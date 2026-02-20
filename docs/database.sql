@@ -1,52 +1,48 @@
 
--- ==========================================================
--- SCRIPT DE CONFIGURAÇÃO INDUSTRIAL - COMPROMISSO | EDUCORI
--- Execute este script no SQL Editor do seu Supabase.
--- ==========================================================
+-- COMPROMISSO | SMART EDUCATION - SQL DATABASE MIGRATION
+-- Versão: 2.1.0 (Industrial Master)
 
--- 1. EXTENSÕES
+-- 1. EXTENSÕES E CONFIGURAÇÕES
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. TABELA DE PERFIS (PROFILES)
--- Garante que a tabela tenha todas as colunas pedagógicas e sociais
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_type TEXT DEFAULT 'student';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS institution TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS course TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS interests TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_financial_aid_eligible BOOLEAN DEFAULT false;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_access TIMESTAMPTZ DEFAULT now();
+-- 2. PERFIS DE USUÁRIOS (PROFILES)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  email TEXT,
+  profile_type TEXT DEFAULT 'student', -- student, teacher, admin, etec, uni
+  institution TEXT,
+  course TEXT,
+  interests TEXT,
+  is_financial_aid_eligible BOOLEAN DEFAULT false,
+  last_access TIMESTAMPTZ DEFAULT now()
+);
 
--- 3. SEGURANÇA DE PERFIS (RLS)
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Perfis visíveis por todos" ON profiles;
-CREATE POLICY "Perfis visíveis por todos" ON profiles FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Usuários editam próprio perfil" ON profiles;
-CREATE POLICY "Usuários editam próprio perfil" ON profiles FOR UPDATE USING (auth.uid() = id);
-
--- 4. ESTRUTURA DE TRILHAS E CONTEÚDO
-CREATE TABLE IF NOT EXISTS trails (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- 3. TRILHAS E CONTEÚDO PEDAGÓGICO
+CREATE TABLE IF NOT EXISTS public.trails (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT now(),
   title TEXT NOT NULL,
   category TEXT DEFAULT 'Geral',
   description TEXT,
   teacher_id UUID REFERENCES auth.users(id),
   teacher_name TEXT,
-  status TEXT DEFAULT 'draft', -- draft, review, active
+  status TEXT DEFAULT 'draft',
   image_url TEXT,
-  target_audience TEXT DEFAULT 'all'
+  target_audience TEXT DEFAULT 'all',
+  average_rating NUMERIC DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS modules (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  trail_id UUID REFERENCES trails(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS public.modules (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  trail_id UUID REFERENCES public.trails(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   order_index INTEGER DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS learning_contents (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  module_id UUID REFERENCES modules(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS public.learning_contents (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  module_id UUID REFERENCES public.modules(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   type TEXT NOT NULL, -- video, pdf, quiz, text
   url TEXT,
@@ -54,25 +50,9 @@ CREATE TABLE IF NOT EXISTS learning_contents (
   order_index INTEGER DEFAULT 0
 );
 
--- 5. MENSAGENS DIRETAS (CHAT PRIVADO)
-CREATE TABLE IF NOT EXISTS direct_messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  receiver_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT false
-);
-
-ALTER TABLE direct_messages ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Ver mensagens próprias" ON direct_messages;
-CREATE POLICY "Ver mensagens próprias" ON direct_messages FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
-DROP POLICY IF EXISTS "Enviar mensagens" ON direct_messages;
-CREATE POLICY "Enviar mensagens" ON direct_messages FOR INSERT WITH CHECK (auth.uid() = sender_id);
-
--- 6. COMUNIDADE (FÓRUM)
-CREATE TABLE IF NOT EXISTS forums (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- 4. COMUNIDADE (FÓRUM)
+CREATE TABLE IF NOT EXISTS public.forums (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT now(),
   name TEXT NOT NULL,
   description TEXT,
@@ -81,27 +61,18 @@ CREATE TABLE IF NOT EXISTS forums (
   author_name TEXT
 );
 
-CREATE TABLE IF NOT EXISTS forum_posts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE IF NOT EXISTS public.forum_posts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT now(),
-  forum_id UUID REFERENCES forums(id) ON DELETE CASCADE,
+  forum_id UUID REFERENCES public.forums(id) ON DELETE CASCADE,
   author_id UUID REFERENCES auth.users(id),
   author_name TEXT,
   content TEXT NOT NULL
 );
 
--- 7. PROGRESSO E BIBLIOTECA
-CREATE TABLE IF NOT EXISTS user_progress (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  trail_id UUID REFERENCES trails(id) ON DELETE CASCADE,
-  percentage INTEGER DEFAULT 0,
-  last_accessed TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(user_id, trail_id)
-);
-
-CREATE TABLE IF NOT EXISTS library_resources (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- 5. BIBLIOTECA DIGITAL
+CREATE TABLE IF NOT EXISTS public.library_resources (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT now(),
   title TEXT NOT NULL,
   category TEXT,
@@ -111,23 +82,23 @@ CREATE TABLE IF NOT EXISTS library_resources (
   description TEXT
 );
 
--- 8. LIVES
-CREATE TABLE IF NOT EXISTS lives (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- 6. TRANSMISSÕES AO VIVO (LIVES)
+CREATE TABLE IF NOT EXISTS public.lives (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT now(),
   title TEXT NOT NULL,
   description TEXT,
   start_time TIMESTAMPTZ NOT NULL,
   teacher_id UUID REFERENCES auth.users(id),
   teacher_name TEXT,
-  status TEXT DEFAULT 'scheduled',
+  status TEXT DEFAULT 'scheduled', -- scheduled, live, finished
   youtube_id TEXT
 );
 
-CREATE TABLE IF NOT EXISTS live_messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE IF NOT EXISTS public.live_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT now(),
-  live_id UUID REFERENCES lives(id) ON DELETE CASCADE,
+  live_id UUID REFERENCES public.lives(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id),
   user_name TEXT,
   content TEXT NOT NULL,
@@ -135,22 +106,80 @@ CREATE TABLE IF NOT EXISTS live_messages (
   is_answered BOOLEAN DEFAULT false
 );
 
--- 9. HABILITAR REALTIME (MUITO IMPORTANTE)
--- Execute estas linhas separadamente se o comando falhar no bloco
--- ALTER publication supabase_realtime ADD TABLE direct_messages;
--- ALTER publication supabase_realtime ADD TABLE forum_posts;
--- ALTER publication supabase_realtime ADD TABLE live_messages;
--- ALTER publication supabase_realtime ADD TABLE lives;
+-- 7. MENSAGENS DIRETAS (CHAT PRIVADO)
+CREATE TABLE IF NOT EXISTS public.direct_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  receiver_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false
+);
 
--- 10. SEED DE MENTORES (DEMO)
--- Estes usuários aparecerão na sua lista de Mentoria imediatamente
-INSERT INTO profiles (id, name, email, profile_type, institution, last_access)
+-- 8. PROGRESSO DO ESTUDANTE
+CREATE TABLE IF NOT EXISTS public.user_progress (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  trail_id UUID REFERENCES public.trails(id) ON DELETE CASCADE,
+  percentage INTEGER DEFAULT 0,
+  last_accessed TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, trail_id)
+);
+
+-- 9. POLÍTICAS DE SEGURANÇA (RLS) - ACESSO TOTAL PARA DEMO
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso profiles" ON public.profiles FOR ALL USING (true);
+
+ALTER TABLE public.trails ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso trails" ON public.trails FOR ALL USING (true);
+
+ALTER TABLE public.modules ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso modules" ON public.modules FOR ALL USING (true);
+
+ALTER TABLE public.learning_contents ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso contents" ON public.learning_contents FOR ALL USING (true);
+
+ALTER TABLE public.forums ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso forums" ON public.forums FOR ALL USING (true);
+
+ALTER TABLE public.forum_posts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso forum_posts" ON public.forum_posts FOR ALL USING (true);
+
+ALTER TABLE public.lives ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso lives" ON public.lives FOR ALL USING (true);
+
+ALTER TABLE public.live_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso live_messages" ON public.live_messages FOR ALL USING (true);
+
+ALTER TABLE public.direct_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso direct_messages" ON public.direct_messages FOR ALL USING (true);
+
+ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso user_progress" ON public.user_progress FOR ALL USING (true);
+
+ALTER TABLE public.library_resources ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso library" ON public.library_resources FOR ALL USING (true);
+
+-- 10. HABILITAR SUPABASE REALTIME
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+END $$;
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.direct_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.forum_posts;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.live_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.lives;
+
+-- 11. DADOS DE TESTE (POPULAR A REDE)
+INSERT INTO public.profiles (id, name, email, profile_type, institution, last_access)
 VALUES 
 ('00000000-0000-0000-0000-000000000001', 'Prof. Ricardo (Matemática)', 'ricardo@demo.com', 'teacher', 'ETEC Jorge Street', now()),
-('00000000-0000-0000-0000-000000000002', 'Dra. Helena (Mentoria ETEC)', 'helena@demo.com', 'teacher', 'Polo Industrial ABC', now()),
-('00000000-0000-0000-0000-000000000003', 'Coord. Márcia (Gestão)', 'marcia@demo.com', 'admin', 'Secretaria de Educação', now())
+('00000000-0000-0000-0000-000000000002', 'Dra. Helena (Mentoria ETEC)', 'helena@demo.com', 'teacher', 'Polo Industrial ABC', now())
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO library_resources (title, category, type, description) VALUES 
-('Guia de Isenção ENEM 2024', 'Geral', 'PDF', 'Documentação necessária para o pedido de isenção.'),
-('Manual de Redação Nota 1000', 'Linguagens', 'E-book', 'Técnicas essenciais para o vestibular.');
+INSERT INTO public.library_resources (title, category, type, description) VALUES 
+('Manual do Candidato ENEM 2024', 'Geral', 'PDF', 'Guia completo com das e regras oficiais.'),
+('Fundamentos de Redação Nota 1000', 'Linguagens', 'E-book', 'Técnicas de argumentação e coesão.');
