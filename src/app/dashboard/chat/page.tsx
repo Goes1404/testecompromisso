@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, Bot, User, BookOpen, GraduationCap } from "lucide-react";
+import { Search, Loader2, Bot, User, BookOpen, GraduationCap, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/AuthProvider";
@@ -16,25 +16,34 @@ export default function ChatListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       if (!user) return;
       setLoading(true);
+      setErrorMsg(null);
       
-      // Busca perfis que NÃO são o usuário atual
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .neq('id', user.id)
-        .order('name');
-      
-      if (!error) {
-        setContacts(data || []);
-      } else {
-        console.error("Erro ao buscar perfis:", error);
+      try {
+        // Busca perfis que NÃO são o usuário atual
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .neq('id', user.id)
+          .order('name');
+        
+        if (error) {
+          console.error("Erro Supabase:", error);
+          setErrorMsg(error.message || "Falha ao carregar mentores. Verifique as políticas de RLS no Supabase.");
+        } else {
+          setContacts(data || []);
+        }
+      } catch (err: any) {
+        console.error("Erro inesperado:", err);
+        setErrorMsg("Erro de conexão com o servidor de rede.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     fetchData();
   }, [user]);
@@ -87,6 +96,21 @@ export default function ChatListPage() {
           <div className="col-span-full py-20 flex flex-col items-center justify-center gap-4">
             <Loader2 className="h-12 w-12 animate-spin text-accent" />
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sintonizando Rede...</p>
+          </div>
+        ) : errorMsg ? (
+          <div className="col-span-full py-10 px-6 bg-red-50 border-2 border-dashed border-red-200 rounded-[2rem] text-center animate-in zoom-in-95">
+            <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+            <p className="text-red-800 font-black italic">Acesso à Rede Pendente</p>
+            <p className="text-red-600 text-xs mt-2 font-medium">Não conseguimos carregar os perfis dos mentores.</p>
+            <div className="mt-6 p-4 bg-white/50 rounded-xl text-[10px] text-left border border-red-100">
+              <p className="font-bold uppercase tracking-widest mb-2 text-red-400">Como resolver:</p>
+              <ol className="list-decimal pl-4 space-y-1 text-red-700">
+                <li>Vá ao <b>SQL Editor</b> do seu Supabase.</li>
+                <li>Copie o conteúdo do arquivo <b>docs/database.sql</b>.</li>
+                <li>Cole e clique em <b>Run</b>.</li>
+                <li>Recarregue esta página.</li>
+              </ol>
+            </div>
           </div>
         ) : filteredContacts.length > 0 ? (
           filteredContacts.map((contact) => (
