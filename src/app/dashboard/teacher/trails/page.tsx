@@ -56,6 +56,7 @@ export default function TeacherTrailsPage() {
 
     setIsSubmitting(true);
     try {
+      // Inserção real no Supabase com image_url
       const { data, error } = await supabase
         .from('trails')
         .insert([{
@@ -72,10 +73,7 @@ export default function TeacherTrailsPage() {
         .single();
 
       if (error) {
-        if (error.message.includes('column') || error.message.includes('schema cache')) {
-          throw new Error("Erro de Banco: A coluna 'image_url' ou outras colunas administrativas não foram encontradas. Por favor, rode o script docs/database.sql no seu console Supabase.");
-        }
-        throw new Error(error.message || "Erro desconhecido ao salvar trilha.");
+        throw new Error(error.message);
       }
 
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
@@ -85,8 +83,8 @@ export default function TeacherTrailsPage() {
     } catch (e: any) {
       console.error("Falha ao criar trilha:", e);
       toast({ 
-        title: "Erro Crítico", 
-        description: e.message || "Verifique sua conexão ou a estrutura do banco de dados.", 
+        title: "Erro de Persistência", 
+        description: "Verifique se você executou o script SQL no Supabase para criar a coluna 'image_url'.", 
         variant: "destructive" 
       });
     } finally {
