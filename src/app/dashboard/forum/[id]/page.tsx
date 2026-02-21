@@ -20,6 +20,7 @@ export default function ForumDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [newPost, setNewPost] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [forum, setForum] = useState<any>(null);
@@ -59,7 +60,6 @@ export default function ForumDetailPage() {
         filter: `forum_id=eq.${forumId}` 
       }, (payload) => {
         setPosts(prev => {
-          // Evita duplicatas se o autor for o próprio usuário (já adicionado manualmente)
           const exists = prev.some(p => p.id === payload.new.id);
           return exists ? prev : [...prev, payload.new];
         });
@@ -73,11 +73,11 @@ export default function ForumDetailPage() {
 
   const handleSendPost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPost.trim() || !user) return;
+    if (!newPost.trim() || !user || isSubmitting) return;
 
+    setIsSubmitting(true);
     const content = newPost;
-    setNewPost("");
-
+    
     const { data, error } = await supabase.from('forum_posts').insert({
       forum_id: forumId,
       author_id: user.id,
@@ -87,10 +87,12 @@ export default function ForumDetailPage() {
 
     if (error) {
       console.error("Erro ao postar:", error);
-      toast({ title: "Erro ao publicar", description: "Verifique as permissões do banco.", variant: "destructive" });
+      toast({ title: "Erro ao publicar", description: "Verifique a conexão.", variant: "destructive" });
     } else if (data) {
+      setNewPost("");
       setPosts(prev => [...prev, data]);
     }
+    setIsSubmitting(false);
   };
 
   useEffect(() => {
@@ -157,10 +159,11 @@ export default function ForumDetailPage() {
               value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
               placeholder="Contribuir com o debate..."
+              disabled={isSubmitting}
               className="flex-1 h-10 md:h-12 bg-transparent border-none text-primary text-xs md:text-sm font-medium italic focus-visible:ring-0 px-0"
             />
-            <Button type="submit" disabled={!newPost.trim()} className="h-10 w-10 md:h-12 md:w-12 bg-primary hover:bg-primary/95 text-white rounded-full shadow-xl shrink-0 transition-all">
-              <Send className="h-4 w-4 md:h-5 md:w-5" />
+            <Button type="submit" disabled={!newPost.trim() || isSubmitting} className="h-10 w-10 md:h-12 md:w-12 bg-primary hover:bg-primary/95 text-white rounded-full shadow-xl shrink-0 transition-all">
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 md:h-5 md:w-5" />}
             </Button>
           </form>
         </div>

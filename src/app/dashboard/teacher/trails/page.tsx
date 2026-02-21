@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -48,14 +49,13 @@ export default function TeacherTrailsPage() {
   }, [user]);
 
   const handleCreateTrail = async () => {
-    if (!newTrail.title || !user) {
-      toast({ title: "Título obrigatório", variant: "destructive" });
+    if (!newTrail.title || !user || isSubmitting) {
+      if(!newTrail.title) toast({ title: "Título obrigatório", variant: "destructive" });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Inserção real no Supabase garantindo image_url
       const { data, error } = await supabase
         .from('trails')
         .insert([{
@@ -71,9 +71,7 @@ export default function TeacherTrailsPage() {
         .select()
         .single();
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
       setTrails(prev => [data, ...prev]);
@@ -81,11 +79,7 @@ export default function TeacherTrailsPage() {
       setNewTrail({ title: "", category: "Dúvidas", description: "" });
     } catch (e: any) {
       console.error("Falha ao criar trilha:", e);
-      toast({ 
-        title: "Erro de Persistência", 
-        description: "Verifique se a coluna 'image_url' existe no Supabase.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Erro de Persistência", description: e.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -122,20 +116,21 @@ export default function TeacherTrailsPage() {
                       Sugerir com IA
                     </Button>
                   </div>
-                  <Input placeholder="Ex: Fundamentos de IA" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.title} onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })} />
+                  <Input placeholder="Ex: Fundamentos de IA" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.title} onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })} disabled={isSubmitting} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase opacity-40">Categoria</Label>
-                  <Input placeholder="Ex: Tecnologia" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.category} onChange={(e) => setNewTrail({ ...newTrail, category: e.target.value })} />
+                  <Input placeholder="Ex: Tecnologia" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.category} onChange={(e) => setNewTrail({ ...newTrail, category: e.target.value })} disabled={isSubmitting} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase opacity-40">Descrição Geral</Label>
-                  <Textarea placeholder="O que o aluno aprenderá nesta jornada?" className="min-h-[120px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={newTrail.description} onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })} />
+                  <Textarea placeholder="O que o aluno aprenderá nesta jornada?" className="min-h-[120px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={newTrail.description} onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })} disabled={isSubmitting} />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreateTrail} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
-                  {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Criar Trilha"}
+                <Button onClick={handleCreateTrail} disabled={isSubmitting || !newTrail.title} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
+                  {isSubmitting ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
+                  {isSubmitting ? "Gravando..." : "Criar Trilha"}
                 </Button>
               </DialogFooter>
             </DialogContent>

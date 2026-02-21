@@ -56,10 +56,14 @@ export default function FinancialAidPage() {
     });
 
     if (user) {
-      await supabase
-        .from('profiles')
-        .update({ is_financial_aid_eligible: eligible })
-        .eq('id', user.id);
+      try {
+        await supabase
+          .from('profiles')
+          .update({ is_financial_aid_eligible: eligible })
+          .eq('id', user.id);
+      } catch (e) {
+        console.error("Erro ao salvar elegibilidade:", e);
+      }
     }
 
     setLoading(false);
@@ -131,6 +135,7 @@ export default function FinancialAidPage() {
                         value={formData.monthlyIncome}
                         onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})}
                         required 
+                        disabled={loading}
                       />
                     </div>
                   </div>
@@ -140,7 +145,7 @@ export default function FinancialAidPage() {
                       <Users2 className="h-4 w-4" />
                       Quantas pessoas residem na casa?
                     </Label>
-                    <Select value={formData.familySize} onValueChange={(v) => setFormData({...formData, familySize: v})}>
+                    <Select value={formData.familySize} onValueChange={(v) => setFormData({...formData, familySize: v})} disabled={loading}>
                       <SelectTrigger id="familySize" className="h-16 bg-muted/30 border-none text-xl font-black rounded-2xl px-6">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
@@ -160,13 +165,14 @@ export default function FinancialAidPage() {
                   disabled={loading} 
                   className="w-full bg-primary hover:bg-primary/95 text-white h-16 rounded-2xl font-black text-lg shadow-2xl shadow-primary/20 transition-all active:scale-95"
                 >
-                  {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Gravar Elegibilidade"}
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <CheckCircle2 className="h-6 w-6 mr-2" />}
+                  {loading ? "Processando..." : "Gravar Elegibilidade"}
                 </Button>
               </form>
             </CardContent>
           </Card>
 
-          {result && (
+          {result && !loading && (
             <Card className={`animate-in zoom-in-95 slide-in-from-top-4 duration-500 border-none shadow-2xl rounded-[2.5rem] overflow-hidden ${result.eligible ? 'bg-green-50/50' : 'bg-red-50/50'}`}>
               <div className={`p-8 flex items-center gap-6 ${result.eligible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                 <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
@@ -194,8 +200,8 @@ export default function FinancialAidPage() {
                 </div>
                 
                 <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-black h-16 rounded-2xl shadow-xl shadow-accent/20">
-                  <Link href="/dashboard/support">
-                    Ver Documentos Necessários
+                  <Link href="/dashboard/chat">
+                    Falar com Mentor de Apoio
                     <ArrowRight className="h-5 w-5 ml-2" />
                   </Link>
                 </Button>

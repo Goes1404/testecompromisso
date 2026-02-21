@@ -28,7 +28,6 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generateQuiz, type QuizGeneratorOutput } from "@/ai/flows/quiz-generator";
 import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
 
@@ -48,7 +47,6 @@ export default function TrailManagementPage() {
   
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
-  const [isAiQuizDialogOpen, setIsAiQuizDialogOpen] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   
   const [moduleForm, setModuleForm] = useState({ title: "" });
@@ -58,9 +56,6 @@ export default function TrailManagementPage() {
     url: "", 
     description: "" 
   });
-
-  const [aiQuizData, setAiQuizData] = useState<QuizGeneratorOutput | null>(null);
-  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -91,6 +86,7 @@ export default function TrailManagementPage() {
   }, [loadData]);
 
   const handlePublish = async () => {
+    if (isPublishing) return;
     setIsPublishing(true);
     const { error } = await supabase.from('trails').update({ status: 'active' }).eq('id', trailId);
     if (!error) {
@@ -101,7 +97,7 @@ export default function TrailManagementPage() {
   };
 
   const handleAddModule = async () => {
-    if (!moduleForm.title.trim()) return;
+    if (!moduleForm.title.trim() || isSubmitting) return;
     setIsSubmitting(true);
     const { data, error } = await supabase.from('modules').insert({
       trail_id: trailId,
@@ -120,7 +116,7 @@ export default function TrailManagementPage() {
   };
 
   const handleAddContent = async () => {
-    if (!activeModuleId || !contentForm.title) return;
+    if (!activeModuleId || !contentForm.title || isSubmitting) return;
     setIsSubmitting(true);
     const { data, error } = await supabase.from('learning_contents').insert({
       module_id: activeModuleId,
@@ -265,7 +261,7 @@ export default function TrailManagementPage() {
           <DialogHeader><DialogTitle className="text-2xl font-black italic text-primary">Novo Capítulo</DialogTitle></DialogHeader>
           <div className="py-6">
             <Label className="text-[9px] font-black uppercase opacity-40 mb-2 block">Título</Label>
-            <Input placeholder="Ex: Fundamentos" value={moduleForm.title} onChange={(e) => setModuleForm({title: e.target.value})} className="h-14 rounded-2xl bg-muted/30 border-none font-bold italic text-lg" />
+            <Input placeholder="Ex: Fundamentos" value={moduleForm.title} onChange={(e) => setModuleForm({title: e.target.value})} disabled={isSubmitting} className="h-14 rounded-2xl bg-muted/30 border-none font-bold italic text-lg" />
           </div>
           <Button onClick={handleAddModule} disabled={isSubmitting || !moduleForm.title} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
             {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Criar"}
@@ -277,7 +273,7 @@ export default function TrailManagementPage() {
         <DialogContent className="rounded-[2.5rem] p-10 max-w-lg bg-white border-none shadow-2xl">
           <DialogHeader><DialogTitle className="text-2xl font-black italic text-primary">Anexar Material</DialogTitle></DialogHeader>
           <div className="space-y-6 py-6">
-            <Select value={contentForm.type} onValueChange={(v) => setContentForm({...contentForm, type: v})}>
+            <Select value={contentForm.type} onValueChange={(v) => setContentForm({...contentForm, type: v})} disabled={isSubmitting}>
               <SelectTrigger className="h-14 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
               <SelectContent className="rounded-xl">
                 <SelectItem value="video">🎞️ Videoaula</SelectItem>
@@ -285,11 +281,11 @@ export default function TrailManagementPage() {
                 <SelectItem value="text">📝 Resumo</SelectItem>
               </SelectContent>
             </Select>
-            <Input placeholder="Título da Aula" value={contentForm.title} onChange={(e) => setContentForm({...contentForm, title: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-bold" />
-            <Input placeholder="Link (YouTube ou PDF)" value={contentForm.url} onChange={(e) => setContentForm({...contentForm, url: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-medium" />
-            <Textarea placeholder="Breve descrição pedagógica..." value={contentForm.description} onChange={(e) => setContentForm({...contentForm, description: e.target.value})} className="min-h-[150px] rounded-xl bg-muted/30 border-none resize-none p-4" />
+            <Input placeholder="Título da Aula" value={contentForm.title} onChange={(e) => setContentForm({...contentForm, title: e.target.value})} disabled={isSubmitting} className="h-14 rounded-xl bg-muted/30 border-none font-bold" />
+            <Input placeholder="Link (YouTube ou PDF)" value={contentForm.url} onChange={(e) => setContentForm({...contentForm, url: e.target.value})} disabled={isSubmitting} className="h-14 rounded-xl bg-muted/30 border-none font-medium" />
+            <Textarea placeholder="Breve descrição pedagógica..." value={contentForm.description} onChange={(e) => setContentForm({...contentForm, description: e.target.value})} disabled={isSubmitting} className="min-h-[150px] rounded-xl bg-muted/30 border-none resize-none p-4" />
           </div>
-          <Button onClick={handleAddContent} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
+          <Button onClick={handleAddContent} disabled={isSubmitting || !contentForm.title} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
             {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Publicar"}
           </Button>
         </DialogContent>

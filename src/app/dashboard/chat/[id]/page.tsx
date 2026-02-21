@@ -24,6 +24,7 @@ export default function DirectChatPage() {
   
   const [input, setInput] = useState("");
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +85,6 @@ export default function DirectChatPage() {
           table: 'direct_messages',
           filter: `receiver_id=eq.${user.id}`
         }, (payload) => {
-          // Só adiciona se for do contato atual para este usuário
           if (payload.new.sender_id === contactId) {
             setMessages(prev => {
               const exists = prev.some(m => m.id === payload.new.id);
@@ -112,7 +112,7 @@ export default function DirectChatPage() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !user || !contactId) return;
+    if (!input.trim() || !user || !contactId || isSending) return;
 
     const userText = input;
     setInput("");
@@ -147,12 +147,12 @@ export default function DirectChatPage() {
           }]);
         }
       } catch (err) {
-        toast({ title: "Aurora processando...", description: "Houve uma oscilação. Tente reenviar sua dúvida.", variant: "destructive" });
+        toast({ title: "Aurora processando...", description: "Houve uma oscilação na rede.", variant: "destructive" });
       } finally {
         setIsAiThinking(false);
       }
     } else {
-      // Chat Real entre humanos - Persistência no Supabase
+      setIsSending(true);
       const { data, error } = await supabase.from('direct_messages').insert({
         sender_id: user.id,
         receiver_id: contactId,
@@ -162,9 +162,10 @@ export default function DirectChatPage() {
       if (!error) {
         setMessages(prev => [...prev, data]);
       } else {
-        console.error("Erro ao enviar mensagem:", error);
-        toast({ title: "Erro ao enviar", description: "Verifique as permissões de banco (RLS).", variant: "destructive" });
+        console.error("Erro ao enviar:", error);
+        toast({ title: "Erro ao enviar", description: "Verifique a conexão.", variant: "destructive" });
       }
+      setIsSending(false);
     }
   };
   
@@ -237,11 +238,11 @@ export default function DirectChatPage() {
                 );
               })
             )}
-            {isAiThinking && (
+            {(isAiThinking || isSending) && (
               <div className="flex justify-start">
                 <div className="flex items-center gap-3 bg-accent/5 px-4 py-2 rounded-[1.25rem] rounded-tl-none border border-accent/10">
                   <Loader2 className="h-3 w-3 animate-spin text-accent" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-accent italic">Aurora Analisando...</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-accent italic">Sincronizando...</span>
                 </div>
               </div>
             )}
@@ -253,12 +254,12 @@ export default function DirectChatPage() {
              <Input 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              disabled={isAiThinking}
+              disabled={isAiThinking || isSending}
               placeholder={isAurora ? "Tire uma dúvida técnica ou pedagógica..." : "Escreva sua mensagem..."}
               className="flex-1 h-9 md:h-10 bg-transparent border-none text-primary font-medium italic focus-visible:ring-0 px-0 text-xs md:text-sm"
             />
-            <Button type="submit" disabled={!input.trim() || isAiThinking} className="h-9 w-9 md:h-12 md:w-12 bg-primary hover:bg-primary/95 rounded-full shadow-xl shrink-0 border-none">
-              {isAiThinking ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Send className="h-4 w-4 text-white" />}
+            <Button type="submit" disabled={!input.trim() || isAiThinking || isSending} className="h-9 w-9 md:h-12 md:w-12 bg-primary hover:bg-primary/95 rounded-full shadow-xl shrink-0 border-none">
+              {isAiThinking || isSending ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Send className="h-4 w-4 text-white" />}
             </Button>
           </form>
         </div>

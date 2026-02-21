@@ -42,7 +42,8 @@ export default function TeacherLiveStudioPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "questions">("all");
   const [input, setInput] = useState("");
-  const [isUpdating, setIsSubmitting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -99,7 +100,7 @@ export default function TeacherLiveStudioPage() {
   }, [liveId, router, toast]);
 
   const toggleLiveStatus = async () => {
-    setIsSubmitting(true);
+    setIsUpdating(true);
     const newStatus = live.status === 'live' ? 'finished' : 'live';
     
     const { error } = await supabase
@@ -111,13 +112,14 @@ export default function TeacherLiveStudioPage() {
       setLive({ ...live, status: newStatus });
       toast({ title: `Status atualizado: ${newStatus.toUpperCase()}` });
     }
-    setIsSubmitting(false);
+    setIsUpdating(false);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !user) return;
+    if (!input.trim() || !user || isSending) return;
 
+    setIsSending(true);
     const { error } = await supabase
       .from('live_messages')
       .insert({
@@ -129,6 +131,7 @@ export default function TeacherLiveStudioPage() {
       });
 
     if (!error) setInput("");
+    setIsSending(false);
   };
 
   const markAsAnswered = async (msgId: string) => {
@@ -191,7 +194,6 @@ export default function TeacherLiveStudioPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0 overflow-hidden">
         <div className="lg:col-span-2 flex flex-col space-y-6 overflow-hidden">
           <Card className="flex-1 bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-slate-800 relative flex items-center justify-center shrink-0">
-             {/* Retorno de Câmera do Mentor */}
              <div className="w-full h-full relative flex flex-col items-center justify-center gap-8 bg-gradient-to-br from-slate-900 to-black">
                 <div className="h-48 w-48 rounded-3xl bg-accent/5 border-2 border-accent/20 flex items-center justify-center relative shadow-inner">
                    <User className="h-24 w-24 text-accent/20" />
@@ -207,7 +209,6 @@ export default function TeacherLiveStudioPage() {
                    </div>
                 </div>
 
-                {/* Controles de Produção */}
                 <div className="absolute bottom-10 flex items-center gap-4 bg-white/5 backdrop-blur-xl p-5 rounded-3xl border border-white/10">
                    <Button size="icon" variant="ghost" className="h-14 w-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white"><Mic className="h-6 w-6" /></Button>
                    <Button size="icon" variant="ghost" className="h-14 w-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white"><Video className="h-6 w-6" /></Button>
@@ -305,11 +306,12 @@ export default function TeacherLiveStudioPage() {
               <Input 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Mensagem oficial..." 
+                disabled={isSending}
+                placeholder={isSending ? "Processando..." : "Mensagem oficial..."} 
                 className="border-none shadow-none text-xs font-bold italic h-10 bg-transparent focus-visible:ring-0 px-0" 
               />
-              <Button type="submit" size="icon" className="h-10 w-10 bg-slate-900 hover:bg-slate-800 text-white rounded-full shrink-0 shadow-lg transition-transform active:scale-90">
-                <Send className="h-4 w-4" />
+              <Button type="submit" disabled={isSending || !input.trim()} size="icon" className="h-10 w-10 bg-slate-900 hover:bg-slate-800 text-white rounded-full shrink-0 shadow-lg transition-transform active:scale-90">
+                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </form>
           </div>

@@ -128,15 +128,17 @@ export default function ForumPage() {
                   <DialogDescription className="font-medium text-xs">Compartilhe sua dúvida com a rede.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                  <Input placeholder="Título da discussão" value={newForum.name} onChange={(e) => setNewForum({...newForum, name: e.target.value})} />
-                  <Select value={newForum.category} onValueChange={(v) => setNewForum({...newForum, category: v})}>
+                  <Input placeholder="Título da discussão" value={newForum.name} onChange={(e) => setNewForum({...newForum, name: e.target.value})} disabled={isSubmitting} />
+                  <Select value={newForum.category} onValueChange={(v) => setNewForum({...newForum, category: v})} disabled={isSubmitting}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>{FORUM_CATEGORIES.filter(c=>c!=="Todos").map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
-                  <Input placeholder="Descreva sua dúvida" value={newForum.description} onChange={(e) => setNewForum({...newForum, description: e.target.value})} />
+                  <Input placeholder="Descreva sua dúvida" value={newForum.description} onChange={(e) => setNewForum({...newForum, description: e.target.value})} disabled={isSubmitting} />
               </div>
               <DialogFooter>
-                  <Button onClick={handleCreateForum} disabled={isSubmitting}>{isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Publicar"}</Button>
+                  <Button onClick={handleCreateForum} disabled={isSubmitting || !newForum.name.trim()} className="w-full h-12 rounded-xl">
+                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Publicar"}
+                  </Button>
               </DialogFooter>
           </DialogContent>
         </Dialog>
