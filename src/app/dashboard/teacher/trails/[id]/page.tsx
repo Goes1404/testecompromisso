@@ -44,6 +44,7 @@ export default function TrailManagementPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
@@ -137,14 +138,19 @@ export default function TrailManagementPage() {
   };
 
   const handleDeleteModule = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     const { error } = await supabase.from('modules').delete().eq('id', id);
     if (!error) {
       setModules(prev => prev.filter(m => m.id !== id));
       toast({ title: "Capítulo removido" });
     }
+    setDeletingId(null);
   };
 
   const handleDeleteContent = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     const { error } = await supabase.from('learning_contents').delete().eq('id', id);
     if (!error) {
       setContents(prev => {
@@ -156,6 +162,7 @@ export default function TrailManagementPage() {
       });
       toast({ title: "Aula removida" });
     }
+    setDeletingId(null);
   };
 
   if (loading) return (
@@ -199,7 +206,9 @@ export default function TrailManagementPage() {
                   <CardTitle className="text-xl font-black text-primary italic">{mod.title}</CardTitle>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleDeleteModule(mod.id)} className="text-muted-foreground hover:text-red-500 rounded-full"><Trash2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDeleteModule(mod.id)} disabled={deletingId === mod.id} className="text-muted-foreground hover:text-red-500 rounded-full">
+                    {deletingId === mod.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  </Button>
                   <Button onClick={() => { setActiveModuleId(mod.id); setIsContentDialogOpen(true); }} className="bg-primary text-white hover:bg-primary/90 font-black text-[9px] uppercase rounded-xl h-10 px-4 shadow-md gap-2">
                     <Plus className="h-3 w-3" /> Aula
                   </Button>
@@ -218,7 +227,9 @@ export default function TrailManagementPage() {
                           <Badge variant="outline" className="text-[7px] font-black uppercase bg-white border-none px-2 mt-1">{content.type}</Badge>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all" onClick={() => handleDeleteContent(content.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-red-500 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all" onClick={() => handleDeleteContent(content.id)} disabled={deletingId === content.id}>
+                        {deletingId === content.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </Button>
                     </div>
                   ))}
                   {(!contents[mod.id] || contents[mod.id].length === 0) && (

@@ -31,6 +31,7 @@ export default function TrailApprovalPage() {
   const [loading, setLoading] = useState(true);
   const [trails, setTrails] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTrails() {
@@ -53,11 +54,16 @@ export default function TrailApprovalPage() {
   }, []);
 
   const handleApprove = async (id: string) => {
+    if (approvingId) return;
+    setApprovingId(id);
     const { error } = await supabase.from('trails').update({ status: 'published' }).eq('id', id);
     if (!error) {
       setTrails(prev => prev.map(t => t.id === id ? { ...t, status: 'published' } : t));
       toast({ title: "Trilha Aprovada!", description: "O conteúdo já está visível para os alunos." });
+    } else {
+      toast({ title: "Erro na aprovação", description: "Verifique sua conexão.", variant: "destructive" });
     }
+    setApprovingId(null);
   };
 
   const filteredTrails = trails.filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -137,7 +143,13 @@ export default function TrailApprovalPage() {
                       </Button>
                       <Button variant="ghost" size="icon" className="rounded-xl"><MessageSquare className="h-4 w-4" /></Button>
                       {trail.status !== 'published' && (
-                        <Button onClick={() => handleApprove(trail.id)} className="bg-primary text-white font-black text-[10px] uppercase h-9 px-4 rounded-xl shadow-lg">Aprovar</Button>
+                        <Button 
+                          onClick={() => handleApprove(trail.id)} 
+                          disabled={approvingId === trail.id}
+                          className="bg-primary text-white font-black text-[10px] uppercase h-9 px-4 rounded-xl shadow-lg min-w-[80px]"
+                        >
+                          {approvingId === trail.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Aprovar"}
+                        </Button>
                       )}
                     </div>
                   </TableCell>
