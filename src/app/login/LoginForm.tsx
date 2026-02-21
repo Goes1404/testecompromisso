@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, ChevronRight, Loader2, Sparkles, UserCircle, Users, GraduationCap, AlertCircle, UserPlus, BookOpen } from "lucide-react";
+import { Shield, ChevronRight, Loader2, Sparkles, UserCircle, Users, GraduationCap, AlertCircle, UserPlus, BookOpen, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -28,7 +28,7 @@ export function LoginForm() {
     if (!email || !password) return;
     
     if (!isSupabaseConfigured) {
-      setAuthError("Configuração Pendente: As chaves do Supabase não foram encontradas no ambiente do Netlify.");
+      setAuthError("Configuração Pendente: As chaves do Supabase não foram encontradas no ambiente.");
       return;
     }
 
@@ -50,10 +50,24 @@ export function LoginForm() {
       if (data.user) {
         setIsRedirecting(true);
         toast({ title: "Login bem-sucedido!", description: "Sintonizando seu portal..." });
-        const userRole = data.user.user_metadata?.role || 'student';
+        
+        // Buscar o perfil para saber o tipo exato (admin, teacher ou student)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('profile_type')
+          .eq('id', data.user.id)
+          .single();
+
+        const role = profile?.profile_type || data.user.user_metadata?.role || 'student';
         
         setTimeout(() => {
-          router.push(userRole === 'teacher' || userRole === 'admin' ? "/dashboard/teacher/home" : "/dashboard/home");
+          if (role === 'admin') {
+            router.push("/dashboard/admin/home");
+          } else if (role === 'teacher') {
+            router.push("/dashboard/teacher/home");
+          } else {
+            router.push("/dashboard/home");
+          }
         }, 100);
       }
 
@@ -63,10 +77,11 @@ export function LoginForm() {
     }
   };
 
-  const fillCredentials = (type: 'student' | 'teacher') => {
+  const fillCredentials = (type: 'student' | 'teacher' | 'admin') => {
     const creds = {
       student: { email: "aluno@compromisso.com.br", password: "123456789" },
-      teacher: { email: "mentor@compromisso.com.br", password: "123456789" }
+      teacher: { email: "mentor@compromisso.com.br", password: "123456789" },
+      admin: { email: "gestor@compromisso.com.br", password: "123456789" }
     };
     setEmail(creds[type].email);
     setPassword(creds[type].password);
@@ -144,12 +159,15 @@ export function LoginForm() {
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40">
               <Users className="h-3 w-3" /> Contas de Demonstração
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" onClick={() => fillCredentials('student')} className="h-12 rounded-xl text-blue-700 font-black gap-2 text-[10px] justify-start px-4 border-blue-100 hover:bg-blue-50">
-                <GraduationCap className="h-4 w-4" /> ALUNO
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" onClick={() => fillCredentials('student')} className="h-11 rounded-xl text-blue-700 font-black gap-1 text-[9px] justify-center px-2 border-blue-100 hover:bg-blue-50">
+                <GraduationCap className="h-3 w-3" /> ALUNO
               </Button>
-              <Button variant="outline" onClick={() => fillCredentials('teacher')} className="h-12 rounded-xl text-orange-700 font-black gap-2 text-[10px] justify-start px-4 border-orange-100 hover:bg-orange-50">
-                <UserCircle className="h-4 w-4" /> MENTOR
+              <Button variant="outline" onClick={() => fillCredentials('teacher')} className="h-11 rounded-xl text-orange-700 font-black gap-1 text-[9px] justify-center px-2 border-orange-100 hover:bg-orange-50">
+                <UserCircle className="h-3 w-3" /> MENTOR
+              </Button>
+              <Button variant="outline" onClick={() => fillCredentials('admin')} className="h-11 rounded-xl text-red-700 font-black gap-1 text-[9px] justify-center px-2 border-red-100 hover:bg-red-50">
+                <ShieldCheck className="h-3 w-3" /> GESTOR
               </Button>
             </div>
           </div>
