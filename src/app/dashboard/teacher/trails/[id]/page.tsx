@@ -196,7 +196,7 @@ export default function TrailManagementPage() {
         ...prev,
         [activeModuleId]: [...(prev[activeModuleId] || []), ...data]
       }));
-      toast({ title: "Materiais Publicados!", description: `${data.length} itens foram adicionados ao capítulo.` });
+      toast({ title: "Materiais Publicados!", description: `${data?.length || 0} itens foram adicionados ao capítulo.` });
       setPendingItems([]);
       setIsContentDialogOpen(false);
     } else {
@@ -412,18 +412,18 @@ export default function TrailManagementPage() {
           </div>
           <DialogFooter>
             <Button onClick={handleAddModule} disabled={isSubmitting || !moduleForm.title} className="w-full h-14 bg-primary text-white font-black rounded-xl">
-              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "Criar Capítulo"}
+              {isSubmitting ? <Loader2 className="h-5 w-5 mr-2" /> : "Criar Capítulo"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Anexar Materiais (Batch Add) */}
+      {/* Dialog: Anexar Materiais (Cadastro em Lote) */}
       <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
         <DialogContent className="rounded-[2.5rem] p-8 md:p-10 max-w-2xl bg-white border-none shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black italic text-primary">Anexar Materiais</DialogTitle>
-            <p className="text-muted-foreground text-xs italic">Monte sua sequência didática antes de publicar.</p>
+            <p className="text-muted-foreground text-xs italic">Monte sua sequência didática antes de publicar na rede.</p>
           </DialogHeader>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-6">
@@ -465,11 +465,22 @@ export default function TrailManagementPage() {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase opacity-40">Orientações Breves</Label>
+                <Textarea 
+                  placeholder="Instruções para o aluno..." 
+                  value={contentForm.description} 
+                  onChange={(e) => setContentForm({...contentForm, description: e.target.value})} 
+                  disabled={isSubmitting} 
+                  className="h-20 rounded-xl bg-muted/30 border-none font-medium resize-none text-xs" 
+                />
+              </div>
+
               <Button 
                 onClick={addToQueue} 
                 variant="outline" 
                 disabled={isSubmitting || !contentForm.title}
-                className="w-full h-12 rounded-xl border-dashed border-primary/20 text-primary font-black uppercase text-[10px] gap-2"
+                className="w-full h-12 rounded-xl border-dashed border-primary/20 text-primary font-black uppercase text-[10px] gap-2 hover:bg-primary/5 transition-all"
               >
                 <Plus className="h-4 w-4" /> Adicionar à Fila
               </Button>
@@ -479,22 +490,24 @@ export default function TrailManagementPage() {
               <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-4 flex items-center gap-2">
                 <Layers className="h-3 w-3" /> Fila de Publicação ({pendingItems.length})
               </h3>
-              <div className="flex-1 overflow-y-auto space-y-2 max-h-[250px] pr-2">
+              <div className="flex-1 overflow-y-auto space-y-2 max-h-[300px] pr-2 scrollbar-hide">
                 {pendingItems.map((item) => (
                   <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-white shadow-sm border border-primary/5 animate-in slide-in-from-right-2 duration-300">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="h-7 w-7 rounded-lg bg-primary/5 flex items-center justify-center text-primary shrink-0">
+                      <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        item.type === 'video' ? 'bg-red-50 text-red-600' : 'bg-primary/5 text-primary'
+                      }`}>
                         {item.type === 'video' ? <Video className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
                       </div>
                       <p className="text-[10px] font-bold text-primary truncate max-w-[120px]">{item.title}</p>
                     </div>
-                    <button onClick={() => removeFromQueue(item.id)} className="text-muted-foreground hover:text-red-500"><X className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => removeFromQueue(item.id)} className="text-muted-foreground hover:text-red-500 transition-colors p-1"><X className="h-3.5 w-3.5" /></button>
                   </div>
                 ))}
                 {pendingItems.length === 0 && (
-                  <div className="h-full flex flex-col items-center justify-center text-center opacity-30 gap-2">
-                    <Sparkles className="h-8 w-8" />
-                    <p className="text-[9px] font-black uppercase">Nenhum item na fila</p>
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-30 gap-2 py-10">
+                    <Sparkles className="h-8 w-8 text-accent" />
+                    <p className="text-[9px] font-black uppercase tracking-widest">Nenhum item na fila</p>
                   </div>
                 )}
               </div>
@@ -505,12 +518,12 @@ export default function TrailManagementPage() {
             <Button 
               onClick={handleBatchSaveContent} 
               disabled={isSubmitting || pendingItems.length === 0} 
-              className="w-full h-14 bg-primary text-white font-black text-lg rounded-2xl shadow-xl transition-all"
+              className="w-full h-14 bg-primary text-white font-black text-lg rounded-2xl shadow-xl transition-all active:scale-95"
             >
               {isSubmitting ? (
-                <><Loader2 className="animate-spin h-6 w-6 mr-2" /> Publicando Rede...</>
+                <><Loader2 className="animate-spin h-6 w-6 mr-2" /> Publicando na Rede...</>
               ) : (
-                <><CheckCircle2 className="h-6 w-6 mr-2" /> Salvar Tudo e Publicar Aula</>
+                <><CheckCircle2 className="h-6 w-6 mr-2" /> Salvar Tudo e Publicar no Capítulo</>
               )}
             </Button>
           </DialogFooter>
