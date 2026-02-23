@@ -60,13 +60,13 @@ function SwipeHandler({ children }: { children: React.ReactNode }) {
     const distanceX = touchEnd.current - touchStart.current;
     const absX = Math.abs(distanceX);
 
-    // Menu na DIREITA (side="right")
-    // ABRIR: Deslizar para a ESQUERDA (distanceX negativo)
-    if (!openMobile && distanceX < -45 && absX > 25) {
+    // Menu na ESQUERDA (side="left")
+    // ABRIR: Deslizar para a DIREITA (distanceX positivo)
+    if (!openMobile && distanceX > 45 && absX > 25) {
       setOpenMobile(true);
     } 
-    // FECHAR: Deslizar para a DIREITA (distanceX positivo)
-    else if (openMobile && distanceX > 45) {
+    // FECHAR: Deslizar para a ESQUERDA (distanceX negativo)
+    else if (openMobile && distanceX < -45) {
       setOpenMobile(false);
     }
   };
@@ -137,7 +137,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SidebarProvider>
-      <Sidebar side="right" collapsible="icon" className="bg-sidebar border-none">
+      <Sidebar side="left" collapsible="icon" className="bg-sidebar border-none">
         <SidebarHeader className="p-6">
            <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-lg">
