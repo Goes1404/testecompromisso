@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, FilePlus, CheckCircle, ListChecks, PlusCircle, AlertCircle } from 'lucide-react';
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
 import { QuestionsList } from '@/components/QuestionsList';
-import { supabase } from '@/app/lib/supabase';
+import { createClient, isSupabaseConfigured } from '@/app/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
 import {
     Select,
@@ -41,6 +40,8 @@ export default function QuestionBankPage() {
 
     useEffect(() => {
         async function fetchSubjects() {
+            if (!isSupabaseConfigured) return;
+            const supabase = createClient();
             try {
                 const { data, error } = await supabase.from('subjects').select('*').order('name');
                 if (error) throw error;
@@ -55,6 +56,11 @@ export default function QuestionBankPage() {
     const handleSaveManual = async () => {
         if (!user) {
             toast({ title: "Acesso Negado", description: "Você precisa estar logado para salvar questões.", variant: "destructive" });
+            return;
+        }
+
+        if (!isSupabaseConfigured) {
+            toast({ title: "Configuração Pendente", description: "As chaves do Supabase não foram configuradas no ambiente.", variant: "destructive" });
             return;
         }
 
@@ -73,6 +79,8 @@ export default function QuestionBankPage() {
         }
 
         setIsSaving(true);
+        const supabase = createClient();
+
         try {
             const payload = {
                 question_text: manualQuestion.question_text.trim(),
@@ -86,12 +94,9 @@ export default function QuestionBankPage() {
             const { error } = await supabase.from('questions').insert([payload]);
 
             if (error) {
-                // Erro específico de cache de esquema ou coluna não encontrada
                 if (error.message.includes("cache de esquema") || error.message.includes("column") || error.message.includes("not found")) {
-                    throw new Error("Sincronização Necessária: O banco de dados não encontrou a coluna 'correct_answer'. Por favor, execute o script SQL de reparo no painel do Supabase.");
+                    throw new Error("Sincronização Necessária: Execute o script SQL no Supabase para criar a coluna 'correct_answer'.");
                 }
-                
-                // Erro específico de RLS
                 if (error.message.includes("row-level security")) {
                     throw new Error("Erro de Permissão (RLS): Certifique-se de executar o script SQL de políticas no Supabase.");
                 }
@@ -100,17 +105,26 @@ export default function QuestionBankPage() {
 
             toast({ title: "Questão Salva! ✅", description: "Item adicionado ao banco oficial." });
             
-            // Limpar formulário
             setManualQuestion(prev => ({ ...prev, question_text: '', correct_answer: 'A' }));
             setManualOptions({ A: '', B: '', C: '', D: '', E: '' });
 
         } catch (e: any) {
             console.error("Erro Supabase Insert:", e);
-            toast({ 
-                title: "Falha na Persistência", 
-                description: e.message || "Verifique a conexão ou as permissões do banco.", 
-                variant: "destructive" 
-            });
+            
+            // Tratamento específico para o AbortError
+            if (e.name === 'AbortError' || e.message?.includes('aborted')) {
+                toast({ 
+                    title: "Instabilidade de Rede", 
+                    description: "A requisição foi interrompida pelo navegador. Verifique sua internet e tente salvar novamente.", 
+                    variant: "destructive" 
+                });
+            } else {
+                toast({ 
+                    title: "Falha na Persistência", 
+                    description: e.message || "Verifique a conexão ou as permissões do banco.", 
+                    variant: "destructive" 
+                });
+            }
         } finally {
             setIsSaving(false);
         }
@@ -119,7 +133,6 @@ export default function QuestionBankPage() {
     const handleAnalyzeBulk = () => {
         if (!rawText.trim()) return;
         setIsAnalyzing(true);
-        // Simulação Aurora IA
         setTimeout(() => {
             toast({ title: "Aurora Analisando...", description: "Estamos processando a estrutura do seu texto." });
             setIsAnalyzing(false);
@@ -144,7 +157,7 @@ export default function QuestionBankPage() {
                 <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
                     <CardContent className="p-8 md:p-12">
                         <div className="flex bg-muted/10 p-1.5 rounded-2xl mb-10 w-fit mx-auto md:mx-0">
-                            <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => setEntryMode('bulk'} className="rounded-xl font-bold h-11 px-6">
+                            <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => setEntryMode('bulk')} className="rounded-xl font-bold h-11 px-6">
                                 <ListChecks className="h-4 w-4 mr-2"/> Carga em Massa
                             </Button>
                             <Button variant={entryMode === 'manual' ? 'default' : 'ghost'} onClick={() => setEntryMode('manual')} className="rounded-xl font-bold h-11 px-6">
