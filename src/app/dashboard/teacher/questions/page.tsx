@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -61,7 +62,7 @@ export default function QuestionBankPage() {
         }
 
         if (!isSupabaseConfigured) {
-            toast({ title: "Configuração Pendente", description: "As chaves do Supabase não foram configuradas no ambiente.", variant: "destructive" });
+            toast({ title: "Configuração Pendente", description: "As chaves do Supabase não foram configuradas.", variant: "destructive" });
             return;
         }
 
@@ -80,6 +81,7 @@ export default function QuestionBankPage() {
         }
 
         setIsSaving(true);
+        // Usamos uma instância local para evitar o erro de AbortError de concorrência
         const supabase = createClient();
 
         try {
@@ -94,15 +96,7 @@ export default function QuestionBankPage() {
 
             const { error } = await supabase.from('questions').insert([payload]);
 
-            if (error) {
-                if (error.message.includes("cache de esquema") || error.message.includes("column") || error.message.includes("not found")) {
-                    throw new Error("Sincronização Necessária: Execute o script SQL no Supabase para criar a coluna 'correct_answer' e 'options'.");
-                }
-                if (error.message.includes("row-level security")) {
-                    throw new Error("Erro de Permissão (RLS): Certifique-se de executar o script SQL de políticas no Supabase.");
-                }
-                throw error;
-            }
+            if (error) throw error;
 
             toast({ title: "Questão Salva! ✅", description: "Item adicionado ao banco oficial." });
             
@@ -113,7 +107,7 @@ export default function QuestionBankPage() {
             console.error("Erro Supabase Insert:", e);
             toast({ 
                 title: "Falha na Persistência", 
-                description: e.message || "Verifique a conexão ou as permissões do banco.", 
+                description: e.message || "Tente novamente ou execute o SQL de cache de esquema.", 
                 variant: "destructive" 
             });
         } finally {
@@ -122,10 +116,7 @@ export default function QuestionBankPage() {
     };
 
     const handleSeedExample = async () => {
-        if (!user || subjects.length === 0) {
-            toast({ title: "Aguarde", description: "Carregando matérias do banco para gerar exemplo...", variant: "default" });
-            return;
-        }
+        if (!user || subjects.length === 0) return;
 
         setIsSeeding(true);
         const supabase = createClient();
@@ -148,22 +139,13 @@ export default function QuestionBankPage() {
             const { error } = await supabase.from('questions').insert([example]);
             if (error) throw error;
 
-            toast({ title: "Exemplo Adicionado! 🧬", description: "Uma questão de biologia foi criada para teste de uso." });
+            toast({ title: "Exemplo Adicionado! 🧬", description: "Uma questão de biologia foi criada para teste." });
             setTimeout(() => window.location.reload(), 1000);
         } catch (e: any) {
             toast({ title: "Erro no Teste", description: e.message, variant: "destructive" });
         } finally {
             setIsSeeding(false);
         }
-    };
-
-    const handleAnalyzeBulk = () => {
-        if (!rawText.trim()) return;
-        setIsAnalyzing(true);
-        setTimeout(() => {
-            toast({ title: "Aurora Analisando...", description: "Estamos processando a estrutura do seu texto." });
-            setIsAnalyzing(false);
-        }, 1500);
     };
 
     return (
@@ -207,7 +189,7 @@ export default function QuestionBankPage() {
                             <div className="space-y-6 animate-in slide-in-from-bottom-2">
                                 <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3 text-amber-800">
                                     <AlertCircle className="h-5 w-5 shrink-0" />
-                                    <p className="text-xs font-medium">A carga em massa via Aurora IA está em fase Beta. Por enquanto, utilize o modo Manual para precisão industrial.</p>
+                                    <p className="text-xs font-medium">A carga em massa via Aurora IA está em fase Beta. Utilize o modo Manual para máxima precisão.</p>
                                 </div>
                                 <Textarea 
                                     placeholder="Cole aqui o texto da prova para análise..." 
@@ -215,8 +197,8 @@ export default function QuestionBankPage() {
                                     value={rawText}
                                     onChange={(e) => setRawText(e.target.value)}
                                 />
-                                <Button onClick={handleAnalyzeBulk} disabled={isAnalyzing || !rawText.trim()} className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black text-lg shadow-xl">
-                                    {isAnalyzing ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : "Analisar com Aurora IA"}
+                                <Button disabled={!rawText.trim()} className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black text-lg shadow-xl">
+                                    Analisar com Aurora IA
                                 </Button>
                             </div>
                         ) : (
