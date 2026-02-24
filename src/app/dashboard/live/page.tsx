@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MonitorPlay, Clock, Loader2, ArrowRight, Signal } from "lucide-react";
+import { MonitorPlay, Clock, Loader2, ArrowRight, Signal, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/app/lib/supabase";
@@ -19,18 +19,15 @@ export default function LiveClassesPage() {
     async function fetchLives() {
       setLoading(true);
       try {
+        // Busca todas as lives que não foram finalizadas
         const { data, error } = await supabase
           .from('lives')
-          .select(`
-            *,
-            teacher:profiles(name)
-          `)
-          .neq('status', 'finished')
+          .select('*')
+          .in('status', ['live', 'scheduled'])
           .order('start_time', { ascending: true });
 
-        if (!error && data) {
-          setLives(data);
-        }
+        if (error) throw error;
+        setLives(data || []);
       } catch (err) {
         console.error("Erro ao buscar lives:", err);
       } finally {
@@ -39,6 +36,18 @@ export default function LiveClassesPage() {
     }
 
     fetchLives();
+
+    // Inscrição Real-time para atualizações de status (AO VIVO)
+    const channel = supabase
+      .channel('live_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lives' }, () => {
+        fetchLives();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (loading) {
@@ -68,7 +77,7 @@ export default function LiveClassesPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {liveNow.map((live) => (
-              <Card key={live.id} className="border-none shadow-2xl bg-slate-950 text-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group">
+              <Card key={live.id} className="border-none shadow-2xl bg-slate-950 text-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden group border-l-4 border-red-600">
                 <CardContent className="p-6 md:p-8 space-y-4 md:space-y-6">
                   <div className="flex justify-between items-start">
                     <Badge className="bg-red-600 text-white border-none px-3 py-1 font-black flex items-center gap-2 animate-pulse text-[8px] md:text-[10px]">
@@ -76,7 +85,7 @@ export default function LiveClassesPage() {
                     </Badge>
                     <div className="text-right">
                       <p className="text-[8px] md:text-[10px] font-black text-slate-500 uppercase">Mentor</p>
-                      <p className="font-bold italic text-blue-400 text-xs md:text-base">{live.teacher?.name || "Mentor da Rede"}</p>
+                      <p className="font-bold italic text-blue-400 text-xs md:text-base">{live.teacher_name || "Mentor da Rede"}</p>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -98,12 +107,13 @@ export default function LiveClassesPage() {
         {upcoming.length === 0 && liveNow.length === 0 ? (
           <Card className="border-none shadow-xl bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-10 md:p-12 text-center opacity-50 border-dashed border-2">
             <MonitorPlay className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 text-muted-foreground" />
-            <p className="font-black italic text-sm md:text-lg text-primary">Nenhuma aula agendada.</p>
+            <p className="font-black italic text-sm md:text-lg text-primary">Nenhuma aula agendada no momento.</p>
+            <p className="text-xs text-muted-foreground mt-2">Fique atento ao mural de avisos para novas datas.</p>
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:gap-4">
             {upcoming.map((live) => (
-              <Card key={live.id} className="border-none shadow-lg bg-white rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-xl transition-all">
+              <Card key={live.id} className="border-none shadow-lg bg-white rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-xl transition-all border-l-4 border-primary/10">
                 <CardContent className="p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
                   <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
                     <div className="h-14 w-14 md:h-16 md:w-16 rounded-xl md:rounded-2xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center shadow-inner shrink-0">
@@ -112,7 +122,7 @@ export default function LiveClassesPage() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-black text-primary italic text-sm md:text-lg leading-none truncate">{live.title}</h3>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Com {live.teacher?.name || "Mentor"}</p>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Com {live.teacher_name || "Mentor"}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between w-full md:w-auto gap-4 md:gap-8">
@@ -124,7 +134,7 @@ export default function LiveClassesPage() {
                       <span className="text-[7px] md:text-[8px] font-black text-muted-foreground uppercase">Horário</span>
                     </div>
                     <Button asChild variant="outline" className="rounded-lg md:rounded-xl border-2 font-black h-10 md:h-12 px-4 md:px-6 text-[10px] md:text-sm uppercase">
-                      <Link href={`/dashboard/live/${live.id}`}>Acessar</Link>
+                      <Link href={`/dashboard/live/${live.id}`}>Ver Detalhes</Link>
                     </Button>
                   </div>
                 </CardContent>

@@ -25,6 +25,7 @@ const studentItems = [
 const teacherItems = [
   { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home" },
   { icon: ClipboardList, label: "Gestão de Trilhas", href: "/dashboard/teacher/trails" },
+  { icon: Library, label: "Gestão de Biblioteca", href: "/dashboard/teacher/library" },
   { icon: Database, label: "Banco de Questões", href: "/dashboard/teacher/questions" },
   { icon: MonitorPlay, label: "Gerenciar Lives", href: "/dashboard/teacher/live" },
   { icon: MessagesSquare, label: "Fórum Pedagógico", href: "/dashboard/forum" },
@@ -36,6 +37,7 @@ const teacherItems = [
 const adminItems = [
   { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home" },
   { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails" },
+  { icon: Library, label: "Curadoria de Acervo", href: "/dashboard/teacher/library" },
   { icon: Users, label: "Gestão de Turmas", href: "/dashboard/admin/students" },
   { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics" },
   { icon: Bell, label: "Comunicados Globais", href: "/dashboard/teacher/communication" },
