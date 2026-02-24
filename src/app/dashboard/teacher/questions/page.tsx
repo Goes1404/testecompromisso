@@ -111,11 +111,10 @@ export default function QuestionBankPage() {
         } catch (e: any) {
             console.error("Erro Supabase Insert:", e);
             
-            // Tratamento específico para o AbortError
             if (e.name === 'AbortError' || e.message?.includes('aborted')) {
                 toast({ 
                     title: "Instabilidade de Rede", 
-                    description: "A requisição foi interrompida pelo navegador. Verifique sua internet e tente salvar novamente.", 
+                    description: "A requisição foi interrompida. Verifique sua internet e tente salvar novamente.", 
                     variant: "destructive" 
                 });
             } else {
