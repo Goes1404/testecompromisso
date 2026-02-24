@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle } from "lucide-react";
 
 // Definição do tipo para o resultado da correção da IA (alinhado com a API)
 interface AIAnalysisResult {
@@ -39,23 +39,24 @@ export default function AICorrectionPage() {
     setAiResult(null);
 
     try {
+      // Corrigido: API espera 'text', não 'essay'
       const response = await fetch('/api/ai/grade-essay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme: essayTopic, essay: essayText }),
+        body: JSON.stringify({ theme: essayTopic, text: essayText }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'A resposta do servidor não foi bem-sucedida.');
+        const errorData = await response.json().catch(() => ({ error: 'O servidor retornou uma resposta inválida.' }));
+        throw new Error(errorData.error || 'Falha ao processar a correção.');
       }
-      
+
+      const data = await response.json();
       setAiResult(data);
 
     } catch (e: any) {
-      setError(e.message || "Ocorreu um erro ao processar a correção. Por favor, tente novamente.");
-      console.error(e);
+      setError(e.message || "Ocorreu um erro ao processar a análise. Por favor, tente novamente.");
+      console.error("Erro Aurora IA:", e);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +102,12 @@ export default function AICorrectionPage() {
                 className="mt-2 min-h-[300px]"
               />
             </div>
-            {error && <p className="text-sm font-bold text-destructive">{error}</p>}
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-700">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <p className="text-xs font-bold uppercase tracking-widest">{error}</p>
+              </div>
+            )}
             <Button onClick={handleCorrection} disabled={isLoading} className="w-full h-12 font-bold text-base shadow-lg">
               {isLoading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processando Análise...</>
@@ -119,43 +125,39 @@ export default function AICorrectionPage() {
             <CardDescription>O resultado da correção será exibido aqui.</CardDescription>
           </CardHeader>
           <CardContent>
-            {!aiResult && !isLoading && !error && (
+            {!aiResult && !isLoading && (
               <div className="text-center text-muted-foreground py-12">
                 <Sparkles className="mx-auto h-12 w-12 opacity-50" />
-                <p className="mt-4 font-medium">Aguardando uma redação para analisar.</p>
+                <p className="mt-4 font-medium italic">Aguardando uma redação para analisar.</p>
               </div>
             )}
             {isLoading && (
               <div className="text-center text-primary py-12">
                 <Loader2 className="mx-auto h-12 w-12 animate-spin" />
-                <p className="mt-4 font-bold">A Aurora está lendo e analisando o texto...</p>
+                <p className="mt-4 font-bold italic">A Aurora está lendo e analisando o texto...</p>
               </div>
-            )}
-            {error && !isLoading && (
-                <div className="text-center text-destructive py-12">
-                    <p className="font-bold">Erro na Análise</p>
-                    <p className="text-sm mt-2">{error}</p>
-                </div>
             )}
             {aiResult && (
               <div className="space-y-6 animate-in fade-in duration-500">
                 <Card className="bg-primary/5 border-primary/20">
                   <CardHeader className="text-center">
                     <CardTitle className="text-sm font-bold uppercase tracking-widest text-primary/80">Nota Final</CardTitle>
-                    <p className="text-6xl font-black text-primary">{aiResult.notaFinal}</p>
+                    <p className="text-6xl font-black text-primary italic">{aiResult.notaFinal}</p>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-center text-primary/90 font-medium">{aiResult.feedbackGeral}</p>
+                    <p className="text-sm text-center text-primary/90 font-medium italic">"{aiResult.feedbackGeral}"</p>
                   </CardContent>
                 </Card>
                 <div className="space-y-4">
                   {Object.entries(aiResult.analiseCompetencias).map(([key, value]) => (
-                    <details key={key} className="border p-3 rounded-lg bg-white" open={value.nota < 200}>
-                      <summary className="font-bold flex items-center justify-between cursor-pointer">
-                        <span>{key}</span>
-                        <Badge variant={value.nota === 200 ? "secondary" : "default"}>{value.nota} / 200</Badge>
+                    <details key={key} className="border p-3 rounded-lg bg-white group" open={value.nota < 200}>
+                      <summary className="font-bold flex items-center justify-between cursor-pointer list-none">
+                        <span className="text-primary italic">{key}</span>
+                        <Badge variant={value.nota === 200 ? "secondary" : "default"} className="font-black">
+                          {value.nota} / 200
+                        </Badge>
                       </summary>
-                      <p className="text-sm text-muted-foreground mt-2 pt-2 border-t">{value.analise}</p>
+                      <p className="text-sm text-muted-foreground mt-2 pt-2 border-t font-medium italic">{value.analise}</p>
                     </details>
                   ))}
                 </div>

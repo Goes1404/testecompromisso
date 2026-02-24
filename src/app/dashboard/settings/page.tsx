@@ -59,7 +59,6 @@ export default function SettingsPage() {
 
     setIsUpdating(true);
     try {
-      // Tenta atualizar o perfil. Se a coluna 'name' falhar, tentamos apenas o avatar_url como fallback
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -79,9 +78,7 @@ export default function SettingsPage() {
       console.error("Erro ao atualizar:", err);
       toast({
         title: "Erro na Atualização",
-        description: err.message.includes("column \"name\"") 
-          ? "A coluna 'name' não existe no banco. Execute o script SQL fornecido."
-          : err.message,
+        description: err.message,
         variant: "destructive"
       });
     } finally {
@@ -93,39 +90,58 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Validar tamanho (máx 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande", description: "O limite é 2MB.", variant: "destructive" });
+    // Aumentado para 10MB para maior flexibilidade do usuário
+    const MAX_SIZE = 10 * 1024 * 1024; 
+    if (file.size > MAX_SIZE) {
+      toast({ 
+        title: "Arquivo muito grande", 
+        description: "O novo limite é 10MB. Tente uma imagem mais leve.", 
+        variant: "destructive" 
+      });
       return;
     }
 
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`; // Salvando na raiz do bucket para simplificar
 
-      // 1. Upload para o Storage
+      // 1. Enviar para o Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          cacheControl: '3600',
+          upsert: true 
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        // Se der erro de bucket não encontrado ou permissão
+        if (uploadError.message.includes("not found") || uploadError.message.includes("bucket")) {
+          throw new Error("O bucket 'avatars' não foi encontrado. Crie-o no painel do Supabase e defina como 'Public'.");
+        }
+        throw uploadError;
+      }
 
-      // 2. Pegar URL pública
-      const { data: { publicUrl } } = supabase.storage
+      // 2. Pegar a URL pública (Certifique-se que o bucket é público no Supabase)
+      const { data } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
+      if (!data?.publicUrl) throw new Error("Falha ao gerar URL da imagem.");
+
       // 3. Atualizar estado local
-      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+      setFormData(prev => ({ ...prev, avatar_url: data.publicUrl }));
       
-      toast({ title: "Foto enviada!", description: "Clique em 'Gravar Alterações' para salvar definitivamente." });
+      toast({ 
+        title: "Foto processada! 📸", 
+        description: "Agora clique em 'Gravar Alterações' para salvar seu novo perfil." 
+      });
     } catch (err: any) {
       console.error("Erro upload:", err);
       toast({ 
-        title: "Erro no Upload", 
-        description: "Certifique-se de que o bucket 'avatars' existe e é público no Supabase Storage.", 
+        title: "Falha no Upload", 
+        description: err.message || "Verifique se o bucket 'avatars' existe e é público no Supabase Storage.", 
         variant: "destructive" 
       });
     } finally {
@@ -164,6 +180,7 @@ export default function SettingsPage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
                 className="absolute bottom-0 right-0 h-10 w-10 bg-accent rounded-full border-4 border-white flex items-center justify-center text-accent-foreground shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
+                title="Carregar da Galeria"
               >
                 {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
               </button>
@@ -181,7 +198,7 @@ export default function SettingsPage() {
             
             <div className="mt-6 p-4 rounded-2xl bg-muted/10 border-2 border-dashed border-muted/20">
               <p className="text-[10px] text-muted-foreground italic leading-relaxed">
-                Clique no ícone de câmera para carregar uma foto da sua galeria ou escolha um avatar abaixo.
+                Clique no ícone de câmera (limite 10MB) ou escolha um avatar abaixo.
               </p>
             </div>
           </Card>
@@ -193,7 +210,7 @@ export default function SettingsPage() {
                 Dica da Aurora
               </h4>
               <p className="text-xs font-medium italic opacity-80 leading-relaxed">
-                "Um perfil completo aumenta o engajamento nos fóruns e facilita a mentoria personalizada."
+                "Um perfil autêntico gera mais confiança nas mentorias e debates da rede."
               </p>
             </div>
             <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
@@ -262,7 +279,7 @@ export default function SettingsPage() {
                   
                   <p className="text-[9px] text-center text-muted-foreground uppercase font-bold tracking-widest flex items-center justify-center gap-2">
                     <AlertCircle className="h-3 w-3" /> 
-                    Certifique-se de ter rodado o script SQL no Supabase para evitar erros de coluna.
+                    Certifique-se de ter criado o bucket 'avatars' como Público no Supabase Storage.
                   </p>
                 </div>
               </form>

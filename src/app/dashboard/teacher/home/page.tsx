@@ -20,8 +20,11 @@ export default function TeacherHomePage() {
     setDiagLoading(true);
     try {
       const response = await fetch('/api/health');
+      
+      // Proteção contra respostas vazias ou erro 500
       if (!response.ok) {
-        throw new Error('Falha na resposta do diagnóstico.');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Falha na resposta do diagnóstico.');
       }
       
       const data = await response.json();
@@ -40,9 +43,10 @@ export default function TeacherHomePage() {
         });
       }
     } catch (err: any) {
+      console.error("Erro diagnóstico:", err);
       toast({ 
         title: "Erro de Comunicação", 
-        description: "Não foi possível contatar a API de diagnóstico ou o JSON retornou vazio.", 
+        description: "Não foi possível contatar a API de diagnóstico ou o servidor retornou um erro.", 
         variant: "destructive" 
       });
     } finally {
