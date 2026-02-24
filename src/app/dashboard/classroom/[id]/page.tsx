@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ChevronLeft, 
@@ -27,11 +27,9 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 
-let apiLoaded = false;
-
 export default function ClassroomPage() {
   const params = useParams();
-  const trailId = params.id as string;
+  const trailId = params?.id as string;
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -45,12 +43,14 @@ export default function ClassroomPage() {
   
   const [videoProgress, setVideoProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isApiReady, setIsApiReady] = useState(false);
   
   const playerRef = useRef<any>(null);
   const progressInterval = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const loadTrailData = useCallback(async () => {
+    if (!trailId) return;
     try {
       setLoading(true);
       
@@ -97,7 +97,7 @@ export default function ClassroomPage() {
 
   const updateServerProgress = useCallback(async (percentage: number) => {
     const completed = percentage >= 80;
-    if (completed && !isCompleted && user) {
+    if (completed && !isCompleted && user && trailId) {
       setIsCompleted(true);
       await supabase.from('user_progress').upsert({
         user_id: user.id,
@@ -112,10 +112,10 @@ export default function ClassroomPage() {
     }
   }, [isCompleted, toast, user, trailId]);
 
-  const onPlayerStateChange = (event: any) => {
+  const onPlayerStateChange = useCallback((event: any) => {
     if (event.data === 1) { // PLAYING
       progressInterval.current = setInterval(() => {
-        if (playerRef.current && playerRef.current.getDuration) {
+        if (playerRef.current && typeof playerRef.current.getDuration === 'function') {
           const currentTime = playerRef.current.getCurrentTime();
           const duration = playerRef.current.getDuration();
           if (duration > 0) {
@@ -126,24 +126,46 @@ export default function ClassroomPage() {
         }
       }, 5000); 
     } else {
-      clearInterval(progressInterval.current);
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
     }
-  };
+  }, [updateServerProgress]);
 
   useEffect(() => {
-    if (!apiLoaded) {
-      const tag = document.createElement('script');
-      tag.src = "https://www.youtube.com/iframe_api";
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-      apiLoaded = true;
-    }
+    // Carregamento resiliente da API do YouTube
+    const loadYoutubeApi = () => {
+      if (!(window as any).YT) {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+        
+        (window as any).onYouTubeIframeAPIReady = () => {
+          setIsApiReady(true);
+        };
+      } else if ((window as any).YT && (window as any).YT.Player) {
+        setIsApiReady(true);
+      }
+    };
+
+    loadYoutubeApi();
+
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      if (playerRef.current) {
+        try { playerRef.current.destroy(); } catch (e) {}
+      }
+    };
   }, []);
 
   const activeContent = contents[activeModuleId || ""]?.find(c => c.id === activeContentId);
 
   useEffect(() => {
-    if (activeContent?.type === 'video' && (window as any).YT) {
+    if (activeContent?.type === 'video' && isApiReady) {
+      const playerElement = document.getElementById('youtube-player');
+      if (!playerElement) return;
+
       if (playerRef.current) {
         try { playerRef.current.destroy(); } catch (e) {}
       }
@@ -155,17 +177,23 @@ export default function ClassroomPage() {
       else if (vidUrl.includes('youtu.be/')) vidId = vidUrl.split('youtu.be/')[1].split('?')[0];
       else vidId = vidUrl;
 
-      playerRef.current = new (window as any).YT.Player('youtube-player', {
-        videoId: vidId,
-        playerVars: { 'autoplay': 0, 'modestbranding': 1, 'rel': 0 },
-        events: {
-          'onStateChange': onPlayerStateChange
+      if (vidId) {
+        try {
+          playerRef.current = new (window as any).YT.Player('youtube-player', {
+            videoId: vidId,
+            playerVars: { 'autoplay': 0, 'modestbranding': 1, 'rel': 0 },
+            events: {
+              'onStateChange': onPlayerStateChange
+            }
+          });
+        } catch (e) {
+          console.error("Falha ao instanciar player:", e);
         }
-      });
+      }
     } else {
-      if (activeContent) setVideoProgress(100);
+      if (activeContent && activeContent.type !== 'video') setVideoProgress(100);
     }
-  }, [activeContentId, activeContent]);
+  }, [activeContentId, activeContent, isApiReady, onPlayerStateChange]);
 
   if (loading) return (
     <div className="flex flex-col h-screen items-center justify-center gap-4 bg-background">

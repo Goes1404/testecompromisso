@@ -81,14 +81,15 @@ export default function LearningTrailsPage() {
   }, [user]);
 
   const filteredTrails = useMemo(() => {
+    if (!Array.isArray(dbTrails)) return [];
     return dbTrails.filter(trail => {
-      const trailTitle = (trail.title || '').toLowerCase();
-      const trailCategory = (trail.category || '').toLowerCase();
+      const trailTitle = (trail?.title || '').toLowerCase();
+      const trailCategory = (trail?.category || '').toLowerCase();
       const query = searchTerm.toLowerCase();
       
       const matchesSearch = trailTitle.includes(query) || trailCategory.includes(query);
-      const matchesCategory = activeCategory === "Todos" || trail.category === activeCategory;
-      const matchesAudience = activeAudience === "all" || trail.target_audience === activeAudience || trail.target_audience === "both" || !trail.target_audience;
+      const matchesCategory = activeCategory === "Todos" || trail?.category === activeCategory;
+      const matchesAudience = activeAudience === "all" || trail?.target_audience === activeAudience || trail?.target_audience === "both" || !trail?.target_audience;
       
       return matchesSearch && matchesCategory && matchesAudience;
     });
