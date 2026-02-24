@@ -85,7 +85,13 @@ export default function QuestionBankPage() {
 
             const { error } = await supabase.from('questions').insert([payload]);
 
-            if (error) throw error;
+            if (error) {
+                // Erro específico de RLS
+                if (error.message.includes("row-level security")) {
+                    throw new Error("Erro de Permissão (RLS): Certifique-se de executar o script SQL de políticas no Supabase.");
+                }
+                throw error;
+            }
 
             toast({ title: "Questão Salva! ✅", description: "Item adicionado ao banco oficial." });
             
@@ -97,7 +103,7 @@ export default function QuestionBankPage() {
             console.error("Erro Supabase Insert:", e);
             toast({ 
                 title: "Falha ao Gravar", 
-                description: e.message || "Verifique se a tabela 'questions' existe no seu Supabase.", 
+                description: e.message || "Verifique a conexão ou as permissões do banco.", 
                 variant: "destructive" 
             });
         } finally {

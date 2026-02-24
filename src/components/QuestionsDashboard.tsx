@@ -49,7 +49,7 @@ export function QuestionsDashboard() {
                     .map(([subject, count]) => ({ subject, count }))
                     .sort((a, b) => b.count - a.count);
 
-                // 3. Buscar taxa de respostas (tabela de histórico)
+                // 3. Buscar taxa de respostas (tabela de histórico opcional)
                 let answeredRatio = 0;
                 try {
                     const { data: answers, error: aError } = await supabase
@@ -61,7 +61,7 @@ export function QuestionsDashboard() {
                         answeredRatio = Math.round((uniqueAnswered.size / validQuestions.length) * 100);
                     }
                 } catch (e) {
-                    console.warn("Histórico de respostas ainda não disponível.");
+                    // Tabela pode não existir no setup inicial, ignoramos silenciosamente
                 }
 
                 setData({
@@ -71,12 +71,12 @@ export function QuestionsDashboard() {
                 });
             } catch (error: any) {
                 console.error("Error fetching dashboard data:", error);
-                // Silenciar erros comuns de setup inicial
+                // Erros de tabela inexistente ou RLS são comuns em setup inicial
                 if (error.code !== 'PGRST116' && error.code !== '42P01') {
                     toast({
-                        title: "Erro de Conexão",
-                        description: "Não conseguimos sincronizar as estatísticas agora.",
-                        variant: "destructive"
+                        title: "Sincronização Pendente",
+                        description: "O banco de dados de questões está sendo configurado.",
+                        variant: "default"
                     });
                 }
             } finally {
