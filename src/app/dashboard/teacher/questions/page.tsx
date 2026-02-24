@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,6 +12,7 @@ import { Loader2, FilePlus, CheckCircle, ListChecks, PlusCircle, Trash2 } from '
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
 import { QuestionsList } from '@/components/QuestionsList';
 import { createClient } from '@/app/lib/supabase';
+import { useAuth } from '@/lib/AuthProvider';
 import {
     Select,
     SelectContent,
@@ -21,6 +23,7 @@ import {
 
 export default function QuestionBankPage() {
     const { toast } = useToast();
+    const { user } = useAuth();
     const supabase = createClient();
 
     const [entryMode, setEntryMode] = useState<'bulk' | 'manual'>('bulk');
@@ -61,27 +64,33 @@ export default function QuestionBankPage() {
             toast({ title: "Matéria não Selecionada", description: "Selecione a matéria para organizar o banco.", variant: "destructive" });
             return;
         }
-        if (!manualOptions.A.trim() || !manualOptions.B.trim()) {
+        
+        const optionsArray = Object.entries(manualOptions)
+            .filter(([_, text]) => text.trim() !== '')
+            .map(([letter, text]) => ({ letter, text }));
+
+        if (optionsArray.length < 2) {
             toast({ title: "Opções Incompletas", description: "Preencha pelo menos as opções A e B.", variant: "destructive" });
             return;
         }
 
         setIsSaving(true);
         try {
-            // Mapeia apenas as opções que têm texto
-            const optionsArray = Object.entries(manualOptions)
-                .filter(([_, text]) => text.trim() !== '')
-                .map(([letter, text]) => ({ letter, text }));
-
-            const { error } = await supabase.from('questions').insert({
+            const payload = {
                 question_text: manualQuestion.question_text.trim(),
                 year: parseInt(manualQuestion.year) || new Date().getFullYear(),
                 subject_id: manualQuestion.subject_id,
                 correct_answer: manualQuestion.correct_answer,
-                options: optionsArray
-            });
+                options: optionsArray,
+                teacher_id: user?.id
+            };
 
-            if (error) throw error;
+            const { error } = await supabase.from('questions').insert(payload);
+
+            if (error) {
+                console.error("Erro Supabase Detalhado:", error);
+                throw error;
+            }
 
             toast({ 
                 title: "Questão Salva! ✅", 
@@ -97,10 +106,10 @@ export default function QuestionBankPage() {
             setManualOptions({ A: '', B: '', C: '', D: '', E: '' });
 
         } catch (e: any) {
-            console.error("Erro Supabase:", e);
+            console.error("Falha na Persistência:", e);
             toast({ 
                 title: "Falha na Persistência", 
-                description: e.message || "Erro desconhecido ao salvar no banco.", 
+                description: e.message || e.details || "Certifique-se de que as tabelas 'subjects' e 'questions' existem no Supabase.", 
                 variant: "destructive" 
             });
         } finally {
