@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -16,7 +15,6 @@ import {
   Signal,
   Sparkles,
   ExternalLink,
-  Video,
   Users,
   Bot,
   MonitorPlay,
@@ -26,6 +24,9 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * Portal de Acesso à Mentoria - Visão do Aluno
+ */
 export default function StudentLivePage() {
   const params = useParams();
   const liveId = params?.id as string;
@@ -130,7 +131,7 @@ export default function StudentLivePage() {
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center gap-4 bg-background">
       <Loader2 className="animate-spin h-12 w-12 text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Sintonizando com o Satélite...</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse text-primary">Sintonizando Satélite...</p>
     </div>
   );
 
@@ -163,19 +164,19 @@ export default function StudentLivePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
-        {/* Lado Esquerdo: Transmissão / Portal */}
+        {/* Lado Esquerdo: Portal de Transmissão */}
         <div className="lg:col-span-8 flex flex-col gap-4 min-h-0 overflow-hidden">
           <Card className="flex-1 bg-slate-950 rounded-[2.5rem] overflow-hidden shadow-2xl border-none relative flex items-center justify-center group">
             <div className="w-full h-full relative flex flex-col items-center justify-center p-8 text-center gap-8 bg-gradient-to-br from-slate-900 via-black to-slate-900">
-               {/* Decorações Visuais */}
+               {/* Sinais de Status */}
                <div className="absolute top-6 left-6 flex items-center gap-2">
                   <div className={`h-2 w-2 rounded-full ${isLive ? 'bg-red-600 animate-ping' : 'bg-slate-600'}`} />
                   <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
-                    {isLive ? 'Sinal de Transmissão Ativo' : 'Aguardando Início'}
+                    {isLive ? 'Transmissão em Curso' : 'Aguardando o Mentor'}
                   </span>
                </div>
 
-               {/* Ícone de Vídeo / Portal */}
+               {/* Central Visual */}
                <div className={`h-32 w-32 md:h-56 md:w-56 rounded-full bg-accent/5 border-4 ${isLive ? 'border-accent/40 shadow-[0_0_80px_rgba(245,158,11,0.2)]' : 'border-white/5'} flex items-center justify-center relative transition-all duration-700`}>
                   <MonitorPlay className={`h-16 w-16 md:h-28 md:w-28 ${isLive ? 'text-accent' : 'text-white/10'} transition-colors`} />
                   {isLive && (
@@ -185,7 +186,7 @@ export default function StudentLivePage() {
                   )}
                </div>
                
-               {/* Call to Action */}
+               {/* Call to Action Central */}
                <div className="space-y-6 max-w-md">
                   <div className="space-y-2">
                     <h3 className="text-xl md:text-4xl font-black text-white italic leading-none uppercase tracking-tighter">
@@ -193,8 +194,8 @@ export default function StudentLivePage() {
                     </h3>
                     <p className="text-xs md:text-sm text-slate-400 font-medium italic">
                       {isLive 
-                        ? "O mentor está online! Clique abaixo para ingressar na videoconferência externa segura."
-                        : "Esta aula está agendada. O botão de acesso será liberado assim que o mentor iniciar a sessão."}
+                        ? "O mentor iniciou a aula! Clique abaixo para ingressar no ambiente seguro do Google Meet."
+                        : "Esta aula está agendada. O link de acesso será habilitado assim que o mentor entrar na sala."}
                     </p>
                   </div>
                   
@@ -203,18 +204,18 @@ export default function StudentLivePage() {
                       <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90 font-black h-16 md:h-20 px-12 rounded-2xl shadow-[0_20px_50px_rgba(245,158,11,0.3)] transition-all hover:scale-105 active:scale-95 group relative overflow-hidden border-none">
                         <a href={live.meeting_url} target="_blank" rel="noopener noreferrer">
                           <span className="relative z-10 flex items-center gap-4 text-sm md:text-xl">
-                            ENTRAR NA SALA AGORA
+                            ACESSAR SALA DO GOOGLE MEET
                             <ExternalLink className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
                           </span>
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                         </a>
                       </Button>
-                      <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Ambiente Externo Seguro (Google Meet)</p>
+                      <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Conexão Externa Criptografada</p>
                     </div>
                   ) : (
                     <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm">
                       <p className="text-xs font-bold text-slate-500 italic">
-                        O link da sala será disponibilizado pelo mentor aqui. Fique atento!
+                        O mentor ainda não disponibilizou o link da sala. Fique atento ao chat!
                       </p>
                     </div>
                   )}
@@ -222,7 +223,7 @@ export default function StudentLivePage() {
             </div>
           </Card>
           
-          {/* Pauta da Aula */}
+          {/* Pauta da Aula (Desktop) */}
           <Card className="bg-white rounded-[2.5rem] shadow-xl p-8 border-none hidden md:block shrink-0 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-6 opacity-5">
               <Sparkles className="h-20 w-20 text-primary" />
@@ -231,24 +232,24 @@ export default function StudentLivePage() {
               <div className="h-8 w-8 rounded-xl bg-primary/5 flex items-center justify-center">
                 <Users className="h-4 w-4 text-primary" />
               </div>
-              <h2 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em]">Pauta da Sessão</h2>
+              <h2 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em]">Pauta da Mentoria</h2>
             </div>
             <p className="text-sm font-medium italic text-primary/80 leading-relaxed max-w-2xl">
-              {live?.description || "Esta é uma sessão de apoio pedagógico exclusiva da rede Compromisso. Aproveite para tirar dúvidas técnicas e pedagógicas em tempo real com seu mentor."}
+              {live?.description || "Esta sessão de apoio pedagógico é focada na resolução de dúvidas e aprofundamento técnico. Use o chat lateral para interagir."}
             </p>
           </Card>
         </div>
 
-        {/* Lado Direito: Chat em Tempo Real */}
+        {/* Lado Direito: Chat de Interatividade */}
         <Card className="lg:col-span-4 border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden flex flex-col min-h-0">
           <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
                 <MessageCircle className="h-4 w-4 text-accent" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Interatividade</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Chat da Aula</span>
             </div>
-            <Badge className="bg-primary/5 text-primary text-[8px] font-black border-none px-2 py-1">LIVE CHAT</Badge>
+            <Badge className="bg-primary/5 text-primary text-[8px] font-black border-none px-2 py-1">REAL-TIME</Badge>
           </div>
 
           <ScrollArea className="flex-1 p-6" ref={scrollRef}>
@@ -256,7 +257,7 @@ export default function StudentLivePage() {
               {messages.length === 0 ? (
                 <div className="py-20 text-center opacity-20 flex flex-col items-center gap-3">
                   <Bot className="h-8 w-8 text-primary" />
-                  <p className="font-black italic text-[10px] uppercase">Aguardando as primeiras dúvidas...</p>
+                  <p className="font-black italic text-[10px] uppercase">Seja o primeiro a perguntar!</p>
                 </div>
               ) : (
                 messages.map((msg) => {
@@ -269,13 +270,13 @@ export default function StudentLivePage() {
                         <span className={`text-[8px] font-black uppercase tracking-widest ${isMentor ? 'text-accent' : 'text-primary/40'}`}>
                           {msg.user_name}
                         </span>
-                        {msg.is_answered && <Badge className="bg-green-100 text-green-700 text-[6px] h-3 px-1 border-none font-black">RESPONDIDO</Badge>}
+                        {msg.is_answered && <Badge className="bg-green-100 text-green-700 text-[6px] h-3 px-1 border-none font-black">LIDO</Badge>}
                       </div>
                       <div className={`px-4 py-3 rounded-[1.5rem] text-xs font-medium shadow-sm border transition-all ${
                         isMe 
                           ? 'bg-primary text-white rounded-tr-none border-primary/5' 
                           : isMentor
-                            ? 'bg-accent/10 text-primary border-accent/20 rounded-tl-none ring-2 ring-accent/5'
+                            ? 'bg-accent/10 text-primary border-accent/20 rounded-tl-none'
                             : msg.is_question 
                               ? 'bg-blue-50 text-blue-900 border-blue-100 rounded-tl-none' 
                               : 'bg-muted/30 text-primary rounded-tl-none border-muted/10'
@@ -294,10 +295,10 @@ export default function StudentLivePage() {
               <Input 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Enviar pergunta para o mentor..."
+                placeholder="Tirar dúvida com o mentor..."
                 className="flex-1 h-10 bg-transparent border-none text-primary font-medium italic focus-visible:ring-0 px-0 text-xs"
               />
-              <Button type="submit" disabled={!input.trim()} className="h-10 w-10 bg-primary hover:bg-primary/95 text-white rounded-full shrink-0 shadow-lg transition-transform active:scale-90 flex items-center justify-center border-none">
+              <Button type="submit" disabled={!input.trim()} className="h-10 w-10 bg-primary hover:bg-primary/95 text-white rounded-full shrink-0 shadow-lg flex items-center justify-center border-none">
                 <Send className="h-4 w-4" />
               </Button>
             </form>
