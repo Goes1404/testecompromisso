@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FilePlus, CheckCircle, ListChecks, PlusCircle, AlertCircle, FlaskConical, Sparkles } from 'lucide-react';
+import { Loader2, FilePlus, CheckCircle, ListChecks, PlusCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
 import { QuestionsList } from '@/components/QuestionsList';
 import { createClient, isSupabaseConfigured } from '@/app/lib/supabase';
@@ -30,7 +30,6 @@ export default function QuestionBankPage() {
     const [isSeeding, setIsSeeding] = useState(false);
     const [subjects, setSubjects] = useState<any[]>([]);
     const [rawText, setRawText] = useState('');
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
     
     const [manualQuestion, setManualQuestion] = useState({ 
         question_text: '', 
@@ -81,7 +80,6 @@ export default function QuestionBankPage() {
         }
 
         setIsSaving(true);
-        // Usamos uma instância local para evitar o erro de AbortError de concorrência
         const supabase = createClient();
 
         try {
@@ -96,7 +94,12 @@ export default function QuestionBankPage() {
 
             const { error } = await supabase.from('questions').insert([payload]);
 
-            if (error) throw error;
+            if (error) {
+                if (error.message.includes("correct_answer")) {
+                    throw new Error("Erro de Coluna: Vá ao SQL Editor do Supabase e rode o script de atualização de cache.");
+                }
+                throw error;
+            }
 
             toast({ title: "Questão Salva! ✅", description: "Item adicionado ao banco oficial." });
             
@@ -107,7 +110,7 @@ export default function QuestionBankPage() {
             console.error("Erro Supabase Insert:", e);
             toast({ 
                 title: "Falha na Persistência", 
-                description: e.message || "Tente novamente ou execute o SQL de cache de esquema.", 
+                description: e.message || "Tente novamente ou verifique as políticas RLS.", 
                 variant: "destructive" 
             });
         } finally {
@@ -116,7 +119,10 @@ export default function QuestionBankPage() {
     };
 
     const handleSeedExample = async () => {
-        if (!user || subjects.length === 0) return;
+        if (!user || subjects.length === 0) {
+            toast({ title: "Aguarde...", description: "As matérias ainda estão sendo carregadas." });
+            return;
+        }
 
         setIsSeeding(true);
         const supabase = createClient();
@@ -140,7 +146,7 @@ export default function QuestionBankPage() {
             if (error) throw error;
 
             toast({ title: "Exemplo Adicionado! 🧬", description: "Uma questão de biologia foi criada para teste." });
-            setTimeout(() => window.location.reload(), 1000);
+            setTimeout(() => window.location.reload(), 800);
         } catch (e: any) {
             toast({ title: "Erro no Teste", description: e.message, variant: "destructive" });
         } finally {

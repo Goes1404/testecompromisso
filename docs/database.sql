@@ -1,43 +1,35 @@
 
--- ==========================================================
--- COMPROMISSO | SMART EDUCATION - MASTER DATABASE SCHEMA
--- Versão: 2.1.0 (Industrial & Non-Destructive)
--- Este script configura toda a estrutura necessária para o 
--- funcionamento do Banco de Questões, Simulados, Chat e Trilhas.
--- ==========================================================
+-- 📋 SCRIPT MESTRE DE CONFIGURAÇÃO - COMPROMISSO | EDUCORI 360
+-- Versão: 3.0.0 (Sincronização de Banco de Questões e Simulados)
+-- Data: Agosto/2024
 
--- 1. TABELA DE MATÉRIAS (Subjects)
+-- 1. TABELA DE MATÉRIAS
 CREATE TABLE IF NOT EXISTS public.subjects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- 2. TABELA DE QUESTÕES (Questions)
+-- 2. TABELA DE QUESTÕES (RESILIENTE)
 CREATE TABLE IF NOT EXISTS public.questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     question_text TEXT NOT NULL,
     year INTEGER,
     subject_id UUID REFERENCES public.subjects(id) ON DELETE CASCADE,
-    correct_answer TEXT NOT NULL, -- A, B, C, D ou E
-    options JSONB NOT NULL,        -- Array de objetos {letter, text}
+    correct_answer TEXT NOT NULL DEFAULT 'A',
+    options JSONB NOT NULL DEFAULT '[]'::jsonb,
     teacher_id UUID REFERENCES auth.users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- 3. TABELA DE PERFIS (Profiles)
--- Caso não exista ou precise de colunas novas
-ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS is_financial_aid_eligible BOOLEAN DEFAULT false;
-ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS name_changes_count INTEGER DEFAULT 0;
-
--- 4. SEED DE MATÉRIAS BASE
+-- 3. INSERIR MATÉRIAS BASE
 INSERT INTO public.subjects (name) VALUES 
-('Matemática'), ('Física'), ('Química'), ('Biologia'), ('Português'), ('História'), ('Geografia'), ('Linguagens')
+('Matemática'), ('Física'), ('Química'), ('Biologia'), ('Português'), ('História'), ('Geografia'), ('Atualidades')
 ON CONFLICT (name) DO NOTHING;
 
--- 5. FUNÇÕES RPC PARA SIMULADOS (Server-Side Logic)
+-- 4. FUNÇÕES PARA O MOTOR DE SIMULADO (RPC)
 
--- 5.1. Contador de questões por matéria
+-- A. Contador de questões por matéria
 CREATE OR REPLACE FUNCTION get_subjects_with_question_count()
 RETURNS TABLE (id UUID, name TEXT, question_count BIGINT) AS $$
 BEGIN
@@ -50,7 +42,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 5.2. Sorteio de questões aleatórias (O coração do Simulado)
+-- B. Sorteador aleatório de questões (Injeção de JSON para compatibilidade Next.js)
 CREATE OR REPLACE FUNCTION get_random_questions_for_subject(p_subject_id UUID, p_limit INTEGER)
 RETURNS TABLE (
     id UUID, 
@@ -77,20 +69,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 6. POLÍTICAS DE SEGURANÇA (RLS)
+-- 5. POLÍTICAS DE SEGURANÇA (RLS)
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
 
--- Permissões para Subjects
-DROP POLICY IF EXISTS "Acesso leitura authenticated" ON public.subjects;
-CREATE POLICY "Acesso leitura authenticated" ON public.subjects FOR SELECT TO authenticated USING (true);
+-- Permissões para MATÉRIAS
+DROP POLICY IF EXISTS "Leitura pública matérias" ON public.subjects;
+CREATE POLICY "Leitura pública matérias" ON public.subjects FOR SELECT TO authenticated USING (true);
 
--- Permissões para Questions
+-- Permissões para QUESTÕES
+DROP POLICY IF EXISTS "Leitura pública questões" ON public.questions;
+CREATE POLICY "Leitura pública questões" ON public.questions FOR SELECT TO authenticated USING (true);
+
 DROP POLICY IF EXISTS "Professores inserem questões" ON public.questions;
 CREATE POLICY "Professores inserem questões" ON public.questions FOR INSERT TO authenticated WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Leitura de questões para simulados" ON public.questions;
-CREATE POLICY "Leitura de questões para simulados" ON public.questions FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Professores atualizam questões" ON public.questions;
+CREATE POLICY "Professores atualizam questões" ON public.questions FOR UPDATE TO authenticated USING (true);
 
--- 7. REFRESH DE CACHE (Importante para evitar o erro de cache de esquema)
+-- 6. LIMPEZA DE CACHE DO ESQUEMA
 NOTIFY pgrst, 'reload schema';
+
+COMMENT ON TABLE public.questions IS 'Repositório mestre de questões para simulados estilo ENEM/Vestibular.';

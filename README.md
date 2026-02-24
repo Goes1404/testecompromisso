@@ -16,12 +16,12 @@ O projeto está **estável e sincronizado**. Todas as funcionalidades de Banco d
 Para garantir que todas as tabelas e funções RPC funcionem corretamente, **é obrigatório** executar o script SQL mestre:
 
 1.  Acesse o seu painel do **Supabase**.
-2.  Vá em **SQL Editor**.
+2.  Vá em **SQL Editor** no menu lateral esquerdo.
 3.  Clique em **"New Query"**.
 4.  Copie o conteúdo do arquivo `docs/database.sql` do projeto.
 5.  Clique em **"Run"**.
 
-Isso resolverá erros de "coluna não encontrada" ou "permissão negada" (RLS).
+Isso resolverá erros de "coluna não encontrada", "AbortError" ou problemas no sorteio de questões do simulado.
 
 ---
 
@@ -42,18 +42,18 @@ Utilize os botões de atalho na página de Login para acessar como Aluno, Mentor
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades Principais
 
-- **Banco de Questões**: Cadastro manual ou sugestão por IA Aurora.
-- **Simulados Inteligentes**: Sorteio randômico por matéria via funções PostgreSQL (RPC).
-- **Trilhas de Estudo**: Caminhos pedagógicos com vídeos, PDFs e atividades.
-- **Centro de Transmissões**: Integração com Google Meet e Studio Master.
-- **Comunidade Ativa**: Fóruns e Chat Direto com Mentores.
+- **Banco de Questões**: Cadastro manual ou sugestão por IA Aurora com suporte a JSONB.
+- **Simulados Inteligentes**: Sorteio randômico por matéria via funções PostgreSQL (RPC) otimizadas.
+- **Trilhas de Estudo**: Caminhos pedagógicos com vídeos, PDFs e atividades práticas.
+- **Centro de Transmissões**: Integração industrial com Google Meet e Studio Master.
+- **Comunidade Ativa**: Fóruns em tempo real e Chat Direto com Mentores.
 
 ---
 
 ## 🛠️ Arquitetura
-- **Next.js 15**: App Router e Server Components.
-- **Tailwind & Shadcn UI**: Design industrial de alta fidelidade.
-- **Supabase**: Auth, PostgreSQL e Realtime.
-- **Genkit**: Engine de IA para suporte pedagógico.
+- **Next.js 15**: App Router, Server Components e React 19 hooks.
+- **Tailwind & Shadcn UI**: Design industrial de alta fidelidade e pixels precisos.
+- **Supabase**: Auth, PostgreSQL, Realtime e RLS dinâmico.
+- **Genkit**: Engine de IA para suporte pedagógico e correções de redação.
