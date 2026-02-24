@@ -28,20 +28,54 @@ export function QuestionsDashboard() {
         const fetchDashboardData = async () => {
             setIsLoading(true);
             try {
-                const { data: functionData, error } = await supabase.functions.invoke('get-question-analytics');
+                // 1. Buscar total de questões e dados para agrupamento
+                const { data: questions, error: qError } = await supabase
+                    .from('questions')
+                    .select('id, subject_id, subjects(name)');
                 
-                if (error) {
-                    throw error;
+                if (qError) throw qError;
+
+                // 2. Processar agrupamento por matéria no cliente para máxima estabilidade
+                const subjectCounts: Record<string, number> = {};
+                (questions || []).forEach(q => {
+                    const name = (q.subjects as any)?.name || 'Sem Categoria';
+                    subjectCounts[name] = (subjectCounts[name] || 0) + 1;
+                });
+
+                const questionsBySubject = Object.entries(subjectCounts)
+                    .map(([subject, count]) => ({ subject, count }))
+                    .sort((a, b) => b.count - a.count);
+
+                // 3. Buscar taxa de respostas (tabela de histórico)
+                let answeredRatio = 0;
+                try {
+                    const { data: answers, error: aError } = await supabase
+                        .from('student_question_answers')
+                        .select('question_id');
+                    
+                    if (!aError && questions && questions.length > 0 && answers) {
+                        const uniqueAnswered = new Set(answers.map(a => a.question_id));
+                        answeredRatio = Math.round((uniqueAnswered.size / questions.length) * 100);
+                    }
+                } catch (e) {
+                    console.warn("Histórico de respostas ainda não disponível.");
                 }
 
-                setData(functionData);
+                setData({
+                    totalQuestions: questions?.length || 0,
+                    questionsBySubject,
+                    answeredRatio
+                });
             } catch (error: any) {
                 console.error("Error fetching dashboard data:", error);
-                toast({
-                    title: "Erro ao Carregar Dashboard",
-                    description: "Não foi possível buscar os dados de análise. Tente recarregar a página.",
-                    variant: "destructive"
-                });
+                // Silenciar erros de tabela não encontrada durante o setup inicial
+                if (error.code !== 'PGRST116' && error.code !== '42P01') {
+                    toast({
+                        title: "Erro ao Carregar Dashboard",
+                        description: "Certifique-se de que as tabelas de questões foram criadas.",
+                        variant: "destructive"
+                    });
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -54,78 +88,88 @@ export function QuestionsDashboard() {
         return <DashboardSkeleton />;
     }
 
-    if (!data) {
-        return <div className='text-center text-muted-foreground'>Não foi possível carregar os dados do dashboard.</div>;
+    if (!data || data.totalQuestions === 0) {
+        return (
+            <div className="py-16 text-center border-4 border-dashed rounded-[3rem] bg-white/50 animate-in fade-in duration-700">
+                <FileQuestion className="h-12 w-12 mx-auto mb-4 text-primary/20" />
+                <h3 className="text-xl font-black text-primary italic">Banco de Dados em Branco</h3>
+                <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto">Alimente o banco com questões manuais ou em massa para habilitar os gráficos de performance.</p>
+            </div>
+        );
     }
 
   return (
-    <div className="space-y-6 mb-10">
-        <h2 className="text-2xl font-black text-primary italic">Visão Geral do Banco</h2>
+    <div className="space-y-6 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <h2 className="text-2xl font-black text-primary italic px-2">Análise Industrial do Banco</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium opacity-70">Total de Questões</CardTitle>
-                    <FileQuestion className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Volume Total</CardTitle>
+                    <div className="p-2 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <FileQuestion className="h-4 w-4" />
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-5xl font-bold text-primary">{data.totalQuestions}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Questões disponíveis para os alunos</p>
+                    <div className="text-5xl font-black text-primary italic">{data.totalQuestions}</div>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-2">ITENS NO REPOSITÓRIO</p>
                 </CardContent>
             </Card>
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium opacity-70">Taxa de Respostas</CardTitle>
-                    <Percent className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Exploração de Rede</CardTitle>
+                    <div className="p-2 rounded-xl bg-accent/5 text-accent group-hover:bg-accent group-hover:text-white transition-colors">
+                        <Percent className="h-4 w-4" />
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-5xl font-bold text-primary">{data.answeredRatio}%</div>
-                    <p className="text-xs text-muted-foreground mt-1">Das questões já foram respondidas alguma vez</p>
+                    <div className="text-5xl font-black text-accent italic">{data.answeredRatio}%</div>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-2">TAXA DE COBERTURA</p>
                 </CardContent>
             </Card>
         </div>
 
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
-            <CardHeader>
-                <CardTitle className="text-xl font-bold text-primary">Distribuição por Matéria</CardTitle>
+        <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
+            <CardHeader className="p-8 pb-0">
+                <CardTitle className="text-lg font-black text-primary italic">Distribuição Geográfica de Matérias</CardTitle>
             </CardHeader>
-            <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={data.questionsBySubject} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                        <XAxis dataKey="subject" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                        <Tooltip 
-                            contentStyle={{ 
-                                backgroundColor: 'rgba(255, 255, 255, 0.8)', 
-                                backdropFilter: 'blur(5px)',
-                                border: '1px solid #E0E0E0',
-                                borderRadius: '1rem',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                            }}
-                        />
-                        <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} background={{ fill: '#eee', radius: 4 }}>
-                            {data.questionsBySubject.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
+            <CardContent className="p-8">
+                <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={data.questionsBySubject} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                            <XAxis dataKey="subject" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                            <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                            <Tooltip 
+                                cursor={{fill: '#f8fafc'}}
+                                contentStyle={{ 
+                                    backgroundColor: 'white', 
+                                    border: 'none',
+                                    borderRadius: '1.5rem',
+                                    boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+                                }}
+                            />
+                            <Bar dataKey="count" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} barSize={40}>
+                                {data.questionsBySubject.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
             </CardContent>
         </Card>
     </div>
   );
 }
 
-// Skeleton component for loading state
 function DashboardSkeleton() {
     return (
         <div className="space-y-6 mb-10 animate-pulse">
-            <Skeleton className="h-8 w-1/3" />
+            <Skeleton className="h-8 w-48 rounded-lg" />
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Skeleton className="h-36 rounded-[2.5rem]" />
-                <Skeleton className="h-36 rounded-[2.5rem]" />
-                <Skeleton className="h-36 rounded-[2.5rem] lg:col-span-1" />
+                <Skeleton className="h-40 rounded-[2.5rem]" />
+                <Skeleton className="h-40 rounded-[2.5rem]" />
             </div>
-            <Skeleton className="h-80 rounded-[2.5rem]" />
+            <Skeleton className="h-[400px] rounded-[2.5rem]" />
         </div>
     );
 }
