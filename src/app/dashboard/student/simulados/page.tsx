@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 const SIMULATION_SIZE = 10;
 
@@ -36,6 +37,7 @@ type Answer = {
 
 export default function SimuladoPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const [gameState, setGameState] = useState<'loading_subjects' | 'idle' | 'loading_questions' | 'active' | 'finished' | 'error'>('loading_subjects');
   const [subjects, setSubjects] = useState<SubjectWithCount[]>([]);
@@ -52,26 +54,23 @@ export default function SimuladoPage() {
 
     setGameState('loading_subjects');
     try {
-      // Tenta usar a RPC (função do banco)
       const { data, error } = await supabase.rpc('get_subjects_with_question_count');
       
       if (error) {
-        console.warn('RPC get_subjects_with_question_count não encontrada, usando fallback de tabela simples.');
-        // Fallback: Busca matérias direto da tabela se a RPC falhar
+        console.warn('RPC get_subjects_with_question_count não encontrada, usando fallback.');
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('subjects')
           .select('id, name')
           .order('name');
         
         if (fallbackError) throw fallbackError;
-        
         setSubjects(fallbackData?.map(s => ({ id: s.id, name: s.name, question_count: 0 })) || []);
       } else {
         setSubjects(data || []);
       }
       setGameState('idle');
     } catch (e: any) {
-      console.error('Erro crítico ao buscar matérias:', e.message || e);
+      console.error('Erro ao buscar matérias:', e);
       setGameState('error');
     }
   }, []);
@@ -88,8 +87,9 @@ export default function SimuladoPage() {
             p_limit: SIMULATION_SIZE
         });
 
+        let formattedQuestions: Question[] = [];
+
         if (error) {
-          // Fallback se a RPC de sorteio falhar
           const { data: fallbackQuestions, error: fallbackError } = await supabase
             .from('questions')
             .select(`*, subjects(name)`)
@@ -98,32 +98,41 @@ export default function SimuladoPage() {
           
           if (fallbackError) throw fallbackError;
           
-          const formatted = fallbackQuestions.map((q: any) => ({
+          formattedQuestions = (fallbackQuestions || []).map((q: any) => ({
             ...q,
             options: typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || [])
           }));
-          setQuestions(formatted);
         } else {
-          const formattedQuestions = data.map((q: any) => ({
+          formattedQuestions = (data || []).map((q: any) => ({
               ...q,
               subjects: typeof q.subjects === 'string' ? JSON.parse(q.subjects) : q.subjects,
               options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
           }));
-          setQuestions(formattedQuestions);
         }
 
+        if (formattedQuestions.length === 0) {
+            toast({
+                title: "Matéria sem questões",
+                description: "Não encontramos questões cadastradas para esta disciplina.",
+                variant: "destructive"
+            });
+            setGameState('idle');
+            return;
+        }
+
+        setQuestions(formattedQuestions);
         setCurrentQuestionIndex(0);
         setAnswers([]);
         setSelectedAnswer(null);
         setGameState('active');
     } catch (error: any) {
-        console.error('Erro ao montar simulado:', error.message || error);
+        console.error('Erro ao montar simulado:', error);
         setGameState('error');
     }
-  }, []);
+  }, [toast]);
 
   const handleNextQuestion = () => {
-    if (selectedAnswer === null) return;
+    if (selectedAnswer === null || !questions[currentQuestionIndex]) return;
 
     const newAnswer = {
       questionId: questions[currentQuestionIndex].id,
@@ -156,6 +165,18 @@ export default function SimuladoPage() {
 
   if (gameState === 'active') {
     const currentQuestion = questions[currentQuestionIndex];
+    
+    // Proteção extra contra estado inconsistente
+    if (!currentQuestion) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+                <AlertCircle className="h-12 w-12 text-amber-500" />
+                <p className="text-amber-600 font-bold italic">Erro ao carregar a questão atual.</p>
+                <Button onClick={() => setGameState('idle')} variant="outline">Voltar ao Início</Button>
+            </div>
+        );
+    }
+
     const progress = ((currentQuestionIndex) / questions.length) * 100;
 
     return (
@@ -181,7 +202,7 @@ export default function SimuladoPage() {
             </CardHeader>
             <CardContent className='p-6 md:p-12 pt-2'>
                 <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer} className="space-y-3">
-                {currentQuestion.options.map((opt: any) => (
+                {(currentQuestion.options || []).map((opt: any) => (
                     <Label 
                     key={opt.letter || opt.key} 
                     className={`flex items-start gap-4 text-xs md:text-base p-4 md:p-6 rounded-xl md:rounded-[1.5rem] border-2 transition-all cursor-pointer ${
@@ -241,7 +262,7 @@ export default function SimuladoPage() {
         <div className='flex flex-col items-center justify-center h-[60vh] gap-4'>
             <AlertCircle className="h-12 w-12 text-red-500" />
             <p className='text-red-500 font-bold italic'>Ocorreu um erro ao carregar os dados do simulado.</p>
-            <p className='text-xs text-muted-foreground'>Verifique se o script SQL foi executado no Supabase.</p>
+            <p className='text-xs text-muted-foreground'>Verifique sua conexão e tente novamente.</p>
             <Button onClick={() => fetchSubjects()} variant="outline">Tentar Novamente</Button>
         </div>
     )
