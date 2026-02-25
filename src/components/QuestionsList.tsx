@@ -94,7 +94,8 @@ export function QuestionsList() {
                 setQuestions(questionsData as FullQuestion[]);
                 setSubjects(subjectsData as Subject[]);
             } catch (error: any) {
-                toast({ title: "Erro ao Carregar Dados", description: "Não foi possível buscar os dados iniciais.", variant: "destructive" });
+                console.error("Erro ao carregar repositório:", error);
+                toast({ title: "Erro ao Carregar Dados", description: "Não foi possível buscar as questões do banco.", variant: "destructive" });
             } finally {
                 setIsLoading(false);
             }

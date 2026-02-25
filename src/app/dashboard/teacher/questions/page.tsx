@@ -124,55 +124,16 @@ export default function QuestionBankPage() {
                 teacher_id: user.id
             }]);
 
-            if (error) {
-                if (error.message.includes("correct_answer")) {
-                    throw new Error("Erro de Coluna: A coluna 'correct_answer' não foi encontrada. Rode o script SQL no Supabase.");
-                }
-                throw error;
-            }
+            if (error) throw error;
 
             toast({ title: "Questão Salva!", description: "A nova questão foi adicionada ao banco." });
             setManualQuestion({ question_text: '', year: new Date().getFullYear(), subject_id: subjects.find(s => s.name === 'Não Categorizado')?.id || '', correct_answer: '' });
             setManualOptions({ A: '', B: '', C: '', D: '', E: '' });
-        } catch (err: any) {
-            toast({ title: "Falha na Persistência", description: err.message, variant: 'destructive' });
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const handleSeedExample = async () => {
-        if (!user || isSaving) return;
-        const biologySubject = subjects.find(s => s.name === 'Biologia')?.id || subjects[0]?.id;
-        if (!biologySubject) {
-            toast({ title: "Aguardando Matérias", description: "Carregando dados do banco...", variant: "destructive" });
-            return;
-        }
-
-        setIsSaving(true);
-        try {
-            const supabase = createClient();
-            const example = {
-                question_text: "Qual organela é responsável pela respiração celular?",
-                year: 2024,
-                subject_id: biologySubject,
-                correct_answer: "B",
-                teacher_id: user.id,
-                options: [
-                    { key: "A", text: "Complexo de Golgi" },
-                    { key: "B", text: "Mitocôndria" },
-                    { key: "C", text: "Ribossomo" },
-                    { key: "D", text: "Lisossomo" }
-                ]
-            };
-
-            const { error } = await supabase.from('questions').insert([example]);
-            if (error) throw error;
             
-            toast({ title: "Exemplo Gerado!", description: "Questão de Biologia adicionada com sucesso." });
+            // Força a atualização da lista (recarregando levemente a página ou emitindo evento)
             window.location.reload();
         } catch (err: any) {
-            toast({ title: "Erro no Teste", description: err.message, variant: "destructive" });
+            toast({ title: "Falha na Persistência", description: err.message, variant: 'destructive' });
         } finally {
             setIsSaving(false);
         }
@@ -188,10 +149,6 @@ export default function QuestionBankPage() {
                         <p className="text-muted-foreground text-xs font-medium">Repositório industrial de avaliações.</p>
                     </div>
                 </div>
-                <Button onClick={handleSeedExample} disabled={isSaving} variant="outline" className="rounded-xl border-dashed border-accent text-accent hover:bg-accent/5 h-12">
-                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FlaskConical className="h-4 w-4 mr-2" />} 
-                    Gerar Exemplo de Teste
-                </Button>
             </div>
 
             <QuestionsDashboard />
