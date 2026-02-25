@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FilePlus, CheckCircle, ListChecks, PlusCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { Loader2, FilePlus, ListChecks, PlusCircle, FlaskConical, AlertCircle } from 'lucide-react';
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
 import { QuestionsList } from '@/components/QuestionsList';
-import { createClient, isSupabaseConfigured } from '@/app/lib/supabase';
+import { createClient } from '@/app/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
 import {
     Select,
@@ -20,240 +20,290 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
+type Subject = {
+    id: string;
+    name: string;
+};
+type QuestionOption = { key: string; text: string };
+type ParsedQuestion = {
+    tempId: string;
+    question_number_in_source: number;
+    question_text: string;
+    options: QuestionOption[];
+    correct_answer: string;
+    year: number;
+    subject_id: string;
+};
+
+const parseExamText = (rawText: string, defaultSubjectId: string): { questions: ParsedQuestion[], errors: string[] } => {
+    const questions: ParsedQuestion[] = [];
+    let errors: string[] = [];
+    const questionMarkers = Array.from(rawText.matchAll(/Questão\s*(\d+)/gi)).map(match => ({ number: parseInt(match[1]), index: match.index, rawText: match[0] }));
+    if (questionMarkers.length === 0) return { questions: [], errors: ["Nenhuma questão encontrada."] };
+    questionMarkers.forEach((marker, i) => {
+        const startIdx = marker.index;
+        const endIdx = (i + 1 < questionMarkers.length) ? questionMarkers[i + 1].index : rawText.length;
+        let block = rawText.substring(startIdx!, endIdx);
+        const altMarkers = Array.from(block.matchAll(/^[A-E][\.)]/gm)).map(m => ({ letter: m[0][0], index: m.index }));
+        if (altMarkers.length >= 4) {
+            try {
+                const enunciadoStart = block.indexOf(marker.rawText) + marker.rawText.length;
+                const enunciadoEnd = altMarkers[0].index;
+                const question_text = block.substring(enunciadoStart, enunciadoEnd).trim();
+                const options = altMarkers.map((alt, j) => {
+                    const optStart = alt.index! + alt.letter.length + 1;
+                    const optEnd = (j + 1 < altMarkers.length) ? altMarkers[j + 1].index : block.length;
+                    return { key: alt.letter, text: block.substring(optStart, optEnd).trim() };
+                });
+                questions.push({ tempId: `q-${marker.number}`, question_number_in_source: marker.number, question_text, options, correct_answer: 'A', year: new Date().getFullYear(), subject_id: defaultSubjectId });
+            } catch (e) { errors.push(`Erro na Questão ${marker.number}`); }
+        }
+    });
+    return { questions, errors };
+};
+
 export default function QuestionBankPage() {
     const { toast } = useToast();
     const { user } = useAuth();
-
-    const [entryMode, setEntryMode] = useState<'bulk' | 'manual'>('manual');
+    const [entryMode, setEntryMode] = useState<'bulk' | 'manual'>('bulk');
     const [isSaving, setIsSaving] = useState(false);
-    const [isSeeding, setIsSeeding] = useState(false);
-    const [subjects, setSubjects] = useState<any[]>([]);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
     const [rawText, setRawText] = useState('');
-    
-    const [manualQuestion, setManualQuestion] = useState({ 
-        question_text: '', 
-        year: new Date().getFullYear().toString(), 
-        subject_id: '', 
-        correct_answer: 'A' 
-    });
+    const [extractedQuestions, setExtractedQuestions] = useState<ParsedQuestion[]>([]);
+    const [view, setView] = useState<'upload' | 'validate' | 'finished'>('upload');
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '' });
     const [manualOptions, setManualOptions] = useState({ A: '', B: '', C: '', D: '', E: '' });
 
     useEffect(() => {
-        async function fetchSubjects() {
-            if (!isSupabaseConfigured) return;
+        const fetchSubjects = async () => {
             const supabase = createClient();
-            try {
-                const { data, error } = await supabase.from('subjects').select('*').order('name');
-                if (error) throw error;
-                if (data) setSubjects(data);
-            } catch (e: any) {
-                console.error("Erro ao carregar matérias:", e.message);
+            const { data, error } = await supabase.from('subjects').select('id, name');
+            if (error) {
+                toast({ title: "Erro ao buscar matérias", description: error.message, variant: 'destructive' });
+            } else if (data) {
+                setSubjects(data);
+                const uncat = data.find(s => s.name === 'Não Categorizado');
+                if (uncat && !manualQuestion.subject_id) setManualQuestion(prev => ({ ...prev, subject_id: uncat.id! }));
             }
-        }
+        };
         fetchSubjects();
-    }, []);
+    }, [toast, manualQuestion.subject_id]);
 
-    const handleSaveManual = async () => {
+    const handleAnalyze = () => {
+        const defaultSubjectId = subjects.find(s => s.name === 'Não Categorizado')?.id || subjects[0]?.id;
+        if (!rawText.trim() || !defaultSubjectId) return;
+        setIsAnalyzing(true);
+        setTimeout(() => {
+            const { questions, errors } = parseExamText(rawText, defaultSubjectId);
+            if (errors.length > 0) toast({ title: "Erro na Análise", description: errors.join('\n'), variant: 'destructive' });
+            setExtractedQuestions(questions);
+            setView('validate');
+            setIsAnalyzing(false);
+        }, 500);
+    };
+
+    const handleSaveSingleQuestion = async () => {
         if (!user) {
-            toast({ title: "Acesso Negado", description: "Você precisa estar logado para salvar questões.", variant: "destructive" });
+            toast({ title: "Não Autenticado", description: "Faça login para salvar questões.", variant: "destructive" });
             return;
         }
 
-        if (!manualQuestion.question_text.trim() || !manualQuestion.subject_id || isSaving) {
-            toast({ title: "Dados Incompletos", description: "Preencha o enunciado e selecione a matéria.", variant: "destructive" });
+        if (!manualQuestion.question_text || !manualQuestion.subject_id || !manualQuestion.correct_answer || Object.values(manualOptions).some(opt => !opt)) {
+            toast({ title: "Campos Incompletos", description: "Preencha todos os campos.", variant: "destructive" });
             return;
         }
         
-        const optionsArray = Object.entries(manualOptions)
-            .filter(([_, text]) => text.trim() !== '')
-            .map(([letter, text]) => ({ letter, text }));
-
-        if (optionsArray.length < 2) {
-            toast({ title: "Opções Incompletas", description: "Preencha ao menos duas alternativas.", variant: "destructive" });
-            return;
-        }
-
         setIsSaving(true);
-        const supabase = createClient();
-
         try {
-            const payload = {
-                question_text: manualQuestion.question_text.trim(),
-                year: parseInt(manualQuestion.year) || new Date().getFullYear(),
-                subject_id: manualQuestion.subject_id,
-                correct_answer: manualQuestion.correct_answer,
-                options: optionsArray,
+            const supabase = createClient();
+            const optionsToSave: QuestionOption[] = Object.entries(manualOptions).map(([key, text]) => ({ key, text }));
+            const { error } = await supabase.from('questions').insert([{ 
+                ...manualQuestion, 
+                options: optionsToSave,
                 teacher_id: user.id
-            };
-
-            const { error } = await supabase.from('questions').insert([payload]);
+            }]);
 
             if (error) {
-                if (error.message.includes('schema cache')) {
-                    throw new Error("Erro de Cache: Rode o comando 'NOTIFY pgrst, ''reload schema'';' no SQL Editor do Supabase.");
+                if (error.message.includes("correct_answer")) {
+                    throw new Error("Erro de Coluna: A coluna 'correct_answer' não foi encontrada. Rode o script SQL no Supabase.");
                 }
                 throw error;
             }
 
-            toast({ title: "Questão Salva! ✅", description: "Item adicionado ao banco oficial." });
-            setManualQuestion(prev => ({ ...prev, question_text: '', correct_answer: 'A' }));
+            toast({ title: "Questão Salva!", description: "A nova questão foi adicionada ao banco." });
+            setManualQuestion({ question_text: '', year: new Date().getFullYear(), subject_id: subjects.find(s => s.name === 'Não Categorizado')?.id || '', correct_answer: '' });
             setManualOptions({ A: '', B: '', C: '', D: '', E: '' });
-
-        } catch (e: any) {
-            console.error("Erro Supabase Insert:", e);
-            toast({ 
-                title: "Falha na Persistência", 
-                description: e.message || "Tente novamente ou verifique a conexão.", 
-                variant: "destructive" 
-            });
+        } catch (err: any) {
+            toast({ title: "Falha na Persistência", description: err.message, variant: 'destructive' });
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleSeedExample = async () => {
-        if (!user || subjects.length === 0) {
-            toast({ title: "Aguarde", description: "Sincronizando matérias do banco..." });
+        if (!user || isSaving) return;
+        const biologySubject = subjects.find(s => s.name === 'Biologia')?.id || subjects[0]?.id;
+        if (!biologySubject) {
+            toast({ title: "Aguardando Matérias", description: "Carregando dados do banco...", variant: "destructive" });
             return;
         }
 
-        setIsSeeding(true);
-        const supabase = createClient();
+        setIsSaving(true);
         try {
+            const supabase = createClient();
             const example = {
-                question_text: "Qual é a principal função das mitocôndrias nas células eucarióticas?",
+                question_text: "Qual organela é responsável pela respiração celular?",
                 year: 2024,
-                subject_id: subjects[0].id,
+                subject_id: biologySubject,
                 correct_answer: "B",
+                teacher_id: user.id,
                 options: [
-                    { letter: "A", text: "Síntese de proteínas nos ribossomos." },
-                    { letter: "B", text: "Produção de energia através da respiração celular." },
-                    { letter: "C", text: "Armazenamento de informações genéticas." },
-                    { letter: "D", text: "Digestão de partículas estranhas." },
-                    { letter: "E", text: "Transporte de substâncias pelo citoplasma." }
-                ],
-                teacher_id: user.id
+                    { key: "A", text: "Complexo de Golgi" },
+                    { key: "B", text: "Mitocôndria" },
+                    { key: "C", text: "Ribossomo" },
+                    { key: "D", text: "Lisossomo" }
+                ]
             };
 
             const { error } = await supabase.from('questions').insert([example]);
             if (error) throw error;
-
-            toast({ title: "Exemplo Adicionado! 🧬", description: "Uma questão de biologia foi criada para teste." });
+            
+            toast({ title: "Exemplo Gerado!", description: "Questão de Biologia adicionada com sucesso." });
             window.location.reload();
-        } catch (e: any) {
-            toast({ title: "Erro no Teste", description: e.message, variant: "destructive" });
+        } catch (err: any) {
+            toast({ title: "Erro no Teste", description: err.message, variant: "destructive" });
         } finally {
-            setIsSeeding(false);
+            setIsSaving(false);
         }
     };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center"><FilePlus className="h-6 w-6 text-accent" /></div>
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-black text-primary italic leading-none">Gestão de Questões</h1>
+                        <p className="text-muted-foreground text-xs font-medium">Repositório industrial de avaliações.</p>
+                    </div>
+                </div>
+                <Button onClick={handleSeedExample} disabled={isSaving} variant="outline" className="rounded-xl border-dashed border-accent text-accent hover:bg-accent/5 h-12">
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FlaskConical className="h-4 w-4 mr-2" />} 
+                    Gerar Exemplo de Teste
+                </Button>
+            </div>
+
             <QuestionsDashboard />
 
-            <div className="space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-                    <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg">
-                            <FilePlus className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-black text-primary italic leading-none">Alimentar Banco</h1>
-                            <p className="text-muted-foreground font-medium text-sm italic">Adicione novos desafios pedagógicos para a rede.</p>
-                        </div>
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                <CardContent className="p-8 md:p-12">
+                    <div className="flex bg-muted/10 p-1.5 rounded-2xl mb-10 w-fit mx-auto md:mx-0">
+                        <Button 
+                            variant={entryMode === 'bulk' ? 'default' : 'ghost'} 
+                            onClick={() => setEntryMode('bulk')} 
+                            className="rounded-xl font-bold h-11 px-6"
+                        >
+                            <ListChecks className="h-4 w-4 mr-2"/> Carga em Massa
+                        </Button>
+                        <Button 
+                            variant={entryMode === 'manual' ? 'default' : 'ghost'} 
+                            onClick={() => setEntryMode('manual')} 
+                            className="rounded-xl font-bold h-11 px-6"
+                        >
+                            <PlusCircle className="h-4 w-4 mr-2"/> Cadastro Manual
+                        </Button>
                     </div>
-                    <Button 
-                        variant="outline" 
-                        onClick={handleSeedExample} 
-                        disabled={isSeeding || subjects.length === 0}
-                        className="rounded-xl h-12 border-dashed border-accent text-accent font-black hover:bg-accent/5 px-6"
-                    >
-                        {isSeeding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                        Gerar Questão de Exemplo
-                    </Button>
-                </div>
 
-                <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
-                    <CardContent className="p-8 md:p-12">
-                        <div className="flex bg-muted/10 p-1.5 rounded-2xl mb-10 w-fit mx-auto md:mx-0">
-                            <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => setEntryMode('bulk')} className="rounded-xl font-bold h-11 px-6">
-                                <ListChecks className="h-4 w-4 mr-2"/> Carga em Massa
-                            </Button>
-                            <Button variant={entryMode === 'manual' ? 'default' : 'ghost'} onClick={() => setEntryMode('manual')} className="rounded-xl font-bold h-11 px-6">
-                                <PlusCircle className="h-4 w-4 mr-2"/> Manual
-                            </Button>
-                        </div>
-
-                        {entryMode === 'bulk' ? (
-                            <div className="space-y-6 animate-in slide-in-from-bottom-2">
-                                <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3 text-amber-800">
-                                    <AlertCircle className="h-5 w-5 shrink-0" />
-                                    <p className="text-xs font-medium">A carga em massa via Aurora IA está em fase Beta. Utilize o modo Manual para máxima precisão.</p>
-                                </div>
+                    {entryMode === 'bulk' ? (
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Conteúdo da Prova (Texto Bruto)</Label>
                                 <Textarea 
-                                    placeholder="Cole aqui o texto da prova para análise..." 
-                                    className="min-h-[300px] rounded-3xl bg-muted/5 border-2 border-dashed border-muted/20 p-6 text-sm italic"
-                                    value={rawText}
-                                    onChange={(e) => setRawText(e.target.value)}
+                                    placeholder="Ex: Questão 1. Enunciado... A. Opção 1 B. Opção 2..." 
+                                    className="min-h-[300px] rounded-[1.5rem] bg-muted/30 border-none p-6 font-medium text-sm leading-relaxed" 
+                                    value={rawText} 
+                                    onChange={(e) => setRawText(e.target.value)} 
                                 />
-                                <Button disabled={!rawText.trim()} className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black text-lg shadow-xl">
-                                    Analisar com Aurora IA
+                            </div>
+                            <div className="flex justify-end pt-6 border-t border-muted/10">
+                                <Button onClick={handleAnalyze} disabled={isAnalyzing || !rawText.trim()} className="h-14 rounded-2xl font-black px-10 bg-accent text-accent-foreground shadow-xl transition-all active:scale-95">
+                                    {isAnalyzing ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : "Extrair Questões do Texto"}
                                 </Button>
                             </div>
-                        ) : (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in slide-in-from-bottom-2">
-                                <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <Label className="text-[9px] font-black uppercase opacity-40">Selecione a Matéria</Label>
-                                        <Select value={manualQuestion.subject_id} onValueChange={(v) => setManualQuestion({...manualQuestion, subject_id: v})}>
-                                            <SelectTrigger className="h-14 rounded-xl bg-muted/30 border-none font-bold">
-                                                <SelectValue placeholder="Matéria..." />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-2xl border-none shadow-2xl">
-                                                {subjects.length > 0 ? subjects.map(s => (
-                                                    <SelectItem key={s.id} value={s.id} className="font-bold">{s.name}</SelectItem>
-                                                )) : (
-                                                    <SelectItem value="loading" disabled>Carregando matérias...</SelectItem>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[9px] font-black uppercase opacity-40">Ano</Label>
-                                            <Input type="number" value={manualQuestion.year} onChange={(e) => setManualQuestion({...manualQuestion, year: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-bold" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[9px] font-black uppercase opacity-40">Gabarito</Label>
-                                            <Select value={manualQuestion.correct_answer} onValueChange={(v) => setManualQuestion({...manualQuestion, correct_answer: v})}>
-                                                <SelectTrigger className="h-14 rounded-xl bg-muted/30 border-none font-black text-accent"><SelectValue /></SelectTrigger>
-                                                <SelectContent className="rounded-xl border-none shadow-2xl">{['A', 'B', 'C', 'D', 'E'].map(l => <SelectItem key={l} value={l}>LETRA {l}</SelectItem>)}</SelectContent>
-                                            </Select>
+                        </div>
+                    ) : (
+                        <div className="space-y-8">
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Enunciado</Label>
+                                <Textarea 
+                                    placeholder="Digite o enunciado completo..." 
+                                    className="rounded-[1.5rem] bg-muted/30 border-none min-h-[150px] p-6 font-medium italic" 
+                                    value={manualQuestion.question_text} 
+                                    onChange={e => setManualQuestion(prev => ({...prev, question_text: e.target.value}))} 
+                                />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {['A', 'B', 'C', 'D', 'E'].map(key => (
+                                    <div key={key} className="space-y-2">
+                                        <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Alternativa {key}</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-primary/20 italic">{key}</span>
+                                            <Input 
+                                                placeholder="Texto da opção..." 
+                                                className="pl-12 h-14 rounded-2xl bg-muted/30 border-none font-medium" 
+                                                value={manualOptions[key as keyof typeof manualOptions]} 
+                                                onChange={e => setManualOptions(prev => ({...prev, [key]: e.target.value}))}
+                                            />
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[9px] font-black uppercase opacity-40">Enunciado</Label>
-                                        <Textarea placeholder="Digite a questão..." className="min-h-[180px] rounded-2xl bg-muted/30 border-none italic p-4 font-medium" value={manualQuestion.question_text} onChange={(e) => setManualQuestion({...manualQuestion, question_text: e.target.value})} />
-                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Gabarito Oficial</Label>
+                                    <Select value={manualQuestion.correct_answer} onValueChange={val => setManualQuestion(prev => ({...prev, correct_answer: val}))}>
+                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
+                                            <SelectValue placeholder="Selecione" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                                            {['A', 'B', 'C', 'D', 'E'].map(key => <SelectItem key={key} value={key} className="py-3 font-bold">Alternativa {key}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <div className="space-y-4">
-                                    <Label className="text-[9px] font-black uppercase opacity-40">Alternativas</Label>
-                                    {['A', 'B', 'C', 'D', 'E'].map(letter => (
-                                        <div key={letter} className="flex gap-3">
-                                            <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black shrink-0 shadow-sm transition-all ${manualQuestion.correct_answer === letter ? 'bg-accent text-accent-foreground scale-105' : 'bg-muted/30 text-primary/30'}`}>{letter}</div>
-                                            <Input placeholder={`Texto da opção ${letter}...`} className="h-12 rounded-xl bg-muted/30 border-none font-medium" value={manualOptions[letter as keyof typeof manualOptions]} onChange={(e) => setManualOptions({...manualOptions, [letter]: e.target.value})} />
-                                        </div>
-                                    ))}
-                                    <Button onClick={handleSaveManual} disabled={isSaving} className="w-full h-16 mt-6 rounded-2xl bg-primary text-white font-black text-lg shadow-2xl transition-all active:scale-95">
-                                        {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <CheckCircle className="h-6 w-6 mr-2" />}
-                                        Gravar Questão no Banco
-                                    </Button>
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Matéria / Disciplina</Label>
+                                    <Select value={manualQuestion.subject_id} onValueChange={val => setManualQuestion(prev => ({...prev, subject_id: val}))}>
+                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
+                                            <SelectValue placeholder="Selecione" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                                            {subjects.map(s => <SelectItem key={s.id} value={s.id} className="py-3 font-bold">{s.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Ano de Aplicação</Label>
+                                    <Input 
+                                        type="number" 
+                                        className="h-14 rounded-2xl bg-muted/30 border-none font-black text-center" 
+                                        value={manualQuestion.year} 
+                                        onChange={e => setManualQuestion(prev => ({...prev, year: parseInt(e.target.value, 10)}))}
+                                    />
                                 </div>
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+
+                            <div className="flex justify-end pt-8 border-t border-muted/10">
+                                <Button onClick={handleSaveSingleQuestion} disabled={isSaving} className="h-16 rounded-2xl font-black px-12 bg-primary text-white shadow-xl hover:bg-primary/95 transition-all">
+                                    {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : "Gravar no Repositório"}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             <div className="pt-10">
                  <QuestionsList />
