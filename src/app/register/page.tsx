@@ -8,14 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { GraduationCap, School, User, ArrowRight, CheckCircle2, Loader2, Mail, Lock, Sparkles, ChevronLeft, UserPlus } from "lucide-react";
+import { GraduationCap, School, User, ArrowRight, Loader2, Mail, Lock, Sparkles, UserPlus, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 
 type Step = 1 | 2 | 3;
-type ProfileType = "etec" | "uni" | "teacher";
+type ProfileType = "etec" | "cpop_santana" | "cpop_osasco" | "enem" | "teacher";
 
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>(1);
@@ -78,9 +77,26 @@ export default function RegisterPage() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Para mentores, salvamos a disciplina em 'institution' para exibição rápida no chat
-        const institutionValue = profileType === 'teacher' ? formData.subject : (profileType === 'etec' ? formData.school : formData.university);
-        const courseValue = profileType === 'etec' ? formData.course : (profileType === 'uni' ? formData.major : `Mentor ${formData.subject}`);
+        // Mapeamento de instituições e cursos baseado no tipo
+        let institutionValue = "";
+        let courseValue = "";
+
+        if (profileType === 'teacher') {
+          institutionValue = formData.subject;
+          courseValue = `Mentor ${formData.subject}`;
+        } else if (profileType === 'etec') {
+          institutionValue = formData.school || "ETEC";
+          courseValue = formData.course;
+        } else if (profileType === 'cpop_santana') {
+          institutionValue = "CPOP Santana";
+          courseValue = formData.course || "Aluno CPOP";
+        } else if (profileType === 'cpop_osasco') {
+          institutionValue = "CPOP Osasco";
+          courseValue = formData.course || "Aluno CPOP";
+        } else if (profileType === 'enem') {
+          institutionValue = formData.university || "ENEM";
+          courseValue = formData.major || "Vestibulando";
+        }
 
         const { error: profileError } = await supabase
           .from('profiles')
@@ -176,7 +192,7 @@ export default function RegisterPage() {
                   <Label htmlFor="password" title="Senha" className="font-bold text-primary/60">Senha de Acesso</Label>
                   <div className="relative group">
                     <Lock className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={formData.password} onChange={(e) => updateField("password", e.target.value)} className="pl-11 h-12 bg-white/50 rounded-xl" />
+                    <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="pl-11 h-12 bg-white/50 rounded-xl" />
                   </div>
                 </div>
               </div>
@@ -187,12 +203,14 @@ export default function RegisterPage() {
                  <RadioGroup 
                   value={profileType} 
                   onValueChange={(v) => setProfileType(v as ProfileType)} 
-                  className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 >
                   {[
-                    { id: "etec", label: "Aluno ETEC", icon: School, desc: "Técnico" },
-                    { id: "uni", label: "Vestibulando", icon: GraduationCap, desc: "Superior" },
-                    { id: "teacher", label: "Mentor", icon: User, desc: "Docente" }
+                    { id: "etec", label: "Aluno ETEC", icon: School, desc: "Ensino Técnico" },
+                    { id: "cpop_santana", label: "Aluno CPOP Santana", icon: MapPin, desc: "Polo Santana" },
+                    { id: "cpop_osasco", label: "Aluno CPOP Osasco", icon: MapPin, desc: "Polo Osasco" },
+                    { id: "enem", label: "Aluno ENEM", icon: GraduationCap, desc: "Vestibular Geral" },
+                    { id: "teacher", label: "Mentor", icon: User, desc: "Docente da Rede" }
                   ].map((p) => (
                     <div key={p.id}>
                       <Label
@@ -202,11 +220,11 @@ export default function RegisterPage() {
                         }`}
                       >
                         <RadioGroupItem value={p.id} id={p.id} className="sr-only" />
-                        <div className={`p-5 rounded-2xl mb-4 transition-all shadow-md ${profileType === p.id ? "bg-accent text-accent-foreground scale-110" : "bg-muted text-primary"}`}>
-                          <p.icon className="h-10 w-10" />
+                        <div className={`p-4 rounded-2xl mb-3 transition-all shadow-md ${profileType === p.id ? "bg-accent text-accent-foreground scale-110" : "bg-muted text-primary"}`}>
+                          <p.icon className="h-8 w-8" />
                         </div>
-                        <p className="font-black text-primary italic leading-none">{p.label}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-2">{p.desc}</p>
+                        <p className="font-black text-primary italic leading-none text-sm">{p.label}</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold mt-2">{p.desc}</p>
                       </Label>
                     </div>
                   ))}
@@ -216,27 +234,29 @@ export default function RegisterPage() {
 
             {step === 3 && (
               <div key="step3" className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                {profileType === "etec" && (
+                {(profileType === "etec" || profileType === "cpop_santana" || profileType === "cpop_osasco") && (
                   <div className="space-y-4">
+                    {profileType === "etec" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="school" className="font-bold text-primary/60">Unidade ETEC</Label>
+                        <Input id="school" placeholder="Ex: ETEC Jorge Street" value={formData.school} onChange={(e) => updateField("school", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                      </div>
+                    )}
                     <div className="space-y-2">
-                      <Label htmlFor="school" className="font-bold text-primary/60">Unidade ETEC</Label>
-                      <Input id="school" placeholder="Ex: ETEC Jorge Street" value={formData.school} onChange={(e) => updateField("school", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="course" className="font-bold text-primary/60">Curso</Label>
-                      <Input id="course" placeholder="Ex: Administração" value={formData.course} onChange={(e) => updateField("course", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                      <Label htmlFor="course" className="font-bold text-primary/60">Curso ou Série</Label>
+                      <Input id="course" placeholder="Ex: Informática ou 3º Ano Médio" value={formData.course} onChange={(e) => updateField("course", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                     </div>
                   </div>
                 )}
-                {profileType === "uni" && (
+                {profileType === "enem" && (
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="university" className="font-bold text-primary/60">Instituição Desejada</Label>
-                      <Input id="university" placeholder="Ex: USP ou FATEC" value={formData.university} onChange={(e) => updateField("university", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                      <Input id="university" placeholder="Ex: USP, UNESP ou FATEC" value={formData.university} onChange={(e) => updateField("university", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="major" className="font-bold text-primary/60">Carreira</Label>
-                      <Input id="major" placeholder="Ex: Direito" value={formData.major} onChange={(e) => updateField("major", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                      <Label htmlFor="major" className="font-bold text-primary/60">Carreira / Curso Alvo</Label>
+                      <Input id="major" placeholder="Ex: Engenharia ou Direito" value={formData.major} onChange={(e) => updateField("major", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                     </div>
                   </div>
                 )}
@@ -254,7 +274,7 @@ export default function RegisterPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="interests" className="font-bold text-primary/60">Interesses Principais</Label>
-                  <Input id="interests" placeholder="Ex: Matemática, Redação" value={formData.interests} onChange={(e) => updateField("interests", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                  <Input id="interests" placeholder="Ex: Geometria, Redação nota 1000" value={formData.interests} onChange={(e) => updateField("interests", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                 </div>
               </div>
             )}

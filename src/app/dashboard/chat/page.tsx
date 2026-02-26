@@ -5,11 +5,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, Bot, User, BookOpen, GraduationCap, AlertCircle, AtSign, ShieldCheck } from "lucide-react";
+import { Search, Loader2, Bot, User, BookOpen, AlertCircle, AtSign } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
+import { Badge } from "@/components/ui/badge";
 
 export default function ChatListPage() {
   const { user, profile } = useAuth();
@@ -27,14 +28,15 @@ export default function ChatListPage() {
       try {
         const userType = profile.profile_type || 'student';
         
-        // Regra de Negócio: Estudantes veem apenas Mentores.
+        // Regra de Negócio: Alunos (todos os tipos) veem apenas Mentores.
         // Mentores e Admins veem todos para suporte.
         let query = supabase
           .from('profiles')
           .select('*')
           .neq('id', user.id);
 
-        if (userType === 'etec' || userType === 'uni') {
+        // Se o usuário não for mentor nem admin, filtra apenas por professores
+        if (userType !== 'teacher' && userType !== 'admin') {
           query = query.eq('profile_type', 'teacher');
         }
 
