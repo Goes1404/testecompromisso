@@ -1,38 +1,27 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, PlusCircle, Megaphone, AlertOctagon, Info, Loader2 } from 'lucide-react';
+import { Bell, PlusCircle, Megaphone, AlertOctagon, Info, Loader2, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/app/lib/supabase';
+import { useAuth } from '@/lib/AuthProvider';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Announcement {
-  id: number;
+  id: string;
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high';
-  createdAt: string;
+  created_at: string;
 }
-
-const initialAnnouncements: Announcement[] = [
-  {
-    id: 1,
-    title: 'Boas-vindas à Plataforma Compromisso!',
-    message: 'Sejam todos bem-vindos! Explore as trilhas de estudo e não hesite em usar o fórum para tirar dúvidas.',
-    priority: 'low',
-    createdAt: new Date().toLocaleDateString('pt-BR'),
-  },
-  {
-    id: 2,
-    title: 'Manutenção Programada',
-    message: 'A plataforma passará por uma manutenção rápida na próxima sexta-feira às 23h. Agradecemos a compreensão.',
-    priority: 'medium',
-    createdAt: new Date().toLocaleDateString('pt-BR'),
-  },
-];
 
 type BadgeVariant = "secondary" | "destructive" | "default" | "outline";
 
@@ -43,92 +32,161 @@ const priorityStyles: Record<'low' | 'medium' | 'high', { variant: BadgeVariant;
 };
 
 export default function CommunicationPage() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [newPriority, setNewPriority] = useState<'low' | 'medium' | 'high'>('low');
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleCreateAnnouncement = () => {
-    if (!newTitle.trim() || !newMessage.trim()) return;
+  useEffect(() => {
+    async function fetchAnnouncements() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!error) setAnnouncements(data || []);
+      setLoading(false);
+    }
+    fetchAnnouncements();
+  }, []);
+
+  const handleCreateAnnouncement = async () => {
+    if (!newTitle.trim() || !newMessage.trim() || !user) return;
 
     setIsCreating(true);
-    setTimeout(() => {
-      const newAnnouncement: Announcement = {
-        id: Date.now(),
-        title: newTitle,
-        message: newMessage,
-        priority: newPriority,
-        createdAt: new Date().toLocaleDateString('pt-BR'),
-      };
-      setAnnouncements([newAnnouncement, ...announcements]);
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .insert([{
+          title: newTitle,
+          message: newMessage,
+          priority: newPriority,
+          author_id: user.id
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Registrar Log de Atividade
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        user_name: profile?.name || user.email,
+        action: `Publicou um comunicado: ${newTitle}`,
+        entity_type: 'announcement',
+        entity_id: data.id
+      });
+
+      setAnnouncements([data, ...announcements]);
       setNewTitle('');
       setNewMessage('');
       setNewPriority('low');
+      toast({ title: "Comunicado Publicado!", description: "O aviso já está visível para todos os alunos." });
+    } catch (e: any) {
+      toast({ title: "Erro ao publicar", description: e.message, variant: "destructive" });
+    } finally {
       setIsCreating(false);
-    }, 1000);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('announcements').delete().eq('id', id);
+    if (!error) {
+      setAnnouncements(announcements.filter(a => a.id !== id));
+      toast({ title: "Comunicado removido." });
+    }
   };
 
   return (
     <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
       <div className="lg:col-span-1 space-y-6">
-        <Card className="bg-white shadow-md rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <PlusCircle className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-slate-800">Criar Novo Aviso</span>
+        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+          <CardHeader className="bg-primary/5 p-8 border-b border-dashed">
+            <CardTitle className="flex items-center gap-3 italic">
+              <PlusCircle className="h-6 w-6 text-accent" />
+              <span className="text-xl font-black text-primary">Novo Comunicado</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-8 space-y-4">
             <div>
-              <label className="text-sm font-semibold text-slate-600 mb-1 block">Título do Aviso</label>
-              <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Aula extra de matemática" className="rounded-lg" />
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-1 block px-2">Título do Aviso</label>
+              <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Aula extra de Redação" className="h-12 bg-muted/30 border-none rounded-xl font-bold" />
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-600 mb-1 block">Mensagem</label>
-              <Textarea value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Detalhes sobre o aviso..." className="rounded-lg min-h-[120px]" />
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-1 block px-2">Mensagem</label>
+              <Textarea value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Descreva os detalhes..." className="rounded-2xl min-h-[150px] bg-muted/30 border-none font-medium text-sm" />
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-600 mb-1 block">Prioridade</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-1 block px-2">Prioridade</label>
               <Select value={newPriority} onValueChange={(v: any) => setNewPriority(v)}>
-                <SelectTrigger className="rounded-lg"><SelectValue placeholder="Defina a urgência" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Normal</SelectItem>
-                  <SelectItem value="medium">Importante</SelectItem>
-                  <SelectItem value="high">Urgente</SelectItem>
+                <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl font-bold">
+                  <SelectValue placeholder="Defina a urgência" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-none shadow-2xl">
+                  <SelectItem value="low" className="font-bold">Normal</SelectItem>
+                  <SelectItem value="medium" className="font-bold">Importante</SelectItem>
+                  <SelectItem value="high" className="font-bold">Urgente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleCreateAnnouncement} disabled={isCreating} className="w-full font-bold rounded-lg">
-              {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bell className="mr-2 h-4 w-4" />} Publicar Aviso
+            <Button onClick={handleCreateAnnouncement} disabled={isCreating || !newTitle.trim()} className="w-full h-14 bg-primary text-white font-black rounded-xl shadow-lg mt-4">
+              {isCreating ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Bell className="mr-2 h-5 w-5" />} Publicar na Rede
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      <div className="lg:col-span-2 space-y-4">
-        <h2 className="text-lg font-bold text-slate-700">Avisos Publicados</h2>
-        {announcements.map((ann) => {
-          const styles = priorityStyles[ann.priority];
-          const Icon = styles.icon;
-          return (
-            <Card key={ann.id} className="bg-white shadow-sm rounded-xl overflow-hidden">
-              <CardContent className="p-5 flex items-start gap-4">
-                 <div className={`mt-1 p-2 rounded-full ${ann.priority === 'high' ? 'bg-red-100' : 'bg-slate-100'}`}>
-                    <Icon className={`h-5 w-5 ${ann.priority === 'high' ? 'text-red-600' : 'text-slate-600'}`} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-slate-800">{ann.title}</h3>
-                    <Badge variant={styles.variant}>{styles.label}</Badge>
-                  </div>
-                  <p className="text-sm text-slate-600 mt-1 mb-2">{ann.message}</p>
-                  <p className="text-xs text-slate-400 font-medium">Publicado em: {ann.createdAt}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="lg:col-span-2 space-y-6">
+        <h2 className="text-xl font-black text-primary italic flex items-center gap-2">
+          <Megaphone className="h-5 w-5 text-accent" /> Histórico de Avisos
+        </h2>
+        
+        {loading ? (
+          <div className="py-20 flex justify-center"><Loader2 className="h-10 w-10 animate-spin text-accent" /></div>
+        ) : announcements.length === 0 ? (
+          <div className="py-20 text-center border-4 border-dashed rounded-[3rem] opacity-30">
+            <Bell className="h-12 w-12 mx-auto mb-4" />
+            <p className="font-black italic">Nenhum comunicado ativo</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {announcements.map((ann) => {
+              const styles = priorityStyles[ann.priority];
+              const Icon = styles.icon;
+              return (
+                <Card key={ann.id} className="border-none shadow-lg rounded-3xl bg-white overflow-hidden group hover:shadow-xl transition-all">
+                  <CardContent className="p-6 flex items-start gap-6">
+                    <div className={`mt-1 h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${ann.priority === 'high' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-600'}`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="space-y-1">
+                          <h3 className="font-black text-primary italic text-lg leading-none">{ann.title}</h3>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase">
+                            Publicado em {format(new Date(ann.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge variant={styles.variant} className="font-black text-[8px] uppercase tracking-widest px-3">{styles.label}</Badge>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(ann.id)} className="h-8 w-8 rounded-full text-muted-foreground hover:text-red-600 hover:bg-red-50">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-primary/70 mt-4 leading-relaxed font-medium italic">"{ann.message}"</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

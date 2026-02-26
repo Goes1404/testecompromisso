@@ -19,7 +19,6 @@ import {
   Clock,
   PlayCircle,
   ChevronRight,
-  CheckCircle2,
   Plus,
   Zap,
   FileText,
@@ -44,7 +43,7 @@ interface LibraryItem {
 }
 
 interface Announcement {
-  id: number;
+  id: string;
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high';
@@ -114,12 +113,27 @@ export default function DashboardHome() {
     async function fetchHomeData() {
       if (!user) return;
 
+      // Buscar Comunicados Reais do Banco
       setLoadingAnnouncements(true);
-      setAnnouncements([
-           { id: 2, title: 'Simulados de Março', message: 'Os novos simulados de Biologia e Química já estão disponíveis no banco de questões.', priority: 'medium' },
-           { id: 1, title: 'Boas-vindas à Rede Compromisso!', message: 'Explore as trilhas de estudo e use o simulador de isenção para garantir seus direitos.', priority: 'low' },
-      ]);
-      setLoadingAnnouncements(false);
+      try {
+        const { data: annData } = await supabase
+          .from('announcements')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(2);
+        
+        if (annData && annData.length > 0) {
+          setAnnouncements(annData);
+        } else {
+          setAnnouncements([
+            { id: '1', title: 'Boas-vindas!', message: 'Explore as trilhas de estudo e o simulador de isenção.', priority: 'low' }
+          ]);
+        }
+      } catch (e) {
+        console.error("Erro comunicados");
+      } finally {
+        setLoadingAnnouncements(false);
+      }
 
       setLoadingTrails(true);
       try {
@@ -136,7 +150,7 @@ export default function DashboardHome() {
           category: f.category 
         })) || []);
       } catch (e) {
-        console.error("Erro ao buscar trilhas recomendadas");
+        console.error("Erro trilhas");
       } finally {
         setLoadingTrails(false);
       }
@@ -150,7 +164,7 @@ export default function DashboardHome() {
           .limit(2);
         setLibraryResources(res || []);
       } catch (e) {
-        console.error("Erro ao buscar acervo");
+        console.error("Erro acervo");
       } finally {
         setLoadingResources(false);
       }
@@ -176,23 +190,20 @@ export default function DashboardHome() {
       toast({ title: "Trilha Adicionada! 🚀", description: "Ela agora aparece no seu Dashboard." });
       await fetchProgress();
     } catch (e: any) {
-      console.error("Erro ao iniciar trilha:", e);
-      toast({ title: "Erro ao sincronizar", description: "Verifique seu banco de dados.", variant: "destructive" });
+      toast({ title: "Erro ao sincronizar", variant: "destructive" });
     } finally {
       setIsStarting(null);
     }
   };
 
-  if (isUserLoading) {
-    return (
-      <div className="flex flex-col h-96 items-center justify-center gap-4">
-        <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sintonizando Portal...</p>
-      </div>
-    );
-  }
+  if (isUserLoading) return (
+    <div className="flex flex-col h-96 items-center justify-center gap-4">
+      <Loader2 className="h-12 w-12 animate-spin text-accent" />
+      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sintonizando Portal...</p>
+    </div>
+  );
 
-  const userName = profile?.name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || 'Estudante';
+  const userName = profile?.name?.split(' ')[0] || 'Estudante';
 
   const quickActions = [
     { label: "Checklist", icon: FileCheck, href: "/dashboard/student/documents", color: "bg-blue-500" },
@@ -213,12 +224,11 @@ export default function DashboardHome() {
              </Badge>
            </div>
            <p className="text-sm md:text-lg text-primary-foreground/80 font-medium leading-relaxed italic max-w-2xl">
-             Transforme dedicação em conquistas reais. Suas trilhas ativas estão logo abaixo.
+             Sua jornada rumo à aprovação está sendo monitorada com inteligência.
            </p>
          </div>
       </section>
 
-      {/* Barra de Ações Rápidas Otimizada */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {quickActions.map((action, i) => (
           <Link key={i} href={action.href}>
@@ -236,7 +246,6 @@ export default function DashboardHome() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {/* Mural de Avisos */}
           <div>
             <h2 className="text-xl font-black text-primary italic flex items-center gap-2 px-2 mb-4">
               <Megaphone className="h-5 w-5 text-accent" /> Mural de Avisos
@@ -248,15 +257,15 @@ export default function DashboardHome() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {announcements.map(ann => {
-                  const Icon = priorityStyles[ann.priority].icon;
-                  const color = priorityStyles[ann.priority].color;
-                  const bgColor = priorityStyles[ann.priority].bgColor;
+                  const Icon = priorityStyles[ann.priority]?.icon || Info;
+                  const color = priorityStyles[ann.priority]?.color || 'text-slate-500';
+                  const bgColor = priorityStyles[ann.priority]?.bgColor || 'bg-slate-100';
                   return (
                     <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${bgColor} animate-in slide-in-from-left duration-500 border border-black/5`}>
                       <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${color}`} />
-                      <div className="flex-1">
-                        <p className={`font-bold text-sm ${color}`}>{ann.title}</p>
-                        <p className="text-[10px] text-slate-600 line-clamp-2 leading-relaxed">{ann.message}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-bold text-sm ${color} truncate`}>{ann.title}</p>
+                        <p className="text-[10px] text-slate-600 line-clamp-2 leading-relaxed font-medium italic">{ann.message}</p>
                       </div>
                     </div>
                   )
@@ -265,88 +274,45 @@ export default function DashboardHome() {
             )}
           </div>
 
-          {/* Continuar Aprendizado */}
           <div>
             <div className="flex items-center justify-between px-2 mb-4">
               <h2 className="text-xl font-black text-primary italic flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-accent" /> Continuar Aprendizado
               </h2>
-              {recentProgress.length > 0 && (
-                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest bg-muted/20 px-3 py-1 rounded-full">
-                  Histórico Recente
-                </span>
-              )}
             </div>
             
             {loadingProgress ? (
               <div className="py-20 flex justify-center flex-col items-center gap-4 border-2 border-dashed rounded-[2.5rem]">
                 <Loader2 className="animate-spin text-accent h-8 w-8" />
-                <p className="text-[10px] font-black uppercase text-muted-foreground">Sincronizando Atividades...</p>
               </div>
             ) : recentProgress.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {recentProgress.map((prog, index) => {
-                  const isFinished = prog.percentage === 100;
                   const trailData = prog.trail;
-                  
                   if (!trailData) return null;
-
-                  const rawDate = prog.last_accessed;
-                  const lastAccessedDate = rawDate ? parseISO(rawDate) : null;
-                  const isDateValid = lastAccessedDate && isValid(lastAccessedDate);
-
                   return (
                     <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
                       <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col relative animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${index * 100}ms` }}>
-                        
                         <div className="relative aspect-[21/9] overflow-hidden">
-                          <Image 
-                            src={trailData.image_url || `https://picsum.photos/seed/${prog.trail_id}/600/300`} 
-                            alt={trailData.title} 
-                            fill 
-                            className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                          />
+                          <Image src={trailData.image_url || `https://picsum.photos/seed/${prog.trail_id}/600/300`} alt={trailData.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
                           <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
-                          
                           <div className="absolute top-3 left-3">
                             <Badge className="bg-white/90 backdrop-blur-md text-primary border-none shadow-lg flex items-center gap-1.5 px-2 py-1 rounded-lg">
-                              <Zap className={`h-3 w-3 ${isFinished ? 'text-green-500 fill-green-500' : 'text-accent fill-accent'}`} />
+                              <Zap className="h-3 w-3 text-accent fill-accent" />
                               <span className="text-[8px] font-black uppercase tracking-wider">{trailData.category}</span>
                             </Badge>
                           </div>
-
-                          {isFinished && (
-                            <div className="absolute top-3 right-3">
-                              <Badge className="bg-green-500 text-white border-none font-black text-[7px] uppercase px-2 py-1 rounded-lg shadow-lg">CONCLUÍDA</Badge>
-                            </div>
-                          )}
                         </div>
-                        
-                        <CardContent className="p-5 space-y-3 flex-1">
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center mb-1">
-                               <span className="text-[8px] font-black text-primary/40 uppercase flex items-center gap-1 italic">
-                                <Clock className="h-2.5 w-2.5"/> {isDateValid ? formatDistanceToNow(lastAccessedDate, { addSuffix: true, locale: ptBR }) : 'Recentemente'}
-                              </span>
-                            </div>
-                            <h3 className="font-black text-sm text-primary italic leading-tight group-hover:text-accent transition-colors duration-300 line-clamp-1">
-                              {trailData.title}
-                            </h3>
-                          </div>
-
+                        <CardContent className="p-5 space-y-3">
+                          <h3 className="font-black text-sm text-primary italic leading-tight group-hover:text-accent transition-colors duration-300 line-clamp-1">{trailData.title}</h3>
                           <div className="space-y-1.5">
                             <div className="flex justify-between items-center text-[8px] font-black text-muted-foreground uppercase">
                               <span>Evolução</span>
-                              <span className={isFinished ? 'text-green-600' : 'text-accent'}>{prog.percentage}%</span>
+                              <span className="text-accent">{prog.percentage}%</span>
                             </div>
                             <Progress value={prog.percentage} className="h-1 rounded-full bg-muted overflow-hidden">
-                               <div className={`h-full transition-all duration-1000 ${isFinished ? 'bg-green-500' : 'bg-accent'}`} style={{ width: `${prog.percentage}%` }} />
+                               <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${prog.percentage}%` }} />
                             </Progress>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-2 border-t border-muted/10">
-                            <p className="text-[9px] font-bold text-muted-foreground italic truncate">Mentor: {trailData.teacher_name || "Rede"}</p>
-                            <ChevronRight className="h-4 w-4 text-accent translate-x-0 group-hover:translate-x-1 transition-all" />
                           </div>
                         </CardContent>
                       </Card>
@@ -358,14 +324,12 @@ export default function DashboardHome() {
               <div className="py-12 text-center border-4 border-dashed rounded-[2.5rem] bg-muted/5 opacity-40">
                 <PlayCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                 <p className="font-black italic text-primary">Nenhuma trilha iniciada</p>
-                <p className="text-[10px] uppercase font-bold text-muted-foreground mt-2">Escolha uma trilha no catálogo para começar.</p>
               </div>
             )}
           </div>
         </div>
 
         <div className="space-y-8">
-            {/* Monitoramento de Rede */}
             <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] p-8 overflow-hidden relative group">
               <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
               <div className="relative z-10 space-y-6">
@@ -376,28 +340,18 @@ export default function DashboardHome() {
                     <p className="text-xl font-black italic">Operacional</p>
                   </div>
                 </div>
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
-                  <div className="flex items-center gap-2 text-accent">
-                    <Sparkles className="h-4 w-4 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Dica da Aurora</span>
-                  </div>
-                  <p className="text-[11px] font-medium leading-relaxed italic opacity-80">"Complete seu checklist de documentos para garantir sua vaga no SiSU/ProUni."</p>
-                </div>
                 <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-black h-12 rounded-2xl shadow-xl transition-all border-none">
                   <Link href="/dashboard/chat">Chat com Mentores</Link>
                 </Button>
               </div>
             </Card>
 
-            {/* Biblioteca Digital */}
             <h3 className="text-xl font-black text-primary italic px-2 flex items-center gap-2">
               <Library className="h-5 w-5 text-accent" /> Acervo Digital
             </h3>
             <div className="space-y-4">
               {loadingResources ? (
-                <div className="py-6 flex flex-col items-center justify-center gap-2">
-                  <Loader2 className="animate-spin text-accent h-6 w-6" />
-                </div>
+                <div className="py-6 flex justify-center"><Loader2 className="animate-spin text-accent h-6 w-6" /></div>
               ) : libraryResources.length > 0 ? libraryResources.map((res) => (
                 <Card key={res.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">
                   <div className="flex items-center gap-4">
@@ -416,44 +370,6 @@ export default function DashboardHome() {
               )) : (
                 <div className="text-center py-10 opacity-20 border-2 border-dashed rounded-2xl">
                   <p className="text-[8px] font-black uppercase">Acervo em Curadoria</p>
-                </div>
-              )}
-              <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-accent hover:bg-accent/5">
-                <Link href="/dashboard/library">Ver Tudo <ChevronRight className="ml-1 h-3 w-3"/></Link>
-              </Button>
-            </div>
-
-            {/* Sugestões de Trilhas */}
-            <h3 className="text-xl font-black text-primary italic px-2">Sugestões de Estudo</h3>
-            <div className="space-y-4">
-              {loadingTrails ? (
-                <div className="py-10 flex flex-col items-center justify-center gap-2">
-                  <Loader2 className="animate-spin text-accent h-6 w-6" />
-                </div>
-              ) : recommendedTrails.length > 0 ? recommendedTrails.map((item) => (
-                <Card key={item.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-muted/30 relative overflow-hidden shrink-0">
-                      <Image src={`https://picsum.photos/seed/${item.id}/100/100`} alt={item.title} fill className="object-cover" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <Badge className="bg-primary/5 text-primary text-[7px] border-none font-black uppercase mb-1">{item.category}</Badge>
-                      <h4 className="font-black text-xs text-primary truncate italic">{item.title}</h4>
-                    </div>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={() => handleQuickStart(item.id)}
-                      disabled={isStarting === item.id}
-                      className="h-8 w-8 rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-white"
-                    >
-                      {isStarting === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </Card>
-              )) : (
-                <div className="text-center py-10 opacity-20 border-2 border-dashed rounded-2xl">
-                  <p className="text-[8px] font-black uppercase">Novas trilhas em breve</p>
                 </div>
               )}
             </div>
