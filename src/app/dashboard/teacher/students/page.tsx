@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 import { 
   Search, 
   AlertCircle, 
@@ -167,9 +168,7 @@ export default function TeacherStudentsPage() {
                               <div className="flex justify-between text-[8px] font-black text-primary/40 uppercase">
                                 <span>{student.progress}%</span>
                               </div>
-                              <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${student.progress}%` }} />
-                              </div>
+                              <Progress value={student.progress} className="h-1 w-full" />
                             </div>
                           </TableCell>
                           <TableCell className="text-right px-8">
@@ -206,9 +205,7 @@ export default function TeacherStudentsPage() {
                       <div className="space-y-1">
                         <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Progresso</p>
                         <div className="flex items-center gap-2">
-                          <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${student.progress}%` }} />
-                          </div>
+                          <Progress value={student.progress} className="h-1.5 flex-1" />
                           <span className="text-[9px] font-black text-accent">{student.progress}%</span>
                         </div>
                       </div>
@@ -221,7 +218,7 @@ export default function TeacherStudentsPage() {
 
           {filteredStudents.length === 0 && !loading && (
             <div className="py-24 text-center">
-              <UserCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground/20" />
+              <UserCircle className="h-16 w-16 auto mb-4 text-muted-foreground/20" />
               <p className="font-black italic text-xl text-primary/40 uppercase tracking-widest">Rede Vazia</p>
             </div>
           )}
