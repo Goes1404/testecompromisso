@@ -27,6 +27,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     password: "",
     school: "",
@@ -42,8 +43,8 @@ export default function RegisterPage() {
   const prevStep = () => setStep((s) => (s - 1) as Step);
 
   const handleFinish = async () => {
-    if (!formData.email || !formData.password || !formData.firstName) {
-      toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha nome, e-mail e senha para continuar." });
+    if (!formData.email || !formData.password || !formData.firstName || !formData.username) {
+      toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha nome, usuário, e-mail e senha para continuar." });
       return;
     }
 
@@ -82,6 +83,7 @@ export default function RegisterPage() {
           .insert([{
             id: authData.user.id,
             name: fullName,
+            username: formData.username.replace('@', '').toLowerCase(),
             email: formData.email,
             profile_type: profileType,
             institution: profileType === 'etec' ? formData.school : (profileType === 'uni' ? formData.university : null),
@@ -164,6 +166,13 @@ export default function RegisterPage() {
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="font-bold text-primary/60">Sobrenome</Label>
                     <Input id="lastName" placeholder="Seu sobrenome" value={formData.lastName} onChange={(e) => updateField("lastName", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="font-bold text-primary/60">Nome de Usuário</Label>
+                  <div className="relative group">
+                    <User className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input id="username" placeholder="ex: joaosilva" value={formData.username} onChange={(e) => updateField("username", e.target.value)} className="pl-11 h-12 bg-white/50 rounded-xl" />
                   </div>
                 </div>
                 <div className="space-y-2">

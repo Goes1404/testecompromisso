@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, Bot, User, BookOpen, GraduationCap, AlertCircle } from "lucide-react";
+import { Search, Loader2, Bot, User, BookOpen, GraduationCap, AlertCircle, AtSign } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/AuthProvider";
@@ -30,7 +30,7 @@ export default function ChatListPage() {
           .from('profiles')
           .select('*')
           .neq('id', user.id)
-          .order('name');
+          .order('created_at', { ascending: false }); // Novos usuários primeiro
         
         if (error) {
           console.error("Erro Supabase:", error);
@@ -50,6 +50,7 @@ export default function ChatListPage() {
 
   const filteredContacts = contacts.filter(c => 
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.institution?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -65,7 +66,7 @@ export default function ChatListPage() {
       <div className="relative max-w-xl group w-full">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors" />
         <Input 
-          placeholder="Pesquisar colega ou mentor..." 
+          placeholder="Pesquisar por nome ou @usuario..." 
           className="pl-12 h-12 md:h-14 bg-white border-none shadow-xl rounded-2xl text-sm md:text-lg font-medium italic focus-visible:ring-accent transition-all"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -102,15 +103,6 @@ export default function ChatListPage() {
             <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
             <p className="text-red-800 font-black italic">Acesso à Rede Pendente</p>
             <p className="text-red-600 text-xs mt-2 font-medium">Não conseguimos carregar os perfis dos mentores.</p>
-            <div className="mt-6 p-4 bg-white/50 rounded-xl text-[10px] text-left border border-red-100">
-              <p className="font-bold uppercase tracking-widest mb-2 text-red-400">Como resolver:</p>
-              <ol className="list-decimal pl-4 space-y-1 text-red-700">
-                <li>Vá ao <b>SQL Editor</b> do seu Supabase.</li>
-                <li>Copie o conteúdo do arquivo <b>docs/database.sql</b>.</li>
-                <li>Cole e clique em <b>Run</b>.</li>
-                <li>Recarregue esta página.</li>
-              </ol>
-            </div>
           </div>
         ) : filteredContacts.length > 0 ? (
           filteredContacts.map((contact) => (
@@ -119,14 +111,20 @@ export default function ChatListPage() {
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="relative">
                     <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-primary/5 shadow-2xl">
-                      <AvatarImage src={`https://picsum.photos/seed/${contact.id}/200/200`} />
+                      <AvatarImage src={contact.avatar_url || `https://picsum.photos/seed/${contact.id}/200/200`} />
                       <AvatarFallback className="bg-primary text-white font-black text-2xl italic">{contact.name?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="absolute bottom-1 right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white" />
                   </div>
                   <div>
                     <CardTitle className="text-lg md:text-xl font-black text-primary italic truncate max-w-[220px]">{contact.name}</CardTitle>
-                    <div className="flex items-center justify-center gap-2 mt-1">
+                    {contact.username && (
+                      <div className="flex items-center justify-center gap-1 text-accent font-bold text-[10px] uppercase mt-1">
+                        <AtSign className="h-2.5 w-2.5" />
+                        <span>{contact.username}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-center gap-2 mt-2">
                       {contact.profile_type === 'teacher' ? <BookOpen className="h-3 w-3 text-accent" /> : <GraduationCap className="h-3 w-3 text-primary" />}
                       <p className="text-[10px] font-bold text-muted-foreground uppercase">{contact.institution || (contact.profile_type === 'teacher' ? 'Mentor' : 'Estudante')}</p>
                     </div>
@@ -142,7 +140,6 @@ export default function ChatListPage() {
           <div className="col-span-full py-20 text-center opacity-30">
             <User className="h-12 w-12 mx-auto mb-4" />
             <p className="font-black italic">Nenhum mentor ou colega encontrado.</p>
-            <p className="text-xs font-medium mt-2">Dica: Execute o script SQL para gerar mentores demo!</p>
           </div>
         )}
       </div>
