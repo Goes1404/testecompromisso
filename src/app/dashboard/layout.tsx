@@ -2,12 +2,12 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState, useMemo, memo, useRef } from "react";
+import { useEffect, useState, useMemo, memo, useRef, Suspense } from "react";
 import { useAuth } from "@/lib/AuthProvider"; 
 
 const studentItems = [
@@ -52,7 +52,6 @@ function SwipeHandler({ children }: { children: React.ReactNode }) {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
-    // Ignorar elementos de interação direta
     if (target.closest('.no-swipe, input, textarea, select, [role="slider"], button, audio, video, #youtube-player, .scrollable-content')) return;
     
     touchStart.current = {
@@ -80,15 +79,10 @@ function SwipeHandler({ children }: { children: React.ReactNode }) {
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
 
-    // REGRAS DE OURO PARA SWIPE INDUSTRIAL:
-    // 1. O movimento horizontal deve ser pelo menos 1.5x maior que o vertical (evita trigger no scroll)
-    // 2. A distância horizontal deve ser maior que 50px (evita toques acidentais)
     if (absX > absY * 1.5 && absX > 50) {
-      // Swipe para Direita (Abre)
       if (!openMobile && deltaX > 50) {
         setOpenMobile(true);
       } 
-      // Swipe para Esquerda (Fecha)
       else if (openMobile && deltaX < -50) {
         setOpenMobile(false);
       }
@@ -129,6 +123,14 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: any[], pathname
   );
 });
 NavMenu.displayName = "NavMenu";
+
+function LoadingFallback() {
+  return (
+    <div className="flex-1 flex items-center justify-center p-8">
+      <Loader2 className="h-8 w-8 animate-spin text-accent opacity-20" />
+    </div>
+  );
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -215,7 +217,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SwipeHandler>
           <main className={`flex-1 flex flex-col min-h-0 ${isAppPage ? 'overflow-hidden' : 'overflow-y-auto'} p-2 md:p-8`}>
             <div className={isAppPage ? 'app-container' : 'max-w-7xl mx-auto w-full'}>
-              {children}
+              <Suspense fallback={<LoadingFallback />}>
+                {children}
+              </Suspense>
             </div>
           </main>
         </SwipeHandler>

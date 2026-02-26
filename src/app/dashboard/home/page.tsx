@@ -65,7 +65,7 @@ export default function DashboardHome() {
     if (!user || !isSupabaseConfigured) return;
     setLoadingProgress(true);
     try {
-      // Query otimizada para buscar o progresso e os detalhes da trilha vinculada
+      // Busca o progresso e tenta trazer os detalhes da trilha via relacionamento
       const { data: progress, error } = await supabase
         .from('user_progress')
         .select(`
@@ -84,14 +84,20 @@ export default function DashboardHome() {
         .limit(5);
       
       if (error) {
-        console.error("Erro Supabase Progresso:", error.message, error.details);
-        throw error;
+        // Se o erro for de relacionamento, explicamos melhor no console
+        if (error.message.includes('relationship')) {
+          console.warn("Atenção: Relacionamento entre user_progress e trails não encontrado no banco. Rode o SQL fornecido.");
+        } else {
+          console.error("Erro Supabase Progresso:", error.message, error.details);
+        }
+        setRecentProgress([]);
+        return;
       }
 
-      // Mapeia os dados para garantir que a estrutura seja plana e fácil de renderizar
+      // Mapeia garantindo que a trilha existe para evitar erros de renderização
       const mappedProgress = progress?.map(p => ({
         ...p,
-        trail: p.trails // Supabase retorna como objeto ou array dependendo da FK
+        trail: Array.isArray(p.trails) ? p.trails[0] : p.trails
       })).filter(p => p.trail);
 
       setRecentProgress(mappedProgress || []);
@@ -118,7 +124,7 @@ export default function DashboardHome() {
         const { data: featured } = await supabase
           .from('trails')
           .select('*')
-          .eq('status', 'active')
+          .or('status.eq.active,status.eq.published')
           .limit(3);
         
         setLibraryItems(featured?.map(f => ({ 
@@ -172,7 +178,7 @@ export default function DashboardHome() {
       await fetchProgress();
     } catch (e: any) {
       console.error("Erro ao iniciar trilha:", e.message || e);
-      toast({ title: "Erro ao sincronizar", description: "Verifique se a tabela de progresso foi criada no Supabase.", variant: "destructive" });
+      toast({ title: "Erro ao sincronizar", description: "Verifique se a tabela de progresso foi criada corretamente com Foreign Keys.", variant: "destructive" });
     } finally {
       setIsStarting(null);
     }
@@ -257,7 +263,7 @@ export default function DashboardHome() {
               <div className="grid grid-cols-1 gap-4">
                 {recentProgress.map((prog) => {
                   const isFinished = prog.percentage === 100;
-                  const trailData = Array.isArray(prog.trails) ? prog.trails[0] : prog.trails;
+                  const trailData = prog.trail;
                   
                   if (!trailData) return null;
 
