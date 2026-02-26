@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -70,10 +71,7 @@ export default function TeacherTrailsPage() {
         .select()
         .single();
 
-      if (error) {
-        console.error("Erro Supabase:", error.message);
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
       setTrails(prev => [data, ...prev]);
@@ -81,18 +79,10 @@ export default function TeacherTrailsPage() {
       setNewTrail({ title: "", category: "Geral", description: "" });
     } catch (e: any) {
       console.error("Falha ao criar trilha:", e);
-      toast({ 
-        title: "Erro de Persistência", 
-        description: e.message, 
-        variant: "destructive" 
-      });
+      toast({ title: "Erro de Persistência", description: e.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleGenerateTopics = () => {
-    toast({ title: "Aurora analisando...", description: "A IA está processando sugestões para sua nova trilha." });
   };
 
   const filteredTrails = trails.filter(t => 
@@ -101,32 +91,26 @@ export default function TeacherTrailsPage() {
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 md:space-y-10 animate-in fade-in duration-500 pb-20 px-1">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary italic leading-none">Gestão de Trilhas</h1>
-          <p className="text-muted-foreground font-medium">Administre caminhos pedagógicos e publique para a rede.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-primary italic leading-none">Gestão de Trilhas</h1>
+          <p className="text-muted-foreground font-medium text-sm md:text-base">Administre caminhos pedagógicos e publique para a rede.</p>
         </div>
         <div className="flex items-center gap-3">
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-2xl h-14 bg-accent text-accent-foreground font-black px-8 shadow-xl hover:scale-105 transition-all">
-                <Plus className="h-6 w-6 mr-2" /> Nova Trilha Digital
+              <Button className="rounded-xl md:rounded-2xl h-12 md:h-14 bg-accent text-accent-foreground font-black px-6 md:px-8 shadow-xl hover:scale-105 transition-all w-full md:w-auto">
+                <Plus className="h-5 w-5 md:h-6 md:w-6 mr-2" /> Nova Trilha Digital
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
+            <DialogContent className="rounded-[2.5rem] p-6 md:p-10 bg-white max-w-lg border-none shadow-2xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black italic text-primary">Configurar Trilha</DialogTitle>
               </DialogHeader>
               <div className="grid gap-6 py-6">
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Título da Trilha</Label>
-                    <Button variant="ghost" size="sm" onClick={handleGenerateTopics} className="text-xs text-accent font-bold hover:bg-accent/10">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Sugerir com IA
-                    </Button>
-                  </div>
+                  <Label className="text-[10px] font-black uppercase opacity-40">Título da Trilha</Label>
                   <Input placeholder="Ex: Fundamentos de IA" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.title} onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })} disabled={isSubmitting} />
                 </div>
                 <div className="space-y-2">
@@ -149,9 +133,9 @@ export default function TeacherTrailsPage() {
         </div>
       </div>
 
-      <div className="relative max-w-xl group">
+      <div className="relative max-w-xl group w-full">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
-        <Input placeholder="Pesquisar entre suas trilhas..." className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] italic focus-visible:ring-accent" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        <Input placeholder="Pesquisar entre suas trilhas..." className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl italic focus-visible:ring-accent" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
       </div>
 
       {loading ? (
@@ -160,12 +144,12 @@ export default function TeacherTrailsPage() {
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Banco de Dados...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {filteredTrails.map((trail) => {
             const isActive = trail.status === 'active' || trail.status === 'published';
             
             return (
-              <Card key={trail.id} className="border-none shadow-xl overflow-hidden group bg-white rounded-[2.5rem] flex flex-col hover:shadow-2xl transition-all duration-500">
+              <Card key={trail.id} className="border-none shadow-xl overflow-hidden group bg-white rounded-[2rem] flex flex-col hover:shadow-2xl transition-all duration-500">
                 <div className="relative aspect-video bg-muted overflow-hidden">
                   <Image src={trail.image_url || `https://picsum.photos/seed/trail-${trail.id}/600/400`} alt={trail.title || "Trilha"} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
                   <div className="absolute top-4 left-4">
@@ -175,11 +159,11 @@ export default function TeacherTrailsPage() {
                     </Badge>
                   </div>
                 </div>
-                <CardHeader className="p-8 pb-4">
+                <CardHeader className="p-6 md:p-8 pb-4">
                   <span className="text-[10px] font-black text-accent uppercase tracking-[0.2em]">{trail.category || "Geral"}</span>
                   <CardTitle className="text-xl font-black italic truncate mt-2 group-hover:text-accent transition-colors">{trail.title}</CardTitle>
                 </CardHeader>
-                <CardFooter className="p-8 pt-4 border-t border-muted/10 mt-auto flex justify-between items-center">
+                <CardFooter className="p-6 md:p-8 pt-4 border-t border-muted/10 mt-auto flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-accent hover:bg-accent/10" asChild title="Simular Visão do Aluno">
                       <Link href={`/dashboard/classroom/${trail.id}`}>
@@ -194,7 +178,7 @@ export default function TeacherTrailsPage() {
               </Card>
             );
           })}
-          {filteredTrails.length === 0 && !loading && (
+          {filteredTrails.length === 0 && (
             <div className="col-span-full py-20 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-muted/5 animate-in fade-in duration-1000">
               <Database className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
               <p className="font-black text-primary italic text-xl">Nenhuma trilha encontrada</p>

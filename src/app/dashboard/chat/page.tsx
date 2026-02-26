@@ -28,14 +28,11 @@ export default function ChatListPage() {
       try {
         const userType = profile.profile_type || 'student';
         
-        // Regra de Negócio: Alunos (todos os tipos) veem apenas Mentores.
-        // Mentores e Admins veem todos para suporte.
         let query = supabase
           .from('profiles')
           .select('*')
           .neq('id', user.id);
 
-        // Se o usuário não for mentor nem admin, filtra apenas por professores
         if (userType !== 'teacher' && userType !== 'admin') {
           query = query.eq('profile_type', 'teacher');
         }
@@ -61,11 +58,11 @@ export default function ChatListPage() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-full mx-auto px-1">
+    <div className="space-y-6 md:space-y-10 animate-in fade-in duration-500 max-w-full mx-auto px-1">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-4xl font-black text-primary italic leading-none">Mentoria</h1>
-          <p className="text-muted-foreground font-medium text-sm italic">Consulte especialistas da rede para acelerar seus estudos.</p>
+          <p className="text-muted-foreground font-medium text-sm md:text-base italic">Consulte especialistas da rede para acelerar seus estudos.</p>
         </div>
       </div>
 
@@ -79,10 +76,9 @@ export default function ChatListPage() {
         />
       </div>
 
-      {/* Card da Aurora (Fixo) */}
       <Card className="border-none shadow-[0_10px_40px_-15px_hsl(var(--accent)/0.3)] rounded-[2.5rem] bg-primary text-white overflow-hidden group transition-all duration-500">
         <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
             <div className="h-16 w-16 md:h-24 md:w-24 rounded-[2rem] bg-accent text-accent-foreground flex items-center justify-center shadow-2xl rotate-3 group-hover:rotate-0 transition-transform">
               <Bot className="h-10 w-10 md:h-14 md:w-14" />
             </div>
@@ -91,13 +87,12 @@ export default function ChatListPage() {
               <p className="text-white/60 font-medium text-xs md:text-base italic">Mentora Pedagógica 24/7. Tire suas dúvidas agora.</p>
             </div>
           </div>
-          <Button className="bg-white text-primary hover:bg-white/90 font-black h-12 md:h-14 px-8 md:px-10 rounded-2xl shadow-xl transition-all border-none" asChild>
+          <Button className="bg-white text-primary hover:bg-white/90 font-black h-12 md:h-14 px-8 md:px-10 rounded-2xl shadow-xl transition-all border-none w-full md:w-auto" asChild>
             <Link href="/dashboard/chat/aurora-ai">Conversar com a Aurora</Link>
           </Button>
         </CardContent>
       </Card>
 
-      {/* Lista de Contatos Reais do Banco */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {loading ? (
           <div className="col-span-full py-20 flex flex-col items-center justify-center gap-4">

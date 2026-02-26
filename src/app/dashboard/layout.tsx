@@ -11,48 +11,38 @@ import { useEffect, useState, useMemo, memo, useRef, Suspense } from "react";
 import { useAuth } from "@/lib/AuthProvider"; 
 
 const studentItems = [
-  // Núcleo de Estudo
   { icon: Home, label: "Página Inicial", href: "/dashboard/home" },
   { icon: Compass, label: "Trilhas de Estudo", href: "/dashboard/trails" },
   { icon: FileText, label: "Simulados", href: "/dashboard/student/simulados" },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live" },
   { icon: Library, label: "Biblioteca Digital", href: "/dashboard/library" },
-  // Comunicação e Social
   { icon: MessagesSquare, label: "Fóruns de Discussão", href: "/dashboard/forum" },
   { icon: MessageSquare, label: "Chat com Mentores", href: "/dashboard/chat", badge: true },
-  // Administrativo e Apoio
   { icon: FileCheck, label: "Documentação", href: "/dashboard/student/documents" },
   { icon: Calculator, label: "Simulador de Isenção", href: "/dashboard/financial-aid" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ];
 
 const teacherItems = [
-  // Gestão Pedagógica
   { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home" },
-  { icon: ClipboardList, label: "Gestão de Trilhas", href: "/dashboard/teacher/trails" },
+  { icon: ClipboardList, label: "Minhas Trilhas", href: "/dashboard/teacher/trails" },
   { icon: Database, label: "Banco de Questões", href: "/dashboard/teacher/questions" },
   { icon: Library, label: "Gestão de Biblioteca", href: "/dashboard/teacher/library" },
-  // Interação e Transmissão
   { icon: MonitorPlay, label: "Gerenciar Lives", href: "/dashboard/teacher/live" },
   { icon: MessagesSquare, label: "Fórum Pedagógico", href: "/dashboard/forum" },
   { icon: MessageSquare, label: "Chats com Alunos", href: "/dashboard/chat", badge: true },
-  // Administrativo
   { icon: Bell, label: "Mural de Avisos", href: "/dashboard/teacher/communication" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ];
 
 const adminItems = [
-  // Inteligência e BI
   { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home" },
   { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics" },
-  // Auditoria e Controle
   { icon: FileCheck, label: "Status de Documentos", href: "/dashboard/admin/checklists" },
   { icon: Eye, label: "Auditoria de Chats", href: "/dashboard/admin/chats" },
   { icon: Users, label: "Gestão de Turmas", href: "/dashboard/admin/students" },
-  // Workflow de Conteúdo
   { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails" },
   { icon: Library, label: "Curadoria de Acervo", href: "/dashboard/teacher/library" },
-  // Global
   { icon: Bell, label: "Comunicados Globais", href: "/dashboard/teacher/communication" },
   { icon: MessagesSquare, label: "Fórum de Gestão", href: "/dashboard/forum" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
@@ -93,12 +83,8 @@ function SwipeHandler({ children }: { children: React.ReactNode }) {
     const absY = Math.abs(deltaY);
 
     if (absX > absY * 1.5 && absX > 50) {
-      if (!openMobile && deltaX > 50) {
-        setOpenMobile(true);
-      } 
-      else if (openMobile && deltaX < -50) {
-        setOpenMobile(false);
-      }
+      if (!openMobile && deltaX > 50) setOpenMobile(true);
+      else if (openMobile && deltaX < -50) setOpenMobile(false);
     }
   };
 
@@ -150,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { user, profile, loading: isUserLoading, signOut } = useAuth();
   
-  const role = profile?.profile_type || user?.user_metadata?.role || 'student';
+  const role = profile?.profile_type === 'teacher' ? 'teacher' : (profile?.profile_type === 'admin' ? 'admin' : 'student');
   const navItems = useMemo(() => {
     if (role === 'admin') return adminItems;
     if (role === 'teacher') return teacherItems;
@@ -218,7 +204,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all">
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">{profile?.name || "Usuário"}</span>
-              <span className="text-[8px] font-black text-accent uppercase tracking-widest">{role.toUpperCase()}</span>
+              <span className="text-[8px] font-black text-accent uppercase tracking-widest">
+                {profile?.profile_type?.toUpperCase() || 'ESTUDANTE'}
+              </span>
             </div>
             <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">
               <AvatarImage src={userAvatar} />

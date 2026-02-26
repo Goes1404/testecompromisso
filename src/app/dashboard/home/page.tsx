@@ -113,7 +113,6 @@ export default function DashboardHome() {
     async function fetchHomeData() {
       if (!user) return;
 
-      // Buscar Comunicados Reais do Banco
       setLoadingAnnouncements(true);
       try {
         const { data: annData } = await supabase
@@ -173,28 +172,6 @@ export default function DashboardHome() {
     }
     fetchHomeData();
   }, [user, fetchProgress]);
-
-  const handleQuickStart = async (trailId: string) => {
-    if (!user || isStarting || !isSupabaseConfigured) return;
-    
-    setIsStarting(trailId);
-    try {
-      const { error: upsertError } = await supabase.from('user_progress').upsert({
-        user_id: user.id,
-        trail_id: trailId,
-        last_accessed: new Date().toISOString()
-      }, { onConflict: 'user_id,trail_id' });
-
-      if (upsertError) throw upsertError;
-      
-      toast({ title: "Trilha Adicionada! 🚀", description: "Ela agora aparece no seu Dashboard." });
-      await fetchProgress();
-    } catch (e: any) {
-      toast({ title: "Erro ao sincronizar", variant: "destructive" });
-    } finally {
-      setIsStarting(null);
-    }
-  };
 
   if (isUserLoading) return (
     <div className="flex flex-col h-96 items-center justify-center gap-4">
@@ -336,12 +313,12 @@ export default function DashboardHome() {
                 <div className="flex items-center gap-4">
                   <div className="h-14 w-14 rounded-3xl bg-white/10 flex items-center justify-center shadow-lg"><ShieldCheck className="h-8 w-8 text-accent" /></div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Status da Conta</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Status da Rede</p>
                     <p className="text-xl font-black italic">Operacional</p>
                   </div>
                 </div>
                 <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-black h-12 rounded-2xl shadow-xl transition-all border-none">
-                  <Link href="/dashboard/chat">Chat com Mentores</Link>
+                  <Link href="/dashboard/chat">Falar com Mentor</Link>
                 </Button>
               </div>
             </Card>
