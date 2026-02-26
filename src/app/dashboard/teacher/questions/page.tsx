@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FilePlus, ListChecks, PlusCircle } from 'lucide-react';
+import { Loader2, FilePlus, ListChecks, PlusCircle, Sparkles, CheckCircle2, Trash2, Database, AlertCircle } from 'lucide-react';
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
 import { QuestionsList } from '@/components/QuestionsList';
 import { supabase } from '@/app/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
+import { Badge } from '@/components/ui/badge';
 import {
     Select,
     SelectContent,
@@ -20,46 +21,13 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-type Subject = {
-    id: string;
-    name: string;
-};
+type Subject = { id: string; name: string };
 type QuestionOption = { key: string; text: string };
 type ParsedQuestion = {
-    tempId: string;
-    question_number_in_source: number;
     question_text: string;
     options: QuestionOption[];
     correct_answer: string;
     year: number;
-    subject_id: string;
-};
-
-const parseExamText = (rawText: string, defaultSubjectId: string): { questions: ParsedQuestion[], errors: string[] } => {
-    const questions: ParsedQuestion[] = [];
-    let errors: string[] = [];
-    const questionMarkers = Array.from(rawText.matchAll(/Questão\s*(\d+)/gi)).map(match => ({ number: parseInt(match[1]), index: match.index, rawText: match[0] }));
-    if (questionMarkers.length === 0) return { questions: [], errors: ["Nenhuma questão encontrada."] };
-    questionMarkers.forEach((marker, i) => {
-        const startIdx = marker.index;
-        const endIdx = (i + 1 < questionMarkers.length) ? questionMarkers[i + 1].index : rawText.length;
-        let block = rawText.substring(startIdx!, endIdx);
-        const altMarkers = Array.from(block.matchAll(/^[A-E][\.)]/gm)).map(m => ({ letter: m[0][0], index: m.index }));
-        if (altMarkers.length >= 4) {
-            try {
-                const enunciadoStart = block.indexOf(marker.rawText) + marker.rawText.length;
-                const enunciadoEnd = altMarkers[0].index;
-                const question_text = block.substring(enunciadoStart, enunciadoEnd).trim();
-                const options = altMarkers.map((alt, j) => {
-                    const optStart = alt.index! + alt.letter.length + 1;
-                    const optEnd = (j + 1 < altMarkers.length) ? altMarkers[j + 1].index : block.length;
-                    return { key: alt.letter, text: block.substring(optStart, optEnd).trim() };
-                });
-                questions.push({ tempId: `q-${marker.number}`, question_number_in_source: marker.number, question_text, options, correct_answer: 'A', year: new Date().getFullYear(), subject_id: defaultSubjectId });
-            } catch (e) { errors.push(`Erro na Questão ${marker.number}`); }
-        }
-    });
-    return { questions, errors };
 };
 
 export default function QuestionBankPage() {
@@ -73,60 +41,99 @@ export default function QuestionBankPage() {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '' });
     const [manualOptions, setManualOptions] = useState({ A: '', B: '', C: '', D: '', E: '' });
+    const [bulkSubjectId, setBulkSubjectId] = useState<string>('');
 
     useEffect(() => {
         const fetchSubjects = async () => {
             const { data, error } = await supabase.from('subjects').select('id, name');
-            if (error) {
-                toast({ title: "Erro ao buscar matérias", description: error.message, variant: 'destructive' });
-            } else if (data) {
+            if (!error && data) {
                 setSubjects(data);
                 const uncat = data.find(s => s.name === 'Não Categorizado');
-                if (uncat && !manualQuestion.subject_id) setManualQuestion(prev => ({ ...prev, subject_id: uncat.id! }));
+                if (uncat) {
+                    setManualQuestion(prev => ({ ...prev, subject_id: uncat.id }));
+                    setBulkSubjectId(uncat.id);
+                }
             }
         };
         fetchSubjects();
-    }, [toast, manualQuestion.subject_id]);
+    }, []);
 
-    const handleAnalyze = () => {
-        const defaultSubjectId = subjects.find(s => s.name === 'Não Categorizado')?.id || subjects[0]?.id;
-        if (!rawText.trim() || !defaultSubjectId) return;
+    const handleAnalyze = async () => {
+        if (!rawText.trim() || isAnalyzing) return;
+        
         setIsAnalyzing(true);
-        setTimeout(() => {
-            const { questions, errors } = parseExamText(rawText, defaultSubjectId);
-            if (errors.length > 0) toast({ title: "Erro na Análise", description: errors.join('\n'), variant: 'destructive' });
-            setExtractedQuestions(questions);
+        setExtractedQuestions([]);
+        
+        try {
+            const response = await fetch('/api/genkit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    flowId: 'bulkQuestionParser',
+                    input: { rawText: rawText }
+                })
+            });
+
+            const data = await response.json();
+            if (data.success && data.result?.questions) {
+                setExtractedQuestions(data.result.questions);
+                toast({ title: "Análise Concluída!", description: `${data.result.questions.length} questões identificadas pela Aurora.` });
+            } else {
+                throw new Error(data.error || "A IA não conseguiu extrair questões válidas.");
+            }
+        } catch (error: any) {
+            toast({ title: "Erro na Aurora", description: error.message, variant: 'destructive' });
+        } finally {
             setIsAnalyzing(false);
-        }, 500);
+        }
     };
 
-    const handleSaveSingleQuestion = async () => {
-        if (!user) {
-            toast({ title: "Não Autenticado", description: "Faça login para salvar questões.", variant: "destructive" });
-            return;
-        }
-
-        if (!manualQuestion.question_text || !manualQuestion.subject_id || !manualQuestion.correct_answer || Object.values(manualOptions).some(opt => !opt)) {
-            toast({ title: "Campos Incompletos", description: "Preencha todos os campos.", variant: "destructive" });
-            return;
-        }
+    const handleSaveBulk = async () => {
+        if (!user || extractedQuestions.length === 0 || !bulkSubjectId) return;
         
         setIsSaving(true);
         try {
-            const optionsToSave: QuestionOption[] = Object.entries(manualOptions).map(([key, text]) => ({ key, text }));
+            const itemsToInsert = extractedQuestions.map(q => ({
+                question_text: q.question_text,
+                options: q.options,
+                correct_answer: q.correct_answer,
+                year: q.year,
+                subject_id: bulkSubjectId,
+                teacher_id: user.id
+            }));
+
+            const { error } = await supabase.from('questions').insert(itemsToInsert);
+            if (error) throw error;
+
+            toast({ title: "Carga Finalizada!", description: "Todas as questões foram gravadas no repositório." });
+            setExtractedQuestions([]);
+            setRawText('');
+            // Forçar reload suave ou atualizar lista
+            window.location.reload();
+        } catch (e: any) {
+            toast({ title: "Erro ao gravar", description: e.message, variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveSingleQuestion = async () => {
+        if (!user || !manualQuestion.question_text || !manualQuestion.subject_id) return;
+        
+        setIsSaving(true);
+        try {
+            const options: QuestionOption[] = Object.entries(manualOptions).map(([key, text]) => ({ key, text }));
             const { error } = await supabase.from('questions').insert([{ 
                 ...manualQuestion, 
-                options: optionsToSave,
+                options,
                 teacher_id: user.id
             }]);
 
             if (error) throw error;
 
-            toast({ title: "Questão Salva!", description: "A nova questão foi adicionada ao banco." });
-            setManualQuestion({ question_text: '', year: new Date().getFullYear(), subject_id: subjects.find(s => s.name === 'Não Categorizado')?.id || '', correct_answer: '' });
+            toast({ title: "Questão Salva!" });
+            setManualQuestion(prev => ({ ...prev, question_text: '' }));
             setManualOptions({ A: '', B: '', C: '', D: '', E: '' });
-            
-            // Recarrega a página para atualizar a lista
             window.location.reload();
         } catch (err: any) {
             toast({ title: "Falha na Persistência", description: err.message, variant: 'destructive' });
@@ -136,13 +143,13 @@ export default function QuestionBankPage() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-1">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center"><FilePlus className="h-6 w-6 text-accent" /></div>
                     <div className="space-y-1">
                         <h1 className="text-3xl font-black text-primary italic leading-none">Gestão de Questões</h1>
-                        <p className="text-muted-foreground text-xs font-medium">Repositório industrial de avaliações.</p>
+                        <p className="text-muted-foreground text-xs font-medium italic">Repositório industrial de avaliações.</p>
                     </div>
                 </div>
             </div>
@@ -152,49 +159,82 @@ export default function QuestionBankPage() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
                 <CardContent className="p-8 md:p-12">
                     <div className="flex bg-muted/10 p-1.5 rounded-2xl mb-10 w-fit mx-auto md:mx-0">
-                        <Button 
-                            variant={entryMode === 'bulk' ? 'default' : 'ghost'} 
-                            onClick={() => setEntryMode('bulk')} 
-                            className="rounded-xl font-bold h-11 px-6"
-                        >
-                            <ListChecks className="h-4 w-4 mr-2"/> Carga em Massa
+                        <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => setEntryMode('bulk')} className="rounded-xl font-bold h-11 px-6">
+                            <ListChecks className="h-4 w-4 mr-2"/> Carga em Massa (IA)
                         </Button>
-                        <Button 
-                            variant={entryMode === 'manual' ? 'default' : 'ghost'} 
-                            onClick={() => setEntryMode('manual')} 
-                            className="rounded-xl font-bold h-11 px-6"
-                        >
+                        <Button variant={entryMode === 'manual' ? 'default' : 'ghost'} onClick={() => setEntryMode('manual')} className="rounded-xl font-bold h-11 px-6">
                             <PlusCircle className="h-4 w-4 mr-2"/> Cadastro Manual
                         </Button>
                     </div>
 
                     {entryMode === 'bulk' ? (
-                        <div className="space-y-6">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Conteúdo da Prova (Texto Bruto)</Label>
+                        <div className="space-y-8">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between px-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Conteúdo Bruto da Prova</Label>
+                                    <Badge className="bg-accent/10 text-accent border-none font-black text-[8px] uppercase px-3 py-1">Aurora Parser Ativo</Badge>
+                                </div>
                                 <Textarea 
-                                    placeholder="Ex: Questão 1. Enunciado... A. Opção 1 B. Opção 2..." 
-                                    className="min-h-[300px] rounded-[1.5rem] bg-muted/30 border-none p-6 font-medium text-sm leading-relaxed" 
+                                    placeholder="Cole aqui o texto da prova... Ex: 1. Qual o valor de X? A) 1 B) 2..." 
+                                    className="min-h-[250px] rounded-[1.5rem] bg-muted/30 border-none p-6 font-medium text-sm leading-relaxed italic" 
                                     value={rawText} 
                                     onChange={(e) => setRawText(e.target.value)} 
                                 />
-                            </div>
-                            <div className="flex justify-end pt-6 border-t border-muted/10">
-                                <Button onClick={handleAnalyze} disabled={isAnalyzing || !rawText.trim()} className="h-14 rounded-2xl font-black px-10 bg-accent text-accent-foreground shadow-xl transition-all active:scale-95">
-                                    {isAnalyzing ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : "Extrair Questões do Texto"}
+                                <Button onClick={handleAnalyze} disabled={isAnalyzing || !rawText.trim()} className="w-full h-14 rounded-2xl font-black text-base bg-accent text-accent-foreground shadow-xl hover:scale-[1.02] transition-all">
+                                    {isAnalyzing ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Sparkles className="h-6 w-6 mr-2" />}
+                                    {isAnalyzing ? "Aurora está lendo o texto..." : "Analisar Texto com IA"}
                                 </Button>
                             </div>
+
+                            {extractedQuestions.length > 0 && (
+                                <div className="space-y-6 pt-10 border-t border-dashed animate-in slide-in-from-bottom-4">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div>
+                                            <h3 className="text-xl font-black text-primary italic">Questões Detectadas ({extractedQuestions.length})</h3>
+                                            <p className="text-xs text-muted-foreground font-medium">Revise os dados antes de gravar no banco oficial.</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Select value={bulkSubjectId} onValueChange={setBulkSubjectId}>
+                                                <SelectTrigger className="w-48 h-11 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
+                                                <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                    {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold">{s.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <Button onClick={handleSaveBulk} disabled={isSaving} className="h-11 px-8 rounded-xl bg-primary text-white font-black shadow-lg">
+                                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
+                                                Gravar Tudo
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {extractedQuestions.map((q, i) => (
+                                            <Card key={i} className="border-none shadow-md bg-slate-50 p-5 rounded-2xl relative group">
+                                                <button onClick={() => setExtractedQuestions(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white text-red-400 opacity-0 group-hover:opacity-100 transition-all shadow-sm flex items-center justify-center hover:bg-red-50">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                                <Badge className="bg-primary/5 text-primary border-none font-black text-[8px] uppercase mb-3">Questão {i+1} • {q.year}</Badge>
+                                                <p className="text-xs font-bold text-primary italic line-clamp-3 mb-4">"{q.question_text}"</p>
+                                                <div className="space-y-1">
+                                                    {q.options.slice(0, 3).map(opt => (
+                                                        <div key={opt.key} className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium">
+                                                            <span className={`font-black ${q.correct_answer === opt.key ? 'text-green-600' : ''}`}>{opt.key})</span>
+                                                            <span className="truncate">{opt.text}</span>
+                                                        </div>
+                                                    ))}
+                                                    {q.options.length > 3 && <p className="text-[8px] text-muted-foreground opacity-40">... + {q.options.length - 3} opções</p>}
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-8">
                             <div className="space-y-4">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Enunciado</Label>
-                                <Textarea 
-                                    placeholder="Digite o enunciado completo..." 
-                                    className="rounded-[1.5rem] bg-muted/30 border-none min-h-[150px] p-6 font-medium italic" 
-                                    value={manualQuestion.question_text} 
-                                    onChange={e => setManualQuestion(prev => ({...prev, question_text: e.target.value}))} 
-                                />
+                                <Textarea placeholder="Digite o enunciado completo..." className="rounded-[1.5rem] bg-muted/30 border-none min-h-[150px] p-6 font-medium italic" value={manualQuestion.question_text} onChange={e => setManualQuestion(prev => ({...prev, question_text: e.target.value}))} />
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -203,12 +243,7 @@ export default function QuestionBankPage() {
                                         <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Alternativa {key}</Label>
                                         <div className="relative">
                                             <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-primary/20 italic">{key}</span>
-                                            <Input 
-                                                placeholder="Texto da opção..." 
-                                                className="pl-12 h-14 rounded-2xl bg-muted/30 border-none font-medium" 
-                                                value={manualOptions[key as keyof typeof manualOptions]} 
-                                                onChange={e => setManualOptions(prev => ({...prev, [key]: e.target.value}))}
-                                            />
+                                            <Input placeholder="Texto da opção..." className="pl-12 h-14 rounded-2xl bg-muted/30 border-none font-medium" value={manualOptions[key as keyof typeof manualOptions]} onChange={e => setManualOptions(prev => ({...prev, [key]: e.target.value}))} />
                                         </div>
                                     </div>
                                 ))}
@@ -218,9 +253,7 @@ export default function QuestionBankPage() {
                                 <div className="space-y-2">
                                     <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Gabarito Oficial</Label>
                                     <Select value={manualQuestion.correct_answer} onValueChange={val => setManualQuestion(prev => ({...prev, correct_answer: val}))}>
-                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
-                                            <SelectValue placeholder="Selecione" />
-                                        </SelectTrigger>
+                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue placeholder="Selecione" /></SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-2xl">
                                             {['A', 'B', 'C', 'D', 'E'].map(key => <SelectItem key={key} value={key} className="py-3 font-bold">Alternativa {key}</SelectItem>)}
                                         </SelectContent>
@@ -229,22 +262,15 @@ export default function QuestionBankPage() {
                                 <div className="space-y-2">
                                     <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Matéria / Disciplina</Label>
                                     <Select value={manualQuestion.subject_id} onValueChange={val => setManualQuestion(prev => ({...prev, subject_id: val}))}>
-                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
-                                            <SelectValue placeholder="Selecione" />
-                                        </SelectTrigger>
+                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue placeholder="Selecione" /></SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-2xl">
                                             {subjects.map(s => <SelectItem key={s.id} value={s.id} className="py-3 font-bold">{s.name}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Ano de Aplicação</Label>
-                                    <Input 
-                                        type="number" 
-                                        className="h-14 rounded-2xl bg-muted/30 border-none font-black text-center" 
-                                        value={manualQuestion.year} 
-                                        onChange={e => setManualQuestion(prev => ({...prev, year: parseInt(e.target.value, 10)}))}
-                                    />
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Ano</Label>
+                                    <Input type="number" className="h-14 rounded-2xl bg-muted/30 border-none font-black text-center" value={manualQuestion.year} onChange={e => setManualQuestion(prev => ({...prev, year: parseInt(e.target.value, 10)}))} />
                                 </div>
                             </div>
 

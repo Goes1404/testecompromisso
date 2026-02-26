@@ -1,8 +1,8 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { conceptExplanationAssistantFlow } from '@/ai/flows/concept-explanation-assistant';
 import { financialAidDeterminationFlow } from '@/ai/flows/financial-aid-determination';
 import { quizGeneratorFlow } from '@/ai/flows/quiz-generator';
+import { bulkQuestionParserFlow } from '@/ai/flows/bulk-question-parser';
 
 /**
  * @fileOverview Gateway de API para os fluxos da Aurora IA.
@@ -24,11 +24,12 @@ export async function POST(req: NextRequest) {
 
     console.log(`[AURORA API] Iniciando flow: ${flowId}`);
 
-    // Mapeamento explícito para garantir que o Next.js encontre as funções
+    // Mapeamento explícito de fluxos registrados
     const flows: Record<string, any> = {
       conceptExplanationAssistant: conceptExplanationAssistantFlow,
       financialAidDetermination: financialAidDeterminationFlow,
       quizGenerator: quizGeneratorFlow,
+      bulkQuestionParser: bulkQuestionParserFlow,
     };
 
     const targetFlow = flows[flowId];
