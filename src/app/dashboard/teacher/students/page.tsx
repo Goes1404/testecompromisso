@@ -64,7 +64,7 @@ const mockStudents = [
 ];
 
 export default function TeacherStudentsPage() {
-  const { user } = auth; // Usando o hook useAuth via importação correta se necessário, mas mantendo a lógica de mock para apresentação conforme solicitado.
+  const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "at_risk" | "financial_aid">("all");
