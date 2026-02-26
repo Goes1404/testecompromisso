@@ -65,7 +65,7 @@ export default function DashboardHome() {
     if (!user) return;
     setLoadingProgress(true);
     try {
-      // A mágica acontece aqui: o Join com 'trail:trails' só funciona se houver a Foreign Key no SQL
+      // O Join com 'trail:trails' depende da Foreign Key no SQL
       const { data: progress, error } = await supabase
         .from('user_progress')
         .select(`
@@ -84,8 +84,6 @@ export default function DashboardHome() {
         .limit(5);
       
       if (error) throw error;
-      
-      // Filtramos apenas os que têm a relação de trilha válida
       setRecentProgress(progress?.filter(p => p.trail) || []);
     } catch (e) {
       console.error("Erro ao buscar progresso:", e);
@@ -156,7 +154,6 @@ export default function DashboardHome() {
         toast({ title: "Atividade Retomada", description: "A trilha foi movida para o topo da sua lista." });
       }
 
-      // Refresh instantâneo para mostrar no Dashboard
       await fetchProgress();
     } catch (e: any) {
       console.error("Erro ao iniciar trilha:", e);
