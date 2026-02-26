@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-// Carregamento dinâmico estrito para o cliente
 const AccessibilityWidget = dynamic(() => 
   import('@/components/AccessibilityWidget').then(mod => mod.AccessibilityWidget),
   { ssr: false }
@@ -24,8 +23,7 @@ export function ClientWrapper({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Regra para não renderizar os widgets em páginas de login/registro
-  const isAuthPage = ['/login', '/register', '/'].includes(pathname);
+  const isAuthPage = ['/login', '/register', '/'].includes(pathname || '');
 
   if (!mounted) return <>{children}</>;
 

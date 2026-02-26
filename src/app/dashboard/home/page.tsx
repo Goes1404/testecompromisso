@@ -26,7 +26,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
-import { formatDistanceToNow, isValid } from "date-fns";
+import { formatDistanceToNow, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 
@@ -89,11 +89,12 @@ export default function DashboardHome() {
       }
 
       const mappedProgress = progress?.map(p => {
+        // Trata o caso do Supabase retornar objeto ou array
         const trailData = Array.isArray(p.trail) ? p.trail[0] : p.trail;
         return { ...p, trail: trailData };
-      }).filter(p => p.trail);
+      }).filter(p => p.trail) || [];
 
-      setRecentProgress(mappedProgress || []);
+      setRecentProgress(mappedProgress);
     } catch (e: any) {
       console.error("Erro fatal ao buscar progresso:", e);
     } finally {
@@ -243,8 +244,9 @@ export default function DashboardHome() {
                   
                   if (!trailData) return null;
 
-                  const lastAccessedDate = new Date(prog.last_accessed);
-                  const isValidDate = isValid(lastAccessedDate);
+                  const rawDate = prog.last_accessed;
+                  const lastAccessedDate = rawDate ? parseISO(rawDate) : null;
+                  const isDateValid = lastAccessedDate && isValid(lastAccessedDate);
 
                   return (
                     <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
@@ -258,7 +260,7 @@ export default function DashboardHome() {
                               {trailData.category} {isFinished && '• CONCLUÍDA'}
                             </span>
                             <span className="text-[8px] font-black text-primary/40 uppercase flex items-center gap-1 italic">
-                              <Clock className="h-3 w-3"/> {isValidDate ? formatDistanceToNow(lastAccessedDate, { addSuffix: true, locale: ptBR }) : 'Recém iniciada'}
+                              <Clock className="h-3 w-3"/> {isDateValid ? formatDistanceToNow(lastAccessedDate, { addSuffix: true, locale: ptBR }) : 'Recentemente'}
                             </span>
                           </div>
                           <h3 className="font-black text-base text-primary italic leading-none truncate max-w-[300px]">
