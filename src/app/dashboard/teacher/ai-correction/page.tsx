@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Sparkles, Loader2, AlertTriangle, BookCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-// Tipagem para o resultado da correção
 interface CorrectionResult {
   final_score: number;
   competencies: {
@@ -45,12 +44,19 @@ export default function AiCorrectionPage() {
         body: JSON.stringify({ theme, text }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Falha ao se comunicar com a API');
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (e) {
+        throw new Error('O servidor retornou uma resposta inválida.');
       }
 
-      const data: CorrectionResult = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'Falha ao se comunicar com a API');
+      }
+
       setResult(data);
 
     } catch (e: any) {

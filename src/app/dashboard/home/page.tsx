@@ -64,21 +64,42 @@ export default function DashboardHome() {
   const fetchProgress = useCallback(async () => {
     if (!user) return;
     setLoadingProgress(true);
-    const { data: progress } = await supabase
-      .from('user_progress')
-      .select('*, trail:trails(title, category, image_url)')
-      .eq('user_id', user.id)
-      .order('last_accessed', { ascending: false })
-      .limit(5);
-    
-    setRecentProgress(progress || []);
-    setLoadingProgress(false);
+    try {
+      // Busca progresso com join na tabela de trilhas
+      // Importante: a Foreign Key deve estar definida no banco
+      const { data: progress, error } = await supabase
+        .from('user_progress')
+        .select(`
+          id, 
+          percentage, 
+          last_accessed, 
+          trail_id,
+          trail:trails (
+            title, 
+            category, 
+            image_url
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('last_accessed', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      
+      // Filtrar apenas registros que possuem trilha válida associada
+      setRecentProgress(progress?.filter(p => p.trail) || []);
+    } catch (e) {
+      console.error("Erro ao buscar progresso:", e);
+    } finally {
+      setLoadingProgress(false);
+    }
   }, [user]);
 
   useEffect(() => {
     async function fetchHomeData() {
       if (!user) return;
 
+      // 1. Avisos (Mock)
       setLoadingAnnouncements(true);
       setAnnouncements([
            { id: 2, title: 'Simulados de Março', message: 'Os novos simulados de Biologia e Química já estão disponíveis no banco de questões.', priority: 'medium' },
@@ -86,12 +107,23 @@ export default function DashboardHome() {
       ]);
       setLoadingAnnouncements(false);
 
+      // 2. Sugestões de Trilhas (Exemplos)
       setLoadingLibrary(true);
-      // Busca 3 trilhas em destaque como exemplos
-      const { data: featured } = await supabase.from('trails').select('*').limit(3);
-      setLibraryItems(featured?.map(f => ({ id: f.id, title: f.title, description: f.description, category: f.category })) || []);
+      const { data: featured } = await supabase
+        .from('trails')
+        .select('*')
+        .eq('status', 'active')
+        .limit(3);
+      
+      setLibraryItems(featured?.map(f => ({ 
+        id: f.id, 
+        title: f.title, 
+        description: f.description, 
+        category: f.category 
+      })) || []);
       setLoadingLibrary(false);
 
+      // 3. Progresso do Usuário
       await fetchProgress();
     }
     fetchHomeData();
@@ -102,32 +134,39 @@ export default function DashboardHome() {
     
     setIsStarting(trailId);
     try {
-      // Verifica se já existe progresso para não sobrescrever
+      // Verifica se já existe progresso para não duplicar
       const { data: existing } = await supabase
         .from('user_progress')
         .select('id')
         .eq('user_id', user.id)
         .eq('trail_id', trailId)
-        .single();
+        .maybeSingle();
 
       if (!existing) {
-        const { error } = await supabase.from('user_progress').insert({
+        const { error: insertError } = await supabase.from('user_progress').insert({
           user_id: user.id,
           trail_id: trailId,
           percentage: 0,
           last_accessed: new Date().toISOString()
         });
 
-        if (error) throw error;
-        toast({ title: "Trilha Iniciada!", description: "Ela agora aparece na sua lista de atividades." });
+        if (insertError) throw insertError;
+        toast({ title: "Trilha Iniciada!", description: "Ela agora aparece na sua lista de atividades recentes." });
       } else {
         // Apenas atualiza a data de acesso para subir na lista
-        await supabase.from('user_progress').update({ last_accessed: new Date().toISOString() }).eq('id', existing.id);
+        await supabase
+          .from('user_progress')
+          .update({ last_accessed: new Date().toISOString() })
+          .eq('id', existing.id);
+        
+        toast({ title: "Atividade Retomada", description: "A trilha foi movida para o topo da sua lista." });
       }
 
+      // Refresh instantâneo da lista na Home
       await fetchProgress();
-    } catch (e) {
+    } catch (e: any) {
       console.error("Erro ao iniciar trilha:", e);
+      toast({ title: "Erro ao sincronizar", description: e.message, variant: "destructive" });
     } finally {
       setIsStarting(null);
     }
@@ -202,12 +241,20 @@ export default function DashboardHome() {
                 </span>
               )}
             </div>
+            
             {loadingProgress ? (
-              <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-accent h-8 w-8" /></div>
+              <div className="py-20 flex justify-center flex-col items-center gap-4 border-2 border-dashed rounded-[2.5rem]">
+                <Loader2 className="animate-spin text-accent h-8 w-8" />
+                <p className="text-[10px] font-black uppercase text-muted-foreground">Sincronizando Atividades...</p>
+              </div>
             ) : recentProgress.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
                 {recentProgress.map((prog) => {
                   const isFinished = prog.percentage === 100;
+                  const trailData = prog.trail;
+                  
+                  if (!trailData) return null;
+
                   return (
                     <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
                       <Card className={`border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-3xl p-5 flex flex-col md:flex-row items-center gap-6 group relative overflow-hidden ${isFinished ? 'bg-slate-50/50' : ''}`}>
@@ -222,14 +269,14 @@ export default function DashboardHome() {
                         <div className="flex-1 space-y-2 w-full">
                           <div className="flex justify-between items-center">
                             <span className={`text-[9px] font-black uppercase tracking-widest ${isFinished ? 'text-green-600' : 'text-accent'}`}>
-                              {prog.trail?.category} {isFinished && '• CONCLUÍDA'}
+                              {trailData.category} {isFinished && '• CONCLUÍDA'}
                             </span>
                             <span className="text-[8px] font-black text-primary/40 uppercase flex items-center gap-1 italic">
-                              <Clock className="h-3 w-3"/> {formatDistanceToNow(new Date(prog.last_accessed), { addSuffix: true, locale: ptBR })}
+                              <Clock className="h-3 w-3"/> {prog.last_accessed ? formatDistanceToNow(new Date(prog.last_accessed), { addSuffix: true, locale: ptBR }) : 'Recém iniciada'}
                             </span>
                           </div>
                           <h3 className="font-black text-base text-primary italic leading-none truncate max-w-[300px]">
-                            {prog.trail?.title}
+                            {trailData.title}
                           </h3>
                           <div className="space-y-1.5 pt-1">
                             <div className="flex justify-between items-center">
@@ -251,6 +298,7 @@ export default function DashboardHome() {
               <div className="py-12 text-center border-4 border-dashed rounded-[2.5rem] bg-muted/5 opacity-40">
                 <PlayCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                 <p className="font-black italic text-primary">Inicie sua primeira trilha ao lado!</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground mt-2">Suas trilhas aparecerão aqui automaticamente.</p>
               </div>
             )}
           </div>
@@ -283,7 +331,12 @@ export default function DashboardHome() {
 
             <h3 className="text-xl font-black text-primary italic px-2">Sugestões de Início</h3>
             <div className="space-y-4">
-              {libraryItems.length > 0 ? libraryItems.map((item) => (
+              {loadingLibrary ? (
+                <div className="py-10 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="animate-spin text-accent h-6 w-6" />
+                  <p className="text-[8px] font-black uppercase opacity-40">Buscando Recomendações...</p>
+                </div>
+              ) : libraryItems.length > 0 ? libraryItems.map((item) => (
                 <Card key={item.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group overflow-hidden relative">
                   <div className="flex items-center gap-4 relative z-10">
                     <div className="h-12 w-12 rounded-xl bg-muted/30 relative overflow-hidden shrink-0">
@@ -305,9 +358,9 @@ export default function DashboardHome() {
                   </div>
                 </Card>
               )) : (
-                <div className="text-center py-10 opacity-20">
-                  <Library className="mx-auto mb-2" />
-                  <p className="text-[10px] font-black uppercase">Carregando Acervo...</p>
+                <div className="text-center py-10 opacity-20 border-2 border-dashed rounded-2xl">
+                  <Library className="mx-auto mb-2 h-6 w-6" />
+                  <p className="text-[8px] font-black uppercase">Acervo Vazio</p>
                 </div>
               )}
               <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-accent hover:bg-accent/5">

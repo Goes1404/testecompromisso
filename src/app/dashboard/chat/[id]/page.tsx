@@ -30,7 +30,6 @@ export default function DirectChatPage() {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Carregar dados iniciais e histórico
   useEffect(() => {
     async function loadChatData() {
       if (!user || !contactId) return;
@@ -43,7 +42,6 @@ export default function DirectChatPage() {
             { id: 'initial', sender_id: 'aurora-ai', content: 'Olá! Como posso te ajudar a acelerar seus estudos hoje?', created_at: new Date().toISOString() }
           ]);
         } else {
-          // Carregar Perfil do Contato
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -57,7 +55,6 @@ export default function DirectChatPage() {
             setContact({ name: "Usuário Externo", institution: "Rede Compromisso" });
           }
 
-          // Carregar Mensagens Reais (Histórico entre eu e o contato)
           const { data: msgs, error: msgsError } = await supabase
             .from('direct_messages')
             .select('*')
@@ -75,7 +72,6 @@ export default function DirectChatPage() {
 
     loadChatData();
 
-    // Inscrição Real-time para chats entre humanos
     if (!isAurora && user) {
       const channel = supabase
         .channel(`chat:${contactId}`)
@@ -100,7 +96,6 @@ export default function DirectChatPage() {
     }
   }, [user, contactId, isAurora]);
 
-  // Scroll automático para a última mensagem
   useEffect(() => {
     if (scrollRef.current) {
       const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
@@ -137,8 +132,12 @@ export default function DirectChatPage() {
           }),
         });
 
+        if (!response.ok) {
+          throw new Error('Falha na comunicação com a IA');
+        }
+
         const data = await response.json();
-        if (data.success && data.result.response) {
+        if (data.success && data.result?.response) {
           setMessages(prev => [...prev, {
             id: Date.now().toString() + '-ai',
             sender_id: "aurora-ai",
@@ -147,7 +146,7 @@ export default function DirectChatPage() {
           }]);
         }
       } catch (err) {
-        toast({ title: "Aurora processando...", description: "Houve uma oscilação na rede.", variant: "destructive" });
+        toast({ title: "Aurora processando...", description: "Houve uma oscilação na rede. Tente novamente.", variant: "destructive" });
       } finally {
         setIsAiThinking(false);
       }
@@ -178,7 +177,6 @@ export default function DirectChatPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 animate-in fade-in duration-500 overflow-hidden space-y-2 md:space-y-4 w-full h-full">
-      {/* Header do Chat */}
       <div className="flex items-center justify-between px-2 py-2 shrink-0 bg-white/50 backdrop-blur-md rounded-2xl shadow-sm border border-white/20">
         <div className="flex items-center gap-2 overflow-hidden">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full h-9 w-9 md:h-10 md:w-10 shrink-0 hover:bg-primary/5 transition-all">

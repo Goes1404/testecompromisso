@@ -1,147 +1,79 @@
-/**
- * MASTER DATABASE SCRIPT - COMPROMISSO
- * Este script deve ser executado no SQL Editor do Supabase.
- * Ele configura todas as tabelas, permissões e funções necessárias.
- */
 
--- 1. TABELA DE PERFIS
-CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    profile_type TEXT CHECK (profile_type IN ('etec', 'uni', 'teacher', 'admin')),
-    institution TEXT,
-    course TEXT,
-    interests TEXT,
-    avatar_url TEXT,
-    name_changes_count INTEGER DEFAULT 0,
-    is_financial_aid_eligible BOOLEAN DEFAULT FALSE,
-    last_access TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+-- =====================================================================
+-- COMPROMISSO | SMART EDUCATION
+-- SCRIPT OFICIAL DE CONFIGURAÇÃO DO BANCO DE DADOS (SUPABASE)
+-- Versão: 3.0.0 (Consolidação Master)
+-- =====================================================================
 
--- 2. ESTRUTURA DE TRILHAS
-CREATE TABLE IF NOT EXISTS public.trails (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
-    category TEXT NOT NULL,
-    description TEXT,
-    teacher_id UUID REFERENCES auth.users(id),
-    teacher_name TEXT,
-    status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'review', 'published', 'active')),
-    image_url TEXT,
-    target_audience TEXT DEFAULT 'all',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.modules (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    trail_id UUID REFERENCES public.trails(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    order_index INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.learning_contents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    module_id UUID REFERENCES public.modules(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    type TEXT NOT NULL, -- video, pdf, quiz, text, file
-    url TEXT,
-    description TEXT,
-    order_index INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- 3. BANCO DE QUESTÕES E MATÉRIAS
+-- 1. TABELA DE MATÉRIAS (Disciplinas Base)
 CREATE TABLE IF NOT EXISTS public.subjects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+-- 2. TABELA DE QUESTÕES (Banco de Dados Industrial)
 CREATE TABLE IF NOT EXISTS public.questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     question_text TEXT NOT NULL,
     year INTEGER,
     subject_id UUID REFERENCES public.subjects(id) ON DELETE CASCADE,
     teacher_id UUID REFERENCES auth.users(id),
-    correct_answer TEXT,
-    options JSONB,
+    correct_answer TEXT, -- Gabarito (A, B, C, D ou E)
+    options JSONB,       -- Lista de alternativas em formato JSON
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- 4. LIVES E AGENDAMENTOS
-CREATE TABLE IF NOT EXISTS public.lives (
+-- 3. TABELA DE TRILHAS (Learning Journeys)
+CREATE TABLE IF NOT EXISTS public.trails (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
+    category TEXT DEFAULT 'Geral',
     description TEXT,
-    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     teacher_id UUID REFERENCES auth.users(id),
     teacher_name TEXT,
-    meet_link TEXT,
-    status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'live', 'finished')),
+    status TEXT DEFAULT 'draft', -- draft, active, published
+    image_url TEXT,
+    target_audience TEXT DEFAULT 'all',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- 5. COMUNIDADE (FÓRUM)
-CREATE TABLE IF NOT EXISTS public.forums (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    description TEXT,
-    category TEXT NOT NULL,
-    author_id UUID REFERENCES auth.users(id),
-    author_name TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.forum_posts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    forum_id UUID REFERENCES public.forums(id) ON DELETE CASCADE,
-    author_id UUID REFERENCES auth.users(id),
-    author_name TEXT,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- 6. CHAT DIRETO
-CREATE TABLE IF NOT EXISTS public.direct_messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    receiver_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- 7. PROGRESSO DO USUÁRIO
+-- 4. TABELA DE PROGRESSO DO USUÁRIO (O Coração do Dashboard)
+-- Importante: Foreign Key para 'trails' deve estar correta para os Joins
 CREATE TABLE IF NOT EXISTS public.user_progress (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     trail_id UUID REFERENCES public.trails(id) ON DELETE CASCADE,
     percentage INTEGER DEFAULT 0,
     last_accessed TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     UNIQUE(user_id, trail_id)
 );
 
--- 8. BIBLIOTECA
-CREATE TABLE IF NOT EXISTS public.library_resources (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
-    description TEXT,
-    category TEXT,
-    type TEXT,
-    url TEXT,
-    image_url TEXT,
+-- 5. TABELA DE PERFIS (Dados Estendidos do Usuário)
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT,
+    email TEXT,
+    profile_type TEXT CHECK (profile_type IN ('etec', 'uni', 'teacher', 'admin')),
+    institution TEXT,
+    course TEXT,
+    is_financial_aid_eligible BOOLEAN DEFAULT false,
+    name_changes_count INTEGER DEFAULT 0,
+    avatar_url TEXT,
+    last_access TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- INSERIR MATÉRIAS BASE
+-- 6. INSERIR DADOS BASE (Não duplica se já existirem)
 INSERT INTO public.subjects (name) VALUES 
-('Matemática'), ('Física'), ('Química'), ('Biologia'), ('Português'), ('História'), ('Geografia')
+('Matemática'), ('Física'), ('Química'), ('Biologia'), ('Português'), ('História'), ('Geografia'), ('Tecnologia')
 ON CONFLICT (name) DO NOTHING;
 
--- FUNÇÕES RPC (PARA SIMULADOS)
+-- 7. FUNÇÕES INTELIGENTES (RPC)
+
+-- Função: Buscar matérias com contagem de questões
 CREATE OR REPLACE FUNCTION get_subjects_with_question_count()
 RETURNS TABLE (id UUID, name TEXT, question_count BIGINT) AS $$
 BEGIN
@@ -154,6 +86,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Função: Sortear questões aleatórias para simulado
 CREATE OR REPLACE FUNCTION get_random_questions_for_subject(p_subject_id UUID, p_limit INTEGER)
 RETURNS TABLE (
     id UUID, 
@@ -180,42 +113,29 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- POLÍTICAS DE SEGURANÇA (RLS - MODO LIBERAL PARA DEMO)
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Perfis" ON public.profiles FOR ALL USING (true);
-
-ALTER TABLE public.trails ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Trilhas" ON public.trails FOR ALL USING (true);
-
-ALTER TABLE public.modules ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Módulos" ON public.modules FOR ALL USING (true);
-
-ALTER TABLE public.learning_contents ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Conteúdos" ON public.learning_contents FOR ALL USING (true);
-
+-- 8. POLÍTICAS DE SEGURANÇA (RLS)
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Matérias" ON public.subjects FOR ALL USING (true);
-
 ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Questões" ON public.questions FOR ALL USING (true);
-
-ALTER TABLE public.lives ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Lives" ON public.lives FOR ALL USING (true);
-
-ALTER TABLE public.forums ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Forums" ON public.forums FOR ALL USING (true);
-
-ALTER TABLE public.forum_posts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Posts" ON public.forum_posts FOR ALL USING (true);
-
-ALTER TABLE public.direct_messages ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Chat" ON public.direct_messages FOR ALL USING (true);
-
+ALTER TABLE public.trails ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Progresso" ON public.user_progress FOR ALL USING (true);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.library_resources ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permissão Total Biblioteca" ON public.library_resources FOR ALL USING (true);
+-- Subjects: Leitura pública para autenticados
+CREATE POLICY "Leitura de matérias" ON public.subjects FOR SELECT TO authenticated USING (true);
 
--- ATUALIZAR CACHE DE ESQUEMA
+-- Questions: Leitura para alunos, total para professores
+CREATE POLICY "Leitura de questões" ON public.questions FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Gestão de questões" ON public.questions FOR ALL TO authenticated USING (true);
+
+-- Trails: Leitura para trilhas ativas
+CREATE POLICY "Leitura de trilhas" ON public.trails FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Gestão de trilhas" ON public.trails FOR ALL TO authenticated USING (true);
+
+-- User Progress: Apenas o próprio usuário acessa seu progresso
+CREATE POLICY "Acesso total progresso" ON public.user_progress FOR ALL TO authenticated USING (auth.uid() = user_id);
+
+-- Profiles: Acesso ao próprio perfil
+CREATE POLICY "Acesso ao próprio perfil" ON public.profiles FOR ALL TO authenticated USING (auth.uid() = id);
+
+-- NOTIFICAR MUDANÇA DE ESQUEMA (Limpeza de Cache PostgREST)
 NOTIFY pgrst, 'reload schema';

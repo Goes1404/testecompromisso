@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, AlertCircle } from "lucide-react";
 
-// Definição do tipo para o resultado da correção da IA (alinhado com a API)
 interface AIAnalysisResult {
   notaFinal: number;
   feedbackGeral: string;
@@ -39,19 +38,25 @@ export default function AICorrectionPage() {
     setAiResult(null);
 
     try {
-      // Corrigido: API espera 'text', não 'essay'
       const response = await fetch('/api/ai/grade-essay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme: essayTopic, text: essayText }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'O servidor retornou uma resposta inválida.' }));
-        throw new Error(errorData.error || 'Falha ao processar a correção.');
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (e) {
+        throw new Error('O servidor retornou uma resposta inválida.');
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'Falha ao processar a correção.');
+      }
+
       setAiResult(data);
 
     } catch (e: any) {
@@ -75,7 +80,6 @@ export default function AICorrectionPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Formulário de Submissão */}
         <Card className="w-full lg:w-1/2 lg:max-w-2xl shadow-xl border-none">
           <CardHeader>
             <CardTitle>Dados da Redação</CardTitle>
@@ -118,7 +122,6 @@ export default function AICorrectionPage() {
           </CardContent>
         </Card>
 
-        {/* Área de Resultados */}
         <Card className="w-full lg:w-1/2 lg:flex-1 sticky top-6 shadow-2xl border-primary/20 border-2">
           <CardHeader>
             <CardTitle>Análise da Aurora</CardTitle>
