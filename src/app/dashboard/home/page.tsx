@@ -17,12 +17,16 @@ import {
   Info,
   TrendingUp,
   Clock,
-  PlayCircle
+  PlayCircle,
+  ChevronRight,
+  CheckCircle2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
 import { supabase } from "@/app/lib/supabase";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface LibraryItem {
   id: string;
@@ -72,13 +76,13 @@ export default function DashboardHome() {
       setLoadingLibrary(false);
 
       setLoadingProgress(true);
-      // Busca progresso real do usuário
+      // Busca as últimas 5 trilhas acessadas pelo usuário
       const { data: progress } = await supabase
         .from('user_progress')
         .select('*, trail:trails(title, category, image_url)')
         .eq('user_id', user.id)
         .order('last_accessed', { ascending: false })
-        .limit(2);
+        .limit(5);
       
       setRecentProgress(progress || []);
       setLoadingProgress(false);
@@ -145,36 +149,60 @@ export default function DashboardHome() {
           </div>
 
           <div>
-            <h2 className="text-xl font-black text-primary italic flex items-center gap-2 px-2 mb-4">
-              <TrendingUp className="h-5 w-5 text-accent" /> Continuar Aprendizado
-            </h2>
+            <div className="flex items-center justify-between px-2 mb-4">
+              <h2 className="text-xl font-black text-primary italic flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-accent" /> Continuar Aprendizado
+              </h2>
+              {recentProgress.length > 0 && (
+                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest bg-muted/20 px-3 py-1 rounded-full">
+                  Exibindo {recentProgress.length} mais recentes
+                </span>
+              )}
+            </div>
             {loadingProgress ? (
-              <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-accent" /></div>
+              <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-accent h-8 w-8" /></div>
             ) : recentProgress.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
-                {recentProgress.map((prog) => (
-                  <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
-                    <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-3xl p-6 flex flex-col md:flex-row items-center gap-6 group">
-                      <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-accent/10 flex items-center justify-center text-accent shrink-0 shadow-inner group-hover:scale-110 transition-transform">
-                        <PlayCircle className="h-10 w-10" />
-                      </div>
-                      <div className="flex-1 space-y-2 w-full">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-black uppercase text-accent tracking-widest">{prog.trail?.category}</span>
-                          <span className="text-[10px] font-black text-primary/40 uppercase flex items-center gap-1 italic"><Clock className="h-3 w-3"/> Ativo</span>
-                        </div>
-                        <h3 className="font-black text-lg text-primary italic leading-none">{prog.trail?.title}</h3>
-                        <div className="space-y-1.5 pt-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[8px] font-black text-primary/40 uppercase">Sua Evolução</span>
-                            <span className="text-[10px] font-black text-accent italic">{prog.percentage}%</span>
+                {recentProgress.map((prog) => {
+                  const isFinished = prog.percentage === 100;
+                  return (
+                    <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
+                      <Card className={`border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-3xl p-5 flex flex-col md:flex-row items-center gap-6 group relative overflow-hidden ${isFinished ? 'bg-slate-50/50' : ''}`}>
+                        {isFinished && (
+                          <div className="absolute top-0 right-0 p-2">
+                            <CheckCircle2 className="h-5 w-5 text-green-500 opacity-20" />
                           </div>
-                          <Progress value={prog.percentage} className="h-1.5 rounded-full" />
+                        )}
+                        <div className={`h-14 w-14 md:h-16 md:w-16 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform ${isFinished ? 'bg-green-50 text-green-600' : 'bg-accent/10 text-accent'}`}>
+                          {isFinished ? <CheckCircle2 className="h-8 w-8" /> : <PlayCircle className="h-8 w-8" />}
                         </div>
-                      </div>
-                    </Card>
-                  </Link>
-                ))}
+                        <div className="flex-1 space-y-2 w-full">
+                          <div className="flex justify-between items-center">
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isFinished ? 'text-green-600' : 'text-accent'}`}>
+                              {prog.trail?.category} {isFinished && '• CONCLUÍDA'}
+                            </span>
+                            <span className="text-[8px] font-black text-primary/40 uppercase flex items-center gap-1 italic">
+                              <Clock className="h-3 w-3"/> {formatDistanceToNow(new Date(prog.last_accessed), { addSuffix: true, locale: ptBR })}
+                            </span>
+                          </div>
+                          <h3 className="font-black text-base text-primary italic leading-none truncate max-w-[300px]">
+                            {prog.trail?.title}
+                          </h3>
+                          <div className="space-y-1.5 pt-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[8px] font-black text-primary/40 uppercase">Evolução</span>
+                              <span className={`text-[10px] font-black italic ${isFinished ? 'text-green-600' : 'text-accent'}`}>{prog.percentage}%</span>
+                            </div>
+                            <Progress value={prog.percentage} className="h-1 rounded-full overflow-hidden bg-muted">
+                               <div className={`h-full transition-all duration-1000 ${isFinished ? 'bg-green-500' : 'bg-accent'}`} style={{ width: `${prog.percentage}%` }} />
+                            </Progress>
+                          </div>
+                        </div>
+                        <ChevronRight className="hidden md:block h-5 w-5 text-muted-foreground/30 group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                      </Card>
+                    </Link>
+                  )
+                })}
               </div>
             ) : (
               <div className="py-12 text-center border-4 border-dashed rounded-[2.5rem] bg-muted/5 opacity-40">
