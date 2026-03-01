@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { conceptExplanationAssistantFlow } from '@/ai/flows/concept-explanation-assistant';
 import { financialAidDeterminationFlow } from '@/ai/flows/financial-aid-determination';
@@ -8,7 +9,7 @@ import { essayEvaluatorFlow } from '@/ai/flows/essay-evaluator';
 
 /**
  * @fileOverview Gateway de API para os fluxos da Aurora IA.
- * Centraliza as chamadas para garantir que todos os fluxos usem a mesma infraestrutura.
+ * Utiliza o modelo gemini-2.5-flash para estabilidade de cota.
  */
 
 export async function POST(req: NextRequest) {
@@ -24,9 +25,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Identificador do motor (flowId) é obrigatório.' }, { status: 400 });
     }
 
-    console.log(`[AURORA API] Acionando motor: ${flowId}`);
+    console.log(`[AURORA API] Acionando motor: ${flowId} com Gemini 2.5 Flash`);
 
-    // MAPA DE FLUXOS: Garanta que os IDs aqui correspondam aos enviados pelo Frontend
+    // MAPA DE FLUXOS
     const flows: Record<string, any> = {
       conceptExplanationAssistant: conceptExplanationAssistantFlow,
       financialAidDetermination: financialAidDeterminationFlow,

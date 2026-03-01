@@ -23,7 +23,7 @@ import {
   Link as LinkIcon,
   FileText,
   Zap,
-  Quote
+  History
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -39,22 +39,16 @@ const mockHistory = [
 
 const ESSAY_TIPS = [
   { 
-    title: "Coesão", 
-    desc: "Varie conectivos no início dos parágrafos.",
+    title: "Conectivos", 
+    desc: "Varie o início dos parágrafos.",
     icon: LinkIcon,
-    color: "bg-blue-500/10 text-blue-600 border-blue-200"
+    color: "bg-blue-500/10 text-blue-600"
   },
   { 
     title: "Tese", 
-    desc: "Deve estar clara logo na introdução.",
+    desc: "Deve ser clara na introdução.",
     icon: Target,
-    color: "bg-orange-500/10 text-orange-600 border-orange-200"
-  },
-  { 
-    title: "Intervenção", 
-    desc: "Use os 5 elementos obrigatórios do INEP.",
-    icon: CheckCircle2,
-    color: "bg-green-500/10 text-green-600 border-green-200"
+    color: "bg-orange-500/10 text-orange-600"
   }
 ];
 
@@ -96,12 +90,12 @@ export default function StudentEssayPage() {
       if (res.ok && data.success) {
         setTheme(data.result.title);
         setSupportingTexts(data.result.supporting_texts || []);
-        toast({ title: "Proposta Gerada!", description: "A Aurora selecionou um desafio pedagógico." });
+        toast({ title: "Proposta ENEM Gerada!", description: "A Aurora carregou os textos motivadores." });
       } else {
-        throw new Error(data.error || "A Aurora não respondeu ao chamado.");
+        throw new Error(data.error || "Aurora temporariamente offline.");
       }
     } catch (e: any) {
-      toast({ title: "Aurora Offline", description: e.message, variant: "destructive" });
+      toast({ title: "Erro na Aurora", description: e.message, variant: "destructive" });
     } finally {
       setLoadingTopic(false);
     }
@@ -109,7 +103,7 @@ export default function StudentEssayPage() {
 
   const handleSubmitEssay = async () => {
     if (text.length < 300) {
-      toast({ title: "Texto insuficiente", description: "Escreva pelo menos 300 caracteres.", variant: "destructive" });
+      toast({ title: "Texto Insuficiente", description: "Escreva ao menos 300 caracteres para uma análise técnica.", variant: "destructive" });
       return;
     }
 
@@ -124,80 +118,79 @@ export default function StudentEssayPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setResult(data.result);
-        toast({ title: "Correção Concluída!", description: "Seu diagnóstico está pronto na lateral." });
+        toast({ title: "Avaliação Concluída!", description: "O diagnóstico já está disponível na lateral." });
       } else {
-        throw new Error(data.error || "Erro no processamento.");
+        throw new Error(data.error || "Falha na análise.");
       }
     } catch (e: any) {
-      toast({ title: "Aurora Offline", description: e.message, variant: "destructive" });
+      toast({ title: "Erro no Processamento", description: e.message, variant: "destructive" });
     } finally {
       setLoadingGrading(false);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-700 pb-16 px-4 md:px-6">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20 px-4 md:px-6">
       
-      {/* HEADER PRINCIPAL */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-b border-muted/20">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl">
-            <PenTool className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-primary italic leading-none">
+      {/* HEADER DINÂMICO */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl font-black text-primary italic tracking-tighter">
               Redação <span className="text-accent">Master</span>
             </h1>
-            <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest mt-1.5 opacity-60">Laboratório de Alta Performance</p>
+            <Badge className="bg-primary text-white border-none font-black text-[10px] px-3 shadow-lg">LABORATÓRIO</Badge>
           </div>
+          <p className="text-muted-foreground font-medium text-sm md:text-lg italic">
+            Escrita de alta performance com auditoria Aurora IA.
+          </p>
         </div>
-        
         <div className="flex items-center gap-3">
           <Button 
             variant="ghost"
             onClick={() => { setCustomTheme(!customTheme); setTheme(""); setSupportingTexts([]); setResult(null); }}
-            className={`rounded-xl h-11 px-5 font-black text-xs uppercase transition-all border-2 ${customTheme ? 'bg-primary text-white border-primary' : 'bg-white border-muted/20 text-primary'}`}
+            className={`rounded-xl h-12 px-6 font-black text-xs uppercase border-2 transition-all ${customTheme ? 'bg-primary text-white border-primary shadow-lg' : 'bg-white border-muted/20 text-primary'}`}
           >
-            {customTheme ? "Voltar" : "Tema Manual"}
+            {customTheme ? "Sair do Modo Manual" : "Tema Personalizado"}
           </Button>
           <Button 
             onClick={handleGenerateTopic} 
             disabled={loadingTopic || loadingGrading}
-            className="rounded-xl h-11 bg-accent text-accent-foreground font-black px-6 shadow-xl hover:scale-105 transition-all border-none text-xs uppercase"
+            className="rounded-xl h-12 bg-accent text-accent-foreground font-black px-8 shadow-xl shadow-accent/20 hover:scale-105 active:scale-95 transition-all text-xs uppercase border-none"
           >
             {loadingTopic ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-            Gerar Proposta INEP
+            Gerar Tema ENEM
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* COLUNA DE ESCRITA (ESQUERDA) */}
+        {/* COLUNA DE ESCRITA (8 COLUNAS) */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden ring-1 ring-black/5 relative">
-            <CardHeader className="bg-slate-50/50 p-6 md:p-8 border-b border-dashed border-muted/30">
+          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden ring-1 ring-black/5">
+            <CardHeader className="bg-slate-50/50 p-8 border-b border-dashed border-muted/30">
               {customTheme ? (
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-2">Defina seu Tema Personalizado</Label>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-2 tracking-widest">Sua Proposta de Tema</Label>
                   <Input 
                     value={theme} 
                     onChange={(e) => setTheme(e.target.value)} 
-                    placeholder="Sobre o que vamos escrever hoje?"
-                    className="h-14 rounded-2xl bg-white border-none shadow-inner font-bold italic text-lg focus-visible:ring-2 focus-visible:ring-accent/30"
+                    placeholder="Ex: A inteligência artificial na educação brasileira..."
+                    className="h-14 rounded-2xl bg-white border-none shadow-inner font-bold italic text-lg"
                   />
                 </div>
               ) : (
                 <div className="flex justify-between items-center gap-6">
                   <div className="space-y-2 flex-1 min-w-0">
-                    <Badge className="bg-primary text-white border-none font-black text-[9px] px-3 py-1 uppercase rounded-full tracking-widest">TEMA SELECIONADO</Badge>
+                    <p className="text-[9px] font-black text-accent uppercase tracking-[0.3em] ml-1">Desafio Pedagógico</p>
                     <CardTitle className="text-xl md:text-2xl font-black text-primary italic leading-tight">
-                      {theme || "Gere um tema estratégico para começar..."}
+                      {theme || "Gere um tema ou inicie manualmente..."}
                     </CardTitle>
                   </div>
-                  <div className="bg-white p-3 rounded-2xl border border-muted/10 shadow-sm shrink-0 flex flex-col items-center justify-center min-w-[80px]">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-tighter">Caracteres</p>
-                    <p className={`text-xl font-black italic ${charCount < 300 ? 'text-orange-500' : 'text-primary'}`}>{charCount}</p>
+                  <div className="bg-white p-4 rounded-2xl border border-muted/10 shadow-sm shrink-0 flex flex-col items-center">
+                    <p className="text-[8px] font-black text-muted-foreground uppercase">Caracteres</p>
+                    <p className="text-xl font-black text-primary italic">{charCount}</p>
                   </div>
                 </div>
               )}
@@ -205,51 +198,47 @@ export default function StudentEssayPage() {
             
             <CardContent className="p-0">
               <Textarea 
-                placeholder="Inicie seu texto dissertativo-argumentativo seguindo o padrão ENEM... (Mínimo de 300 caracteres para correção)"
+                placeholder="Inicie sua dissertação aqui. Lembre-se: Introdução, Desenvolvimento e Intervenção..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 disabled={loadingGrading}
-                className="min-h-[500px] md:min-h-[650px] border-none p-8 md:p-12 font-medium text-base md:text-lg leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary/90"
+                className="min-h-[600px] border-none p-10 md:p-14 font-medium text-base md:text-lg leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary/90"
               />
               
-              <div className="p-6 md:p-8 bg-white/80 backdrop-blur-md border-t border-muted/10 flex flex-col sm:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-3 text-primary/30">
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] italic">Aurora Engine v2.5 Flash Ativa</p>
+              <div className="p-8 bg-slate-50/50 border-t border-muted/10 flex flex-col sm:flex-row justify-between items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 italic">Engine de IA Operacional</p>
                 </div>
                 <Button 
                   onClick={handleSubmitEssay} 
                   disabled={loadingGrading || !text || !theme}
-                  className="bg-primary text-white font-black h-14 px-10 rounded-2xl shadow-2xl hover:scale-105 active:scale-95 transition-all w-full sm:w-auto text-sm uppercase border-none group"
+                  className="bg-primary text-white font-black h-14 px-12 rounded-2xl shadow-2xl hover:scale-105 active:scale-95 transition-all text-sm uppercase border-none w-full sm:w-auto"
                 >
-                  {loadingGrading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Send className="h-5 w-5 mr-2 text-accent group-hover:translate-x-1 transition-transform" />}
-                  {loadingGrading ? "Auditando Texto..." : "Enviar para Avaliação"}
+                  {loadingGrading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Send className="h-5 w-5 mr-2 text-accent" />}
+                  {loadingGrading ? "Auditando Texto..." : "Enviar para Correção"}
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* COLUNA LATERAL DE APOIO E RESULTADOS (DIREITA) */}
+        {/* COLUNA DE AUDITORIA (4 COLUNAS) */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* PAINEL DE RESULTADOS (DINÂMICO) */}
+          {/* RESULTADOS DA AURORA */}
           {result && (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-700">
-              {/* NOTA FINAL */}
+              {/* CARD DE NOTA */}
               <Card className="border-none shadow-2xl bg-primary text-white rounded-[2rem] overflow-hidden relative group">
-                <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-accent/20 rounded-full blur-[50px] group-hover:scale-150 transition-transform duration-1000" />
-                <div className="p-8 flex items-center justify-between gap-6 relative z-10">
-                  <div className="space-y-2">
-                    <Badge className="bg-accent text-accent-foreground font-black text-[10px] px-3 py-1 uppercase rounded-full shadow-lg">NOTA FINAL</Badge>
-                    <h2 className="text-6xl font-black italic tracking-tighter leading-none">{result.total_score}</h2>
+                <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                <div className="p-8 relative z-10">
+                  <div className="flex justify-between items-center mb-6">
+                    <Badge className="bg-accent text-accent-foreground font-black text-[9px] px-3 py-1 uppercase rounded-full">RESULTADO FINAL</Badge>
+                    <CheckCircle2 className="h-6 w-6 text-accent animate-bounce" />
                   </div>
-                  <div className="h-20 w-20 rounded-3xl bg-white/10 flex items-center justify-center rotate-6 shadow-2xl border border-white/10 backdrop-blur-sm">
-                    <CheckCircle2 className="h-10 w-10 text-accent animate-pulse" />
-                  </div>
-                </div>
-                <div className="px-8 pb-8 relative z-10">
-                  <p className="text-xs md:text-sm font-medium italic text-white/80 leading-relaxed border-t border-white/10 pt-4">
+                  <h2 className="text-7xl font-black italic tracking-tighter leading-none">{result.total_score}</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mt-4 border-t border-white/10 pt-4 leading-relaxed">
                     "{result.general_feedback}"
                   </p>
                 </div>
@@ -257,68 +246,54 @@ export default function StudentEssayPage() {
 
               {/* COMPETÊNCIAS - LOGO ABAIXO DA NOTA */}
               <div className="space-y-3">
-                <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em] px-3">Análise de Competências</h3>
-                <div className="grid grid-cols-1 gap-3">
+                <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] px-3">Performance Pedagógica</h3>
+                <div className="grid gap-3">
                   {Object.entries(result.competencies || {}).map(([key, comp]: any) => (
-                    <div key={key} className="bg-white p-5 rounded-2xl shadow-lg border border-muted/10 group hover:border-accent/30 transition-all">
+                    <Card key={key} className="border-none shadow-lg bg-white p-5 rounded-2xl hover:border-accent/30 transition-all border border-muted/10 group">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-black uppercase text-primary/60 tracking-wider">{COMPETENCY_LABELS[key]}</span>
-                        <Badge className="bg-muted text-primary font-black italic text-xs h-6 px-3">{comp.score}</Badge>
+                        <span className="text-sm font-black italic text-accent">{comp.score}</span>
                       </div>
                       <p className="text-[11px] text-primary/80 font-medium italic leading-relaxed">{comp.feedback}</p>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               </div>
 
               {/* RAIO-X GRAMATICAL - ABAIXO DAS COMPETÊNCIAS */}
-              <Card className="border-none shadow-2xl bg-white rounded-[2rem] overflow-hidden ring-1 ring-black/5">
-                <CardHeader className="bg-slate-50/50 p-6 border-b border-dashed border-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
+              <div className="space-y-3">
+                <h3 className="text-[10px] font-black text-red-600/40 uppercase tracking-[0.2em] px-3">Raio-X de Desvios</h3>
+                {result.detailed_corrections?.map((corr: any, i: number) => (
+                  <Card key={i} className="p-5 border-none shadow-md bg-white rounded-2xl space-y-3 border-l-4 border-red-500">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-lg line-through decoration-2 w-fit">{corr.original}</span>
+                      <span className="text-sm bg-green-50 text-green-700 px-3 py-1.5 rounded-lg font-black italic w-fit">{corr.suggestion}</span>
                     </div>
-                    <CardTitle className="text-xs font-black text-primary italic uppercase tracking-[0.2em]">Raio-X de Desvios</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  {result.detailed_corrections?.length > 0 ? result.detailed_corrections.map((corr: any, i: number) => (
-                    <div key={i} className="p-4 rounded-2xl bg-slate-50/50 border border-muted/20 space-y-2 group hover:bg-white hover:shadow-md transition-all">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs bg-red-100/50 text-red-700 px-3 py-1.5 rounded-xl line-through decoration-2 opacity-70 w-fit">{corr.original}</span>
-                        <span className="text-sm bg-green-100/50 text-green-700 px-3 py-1.5 rounded-xl font-black italic w-fit">{corr.suggestion}</span>
-                      </div>
-                      <p className="text-[10px] font-bold text-primary/60 italic leading-relaxed flex items-start gap-2 pt-1">
-                        <Lightbulb className="h-3 w-3 mt-0.5 text-accent shrink-0" />
-                        {corr.reason}
-                      </p>
-                    </div>
-                  )) : (
-                    <div className="text-center py-8 opacity-40">
-                      <CheckCircle2 className="h-10 w-10 mx-auto mb-2 text-green-500" />
-                      <p className="text-xs font-black italic">Nenhum desvio gramatical crítico encontrado.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <p className="text-[10px] font-bold text-primary/60 italic leading-relaxed flex items-start gap-2">
+                      <Lightbulb className="h-3 w-3 mt-0.5 text-accent shrink-0" />
+                      {corr.reason}
+                    </p>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* APOIO PEDAGÓGICO (ESTÁTICO) */}
+          {/* SUPORTE TEÓRICO (ESTÁTICO) */}
           <div className="space-y-6">
             
-            {/* TEXTOS MOTIVADORES (CASO EXISTAM) */}
+            {/* TEXTOS MOTIVADORES */}
             {!result && supportingTexts.length > 0 && (
-              <Card className="border-none shadow-2xl bg-white rounded-[2rem] overflow-hidden animate-in slide-in-from-right-4 ring-1 ring-black/5">
+              <Card className="border-none shadow-2xl bg-white rounded-[2rem] overflow-hidden ring-1 ring-black/5 animate-in slide-in-from-right-4">
                 <CardHeader className="bg-accent/5 p-6 border-b border-dashed border-accent/20">
-                  <CardTitle className="text-xs font-black text-primary uppercase tracking-[0.3em] flex items-center gap-3">
-                    <BookOpen className="h-5 w-5 text-accent" /> Base de Apoio
+                  <CardTitle className="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-3 italic">
+                    <BookOpen className="h-5 w-5 text-accent" /> Base de Apoio ENEM
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4 max-h-[400px] overflow-y-auto scrollbar-hide">
                   {supportingTexts.map((st) => (
                     <div key={st.id} className="p-4 bg-slate-50/50 rounded-2xl border border-muted/20 hover:bg-white hover:shadow-md transition-all">
-                      <p className="text-xs md:text-sm font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
+                      <p className="text-xs font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
                       <p className="text-[9px] font-black text-muted-foreground uppercase text-right pt-2 opacity-60">Fonte: {st.source}</p>
                     </div>
                   ))}
@@ -326,26 +301,23 @@ export default function StudentEssayPage() {
               </Card>
             )}
 
-            {/* CHECKLIST PADRÃO INEP */}
-            <Card className="border-none shadow-2xl bg-primary text-white rounded-[2rem] p-8 space-y-4 relative overflow-hidden group">
-              <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-[40px] group-hover:scale-125 transition-transform duration-700" />
+            {/* CHECKLIST INEP */}
+            <Card className="border-none shadow-xl bg-primary text-white rounded-[2rem] p-8 space-y-4 relative overflow-hidden group">
+              <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
               <div className="relative z-10 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                    <CheckCircle2 className="h-5 w-5 text-accent" />
-                  </div>
-                  <h3 className="font-black text-white italic uppercase tracking-[0.2em] text-xs">Exigências INEP</h3>
+                  <CheckCircle2 className="h-5 w-5 text-accent" />
+                  <h3 className="font-black italic uppercase tracking-widest text-xs">Exigências INEP</h3>
                 </div>
                 <div className="space-y-2">
                   {[
-                    "Norma culta formal impecável.",
                     "Tese explícita no primeiro parágrafo.",
-                    "Mínimo de dois repertórios externos.",
-                    "Proposta de intervenção com 5 elementos."
+                    "Dois ou mais repertórios externos.",
+                    "Intervenção com 5 elementos."
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 backdrop-blur-sm">
                       <div className="h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-                      <span className="text-[10px] font-bold italic opacity-90 leading-tight">{item}</span>
+                      <span className="text-[10px] font-bold italic opacity-90">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -354,16 +326,16 @@ export default function StudentEssayPage() {
 
             {/* DICAS DA AURORA */}
             <div className="space-y-3">
-              <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em] px-3">Mentoria Aurora</h3>
+              <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] px-3">Insights Mentoria</h3>
               {ESSAY_TIPS.map((tip, i) => (
-                <Card key={i} className="border-none shadow-xl bg-white rounded-2xl p-4 hover:shadow-2xl hover:-translate-y-1 transition-all group cursor-default">
+                <Card key={i} className="border-none shadow-lg bg-white p-4 rounded-2xl hover:-translate-y-1 transition-all group">
                   <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-xl border-2 shrink-0 transition-all group-hover:scale-110 ${tip.color}`}>
+                    <div className={`p-3 rounded-xl shrink-0 transition-all group-hover:scale-110 ${tip.color}`}>
                       <tip.icon className="h-5 w-5" />
                     </div>
-                    <div className="space-y-1">
+                    <div>
                       <p className="text-xs font-black text-primary italic leading-none">{tip.title}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">{tip.desc}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed mt-1">{tip.desc}</p>
                     </div>
                   </div>
                 </Card>
@@ -371,78 +343,78 @@ export default function StudentEssayPage() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* DASHBOARD DE EVOLUÇÃO (RODAPÉ) */}
-      <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden p-8 md:p-10 mt-8 group relative ring-1 ring-black/5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent shadow-inner">
-              <TrendingUp className="h-6 w-6" />
+        {/* DASHBOARD DE EVOLUÇÃO (RODAPÉ - FULL WIDTH) */}
+        <Card className="lg:col-span-12 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden p-8 md:p-12 group relative ring-1 ring-black/5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6 relative z-10">
+            <div className="flex items-center gap-5">
+              <div className="h-14 w-14 rounded-3xl bg-accent/10 flex items-center justify-center text-accent shadow-inner rotate-3">
+                <TrendingUp className="h-8 w-8" />
+              </div>
+              <div>
+                <h3 className="text-2xl md:text-3xl font-black text-primary italic tracking-tighter leading-none">
+                  Evolução <span className="text-accent">Acadêmica</span>
+                </h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mt-2 opacity-60">Ciclo de Avaliação 2024</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl md:text-2xl font-black text-primary italic tracking-tight leading-none">
-                Evolução <span className="text-accent">Acadêmica</span>
-              </h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1.5 opacity-60">Histórico de Notas 2024</p>
+            
+            <div className="flex gap-10 bg-slate-50/80 backdrop-blur-sm p-6 rounded-[2rem] border border-muted/10 shadow-inner">
+              <div className="text-center">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Média Rede</p>
+                <p className="text-3xl font-black text-primary italic leading-none">785</p>
+              </div>
+              <div className="w-px bg-muted/20" />
+              <div className="text-center">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Seu Pico</p>
+                <p className="text-3xl font-black text-accent italic leading-none">920</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex gap-6 bg-slate-50 p-4 rounded-2xl border border-muted/10 shadow-inner">
-            <div className="text-center px-4">
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Média Geral</p>
-              <p className="text-2xl font-black text-primary italic leading-none">785</p>
-            </div>
-            <div className="w-px bg-muted/20" />
-            <div className="text-center px-4">
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Pico Histórico</p>
-              <p className="text-2xl font-black text-accent italic leading-none">920</p>
-            </div>
+          <div className="h-[250px] w-full relative z-10">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={mockHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: '900' }} 
+                  dy={10}
+                />
+                <YAxis 
+                  domain={[0, 1000]} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: '900' }} 
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', padding: '1rem', backgroundColor: 'hsl(var(--primary))', color: 'white' }} 
+                  itemStyle={{ fontWeight: '900', fontSize: '12px', color: 'hsl(var(--accent))' }}
+                  labelStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginBottom: '4px' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="score" 
+                  stroke="hsl(var(--accent))" 
+                  strokeWidth={5} 
+                  fillOpacity={1} 
+                  fill="url(#colorScore)" 
+                  dot={{ r: 6, fill: "hsl(var(--accent))", strokeWidth: 2, stroke: "#fff" }} 
+                  activeDot={{ r: 8, strokeWidth: 0 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        </div>
-        
-        <div className="h-[200px] w-full relative z-10">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={mockHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="date" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: '900' }} 
-                dy={10}
-              />
-              <YAxis 
-                domain={[0, 1000]} 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: '900' }} 
-              />
-              <Tooltip 
-                contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', padding: '1rem', backgroundColor: 'hsl(var(--primary))', color: 'white' }} 
-                itemStyle={{ fontWeight: '900', fontSize: '12px', color: 'hsl(var(--accent))' }}
-                labelStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginBottom: '4px' }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="score" 
-                stroke="hsl(var(--accent))" 
-                strokeWidth={4} 
-                fillOpacity={1} 
-                fill="url(#colorScore)" 
-                dot={{ r: 6, fill: "hsl(var(--accent))", strokeWidth: 2, stroke: "#fff" }} 
-                activeDot={{ r: 8, strokeWidth: 0 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
