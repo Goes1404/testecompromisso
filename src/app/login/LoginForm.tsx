@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -28,7 +29,7 @@ export function LoginForm() {
     if (!email || !password) return;
     
     if (!isSupabaseConfigured) {
-      setAuthError("Configuração Pendente: As chaves do Supabase não foram encontradas no ambiente.");
+      setAuthError("Configuração Inválida: Verifique se você está usando a ANON KEY e não a SERVICE_ROLE KEY no seu ambiente.");
       return;
     }
 
@@ -43,7 +44,12 @@ export function LoginForm() {
       if (error) {
         setLoading(false);
         console.error("Erro de Autenticação:", error.message);
-        setAuthError("E-mail ou senha incorretos. Verifique se as contas demo foram criadas no Supabase.");
+        
+        if (error.message.includes("secret API key")) {
+          setAuthError("Erro de Segurança: Uma chave secreta foi detectada no navegador. Por favor, use a 'anon public' key do Supabase.");
+        } else {
+          setAuthError("E-mail ou senha incorretos. Verifique os dados informados.");
+        }
         return;
       }
 
@@ -51,7 +57,6 @@ export function LoginForm() {
         setIsRedirecting(true);
         toast({ title: "Login bem-sucedido!", description: "Sintonizando seu portal..." });
         
-        // Buscar o perfil para saber o tipo exato (admin, teacher ou student)
         const { data: profile } = await supabase
           .from('profiles')
           .select('profile_type')
