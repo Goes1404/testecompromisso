@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Aurora - Gerador de Temas de Redação Estilo ENEM.
- * Gera temas completos com textos motivadores/influência.
+ * Gera temas completos com textos motivadores para imersão real.
  */
 
 import { ai } from '@/ai/genkit';
@@ -31,11 +31,11 @@ const prompt = ai.definePrompt({
   system: `Você é a Aurora, mentora de redação nota 1000. 
   Sua missão é criar propostas de redação IDÊNTICAS às do ENEM.
   REGRAS:
-  1. O tema deve ser um problema social brasileiro atual.
+  1. O tema deve ser um problema social brasileiro atual e relevante.
   2. Inclua EXATAMENTE 3 ou 4 textos motivadores curtos e impactantes.
-  3. Os textos devem conter dados estatísticos fictícios mas verossímeis ou citações.
-  4. O tom deve ser formal e pedagógico.`,
-  prompt: `Gere uma proposta de redação desafiadora{{#if category}} focado em {{{category}}}{{/if}}.`,
+  3. Os textos devem conter dados estatísticos fictícios mas verossímeis, citações ou reflexões sociológicas.
+  4. O tom deve ser formal, sério e pedagógico.`,
+  prompt: `Gere uma proposta de redação desafiadora{{#if category}} focada em {{{category}}}{{/if}}.`,
 });
 
 export const essayTopicGeneratorFlow = ai.defineFlow(
