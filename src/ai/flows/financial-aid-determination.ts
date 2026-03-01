@@ -33,7 +33,7 @@ export async function financialAidDetermination(
 
 const prompt = ai.definePrompt({
   name: 'financialAidDeterminationPrompt',
-  model: googleAI.model('gemini-3-flash-preview'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: FinancialAidDeterminationInputSchema },
   output: { schema: FinancialAidDeterminationOutputSchema },
   system: `Você é a Aurora, uma consultora especialista em auxílio estudantil do curso Compromisso. 
