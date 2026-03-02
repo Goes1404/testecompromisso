@@ -25,7 +25,12 @@ import {
   PlusCircle,
   Compass,
   PanelRightClose,
-  PanelRightOpen
+  PanelRightOpen,
+  Target,
+  Lightbulb,
+  Zap,
+  ShieldCheck,
+  Award
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -286,7 +291,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
           <Tabs defaultValue="summary" className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden">
             <TabsList className="grid w-full grid-cols-4 h-12 bg-slate-950 p-0 gap-0 shrink-0 shadow-2xl">
               {[
-                { id: "summary", label: "Guia", icon: BookOpen },
+                { id: "summary", label: "Roteiro", icon: BookOpen },
                 { id: "quiz", label: "Prática", icon: BrainCircuit },
                 { id: "support", label: "Live", icon: Video },
                 { id: "attachments", label: "Anexos", icon: Paperclip }
@@ -302,30 +307,70 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
               ))}
             </TabsList>
             
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/30">
-               <TabsContent value="summary" className="mt-0 outline-none animate-in slide-in-from-bottom-2">
-                  <div className="max-w-4xl space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg rotate-2">
-                        <Sparkles className="h-4 w-4 text-accent" />
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50/30">
+               <TabsContent value="summary" className="mt-0 outline-none animate-in fade-in duration-500">
+                  <div className="max-w-5xl mx-auto space-y-8 pb-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="md:col-span-2 space-y-6">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4 text-accent" />
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40">Plano de Aprendizado</h2>
+                          </div>
+                          <h3 className="text-xl font-black text-primary italic leading-tight">{activeContent?.title}</h3>
+                          <p className="text-sm font-medium text-primary/70 leading-relaxed italic whitespace-pre-line">
+                            {activeContent?.description || "Inicie este material para fortalecer seus fundamentos técnicos. Este conteúdo foi estrategicamente selecionado para o seu perfil."}
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Card className="p-5 border-none shadow-lg bg-white rounded-2xl space-y-3 group hover:shadow-xl transition-all">
+                            <div className="flex items-center gap-3 text-primary">
+                              <div className="h-8 w-8 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
+                                <Zap className="h-4 w-4" />
+                              </div>
+                              <span className="text-[9px] font-black uppercase tracking-widest">Ação Necessária</span>
+                            </div>
+                            <p className="text-[11px] font-medium italic opacity-70">Assista ao vídeo e anote os pontos de dúvida crítica para a próxima live.</p>
+                          </Card>
+                          <Card className="p-5 border-none shadow-lg bg-white rounded-2xl space-y-3 group hover:shadow-xl transition-all">
+                            <div className="flex items-center gap-3 text-primary">
+                              <div className="h-8 w-8 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
+                                <Award className="h-4 w-4" />
+                              </div>
+                              <span className="text-[9px] font-black uppercase tracking-widest">Meta de Fixação</span>
+                            </div>
+                            <p className="text-[11px] font-medium italic opacity-70">Realizar o mini-assessment logo após a aula para validar o progresso.</p>
+                          </Card>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-sm font-black text-primary italic leading-none">Diretrizes da Mentoria</h2>
-                        <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest mt-1">Instruções Técnicas</p>
+
+                      <div className="space-y-6">
+                        <Card className="p-6 border-none shadow-2xl bg-primary text-white rounded-[2rem] relative overflow-hidden group">
+                          <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
+                          <div className="relative z-10 space-y-4">
+                            <div className="flex items-center gap-2">
+                              <Lightbulb className="h-4 w-4 text-accent" />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Sugestão Aurora</span>
+                            </div>
+                            <p className="text-[11px] font-medium leading-relaxed italic opacity-90">
+                              "Estudos indicam que pausar o vídeo a cada 10 minutos para resumir o que foi dito aumenta a retenção em até 40%."
+                            </p>
+                          </div>
+                        </Card>
+
+                        <div className="space-y-3">
+                          <h4 className="text-[8px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Competências Focadas</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {['Raciocínio Lógico', 'Análise Crítica', 'Base Teórica', 'Prática Técnica'].map(tag => (
+                              <Badge key={tag} variant="outline" className="bg-white border-muted/20 text-primary/60 font-bold text-[8px] uppercase px-3 h-6 rounded-lg italic">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    
-                    <Card className="border-none shadow-xl bg-white p-6 rounded-2xl border-l-4 border-accent relative overflow-hidden group">
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3 text-accent">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          <span className="text-[8px] font-black uppercase tracking-widest">Recomendações Aurora</span>
-                        </div>
-                        <p className="text-xs leading-relaxed text-primary/80 font-medium italic whitespace-pre-line">
-                          {activeContent?.description || "Este conteúdo foi estrategicamente curado para fortalecer sua base de conhecimento. Foque nos conceitos fundamentais e anote dúvidas críticas."}
-                        </p>
-                      </div>
-                    </Card>
                   </div>
                </TabsContent>
 
