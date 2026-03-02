@@ -14,60 +14,89 @@ import {
   Activity,
   BookOpen,
   ArrowUpRight,
-  Zap,
-  Database,
-  ShieldCheck,
   History,
   Clock
 } from "lucide-react";
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const engagementData = [
-  { name: "Seg", acessos: 120, quizzes: 45 },
-  { name: "Ter", acessos: 150, quizzes: 52 },
-  { name: "Qua", acessos: 180, quizzes: 61 },
-  { name: "Qui", acessos: 140, quizzes: 48 },
-  { name: "Sex", acessos: 160, quizzes: 55 },
-  { name: "Sáb", acessos: 90, quizzes: 20 },
-  { name: "Dom", acessos: 70, quizzes: 15 },
-];
-
 export default function CoordinatorDashboard() {
   const { profile, loading: isUserLoading } = useAuth();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<any[]>([]);
   const [stats, setStats] = useState({
-    totalStudents: 1250,
-    totalTeachers: 42,
-    completionRate: 82,
-    avgScore: 8.7
+    totalStudents: 0,
+    totalTeachers: 0,
+    completionRate: 0,
+    avgScore: 0
   });
 
   useEffect(() => {
-    async function fetchLogs() {
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (!error) setLogs(data || []);
-      setLoading(false);
+    async function fetchDashboardData() {
+      setLoading(true);
+      try {
+        // 1. Logs de Atividade
+        const { data: logData } = await supabase
+          .from('activity_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (logData) setLogs(logData);
+
+        // 2. Contagem de Alunos (Todos os tipos exceto teacher/admin)
+        const { count: studentCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .not('profile_type', 'in', '("teacher","admin")');
+
+        // 3. Contagem de Professores
+        const { count: teacherCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_type', 'teacher');
+
+        // 4. Taxa de Conclusão Média
+        const { data: progressData } = await supabase
+          .from('user_progress')
+          .select('percentage');
+        
+        const avgCompletion = progressData && progressData.length > 0
+          ? Math.round(progressData.reduce((acc, curr) => acc + curr.percentage, 0) / progressData.length)
+          : 0;
+
+        // 5. Média Global de Simulados
+        const { data: scoreData } = await supabase
+          .from('simulation_attempts')
+          .select('score, total_questions');
+        
+        const avgScore = scoreData && scoreData.length > 0
+          ? (scoreData.reduce((acc, curr) => acc + (curr.score / curr.total_questions), 0) / scoreData.length) * 10
+          : 0;
+
+        setStats({
+          totalStudents: studentCount || 0,
+          totalTeachers: teacherCount || 0,
+          completionRate: avgCompletion,
+          avgScore: Number(avgScore.toFixed(1))
+        });
+
+      } catch (err) {
+        console.error("Erro ao carregar dashboard admin:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-    fetchLogs();
+    fetchDashboardData();
   }, []);
 
   if (isUserLoading || loading) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
       <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Auditoria...</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Auditoria Global...</p>
     </div>
   );
 
@@ -90,10 +119,10 @@ export default function CoordinatorDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Alunos Ativos", value: stats.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50", trend: "+12%" },
-          { label: "Corpo Docente", value: stats.totalTeachers, icon: BookOpen, color: "text-purple-600", bg: "bg-purple-50", trend: "+2" },
-          { label: "Taxa Conclusão", value: `${stats.completionRate}%`, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50", trend: "+5%" },
-          { label: "Média Global", value: stats.avgScore, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", trend: "+0.3" },
+          { label: "Alunos Ativos", value: stats.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50", trend: "REDE" },
+          { label: "Corpo Docente", value: stats.totalTeachers, icon: BookOpen, color: "text-purple-600", bg: "bg-purple-50", trend: "ATIVO" },
+          { label: "Taxa Conclusão", value: `${stats.completionRate}%`, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50", trend: "MÉDIA" },
+          { label: "Média Global", value: stats.avgScore, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", trend: "NOTAS" },
         ].map((stat, i) => (
           <Card key={i} className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
             <CardContent className="p-6">
@@ -101,7 +130,7 @@ export default function CoordinatorDashboard() {
                 <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-700 border-none font-black text-[10px]">{stat.trend}</Badge>
+                <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[10px]">{stat.trend}</Badge>
               </div>
               <div className="mt-4">
                 <p className="text-3xl font-black text-primary leading-none italic">{stat.value}</p>
@@ -125,7 +154,7 @@ export default function CoordinatorDashboard() {
           </CardHeader>
           <CardContent className="p-8 space-y-4">
             {logs.length === 0 ? (
-              <div className="py-10 text-center opacity-30 italic font-medium">Nenhuma atividade registrada hoje.</div>
+              <div className="py-10 text-center opacity-30 italic font-medium">Nenhuma atividade registrada no sistema.</div>
             ) : (
               logs.map((log) => (
                 <div key={log.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
@@ -145,37 +174,23 @@ export default function CoordinatorDashboard() {
                 </div>
               ))
             )}
-            <Button variant="ghost" className="w-full text-[10px] font-black uppercase text-accent hover:bg-accent/5 tracking-widest mt-4">
-              Ver Log Completo de Auditoria <ArrowUpRight className="h-3 w-3 ml-2" />
-            </Button>
           </CardContent>
         </Card>
 
         <div className="space-y-6">
           <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
-            <CardHeader className="pb-2 p-8">
+            <CardHeader className="pb-2 p-8 relative z-10">
               <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-3">
                 <AlertCircle className="h-4 w-4 text-accent" />
                 Alertas de Risco
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-8 pb-8 space-y-4">
-              {[
-                { name: 'Ana Beatriz', reason: 'Inativa há 10 dias', severity: 'high' },
-                { name: 'Julia Costa', reason: 'Evasão Detectada', severity: 'high' },
-              ].map((alerta, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/10 border border-white/10 hover:bg-white/20 transition-all cursor-pointer group">
-                  <div className="flex flex-col overflow-hidden">
-                    <span className="text-xs font-black truncate italic group-hover:text-accent transition-colors">{alerta.name}</span>
-                    <span className={`text-[8px] font-black uppercase tracking-widest ${alerta.severity === 'high' ? 'text-red-400' : 'text-accent'}`}>{alerta.reason}</span>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-white/40 hover:text-white" asChild>
-                    <Link href="/dashboard/admin/students"><ArrowUpRight className="h-4 w-4" /></Link>
-                  </Button>
-                </div>
-              ))}
-              <Button className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg shadow-accent/20 hover:scale-[1.02] transition-transform">
+            <CardContent className="px-8 pb-8 space-y-4 relative z-10">
+              <div className="py-10 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
+                <p className="text-[10px] font-bold italic">Nenhum risco crítico detectado no momento.</p>
+              </div>
+              <Button disabled className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg shadow-accent/20">
                 Central de Intervenção
               </Button>
             </CardContent>

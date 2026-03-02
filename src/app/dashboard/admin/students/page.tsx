@@ -32,22 +32,67 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  
   const [cohorts, setCohorts] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [newCohort, setNewCohort] = useState({ name: "", description: "" });
 
-  async function fetchCohorts() {
+  async function fetchData() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('classes')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error) setCohorts(data || []);
-    setLoading(false);
+    try {
+      // 1. Busca Turmas
+      const { data: classData } = await supabase
+        .from('classes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (classData) setCohorts(classData);
+
+      // 2. Busca Alunos Dinamicamente (Perfis reais)
+      const { data: studentData } = await supabase
+        .from('profiles')
+        .select(`
+          id, 
+          name, 
+          email, 
+          profile_type, 
+          class_id,
+          classes (name)
+        `)
+        .not('profile_type', 'in', '("teacher","admin")')
+        .order('name');
+
+      // 3. Busca Progresso para Engajamento
+      const { data: progressData } = await supabase
+        .from('user_progress')
+        .select('user_id, percentage');
+
+      if (studentData) {
+        const mapped = studentData.map(s => {
+          const userProgress = progressData?.filter(p => p.user_id === s.id) || [];
+          const avgProgress = userProgress.length > 0 
+            ? Math.round(userProgress.reduce((acc, curr) => acc + curr.percentage, 0) / userProgress.length)
+            : 0;
+          
+          return {
+            ...s,
+            engagement: `${avgProgress}%`,
+            cohort: (s.classes as any)?.name || 'Pendente',
+            status: avgProgress > 70 ? 'high' : avgProgress > 30 ? 'medium' : 'low'
+          };
+        });
+        setStudents(mapped);
+      }
+
+    } catch (e) {
+      console.error("Erro ao buscar alunos/turmas:", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    fetchCohorts();
+    fetchData();
   }, []);
 
   const handleCreateCohort = async () => {
@@ -67,7 +112,6 @@ export default function AdminStudentsPage() {
 
       if (error) throw error;
 
-      // Log de Auditoria
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         user_name: profile?.name || user.email,
@@ -94,6 +138,11 @@ export default function AdminStudentsPage() {
       toast({ title: "Turma removida." });
     }
   };
+
+  const filteredStudents = students.filter(s => 
+    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
@@ -182,7 +231,7 @@ export default function AdminStudentsPage() {
 
       <Card className="border-none shadow-2xl rounded-3xl bg-white overflow-hidden">
         <CardHeader className="p-8 border-b border-muted/10 flex flex-row items-center justify-between">
-          <CardTitle className="text-xl font-black text-primary italic">Lista Mestra de Alunos</CardTitle>
+          <CardTitle className="text-xl font-black text-primary italic">Lista Mestra de Alunos ({filteredStudents.length})</CardTitle>
           <div className="relative w-64 group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
             <Input 
@@ -204,29 +253,36 @@ export default function AdminStudentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[
-                { name: "Ana Beatriz", cohort: "Turma A", engagement: "92%", status: "high" },
-                { name: "Marcos Silva", cohort: "Pendente", engagement: "45%", status: "low" },
-                { name: "Julia Costa", cohort: "Turma A", engagement: "78%", status: "medium" },
-              ].map((student, i) => (
-                <TableRow key={i} className="border-b last:border-0 hover:bg-accent/5 transition-colors group h-20">
-                  <TableCell className="px-8">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-primary text-white flex items-center justify-center font-black italic shadow-md">{student.name.charAt(0)}</div>
-                      <span className="font-black text-primary text-sm italic">{student.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-muted-foreground italic">{student.cohort}</TableCell>
-                  <TableCell>
-                    <Badge className={`border-none font-black text-[8px] uppercase px-3 ${student.status === 'high' ? 'bg-green-100 text-green-700' : student.status === 'low' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {student.engagement}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right px-8">
-                    <Button variant="ghost" size="icon" className="rounded-xl text-accent hover:bg-accent/10"><Send className="h-4 w-4" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {loading ? (
+                <TableRow><TableCell colSpan={4} className="h-32 text-center"><Loader2 className="animate-spin h-6 w-6 mx-auto opacity-20"/></TableCell></TableRow>
+              ) : filteredStudents.length === 0 ? (
+                <TableRow><TableCell colSpan={4} className="h-32 text-center font-black italic opacity-20">Nenhum aluno localizado.</TableCell></TableRow>
+              ) : (
+                filteredStudents.map((student, i) => (
+                  <TableRow key={student.id} className="border-b last:border-0 hover:bg-accent/5 transition-colors group h-20">
+                    <TableCell className="px-8">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-primary text-white flex items-center justify-center font-black italic shadow-md">{student.name?.charAt(0)}</div>
+                        <div className="flex flex-col">
+                          <span className="font-black text-primary text-sm italic">{student.name}</span>
+                          <span className="text-[8px] font-black uppercase opacity-40">{student.profile_type}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-muted-foreground italic">{student.cohort}</TableCell>
+                    <TableCell>
+                      <Badge className={`border-none font-black text-[8px] uppercase px-3 ${student.status === 'high' ? 'bg-green-100 text-green-700' : student.status === 'low' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {student.engagement}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right px-8">
+                      <Button variant="ghost" size="icon" className="rounded-xl text-accent hover:bg-accent/10" asChild>
+                        <Link href={`/dashboard/chat/${student.id}`}><Send className="h-4 w-4" /></Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

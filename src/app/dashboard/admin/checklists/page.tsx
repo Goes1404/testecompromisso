@@ -14,12 +14,9 @@ import {
   AlertCircle, 
   CheckCircle2, 
   Send,
-  Filter,
-  Users,
-  ChevronRight
+  Users
 } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 interface StudentProgress {
@@ -32,21 +29,21 @@ interface StudentProgress {
 }
 
 export default function AdminChecklistAuditPage() {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<StudentProgress[]>([]);
 
-  const TOTAL_REQUIRED_DOCS = 12; // Baseado no checklist do aluno
+  const TOTAL_REQUIRED_DOCS = 12;
 
   useEffect(() => {
     async function fetchChecklists() {
       setLoading(true);
       try {
+        // Busca todos os perfis que não são professores nem admin (pegando todos os tipos de alunos)
         const { data: profiles, error: pError } = await supabase
           .from('profiles')
           .select('id, name, email')
-          .eq('profile_type', 'student')
+          .not('profile_type', 'in', '("teacher","admin")')
           .order('name');
 
         if (pError) throw pError;
@@ -57,8 +54,8 @@ export default function AdminChecklistAuditPage() {
 
         if (cError) throw cError;
 
-        const progressMap = profiles.map(p => {
-          const count = checklists.filter(c => c.user_id === p.id).length;
+        const progressMap = (profiles || []).map(p => {
+          const count = (checklists || []).filter(c => c.user_id === p.id).length;
           const percent = (count / TOTAL_REQUIRED_DOCS) * 100;
           return {
             id: p.id,
