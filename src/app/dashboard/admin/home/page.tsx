@@ -13,9 +13,10 @@ import {
   Loader2, 
   Activity,
   BookOpen,
-  ArrowUpRight,
   History,
-  Clock
+  Clock,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
@@ -26,6 +27,7 @@ import { ptBR } from "date-fns/locale";
 export default function CoordinatorDashboard() {
   const { profile, loading: isUserLoading } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [networkStatus, setNetworkStatus] = useState({ db: 'checking', ai: 'checking' });
   const [logs, setLogs] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -34,11 +36,24 @@ export default function CoordinatorDashboard() {
     avgScore: 0
   });
 
+  async function checkHealth() {
+    try {
+      const res = await fetch('/api/health');
+      const data = await res.json();
+      setNetworkStatus({
+        db: data.supabase?.status === 'ok' ? 'online' : 'offline',
+        ai: data.genkit?.status === 'ok' ? 'online' : 'offline'
+      });
+    } catch (e) {
+      setNetworkStatus({ db: 'offline', ai: 'offline' });
+    }
+  }
+
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
+      checkHealth();
       try {
-        // 1. Logs de Atividade
         const { data: logData } = await supabase
           .from('activity_logs')
           .select('*')
@@ -47,19 +62,16 @@ export default function CoordinatorDashboard() {
         
         if (logData) setLogs(logData);
 
-        // 2. Contagem de Alunos (Todos os tipos exceto teacher/admin)
         const { count: studentCount } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .not('profile_type', 'in', '("teacher","admin")');
 
-        // 3. Contagem de Professores
         const { count: teacherCount } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('profile_type', 'teacher');
 
-        // 4. Taxa de Conclusão Média
         const { data: progressData } = await supabase
           .from('user_progress')
           .select('percentage');
@@ -68,7 +80,6 @@ export default function CoordinatorDashboard() {
           ? Math.round(progressData.reduce((acc, curr) => acc + curr.percentage, 0) / progressData.length)
           : 0;
 
-        // 5. Média Global de Simulados
         const { data: scoreData } = await supabase
           .from('simulation_attempts')
           .select('score, total_questions');
@@ -85,7 +96,7 @@ export default function CoordinatorDashboard() {
         });
 
       } catch (err) {
-        console.error("Erro ao carregar dashboard admin:", err);
+        console.error("Erro dashboard admin:", err);
       } finally {
         setLoading(false);
       }
@@ -110,11 +121,9 @@ export default function CoordinatorDashboard() {
           </div>
           <p className="text-muted-foreground font-medium text-sm md:text-lg italic">Inteligência de rede e auditoria em tempo real.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button className="rounded-xl h-12 bg-accent text-accent-foreground font-black shadow-xl" asChild>
-            <Link href="/dashboard/teacher/analytics">Relatório Global</Link>
-          </Button>
-        </div>
+        <Button className="rounded-xl h-12 bg-accent text-accent-foreground font-black shadow-xl" asChild>
+          <Link href="/dashboard/teacher/analytics">Relatório Global</Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -130,7 +139,7 @@ export default function CoordinatorDashboard() {
                 <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
-                <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[10px]">{stat.trend}</Badge>
+                <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px]">{stat.trend}</Badge>
               </div>
               <div className="mt-4">
                 <p className="text-3xl font-black text-primary leading-none italic">{stat.value}</p>
@@ -144,13 +153,8 @@ export default function CoordinatorDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
           <CardHeader className="p-8 pb-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-black text-primary italic">Auditoria de Atividades</CardTitle>
-                <CardDescription className="font-medium">Rastro industrial de ações dos gestores e mentores.</CardDescription>
-              </div>
-              <History className="h-6 w-6 text-accent opacity-20" />
-            </div>
+            <CardTitle className="text-xl font-black text-primary italic">Auditoria de Atividades</CardTitle>
+            <CardDescription className="font-medium">Rastro industrial de ações dos gestores e mentores.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-4">
             {logs.length === 0 ? (
@@ -178,6 +182,33 @@ export default function CoordinatorDashboard() {
         </Card>
 
         <div className="space-y-6">
+          <Card className="border-none shadow-xl bg-white rounded-[2.5rem] p-8 overflow-hidden group">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em]">Sinal da Rede</h3>
+              <Activity className={`h-4 w-4 ${networkStatus.db === 'online' ? 'text-green-500 animate-pulse' : 'text-red-500'}`} />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-[10px] font-bold">
+                <span className="text-primary/60 uppercase">Banco de Dados</span>
+                <Badge variant="outline" className={`border-none ${networkStatus.db === 'online' ? 'text-green-600' : 'text-red-600'} uppercase text-[8px]`}>
+                  {networkStatus.db === 'online' ? <Wifi className="h-2.5 w-2.5 mr-1" /> : <WifiOff className="h-2.5 w-2.5 mr-1" />}
+                  {networkStatus.db.toUpperCase()}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-bold">
+                <span className="text-primary/60 uppercase">Aurora IA</span>
+                <Badge variant="outline" className={`border-none ${networkStatus.ai === 'online' ? 'text-green-600' : 'text-red-600'} uppercase text-[8px]`}>
+                  {networkStatus.ai === 'online' ? <Wifi className="h-2.5 w-2.5 mr-1" /> : <WifiOff className="h-2.5 w-2.5 mr-1" />}
+                  {networkStatus.ai.toUpperCase()}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-bold">
+                <span className="text-primary/60 uppercase">Arquivamento</span>
+                <span className="text-green-600 uppercase">SINCRONIZADO</span>
+              </div>
+            </div>
+          </Card>
+
           <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
             <CardHeader className="pb-2 p-8 relative z-10">
@@ -190,31 +221,10 @@ export default function CoordinatorDashboard() {
               <div className="py-10 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
                 <p className="text-[10px] font-bold italic">Nenhum risco crítico detectado no momento.</p>
               </div>
-              <Button disabled className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg shadow-accent/20">
+              <Button disabled className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg">
                 Central de Intervenção
               </Button>
             </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-xl bg-white rounded-[2.5rem] p-8 overflow-hidden group">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em]">Sinal da Rede</h3>
-              <Activity className="h-4 w-4 text-green-500 animate-pulse" />
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-[10px] font-bold">
-                <span className="text-primary/60 uppercase">Banco de Dados</span>
-                <span className="text-green-600 uppercase">Online</span>
-              </div>
-              <div className="flex items-center justify-between text-[10px] font-bold">
-                <span className="text-primary/60 uppercase">Aurora IA</span>
-                <span className="text-green-600 uppercase">Ativa</span>
-              </div>
-              <div className="flex items-center justify-between text-[10px] font-bold">
-                <span className="text-primary/60 uppercase">Arquivamento</span>
-                <span className="text-green-600 uppercase">Sincronizado</span>
-              </div>
-            </div>
           </Card>
         </div>
       </div>
