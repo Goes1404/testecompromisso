@@ -65,7 +65,8 @@ export default function AdminStudentsPage() {
           favorite_subject,
           classes (name)
         `)
-        .not('profile_type', 'in', '("teacher","admin")')
+        .neq('profile_type', 'teacher')
+        .neq('profile_type', 'admin')
         .order('name');
 
       const { data: progressData } = await supabase

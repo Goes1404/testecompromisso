@@ -65,18 +65,22 @@ export default function CoordinatorDashboard() {
         if (logData) setLogs(logData);
 
         // 2. Contagem de Alunos (Qualquer perfil que não seja teacher ou admin)
-        const { count: studentCount, error: sErr } = await supabase
+        const { data: students, error: sErr } = await supabase
           .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .not('profile_type', 'in', '("teacher","admin")');
+          .select('id, profile_type')
+          .neq('profile_type', 'teacher')
+          .neq('profile_type', 'admin');
         
-        console.log("[ADMIN] Alunos localizados:", studentCount, sErr || "");
+        const studentCount = students?.length || 0;
+        console.log("[ADMIN] Alunos localizados:", studentCount);
 
         // 3. Contagem de Professores
-        const { count: teacherCount } = await supabase
+        const { data: teachers } = await supabase
           .from('profiles')
-          .select('*', { count: 'exact', head: true })
+          .select('id')
           .eq('profile_type', 'teacher');
+        
+        const teacherCount = teachers?.length || 0;
 
         // 4. Taxa de Conclusão Média
         let avgCompletion = 0;
@@ -88,7 +92,7 @@ export default function CoordinatorDashboard() {
           avgCompletion = Math.round(progressData.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / progressData.length);
         }
 
-        // 5. Média Global de Simulados (Tabela recém-criada)
+        // 5. Média Global de Simulados
         let avgScore = 0;
         const { data: scoreData } = await supabase
           .from('simulation_attempts')
@@ -103,8 +107,8 @@ export default function CoordinatorDashboard() {
         }
 
         setStats({
-          totalStudents: studentCount || 0,
-          totalTeachers: teacherCount || 0,
+          totalStudents: studentCount,
+          totalTeachers: teacherCount,
           completionRate: avgCompletion,
           avgScore: Number(avgScore.toFixed(1))
         });

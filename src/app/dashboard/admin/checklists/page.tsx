@@ -39,11 +39,12 @@ export default function AdminChecklistAuditPage() {
     async function fetchChecklists() {
       setLoading(true);
       try {
-        // Busca todos os perfis que não são professores nem admin (pegando todos os tipos de alunos)
+        // Busca todos os perfis que não são professores nem admin
         const { data: profiles, error: pError } = await supabase
           .from('profiles')
           .select('id, name, email')
-          .not('profile_type', 'in', '("teacher","admin")')
+          .neq('profile_type', 'teacher')
+          .neq('profile_type', 'admin')
           .order('name');
 
         if (pError) throw pError;
