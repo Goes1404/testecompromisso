@@ -55,9 +55,9 @@ export default function CoordinatorDashboard() {
       await checkHealth();
       
       try {
-        console.log("[ADMIN DEBUG] Iniciando coleta de dados...");
+        console.log("[ADMIN DEBUG] Iniciando coleta de métricas reais...");
 
-        // 1. Buscar Todos os Perfis (Mais robusto que filtros SQL para depuração)
+        // 1. Buscar Todos os Perfis para contagem manual (Estratégia Inclusiva)
         const { data: allProfiles, error: pErr } = await supabase
           .from('profiles')
           .select('id, profile_type, name');
@@ -65,10 +65,19 @@ export default function CoordinatorDashboard() {
         if (pErr) {
           console.error("[ADMIN DEBUG] Erro ao buscar perfis:", pErr.message);
         } else {
-          console.log("[ADMIN DEBUG] Perfis localizados no banco:", allProfiles?.length || 0, allProfiles);
+          console.log("[ADMIN DEBUG] Total de perfis localizados:", allProfiles?.length || 0);
           
-          const students = allProfiles?.filter(p => p.profile_type !== 'teacher' && p.profile_type !== 'admin') || [];
-          const teachers = allProfiles?.filter(p => p.profile_type === 'teacher') || [];
+          // Classificação robusta no cliente
+          const students = allProfiles?.filter(p => 
+            p.profile_type !== 'teacher' && 
+            p.profile_type !== 'admin'
+          ) || [];
+          
+          const teachers = allProfiles?.filter(p => 
+            p.profile_type === 'teacher'
+          ) || [];
+          
+          console.log("[ADMIN DEBUG] Professores identificados:", teachers.length);
           
           setStats(prev => ({
             ...prev,
@@ -91,7 +100,10 @@ export default function CoordinatorDashboard() {
           .select('percentage');
         
         if (progressData && progressData.length > 0) {
-          const avgCompletion = Math.round(progressData.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / progressData.length);
+          const validProgress = progressData.filter(p => p.percentage !== null);
+          const avgCompletion = validProgress.length > 0 
+            ? Math.round(validProgress.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / validProgress.length)
+            : 0;
           setStats(prev => ({ ...prev, completionRate: avgCompletion }));
         }
 
@@ -110,7 +122,7 @@ export default function CoordinatorDashboard() {
         }
 
       } catch (err) {
-        console.error("[ADMIN DEBUG] Erro fatal no processamento:", err);
+        console.error("[ADMIN DEBUG] Erro fatal no processamento das estatísticas:", err);
       } finally {
         setLoading(false);
       }
@@ -172,7 +184,7 @@ export default function CoordinatorDashboard() {
           </CardHeader>
           <CardContent className="p-8 space-y-4">
             {logs.length === 0 ? (
-              <div className="py-10 text-center opacity-30 italic font-medium">Nenhuma atividade registrada no sistema.</div>
+              <div className="py-10 text-center opacity-30 italic font-medium">Nenhuma atividade recente registrada.</div>
             ) : (
               logs.map((log) => (
                 <div key={log.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
@@ -233,7 +245,7 @@ export default function CoordinatorDashboard() {
             </CardHeader>
             <CardContent className="px-8 pb-8 space-y-4 relative z-10">
               <div className="py-10 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
-                <p className="text-[10px] font-bold italic">Nenhum risco crítico detectado no momento.</p>
+                <p className="text-[10px] font-bold italic">Nenhum risco crítico detectado.</p>
               </div>
               <Button disabled className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg">
                 Central de Intervenção
