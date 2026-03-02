@@ -55,17 +55,17 @@ export default function CoordinatorDashboard() {
       await checkHealth();
       
       try {
-        console.log("[ADMIN DEBUG] Coletando dados da rede...");
+        console.log("[ADMIN DEBUG] Iniciando Varredura de Rede...");
 
-        // 1. Buscar todos os perfis
         const { data: allProfiles, error: pErr } = await supabase
           .from('profiles')
-          .select('id, profile_type, name');
+          .select('id, profile_type, name, email');
         
         if (pErr) {
           console.error("[ADMIN DEBUG] Erro Supabase:", pErr.message);
         } else {
-          // LÓGICA INVERSA: Definir quem é ALUNO. Todo o resto (que não for vazio) é STAFF.
+          // LÓGICA INDUSTRIAL: Definir quem é ALUNO. 
+          // O resto (que não for vazio) é STAFF/DOCENTE.
           const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
           
           const students = allProfiles?.filter(p => {
@@ -81,12 +81,12 @@ export default function CoordinatorDashboard() {
             return isNotStudent && type !== '';
           }) || [];
           
-          console.log("[ADMIN DEBUG] Classificação Industrial:", {
-            total: allProfiles?.length || 0,
-            alunos: students.length,
-            corpoDocente: teachers.length,
-            tiposEncontrados: Array.from(new Set(allProfiles?.map(p => p.profile_type)))
-          });
+          console.table(allProfiles?.map(p => ({
+            Nome: p.name,
+            Email: p.email,
+            TipoOriginal: p.profile_type || "NULO",
+            Classificacao: studentKeywords.some(key => (p.profile_type || '').toLowerCase().includes(key)) || (p.profile_type || '') === '' ? "ALUNO" : "DOCENTE/STAFF"
+          })));
           
           setStats(prev => ({
             ...prev,
@@ -131,7 +131,7 @@ export default function CoordinatorDashboard() {
             }
           }
         } catch (e) {
-          console.log("[ADMIN DEBUG] Tabela simulation_attempts não localizada.");
+          console.log("[ADMIN DEBUG] Dados de simulados ainda não disponíveis.");
         }
 
       } catch (err) {
