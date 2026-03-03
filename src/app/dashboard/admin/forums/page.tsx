@@ -21,8 +21,18 @@ import {
   Calendar,
   User,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Filter,
+  Eye,
+  EyeOff
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -50,11 +60,27 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
+const FORUM_CATEGORIES = [
+  "Dúvidas", 
+  "Matemática", 
+  "Física", 
+  "Química", 
+  "Biologia", 
+  "Linguagens", 
+  "História", 
+  "Geografia", 
+  "Carreira", 
+  "Off-Topic"
+];
+
 export default function AdminForumModerationPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [visibilityFilter, setVisibilityFilter] = useState("all");
+  
   const [forums, setForums] = useState<any[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
@@ -178,10 +204,18 @@ export default function AdminForumModerationPage() {
     }
   };
 
-  const filtered = forums.filter(f => 
-    f.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.author_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = forums.filter(f => {
+    const matchesSearch = f.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         f.author_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = categoryFilter === 'all' || f.category === categoryFilter;
+    
+    const matchesVisibility = visibilityFilter === 'all' || 
+                             (visibilityFilter === 'staff' && f.is_teacher_only) ||
+                             (visibilityFilter === 'public' && !f.is_teacher_only);
+
+    return matchesSearch && matchesCategory && matchesVisibility;
+  });
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
@@ -196,11 +230,46 @@ export default function AdminForumModerationPage() {
         <div className="relative w-full md:w-80 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors" />
           <Input 
-            placeholder="Pesquisar tópico..." 
+            placeholder="Pesquisar tópico ou autor..." 
             className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl italic font-medium focus-visible:ring-accent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest flex items-center gap-2">
+            <Filter className="h-3 w-3" /> Filtrar por Matéria
+          </Label>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
+              <SelectValue placeholder="Todas as Categorias" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-none shadow-2xl">
+              <SelectItem value="all" className="font-bold">Todas as Matérias</SelectItem>
+              {FORUM_CATEGORIES.map(cat => (
+                <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest flex items-center gap-2">
+            <Eye className="h-3 w-3" /> Nível de Visibilidade
+          </Label>
+          <Select value={visibilityFilter} onValueChange={setVisibilityFilter}>
+            <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
+              <SelectValue placeholder="Todos os Status" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-none shadow-2xl">
+              <SelectItem value="all" className="font-bold">Todos os Tópicos</SelectItem>
+              <SelectItem value="public" className="font-bold">Apenas Públicos</SelectItem>
+              <SelectItem value="staff" className="font-bold">Apenas Somente Staff</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -379,6 +448,14 @@ export default function AdminForumModerationPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-64 text-center py-20">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground/20" />
+                        <p className="font-black italic text-xl text-primary/40 uppercase tracking-widest">Nenhuma discussão localizada</p>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
