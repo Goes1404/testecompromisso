@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   Search, 
@@ -50,7 +51,7 @@ export default function AdminUserDirectoryPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Novos Estados de Filtro
+  // Estados de Filtro
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -145,11 +146,9 @@ export default function AdminUserDirectoryPage() {
   };
 
   const filtered = users.filter(u => {
-    // 1. Busca por Nome/Username
     const matchesSearch = u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          u.username?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // 2. Classificação Aluno vs Staff
     const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
     const pType = (u.profile_type || '').toLowerCase();
     const isStudent = studentKeywords.some(key => pType.includes(key)) || pType === '';
@@ -159,13 +158,11 @@ export default function AdminUserDirectoryPage() {
                        (roleFilter === 'staff' && isStaff) || 
                        (roleFilter === 'student' && isStudent);
 
-    // 3. Status de Acesso
     const isSuspended = u.status === 'suspended';
     const matchesStatus = statusFilter === 'all' ||
                          (statusFilter === 'active' && !isSuspended) ||
                          (statusFilter === 'suspended' && isSuspended);
 
-    // 4. Tipo de Perfil Específico
     const matchesType = typeFilter === 'all' || u.profile_type === typeFilter;
 
     return matchesSearch && matchesRole && matchesStatus && matchesType;
@@ -192,7 +189,6 @@ export default function AdminUserDirectoryPage() {
         </div>
       </div>
 
-      {/* ÁREA DE FILTROS AVANÇADOS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest flex items-center gap-2">
