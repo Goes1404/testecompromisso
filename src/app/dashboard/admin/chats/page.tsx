@@ -15,12 +15,14 @@ import {
   ShieldCheck, 
   User, 
   History,
-  Calendar
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 interface Conversation {
   u1_id: string;
@@ -37,34 +39,56 @@ export default function AdminChatAuditPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [threads, setThreads] = useState<Conversation[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchThreads() {
       setLoading(true);
       try {
-        // Busca mensagens recentes para identificar threads
-        const { data: messages, error } = await supabase
+        // 1. Busca mensagens recentes
+        const { data: messages, error: mError } = await supabase
           .from('direct_messages')
-          .select('*, sender:profiles!sender_id(name, profile_type), receiver:profiles!receiver_id(name, profile_type)')
+          .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (mError) throw mError;
 
-        // Agrupar por pares únicos de usuários
+        if (!messages || messages.length === 0) {
+          setThreads([]);
+          return;
+        }
+
+        // 2. Extrair IDs únicos de usuários envolvidos
+        const userIds = Array.from(new Set(messages.flatMap(m => [m.sender_id, m.receiver_id])));
+
+        // 3. Buscar perfis desses usuários
+        const { data: profiles, error: pError } = await supabase
+          .from('profiles')
+          .select('id, name, profile_type')
+          .in('id', userIds);
+
+        if (pError) throw pError;
+
+        const profileMap = new Map(profiles?.map(p => [p.id, p]));
+
+        // 4. Agrupar por pares únicos de usuários (Threads)
         const threadMap = new Map();
         
-        messages?.forEach(msg => {
+        messages.forEach(msg => {
           const ids = [msg.sender_id, msg.receiver_id].sort();
           const key = ids.join(':');
           
           if (!threadMap.has(key)) {
+            const u1 = profileMap.get(ids[0]);
+            const u2 = profileMap.get(ids[1]);
+
             threadMap.set(key, {
               u1_id: ids[0],
               u2_id: ids[1],
-              u1_name: msg.sender_id === ids[0] ? msg.sender?.name : msg.receiver?.name,
-              u2_name: msg.sender_id === ids[1] ? msg.sender?.name : msg.receiver?.name,
-              u1_type: msg.sender_id === ids[0] ? msg.sender?.profile_type : msg.receiver?.profile_type,
-              u2_type: msg.sender_id === ids[1] ? msg.sender?.profile_type : msg.receiver?.profile_type,
+              u1_name: u1?.name || 'Usuário Externo',
+              u2_name: u2?.name || 'Usuário Externo',
+              u1_type: u1?.profile_type || 'student',
+              u2_type: u2?.profile_type || 'student',
               last_message: msg.content,
               last_date: msg.created_at
             });
@@ -72,15 +96,20 @@ export default function AdminChatAuditPage() {
         });
 
         setThreads(Array.from(threadMap.values()));
-      } catch (err) {
-        console.error("Erro ao auditar chats:", err);
+      } catch (err: any) {
+        console.error("Erro detalhado ao auditar chats:", err);
+        toast({
+          title: "Erro de Sincronização",
+          description: "Não foi possível carregar os logs. Verifique se a tabela 'direct_messages' existe.",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     }
 
     fetchThreads();
-  }, []);
+  }, [toast]);
 
   const filteredThreads = threads.filter(t => 
     t.u1_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
