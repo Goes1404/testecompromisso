@@ -17,13 +17,25 @@ import {
   ArrowUpRight,
   PlusCircle,
   Database,
-  Star
+  Star,
+  Trash2
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import Link from "next/link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminStudentsPage() {
   const { user, profile } = useAuth();
@@ -32,6 +44,7 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
@@ -40,7 +53,6 @@ export default function AdminStudentsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      // 1. Buscar Turmas
       const { data: classData } = await supabase
         .from('classes')
         .select('*')
@@ -48,16 +60,9 @@ export default function AdminStudentsPage() {
       
       if (classData) setCohorts(classData);
 
-      // 2. Buscar Alunos
       const { data: allProfiles, error: pError } = await supabase
         .from('profiles')
-        .select(`
-          id, 
-          name, 
-          profile_type, 
-          class_id,
-          favorite_subject
-        `)
+        .select('*')
         .order('name');
 
       if (pError) throw pError;
@@ -68,7 +73,6 @@ export default function AdminStudentsPage() {
         return studentKeywords.some(key => type.includes(key)) || type === '';
       }) || [];
 
-      // 3. Buscar Progresso (Opcional)
       const { data: progressData } = await supabase
         .from('user_progress')
         .select('user_id, percentage');
@@ -99,7 +103,7 @@ export default function AdminStudentsPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [cohorts.length]); // Atualiza quando mudar o número de turmas
 
   const handleCreateCohort = async () => {
     if (!newCohort.name.trim() || !user) return;
@@ -133,6 +137,29 @@ export default function AdminStudentsPage() {
       toast({ title: "Erro ao criar", description: e.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteStudent = async (id: string, name: string) => {
+    setDeletingId(id);
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) throw error;
+
+      await supabase.from('activity_logs').insert({
+        user_id: user?.id,
+        user_name: profile?.name || 'Administrador',
+        action: `Removeu o estudante ${name} da rede.`,
+        entity_type: 'user',
+        entity_id: id
+      });
+
+      setStudents(prev => prev.filter(s => s.id !== id));
+      toast({ title: "Registro Removido" });
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -250,9 +277,36 @@ export default function AdminStudentsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right px-8">
-                    <Button variant="ghost" size="icon" className="rounded-xl text-accent" asChild>
-                      <Link href={`/dashboard/chat/${student.id}`}><Send className="h-4 w-4" /></Link>
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="ghost" size="icon" className="rounded-xl text-accent" asChild>
+                        <Link href={`/dashboard/chat/${student.id}`}><Send className="h-4 w-4" /></Link>
+                      </Button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50">
+                            {deletingId === student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl p-10 max-w-sm">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-2xl font-black italic text-primary">Excluir Registro?</AlertDialogTitle>
+                            <AlertDialogDescription className="font-medium text-sm">
+                              Esta ação removerá o perfil de <strong className="text-red-600">{student.name}</strong> da rede. Esta ação é irreversível.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="gap-3 mt-6">
+                            <AlertDialogCancel className="rounded-xl font-bold border-none bg-muted/30">Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteStudent(student.id, student.name)} 
+                              className="rounded-xl font-black bg-red-600 hover:bg-red-700 text-white px-8"
+                            >
+                              Confirmar Exclusão
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

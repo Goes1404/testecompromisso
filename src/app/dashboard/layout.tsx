@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Loader2, Eye, FileCheck, FilePenLine } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Loader2, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,14 +38,14 @@ const teacherItems = [
 
 const adminItems = [
   { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home" },
+  { icon: Users, label: "Diretório de Usuários", href: "/dashboard/admin/users" },
   { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics" },
+  { icon: Gavel, label: "Moderação de Fórum", href: "/dashboard/admin/forums" },
   { icon: FileCheck, label: "Status de Documentos", href: "/dashboard/admin/checklists" },
   { icon: Eye, label: "Auditoria de Chats", href: "/dashboard/admin/chats" },
-  { icon: Users, label: "Gestão de Turmas", href: "/dashboard/admin/students" },
+  { icon: Database, label: "Gestão de Turmas", href: "/dashboard/admin/students" },
   { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails" },
-  { icon: Library, label: "Curadoria de Acervo", href: "/dashboard/teacher/library" },
   { icon: Bell, label: "Comunicados Globais", href: "/dashboard/teacher/communication" },
-  { icon: MessagesSquare, label: "Fórum de Gestão", href: "/dashboard/forum" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ];
 
@@ -137,7 +137,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { user, profile, loading: isUserLoading, signOut } = useAuth();
   
-  // SOLUÇÃO PARA ERRO DE HIDRATAÇÃO: Garantir que o servidor e o cliente renderizem a mesma coisa no início
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
@@ -159,16 +158,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/');
   }, [pathname]);
 
-  // Se ainda não hidratou ou está buscando o usuário, exibe o loading shell estável
   if (!hasHydrated || isUserLoading) return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-primary gap-4">
       <div className="relative">
-        <div className="h-16 w-16 rounded-2xl bg-accent flex items-center justify-center shadow-2xl animate-pulse">
-          <BookOpen className="h-8 w-8 text-accent-foreground" />
+        <div className="h-12 w-12 rounded-2xl bg-accent flex items-center justify-center shadow-2xl animate-pulse">
+          <BookOpen className="h-6 w-6 text-accent-foreground" />
         </div>
-        <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-accent animate-bounce" />
+        <Sparkles className="absolute -top-2 -right-2 h-4 w-4 text-accent animate-bounce" />
       </div>
-      <h2 className="text-xl font-black text-white italic tracking-tight">Compromisso</h2>
+      <h2 className="text-sm font-black text-white italic tracking-tight">Compromisso</h2>
       <div className="flex items-center gap-2 opacity-40">
         <Loader2 className="h-3 w-3 animate-spin text-white" />
         <span className="text-[8px] font-black uppercase text-white tracking-widest">Sincronizando...</span>
