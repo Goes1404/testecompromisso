@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,22 @@ import {
   BookOpen,
   Clock,
   Wifi,
-  WifiOff
+  WifiOff,
+  Filter,
+  Layers,
+  ArrowUpRight
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, subDays, subMonths, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function CoordinatorDashboard() {
@@ -28,10 +38,13 @@ export default function CoordinatorDashboard() {
   const [loading, setLoading] = useState(true);
   const [networkStatus, setNetworkStatus] = useState({ db: 'checking', ai: 'checking' });
   const [logs, setLogs] = useState<any[]>([]);
+  const [timeFilter, setTimeFilter] = useState("all");
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalTeachers: 0,
-    completionRate: 0,
+    startedTrails: 0,
+    finishedTrails: 0,
+    avgFinishedPerStudent: 0,
     avgScore: 0
   });
 
@@ -49,71 +62,95 @@ export default function CoordinatorDashboard() {
     }
   }
 
-  useEffect(() => {
-    async function fetchDashboardData() {
-      setLoading(true);
-      await checkHealth();
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    await checkHealth();
+    
+    try {
+      // 1. Buscar Perfis para contagem de usuários
+      const { data: allProfiles, error: pErr } = await supabase
+        .from('profiles')
+        .select('id, profile_type, name');
       
-      try {
-        const { data: allProfiles, error: pErr } = await supabase
-          .from('profiles')
-          .select('id, profile_type, name');
-        
-        if (!pErr && allProfiles) {
-          const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
-          
-          const students = allProfiles.filter(p => {
-            const type = (p.profile_type || '').toLowerCase().trim();
-            return studentKeywords.some(key => type.includes(key)) || type === '';
-          });
+      let studentCount = 0;
+      let teacherCount = 0;
 
-          const teachers = allProfiles.filter(p => {
-            const type = (p.profile_type || '').toLowerCase().trim();
-            const isStudentType = studentKeywords.some(key => type.includes(key)) || type === '';
-            return !isStudentType;
-          });
-          
-          setStats(prev => ({
-            ...prev,
-            totalStudents: students.length,
-            totalTeachers: teachers.length
-          }));
-        }
+      if (!pErr && allProfiles) {
+        const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
+        const classified = allProfiles.map(p => {
+          const type = (p.profile_type || '').toLowerCase().trim();
+          const isStaff = type !== '' && !studentKeywords.some(key => type.includes(key));
+          return { ...p, isStaff };
+        });
 
-        const { data: logData } = await supabase
-          .from('activity_logs')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(5);
-        if (logData) setLogs(logData);
-
-        const { data: progressData } = await supabase
-          .from('user_progress')
-          .select('percentage');
-        
-        if (progressData && progressData.length > 0) {
-          const sum = progressData.reduce((acc, curr) => acc + (curr.percentage || 0), 0);
-          setStats(prev => ({ ...prev, completionRate: Math.round(sum / progressData.length) }));
-        }
-
-        const { data: scoreData } = await supabase
-          .from('simulation_attempts')
-          .select('score, total_questions');
-        
-        if (scoreData && scoreData.length > 0) {
-          const sumGrades = scoreData.reduce((acc, curr) => acc + (curr.score / curr.total_questions), 0);
-          const avgScore = (sumGrades / scoreData.length) * 10;
-          setStats(prev => ({ ...prev, avgScore: Number(avgScore.toFixed(1)) }));
-        }
-
-      } catch (err) {
-        console.error("[ADMIN DEBUG] Falha no carregamento:", err);
-      } finally {
-        setLoading(false);
+        studentCount = classified.filter(p => !p.isStaff).length;
+        teacherCount = classified.filter(p => p.isStaff).length;
       }
+
+      // 2. Buscar Logs
+      const { data: logData } = await supabase
+        .from('activity_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (logData) setLogs(logData);
+
+      // 3. Buscar Progresso com Filtro de Tempo
+      let progressQuery = supabase.from('user_progress').select('percentage, last_accessed');
+      
+      if (timeFilter !== "all") {
+        let dateLimit;
+        if (timeFilter === "week") dateLimit = subDays(new Date(), 7).toISOString();
+        else if (timeFilter === "month") dateLimit = subMonths(new Date(), 1).toISOString();
+        else if (timeFilter === "year") dateLimit = subYears(new Date(), 1).toISOString();
+        
+        if (dateLimit) {
+          progressQuery = progressQuery.gte('last_accessed', dateLimit);
+        }
+      }
+
+      const { data: progressData } = await progressQuery;
+      
+      let started = 0;
+      let finished = 0;
+      let avgFinished = 0;
+
+      if (progressData) {
+        started = progressData.length;
+        finished = progressData.filter(p => p.percentage === 100).length;
+        avgFinished = studentCount > 0 ? Number((finished / studentCount).toFixed(2)) : 0;
+      }
+
+      // 4. Média de Notas
+      const { data: scoreData } = await supabase
+        .from('simulation_attempts')
+        .select('score, total_questions');
+      
+      let avgScoreValue = 0;
+      if (scoreData && scoreData.length > 0) {
+        const sumGrades = scoreData.reduce((acc, curr) => acc + (curr.score / curr.total_questions), 0);
+        avgScoreValue = Number(((sumGrades / scoreData.length) * 10).toFixed(1));
+      }
+
+      setStats({
+        totalStudents: studentCount,
+        totalTeachers: teacherCount,
+        startedTrails: started,
+        finishedTrails: finished,
+        avgFinishedPerStudent: avgFinished,
+        avgScore: avgScoreValue
+      });
+
+    } catch (err) {
+      console.error("[ADMIN DEBUG] Falha no carregamento:", err);
+    } finally {
+      setLoading(false);
     }
+  }, [timeFilter]);
+
+  useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
   if (isUserLoading || loading) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
@@ -132,33 +169,101 @@ export default function CoordinatorDashboard() {
           </div>
           <p className="text-muted-foreground font-medium text-sm md:text-lg italic">Inteligência de rede e auditoria em tempo real.</p>
         </div>
-        <Button className="rounded-xl h-12 bg-accent text-accent-foreground font-black shadow-xl" asChild>
-          <Link href="/dashboard/teacher/analytics">Relatório Global</Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Select value={timeFilter} onValueChange={setTimeFilter}>
+            <SelectTrigger className="w-[180px] h-12 rounded-xl bg-white border-none shadow-xl font-bold italic text-primary">
+              <Filter className="h-4 w-4 mr-2 text-accent" />
+              <SelectValue placeholder="Filtrar Período" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-none shadow-2xl">
+              <SelectItem value="all" className="font-bold">Todo o Período</SelectItem>
+              <SelectItem value="week" className="font-bold">Última Semana</SelectItem>
+              <SelectItem value="month" className="font-bold">Último Mês</SelectItem>
+              <SelectItem value="year" className="font-bold">Último Ano</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button className="rounded-xl h-12 bg-accent text-accent-foreground font-black shadow-xl" asChild>
+            <Link href="/dashboard/teacher/analytics">Relatório Global</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: "Alunos Ativos", value: stats.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50", trend: "REDE" },
-          { label: "Corpo Docente", value: stats.totalTeachers, icon: BookOpen, color: "text-purple-600", bg: "bg-purple-50", trend: "EQUIPE" },
-          { label: "Taxa Conclusão", value: `${stats.completionRate}%`, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50", trend: "MÉDIA" },
-          { label: "Média Global", value: stats.avgScore, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", trend: "NOTAS" },
-        ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
-                  <stat.icon className="h-6 w-6" />
+        {/* Card Alunos */}
+        <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className={`p-3 rounded-2xl bg-blue-50 text-blue-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+                <Users className="h-6 w-6" />
+              </div>
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px]">REDE</Badge>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-black text-primary leading-none italic">{stats.totalStudents}</p>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2">Alunos Ativos</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card Professores */}
+        <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className={`p-3 rounded-2xl bg-purple-50 text-purple-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+                <BookOpen className="h-6 w-6" />
+              </div>
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px]">EQUIPE</Badge>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-black text-primary leading-none italic">{stats.totalTeachers}</p>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2">Corpo Docente</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card Taxa Conclusão (Otimizado) */}
+        <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className={`p-3 rounded-2xl bg-green-50 text-green-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <Badge variant="secondary" className="bg-green-100 text-green-700 border-none font-black text-[8px]">MÉDIA</Badge>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div>
+                <p className="text-3xl font-black text-primary leading-none italic">{stats.avgFinishedPerStudent}</p>
+                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Trilhas Finalizadas / Aluno</p>
+              </div>
+              <div className="pt-2 border-t border-muted/10 grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs font-black text-primary italic">{stats.startedTrails}</p>
+                  <p className="text-[7px] font-bold text-muted-foreground uppercase">Iniciadas</p>
                 </div>
-                <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px]">{stat.trend}</Badge>
+                <div>
+                  <p className="text-xs font-black text-green-600 italic">{stats.finishedTrails}</p>
+                  <p className="text-[7px] font-bold text-muted-foreground uppercase">Terminadas</p>
+                </div>
               </div>
-              <div className="mt-4">
-                <p className="text-3xl font-black text-primary leading-none italic">{stat.value}</p>
-                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2">{stat.label}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card Média Global */}
+        <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className={`p-3 rounded-2xl bg-orange-50 text-orange-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+                <TrendingUp className="h-6 w-6" />
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px]">NOTAS</Badge>
+            </div>
+            <div className="mt-4">
+              <p className="text-3xl font-black text-primary leading-none italic">{stats.avgScore}</p>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2">Média Global</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
