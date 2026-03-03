@@ -23,7 +23,8 @@ import {
   Sparkles,
   MapPin,
   MessagesSquare,
-  Layers
+  Layers,
+  ExternalLink
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -348,6 +349,15 @@ export default function AdminStudentsPage() {
                         <p className="text-lg font-black text-primary italic leading-none group-hover:text-accent transition-colors truncate">{poloName}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">COMUNIDADE REGIONAL</p>
                       </div>
+                      {selectedPoloName === poloName && (
+                        <div className="mt-4 animate-in slide-in-from-top-2">
+                          <Button asChild variant="outline" className="w-full h-10 rounded-xl border-accent text-accent font-black text-[10px] uppercase hover:bg-accent hover:text-white transition-all">
+                            <Link href={`/dashboard/forum/${forum.id}`}>
+                              Entrar no Fórum <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
