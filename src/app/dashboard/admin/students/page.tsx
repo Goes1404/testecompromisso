@@ -24,12 +24,20 @@ import {
   MapPin,
   MessagesSquare,
   Layers,
-  ExternalLink
+  ExternalLink,
+  GitMerge
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
 import {
   AlertDialog,
@@ -50,6 +58,7 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
   const [cohorts, setCohorts] = useState<any[]>([]);
@@ -57,6 +66,10 @@ export default function AdminStudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
   const [newCohort, setNewCohort] = useState({ name: "", description: "" });
   
+  // Estados para Mesclagem
+  const [sourceCohortId, setSourceCohortId] = useState<string>("");
+  const [destCohortId, setDestCohortId] = useState<string>("");
+
   // Filtros ativos
   const [selectedCohortId, setSelectedCohortId] = useState<string | null>(null);
   const [selectedPoloName, setSelectedPoloName] = useState<string | null>(null);
@@ -167,6 +180,54 @@ export default function AdminStudentsPage() {
     }
   };
 
+  const handleMergeCohorts = async () => {
+    if (!sourceCohortId || !destCohortId || sourceCohortId === destCohortId || !user) {
+      toast({ title: "Seleção Inválida", description: "Selecione duas turmas diferentes.", variant: "destructive" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // 1. Mover alunos da turma de origem para a de destino
+      const { error: moveError } = await supabase
+        .from('profiles')
+        .update({ class_id: destCohortId })
+        .eq('class_id', sourceCohortId);
+
+      if (moveError) throw moveError;
+
+      // 2. Apagar a turma de origem
+      const sourceName = cohorts.find(c => c.id === sourceCohortId)?.name;
+      const destName = cohorts.find(c => c.id === destCohortId)?.name;
+
+      const { error: deleteError } = await supabase
+        .from('classes')
+        .delete()
+        .eq('id', sourceCohortId);
+
+      if (deleteError) throw deleteError;
+
+      // 3. Logar a ação
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        user_name: profile?.name || 'Administrador',
+        action: `Mesclou a turma ${sourceName} na turma ${destName}`,
+        entity_type: 'class_merge'
+      });
+
+      toast({ title: "Turmas Mescladas!", description: `Todos os alunos de ${sourceName} agora pertencem a ${destName}.` });
+      
+      setIsMergeOpen(false);
+      setSourceCohortId("");
+      setDestCohortId("");
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "Falha na Mesclagem", description: e.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleUpdateStudentForum = async () => {
     const institutionClean = newInstitution.trim();
     if (!editingStudent || !institutionClean) return;
@@ -258,12 +319,69 @@ export default function AdminStudentsPage() {
           <p className="text-muted-foreground font-medium italic">Administração centralizada de Cohorts acadêmicos e Polos regionais.</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {(selectedCohortId || selectedPoloName) && (
             <Button variant="ghost" onClick={clearFilters} className="h-14 rounded-2xl font-black text-red-500 uppercase text-[10px] gap-2">
               <X className="h-4 w-4" /> Limpar Filtros
             </Button>
           )}
+
+          {/* BOTÃO MESCLAR TURMAS */}
+          <Dialog open={isMergeOpen} onOpenChange={setIsMergeOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="rounded-2xl h-14 border-dashed border-primary/20 text-primary font-black px-6 hover:bg-primary/5 transition-all flex items-center justify-center gap-3">
+                <GitMerge className="h-5 w-5 text-accent" />
+                <span>Mesclar Turmas</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black italic text-primary">Mesclar Cohorts</DialogTitle>
+                <DialogDescription className="italic">Isso moverá todos os alunos de uma turma para outra e apagará o registro de origem.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Turma de Origem (Será removida)</Label>
+                  <Select value={sourceCohortId} onValueChange={setSourceCohortId}>
+                    <SelectTrigger className="h-14 rounded-xl bg-muted/30 border-none font-bold italic">
+                      <SelectValue placeholder="Selecione a origem..." />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                      {cohorts.map(c => (
+                        <SelectItem key={c.id} value={c.id} className="font-bold italic">{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-center">
+                  <GitMerge className="h-6 w-6 text-accent animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Turma de Destino (Receberá os alunos)</Label>
+                  <Select value={destCohortId} onValueChange={setDestCohortId}>
+                    <SelectTrigger className="h-14 rounded-xl bg-muted/30 border-none font-bold italic">
+                      <SelectValue placeholder="Selecione o destino..." />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                      {cohorts.map(c => (
+                        <SelectItem key={c.id} value={c.id} className="font-bold italic" disabled={c.id === sourceCohortId}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  onClick={handleMergeCohorts} 
+                  disabled={isSubmitting || !sourceCohortId || !destCohortId} 
+                  className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl"
+                >
+                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Unificar e Sincronizar Alunos"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button className="rounded-2xl h-14 bg-accent text-accent-foreground font-black px-8 shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">
