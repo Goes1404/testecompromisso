@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { 
   Bell, 
   PlusCircle, 
@@ -23,7 +23,8 @@ import {
   Clock,
   Search,
   Filter,
-  Sparkles
+  Sparkles,
+  Layers
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/app/lib/supabase';
@@ -58,6 +59,7 @@ export default function CommunicationPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [cohorts, setCohorts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -70,17 +72,28 @@ export default function CommunicationPage() {
   });
 
   useEffect(() => {
-    async function fetchAnnouncements() {
+    async function fetchData() {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Buscar Avisos
+      const { data: annData } = await supabase
         .from('announcements')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (!error) setAnnouncements(data || []);
+      if (annData) setAnnouncements(annData);
+
+      // Buscar Turmas (Para o Filtro de Público Alvo)
+      const { data: classData } = await supabase
+        .from('classes')
+        .select('id, name')
+        .order('name');
+      
+      if (classData) setCohorts(classData);
+
       setLoading(false);
     }
-    fetchAnnouncements();
+    fetchData();
   }, []);
 
   const handleCreateAnnouncement = async (overrideData?: any) => {
@@ -139,10 +152,15 @@ export default function CommunicationPage() {
     }
   };
 
-  const filtered = announcements.filter(a => 
-    a.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    a.message.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = announcements.filter(a => {
+    const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         a.message.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const targetName = cohorts.find(c => c.id === a.target_group)?.name || '';
+    const matchesTarget = targetName.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesSearch || matchesTarget;
+  });
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
@@ -199,7 +217,7 @@ export default function CommunicationPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Prioridade</label>
                   <Select value={formData.priority} onValueChange={(v: any) => setFormData({...formData, priority: v})}>
@@ -217,13 +235,27 @@ export default function CommunicationPage() {
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Público Alvo</label>
                   <Select value={formData.target_group} onValueChange={(v) => setFormData({...formData, target_group: v})}>
                     <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl font-bold italic">
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione o alvo" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-none shadow-2xl">
-                      <SelectItem value="all" className="font-bold italic">Toda a Rede</SelectItem>
-                      <SelectItem value="etec" className="font-bold italic">Alunos ETEC</SelectItem>
-                      <SelectItem value="enem" className="font-bold italic">Alunos ENEM</SelectItem>
-                      <SelectItem value="teacher" className="font-bold italic">Apenas Staff</SelectItem>
+                    <SelectContent className="rounded-xl border-none shadow-2xl max-h-80">
+                      <SelectGroup>
+                        <SelectLabel className="text-[9px] font-black uppercase opacity-40 px-2 pt-2">Geral</SelectLabel>
+                        <SelectItem value="all" className="font-bold italic">Toda a Rede</SelectItem>
+                        <SelectItem value="etec" className="font-bold italic">Alunos ETEC</SelectItem>
+                        <SelectItem value="enem" className="font-bold italic">Alunos ENEM</SelectItem>
+                        <SelectItem value="teacher" className="font-bold italic">Apenas Staff</SelectItem>
+                      </SelectGroup>
+                      
+                      {cohorts.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel className="text-[9px] font-black uppercase opacity-40 px-2 pt-4 border-t border-dashed mt-2">Turmas (Cohorts)</SelectLabel>
+                          {cohorts.map(cohort => (
+                            <SelectItem key={cohort.id} value={cohort.id} className="font-bold italic">
+                              🎓 {cohort.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -261,7 +293,7 @@ export default function CommunicationPage() {
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
             <Input 
-              placeholder="Pesquisar por termo no histórico..." 
+              placeholder="Pesquisar por termo ou turma no histórico..." 
               className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl italic font-medium focus-visible:ring-accent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -283,6 +315,8 @@ export default function CommunicationPage() {
               filtered.map((ann) => {
                 const styles = priorityStyles[ann.priority] || priorityStyles.low;
                 const Icon = styles.icon;
+                const targetCohort = cohorts.find(c => c.id === ann.target_group);
+                
                 return (
                   <Card key={ann.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
                     <CardContent className="p-0">
@@ -304,9 +338,13 @@ export default function CommunicationPage() {
                                   <Badge className={`${styles.bg} ${styles.color} border-none font-black text-[8px] uppercase px-3 h-5`}>
                                     {styles.label}
                                   </Badge>
-                                  {ann.target_group && ann.target_group !== 'all' && (
-                                    <Badge variant="outline" className="border-primary/10 text-primary/40 font-black text-[8px] uppercase px-3 h-5">
-                                      <Target className="h-2.5 w-2.5 mr-1" /> {ann.target_group}
+                                  {ann.target_group && (
+                                    <Badge variant="outline" className="border-primary/10 text-primary/40 font-black text-[8px] uppercase px-3 h-5 flex items-center gap-1">
+                                      {targetCohort ? (
+                                        <><Layers className="h-2.5 w-2.5" /> TURMA: {targetCohort.name}</>
+                                      ) : (
+                                        <><Target className="h-2.5 w-2.5" /> {ann.target_group === 'all' ? 'TODA A REDE' : ann.target_group.toUpperCase()}</>
+                                      )}
                                     </Badge>
                                   )}
                                 </div>
