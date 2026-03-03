@@ -20,7 +20,8 @@ import {
   Star,
   Trash2,
   Settings2,
-  Building2
+  Building2,
+  X
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +39,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminStudentsPage() {
   const { user, profile } = useAuth();
@@ -52,6 +52,7 @@ export default function AdminStudentsPage() {
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [newCohort, setNewCohort] = useState({ name: "", description: "" });
+  const [selectedCohortId, setSelectedCohortId] = useState<string | null>(null);
 
   // Estados para Edição de Aluno (Unidade/Fórum)
   const [editingStudent, setEditingStudent] = useState<any>(null);
@@ -210,9 +211,11 @@ export default function AdminStudentsPage() {
     }
   };
 
-  const filteredStudents = students.filter(s => 
-    s.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCohort = !selectedCohortId || s.class_id === selectedCohortId;
+    return matchesSearch && matchesCohort;
+  });
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
@@ -222,32 +225,39 @@ export default function AdminStudentsPage() {
           <p className="text-muted-foreground font-medium italic">Administração de turmas, fóruns regionais e matrículas.</p>
         </div>
         
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-2xl h-14 bg-accent text-accent-foreground font-black px-8 shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">
-              <Users className="h-5 w-5" />
-              <span>Criar Nova Turma</span>
+        <div className="flex items-center gap-3">
+          {selectedCohortId && (
+            <Button variant="ghost" onClick={() => setSelectedCohortId(null)} className="h-14 rounded-2xl font-black text-red-500 uppercase text-[10px] gap-2">
+              <X className="h-4 w-4" /> Limpar Filtro
             </Button>
-          </DialogTrigger>
-          <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
-            <DialogHeader><DialogTitle className="text-2xl font-black italic text-primary">Configurar Turma</DialogTitle></DialogHeader>
-            <div className="space-y-6 py-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Identificação</Label>
-                <Input value={newCohort.name} onChange={(e) => setNewCohort({...newCohort, name: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-bold italic" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Meta Pedagógica</Label>
-                <Input value={newCohort.description} onChange={(e) => setNewCohort({...newCohort, description: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-medium italic" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleCreateCohort} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
-                {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Registrar Turma"}
+          )}
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-2xl h-14 bg-accent text-accent-foreground font-black px-8 shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">
+                <Users className="h-5 w-5" />
+                <span>Criar Nova Turma</span>
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
+              <DialogHeader><DialogTitle className="text-2xl font-black italic text-primary">Configurar Turma</DialogTitle></DialogHeader>
+              <div className="space-y-6 py-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Identificação</Label>
+                  <Input value={newCohort.name} onChange={(e) => setNewCohort({...newCohort, name: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-bold italic" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Meta Pedagógica</Label>
+                  <Input value={newCohort.description} onChange={(e) => setNewCohort({...newCohort, description: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-medium italic" />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleCreateCohort} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
+                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Registrar Turma"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -260,9 +270,16 @@ export default function AdminStudentsPage() {
           </div>
         ) : (
           cohorts.map((cohort) => (
-            <Card key={cohort.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all">
+            <Card 
+              key={cohort.id} 
+              className={`border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all ${
+                selectedCohortId === cohort.id ? 'ring-4 ring-accent' : ''
+              }`}
+            >
               <CardContent className="p-8">
-                <div className="p-4 w-fit rounded-2xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
+                <div className={`p-4 w-fit rounded-2xl transition-all shadow-inner ${
+                  selectedCohortId === cohort.id ? 'bg-accent text-accent-foreground' : 'bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white'
+                }`}>
                   <GraduationCap className="h-8 w-8" />
                 </div>
                 <div className="mt-6 space-y-2">
@@ -270,7 +287,14 @@ export default function AdminStudentsPage() {
                   <p className="text-[10px] text-muted-foreground font-medium italic line-clamp-1">{cohort.description || "Sem descrição."}</p>
                   <div className="flex items-center justify-between mt-6 pt-4 border-t border-muted/10">
                     <Badge variant="secondary" className="bg-green-100 text-green-700 font-black text-[8px] px-3">ATIVO</Badge>
-                    <Button variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-accent px-3">Visualizar <ArrowUpRight className="h-3 w-3 ml-1" /></Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setSelectedCohortId(selectedCohortId === cohort.id ? null : cohort.id)}
+                      className={`h-8 rounded-lg font-bold px-3 ${selectedCohortId === cohort.id ? 'bg-accent text-accent-foreground' : 'text-accent'}`}
+                    >
+                      {selectedCohortId === cohort.id ? 'Filtrado' : 'Visualizar'} <ArrowUpRight className="h-3 w-3 ml-1" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -281,7 +305,12 @@ export default function AdminStudentsPage() {
 
       <Card className="border-none shadow-2xl rounded-3xl bg-white overflow-hidden">
         <CardHeader className="p-8 border-b border-muted/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <CardTitle className="text-xl font-black text-primary italic">Lista Mestra de Alunos ({filteredStudents.length})</CardTitle>
+          <CardTitle className="text-xl font-black text-primary italic">
+            Lista Mestra de Alunos ({filteredStudents.length})
+            {selectedCohortId && (
+              <Badge className="ml-3 bg-accent text-accent-foreground font-black italic">Filtrando Turma</Badge>
+            )}
+          </CardTitle>
           <div className="relative w-64 group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent" />
             <Input placeholder="Pesquisar..." className="pl-10 h-11 bg-muted/30 border-none rounded-xl font-medium italic" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
