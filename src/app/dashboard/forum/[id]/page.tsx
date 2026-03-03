@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Loader2, MessageSquare, Calendar, Info } from "lucide-react";
+import { ChevronLeft, Send, Loader2, MessageSquare, Calendar, Info, Lock, ShieldAlert, UserX } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/app/lib/supabase";
@@ -27,14 +27,34 @@ export default function ForumDetailPage() {
   const [forum, setForum] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRestricted, setIsRestricted] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
 
   useEffect(() => {
     async function loadData() {
-      if (!forumId) return;
+      if (!forumId || !user) return;
       setLoading(true);
       try {
         const { data: forumData } = await supabase.from('forums').select('*').eq('id', forumId).single();
-        if (forumData) setForum(forumData);
+        if (forumData) {
+          setForum(forumData);
+          
+          // Verificar se o fórum é "Somente Staff" e se o usuário é aluno
+          const isStaff = ['teacher', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
+          if (forumData.is_teacher_only && !isStaff) {
+            setIsRestricted(true);
+          }
+        }
+
+        // Verificar banimento específico deste usuário neste fórum
+        const { data: banData } = await supabase
+          .from('forum_bans')
+          .select('id')
+          .eq('forum_id', forumId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (banData) setIsBanned(true);
 
         const { data: postsData } = await supabase
           .from('forum_posts')
@@ -69,11 +89,11 @@ export default function ForumDetailPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [forumId]);
+  }, [forumId, user, profile]);
 
   const handleSendPost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPost.trim() || !user || isSubmitting) return;
+    if (!newPost.trim() || !user || isSubmitting || isRestricted || isBanned) return;
 
     setIsSubmitting(true);
     const content = newPost;
@@ -128,7 +148,11 @@ export default function ForumDetailPage() {
               <Badge variant="outline" className="bg-accent/10 text-accent border-none font-black text-[8px] uppercase px-2 h-4 tracking-widest">
                 {forum?.category || "Geral"}
               </Badge>
-              <span className="text-[8px] font-bold text-muted-foreground uppercase hidden sm:inline">Iniciado por {forum?.author_name}</span>
+              {forum?.is_teacher_only && (
+                <Badge className="bg-red-50 text-red-600 border-none font-black text-[8px] uppercase px-2 h-4 tracking-widest flex items-center gap-1">
+                  <Lock className="h-2 w-2" /> Somente Mentoria
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -182,18 +206,30 @@ export default function ForumDetailPage() {
         </ScrollArea>
         
         <div className="p-4 md:p-6 bg-white border-t shrink-0">
-          <form onSubmit={handleSendPost} className="flex items-center gap-3 bg-slate-100 p-2 pl-6 rounded-full shadow-inner border max-w-4xl mx-auto focus-within:ring-2 focus-within:ring-accent/30 transition-all">
-            <Input 
-              value={newPost}
-              onChange={(e) => setNewPost(e.target.value)}
-              placeholder="Sua contribuição..."
-              disabled={isSubmitting}
-              className="flex-1 h-10 md:h-12 bg-transparent border-none text-primary text-sm font-medium italic focus-visible:ring-0 px-0"
-            />
-            <Button type="submit" disabled={!newPost.trim() || isSubmitting} className="h-10 w-10 md:h-12 md:w-12 bg-primary hover:bg-primary/95 text-white rounded-full shadow-xl shrink-0 transition-transform active:scale-90">
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </form>
+          {isBanned ? (
+            <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center gap-3">
+              <UserX className="h-5 w-5 text-red-600" />
+              <p className="text-sm font-black text-red-800 italic uppercase">Sua participação foi restrita neste debate pelo moderador.</p>
+            </div>
+          ) : isRestricted ? (
+            <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center gap-3">
+              <ShieldAlert className="h-5 w-5 text-amber-600" />
+              <p className="text-sm font-black text-amber-800 italic uppercase">Este fórum está em modo 'Leitura'. Apenas mentores podem postar.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSendPost} className="flex items-center gap-3 bg-slate-100 p-2 pl-6 rounded-full shadow-inner border max-w-4xl mx-auto focus-within:ring-2 focus-within:ring-accent/30 transition-all">
+              <Input 
+                value={newPost}
+                onChange={(e) => setNewPost(e.target.value)}
+                placeholder="Sua contribuição..."
+                disabled={isSubmitting}
+                className="flex-1 h-10 md:h-12 bg-transparent border-none text-primary text-sm font-medium italic focus-visible:ring-0 px-0"
+              />
+              <Button type="submit" disabled={!newPost.trim() || isSubmitting} className="h-10 w-10 md:h-12 md:w-12 bg-primary hover:bg-primary/95 text-white rounded-full shadow-xl shrink-0 transition-transform active:scale-90">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </form>
+          )}
         </div>
       </div>
     </div>
