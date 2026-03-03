@@ -25,7 +25,9 @@ import {
   Video,
   FileCheck,
   Calculator,
-  BrainCircuit
+  BrainCircuit,
+  X,
+  AlertTriangle
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,6 +49,7 @@ interface Announcement {
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high';
+  target_group?: string;
 }
 
 const priorityStyles = {
@@ -58,6 +61,7 @@ const priorityStyles = {
 export default function DashboardHome() {
   const { user, profile, loading: isUserLoading } = useAuth();
   const { toast } = useToast();
+  
   const [recommendedTrails, setRecommendedTrails] = useState<LibraryItem[]>([]);
   const [loadingTrails, setLoadingTrails] = useState(true);
   const [libraryResources, setLibraryResources] = useState<any[]>([]);
@@ -66,7 +70,11 @@ export default function DashboardHome() {
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(true);
-  const [isStarting, setIsStarting] = useState<string | null>(null);
+  
+  // Estados do Alerta Urgente
+  const [urgentAlert, setUrgentAlert] = useState<Announcement | null>(null);
+  const [countdown, setCountdown] = useState(3);
+  const [canCloseUrgent, setCanCloseUrgent] = useState(false);
 
   const fetchProgress = useCallback(async () => {
     if (!user || !isSupabaseConfigured) return;
@@ -118,11 +126,26 @@ export default function DashboardHome() {
         const { data: annData } = await supabase
           .from('announcements')
           .select('*')
-          .order('created_at', { ascending: false })
-          .limit(2);
+          .order('created_at', { ascending: false });
         
         if (annData && annData.length > 0) {
-          setAnnouncements(annData);
+          // Filtragem de Público Alvo Industrial
+          const filtered = annData.filter(ann => {
+            if (ann.target_group === 'all') return true;
+            if (ann.target_group === profile?.profile_type) return true;
+            if (ann.target_group === profile?.class_id) return true;
+            // Se o alvo for polo, verifica se o nome da instituição do aluno está no alvo
+            if (profile?.institution && ann.target_group === profile.institution) return true;
+            return false;
+          });
+
+          setAnnouncements(filtered.slice(0, 3));
+
+          // Ativa Alerta Urgente se houver algum de alta prioridade não lido
+          const urgent = filtered.find(ann => ann.priority === 'high');
+          if (urgent) {
+            setUrgentAlert(urgent);
+          }
         } else {
           setAnnouncements([
             { id: '1', title: 'Boas-vindas!', message: 'Explore as trilhas de estudo e o simulador de isenção.', priority: 'low' }
@@ -171,7 +194,20 @@ export default function DashboardHome() {
       await fetchProgress();
     }
     fetchHomeData();
-  }, [user, fetchProgress]);
+  }, [user, profile, fetchProgress]);
+
+  // Lógica do Timer do Alerta Urgente
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (urgentAlert && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      setCanCloseUrgent(true);
+    }
+    return () => clearInterval(timer);
+  }, [urgentAlert, countdown]);
 
   if (isUserLoading) return (
     <div className="flex flex-col h-96 items-center justify-center gap-4">
@@ -190,7 +226,60 @@ export default function DashboardHome() {
   ];
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-700 px-1">
+    <div className="space-y-8 pb-12 animate-in fade-in duration-700 px-1 relative">
+      
+      {/* OVERLAY DE ALERTA URGENTE (FULLSCREEN) */}
+      {urgentAlert && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-10 animate-in fade-in zoom-in-95 duration-500">
+          <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl" />
+          
+          <Card className="relative w-full max-w-2xl border-none shadow-[0_0_100px_rgba(239,68,68,0.2)] bg-white rounded-[3rem] overflow-hidden">
+            <div className="bg-red-600 p-8 md:p-12 text-white flex flex-col items-center text-center gap-6">
+              <div className="h-20 w-20 rounded-[2rem] bg-white/20 flex items-center justify-center animate-pulse">
+                <AlertOctagon className="h-10 w-10 text-white" />
+              </div>
+              <div className="space-y-2">
+                <Badge className="bg-white text-red-600 border-none font-black text-[10px] px-4 py-1.5 uppercase tracking-widest mb-2">
+                  COMUNICADO CRÍTICO
+                </Badge>
+                <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none uppercase">
+                  {urgentAlert.title}
+                </h2>
+              </div>
+            </div>
+            
+            <CardContent className="p-8 md:p-12 space-y-10">
+              <div className="p-6 md:p-8 rounded-[2rem] bg-red-50 border border-red-100 italic font-medium text-red-900 md:text-xl leading-relaxed text-center">
+                "{urgentAlert.message}"
+              </div>
+
+              <div className="flex flex-col items-center gap-6">
+                {!canCloseUrgent ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-12 w-12 rounded-full border-4 border-red-100 border-t-red-600 animate-spin" />
+                    <p className="text-[10px] font-black uppercase text-red-600/40 tracking-[0.3em]">
+                      Aguarde {countdown}s para confirmar leitura
+                    </p>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={() => setUrgentAlert(null)}
+                    className="w-full h-16 md:h-20 bg-primary text-white font-black text-lg md:text-xl rounded-2xl shadow-2xl hover:scale-105 active:scale-95 transition-all gap-3"
+                  >
+                    Ciente da Informação
+                    <CheckCircle2 className="h-6 w-6 text-accent" />
+                  </Button>
+                )}
+                <div className="flex items-center gap-2 opacity-30">
+                  <ShieldCheck className="h-3 w-3" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Protocolo de Segurança Compromisso</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <section className="bg-primary p-8 md:p-12 rounded-[2.5rem] text-primary-foreground relative overflow-hidden shadow-2xl">
          <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
          <div className="relative z-10 space-y-4">
@@ -234,14 +323,16 @@ export default function DashboardHome() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {announcements.map(ann => {
-                  const Icon = priorityStyles[ann.priority]?.icon || Info;
-                  const color = priorityStyles[ann.priority]?.color || 'text-slate-500';
-                  const bgColor = priorityStyles[ann.priority]?.bgColor || 'bg-slate-100';
+                  const styles = priorityStyles[ann.priority] || priorityStyles.low;
+                  const Icon = styles.icon;
                   return (
-                    <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${bgColor} animate-in slide-in-from-left duration-500 border border-black/5`}>
-                      <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${color}`} />
+                    <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${styles.bg} animate-in slide-in-from-left duration-500 border border-black/5`}>
+                      <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${styles.color}`} />
                       <div className="flex-1 min-w-0">
-                        <p className={`font-bold text-sm ${color} truncate`}>{ann.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className={`font-bold text-sm ${styles.color} truncate`}>{ann.title}</p>
+                          {ann.priority === 'high' && <div className="h-1.5 w-1.5 rounded-full bg-red-600 animate-ping" />}
+                        </div>
                         <p className="text-[10px] text-slate-600 line-clamp-2 leading-relaxed font-medium italic">{ann.message}</p>
                       </div>
                     </div>
