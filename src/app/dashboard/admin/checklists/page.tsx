@@ -17,7 +17,10 @@ import {
   Users,
   Filter,
   ArrowUpRight,
-  ClipboardList
+  ClipboardList,
+  MessagesSquare,
+  Megaphone,
+  Sparkles
 } from "lucide-react";
 import {
   Select,
@@ -26,8 +29,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/app/lib/supabase";
+import { useAuth } from "@/lib/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 interface StudentProgress {
@@ -40,11 +55,19 @@ interface StudentProgress {
 }
 
 export default function AdminChecklistAuditPage() {
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<StudentProgress[]>([]);
+  
+  // Estados para Ações em Massa
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
+  const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
+  const [bulkContent, setBulkContent] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const TOTAL_REQUIRED_DOCS = 12;
 
@@ -52,7 +75,6 @@ export default function AdminChecklistAuditPage() {
     async function fetchChecklists() {
       setLoading(true);
       try {
-        // 1. Buscar Perfis (Filtrando alunos na query para performance)
         const { data: allProfiles, error: pError } = await supabase
           .from('profiles')
           .select('id, name, profile_type')
@@ -60,14 +82,12 @@ export default function AdminChecklistAuditPage() {
 
         if (pError) throw pError;
 
-        // Lógica de filtragem de alunos (evitando staff)
         const staffKeywords = ['teacher', 'admin', 'mentor', 'coordenador'];
         const studentProfiles = allProfiles?.filter(p => {
           const type = (p.profile_type || '').toLowerCase().trim();
           return !staffKeywords.some(key => type.includes(key)) || type === '';
         }) || [];
 
-        // 2. Buscar Dados de Checklist (Contagem por usuário)
         const { data: checklistData, error: cError } = await supabase
           .from('student_checklists')
           .select('user_id');
@@ -103,6 +123,68 @@ export default function AdminChecklistAuditPage() {
     
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  const handleBulkMessage = async () => {
+    if (!bulkContent.trim() || !user || filtered.length === 0) return;
+    setIsProcessing(true);
+    
+    try {
+      const messages = filtered.map(student => ({
+        sender_id: user.id,
+        receiver_id: student.id,
+        content: bulkContent
+      }));
+
+      const { error } = await supabase.from('direct_messages').insert(messages);
+      if (error) throw error;
+
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        user_name: profile?.name || 'Admin',
+        action: `Enviou mensagem em massa para ${filtered.length} alunos (${statusFilter})`,
+        entity_type: 'bulk_action'
+      });
+
+      toast({ title: "Mensagens Enviadas!", description: `${filtered.length} alunos receberam seu contato.` });
+      setIsMessageOpen(false);
+      setBulkContent("");
+    } catch (e: any) {
+      toast({ title: "Falha no disparo", description: e.message, variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBulkAnnouncement = async () => {
+    if (!bulkContent.trim() || !user || filtered.length === 0) return;
+    setIsProcessing(true);
+
+    try {
+      const { error } = await supabase.from('announcements').insert({
+        title: `⚠️ Alerta de Documentação: ${statusFilter.toUpperCase()}`,
+        message: bulkContent,
+        priority: 'high',
+        author_id: user.id
+      });
+
+      if (error) throw error;
+
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        user_name: profile?.name || 'Admin',
+        action: `Publicou aviso segmentado para o grupo: ${statusFilter}`,
+        entity_type: 'announcement'
+      });
+
+      toast({ title: "Aviso Publicado!", description: "O comunicado já está no mural de todos os alunos." });
+      setIsAnnouncementOpen(false);
+      setBulkContent("");
+    } catch (e: any) {
+      toast({ title: "Erro ao publicar", description: e.message, variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
@@ -145,40 +227,106 @@ export default function AdminChecklistAuditPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest flex items-center gap-2">
-            <Filter className="h-3 w-3" /> Filtrar por Nível de Risco
-          </Label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
-              <SelectValue placeholder="Todos os Status" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-none shadow-2xl">
-              <SelectItem value="all" className="font-bold">Todos os Status</SelectItem>
-              <SelectItem value="low" className="font-bold text-red-600">Apenas Críticos</SelectItem>
-              <SelectItem value="medium" className="font-bold text-amber-600">Em Evolução</SelectItem>
-              <SelectItem value="high" className="font-bold text-green-600">Prontos para Matrícula</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest flex items-center gap-2">
+              <Filter className="h-3 w-3" /> Filtrar por Nível de Risco
+            </Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
+                <SelectValue placeholder="Todos os Status" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-none shadow-2xl">
+                <SelectItem value="all" className="font-bold">Todos os Status</SelectItem>
+                <SelectItem value="low" className="font-bold text-red-600">Apenas Críticos</SelectItem>
+                <SelectItem value="medium" className="font-bold text-amber-600">Em Evolução</SelectItem>
+                <SelectItem value="high" className="font-bold text-green-600">Prontos para Matrícula</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest flex items-center gap-2">
+              <Users className="h-3 w-3" /> Filtrar por Categoria
+            </Label>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
+                <SelectValue placeholder="Todas as Categorias" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-none shadow-2xl">
+                <SelectItem value="all" className="font-bold">Todos os Perfis</SelectItem>
+                <SelectItem value="etec" className="font-bold">Alunos ETEC</SelectItem>
+                <SelectItem value="enem" className="font-bold">Alunos ENEM</SelectItem>
+                <SelectItem value="cpop_santana" className="font-bold">CPOP Santana</SelectItem>
+                <SelectItem value="cpop_osasco" className="font-bold">CPOP Osasco</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest flex items-center gap-2">
-            <Users className="h-3 w-3" /> Filtrar por Categoria de Aluno
-          </Label>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
-              <SelectValue placeholder="Todas as Categorias" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-none shadow-2xl">
-              <SelectItem value="all" className="font-bold">Todos os Perfis</SelectItem>
-              <SelectItem value="etec" className="font-bold">Alunos ETEC</SelectItem>
-              <SelectItem value="enem" className="font-bold">Alunos ENEM</SelectItem>
-              <SelectItem value="cpop_santana" className="font-bold">CPOP Santana</SelectItem>
-              <SelectItem value="cpop_osasco" className="font-bold">CPOP Osasco</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-end gap-3">
+          {/* BOTÃO MENSAGEM EM MASSA */}
+          <Dialog open={isMessageOpen} onOpenChange={setIsMessageOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={filtered.length === 0} className="h-12 bg-primary text-white font-black text-[10px] uppercase px-6 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all gap-2">
+                <MessagesSquare className="h-4 w-4 text-accent" />
+                Mensagem em Massa ({filtered.length})
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] p-10 bg-white border-none shadow-2xl max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black italic text-primary">Intervenção Direta</DialogTitle>
+                <DialogDescription className="font-medium italic">Esta mensagem será enviada individualmente para o chat de {filtered.length} alunos filtrados.</DialogDescription>
+              </DialogHeader>
+              <div className="py-6 space-y-4">
+                <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Conteúdo da Mensagem</Label>
+                <Textarea 
+                  placeholder="Olá! Notamos que sua documentação está pendente. Precisa de ajuda com algum item?" 
+                  className="min-h-[150px] rounded-2xl bg-muted/30 border-none font-medium italic p-6"
+                  value={bulkContent}
+                  onChange={(e) => setBulkContent(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button onClick={handleBulkMessage} disabled={isProcessing || !bulkContent.trim()} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
+                  {isProcessing ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Send className="h-5 w-5 mr-2 text-accent" />}
+                  Disparar no Chat
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* BOTÃO AVISO EM MASSA */}
+          <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={filtered.length === 0} variant="outline" className="h-12 border-2 border-primary/20 text-primary font-black text-[10px] uppercase px-6 rounded-xl hover:bg-primary/5 transition-all gap-2">
+                <Megaphone className="h-4 w-4 text-accent" />
+                Publicar Aviso Segmentado
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] p-10 bg-white border-none shadow-2xl max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black italic text-primary">Alerta Geral de Grupo</DialogTitle>
+                <DialogDescription className="font-medium italic">Isso criará um aviso no mural para toda a rede, mas focado no grupo {statusFilter}.</DialogDescription>
+              </DialogHeader>
+              <div className="py-6 space-y-4">
+                <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Corpo do Comunicado</Label>
+                <Textarea 
+                  placeholder="Atenção alunos em situação CRÍTICA: O prazo para envio de documentos do SiSU encerra em 48h!" 
+                  className="min-h-[150px] rounded-2xl bg-muted/30 border-none font-medium italic p-6"
+                  value={bulkContent}
+                  onChange={(e) => setBulkContent(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button onClick={handleBulkAnnouncement} disabled={isProcessing || !bulkContent.trim()} className="w-full h-16 bg-accent text-accent-foreground font-black rounded-2xl shadow-xl">
+                  {isProcessing ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Megaphone className="h-5 w-5 mr-2" />}
+                  Fixar no Mural de Avisos
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
