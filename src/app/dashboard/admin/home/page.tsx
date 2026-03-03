@@ -19,7 +19,10 @@ import {
   Filter,
   Layers,
   ArrowUpRight,
-  HandHeart
+  HandHeart,
+  FileWarning,
+  UserX,
+  ZapOff
 } from "lucide-react";
 import {
   Select,
@@ -34,12 +37,23 @@ import { supabase } from "@/app/lib/supabase";
 import { formatDistanceToNow, subDays, subMonths, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+interface RiskAlert {
+  id: string;
+  type: 'inactivity' | 'documentation' | 'progress' | 'system';
+  label: string;
+  count: number;
+  description: string;
+  icon: any;
+  color: string;
+}
+
 export default function CoordinatorDashboard() {
   const { profile, loading: isUserLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [networkStatus, setNetworkStatus] = useState({ db: 'checking', ai: 'checking' });
   const [logs, setLogs] = useState<any[]>([]);
   const [timeFilter, setTimeFilter] = useState("all");
+  const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>([]);
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalTeachers: 0,
@@ -54,51 +68,118 @@ export default function CoordinatorDashboard() {
       const res = await fetch('/api/health');
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setNetworkStatus({
+      const status = {
         db: data.supabase?.status === 'ok' ? 'online' : 'offline',
         ai: data.genkit?.status === 'ok' ? 'online' : 'offline'
-      });
+      };
+      setNetworkStatus(status);
+      return status;
     } catch (e) {
       setNetworkStatus({ db: 'offline', ai: 'offline' });
+      return { db: 'offline', ai: 'offline' };
     }
   }
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
-    await checkHealth();
+    const health = await checkHealth();
     
     try {
-      // 1. Buscar Perfis para contagem de usuários
+      // 1. Buscar Perfis
       const { data: allProfiles, error: pErr } = await supabase
         .from('profiles')
-        .select('id, profile_type, name, is_financial_aid_eligible');
+        .select('id, profile_type, name, last_access, is_financial_aid_eligible');
       
       let studentCount = 0;
       let teacherCount = 0;
       let eligibleCount = 0;
+      let inactiveStudents = 0;
 
       if (!pErr && allProfiles) {
         const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
+        const sevenDaysAgo = subDays(new Date(), 7);
         
         const classified = allProfiles.map(p => {
           const type = (p.profile_type || '').toLowerCase().trim();
-          if (!type) return { ...p, isStaff: false };
-          const isStaff = !studentKeywords.some(key => type.includes(key));
+          const isStaff = !studentKeywords.some(key => type.includes(key)) && type !== '';
+          
+          if (!isStaff) {
+            if (p.last_access && new Date(p.last_access) < sevenDaysAgo) {
+              inactiveStudents++;
+            }
+          }
+          
           return { ...p, isStaff };
         });
 
         studentCount = classified.filter(p => !p.isStaff).length;
         teacherCount = classified.filter(p => p.isStaff).length;
         eligibleCount = classified.filter(p => p.is_financial_aid_eligible === true).length;
-
-        console.table(classified.map(p => ({ 
-          Nome: p.name, 
-          Tipo: p.profile_type, 
-          Classificacao: p.isStaff ? 'DOCENTE' : 'ALUNO' 
-        })));
       }
 
-      // 2. Buscar Logs
+      // 2. Buscar Documentação
+      const { data: checklists } = await supabase.from('student_checklists').select('user_id');
+      const studentsWithDocs = new Set(checklists?.map(c => c.user_id) || []);
+      const documentationRisk = studentCount - studentsWithDocs.size;
+
+      // 3. Buscar Progresso
+      const { data: progressData } = await supabase.from('user_progress').select('user_id, percentage, last_accessed');
+      const stuckStudents = progressData?.filter(p => p.percentage < 20 && p.percentage > 0).length || 0;
+
+      // 4. Montar Alertas de Risco
+      const alerts: RiskAlert[] = [];
+      
+      if (health.db === 'offline' || health.ai === 'offline') {
+        alerts.push({
+          id: 'system',
+          type: 'system',
+          label: 'Sinal Instável',
+          count: 1,
+          description: 'Falha detectada nos serviços de infraestrutura.',
+          icon: ZapOff,
+          color: 'text-red-400'
+        });
+      }
+
+      if (inactiveStudents > 0) {
+        alerts.push({
+          id: 'inactivity',
+          type: 'inactivity',
+          label: 'Inatividade Crítica',
+          count: inactiveStudents,
+          description: 'Alunos sem acesso há mais de 7 dias.',
+          icon: UserX,
+          color: 'text-orange-400'
+        });
+      }
+
+      if (documentationRisk > 0) {
+        alerts.push({
+          id: 'docs',
+          type: 'documentation',
+          label: 'Vácuo Documental',
+          count: documentationRisk,
+          description: 'Estudantes sem nenhum item no checklist.',
+          icon: FileWarning,
+          color: 'text-amber-400'
+        });
+      }
+
+      if (stuckStudents > 0) {
+        alerts.push({
+          id: 'progress',
+          type: 'progress',
+          label: 'Engajamento Baixo',
+          count: stuckStudents,
+          description: 'Alunos estagnados no início das trilhas.',
+          icon: Activity,
+          color: 'text-blue-400'
+        });
+      }
+
+      setRiskAlerts(alerts);
+
+      // Logs e Stats
       const { data: logData } = await supabase
         .from('activity_logs')
         .select('*')
@@ -106,31 +187,9 @@ export default function CoordinatorDashboard() {
         .limit(5);
       if (logData) setLogs(logData);
 
-      // 3. Buscar Progresso com Filtro de Tempo
-      let progressQuery = supabase.from('user_progress').select('percentage, last_accessed');
-      
-      if (timeFilter !== "all") {
-        let dateLimit;
-        if (timeFilter === "week") dateLimit = subDays(new Date(), 7).toISOString();
-        else if (timeFilter === "month") dateLimit = subMonths(new Date(), 1).toISOString();
-        else if (timeFilter === "year") dateLimit = subYears(new Date(), 1).toISOString();
-        
-        if (dateLimit) {
-          progressQuery = progressQuery.gte('last_accessed', dateLimit);
-        }
-      }
-
-      const { data: progressData } = await progressQuery;
-      
-      let started = 0;
-      let finished = 0;
-      let avgFinished = 0;
-
-      if (progressData) {
-        started = progressData.length;
-        finished = progressData.filter(p => p.percentage === 100).length;
-        avgFinished = studentCount > 0 ? Number((finished / studentCount).toFixed(2)) : 0;
-      }
+      let started = progressData?.length || 0;
+      let finished = progressData?.filter(p => p.percentage === 100).length || 0;
+      let avgFinished = studentCount > 0 ? Number((finished / studentCount).toFixed(2)) : 0;
 
       setStats({
         totalStudents: studentCount,
@@ -146,7 +205,7 @@ export default function CoordinatorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [timeFilter]);
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
@@ -182,18 +241,18 @@ export default function CoordinatorDashboard() {
               <SelectItem value="year" className="font-bold">Último Ano</SelectItem>
             </SelectContent>
           </Select>
-          <Button className="rounded-xl h-12 bg-accent text-accent-foreground font-black shadow-xl" asChild>
-            <Link href="/dashboard/teacher/analytics">Relatório Global</Link>
+          <Button onClick={() => fetchDashboardData()} variant="ghost" size="icon" className="rounded-xl h-12 w-12 bg-white shadow-xl">
+            <Activity className={`h-5 w-5 text-accent ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Card Alunos */}
+        {/* Alunos Ativos */}
         <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-2xl bg-blue-50 text-blue-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+              <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
                 <Users className="h-6 w-6" />
               </div>
               <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px]">REDE</Badge>
@@ -205,11 +264,11 @@ export default function CoordinatorDashboard() {
           </CardContent>
         </Card>
 
-        {/* Card Professores */}
+        {/* Corpo Docente */}
         <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-2xl bg-purple-50 text-purple-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+              <div className="p-3 rounded-2xl bg-purple-50 text-purple-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
                 <BookOpen className="h-6 w-6" />
               </div>
               <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px]">EQUIPE</Badge>
@@ -221,11 +280,11 @@ export default function CoordinatorDashboard() {
           </CardContent>
         </Card>
 
-        {/* Card Taxa Conclusão */}
+        {/* Trilhas Concluídas */}
         <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-2xl bg-green-50 text-green-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+              <div className="p-3 rounded-2xl bg-green-50 text-green-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
               <Badge variant="secondary" className="bg-green-100 text-green-700 border-none font-black text-[8px]">CONCLUÍDAS</Badge>
@@ -249,11 +308,11 @@ export default function CoordinatorDashboard() {
           </CardContent>
         </Card>
 
-        {/* Card Impacto Social (Elegibilidade de Isenção) */}
+        {/* Impacto Social */}
         <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-2xl bg-orange-50 text-orange-600 shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+              <div className="p-3 rounded-2xl bg-orange-50 text-orange-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
                 <HandHeart className="h-6 w-6" />
               </div>
               <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-none font-black text-[8px]">SOCIAL</Badge>
@@ -334,11 +393,30 @@ export default function CoordinatorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-8 pb-8 space-y-4 relative z-10">
-              <div className="py-10 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
-                <p className="text-[10px] font-bold italic">Nenhum risco crítico detectado.</p>
-              </div>
-              <Button disabled className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg">
-                Central de Intervenção
+              {riskAlerts.length === 0 ? (
+                <div className="py-10 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
+                  <p className="text-[10px] font-bold italic">Nenhum risco crítico detectado.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {riskAlerts.map((alert) => (
+                    <div key={alert.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-4 group hover:bg-white/10 transition-all">
+                      <div className={`p-2.5 rounded-xl bg-white/10 ${alert.color} shadow-inner`}>
+                        <alert.icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-black text-xs italic leading-none">{alert.label}</p>
+                          <Badge className="h-4 px-1.5 bg-accent text-accent-foreground border-none font-black text-[8px]">{alert.count}</Badge>
+                        </div>
+                        <p className="text-[9px] font-medium text-white/50 mt-1 leading-tight">{alert.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Button asChild className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg hover:scale-105 transition-transform mt-2">
+                <Link href="/dashboard/admin/checklists">Central de Intervenção</Link>
               </Button>
             </CardContent>
           </Card>
