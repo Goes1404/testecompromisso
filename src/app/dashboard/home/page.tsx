@@ -53,7 +53,7 @@ interface Announcement {
   target_group?: string;
 }
 
-const priorityStyles = {
+const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: string; bgColor: string }> = {
   low: { icon: Info, color: 'text-slate-500', bgColor: 'bg-slate-100' },
   medium: { icon: Megaphone, color: 'text-amber-600', bgColor: 'bg-amber-100' },
   high: { icon: AlertOctagon, color: 'text-red-600', bgColor: 'bg-red-100' },
@@ -327,7 +327,7 @@ export default function DashboardHome() {
                   const styles = priorityStyles[ann.priority] || priorityStyles.low;
                   const Icon = styles.icon;
                   return (
-                    <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${styles.bg} animate-in slide-in-from-left duration-500 border border-black/5`}>
+                    <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${styles.bgColor} animate-in slide-in-from-left duration-500 border border-black/5`}>
                       <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${styles.color}`} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
