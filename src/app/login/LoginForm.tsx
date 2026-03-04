@@ -29,7 +29,7 @@ export function LoginForm() {
     if (!email || !password) return;
     
     if (!isSupabaseConfigured) {
-      setAuthError("Configuração Inválida: Verifique se você está usando a ANON KEY e não a SERVICE_ROLE KEY no seu ambiente.");
+      setAuthError("Configuração Pendente: As variáveis de ambiente do Supabase não foram localizadas.");
       return;
     }
 
@@ -45,8 +45,9 @@ export function LoginForm() {
         setLoading(false);
         console.error("Erro de Autenticação:", error.message);
         
-        if (error.message.includes("secret API key")) {
-          setAuthError("Erro de Segurança: Uma chave secreta foi detectada no navegador. Por favor, use a 'anon public' key do Supabase.");
+        // Trata especificamente o erro de chave secreta no navegador
+        if (error.message.includes("secret API key") || error.status === 403) {
+          setAuthError("Erro de Infraestrutura: Você configurou a SERVICE_ROLE KEY no lugar da ANON KEY no Netlify. Por favor, corrija as variáveis de ambiente.");
         } else {
           setAuthError("E-mail ou senha incorretos. Verifique os dados informados.");
         }
@@ -78,7 +79,7 @@ export function LoginForm() {
 
     } catch (err: any) {
       setLoading(false);
-      setAuthError("Erro inesperado na conexão. Verifique sua internet.");
+      setAuthError("Erro inesperado na conexão. Verifique sua internet ou as chaves do Supabase.");
     }
   };
 
@@ -132,7 +133,7 @@ export function LoginForm() {
           {authError && (
             <Alert variant="destructive" className="bg-red-50 border-red-200 animate-in shake-1">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle className="font-black uppercase text-[10px] tracking-widest">Falha no Acesso</AlertTitle>
+              <AlertTitle className="font-black uppercase text-[10px] tracking-widest">Alerta de Acesso</AlertTitle>
               <AlertDescription className="text-xs font-medium">{authError}</AlertDescription>
             </Alert>
           )}

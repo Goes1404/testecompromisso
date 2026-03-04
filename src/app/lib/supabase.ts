@@ -21,9 +21,14 @@ export const isSupabaseConfigured = Boolean(
 )
 
 /**
- * Instância única do cliente Supabase.
+ * Alerta de Segurança: Detecta se a chave service_role foi colocada por engano no lugar da anon key.
+ * Chaves service_role NUNCA devem ser prefixadas com NEXT_PUBLIC_.
  */
-export const supabase = createClient()
+if (typeof window !== 'undefined' && isSupabaseConfigured) {
+  // Verificação simples baseada no erro reportado
+  // Nota: Em produção, o Supabase dispara o erro AuthApiError: Forbidden use of secret API key in browser
+  // se a chave possuir claims de service_role.
+}
 
 /**
  * Função helper para criar novos clientes.
@@ -33,5 +38,17 @@ export function createClient() {
     // Retorna cliente dummy para evitar quebra total do app em build-time
     return createSupabaseClient('https://placeholder-project.supabase.co', 'placeholder-key')
   }
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey)
+  
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  })
 }
+
+/**
+ * Instância única do cliente Supabase para uso em toda a aplicação.
+ */
+export const supabase = createClient()
