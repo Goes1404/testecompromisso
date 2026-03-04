@@ -9,7 +9,7 @@ import { trailStructureGeneratorFlow } from '@/ai/flows/trail-structure-generato
 
 /**
  * @fileOverview Gateway de API para os fluxos da Aurora IA.
- * Utiliza o modelo gemini-2.5-flash para estabilidade de cota.
+ * Utiliza o modelo gemini-1.5-flash para estabilidade industrial e compatibilidade global.
  */
 
 export async function POST(req: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Identificador do motor (flowId) é obrigatório.' }, { status: 400 });
     }
 
-    console.log(`[AURORA API] Acionando motor: ${flowId} com Gemini 2.5 Flash`);
+    console.log(`[AURORA API] Acionando motor: ${flowId} com Gemini 1.5 Flash`);
 
     // MAPA DE FLUXOS
     const flows: Record<string, any> = {

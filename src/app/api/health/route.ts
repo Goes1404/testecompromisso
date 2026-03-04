@@ -1,7 +1,7 @@
-
 import { NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * @fileOverview API de Diagnóstico do Compromisso.
@@ -33,7 +33,7 @@ export async function GET() {
   // 2. Testar Genkit (Migrado para Gemini 1.5 Flash para estabilidade industrial)
   try {
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: googleAI.model('gemini-1.5-flash'),
       prompt: 'Responda apenas "ok"',
       config: { maxOutputTokens: 5 }
     });

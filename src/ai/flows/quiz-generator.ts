@@ -29,7 +29,7 @@ export type QuizGeneratorOutput = z.infer<typeof QuizGeneratorOutputSchema>;
 
 const prompt = ai.definePrompt({
   name: 'generateQuizPrompt',
-  model: googleAI.model('gemini-2.5-flash'),
+  model: googleAI.model('gemini-1.5-flash'),
   input: { schema: QuizGeneratorInputSchema },
   output: { schema: QuizGeneratorOutputSchema },
   config: { temperature: 0.8 },
