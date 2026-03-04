@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Papel normalizado industrial
   const userRole = useMemo((): UserRole => {
     if (!profile) return 'student';
     const type = (profile.profile_type || '').toLowerCase().trim();
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(data as Profile);
         }
       } catch (error) {
-        console.error('Erro ao buscar perfil:', error);
+        console.error('Erro ao buscar perfil real:', error);
       }
     };
 
