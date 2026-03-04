@@ -1,22 +1,23 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-// URL do projeto (mantida do ambiente)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qjdcexrirmortchemeli.supabase.co'
+/**
+ * Configuração Industrial do Cliente Supabase.
+ * As variáveis devem ser configuradas no painel do Netlify/Vercel.
+ */
 
-// Chave fornecida pelo usuário para teste (limpa de duplicidade)
-const TEST_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqZGNleHJpcm9ydGNoZW1lemlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzODg0MzksImV4cCI6MjA4NTk2NDQzOX0.bOnOPy-AkPokgOON6f3KJb7TD2u6HceZ5UL86Xk0Vi0'
-
-const supabaseAnonKey = TEST_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 /**
  * Verifica se as credenciais do Supabase estão configuradas.
+ * Bloqueia URLs de placeholder para evitar erros silenciosos.
  */
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && 
   supabaseAnonKey && 
   supabaseUrl.startsWith('https://') &&
-  supabaseUrl !== 'SUA_URL_DO_PROJETO_SUPABASE'
+  !supabaseUrl.includes('placeholder')
 )
 
 /**
@@ -28,8 +29,9 @@ export const supabase = createClient()
  * Função helper para criar novos clientes.
  */
 export function createClient() {
-  return createSupabaseClient(
-    isSupabaseConfigured ? supabaseUrl : 'https://placeholder.supabase.co', 
-    isSupabaseConfigured ? supabaseAnonKey : 'placeholder'
-  )
+  if (!isSupabaseConfigured) {
+    // Retorna cliente dummy para evitar quebra total do app em build-time
+    return createSupabaseClient('https://placeholder-project.supabase.co', 'placeholder-key')
+  }
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey)
 }
