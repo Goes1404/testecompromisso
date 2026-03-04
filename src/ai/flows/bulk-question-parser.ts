@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Aurora - Extrator de Provas em Massa.
- * Transforma texto bruto em questões estruturadas para o banco de dados.
+ * Transforma texto bruto em questões estruturadas utilizando Gemini 1.5 Flash.
  */
 
 import { ai } from '@/ai/genkit';
@@ -43,7 +43,7 @@ const prompt = ai.definePrompt({
   2. Garanta que cada questão tenha EXATAMENTE 5 alternativas (A a E).
   3. Se o texto não contiver o gabarito explicitamente, tente inferir a resposta correta logicamente.
   4. Preserve a formatação matemática ou técnica básica no enunciado.`,
-  prompt: `Analise o seguinte conteúdo e extraia as questões:
+  prompt: `Analise the seguinte conteúdo e extraia as questões:
   
   {{{rawText}}}`,
 });

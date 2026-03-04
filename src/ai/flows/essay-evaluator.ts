@@ -1,9 +1,8 @@
-
 'use server';
 
 /**
  * @fileOverview Aurora - Avaliador de Redação Profissional.
- * Analisa o texto seguindo rigorosamente as 5 competências do ENEM.
+ * Analisa o texto seguindo rigorosamente as 5 competências do ENEM utilizando Gemini 1.5 Flash.
  */
 
 import { ai } from '@/ai/genkit';

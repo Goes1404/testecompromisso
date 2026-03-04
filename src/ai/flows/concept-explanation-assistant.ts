@@ -2,6 +2,7 @@
 
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
+ * Fornece explicações e suporte utilizando Gemini 1.5 Flash.
  */
 
 import { ai } from '@/ai/genkit';
@@ -79,10 +80,7 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
       return output;
     } catch (error: any) {
       console.error("ERRO CRÍTICO AURORA IA:", error?.message || error);
-      if (error?.message?.includes("API key")) {
-        return { response: "Ops! Minha chave de acesso parece estar com problemas. Por favor, verifique a GEMINI_API_KEY no ambiente." };
-      }
-      return { response: `Olá! Notei uma pequena instabilidade técnica (${error?.message?.substring(0, 40)}...). Pode repetir sua dúvida?` };
+      return { response: `Olá! Notei uma pequena instabilidade técnica. Pode repetir sua dúvida?` };
     }
   }
 );

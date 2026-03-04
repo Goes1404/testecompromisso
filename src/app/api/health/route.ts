@@ -5,7 +5,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * @fileOverview API de Diagnóstico do Compromisso.
- * Verifica a saúde do Supabase e do Genkit.
+ * Verifica a saúde do Supabase e do Genkit utilizando modelos estáveis.
  */
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +30,7 @@ export async function GET() {
     }
   }
 
-  // 2. Testar Genkit (Migrado para Gemini 1.5 Flash para estabilidade industrial)
+  // 2. Testar Genkit (Utilizando Gemini 1.5 Flash para estabilidade industrial)
   try {
     const response = await ai.generate({
       model: googleAI.model('gemini-1.5-flash'),

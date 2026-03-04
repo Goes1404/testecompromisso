@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Gerador de Quizzes via IA para Professores.
+ * @fileOverview Gerador de Quizzes via IA para Professores utilizando Gemini 1.5 Flash.
  */
 
 import { ai } from '@/ai/genkit';

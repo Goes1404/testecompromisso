@@ -1,9 +1,8 @@
-
 'use server';
 
 /**
  * @fileOverview Aurora - Gerador de Temas de Redação Estilo ENEM.
- * Gera temas completos com textos motivadores para imersão real.
+ * Gera temas completos com textos motivadores utilizando Gemini 1.5 Flash.
  */
 
 import { ai } from '@/ai/genkit';
