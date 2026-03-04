@@ -42,10 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isMock, setIsMock] = useState(false);
   const router = useRouter();
 
+  // 1. Inicialização de Auth (Simulado ou Real)
   useEffect(() => {
     const initAuth = async () => {
-      // 1. Tentar recuperar sessão simulada (Modo de Emergência para Preview)
-      const savedMock = localStorage.getItem('compromisso_mock_session');
+      // Tentar recuperar sessão simulada (Prioridade para Desenvolvimento)
+      const savedMock = typeof window !== 'undefined' ? localStorage.getItem('compromisso_mock_session') : null;
       if (savedMock) {
         try {
           const mockData = JSON.parse(savedMock);
@@ -80,33 +81,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
         }
       } catch (e) {
-        console.error("Erro ao obter sessão inicial:", e);
+        console.warn("Supabase Auth initialization error, possibly due to keys:", e);
         setLoading(false);
       }
     };
 
     initAuth();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (!isMock) {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-      }
-      
-      if (event === 'SIGNED_OUT') {
-        setProfile(null);
-        setIsMock(false);
-        localStorage.removeItem('compromisso_mock_session');
-        setLoading(false);
-        router.replace('/login');
-      }
-    });
+    if (isSupabaseConfigured) {
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, currentSession) => {
+        if (!isMock) {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setIsMock(false);
+          localStorage.removeItem('compromisso_mock_session');
+          setLoading(false);
+          router.replace('/login');
+        }
+      });
 
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    }
   }, [router, isMock]);
 
+  // 2. Busca de Perfil
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user || isMock) return;
@@ -126,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setProfile(data as Profile);
         } else {
+          // Fallback para perfil básico se der erro no banco (ex: RLS ou chaves)
           setProfile({
             id: user.id,
             name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
@@ -136,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } catch (error) {
-        console.error('Erro ao buscar perfil do Compromisso:', error);
+        console.error('Erro ao buscar perfil:', error);
       } finally {
         setLoading(false);
       }
@@ -145,27 +150,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user && !isMock) {
       fetchProfile();
 
-      const profileChannel = supabase
-        .channel(`profile_sync_${user.id}`)
-        .on('postgres_changes', { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'profiles', 
-          filter: `id=eq.${user.id}` 
-        }, (payload) => {
-          setProfile(payload.new as Profile);
-        })
-        .subscribe();
+      if (isSupabaseConfigured) {
+        const profileChannel = supabase
+          .channel(`profile_sync_${user.id}`)
+          .on('postgres_changes', { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'profiles', 
+            filter: `id=eq.${user.id}` 
+          }, (payload) => {
+            setProfile(payload.new as Profile);
+          })
+          .subscribe();
 
-      return () => {
-        supabase.removeChannel(profileChannel);
-      };
+        return () => {
+          supabase.removeChannel(profileChannel);
+        };
+      }
     }
   }, [user, router, isMock]);
 
   const signOut = async () => {
     setLoading(true);
-    if (!isMock) {
+    if (!isMock && isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
     localStorage.removeItem('compromisso_mock_session');

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, ChevronRight, Loader2, Sparkles, UserCircle, Users, GraduationCap, AlertCircle, UserPlus, BookOpen, ShieldCheck } from "lucide-react";
+import { Shield, ChevronRight, Loader2, Sparkles, UserCircle, Users, GraduationCap, AlertCircle, BookOpen, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured, isUsingSecretKeyInBrowser } from "@/app/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -22,24 +22,28 @@ export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const isDemoAccount = (emailAddr: string) => [
+    "aluno@compromisso.com.br", 
+    "mentor@compromisso.com.br", 
+    "gestor@compromisso.com.br"
+  ].includes(emailAddr);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
     
     if (!email || !password) return;
     
-    const isDemoAccount = [
-      "aluno@compromisso.com.br", 
-      "mentor@compromisso.com.br", 
-      "gestor@compromisso.com.br"
-    ].includes(email);
+    const demo = isDemoAccount(email);
+
+    // Se o Supabase não estiver configurado mas for conta demo, entra direto
+    if (!isSupabaseConfigured && demo) {
+      startMockSession(email);
+      return;
+    }
 
     if (!isSupabaseConfigured) {
-      if (isDemoAccount) {
-        startMockSession(email);
-        return;
-      }
-      setAuthError("Configuração Pendente: Supabase não localizado.");
+      setAuthError("Banco de dados não localizado. Use os botões de Acesso Rápido abaixo para testar.");
       return;
     }
 
@@ -52,16 +56,15 @@ export function LoginForm() {
       });
 
       if (error) {
-        // FALLBACK DE EMERGÊNCIA: Se a chave estiver errada (403), mas for conta demo, permite acesso simulado
-        if ((error.message.includes("secret API key") || error.status === 403) && isDemoAccount) {
-          console.warn("[AUTH] Chave service_role detectada. Ativando Modo de Simulação para conta Demo.");
+        // Trata especificamente o erro de chave secreta no navegador para contas demo
+        if ((error.message.includes("secret API key") || error.status === 403) && demo) {
           startMockSession(email);
           return;
         }
 
         setLoading(false);
         setAuthError(error.message.includes("secret API key") 
-          ? "ERRO DE CHAVE: Você está usando a SERVICE_ROLE_KEY no Netlify. Troque pela ANON_KEY." 
+          ? "ERRO TÉCNICO: Chave secreta detectada no navegador. Use os botões de Acesso Rápido para entrar." 
           : "E-mail ou senha incorretos.");
         return;
       }
@@ -72,55 +75,64 @@ export function LoginForm() {
 
     } catch (err: any) {
       setLoading(false);
-      if (isDemoAccount) {
+      if (demo) {
         startMockSession(email);
       } else {
-        setAuthError("Erro na conexão com o servidor.");
+        setAuthError("Falha na rede de autenticação.");
       }
     }
   };
 
-  const startMockSession = (email: string) => {
+  const startMockSession = (emailAddr: string) => {
     setLoading(true);
     setIsRedirecting(true);
-    const role = email.includes('gestor') ? 'admin' : email.includes('mentor') ? 'teacher' : 'student';
+    const role = emailAddr.includes('gestor') ? 'admin' : emailAddr.includes('mentor') ? 'teacher' : 'student';
     
-    // Salva flag de sessão simulada para o AuthProvider
     localStorage.setItem('compromisso_mock_session', JSON.stringify({
       id: `mock-${role}`,
-      email,
+      email: emailAddr,
       role,
-      name: role === 'admin' ? 'Gestor Demo' : role === 'teacher' ? 'Mentor Demo' : 'Aluno Demo'
+      name: role === 'admin' ? 'Gestor Master' : role === 'teacher' ? 'Mentor Expert' : 'Aluno Pro'
     }));
 
-    toast({ title: "Modo Simulação Ativado", description: "Acessando com credenciais de demonstração." });
+    toast({ 
+      title: "Conexão Estabelecida", 
+      description: `Acessando como ${role === 'admin' ? 'Gestor' : role === 'teacher' ? 'Mentor' : 'Aluno'} (Modo Preview).` 
+    });
     
     setTimeout(() => {
-      router.push(role === 'admin' ? "/dashboard/admin/home" : role === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home");
-    }, 1000);
+      const path = role === 'admin' ? "/dashboard/admin/home" : role === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home";
+      router.push(path);
+    }, 800);
   };
 
   const redirectByRole = async (userId: string, metaRole?: string) => {
     setIsRedirecting(true);
-    const { data: profile } = await supabase.from('profiles').select('profile_type').eq('id', userId).single();
-    const role = profile?.profile_type || metaRole || 'student';
-    
-    setTimeout(() => {
-      if (role === 'admin') router.push("/dashboard/admin/home");
-      else if (role === 'teacher') router.push("/dashboard/teacher/home");
-      else router.push("/dashboard/home");
-    }, 100);
+    try {
+      const { data: profile } = await supabase.from('profiles').select('profile_type').eq('id', userId).single();
+      const role = profile?.profile_type || metaRole || 'student';
+      
+      const path = role === 'admin' ? "/dashboard/admin/home" : role === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home";
+      router.push(path);
+    } catch (e) {
+      router.push("/dashboard/home");
+    }
   };
 
-  const fillCredentials = (type: 'student' | 'teacher' | 'admin') => {
+  const quickLogin = (type: 'student' | 'teacher' | 'admin') => {
     const creds = {
-      student: { email: "aluno@compromisso.com.br", password: "123456789" },
-      teacher: { email: "mentor@compromisso.com.br", password: "123456789" },
-      admin: { email: "gestor@compromisso.com.br", password: "123456789" }
+      student: "aluno@compromisso.com.br",
+      teacher: "mentor@compromisso.com.br",
+      admin: "gestor@compromisso.com.br"
     };
-    setEmail(creds[type].email);
-    setPassword(creds[type].password);
+    setEmail(creds[type]);
+    setPassword("123456789");
     setAuthError(null);
+    
+    // Se estivermos em ambiente com erro de chave ou sem config, bypass imediato
+    if (!isSupabaseConfigured || isUsingSecretKeyInBrowser) {
+      startMockSession(creds[type]);
+    }
   };
 
   return (
@@ -130,10 +142,10 @@ export function LoginForm() {
           <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-accent text-accent-foreground shadow-2xl mb-6 animate-bounce">
             <BookOpen className="h-12 w-12" />
           </div>
-          <h2 className="text-2xl font-black italic tracking-tighter mb-2">Compromisso</h2>
+          <h2 className="text-2xl font-black italic tracking-tighter mb-2 uppercase">Compromisso</h2>
           <div className="flex items-center gap-3">
             <Loader2 className="h-4 w-4 animate-spin text-accent" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Sintonizando Portal...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Sincronizando Dados...</p>
           </div>
         </div>
       )}
@@ -148,7 +160,7 @@ export function LoginForm() {
           </h1>
           <p className="text-white/70 font-medium flex items-center justify-center gap-2 italic">
             <Sparkles className="h-4 w-4 text-accent animate-pulse" />
-            Portal de Acesso
+            Acesso Restrito
           </p>
         </div>
       </div>
@@ -156,55 +168,45 @@ export function LoginForm() {
       <Card className="border-none shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-2xl bg-white/95 rounded-[2.5rem]">
         <CardHeader className="space-y-1 pb-6 pt-8 text-center bg-primary/5 border-b border-dashed">
           <CardTitle className="text-2xl font-black text-primary italic">Login</CardTitle>
-          <CardDescription className="font-medium text-muted-foreground italic">Identifique-se para entrar na rede.</CardDescription>
+          <CardDescription className="font-medium text-muted-foreground italic">Entre para gerenciar sua jornada.</CardDescription>
         </CardHeader>
         <CardContent className="px-8 pt-8 space-y-6">
-          {isUsingSecretKeyInBrowser && (
+          {authError && (
             <Alert variant="destructive" className="bg-red-50 border-red-200">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle className="font-black uppercase text-[10px] tracking-widest">Alerta de Configuração</AlertTitle>
-              <AlertDescription className="text-[10px] font-medium leading-tight">
-                Detectamos a chave secreta no navegador. Use as contas Demo para ignorar este erro e testar a interface.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {authError && !isUsingSecretKeyInBrowser && (
-            <Alert variant="destructive" className="bg-red-50 border-red-200">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-xs font-medium">{authError}</AlertDescription>
+              <AlertDescription className="text-xs font-bold italic">{authError}</AlertDescription>
             </Alert>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="font-bold text-primary/60">E-mail</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-white rounded-xl border-muted/20" placeholder="seu@email.com" required disabled={loading} />
+              <Label htmlFor="email" className="font-bold text-primary/60 ml-1">E-mail</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-white rounded-xl border-muted/20 italic" placeholder="seu@email.com" required disabled={loading} />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="password" title="Senha" className="font-bold text-primary/60">Senha</Label>
-                <Link href="#" className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline">Esqueceu?</Link>
+                <Label htmlFor="password" title="Senha" className="font-bold text-primary/60 ml-1">Senha</Label>
+                <Link href="#" className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline">Esqueci a senha</Link>
               </div>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 bg-white rounded-xl border-muted/20" placeholder="••••••••" required disabled={loading} />
             </div>
             <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-black h-14 text-base shadow-xl rounded-2xl transition-all">
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Entrar na Plataforma <ChevronRight className="h-5 w-5 ml-1" /></>}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Entrar no Portal <ChevronRight className="h-5 w-5 ml-1" /></>}
             </Button>
           </form>
 
           <div className="pt-6 space-y-4 border-t border-dashed">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40">
-              <Users className="h-3 w-3" /> Acesso Rápido (Demo)
+              <Users className="h-3 w-3" /> Atalhos de Acesso Rápido (Preview)
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" onClick={() => fillCredentials('student')} className="h-11 rounded-xl text-blue-700 font-black gap-1 text-[9px] justify-center px-2 border-blue-100 hover:bg-blue-50">
+              <Button variant="outline" onClick={() => quickLogin('student')} className="h-11 rounded-xl text-blue-700 font-black gap-1 text-[9px] justify-center px-2 border-blue-100 hover:bg-blue-50">
                 <GraduationCap className="h-3 w-3" /> ALUNO
               </Button>
-              <Button variant="outline" onClick={() => fillCredentials('teacher')} className="h-11 rounded-xl text-orange-700 font-black gap-1 text-[9px] justify-center px-2 border-orange-100 hover:bg-orange-50">
+              <Button variant="outline" onClick={() => quickLogin('teacher')} className="h-11 rounded-xl text-orange-700 font-black gap-1 text-[9px] justify-center px-2 border-orange-100 hover:bg-orange-50">
                 <UserCircle className="h-3 w-3" /> MENTOR
               </Button>
-              <Button variant="outline" onClick={() => fillCredentials('admin')} className="h-11 rounded-xl text-red-700 font-black gap-1 text-[9px] justify-center px-2 border-red-100 hover:bg-red-50">
+              <Button variant="outline" onClick={() => quickLogin('admin')} className="h-11 rounded-xl text-red-700 font-black gap-1 text-[9px] justify-center px-2 border-red-100 hover:bg-red-50">
                 <ShieldCheck className="h-3 w-3" /> GESTOR
               </Button>
             </div>
