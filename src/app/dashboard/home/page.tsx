@@ -30,7 +30,7 @@ import {
   AlertTriangle,
   CheckCircle2
 } from "lucide-react";
-import Image from "image/next";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
