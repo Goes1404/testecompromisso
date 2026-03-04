@@ -46,8 +46,8 @@ export function LoginForm() {
         console.error("Erro de Autenticação:", error.message);
         
         // Trata especificamente o erro de chave secreta no navegador
-        if (error.message.includes("secret API key") || error.status === 403) {
-          setAuthError("Erro de Infraestrutura: Você configurou a SERVICE_ROLE KEY no lugar da ANON KEY no Netlify. Por favor, corrija as variáveis de ambiente.");
+        if (error.message.includes("secret API key") || error.status === 403 || error.message.includes("Forbidden")) {
+          setAuthError("ERRO DE SEGURANÇA: Você configurou a SERVICE_ROLE_KEY no lugar da ANON_KEY no Netlify. Por favor, use a chave pública (anon public) para resolver este erro.");
         } else {
           setAuthError("E-mail ou senha incorretos. Verifique os dados informados.");
         }
@@ -79,7 +79,12 @@ export function LoginForm() {
 
     } catch (err: any) {
       setLoading(false);
-      setAuthError("Erro inesperado na conexão. Verifique sua internet ou as chaves do Supabase.");
+      const msg = err?.message || "";
+      if (msg.includes("secret API key") || msg.includes("Forbidden")) {
+        setAuthError("ERRO DE INFRAESTRUTURA: A chave configurada no Netlify é restrita ao servidor. Troque a chave NEXT_PUBLIC_SUPABASE_ANON_KEY pela chave pública.");
+      } else {
+        setAuthError("Erro inesperado na conexão. Verifique sua internet ou as chaves do Supabase.");
+      }
     }
   };
 
@@ -133,7 +138,7 @@ export function LoginForm() {
           {authError && (
             <Alert variant="destructive" className="bg-red-50 border-red-200 animate-in shake-1">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle className="font-black uppercase text-[10px] tracking-widest">Alerta de Acesso</AlertTitle>
+              <AlertTitle className="font-black uppercase text-[10px] tracking-widest">Alerta de Infraestrutura</AlertTitle>
               <AlertDescription className="text-xs font-medium">{authError}</AlertDescription>
             </Alert>
           )}

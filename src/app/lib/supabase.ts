@@ -21,31 +21,35 @@ export const isSupabaseConfigured = Boolean(
 )
 
 /**
- * Alerta de Segurança: Detecta se a chave service_role foi colocada por engano no lugar da anon key.
- * Chaves service_role NUNCA devem ser prefixadas com NEXT_PUBLIC_.
- */
-if (typeof window !== 'undefined' && isSupabaseConfigured) {
-  // Verificação simples baseada no erro reportado
-  // Nota: Em produção, o Supabase dispara o erro AuthApiError: Forbidden use of secret API key in browser
-  // se a chave possuir claims de service_role.
-}
-
-/**
- * Função helper para criar novos clientes.
+ * Função helper para criar novos clientes com tratamento de erro de inicialização.
  */
 export function createClient() {
   if (!isSupabaseConfigured) {
-    // Retorna cliente dummy para evitar quebra total do app em build-time
+    // Retorna cliente dummy para evitar quebra total do app em build-time ou configuração ausente
     return createSupabaseClient('https://placeholder-project.supabase.co', 'placeholder-key')
   }
   
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
+  try {
+    const client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+
+    // Verificação proativa de chave secreta no lado do cliente
+    if (typeof window !== 'undefined' && supabaseAnonKey.length > 100) {
+      // Chaves service_role costumam ser significativamente maiores ou conter claims de admin.
+      // O Supabase disparará o erro no uso, mas alertamos aqui para facilitar o debug.
+      console.warn("⚠️ [SEGURANÇA] Possível uso de SERVICE_ROLE_KEY detectado no navegador. Verifique suas variáveis de ambiente.");
     }
-  })
+
+    return client;
+  } catch (e) {
+    console.error("Erro crítico na inicialização do Supabase:", e);
+    return createSupabaseClient('https://placeholder-project.supabase.co', 'placeholder-key')
+  }
 }
 
 /**
