@@ -7,7 +7,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const EssayTopicInputSchema = z.object({
   category: z.string().optional().describe('Eixo temático opcional.'),
@@ -25,7 +24,7 @@ const EssayTopicOutputSchema = z.object({
 
 const prompt = ai.definePrompt({
   name: 'essayTopicGeneratorPrompt',
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: EssayTopicInputSchema },
   output: { schema: EssayTopicOutputSchema },
   system: `Você é a Aurora, mentora de redação nota 1000. 
