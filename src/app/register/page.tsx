@@ -72,7 +72,6 @@ export default function RegisterPage() {
 
     try {
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-      const role = profileType === 'teacher' ? 'teacher' : 'student';
       const cleanUsername = formData.username.replace('@', '').toLowerCase();
 
       let institutionValue = "";
@@ -95,6 +94,7 @@ export default function RegisterPage() {
         courseValue = formData.major || "Vestibulando";
       }
 
+      // FLUXO ATÔMICO: A criação do perfil agora é feita pelo Trigger no Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -103,7 +103,6 @@ export default function RegisterPage() {
             full_name: fullName,
             username: cleanUsername,
             profile_type: profileType,
-            role: role,
             institution: institutionValue,
             course: courseValue
           }
@@ -125,18 +124,19 @@ export default function RegisterPage() {
 
       toast({ 
         title: "Cadastro Realizado! 🚀", 
-        description: "Seu perfil foi criado com sucesso." 
+        description: "Seu perfil foi criado com sucesso. Verifique seu e-mail." 
       });
       
+      // Pequeno delay para o trigger terminar de rodar no banco
       setTimeout(() => {
-        window.location.href = role === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home";
-      }, 1500);
+        window.location.href = profileType === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home";
+      }, 2000);
 
     } catch (err: any) {
       console.error("Erro no cadastro:", err);
       toast({ 
         title: "Falha no Cadastro", 
-        description: err.message || "Verifique os dados e tente novamente.", 
+        description: err.message || "Ocorreu um erro no servidor. Verifique se o SQL foi aplicado.", 
         variant: "destructive" 
       });
     } finally {
