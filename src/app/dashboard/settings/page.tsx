@@ -146,13 +146,13 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
+    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20 px-2">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-primary italic leading-none">Configurações</h1>
           <p className="text-muted-foreground font-medium">Personalize sua identidade no Compromisso.</p>
         </div>
-        <Badge className="bg-accent/10 text-accent font-black border-none px-4 py-2 flex items-center gap-2">
+        <Badge className="bg-accent/10 text-accent font-black border-none px-4 py-2 flex items-center gap-2 w-fit">
           <ShieldCheck className="h-4 w-4" /> CONTA ATIVA
         </Badge>
       </div>
@@ -161,8 +161,8 @@ export default function SettingsPage() {
         <div className="lg:col-span-1 space-y-6">
           <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden text-center p-8">
             <div className="relative mx-auto w-32 h-32 mb-6 group">
-              <Avatar className="w-32 h-32 border-4 border-primary/5 shadow-2xl transition-all">
-                <AvatarImage src={formData.avatar_url || `https://picsum.photos/seed/${user.id}/200/200`} />
+              <Avatar className="w-32 h-32 border-4 border-primary/5 shadow-2xl transition-all overflow-hidden">
+                <AvatarImage src={formData.avatar_url || `https://picsum.photos/seed/${user.id}/400/400`} className="object-cover" />
                 <AvatarFallback className="bg-primary text-white text-4xl font-black">{formData.name?.charAt(0)}</AvatarFallback>
               </Avatar>
               <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="absolute bottom-0 right-0 h-10 w-10 bg-accent rounded-full border-4 border-white flex items-center justify-center text-accent-foreground shadow-lg hover:scale-110 active:scale-95 transition-all">
@@ -171,7 +171,7 @@ export default function SettingsPage() {
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
             </div>
             <h3 className="text-xl font-black text-primary italic leading-none truncate">{formData.name || "Usuário"}</h3>
-            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-2">{profile?.profile_type}</p>
+            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-2">{profile?.profile_type?.replace('_', ' ')}</p>
           </Card>
 
           <Card className="border-none shadow-xl bg-primary text-white rounded-[2rem] p-6 relative overflow-hidden">
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                         )}
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-none shadow-2xl max-h-60">
-                        {subjects.map(s => <SelectItem key={s.id} value={s.name} className="font-bold">{s.name}</SelectItem>)}
+                        {subjects.length > 0 ? subjects.map(s => <SelectItem key={s.id} value={s.name} className="font-bold">{s.name}</SelectItem>) : <SelectItem value="Geral">Geral</SelectItem>}
                       </SelectContent>
                     </Select>
                   </div>
@@ -231,7 +231,7 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                       {PRESET_AVATARS.map((url, i) => (
                         <button key={i} type="button" onClick={() => setFormData({...formData, avatar_url: url})} className={`relative rounded-2xl overflow-hidden aspect-square border-4 transition-all ${formData.avatar_url === url ? 'border-accent shadow-xl scale-110' : 'border-transparent opacity-60'}`}>
-                          <Avatar className="w-full h-full rounded-none"><AvatarImage src={url} /></Avatar>
+                          <Avatar className="w-full h-full rounded-none"><AvatarImage src={url} className="object-cover" /></Avatar>
                           {formData.avatar_url === url && <div className="absolute inset-0 bg-accent/20 flex items-center justify-center"><CheckCircle2 className="h-6 w-6 text-white" /></div>}
                         </button>
                       ))}
