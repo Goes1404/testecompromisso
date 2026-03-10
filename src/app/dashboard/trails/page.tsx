@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -14,15 +13,12 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { 
-  PlayCircle, 
-  CheckCircle2,
-  TrendingUp,
   Search,
   Filter,
   Loader2,
   ChevronRight,
   Zap,
-  Clock,
+  TrendingUp,
   BookOpen
 } from "lucide-react";
 import Image from "next/image";
@@ -103,36 +99,36 @@ export default function LearningTrailsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1 md:px-4">
-      {/* Header Visual */}
-      <section className="relative overflow-hidden bg-primary rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl">
+      {/* Header Visual Industrial */}
+      <section className="relative overflow-hidden bg-primary rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl">
         <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-accent/20 rounded-full blur-[80px]" />
-        <div className="relative z-10 space-y-4 max-w-3xl">
-          <Badge className="bg-accent text-accent-foreground border-none font-black text-[9px] px-3 py-1 uppercase tracking-wider">Compromisso 360</Badge>
-          <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-tight uppercase">
-            Sua Rota de <span className="text-accent">Alta Performance</span>
+        <div className="relative z-10 space-y-6 max-w-3xl">
+          <Badge className="bg-accent text-accent-foreground border-none font-black text-[10px] px-4 py-1.5 uppercase tracking-wider shadow-xl">COMPROMISSO 360</Badge>
+          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase">
+            Sua Rota de <br/><span className="text-accent">Alta Performance</span>
           </h1>
-          <p className="text-sm md:text-base text-white/60 font-medium italic leading-relaxed max-w-xl">
-            Escolha um dos eixos temáticos abaixo e inicie sua jornada guiada pelos melhores mentores da rede.
+          <p className="text-sm md:text-xl text-white/60 font-medium italic leading-relaxed max-w-xl">
+            Escolha um dos eixos temáticos e inicie sua jornada guiada pelos melhores mentores da rede.
           </p>
         </div>
       </section>
 
       {/* Controles Dinâmicos */}
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+      <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
           <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-accent" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
             <Input 
               placeholder="Pesquisar trilha..." 
-              className="pl-11 h-12 bg-white border-none shadow-xl rounded-2xl text-sm font-medium italic focus-visible:ring-accent"
+              className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl text-base font-medium italic focus-visible:ring-accent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-12 px-6 rounded-2xl bg-white border-none shadow-xl font-black text-[10px] uppercase gap-3">
-                <Filter className="h-4 w-4 text-accent" />
+              <Button variant="outline" className="h-14 px-8 rounded-2xl bg-white border-none shadow-xl font-black text-[10px] uppercase gap-3 hover:bg-muted/50 transition-all">
+                <Filter className="h-5 w-5 text-accent" />
                 Filtrar Perfil
               </Button>
             </DropdownMenuTrigger>
@@ -151,12 +147,12 @@ export default function LearningTrailsPage() {
           </DropdownMenu>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto w-full lg:w-auto pb-2 scrollbar-hide">
+        <div className="flex items-center gap-2 overflow-x-auto w-full lg:w-auto pb-4 scrollbar-hide">
           {TRAIL_CATEGORIES.map(cat => (
             <button 
               key={cat} 
               onClick={() => setActiveCategory(cat)}
-              className={`rounded-full px-6 h-10 text-[9px] font-black uppercase tracking-widest shrink-0 transition-all shadow-md border-none ${activeCategory === cat ? 'bg-primary text-white scale-105' : 'bg-white text-primary hover:bg-accent hover:text-white'}`}
+              className={`rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-md border-none ${activeCategory === cat ? 'bg-primary text-white scale-105 shadow-primary/20' : 'bg-white text-primary hover:bg-accent hover:text-white'}`}
             >
               {cat}
             </button>
@@ -164,15 +160,14 @@ export default function LearningTrailsPage() {
         </div>
       </div>
 
-      {/* Grid de Trilhas - Responsividade e Alinhamento Industrial */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-        {filteredTrails.map((trail, index) => {
+      {/* Grid de Trilhas - Simétrico e Industrial */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredTrails.map((trail) => {
           const userProgress = allProgress?.find(p => p.trail_id === trail.id);
           const percentage = userProgress?.percentage || 0;
-          const isCompleted = percentage === 100;
 
           return (
-            <Card key={trail.id} className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col relative animate-in fade-in slide-in-from-bottom-4">
+            <Card key={trail.id} className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2.5rem] flex flex-col h-full animate-in fade-in slide-in-from-bottom-4">
               <div className="relative aspect-video overflow-hidden shrink-0">
                 <Image 
                   src={trail.image_url || `https://picsum.photos/seed/trail-${trail.id}/800/450`} 
@@ -180,61 +175,59 @@ export default function LearningTrailsPage() {
                   fill 
                   className="object-cover transition-transform duration-1000 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-white/90 backdrop-blur-md text-primary border-none shadow-lg px-3 py-1 rounded-lg font-black text-[8px] uppercase tracking-wider flex items-center gap-1.5">
-                    <Zap className="h-3 w-3 text-accent fill-accent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-60" />
+                <div className="absolute top-5 left-5">
+                  <Badge className="bg-white/95 backdrop-blur-md text-primary border-none shadow-lg px-4 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-2">
+                    <Zap className="h-3.5 w-3.5 text-accent fill-accent" />
                     {trail.category}
                   </Badge>
                 </div>
-                {isCompleted && (
-                  <div className="absolute top-4 right-4 h-8 w-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white animate-in zoom-in">
-                    <CheckCircle2 className="h-5 w-5" />
-                  </div>
-                )}
               </div>
               
-              <CardContent className="p-6 flex-1 flex flex-col justify-between min-h-[180px]">
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-primary italic leading-tight group-hover:text-accent transition-colors line-clamp-2">
+              <CardContent className="p-8 flex-1 flex flex-col">
+                <div className="space-y-3 flex-1">
+                  <h3 className="text-2xl font-black text-primary italic leading-tight group-hover:text-accent transition-colors line-clamp-2">
                     {trail.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground font-medium italic line-clamp-2 opacity-80 leading-relaxed">
-                    {trail.description || "Inicie agora esta jornada técnica projetada para fortalecer sua base acadêmica."}
+                  <p className="text-sm text-muted-foreground font-medium italic line-clamp-3 opacity-80 leading-relaxed">
+                    {trail.description || "Inicie agora esta jornada técnica projetada para fortalecer sua base acadêmica e acelerar sua aprovação."}
                   </p>
                 </div>
 
-                <div className="mt-6 space-y-2">
-                  <div className="flex justify-between items-center text-[8px] font-black text-muted-foreground uppercase tracking-widest">
-                    <span className="flex items-center gap-1.5">
-                      <TrendingUp className="h-3 w-3 text-accent" />
+                <div className="mt-8 space-y-3">
+                  <div className="flex justify-between items-center text-[10px] font-black text-primary/40 uppercase tracking-widest">
+                    <span className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-accent" />
                       {percentage}% Evoluído
                     </span>
-                    <span className="opacity-40">{isCompleted ? 'Finalizada' : 'Em andamento'}</span>
+                    <span>{percentage === 100 ? 'Finalizada' : 'Em andamento'}</span>
                   </div>
-                  <Progress value={percentage} className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                     <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${percentage}%` }} />
-                  </Progress>
+                  <div className="h-2 rounded-full bg-slate-100 overflow-hidden shadow-inner border border-black/5">
+                     <div className="h-full bg-accent transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${percentage}%` }} />
+                  </div>
                 </div>
               </CardContent>
               
-              <CardFooter className="px-6 pb-6 pt-0 mt-auto">
-                <div className="flex items-center justify-between w-full pt-4 border-t border-muted/5">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-muted/10 overflow-hidden shrink-0">
+              <CardFooter className="px-8 pb-8 pt-0 mt-auto">
+                <div className="flex items-center justify-between w-full pt-6 border-t border-muted/10">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-2xl bg-primary/5 flex items-center justify-center border border-muted/10 overflow-hidden shrink-0 shadow-sm">
                       <Image 
-                        src={`https://picsum.photos/seed/prof-${trail.id}/60/60`} 
+                        src={`https://picsum.photos/seed/prof-${trail.id}/100/100`} 
                         alt="Mentor" 
-                        width={32} 
-                        height={32} 
+                        width={40} 
+                        height={40} 
                         className="object-cover"
                       />
                     </div>
-                    <span className="text-[10px] font-black text-primary italic leading-none truncate max-w-[100px]">{trail.teacher_name || "Mentor"}</span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-primary italic leading-none truncate max-w-[120px]">{trail.teacher_name || "Mentor da Rede"}</span>
+                      <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Especialista</span>
+                    </div>
                   </div>
-                  <Button asChild className="bg-primary text-white font-black text-[9px] uppercase h-9 px-5 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all">
+                  <Button asChild className="bg-primary text-white font-black text-[10px] uppercase h-12 px-8 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all group/btn border-none">
                     <Link href={`/dashboard/classroom/${trail.id}`}>
-                      Entrar <ChevronRight className="h-3 w-3 ml-1.5 text-accent" />
+                      Entrar <ChevronRight className="h-4 w-4 ml-2 text-accent group-hover/btn:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
                 </div>
@@ -244,8 +237,9 @@ export default function LearningTrailsPage() {
         })}
         {filteredTrails.length === 0 && !loading && (
           <div className="col-span-full py-32 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-white/50 opacity-40">
-            <BookOpen className="h-16 w-16 mx-auto mb-4" />
-            <p className="font-black italic text-xl">Nenhuma trilha localizada</p>
+            <BookOpen className="h-20 w-20 mx-auto mb-6 text-primary/20" />
+            <p className="font-black italic text-2xl uppercase tracking-tighter text-primary">Nenhuma trilha localizada</p>
+            <p className="text-muted-foreground font-medium mt-2 italic">Tente ajustar seus filtros ou pesquisar por outro termo.</p>
           </div>
         )}
       </div>

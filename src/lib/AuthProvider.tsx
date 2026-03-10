@@ -13,6 +13,7 @@ type Profile = {
   email: string;
   profile_type: string;
   status?: string;
+  institution?: string;
   [key: string]: any;
 };
 
@@ -44,9 +45,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
-    const rawType = (profile?.profile_type || '').toLowerCase().trim();
-    if (['admin', 'gestor', 'coordenador', 'coordenacao'].includes(rawType)) return 'admin';
-    if (['teacher', 'mentor', 'professor', 'instrutor', 'docente'].includes(rawType)) return 'teacher';
+    if (!profile) return 'student';
+    const rawType = (profile.profile_type || '').toLowerCase().trim();
+    if (['admin', 'gestor', 'coordenador'].includes(rawType)) return 'admin';
+    if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
     return 'student';
   }, [profile]);
 
@@ -80,12 +82,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const initAuth = async () => {
-      setLoading(true);
       try {
-        // 1. Verificar Mock Session
+        // 1. Verificar Mock Session (Apenas para Testes Rápidos)
         const mockData = typeof window !== 'undefined' ? localStorage.getItem('compromisso_mock_session') : null;
-        if (mockData) {
+        if (mockData && isMounted) {
           const parsed = JSON.parse(mockData);
           setUser(parsed.user);
           setProfile(parsed.profile);
@@ -95,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Verificar Sessão Real
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (initialSession) {
+        if (initialSession && isMounted) {
           setSession(initialSession);
           setUser(initialSession.user);
           const p = await fetchProfile(initialSession.user.id);
@@ -104,13 +107,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         console.warn("Auth init error:", e);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     initAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!isMounted) return;
+      
+      // Se houver uma sessão mock, não deixamos o Supabase interferir nos estados
       if (typeof window !== 'undefined' && localStorage.getItem('compromisso_mock_session')) return;
 
       if (currentSession) {
@@ -125,11 +131,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (event === 'SIGNED_OUT') {
-        router.replace('/');
+        router.replace('/login');
       }
     });
 
-    return () => authListener?.subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      authListener?.subscription.unsubscribe();
+    };
   }, [fetchProfile, router]);
 
   const signOut = async () => {
@@ -142,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setProfile(null);
     setLoading(false);
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const contextValue = useMemo(() => ({

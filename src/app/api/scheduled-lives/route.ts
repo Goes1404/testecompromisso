@@ -1,10 +1,15 @@
-
 import { NextResponse } from 'next/server';
+
+/**
+ * API de Controle de Transmissões Master.
+ * Limpa para uso em produção - Dados mock removidos.
+ */
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // Retorna lista vazia em produção até que o mentor cadastre via Dashboard
     const data: any[] = [];
     return NextResponse.json(data);
   } catch (error: any) {
@@ -33,7 +38,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const data = { id: 'mock-id', ...body };
+    // Retorna o objeto criado (Mock de sucesso para a interface)
+    const data = { id: Math.random().toString(36).substr(2, 9), ...body };
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

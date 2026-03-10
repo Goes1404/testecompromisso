@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, Bot, User, BookOpen, AlertCircle, AtSign, MapPin } from "lucide-react";
+import { Search, Loader2, Bot, User, MapPin, ShieldCheck, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/AuthProvider";
@@ -17,50 +16,47 @@ export default function ChatListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       if (!user || !profile) return;
       setLoading(true);
-      setErrorMsg(null);
       
       try {
-        const userType = profile.profile_type || 'student';
+        const userType = (profile.profile_type || 'student').toLowerCase();
         const userInstitution = (profile.institution || '').toLowerCase().trim();
         
-        // Query base para buscar mentores
+        // Query para buscar mentores
         let query = supabase
           .from('profiles')
           .select('*')
           .neq('id', user.id)
           .eq('profile_type', 'teacher');
 
-        // Lógica de Segmentação por Polo
-        // Alunos veem apenas mentores do seu polo ou mentores "Gerais"
         const { data, error } = await query.order('name', { ascending: true });
         
         if (error) throw error;
 
-        // Filtragem Inteligente no Cliente para máxima precisão de Polo
+        // LÓGICA DE SEGMENTAÇÃO POR POLO (INDUSTRIAL)
+        // Alunos veem apenas mentores do seu polo ou mentores "Gerais"
         const filteredByPolo = data?.filter(mentor => {
+          // Admin vê todo mundo
           if (userType === 'admin') return true;
           
           const mentorInstitution = (mentor.institution || '').toLowerCase();
           
-          // Se o aluno não tem polo, vê apenas mentores sem polo ou "Geral"
+          // Se o aluno não tem polo definido, vê mentores "Geral" ou sem polo
           if (!userInstitution) {
             return !mentorInstitution || mentorInstitution.includes('geral');
           }
 
-          // Se o aluno tem polo, vê mentores do mesmo polo ou "Geral"
+          // Se o aluno tem polo (ex: CPOP Santana), vê mentores do mesmo polo ou "Geral"
           return mentorInstitution.includes(userInstitution) || mentorInstitution.includes('geral') || !mentorInstitution;
         }) || [];
 
         setContacts(filteredByPolo);
       } catch (err: any) {
-        console.error("Erro ao carregar mentores:", err);
-        setErrorMsg("Falha ao sintonizar rede de mentores específica do seu polo.");
+        console.error("Erro ao carregar rede de mentoria:", err);
       } finally {
         setLoading(false);
       }
@@ -75,12 +71,17 @@ export default function ChatListPage() {
   );
 
   return (
-    <div className="space-y-6 md:space-y-10 animate-in fade-in duration-500 pb-20 px-1 md:px-4">
+    <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500 pb-20 px-1 md:px-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-2xl md:text-4xl font-black text-primary italic leading-none">Mentoria Especializada</h1>
-          <p className="text-muted-foreground font-medium text-sm md:text-base italic">
-            Conectado aos especialistas do seu polo: <span className="text-accent font-bold uppercase">{profile?.institution || 'Rede Geral'}</span>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl font-black text-primary italic leading-none">Mentoria Especializada</h1>
+            <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3 text-accent" /> CANAL SEGURO
+            </Badge>
+          </div>
+          <p className="text-muted-foreground font-medium text-sm md:text-xl italic">
+            Conectado aos especialistas do polo: <span className="text-accent font-black uppercase">{profile?.institution || 'Rede Geral'}</span>
           </p>
         </div>
       </div>
@@ -88,65 +89,75 @@ export default function ChatListPage() {
       <div className="relative max-w-xl group w-full">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
         <Input 
-          placeholder="Buscar mentor ou disciplina..." 
-          className="pl-12 h-12 md:h-14 bg-white border-none shadow-xl rounded-2xl text-sm md:text-lg font-medium italic focus-visible:ring-accent"
+          placeholder="Buscar mentor por nome ou polo..." 
+          className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl text-lg font-medium italic focus-visible:ring-accent"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <Card className="border-none shadow-[0_10px_40px_-15px_hsl(var(--accent)/0.3)] rounded-[2.5rem] bg-primary text-white overflow-hidden group transition-all duration-500">
-        <CardContent className="p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-            <div className="h-16 w-16 md:h-20 md:w-20 rounded-[2rem] bg-accent text-accent-foreground flex items-center justify-center shadow-2xl rotate-3 group-hover:rotate-0 transition-transform">
-              <Bot className="h-10 w-10 md:h-12 md:w-12" />
+      {/* CARD DESTAQUE AURORA */}
+      <Card className="border-none shadow-[0_20px_50px_-15px_rgba(26,44,75,0.3)] rounded-[3rem] bg-primary text-white overflow-hidden group transition-all duration-500 hover:shadow-primary/20">
+        <CardContent className="p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+            <div className="h-20 w-20 md:h-24 md:w-24 rounded-[2.5rem] bg-accent text-accent-foreground flex items-center justify-center shadow-2xl rotate-3 group-hover:rotate-0 transition-transform">
+              <Bot className="h-12 w-12 md:h-14 md:w-14" />
             </div>
-            <div>
-              <CardTitle className="text-xl md:text-3xl font-black italic">Aurora IA</CardTitle>
-              <p className="text-white/60 font-medium text-xs md:text-base italic">Mentora Pedagógica 24/7. Suporte imediato em qualquer polo.</p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-center md:justify-start gap-3">
+                <CardTitle className="text-2xl md:text-4xl font-black italic">Aurora IA</CardTitle>
+                <Badge className="bg-white/10 text-white border-none text-[8px] font-black uppercase">Mentoria 24/7</Badge>
+              </div>
+              <p className="text-white/60 font-medium text-sm md:text-lg italic max-w-md">Engine de Apoio Pedagógico para dúvidas imediatas em qualquer polo.</p>
             </div>
           </div>
-          <Button className="bg-white text-primary hover:bg-white/90 font-black h-12 md:h-14 px-8 md:px-10 rounded-2xl shadow-xl transition-all border-none w-full md:w-auto" asChild>
+          <Button className="bg-white text-primary hover:bg-white/90 font-black h-14 md:h-16 px-10 md:px-12 rounded-2xl shadow-xl transition-all border-none w-full md:w-auto text-lg" asChild>
             <Link href="/dashboard/chat/aurora-ai">Conversar agora</Link>
           </Button>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 pt-4">
         {loading ? (
           <div className="col-span-full py-20 flex flex-col items-center justify-center gap-4">
             <Loader2 className="h-12 w-12 animate-spin text-accent" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sintonizando Rede...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 animate-pulse">Sintonizando Rede de Mentores...</p>
           </div>
         ) : filteredContacts.length > 0 ? (
           filteredContacts.map((contact) => (
-            <Card key={contact.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-              <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
+            <Card key={contact.id} className="border-none shadow-xl rounded-[3rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 relative border-b-8 border-primary/5">
+              <CardContent className="p-10 flex flex-col items-center text-center space-y-6">
                 <div className="relative">
-                  <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-primary/5 shadow-2xl">
-                    <AvatarImage src={contact.avatar_url || `https://picsum.photos/seed/${contact.id}/200/200`} className="object-cover" />
-                    <AvatarFallback className="bg-primary text-white font-black text-2xl italic">{contact.name?.charAt(0)}</AvatarFallback>
+                  <Avatar className="h-24 w-24 md:h-28 md:w-28 border-[6px] border-primary/5 shadow-2xl">
+                    <AvatarImage src={`https://picsum.photos/seed/${contact.id}/200/200`} className="object-cover" />
+                    <AvatarFallback className="bg-primary text-white font-black text-3xl italic">{contact.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <div className="absolute bottom-1 right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white" />
+                  <div className="absolute bottom-1 right-1 h-5 w-5 bg-green-500 rounded-full border-4 border-white shadow-lg animate-pulse" />
                 </div>
-                <div className="space-y-1">
-                  <CardTitle className="text-lg md:text-xl font-black text-primary italic truncate max-w-[220px]">{contact.name}</CardTitle>
-                  <div className="flex items-center justify-center gap-1.5 text-accent font-bold text-[9px] uppercase tracking-wider">
-                    <MapPin className="h-2.5 w-2.5" />
-                    <span>{contact.institution || "Rede Geral"}</span>
+                <div className="space-y-2 w-full">
+                  <CardTitle className="text-xl md:text-2xl font-black text-primary italic truncate px-2">{contact.name}</CardTitle>
+                  <div className="flex flex-col gap-2 items-center">
+                    <Badge variant="outline" className="bg-slate-50 border-none text-muted-foreground font-black text-[8px] px-3 h-6 uppercase tracking-tighter">
+                      <GraduationCap className="h-3 w-3 mr-1.5 text-accent" />
+                      {contact.course || 'Mentor Acadêmico'}
+                    </Badge>
+                    <div className="flex items-center justify-center gap-2 text-accent font-black text-[9px] uppercase tracking-widest mt-1">
+                      <MapPin className="h-3 w-3" />
+                      <span>{contact.institution || "Rede Geral"}</span>
+                    </div>
                   </div>
                 </div>
-                <Button className="w-full bg-primary text-white hover:bg-primary/95 font-black h-12 rounded-2xl shadow-xl transition-all" asChild>
-                  <Link href={`/dashboard/chat/${contact.id}`}>Abrir Chat</Link>
+                <Button className="w-full bg-primary text-white hover:bg-primary/95 font-black h-14 rounded-2xl shadow-xl transition-all active:scale-95 border-none" asChild>
+                  <Link href={`/dashboard/chat/${contact.id}`}>Abrir Mentoria</Link>
                 </Button>
               </CardContent>
             </Card>
           ))
         ) : (
-          <div className="col-span-full py-24 text-center border-4 border-dashed rounded-[3rem] bg-white/50 opacity-30 animate-in zoom-in-95">
-            <User className="h-16 w-16 mx-auto mb-4" />
-            <p className="font-black italic text-xl text-primary">Nenhum mentor do seu polo online</p>
-            <p className="text-sm font-medium italic mt-2">Fale com a Aurora IA para suporte imediato.</p>
+          <div className="col-span-full py-24 text-center border-4 border-dashed rounded-[3.5rem] bg-white/50 opacity-30 animate-in zoom-in-95">
+            <User className="h-20 w-20 mx-auto mb-6 text-primary/20" />
+            <p className="font-black italic text-2xl text-primary uppercase">Nenhum mentor deste polo online</p>
+            <p className="text-sm font-medium italic mt-2">Você pode falar com a Aurora IA para suporte imediato.</p>
           </div>
         )}
       </div>
