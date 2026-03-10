@@ -69,8 +69,8 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 pt-20">
-        {/* HERO SECTION */}
-        <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-b from-transparent via-white/50 to-white">
+        {/* HERO SECTION - Degrade do Azul Royal institucional para o Branco */}
+        <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-b from-primary/10 via-primary/5 to-white">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/5 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
           
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
