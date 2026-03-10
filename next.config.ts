@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'sl.bing.net' },
     ],
   },
+  // Fix for cross-origin request warnings in the cloud environment
+  experimental: {
+    allowedDevOrigins: [
+      '6000-firebase-studio-1770083699143.cluster-ocv3ypmyqfbqysslgd7zlhmxek.cloudworkstations.dev',
+      'localhost:9002'
+    ]
+  }
 };
 
 export default nextConfig;
