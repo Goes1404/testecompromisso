@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    /* Paleta Santana de Parnaíba - EduTech Premium Vibrante (Acordada) */
-    --background: 210 40% 98%;    /* Um branco levemente azulado para reduzir brilho excessivo */
+    /* Paleta Santana de Parnaíba - EduTech Premium Vibrante */
+    --background: 210 40% 98%;    
     --foreground: 222 47% 11%;    
     
     --card: 0 0% 100%;
@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     
-    --primary: 215 100% 40%;      /* Azul Royal Saturado e Vibrante */
+    --primary: 215 100% 45%;      /* Azul Royal Saturado */
     --primary-foreground: 210 40% 98%;
     
     --secondary: 210 40% 96%;    
@@ -23,7 +23,7 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
     
-    --accent: 45 100% 50%;        /* Ouro Solar para reter atenção */
+    --accent: 45 100% 50%;        /* Ouro Solar Vibrante */
     --accent-foreground: 222 47% 11%;
     
     --destructive: 0 84% 60%;    
@@ -31,9 +31,9 @@
     
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 215 100% 40%;
+    --ring: 215 100% 45%;
     
-    --radius: 0.75rem; 
+    --radius: 1rem; 
 
     --sidebar-background: 215 100% 34%;
     --sidebar-foreground: 210 40% 98%;
@@ -54,40 +54,56 @@
     overflow-x: hidden;
     min-height: 100vh;
     overflow-y: auto !important;
-    -webkit-tap-highlight-color: transparent;
+    position: relative;
     
-    /* Efeito de Background: Gradiente Radial + Malha de Pontos (Industrial) */
+    /* Efeito de Background Multinível */
+    background-color: hsl(var(--background));
     background-image: 
-      radial-gradient(at 0% 0%, hsla(215, 100%, 40%, 0.03) 0, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(45, 100%, 50%, 0.03) 0, transparent 50%),
-      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.03) 1px, transparent 0);
+      /* Camada 1: Glow Azul Superior */
+      radial-gradient(at 0% 0%, hsla(215, 100%, 45%, 0.08) 0px, transparent 50%),
+      /* Camada 2: Glow Ouro Inferior */
+      radial-gradient(at 100% 100%, hsla(45, 100%, 50%, 0.08) 0px, transparent 50%),
+      /* Camada 3: Malha Técnica (Grid Dots) */
+      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.04) 1px, transparent 0);
     background-size: 100% 100%, 100% 100%, 32px 32px;
     background-attachment: fixed;
   }
-}
 
-/* Camadas de Fundo Histórico */
-.bg-santana-fixed {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.04;
-  filter: grayscale(100%) contrast(1.2);
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  /* Camada de Detalhe Histórico (Marca d'Água) */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: grayscale(100%) brightness(0.9);
+    opacity: 0.04;
+    pointer-events: none;
+  }
 }
 
 .animate-in {
   animation-fill-mode: forwards;
 }
 
-button:focus {
-  outline: none;
+/* Efeito de Vidro para Cards sobre o fundo texturizado */
+.card {
+  @apply bg-white/90 backdrop-blur-sm shadow-xl border-white/20;
 }
 
-/* Melhora na legibilidade de cards sobre o novo fundo */
-.card-glass {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+/* Scrollbar Industrial */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.2);
 }
