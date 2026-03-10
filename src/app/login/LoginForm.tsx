@@ -53,7 +53,7 @@ export function LoginForm() {
     const mockProfile = {
       id: mockUser.id,
       name: role === 'admin' ? 'Coordenador Geral' : role === 'teacher' ? 'Mentor Pedagógico' : 'Estudante de Alta Performance',
-      profile_type: role,
+      profile_type: role === 'teacher' ? 'teacher' : role,
       institution: "Polo Central Compromisso"
     };
 
