@@ -14,14 +14,16 @@ export default function DashboardRoot() {
   const router = useRouter();
 
   useEffect(() => {
-    // Só redireciona quando o carregamento inicial (sessão + perfil) terminar
+    // Só age quando o carregamento inicial (sessão + perfil) terminar de fato
     if (!loading) {
       if (!user) {
+        // Se não houver usuário, volta para o login
         router.replace("/login");
         return;
       }
 
-      // Aguarda um pequeno frame para garantir que o estado do perfil estabilizou
+      // Se houver usuário, redireciona baseado no papel (role)
+      // Pequeno delay para garantir que a transição de UI seja fluida
       const redirectTimeout = setTimeout(() => {
         if (userRole === 'admin') {
           router.replace("/dashboard/admin/home");
@@ -30,7 +32,7 @@ export default function DashboardRoot() {
         } else {
           router.replace("/dashboard/home");
         }
-      }, 100);
+      }, 150);
 
       return () => clearTimeout(redirectTimeout);
     }
@@ -47,7 +49,7 @@ export default function DashboardRoot() {
       <div className="flex flex-col items-center gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-accent/60" />
         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40 italic">
-          Sincronizando Perfil de Alta Performance
+          Autenticando Acesso Industrial
         </p>
       </div>
     </div>

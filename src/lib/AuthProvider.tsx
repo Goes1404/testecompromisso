@@ -86,7 +86,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        // 1. Verificar Mock Session (Apenas para Testes Rápidos)
+        setLoading(true);
+        
+        // 1. Verificar Mock Session (Prioridade para Testes Rápidos)
         const mockData = typeof window !== 'undefined' ? localStorage.getItem('compromisso_mock_session') : null;
         if (mockData && isMounted) {
           const parsed = JSON.parse(mockData);
@@ -96,13 +98,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // 2. Verificar Sessão Real
+        // 2. Verificar Sessão Real Supabase
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
         if (initialSession && isMounted) {
           setSession(initialSession);
           setUser(initialSession.user);
           const p = await fetchProfile(initialSession.user.id);
-          if (p) setProfile(p);
+          if (p && isMounted) {
+            setProfile(p);
+          }
         }
       } catch (e) {
         console.warn("Auth init error:", e);
@@ -113,17 +118,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
+    // Listener de Mudança de Estado (Login/Logout)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!isMounted) return;
       
-      // Se houver uma sessão mock, não deixamos o Supabase interferir nos estados
+      // Se houver uma sessão mock, ignoramos eventos do Supabase para não quebrar a simulação
       if (typeof window !== 'undefined' && localStorage.getItem('compromisso_mock_session')) return;
 
       if (currentSession) {
         setSession(currentSession);
         setUser(currentSession.user);
         const p = await fetchProfile(currentSession.user.id);
-        if (p) setProfile(p);
+        if (p && isMounted) setProfile(p);
       } else {
         setSession(null);
         setUser(null);

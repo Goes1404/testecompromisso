@@ -121,7 +121,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [userRole]);
 
   useEffect(() => {
-    // Redireciona para o login APENAS se o carregamento terminou e não há usuário
+    // Redireciona para o login APENAS se o carregamento terminou E não há usuário detectado
     if (hasHydrated && !isUserLoading && !user) {
       router.replace("/login");
     }
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/');
   }, [pathname]);
 
-  // Enquanto estiver carregando os dados iniciais, mostra a tela de loading unificada
+  // Enquanto estiver carregando os dados iniciais, mostra a tela de loading industrial
   if (!hasHydrated || isUserLoading) return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-primary gap-4">
       <div className="relative">
@@ -144,7 +144,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 
-  // Se não houver usuário após o carregamento, não renderiza nada (o useEffect cuidará do redirecionamento)
+  // Se não houver usuário após o carregamento, não renderiza o layout (o useEffect cuidará do redirecionamento)
   if (!user) return null;
 
   const userAvatar = profile?.avatar_url || `https://picsum.photos/seed/${user.id}/100/100`;
