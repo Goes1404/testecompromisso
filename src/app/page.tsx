@@ -31,7 +31,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden">
               <Image 
-                src="https://picsum.photos/seed/parnaiba-logo/400/400" 
+                src="https://sl.bing.net/k7fXDmA0vsq" 
                 alt="Logo Santana de Parnaíba" 
                 fill 
                 className="object-contain"
@@ -75,9 +75,9 @@ export default function LandingPage() {
                 <span className="text-accent drop-shadow-sm">é o nosso Compromisso.</span>
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground font-medium italic leading-relaxed max-w-xl border-l-4 border-accent/30 pl-6">
-                Plataforma 360º de Santana de Parnaíba que integra IA e gestão de dados para o success do aluno.
+                Plataforma 360º de Santana de Parnaíba que integra IA e gestão de dados para o sucesso do aluno.
               </p>
-              <div className="flex flex-col sm:row-row gap-6 pt-4">
+              <div className="flex flex-col sm:flex-row gap-6 pt-4">
                 <Button asChild size="lg" className="h-20 px-12 bg-primary text-white font-black text-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group">
                   <Link href="/register" className="flex items-center gap-4">
                     Iniciar Jornada <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
@@ -203,7 +203,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               <div className="relative h-16 w-16 overflow-hidden">
                 <Image 
-                  src="https://picsum.photos/seed/parnaiba-logo/400/400" 
+                  src="https://sl.bing.net/k7fXDmA0vsq" 
                   alt="Logo Santana de Parnaíba" 
                   fill 
                   className="object-contain brightness-0 invert"

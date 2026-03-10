@@ -131,7 +131,7 @@ export function LoginForm() {
       <div className="flex flex-col items-center gap-4 text-center">
         <Link href="/" className="relative h-24 w-24 overflow-hidden rounded-3xl shadow-2xl transition-all duration-500 hover:scale-110 bg-white p-2">
           <Image 
-            src="https://picsum.photos/seed/parnaiba-logo/400/400" 
+            src="https://sl.bing.net/k7fXDmA0vsq" 
             alt="Logo Prefeitura" 
             fill 
             className="object-contain p-2"

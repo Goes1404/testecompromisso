@@ -158,7 +158,7 @@ export default function RegisterPage() {
         <div className="space-y-4 text-center">
           <div className="relative h-20 w-20 mx-auto overflow-hidden rounded-2xl shadow-xl bg-white p-2">
             <Image 
-              src="https://picsum.photos/seed/parnaiba-logo/400/400" 
+              src="https://sl.bing.net/k7fXDmA0vsq" 
               alt="Logo Prefeitura" 
               fill 
               className="object-contain p-1"

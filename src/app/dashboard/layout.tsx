@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
            <div className="flex items-center gap-4">
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white p-1.5 shadow-lg">
               <Image 
-                src="https://picsum.photos/seed/parnaiba-logo/400/400" 
+                src="https://sl.bing.net/k7fXDmA0vsq" 
                 alt="Logo Santana de Parnaíba" 
                 fill 
                 className="object-contain"
