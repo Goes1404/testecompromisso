@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,10 @@ import {
   LayoutDashboard,
   Sparkles,
   GraduationCap,
-  School
+  School,
+  Building2,
+  Video,
+  History
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -162,12 +166,15 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-white py-20 text-primary relative border-t">
+      {/* FOOTER - TEMA ESCURO INDUSTRIAL */}
+      <footer className="bg-slate-950 py-20 text-white relative border-t border-white/5 overflow-hidden">
+        {/* Glow de Profundidade */}
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />
+        
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10">
           <div className="space-y-6 col-span-1 lg:col-span-2">
             <div className="flex items-center gap-4">
-              <div className="relative h-16 w-16 overflow-hidden">
+              <div className="relative h-16 w-16 overflow-hidden bg-white/10 rounded-xl p-2 backdrop-blur-sm shadow-xl">
                 <Image 
                   src={logoUrl} 
                   alt="Logo Santana de Parnaíba" 
@@ -176,28 +183,28 @@ export default function LandingPage() {
                   className="object-contain"
                 />
               </div>
-              <span className="text-3xl font-black italic tracking-tighter uppercase">Compromisso</span>
+              <span className="text-3xl font-black italic tracking-tighter uppercase text-white">Compromisso</span>
             </div>
-            <p className="text-muted-foreground font-medium italic text-lg max-w-sm">
+            <p className="text-white/40 font-medium italic text-lg max-w-sm">
               Transformando a educação de Santana de Parnaíba através de dados e IA de ponta.
             </p>
           </div>
           <div className="space-y-6">
             <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Links Rápidos</h5>
-            <ul className="space-y-4 text-primary/60 font-bold text-sm">
-              <li><Link href="/login" className="hover:text-primary transition-colors">Acesso Restrito</Link></li>
-              <li><Link href="/register" className="hover:text-primary transition-colors">Novo Cadastro</Link></li>
+            <ul className="space-y-4 text-white/60 font-bold text-sm">
+              <li><Link href="/login" className="hover:text-accent transition-colors">Acesso Restrito</Link></li>
+              <li><Link href="/register" className="hover:text-accent transition-colors">Novo Cadastro</Link></li>
             </ul>
           </div>
           <div className="space-y-6">
             <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Atendimento</h5>
-            <ul className="space-y-4 text-primary/60 font-bold text-sm italic">
+            <ul className="space-y-4 text-white/60 font-bold text-sm italic">
               <li>contato@compromisso.edu.br</li>
               <li>Polo Central - Santana de Parnaíba</li>
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 mt-20 pt-10 border-t border-muted/20 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-6 mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 italic">© 2024 Prefeitura de Santana de Parnaíba • Tecnologia Industrial na Educação</p>
           <div className="flex gap-8 opacity-40">
             <Globe className="h-5 w-5" />
