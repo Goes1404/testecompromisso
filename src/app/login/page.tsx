@@ -1,11 +1,10 @@
-
 "use client";
 
 import { LoginForm } from "@/app/login/LoginForm";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-black">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-black bg-tech-blueprint">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20"></div>
       
       {/* O LoginForm agora é estritamente real (sem bypass) */}

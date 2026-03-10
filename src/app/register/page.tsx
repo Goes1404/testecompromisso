@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -150,7 +149,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-8 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-8 relative overflow-hidden bg-tech-blueprint">
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
       
@@ -166,7 +165,7 @@ export default function RegisterPage() {
               data-ai-hint="city logo"
             />
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-primary flex items-center justify-center gap-3 italic leading-none">
+          <h1 className="text-4xl font-black tracking-tight text-primary flex items-center justify-center gap-3 italic leading-none drop-shadow-sm">
             Cadastro <span className="text-accent">Compromisso</span>
           </h1>
           <p className="text-muted-foreground text-lg font-medium italic">Inicie sua jornada oficial em Santana de Parnaíba.</p>
@@ -180,7 +179,7 @@ export default function RegisterPage() {
           <Progress value={(step / 3) * 100} className="h-2 bg-muted rounded-full overflow-hidden" />
         </div>
 
-        <Card className="shadow-[0_30px_80px_rgba(0,0,0,0.1)] border-none overflow-hidden bg-white/95 backdrop-blur-md rounded-[3rem]">
+        <Card className="shadow-[0_30px_80px_rgba(0,0,0,0.1)] border-none overflow-hidden bg-white/95 backdrop-blur-md rounded-[3rem] bg-edu-pattern">
           <CardHeader className="bg-primary/5 pb-8 pt-8 border-b border-dashed">
             <CardTitle className="text-xl font-bold text-primary flex items-center gap-3 italic">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground text-sm font-black shadow-lg">
@@ -246,7 +245,7 @@ export default function RegisterPage() {
                       <Label
                         htmlFor={p.id}
                         className={`flex flex-col items-center justify-center rounded-[2rem] border-4 p-6 hover:bg-white cursor-pointer transition-all h-full text-center group ${
-                          profileType === p.id ? "border-accent bg-white shadow-xl ring-8 ring-accent/5" : "border-transparent bg-white/50"
+                          profileType === p.id ? "border-accent bg-white shadow-xl ring-8 ring-accent/5" : "border-transparent bg-white/50 backdrop-blur-sm"
                         }`}
                       >
                         <RadioGroupItem value={p.id} id={p.id} className="sr-only" />
@@ -266,7 +265,7 @@ export default function RegisterPage() {
               <div key="step3" className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
                 {profileType === "teacher" && (
                   <div className="space-y-6 animate-in zoom-in-95">
-                    <div className="p-6 bg-accent/5 border-2 border-dashed border-accent/20 rounded-3xl flex items-start gap-4">
+                    <div className="p-6 bg-accent/5 border-2 border-dashed border-accent/20 rounded-3xl flex items-start gap-4 backdrop-blur-sm">
                       <AlertCircle className="h-6 w-6 text-accent shrink-0 mt-1" />
                       <div>
                         <p className="font-black text-primary text-xs uppercase tracking-widest">Atenção Mentor</p>
@@ -282,7 +281,7 @@ export default function RegisterPage() {
                         placeholder="••••••••••••" 
                         value={teacherCode} 
                         onChange={(e) => setTeacherCode(e.target.value)} 
-                        className="h-14 rounded-2xl bg-white border-2 border-accent/20 text-center font-black tracking-[0.5em] text-lg uppercase"
+                        className="h-14 rounded-2xl bg-white border-2 border-accent/20 text-center font-black tracking-[0.5em] text-lg uppercase shadow-inner"
                       />
                     </div>
                   </div>

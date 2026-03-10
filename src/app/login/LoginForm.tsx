@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from "react";
@@ -152,7 +151,7 @@ export function LoginForm() {
         </div>
       </div>
 
-      <Card className="border-none shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-2xl bg-white/95 rounded-[2.5rem]">
+      <Card className="border-none shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-2xl bg-white/95 rounded-[2.5rem] bg-edu-pattern">
         <CardHeader className="space-y-1 pb-6 pt-8 text-center bg-primary/5 border-b border-dashed">
           <CardTitle className="text-2xl font-black text-primary italic">Entrar no Sistema</CardTitle>
           <CardDescription className="font-medium text-muted-foreground italic">Portal Oficial de Santana de Parnaíba.</CardDescription>
@@ -160,19 +159,19 @@ export function LoginForm() {
         <CardContent className="px-8 pt-8 space-y-6">
           
           <div className="grid grid-cols-3 gap-3">
-            <button type="button" onClick={() => handleQuickLogin('student')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-50 border border-transparent hover:border-primary/20 hover:bg-white transition-all group shadow-sm">
+            <button type="button" onClick={() => handleQuickLogin('student')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-transparent hover:border-primary/20 hover:bg-white transition-all group shadow-sm">
               <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <GraduationCap className="h-6 w-6" />
               </div>
               <span className="text-[8px] font-black uppercase text-primary/60 tracking-widest">Aluno</span>
             </button>
-            <button type="button" onClick={() => handleQuickLogin('teacher')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-50 border border-transparent hover:border-accent/20 hover:bg-white transition-all group shadow-sm">
+            <button type="button" onClick={() => handleQuickLogin('teacher')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-transparent hover:border-accent/20 hover:bg-white transition-all group shadow-sm">
               <div className="h-10 w-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <User className="h-6 w-6" />
               </div>
               <span className="text-[8px] font-black uppercase text-primary/60 tracking-widest">Mentor</span>
             </button>
-            <button type="button" onClick={() => handleQuickLogin('admin')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-50 border border-transparent hover:border-primary/20 hover:bg-white transition-all group shadow-sm">
+            <button type="button" onClick={() => handleQuickLogin('admin')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-transparent hover:border-primary/20 hover:bg-white transition-all group shadow-sm">
               <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                 <ShieldCheck className="h-6 w-6" />
               </div>

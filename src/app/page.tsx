@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -62,8 +61,8 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 pt-20">
-        {/* HERO SECTION */}
-        <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white">
+        {/* HERO SECTION - Adicionado Padrão Grid */}
+        <section className="relative py-24 md:py-40 overflow-hidden bg-edu-grid">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
           <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] -z-10 -translate-x-1/2 translate-y-1/2" />
           
@@ -114,9 +113,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* PILARES SECTION */}
-        <section id="features" className="py-32 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+        {/* PILARES SECTION - Adicionado Padrão Tech Blueprint */}
+        <section id="features" className="py-32 bg-slate-900 text-white relative overflow-hidden bg-tech-blueprint opacity-[0.98]">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-24 space-y-6">
               <div className="h-1 w-20 bg-accent mx-auto rounded-full" />
@@ -161,8 +159,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* EXEMPLOS ESCOLARES SECTION */}
-        <section className="py-32 bg-white">
+        {/* EXEMPLOS ESCOLARES SECTION - Adicionado Padrão Edu Pattern */}
+        <section className="py-32 bg-white bg-edu-pattern">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
               <div className="space-y-4 max-w-2xl">
