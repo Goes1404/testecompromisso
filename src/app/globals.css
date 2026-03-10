@@ -56,15 +56,15 @@
     overflow-y: auto !important;
     position: relative;
     
-    /* Efeito de Background Multinível */
+    /* Efeito de Background Multinível com Gradientes de Transição */
     background-color: hsl(var(--background));
     background-image: 
       /* Camada 1: Glow Azul Superior */
-      radial-gradient(at 0% 0%, hsla(215, 100%, 45%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.12) 0px, transparent 50%),
       /* Camada 2: Glow Ouro Inferior */
-      radial-gradient(at 100% 100%, hsla(45, 100%, 50%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(45, 100%, 50%, 0.1) 0px, transparent 50%),
       /* Camada 3: Malha Técnica (Grid Dots) */
-      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.04) 1px, transparent 0);
+      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.05) 1px, transparent 0);
     background-size: 100% 100%, 100% 100%, 32px 32px;
     background-attachment: fixed;
   }
@@ -78,8 +78,8 @@
     background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg');
     background-size: cover;
     background-position: center;
-    filter: grayscale(100%) brightness(0.9);
-    opacity: 0.04;
+    filter: grayscale(100%) brightness(0.95);
+    opacity: 0.05;
     pointer-events: none;
   }
 }
@@ -90,7 +90,7 @@
 
 /* Efeito de Vidro para Cards sobre o fundo texturizado */
 .card {
-  @apply bg-white/90 backdrop-blur-sm shadow-xl border-white/20;
+  @apply bg-white/95 backdrop-blur-md shadow-xl border-white/20;
 }
 
 /* Scrollbar Industrial */
@@ -101,9 +101,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.1);
+  background: hsl(var(--primary) / 0.15);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.2);
+  background: hsl(var(--primary) / 0.3);
 }

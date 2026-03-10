@@ -135,14 +135,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   if (!hasHydrated || isUserLoading) return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-primary gap-4">
-      <div className="relative">
-        <div className="h-16 w-16 rounded-2xl bg-white/5 flex items-center justify-center shadow-2xl animate-pulse">
-          <BookOpen className="h-8 w-8 text-accent" />
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary to-slate-950 gap-6 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-5 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <div className="relative">
+          <div className="h-16 w-16 rounded-2xl bg-white/5 flex items-center justify-center shadow-2xl animate-pulse">
+            <BookOpen className="h-8 w-8 text-accent" />
+          </div>
+          <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-accent animate-pulse" />
         </div>
-        <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-accent animate-pulse" />
+        <h2 className="text-sm font-black text-white italic tracking-tighter uppercase opacity-40">Sincronizando Rede...</h2>
       </div>
-      <h2 className="text-sm font-black text-white italic tracking-tighter uppercase opacity-40">Sincronizando Rede...</h2>
     </div>
   );
 

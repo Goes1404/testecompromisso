@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ import {
   School,
   Building2,
   Video,
-  History
+  History as HistoryIcon
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -71,7 +70,7 @@ export default function LandingPage() {
 
       <main className="flex-1 pt-20">
         {/* HERO SECTION */}
-        <section className="relative py-24 md:py-40 overflow-hidden">
+        <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-b from-transparent via-white/50 to-white">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/5 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
           
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
@@ -122,7 +121,7 @@ export default function LandingPage() {
         </section>
 
         {/* PILARES SECTION */}
-        <section id="features" className="py-32 bg-primary text-white relative overflow-hidden">
+        <section id="features" className="py-32 bg-gradient-to-b from-primary to-slate-900 text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-24 space-y-6">
@@ -166,8 +165,8 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* FOOTER - TEMA ESCURO INDUSTRIAL */}
-      <footer className="bg-slate-950 py-20 text-white relative border-t border-white/5 overflow-hidden">
+      {/* FOOTER - TEMA ESCURO INDUSTRIAL COM GRADIENTE DE TRANSIÇÃO */}
+      <footer className="bg-gradient-to-b from-slate-900 to-black py-20 text-white relative border-t border-white/5 overflow-hidden">
         {/* Glow de Profundidade */}
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />
         

@@ -1,4 +1,3 @@
-
 import { AuthProvider } from '@/lib/AuthProvider';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -20,14 +19,20 @@ export const metadata = {
 
 function LoadingShell() {
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-background gap-4">
-      <div className="relative">
-        <div className="h-16 w-16 rounded-[2rem] bg-primary/5 flex items-center justify-center animate-pulse">
-          <BookOpen className="h-8 w-8 text-primary opacity-20" />
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-slate-950 gap-6 overflow-hidden relative">
+      <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
+      <div className="relative z-10 flex flex-col items-center gap-6">
+        <div className="relative">
+          <div className="h-20 w-20 rounded-[2.5rem] bg-white/10 flex items-center justify-center animate-pulse shadow-2xl border border-white/20">
+            <BookOpen className="h-10 w-10 text-accent" />
+          </div>
+          <Sparkles className="absolute -top-3 -right-3 h-8 w-8 text-accent animate-bounce" />
         </div>
-        <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-accent animate-pulse" />
+        <div className="flex flex-col items-center gap-2">
+          <h2 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Compromisso</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 animate-pulse">Sintonizando Rede Industrial</p>
+        </div>
       </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/20">Sincronizando Rede</p>
     </div>
   );
 }
