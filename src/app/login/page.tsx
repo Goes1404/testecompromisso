@@ -8,12 +8,13 @@ import Link from "next/link";
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden bg-blue-gradient">
-      {/* Botão de Voltar para a Home */}
-      <div className="absolute top-6 left-6 z-50">
-        <Button asChild variant="ghost" className="text-white hover:bg-white/10 font-black uppercase text-[10px] tracking-[0.3em] gap-2 rounded-xl transition-all active:scale-95">
+      {/* Botão de Voltar para a Home - Colorido e Responsivo */}
+      <div className="absolute top-4 left-4 md:top-8 md:left-8 z-50">
+        <Button asChild className="bg-white text-primary hover:bg-white/90 font-black uppercase text-[10px] tracking-[0.2em] gap-2 rounded-xl shadow-2xl transition-all active:scale-95 border-none h-10 px-4 md:px-6">
           <Link href="/">
             <ChevronLeft className="h-4 w-4 text-accent" />
-            Voltar ao Início
+            <span className="hidden sm:inline">Voltar ao Início</span>
+            <span className="sm:hidden">Início</span>
           </Link>
         </Button>
       </div>
