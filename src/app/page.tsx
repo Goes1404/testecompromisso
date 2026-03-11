@@ -26,16 +26,9 @@ import Image from "next/image";
 
 export default function LandingPage() {
   const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
-  const bgUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg";
 
   return (
-    <div className="flex min-h-screen flex-col bg-white relative">
-      {/* Background Histórico (Ponto 1: Centro) */}
-      <div 
-        className="bg-santana-fixed" 
-        style={{ backgroundImage: `url('${bgUrl}')` }} 
-      />
-      
+    <div className="flex min-h-screen flex-col bg-white">
       {/* HEADER */}
       <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-muted/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -69,7 +62,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 pt-20">
-        {/* HERO SECTION - Degrade do Azul Royal institucional para o Branco */}
+        {/* HERO SECTION - Degradê de Azul Maestro para Branco */}
         <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-b from-primary/15 via-primary/5 to-white">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/5 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
           
@@ -122,7 +115,6 @@ export default function LandingPage() {
 
         {/* PILARES SECTION */}
         <section id="features" className="py-32 bg-gradient-to-b from-primary to-slate-900 text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-24 space-y-6">
               <div className="h-1.5 w-24 bg-accent mx-auto rounded-full" />
@@ -163,9 +155,50 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* EXEMPLOS ESCOLARES SECTION */}
+        <section className="py-32 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
+              <div className="space-y-4 max-w-2xl">
+                <h2 className="text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">Ambiente de <span className="text-accent">Alta Performance</span></h2>
+                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa tecnologia transforma o cotidiano das instituições parceiras.</p>
+              </div>
+              <Button asChild variant="outline" className="h-14 px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
+                <Link href="/register">Ver Demonstração Completa</Link>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { title: "Salas Inteligentes", icon: School },
+                { title: "Laboratórios Digitais", icon: Building2 },
+                { title: "Estúdios de Live", icon: Video },
+                { title: "Acervo Digital", icon: HistoryIcon },
+              ].map((item, i) => (
+                <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
+                  <Image 
+                    src={`https://picsum.photos/seed/school-${i}/600/800`} 
+                    alt={item.title} 
+                    fill 
+                    className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-8 left-8 right-8">
+                    <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">INFRAESTRUTURA</p>
+                    <h4 className="text-xl font-black text-white italic flex items-center gap-3">
+                      <item.icon className="h-5 w-5 text-accent" />
+                      {item.title}
+                    </h4>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
-      {/* FOOTER - TEMA ESCURO INDUSTRIAL */}
+      {/* FOOTER - TEMA ESCURO INDUSTRIAL COM GRADIENTE */}
       <footer className="bg-slate-950 py-20 text-white relative border-t border-white/5 overflow-hidden">
         {/* Glow de Profundidade */}
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />

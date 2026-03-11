@@ -23,7 +23,6 @@ export default function DashboardRoot() {
       }
 
       // Se houver usuário, redireciona baseado no papel (role)
-      // Pequeno delay para garantir que a transição de UI seja fluida
       const redirectTimeout = setTimeout(() => {
         if (userRole === 'admin') {
           router.replace("/dashboard/admin/home");
@@ -39,7 +38,7 @@ export default function DashboardRoot() {
   }, [userRole, loading, user, router, profile]);
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-primary gap-6 bg-gradient-to-br from-primary via-primary/90 to-slate-950 relative overflow-hidden">
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-gradient gap-6 relative overflow-hidden">
       <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
       <div className="relative z-10 flex flex-col items-center gap-4">
         <div className="relative">

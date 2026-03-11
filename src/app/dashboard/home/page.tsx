@@ -28,7 +28,8 @@ import {
   X,
   AlertTriangle,
   CheckCircle2,
-  MapPin
+  MapPin,
+  History as HistoryIcon
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -453,8 +454,9 @@ export default function DashboardHome() {
                   </div>
                 </Card>
               )) : (
-                <div className="text-center py-10 opacity-20 border-2 border-dashed rounded-2xl">
-                  <p className="text-[8px] font-black uppercase">Acervo em Curadoria</p>
+                <div className="text-center py-16 opacity-30 border-4 border-dashed rounded-[2.5rem] bg-white flex flex-col items-center gap-3">
+                  <HistoryIcon className="h-8 w-8 text-primary/20" />
+                  <p className="text-[10px] font-black uppercase italic tracking-widest">Acervo em Curadoria</p>
                 </div>
               )}
             </div>

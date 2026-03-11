@@ -136,7 +136,7 @@ export default function RegisterPage() {
       console.error("Erro no cadastro:", err);
       toast({ 
         title: "Falha no Cadastro", 
-        description: err.message || "Erro no servidor.", 
+        description: err.message || "Ocorreu um erro no servidor.", 
         variant: "destructive" 
       });
     } finally {
@@ -149,9 +149,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-8 relative overflow-hidden bg-tech-blueprint">
+    <div className="flex min-h-screen items-center justify-center bg-blue-gradient p-4 sm:p-8 relative overflow-hidden">
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale opacity-10 pointer-events-none"></div>
       
       <div className="w-full max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative z-10">
         <div className="space-y-4 text-center">
@@ -162,21 +163,20 @@ export default function RegisterPage() {
               fill 
               unoptimized
               className="object-contain p-1"
-              data-ai-hint="city logo"
             />
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-primary flex items-center justify-center gap-3 italic leading-none drop-shadow-sm">
+          <h1 className="text-4xl font-black tracking-tight text-white flex items-center justify-center gap-3 italic">
             Cadastro <span className="text-accent">Compromisso</span>
           </h1>
-          <p className="text-muted-foreground text-lg font-medium italic">Inicie sua jornada oficial em Santana de Parnaíba.</p>
+          <p className="text-white/70 text-lg font-medium italic">Sua rota de aprovação começa agora.</p>
         </div>
 
         <div className="space-y-4">
-          <div className="flex justify-between text-[10px] font-black text-primary uppercase tracking-widest">
+          <div className="flex justify-between text-[10px] font-black text-white uppercase tracking-widest">
             <span>Passo {step} de 3: {step === 1 ? "Acesso" : step === 2 ? "Perfil" : "Detalhes"}</span>
             <span className="text-accent italic">{Math.round((step / 3) * 100)}%</span>
           </div>
-          <Progress value={(step / 3) * 100} className="h-2 bg-muted rounded-full overflow-hidden" />
+          <Progress value={(step / 3) * 100} className="h-2 bg-white/20 rounded-full overflow-hidden" />
         </div>
 
         <Card className="shadow-[0_30px_80px_rgba(0,0,0,0.1)] border-none overflow-hidden bg-white/95 backdrop-blur-md rounded-[3rem]">
@@ -245,7 +245,7 @@ export default function RegisterPage() {
                       <Label
                         htmlFor={p.id}
                         className={`flex flex-col items-center justify-center rounded-[2rem] border-4 p-6 hover:bg-white cursor-pointer transition-all h-full text-center group ${
-                          profileType === p.id ? "border-accent bg-white shadow-xl ring-8 ring-accent/5" : "border-transparent bg-white/50 backdrop-blur-sm"
+                          profileType === p.id ? "border-accent bg-white shadow-xl ring-8 ring-accent/5" : "border-transparent bg-white/50"
                         }`}
                       >
                         <RadioGroupItem value={p.id} id={p.id} className="sr-only" />
@@ -265,7 +265,7 @@ export default function RegisterPage() {
               <div key="step3" className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
                 {profileType === "teacher" && (
                   <div className="space-y-6 animate-in zoom-in-95">
-                    <div className="p-6 bg-accent/5 border-2 border-dashed border-accent/20 rounded-3xl flex items-start gap-4 backdrop-blur-sm">
+                    <div className="p-6 bg-accent/5 border-2 border-dashed border-accent/20 rounded-3xl flex items-start gap-4">
                       <AlertCircle className="h-6 w-6 text-accent shrink-0 mt-1" />
                       <div>
                         <p className="font-black text-primary text-xs uppercase tracking-widest">Atenção Mentor</p>
@@ -281,7 +281,7 @@ export default function RegisterPage() {
                         placeholder="••••••••••••" 
                         value={teacherCode} 
                         onChange={(e) => setTeacherCode(e.target.value)} 
-                        className="h-14 rounded-2xl bg-white border-2 border-accent/20 text-center font-black tracking-[0.5em] text-lg uppercase shadow-inner"
+                        className="h-14 rounded-2xl bg-white border-2 border-accent/20 text-center font-black tracking-[0.5em] text-lg uppercase"
                       />
                     </div>
                   </div>

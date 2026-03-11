@@ -33,7 +33,7 @@
     --input: 214 32% 91%;
     --ring: 215 100% 45%;
     
-    --radius: 1rem; 
+    --radius: 1.25rem; 
 
     --sidebar-background: 215 100% 34%;
     --sidebar-foreground: 210 40% 98%;
@@ -53,23 +53,18 @@
     @apply bg-background text-foreground antialiased;
     overflow-x: hidden;
     min-height: 100vh;
-    overflow-y: auto !important;
     position: relative;
     
-    /* Fundo Institucional Multinível */
-    background-color: hsl(var(--background));
+    /* Degradê de Azul Suave no Fundo */
     background-image: 
-      /* Glow Azul Superior */
-      radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.12) 0px, transparent 50%),
-      /* Glow Ouro Inferior */
-      radial-gradient(at 100% 100%, hsla(45, 100%, 50%, 0.1) 0px, transparent 50%),
-      /* Malha Técnica (Grid Dots) */
-      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.05) 1px, transparent 0);
+      radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(215, 100% , 45%, 0.05) 0px, transparent 50%),
+      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.03) 1px, transparent 0);
     background-size: 100% 100%, 100% 100%, 32px 32px;
     background-attachment: fixed;
   }
 
-  /* Marca d'Água do Centro Histórico */
+  /* Marca d'Água do Centro Histórico em Cinza */
   body::before {
     content: "";
     position: fixed;
@@ -78,8 +73,8 @@
     background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg');
     background-size: cover;
     background-position: center;
-    filter: grayscale(100%) brightness(0.95);
-    opacity: 0.06;
+    filter: grayscale(100%) contrast(1.1);
+    opacity: 0.05;
     pointer-events: none;
   }
 }
@@ -88,15 +83,8 @@
   animation-fill-mode: forwards;
 }
 
-.bg-santana-fixed {
-  @apply fixed inset-0 z-[-1] bg-cover bg-center grayscale opacity-[0.04] pointer-events-none;
-}
-
-.bg-tech-blueprint {
-  background-image: 
-    linear-gradient(rgba(0, 71, 171, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 71, 171, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
+.bg-blue-gradient {
+  background: linear-gradient(135deg, hsl(215 100% 45%) 0%, hsl(215 100% 25%) 100%);
 }
 
 /* Scrollbar Industrial */
