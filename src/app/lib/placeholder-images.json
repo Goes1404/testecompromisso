@@ -1,4 +1,3 @@
-
 {
   "placeholderImages": [
     {
@@ -15,9 +14,9 @@
     },
     {
       "id": "hero-educational",
-      "description": "Estudante em ambiente educacional moderno e tecnológico",
-      "imageUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxlZHVjYXRpb24lMjB0ZWNobm9sb2d5fGVufDB8fHx8MTc3MDA4NTYwNXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "modern education"
+      "description": "Estudante em ambiente educacional de Santana de Parnaíba",
+      "imageUrl": "https://picsum.photos/seed/jornada-literaria/1000/1200",
+      "imageHint": "classroom students lecture"
     },
     {
       "id": "gallery-classroom",
@@ -30,24 +29,6 @@
       "description": "Laboratório de tecnologia e inovação",
       "imageUrl": "https://picsum.photos/seed/tech-lab/600/800",
       "imageHint": "tech lab"
-    },
-    {
-      "id": "gallery-studio",
-      "description": "Estúdio profissional para gravação de aulas",
-      "imageUrl": "https://picsum.photos/seed/media-studio/600/800",
-      "imageHint": "media studio"
-    },
-    {
-      "id": "gallery-study",
-      "description": "Espaço de estudo colaborativo e moderno",
-      "imageUrl": "https://picsum.photos/seed/collab-space/600/800",
-      "imageHint": "collab space"
-    },
-    {
-      "id": "trail-math",
-      "description": "Mathematics learning trail cover",
-      "imageUrl": "https://images.unsplash.com/photo-1613563696452-c7239f5ae99c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtYXRoZW1hdGljcyUyMGVkdWNhdGlvbnxlbnwwfHx8fDE3NzAwODU2MDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "mathematics education"
     }
   ]
 }

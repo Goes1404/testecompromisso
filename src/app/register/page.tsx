@@ -54,6 +54,10 @@ export default function RegisterPage() {
   
   const prevStep = () => setStep((s) => (s - 1) as Step);
 
+  const updateField = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleFinish = async () => {
     if (!formData.email || !formData.password || !formData.firstName || !formData.username) {
       toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha nome, usuário, e-mail e senha." });
@@ -142,10 +146,6 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (

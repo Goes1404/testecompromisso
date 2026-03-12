@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Paleta Santana de Parnaíba - EduTech Premium Vibrante */
+    /* Paleta Santana de Parnaíba - Premium Maestro */
     --background: 210 40% 98%;    
     --foreground: 222 47% 11%;    
     
@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     
-    --primary: 215 100% 45%;      /* Azul Royal Saturado */
+    --primary: 215 100% 45%;      /* Azul Royal */
     --primary-foreground: 210 40% 98%;
     
     --secondary: 210 40% 96%;    
@@ -23,7 +23,7 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
     
-    --accent: 45 100% 50%;        /* Ouro Solar Vibrante */
+    --accent: 45 100% 50%;        /* Ouro Solar */
     --accent-foreground: 222 47% 11%;
     
     --destructive: 0 84% 60%;    
@@ -33,7 +33,7 @@
     --input: 214 32% 91%;
     --ring: 215 100% 45%;
     
-    --radius: 1.25rem; 
+    --radius: 1.5rem; 
 
     --sidebar-background: 215 100% 34%;
     --sidebar-foreground: 210 40% 98%;
@@ -55,22 +55,22 @@
     min-height: 100vh;
     position: relative;
     
-    /* Efeito de Profundidade no Fundo */
+    /* Efeito de Malha Técnica e Profundidade */
     background-image: 
-      radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(215, 100% , 45%, 0.05) 0px, transparent 50%),
-      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.03) 1px, transparent 0);
-    background-size: 100% 100%, 100% 100%, 32px 32px;
+      radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(45, 100% , 50%, 0.03) 0px, transparent 50%),
+      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.02) 1px, transparent 0);
+    background-size: 100% 100%, 100% 100%, 24px 24px;
     background-attachment: fixed;
   }
 
-  /* Marca d'Água do Centro Histórico de Santana de Parnaíba */
+  /* Marca d'Água Histórica de Santana de Parnaíba */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: -1;
-    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg');
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1920px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg');
     background-size: cover;
     background-position: center;
     filter: grayscale(100%) contrast(1.1);
@@ -84,10 +84,9 @@
 }
 
 .bg-blue-gradient {
-  background: linear-gradient(135deg, hsl(215 100% 45%) 0%, hsl(215 100% 25%) 100%);
+  background: linear-gradient(135deg, hsl(215 100% 45%) 0%, hsl(215 100% 20%) 100%);
 }
 
-/* Scrollbar Industrial */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -95,9 +94,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.15);
+  background: hsl(var(--primary) / 0.1);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary) / 0.2);
 }
