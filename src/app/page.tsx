@@ -19,11 +19,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function LandingPage() {
-  const heroData = PlaceHolderImages.find(img => img.id === 'hero-educational');
-  const cityLogo = PlaceHolderImages.find(img => img.id === 'prefeitura-logo')?.imageUrl || "";
+  const cityLogo = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
+  const heroImage = "https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg";
   
   const galleryItems = [
     { url: "https://i.postimg.cc/QMnBTzsK/4.jpg" },
@@ -95,23 +94,13 @@ export default function LandingPage() {
                   <Link href="/login">Portal do Aluno</Link>
                 </Button>
               </div>
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-10 border-t border-muted/20">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 shadow-sm"><ShieldCheck className="h-6 w-6" /></div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Foco ENEM & Vestibulares</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm"><Globe className="h-6 w-6" /></div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Rede Municipal 360</span>
-                </div>
-              </div>
             </div>
             
             <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
               <div className="relative aspect-video lg:aspect-square rounded-[3rem] md:rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[8px] md:border-[12px] border-white group">
                 <Image 
-                  src={heroData?.imageUrl || ""} 
-                  alt={heroData?.description || "Alunos Santana de Parnaíba"} 
+                  src={heroImage} 
+                  alt="Educação Santana de Parnaíba" 
                   fill 
                   priority
                   unoptimized
@@ -225,17 +214,6 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            
-            <div className="mt-20 p-8 md:p-16 rounded-[3rem] bg-primary text-white flex flex-col md:flex-row items-center justify-between gap-10 relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-               <div className="flex-1 space-y-4 text-center md:text-left z-10">
-                  <h3 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none">Pronto para acelerar sua aprovação?</h3>
-                  <p className="text-white/70 font-medium italic text-lg">Junte-se a centenas de alunos parnaibanos que já usam o Compromisso.</p>
-               </div>
-               <Button asChild size="lg" className="h-16 md:h-20 px-12 bg-accent text-accent-foreground font-black text-xl rounded-2xl shadow-2xl hover:scale-105 active:scale-95 transition-all shrink-0 z-10 border-none">
-                  <Link href="/register">Cadastrar Agora</Link>
-               </Button>
-            </div>
           </div>
         </section>
       </main>
@@ -290,14 +268,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
-  return (
-    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${className}`}>
-      {children}
     </div>
   );
 }

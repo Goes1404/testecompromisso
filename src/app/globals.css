@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Paleta Santana de Parnaíba - Premium Maestro */
+    /* Paleta Santana de Parnaíba - Maestro Industrial */
     --background: 210 40% 98%;    
     --foreground: 222 47% 11%;    
     
@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     
-    --primary: 215 100% 45%;      /* Azul Royal */
+    --primary: 215 100% 45%;      /* Azul Royal Maestro */
     --primary-foreground: 210 40% 98%;
     
     --secondary: 210 40% 96%;    
@@ -64,7 +64,7 @@
     background-attachment: fixed;
   }
 
-  /* Marca d'Água Histórica de Santana de Parnaíba - Igreja Matriz */
+  /* Marca d'Água Histórica de Santana de Parnaíba - Igreja Matriz Global */
   body::before {
     content: "";
     position: fixed;
