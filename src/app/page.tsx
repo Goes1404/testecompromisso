@@ -5,21 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
   Shield, 
-  TrendingUp, 
   BookOpen, 
   ShieldCheck, 
   CheckCircle2, 
   ArrowRight, 
-  Users, 
   BarChart3, 
   Zap,
   Globe,
-  LayoutDashboard,
   Sparkles,
   GraduationCap,
-  School,
-  Video,
-  History as HistoryIcon
+  School
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -28,6 +23,13 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 export default function LandingPage() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-educational')?.imageUrl || "";
   const cityLogo = PlaceHolderImages.find(img => img.id === 'prefeitura-logo')?.imageUrl || "";
+
+  const galleryItems = [
+    { title: "Salas de Performance", url: "https://i.postimg.cc/QMnBTzsK/4.jpg" },
+    { title: "Laboratórios Digitais", url: "https://i.postimg.cc/mgvJgL14/Whats-App-Image-2026-03-12-at-17-48-36.jpg" },
+    { title: "Estúdios de Live", url: "https://i.postimg.cc/Px4Ry13T/2.jpg" },
+    { title: "Foco e Mentoria", url: "https://i.postimg.cc/J0YdVMCd/Whats-App-Image-2026-03-12-at-2.jpg" },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -193,7 +195,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* EXEMPLOS ESCOLARES SECTION */}
+        {/* IMPACT SECTION */}
         <section id="impact" className="py-32 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
@@ -207,12 +209,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { title: "Salas de Performance", url: PlaceHolderImages.find(img => img.id === 'gallery-classroom')?.imageUrl || "" },
-                { title: "Laboratórios Digitais", url: PlaceHolderImages.find(img => img.id === 'gallery-lab')?.imageUrl || "" },
-                { title: "Estúdios de Live", url: PlaceHolderImages.find(img => img.id === 'gallery-3')?.imageUrl || "" },
-                { title: "Foco e Mentoria", url: PlaceHolderImages.find(img => img.id === 'gallery-4')?.imageUrl || "" },
-              ].map((item, i) => (
+              {galleryItems.map((item, i) => (
                 <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
                   <Image 
                     src={item.url} 
@@ -222,7 +219,7 @@ export default function LandingPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute bottom-8 left-8 right-8">
-                    <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">COMPROMISSO</p>
+                    <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">PROJETO COMPROMISSO</p>
                     <h4 className="text-xl font-black text-white italic">{item.title}</h4>
                   </div>
                 </div>
