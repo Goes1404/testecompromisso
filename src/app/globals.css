@@ -100,3 +100,8 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.2);
 }
+
+.bg-santana-fixed {
+  @apply fixed inset-0 z-0 bg-cover bg-center grayscale opacity-10;
+  background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg');
+}

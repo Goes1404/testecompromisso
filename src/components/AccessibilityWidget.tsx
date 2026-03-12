@@ -100,7 +100,7 @@ export function AccessibilityWidget() {
             {!isOpen && <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-50 rounded-full border-2 border-white animate-bounce" />}
           </button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-[90vw] sm:max-w-[400px] p-0 border-none rounded-l-[2rem] overflow-hidden bg-white flex flex-col shadow-2xl">
+        <SheetContent side="right" className="w-[90vw] sm:max-w-[400px] p-0 border-none rounded-l-[2rem] overflow-hidden bg-white flex flex-col shadow-2xl z-50">
           <SheetHeader className="p-6 bg-primary text-white shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">

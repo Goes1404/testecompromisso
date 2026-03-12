@@ -44,7 +44,7 @@ export default function LandingPage() {
                 alt="Prefeitura de Santana de Parnaíba" 
                 fill 
                 unoptimized
-                className="object-contain"
+                className="object-contain p-1"
               />
             </div>
             <div className="flex flex-col">
@@ -114,6 +114,7 @@ export default function LandingPage() {
                   alt={heroData?.description || "Alunos Santana de Parnaíba"} 
                   fill 
                   priority
+                  unoptimized
                   className="object-cover group-hover:scale-110 transition-transform duration-1000"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent" />
@@ -214,6 +215,7 @@ export default function LandingPage() {
                     src={item.url} 
                     alt="Cotidiano Cursinho Compromisso" 
                     fill 
+                    unoptimized
                     className="object-cover group-hover:scale-110 transition-transform duration-1000"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
