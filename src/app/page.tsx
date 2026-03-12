@@ -61,7 +61,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 pt-20">
-        {/* HERO SECTION */}
+        {/* HERO SECTION - Degradê Azul maestro para branco */}
         <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-white">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2" />
           
@@ -103,7 +103,7 @@ export default function LandingPage() {
             <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
               <div className="relative aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[12px] border-white group">
                 <Image 
-                  src="https://picsum.photos/seed/jornada-literaria/1000/1200" 
+                  src="https://i.postimg.cc/QMnBTzsK/4.jpg" 
                   alt="Educação Santana de Parnaíba" 
                   fill 
                   className="object-cover group-hover:scale-110 transition-transform duration-1000"
