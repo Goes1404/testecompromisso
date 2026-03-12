@@ -1,28 +1,46 @@
 {
   "placeholderImages": [
     {
-      "id": "trail-math",
-      "description": "Mathematics learning trail cover",
-      "imageUrl": "https://images.unsplash.com/photo-1613563696452-c7239f5ae99c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtYXRoZW1hdGljcyUyMGVkdWNhdGlvbnxlbnwwfHx8fDE3NzAwODU2MDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "mathematics education"
+      "id": "hero-educational",
+      "description": "Jornada Literária e Educação em Santana de Parnaíba",
+      "imageUrl": "https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg",
+      "imageHint": "classroom students lecture"
     },
     {
-      "id": "trail-physics",
-      "description": "Physics learning trail cover",
-      "imageUrl": "https://images.unsplash.com/photo-1690050070164-476021806d24?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwaHlzaWNzJTIwZXhwZXJpbWVudHxlbnwwfHx8fDE3Njk5ODMxOTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "physics experiment"
+      "id": "gallery-classroom",
+      "description": "Alunos em sala de aula - Santana de Parnaíba",
+      "imageUrl": "https://i.postimg.cc/QMnBTzsK/4.jpg",
+      "imageHint": "student classroom"
     },
     {
-      "id": "trail-tech",
-      "description": "Technology and AI trail cover",
-      "imageUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxlZHVjYXRpb24lMjB0ZWNobm9sb2d5fGVufDB8fHx8MTc3MDA4NTYwNXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "technology education"
+      "id": "gallery-lab",
+      "description": "Ambiente de estudo e tecnologia",
+      "imageUrl": "https://i.postimg.cc/mgvJgL14/Whats-App-Image-2026-03-12-at-17-48-36.jpg",
+      "imageHint": "science lab education"
     },
     {
-      "id": "trail-biology",
-      "description": "Biology learning trail cover",
-      "imageUrl": "https://images.unsplash.com/photo-1600740073508-89a1726b3cf6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YmlvbG9neSUyMG5hdHVyZXxlbnwwfHx8fDE3NzAwODU2MDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "biology nature"
+      "id": "gallery-3",
+      "description": "Estudantes em atividade prática",
+      "imageUrl": "https://i.postimg.cc/Px4Ry13T/2.jpg",
+      "imageHint": "video broadcast studio"
+    },
+    {
+      "id": "gallery-4",
+      "description": "Mentoria e foco acadêmico",
+      "imageUrl": "https://i.postimg.cc/J0YdVMCd/Whats-App-Image-2026-03-12-at-2.jpg",
+      "imageHint": "co-working study space"
+    },
+    {
+      "id": "prefeitura-logo",
+      "description": "Logomarca Oficial da Prefeitura de Santana de Parnaíba SP",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG",
+      "imageHint": "city logo"
+    },
+    {
+      "id": "santana-landmark",
+      "description": "Igreja Matriz de Santana de Parnaíba - Coração da Cidade",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg",
+      "imageHint": "historic church"
     }
   ]
 }

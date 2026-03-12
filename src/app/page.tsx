@@ -103,7 +103,7 @@ export default function LandingPage() {
             <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
               <div className="relative aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[12px] border-white group">
                 <Image 
-                  src="https://i.postimg.cc/QMnBTzsK/4.jpg" 
+                  src="https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg" 
                   alt="Educação Santana de Parnaíba" 
                   fill 
                   className="object-cover group-hover:scale-110 transition-transform duration-1000"
@@ -208,18 +208,17 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { title: "Salas Inteligentes", hint: "modern school classroom", icon: School },
-                { title: "Laboratórios Digitais", hint: "science lab education", icon: ShieldCheck },
-                { title: "Estúdios de Live", hint: "video broadcast studio", icon: Video },
-                { title: "Espaços de Mentoria", hint: "co-working study space", icon: HistoryIcon },
+                { title: "Salas Inteligentes", url: "https://i.postimg.cc/QMnBTzsK/4.jpg", icon: School },
+                { title: "Laboratórios Digitais", url: "https://i.postimg.cc/mgvJgL14/Whats-App-Image-2026-03-12-at-17-48-36.jpg", icon: ShieldCheck },
+                { title: "Estúdios de Live", url: "https://i.postimg.cc/Px4Ry13T/2.jpg", icon: Video },
+                { title: "Espaços de Mentoria", url: "https://i.postimg.cc/J0YdVMCd/Whats-App-Image-2026-03-12-at-2.jpg", icon: HistoryIcon },
               ].map((item, i) => (
                 <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
                   <Image 
-                    src={`https://picsum.photos/seed/school-${i}/600/800`} 
+                    src={item.url} 
                     alt={item.title} 
                     fill 
                     className="object-cover group-hover:scale-110 transition-transform duration-1000"
-                    data-ai-hint={item.hint}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute bottom-8 left-8 right-8">
