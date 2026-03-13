@@ -28,7 +28,7 @@ export type TrailStructureOutput = z.infer<typeof TrailStructureOutputSchema>;
 
 const prompt = ai.definePrompt({
   name: 'trailStructureGeneratorPrompt',
-  model: 'googleai/gemini-1.5-flash-001',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: TrailStructureInputSchema },
   output: { schema: TrailStructureOutputSchema },
   config: { temperature: 0.7 },

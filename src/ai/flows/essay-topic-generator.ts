@@ -23,7 +23,7 @@ const EssayTopicOutputSchema = z.object({
 
 const prompt = ai.definePrompt({
   name: 'essayTopicGeneratorPrompt',
-  model: 'googleai/gemini-1.5-flash-001',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: EssayTopicInputSchema },
   output: { schema: EssayTopicOutputSchema },
   system: `Você é a Aurora, mentora de redação nota 1000. 

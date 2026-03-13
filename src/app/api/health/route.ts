@@ -35,9 +35,9 @@ export async function GET() {
     diagnostics.genkit = { status: 'error', details: 'Chave de API não configurada no ambiente.' };
   } else {
     try {
-      // Teste minimalista com ID de versão fixa para evitar erros de alias (404)
+      // Teste minimalista com o identificador padrão estável
       const response = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-001',
+        model: 'googleai/gemini-1.5-flash',
         prompt: 'ok',
         config: { maxOutputTokens: 2 }
       });
@@ -52,7 +52,7 @@ export async function GET() {
       if (msg.includes('API key expired') || msg.includes('API_KEY_INVALID')) {
         diagnostics.genkit = { status: 'error', details: 'Chave INVÁLIDA ou EXPIROU. Gere uma nova no Google AI Studio.' };
       } else if (msg.includes('not found') || msg.includes('404')) {
-        diagnostics.genkit = { status: 'error', details: 'Modelo 1.5-flash-001 não localizado para esta chave de projeto.' };
+        diagnostics.genkit = { status: 'error', details: 'Modelo não localizado. Se a chave for do GCP, verifique se a "Generative Language API" está ATIVADA.' };
       } else {
         diagnostics.genkit = { status: 'error', details: `Falha no motor: ${msg.substring(0, 100)}` };
       }
