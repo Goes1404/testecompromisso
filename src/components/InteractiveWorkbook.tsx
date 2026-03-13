@@ -14,7 +14,7 @@ import {
   RotateCcw, 
   ChevronUp, 
   ChevronDown,
-  CloudSync,
+  Cloud,
   AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -127,15 +127,15 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       if (syncError) throw syncError;
       
       localStorage.removeItem(`workbook_draft_${materialId}`);
+      toast({ title: "Progresso Sincronizado!", description: "Suas anotações estão salvas na nuvem." });
     } catch (e) {
       console.error("Erro na sincronização Bulk:", e);
     }
-  }, [materialId, currentPage, numPages, getCleanJson, isSaving]);
+  }, [materialId, currentPage, numPages, getCleanJson, isSaving, toast]);
 
   // Listener para fechamento da aba (Bulk Save Strategy)
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Usamos keepalive: true para garantir que a requisição finalize após o fechamento
       const percentage = Math.round((currentPage / numPages) * 100);
       const allAnnotations: Record<number, any> = {};
       Object.keys(fabricCanvases.current).forEach(pageNum => {
@@ -152,7 +152,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
         drawing_data: { pages: allAnnotations }
       });
 
-      // Em Next.js/Supabase, chamamos o fetch com keepalive
       fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/material_annotations`, {
         method: 'POST',
         headers: {
@@ -180,7 +179,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
         const pdf = await loadingTask.promise;
         setTotalPages(pdf.numPages);
 
-        // Carregar rascunho anterior ou dados do Supabase
         const draft = localStorage.getItem(`workbook_draft_${materialId}`);
         const savedData = draft ? JSON.parse(draft) : null;
 
@@ -197,7 +195,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
 
           await page.render({ canvasContext: context!, viewport }).promise;
 
-          // Injetar Watermark no background do canvas PDF antes de sobrepor Fabric
           context!.font = "bold 14px Inter";
           context!.fillStyle = "rgba(0, 0, 0, 0.05)";
           context!.save();
@@ -209,7 +206,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
           }
           context!.restore();
 
-          // Inicializar Fabric.js por cima
           const fCanvas = new fabric.Canvas(`fabric-canvas-${i}`, {
             height: viewport.height,
             width: viewport.width,
@@ -219,7 +215,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
           fCanvas.freeDrawingBrush.color = brushColor;
           fCanvas.freeDrawingBrush.width = brushWidth;
 
-          // Restaurar anotações
           if (savedData?.annotations?.[i]) {
             fCanvas.loadFromJSON(savedData.annotations[i], () => fCanvas.renderAll());
           }
@@ -282,7 +277,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
 
   return (
     <div className="h-full flex flex-col md:flex-row bg-slate-900">
-      {/* BARRA DE FERRAMENTAS LATERAL */}
       <aside className="w-full md:w-20 bg-slate-950 border-b md:border-b-0 md:border-r border-white/5 p-4 flex flex-row md:flex-col items-center justify-between md:justify-center gap-6 z-20 overflow-x-auto">
         <div className="flex flex-row md:flex-col gap-4">
           <Button 
@@ -325,11 +319,10 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
           disabled={isSaving}
           className="h-12 w-12 rounded-2xl text-slate-400 hover:bg-white/10"
         >
-          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <CloudSync className="h-5 w-5" />}
+          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Cloud className="h-5 w-5" />}
         </Button>
       </aside>
 
-      {/* ÁREA DO DOCUMENTO */}
       <div 
         ref={containerRef}
         onContextMenu={(e) => e.preventDefault()}
@@ -355,7 +348,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
             <div className="absolute inset-0 z-10">
               <canvas id={`fabric-canvas-${i + 1}`} />
             </div>
-            {/* Overlay de Segurança Visual */}
             <div className="absolute bottom-4 right-4 z-20 pointer-events-none opacity-20">
               <p className="text-[8px] font-black text-black uppercase tracking-widest">{userName} | ID {userCpf}</p>
             </div>
@@ -363,7 +355,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
         ))}
       </div>
 
-      {/* CONTROLES DE NAVEGAÇÃO FLUTUANTES */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-950/90 backdrop-blur-2xl px-6 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-6 z-30">
         <p className="text-[10px] font-black text-white uppercase tracking-widest">
           PÁGINA <span className="text-accent italic text-sm">{currentPage}</span> / {numPages}
