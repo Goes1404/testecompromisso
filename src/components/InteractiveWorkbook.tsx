@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -16,7 +17,8 @@ import {
   AlertTriangle,
   Maximize,
   Hash,
-  Trash2
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,12 +31,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 
 interface InteractiveWorkbookProps {
   materialId: string;
-  pdfUrl: string;
+  pdfUrl?: string; // Tornar opcional para permitir carregamento via materialId
   userName: string;
   userCpf: string;
 }
 
-export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: InteractiveWorkbookProps) {
+export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userName, userCpf }: InteractiveWorkbookProps) {
   const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,6 +44,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
   const renderTaskRef = useRef<any>(null);
   
   const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState<string>(initialPdfUrl || "");
   const [numPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [inputPage, setInputPage] = useState("1");
@@ -52,6 +55,32 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
   const [error, setError] = useState<string | null>(null);
 
   const { toast } = useToast();
+
+  // Carregar dados do material se a URL não for fornecida
+  useEffect(() => {
+    async function fetchMaterialUrl() {
+      if (initialPdfUrl) {
+        setCurrentPdfUrl(initialPdfUrl);
+        return;
+      }
+      if (!materialId) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('library_resources')
+          .select('url')
+          .eq('id', materialId)
+          .single();
+        
+        if (error) throw error;
+        if (data?.url) setCurrentPdfUrl(data.url);
+      } catch (err) {
+        console.error("Erro ao buscar URL da apostila:", err);
+        setError("Não foi possível localizar o arquivo da apostila.");
+      }
+    }
+    fetchMaterialUrl();
+  }, [materialId, initialPdfUrl]);
 
   // Salva anotações da página atual no LocalStorage
   const savePageDraft = useCallback(() => {
@@ -92,7 +121,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
 
   // Sincronização final com Supabase
   const syncWithSupabase = useCallback(async () => {
-    if (isSaving || !user) return;
+    if (isSaving || !user || !materialId) return;
     setIsSaving(true);
     
     const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
@@ -133,10 +162,10 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
   // Carregar PDF inicial
   useEffect(() => {
     async function loadPdf() {
-      if (!pdfUrl) return;
+      if (!currentPdfUrl) return;
       setLoading(true);
       try {
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
         const pdf = await loadingTask.promise;
         setPdfDoc(pdf);
         setTotalPages(pdf.numPages);
@@ -157,7 +186,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       }
     }
     loadPdf();
-  }, [pdfUrl, materialId]);
+  }, [currentPdfUrl, materialId]);
 
   // Renderizar Página Atual
   const renderPage = useCallback(async (pageNum: number) => {
@@ -171,7 +200,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       const containerWidth = containerRef.current?.clientWidth || 800;
       const unscaledViewport = page.getViewport({ scale: 1 });
       const scale = (containerWidth - 40) / unscaledViewport.width;
-      const viewport = page.getViewport({ scale: Math.min(scale, 2) }); // Limite de 2x para nitidez
+      const viewport = page.getViewport({ scale: Math.min(scale, 2) }); 
 
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
@@ -202,20 +231,18 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
         height: viewport.height,
         width: viewport.width,
         isDrawingMode: !isEraser,
-        selection: !isEraser // Permite selecionar apenas se não for desenho
+        selection: !isEraser 
       });
 
       fCanvas.freeDrawingBrush.color = brushColor;
       fCanvas.freeDrawingBrush.width = 3;
 
-      // Carregar anotações existentes para esta página
       const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
       const draft = draftStr ? JSON.parse(draftStr) : null;
       if (draft?.annotations?.[pageNum]) {
         fCanvas.loadFromJSON(draft.annotations[pageNum], () => fCanvas.renderAll());
       }
 
-      // Logica da Borracha: Se clicar em um traço no modo borracha, remove ele
       fCanvas.on('mouse:down', (options) => {
         if (isEraser && options.target) {
           fCanvas.remove(options.target);
@@ -250,19 +277,12 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
   const jumpToPage = (e: React.FormEvent) => {
     e.preventDefault();
     let target = parseInt(inputPage);
-    
     if (isNaN(target)) {
       setInputPage(currentPage.toString());
       return;
     }
-
-    // Lógica de limite solicitada
-    if (target > numPages) {
-      target = numPages;
-    } else if (target < 1) {
-      target = 1;
-    }
-
+    if (target > numPages) target = numPages;
+    else if (target < 1) target = 1;
     setCurrentPage(target);
     setInputPage(target.toString());
   };
@@ -271,7 +291,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
     setIsEraser(eraser);
     if (fabricCanvasRef.current) {
       fabricCanvasRef.current.isDrawingMode = !eraser;
-      // Cursor de borracha ou caneta
       fabricCanvasRef.current.defaultCursor = eraser ? 'cell' : 'crosshair';
     }
   };
@@ -295,7 +314,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
 
   return (
     <div className="h-full flex flex-col bg-slate-900 overflow-hidden select-none">
-      {/* TOOLBAR SUPERIOR - RESPONSIVA */}
+      {/* TOOLBAR SUPERIOR */}
       <div className="bg-slate-950 border-b border-white/5 p-2 md:p-4 flex flex-wrap items-center justify-between gap-4 z-30 shadow-2xl">
         <div className="flex items-center gap-2">
           <Button 
@@ -311,7 +330,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
             variant={isEraser ? "default" : "ghost"} 
             size="icon" 
             onClick={() => toggleTool(true)}
-            title="Borracha (Clique no traço para apagar)"
+            title="Borracha"
             className={`h-10 w-10 md:h-12 md:w-12 rounded-xl transition-all ${isEraser ? 'bg-accent text-accent-foreground scale-110 shadow-lg' : 'text-slate-400'}`}
           >
             <Eraser className="h-5 w-5" />
@@ -320,8 +339,8 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
             variant="ghost" 
             size="icon" 
             onClick={clearCurrentPage}
-            title="Limpar Página Inteira"
-            className="h-10 w-10 md:h-12 md:w-12 rounded-xl text-red-400 hover:text-red-500 hover:bg-red-500/10"
+            title="Limpar Página"
+            className="h-10 w-10 md:h-12 md:w-12 rounded-xl text-red-400 hover:text-red-500"
           >
             <Trash2 className="h-5 w-5" />
           </Button>
@@ -354,7 +373,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
 
       {/* ÁREA DO DOCUMENTO */}
       <div ref={containerRef} className="flex-1 overflow-auto p-4 md:p-8 flex justify-center items-start bg-slate-900 scrollbar-hide no-swipe">
-        <div className="relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] rounded-sm bg-white overflow-hidden transition-all duration-500">
+        <div className="relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] rounded-sm bg-white overflow-hidden">
           {loading && (
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-sm gap-4">
               <Loader2 className="h-12 w-12 animate-spin text-accent" />
@@ -369,7 +388,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       </div>
 
       {/* NAVEGAÇÃO INFERIOR */}
-      <div className="bg-slate-950/90 backdrop-blur-2xl border-t border-white/5 p-4 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 z-30 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+      <div className="bg-slate-950/90 backdrop-blur-2xl border-t border-white/5 p-4 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 z-30 shadow-2xl">
         <div className="flex items-center gap-1 md:gap-2">
           <Button variant="ghost" size="icon" onClick={() => changePage(-currentPage)} disabled={currentPage === 1} className="text-white hover:bg-white/10 h-10 w-10">
             <ChevronsLeft className="h-5 w-5" />
@@ -388,7 +407,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
             className="w-12 h-8 bg-transparent border-none text-center font-black text-white p-0 focus-visible:ring-0 text-lg italic"
           />
           <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">DE {numPages}</span>
-          <button type="submit" className="hidden" />
         </form>
 
         <div className="flex items-center gap-1 md:gap-2">
@@ -398,11 +416,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
           <Button variant="ghost" size="icon" onClick={() => changePage(numPages - currentPage)} disabled={currentPage === numPages} className="text-white hover:bg-white/10 h-10 w-10">
             <ChevronsRight className="h-5 w-5" />
           </Button>
-        </div>
-
-        <div className="hidden lg:flex items-center gap-2 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">
-          <Maximize className="h-3 w-3" />
-          Renderização Protegida
         </div>
       </div>
     </div>

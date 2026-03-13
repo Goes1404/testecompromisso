@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback, use } from "react";
@@ -27,13 +28,17 @@ import {
   Zap,
   Award,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Maximize2,
+  Minimize2,
+  X
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import Script from "next/script";
 import Link from "next/link";
+import { InteractiveWorkbook } from "@/components/InteractiveWorkbook";
 
 // Conteúdo de Exemplo caso a trilha esteja vazia
 const DEMO_CONTENTS = [
@@ -43,7 +48,7 @@ const DEMO_CONTENTS = [
 
 export default function ClassroomPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: trailId } = use(params);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   
@@ -55,6 +60,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
   const [contents, setContents] = useState<Record<string, any[]>>({});
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [showSimultaneousWorkbook, setShowSimultaneousWorkbook] = useState(false);
   
   const [videoProgress, setVideoProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -97,7 +103,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         .order('order_index');
       
       if (!modulesData || modulesData.length === 0) {
-        // Se não houver módulos, entramos em modo demo para mostrar exemplos
         setIsDemoMode(true);
         setModules([{ id: 'demo-mod', title: 'Início Rápido' }]);
         setActiveModuleId('demo-mod');
@@ -125,7 +130,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         contentMap[c.module_id].push(c);
       });
 
-      // Se o primeiro módulo não tem conteúdo real, também mostramos demo
       if (!contentMap[modulesData[0].id] || contentMap[modulesData[0].id].length === 0) {
         contentMap[modulesData[0].id] = DEMO_CONTENTS;
         setIsDemoMode(true);
@@ -260,7 +264,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
       />
       
       {/* CABEÇALHO CLASSE */}
-      <header className="sticky top-0 bg-primary text-white px-4 h-16 flex items-center justify-between shrink-0 z-50 shadow-xl border-b border-white/5">
+      <header className="sticky top-0 bg-primary text-white px-4 h-16 flex items-center justify-between shrink-0 z-[60] shadow-xl border-b border-white/5">
         <div className="flex items-center gap-4 overflow-hidden">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-white/10 h-10 w-10 shrink-0 text-white">
             <ChevronLeft className="h-6 w-6" />
@@ -301,7 +305,13 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         
         {/* ÁREA DE CONTEÚDO */}
         <main className={`flex-1 flex flex-col bg-white min-w-0 transition-all duration-500`}>
-          <div className="w-full aspect-video bg-black relative shadow-2xl overflow-hidden shrink-0 ring-1 ring-white/10">
+          
+          {/* PLAYER DE VÍDEO - COMPORTAMENTO DINÂMICO PI-P */}
+          <div className={`w-full transition-all duration-700 ease-in-out ${
+            showSimultaneousWorkbook 
+              ? 'fixed bottom-6 right-[370px] w-80 md:w-[450px] aspect-video z-[70] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] rounded-[2rem] border-4 border-white overflow-hidden bg-black'
+              : 'aspect-video bg-black relative shadow-2xl overflow-hidden shrink-0 ring-1 ring-white/10'
+          }`}>
             {activeContent?.type === 'video' ? (
               <div id="youtube-player" className="w-full h-full" />
             ) : (
@@ -315,227 +325,260 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                 </div>
               </div>
             )}
+            {showSimultaneousWorkbook && (
+              <button 
+                onClick={() => setShowSimultaneousWorkbook(false)}
+                className="absolute top-4 right-4 h-10 w-10 bg-black/60 backdrop-blur-md rounded-full text-white flex items-center justify-center hover:bg-red-600 transition-all z-10"
+              >
+                <Minimize2 className="h-5 w-5" />
+              </button>
+            )}
           </div>
 
-          {/* CONSOLE DE ESTUDOS */}
-          <Tabs defaultValue="summary" className="flex flex-col flex-1">
-            <TabsList className="grid w-full grid-cols-4 h-14 bg-slate-900 p-0 gap-0 shadow-2xl border-b border-white/5 shrink-0">
-              {[
-                { id: "summary", label: "Roteiro", icon: BookOpen },
-                { id: "quiz", label: "Prática", icon: BrainCircuit },
-                { id: "support", label: "Links", icon: Video },
-                { id: "attachments", label: "Anexos", icon: Paperclip }
-              ].map((tab) => (
-                <TabsTrigger 
-                  key={tab.id} 
-                  value={tab.id} 
-                  className="data-[state=active]:bg-white data-[state=active]:text-primary h-full rounded-none font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] gap-3 text-white/30 border-none transition-all"
-                >
-                  <tab.icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            
-            <div className="p-6 md:p-10 bg-slate-50/50 flex-1">
-               <TabsContent value="summary" className="mt-0 outline-none animate-in fade-in">
-                  <div className="max-w-5xl mx-auto space-y-8">
-                    {isDemoMode && (
-                      <div className="p-6 bg-accent/10 border-2 border-dashed border-accent/20 rounded-[2rem] flex items-center gap-6 animate-in slide-in-from-top-4">
-                        <div className="h-14 w-14 rounded-2xl bg-accent flex items-center justify-center text-accent-foreground shrink-0 shadow-lg"><Sparkles className="h-8 w-8" /></div>
-                        <div>
-                          <p className="text-sm font-black text-primary uppercase tracking-widest italic">Modo Demonstração</p>
-                          <p className="text-xs font-medium text-primary/60 italic mt-1 leading-relaxed">
-                            Esta trilha ainda não possui materiais carregados pelo mentor. Exibindo exemplos educativos do YouTube para sua experiência.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                      <div className="lg:col-span-2 space-y-8">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Target className="h-5 w-5 text-accent" />
-                            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-primary/40">Plano de Aprendizado</h2>
-                          </div>
-                          <h3 className="text-3xl md:text-4xl font-black text-primary italic leading-tight tracking-tight">{activeContent?.title}</h3>
-                          <p className="text-lg font-medium text-primary/70 leading-relaxed italic border-l-4 border-accent pl-6 py-2 bg-white rounded-r-2xl shadow-sm">
-                            {activeContent?.description || "Inicie este material para fortalecer seus fundamentos técnicos e acelerar sua aprovação."}
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] space-y-4 group hover:shadow-2xl transition-all">
-                            <div className="flex items-center gap-3 text-primary">
-                              <div className="h-10 w-10 rounded-2xl bg-accent/10 flex items-center justify-center text-accent shadow-inner group-hover:bg-accent group-hover:text-white transition-all"><Zap className="h-5 w-5" /></div>
-                              <span className="text-xs font-black uppercase tracking-widest">Ação Sugerida</span>
-                            </div>
-                            <p className="text-sm font-medium italic text-primary/60 leading-relaxed">Assista ao vídeo e anote os pontos de dúvida para a mentoria semanal.</p>
-                          </Card>
-                          <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] space-y-4 group hover:shadow-2xl transition-all">
-                            <div className="flex items-center gap-3 text-primary">
-                              <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center"><Award className="h-5 w-5" /></div>
-                              <span className="text-xs font-black uppercase tracking-widest">Meta de Aula</span>
-                            </div>
-                            <p className="text-sm font-medium italic text-primary/60 leading-relaxed">Realize o mini-assessment integrado logo após o vídeo para validar a retenção.</p>
-                          </Card>
-                        </div>
-                      </div>
-
-                      <div className="space-y-8">
-                        <Card className="p-8 border-none shadow-2xl bg-primary text-white rounded-[2.5rem] relative overflow-hidden group">
-                          <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150" />
-                          <div className="relative z-10 space-y-6">
-                            <div className="flex items-center gap-3">
-                              <Lightbulb className="h-6 w-6 text-accent animate-pulse" />
-                              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Insight Aurora IA</span>
-                            </div>
-                            <p className="text-sm md:text-lg font-medium leading-relaxed italic opacity-90 tracking-tight">
-                              "Estudos indicam que pausar o vídeo a cada 12 minutos para processar o conteúdo aumenta a retenção acadêmica em até 45%."
+          {/* MODO APOSTILA INTERATIVA (ESTUDO SIMULTÂNEO) */}
+          {showSimultaneousWorkbook && activeContent?.workbook_id ? (
+            <div className="flex-1 flex flex-col min-h-[calc(100vh-64px)] animate-in slide-in-from-bottom-8 duration-700 relative z-10">
+              <InteractiveWorkbook 
+                materialId={activeContent.workbook_id}
+                pdfUrl="" // O componente buscará a URL pelo materialId se refatorado, ou precisamos carregar aqui
+                userName={profile?.name || "Estudante"}
+                userCpf={profile?.id?.substring(0, 8) || "ID"}
+              />
+              <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[50] animate-in fade-in zoom-in-95 delay-500">
+                <Badge className="bg-primary text-white border-none font-black text-[10px] px-6 py-2 uppercase tracking-widest shadow-2xl flex items-center gap-3 rounded-full">
+                  <Sparkles className="h-4 w-4 text-accent animate-pulse" /> MODO DE ESTUDO SIMULTÂNEO ATIVO
+                </Badge>
+              </div>
+            </div>
+          ) : (
+            /* CONSOLE DE ESTUDOS PADRÃO (TABS) */
+            <Tabs defaultValue="summary" className="flex flex-col flex-1">
+              <TabsList className="grid w-full grid-cols-4 h-14 bg-slate-900 p-0 gap-0 shadow-2xl border-b border-white/5 shrink-0">
+                {[
+                  { id: "summary", label: "Roteiro", icon: BookOpen },
+                  { id: "quiz", label: "Prática", icon: BrainCircuit },
+                  { id: "support", label: "Links", icon: Video },
+                  { id: "attachments", label: "Anexos", icon: Paperclip }
+                ].map((tab) => (
+                  <TabsTrigger 
+                    key={tab.id} 
+                    value={tab.id} 
+                    className="data-[state=active]:bg-white data-[state=active]:text-primary h-full rounded-none font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] gap-3 text-white/30 border-none transition-all"
+                  >
+                    <tab.icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              <div className="p-6 md:p-10 bg-slate-50/50 flex-1">
+                <TabsContent value="summary" className="mt-0 outline-none animate-in fade-in">
+                    <div className="max-w-5xl mx-auto space-y-8">
+                      {isDemoMode && (
+                        <div className="p-6 bg-accent/10 border-2 border-dashed border-accent/20 rounded-[2rem] flex items-center gap-6 animate-in slide-in-from-top-4">
+                          <div className="h-14 w-14 rounded-2xl bg-accent flex items-center justify-center text-accent-foreground shrink-0 shadow-lg"><Sparkles className="h-8 w-8" /></div>
+                          <div>
+                            <p className="text-sm font-black text-primary uppercase tracking-widest italic">Modo Demonstração</p>
+                            <p className="text-xs font-medium text-primary/60 italic mt-1 leading-relaxed">
+                              Esta trilha ainda não possui materiais carregados pelo mentor. Exibindo exemplos educativos do YouTube para sua experiência.
                             </p>
                           </div>
-                        </Card>
+                        </div>
+                      )}
 
-                        <div className="space-y-4 px-2">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-1">Competências Desenvolvidas</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {['Análise Crítica', 'Lógica Estrutural', 'Base Teórica', 'Prática Industrial', 'Foco'].map(tag => (
-                              <Badge key={tag} variant="outline" className="bg-white border-muted/20 text-primary/60 font-black text-[9px] uppercase px-4 py-1.5 rounded-xl italic shadow-sm hover:border-accent/40 transition-all">
-                                {tag}
-                              </Badge>
-                            ))}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        <div className="lg:col-span-2 space-y-8">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Target className="h-5 w-5 text-accent" />
+                              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-primary/40">Plano de Aprendizado</h2>
+                            </div>
+                            <h3 className="text-3xl md:text-4xl font-black text-primary italic leading-tight tracking-tight">{activeContent?.title}</h3>
+                            <p className="text-lg font-medium text-primary/70 leading-relaxed italic border-l-4 border-accent pl-6 py-2 bg-white rounded-r-2xl shadow-sm">
+                              {activeContent?.description || "Inicie este material para fortalecer seus fundamentos técnicos e acelerar sua aprovação."}
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] space-y-4 group hover:shadow-2xl transition-all">
+                              <div className="flex items-center gap-3 text-primary">
+                                <div className="h-10 w-10 rounded-2xl bg-accent/10 flex items-center justify-center text-accent shadow-inner group-hover:bg-accent group-hover:text-white transition-all"><Zap className="h-5 w-5" /></div>
+                                <span className="text-xs font-black uppercase tracking-widest">Ação Sugerida</span>
+                              </div>
+                              <p className="text-sm font-medium italic text-primary/60 leading-relaxed">Assista ao vídeo e anote os pontos de dúvida para a mentoria semanal.</p>
+                            </Card>
+                            <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] space-y-4 group hover:shadow-2xl transition-all">
+                              <div className="flex items-center gap-3 text-primary">
+                                <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center"><Award className="h-5 w-5" /></div>
+                                <span className="text-xs font-black uppercase tracking-widest">Meta de Aula</span>
+                              </div>
+                              <p className="text-sm font-medium italic text-primary/60 leading-relaxed">Realize o mini-assessment integrado logo após o vídeo para validar a retenção.</p>
+                            </Card>
+                          </div>
+                        </div>
+
+                        <div className="space-y-8">
+                          <Card className="p-8 border-none shadow-2xl bg-primary text-white rounded-[2.5rem] relative overflow-hidden group">
+                            <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150" />
+                            <div className="relative z-10 space-y-6">
+                              <div className="flex items-center gap-3">
+                                <Lightbulb className="h-6 w-6 text-accent animate-pulse" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Insight Aurora IA</span>
+                              </div>
+                              <p className="text-sm md:text-lg font-medium leading-relaxed italic opacity-90 tracking-tight">
+                                "Estudos indicam que pausar o vídeo a cada 12 minutos para processar o conteúdo aumenta a retenção acadêmica em até 45%."
+                              </p>
+                            </div>
+                          </Card>
+
+                          <div className="space-y-4 px-2">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-1">Competências Desenvolvidas</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {['Análise Crítica', 'Lógica Estrutural', 'Base Teórica', 'Prática Industrial', 'Foco'].map(tag => (
+                                <Badge key={tag} variant="outline" className="bg-white border-muted/20 text-primary/60 font-black text-[9px] uppercase px-4 py-1.5 rounded-xl italic shadow-sm hover:border-accent/40 transition-all">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-               </TabsContent>
+                </TabsContent>
 
-               <TabsContent value="quiz" className="mt-0 outline-none animate-in slide-in-from-bottom-4">
-                  <div className="max-w-4xl mx-auto space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl rotate-2">
-                        <BrainCircuit className="h-6 w-6" />
+                <TabsContent value="quiz" className="mt-0 outline-none animate-in slide-in-from-bottom-4">
+                    <div className="max-w-4xl mx-auto space-y-8">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl rotate-2">
+                          <BrainCircuit className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-black text-primary italic leading-none">Laboratório de Prática</h2>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">Validar Aprendizado Industrial</p>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-2xl font-black text-primary italic leading-none">Laboratório de Prática</h2>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">Validar Aprendizado Industrial</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-6">
-                      {activeContent?.workbook_id && (
-                        <Card className="p-10 border-none shadow-2xl bg-white rounded-[3rem] group hover:shadow-primary/10 transition-all overflow-hidden relative">
-                          <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
-                            <BookOpen className="h-40 w-40" />
-                          </div>
-                          <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                            <div className="h-20 w-20 rounded-[2rem] bg-accent/10 flex items-center justify-center shadow-inner shrink-0 group-hover:rotate-6 transition-transform">
-                              <BookOpen className="h-10 w-10 text-accent" />
+                      
+                      <div className="grid grid-cols-1 gap-6">
+                        {activeContent?.workbook_id && (
+                          <Card className="p-10 border-none shadow-2xl bg-white rounded-[3rem] group hover:shadow-primary/10 transition-all overflow-hidden relative">
+                            <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
+                              <BookOpen className="h-40 w-40" />
                             </div>
-                            <div className="flex-1 text-center md:text-left space-y-2">
-                              <Badge className="bg-accent text-accent-foreground border-none font-black text-[8px] px-3 h-5 uppercase tracking-widest">Apostila Vinculada</Badge>
-                              <h3 className="text-2xl font-black text-primary italic leading-none">Exercícios do Módulo</h3>
-                              <p className="text-sm font-medium italic text-muted-foreground">O mentor vinculou um material específico para este capítulo. Pratique agora!</p>
+                            <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                              <div className="h-20 w-20 rounded-[2rem] bg-accent/10 flex items-center justify-center shadow-inner shrink-0 group-hover:rotate-6 transition-transform">
+                                <BookOpen className="h-10 w-10 text-accent" />
+                              </div>
+                              <div className="flex-1 text-center md:text-left space-y-2">
+                                <Badge className="bg-accent text-accent-foreground border-none font-black text-[8px] px-3 h-5 uppercase tracking-widest">Apostila Vinculada</Badge>
+                                <h3 className="text-2xl font-black text-primary italic leading-none">Exercícios do Módulo</h3>
+                                <p className="text-sm font-medium italic text-muted-foreground">O mentor vinculou um material específico para este capítulo. Estude simultaneamente com o vídeo!</p>
+                              </div>
+                              <div className="flex flex-col gap-3 shrink-0">
+                                <Button 
+                                  onClick={() => setShowSimultaneousWorkbook(true)}
+                                  className="bg-primary text-white h-14 px-8 rounded-2xl font-black text-[10px] uppercase shadow-xl hover:scale-105 transition-all gap-2"
+                                >
+                                  <Maximize2 className="h-4 w-4 text-accent" /> ESTUDO SIMULTÂNEO
+                                </Button>
+                                <Button asChild variant="outline" className="h-12 px-8 rounded-2xl font-black text-[10px] uppercase border-2">
+                                  <Link href={`/dashboard/library/book/${activeContent.workbook_id}`}>
+                                    ABRIR EM TELA CHEIA
+                                  </Link>
+                                </Button>
+                              </div>
                             </div>
-                            <Button asChild className="bg-primary text-white h-14 px-8 rounded-2xl font-black text-[10px] uppercase shadow-xl hover:scale-105 transition-all shrink-0">
-                              <Link href={`/dashboard/library/book/${activeContent.workbook_id}`}>
-                                ABRIR APOSTILA <ExternalLink className="ml-2 h-4 w-4 text-accent" />
-                              </Link>
+                          </Card>
+                        )}
+
+                        {activeContent?.type === 'quiz' || activeContent?.url?.includes('quiz') || activeContent?.url?.includes('form') ? (
+                          <Card className="p-12 bg-white border-4 border-dashed border-slate-200 rounded-[3rem] text-center space-y-8 shadow-2xl hover:border-accent transition-all duration-500">
+                            <div className="h-20 w-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                <Layers className="h-10 w-10 text-accent" />
+                            </div>
+                            <div className="space-y-3">
+                                <p className="text-3xl font-black text-primary italic">Assessment Online</p>
+                                <p className="text-sm md:text-lg text-muted-foreground font-medium italic max-w-md mx-auto">Esta aula possui uma avaliação técnica externa vinculada.</p>
+                            </div>
+                            <Button asChild className="bg-primary text-white h-16 rounded-[1.5rem] font-black px-12 shadow-2xl text-base hover:scale-105 transition-all">
+                              <a href={activeContent?.url} target="_blank" rel="noopener noreferrer">
+                                ABRIR EXERCÍCIOS 
+                                <ArrowRight className="ml-3 h-5 w-5 text-accent" />
+                              </a>
                             </Button>
+                          </Card>
+                        ) : null}
+
+                        {!activeContent?.workbook_id && activeContent?.type !== 'quiz' && !activeContent?.url?.includes('quiz') && (
+                          <div className="text-center py-24 bg-white/50 rounded-[3rem] border-4 border-dashed border-slate-200 opacity-40 flex flex-col items-center gap-4">
+                            <BrainCircuit className="h-12 w-12 text-primary/20" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.4em] italic text-primary/40">Sem exercícios vinculados a este material</p>
                           </div>
-                        </Card>
-                      )}
+                        )}
+                      </div>
+                    </div>
+                </TabsContent>
 
-                      {activeContent?.type === 'quiz' || activeContent?.url?.includes('quiz') || activeContent?.url?.includes('form') ? (
-                        <Card className="p-12 bg-white border-4 border-dashed border-slate-200 rounded-[3rem] text-center space-y-8 shadow-2xl hover:border-accent transition-all duration-500">
-                           <div className="h-20 w-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                              <Layers className="h-10 w-10 text-accent" />
-                           </div>
-                           <div className="space-y-3">
-                              <p className="text-3xl font-black text-primary italic">Assessment Online</p>
-                              <p className="text-sm md:text-lg text-muted-foreground font-medium italic max-w-md mx-auto">Esta aula possui uma avaliação técnica externa vinculada.</p>
-                           </div>
-                           <Button asChild className="bg-primary text-white h-16 rounded-[1.5rem] font-black px-12 shadow-2xl text-base hover:scale-105 transition-all">
-                             <a href={activeContent?.url} target="_blank" rel="noopener noreferrer">
-                               ABRIR EXERCÍCIOS 
-                               <ArrowRight className="ml-3 h-5 w-5 text-accent" />
-                             </a>
-                           </Button>
-                        </Card>
-                      ) : null}
+                <TabsContent value="support" className="mt-0 outline-none animate-in slide-in-from-bottom-4">
+                    <div className="max-w-4xl mx-auto space-y-8">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl">
+                          <Video className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-black text-primary italic leading-none">Links de Aula</h2>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">Recursos Externos do Mentor</p>
+                        </div>
+                      </div>
 
-                      {!activeContent?.workbook_id && activeContent?.type !== 'quiz' && !activeContent?.url?.includes('quiz') && (
-                        <div className="text-center py-24 bg-white/50 rounded-[3rem] border-4 border-dashed border-slate-200 opacity-40 flex flex-col items-center gap-4">
-                          <BrainCircuit className="h-12 w-12 text-primary/20" />
-                          <p className="text-[10px] font-black uppercase tracking-[0.4em] italic text-primary/40">Sem exercícios vinculados a este material</p>
+                      {activeContent?.type === 'video' ? (
+                        <Card className="p-8 border-none shadow-xl bg-white rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                          <div className="flex items-center gap-6">
+                            <div className="h-14 w-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shadow-inner">
+                              <PlayCircle className="h-8 w-8" />
+                            </div>
+                            <div>
+                              <p className="text-lg font-black text-primary italic">Assista no Youtube</p>
+                              <p className="text-xs font-medium text-muted-foreground">Caso prefira, você pode assistir este material diretamente na plataforma oficial.</p>
+                            </div>
+                          </div>
+                          <Button asChild variant="outline" className="h-12 px-8 rounded-xl border-2 border-primary/10 font-black text-[10px] uppercase">
+                            <a href={activeContent?.url} target="_blank" rel="noopener noreferrer">ABRIR LINK <ExternalLink className="ml-2 h-4 w-4 text-accent" /></a>
+                          </Button>
+                        </Card>
+                      ) : (
+                        <div className="text-center py-24 bg-white/50 rounded-[3rem] border-4 border-dashed border-slate-200 opacity-40">
+                          <p className="text-[10px] font-black uppercase tracking-[0.4em] italic text-primary/40">Nenhum link adicional registrado.</p>
                         </div>
                       )}
                     </div>
-                  </div>
-               </TabsContent>
+                </TabsContent>
 
-               <TabsContent value="support" className="mt-0 outline-none animate-in slide-in-from-bottom-4">
-                  <div className="max-w-4xl mx-auto space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl">
-                        <Video className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-black text-primary italic leading-none">Links de Aula</h2>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">Recursos Externos do Mentor</p>
-                      </div>
+                <TabsContent value="attachments" className="mt-0 outline-none animate-in slide-in-from-bottom-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-5xl mx-auto pb-10">
+                      {activeContent?.type === 'pdf' || activeContent?.url?.includes('.pdf') || activeContent?.type === 'file' ? (
+                        <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] flex items-center gap-6 group hover:bg-primary transition-all duration-700 cursor-pointer overflow-hidden border-2 border-transparent hover:border-white/20">
+                          <div className="h-14 w-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-white/10 group-hover:text-white transition-all shadow-inner">
+                            <FileText className="h-7 w-7" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-[9px] text-accent group-hover:text-white/60 uppercase tracking-[0.2em]">Material de Apoio</p>
+                            <p className="text-lg font-black text-primary group-hover:text-white italic leading-tight truncate">Download_Material.pdf</p>
+                          </div>
+                          <Button asChild variant="ghost" size="icon" className="h-12 w-12 rounded-full text-primary group-hover:text-white hover:bg-white/20">
+                            <a href={activeContent?.url} target="_blank" rel="noopener noreferrer"><Paperclip className="h-5 w-5" /></a>
+                          </Button>
+                        </Card>
+                      ) : (
+                        <div className="col-span-full py-24 text-center opacity-20 border-4 border-dashed rounded-[3rem] bg-muted/5 flex flex-col items-center gap-4">
+                          <Paperclip className="h-12 w-12" />
+                          <p className="text-[10px] font-black uppercase italic tracking-[0.4em]">Sem anexos pedagógicos disponíveis.</p>
+                        </div>
+                      )}
                     </div>
-
-                    {activeContent?.type === 'video' ? (
-                      <Card className="p-8 border-none shadow-xl bg-white rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-6">
-                          <div className="h-14 w-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shadow-inner">
-                            <PlayCircle className="h-8 w-8" />
-                          </div>
-                          <div>
-                            <p className="text-lg font-black text-primary italic">Assista no Youtube</p>
-                            <p className="text-xs font-medium text-muted-foreground">Caso prefira, você pode assistir este material diretamente na plataforma oficial.</p>
-                          </div>
-                        </div>
-                        <Button asChild variant="outline" className="h-12 px-8 rounded-xl border-2 border-primary/10 font-black text-[10px] uppercase">
-                          <a href={activeContent?.url} target="_blank" rel="noopener noreferrer">ABRIR LINK <ExternalLink className="ml-2 h-4 w-4 text-accent" /></a>
-                        </Button>
-                      </Card>
-                    ) : (
-                      <div className="text-center py-24 bg-white/50 rounded-[3rem] border-4 border-dashed border-slate-200 opacity-40">
-                        <p className="text-[10px] font-black uppercase tracking-[0.4em] italic text-primary/40">Nenhum link adicional registrado.</p>
-                      </div>
-                    )}
-                  </div>
-               </TabsContent>
-
-               <TabsContent value="attachments" className="mt-0 outline-none animate-in slide-in-from-bottom-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-5xl mx-auto pb-10">
-                    {activeContent?.type === 'pdf' || activeContent?.url?.includes('.pdf') || activeContent?.type === 'file' ? (
-                      <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem] flex items-center gap-6 group hover:bg-primary transition-all duration-700 cursor-pointer overflow-hidden border-2 border-transparent hover:border-white/20">
-                        <div className="h-14 w-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-white/10 group-hover:text-white transition-all shadow-inner">
-                          <FileText className="h-7 w-7" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-[9px] text-accent group-hover:text-white/60 uppercase tracking-[0.2em]">Material de Apoio</p>
-                          <p className="text-lg font-black text-primary group-hover:text-white italic leading-tight truncate">Download_Material.pdf</p>
-                        </div>
-                        <Button asChild variant="ghost" size="icon" className="h-12 w-12 rounded-full text-primary group-hover:text-white hover:bg-white/20">
-                          <a href={activeContent?.url} target="_blank" rel="noopener noreferrer"><Paperclip className="h-5 w-5" /></a>
-                        </Button>
-                      </Card>
-                    ) : (
-                      <div className="col-span-full py-24 text-center opacity-20 border-4 border-dashed rounded-[3rem] bg-muted/5 flex flex-col items-center gap-4">
-                        <Paperclip className="h-12 w-12" />
-                        <p className="text-[10px] font-black uppercase italic tracking-[0.4em]">Sem anexos pedagógicos disponíveis.</p>
-                      </div>
-                    )}
-                  </div>
-               </TabsContent>
-            </div>
-          </Tabs>
+                </TabsContent>
+              </div>
+            </Tabs>
+          )}
         </main>
 
         {/* EMENTA LATERAL */}
@@ -554,6 +597,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                     onClick={() => {
                       setActiveModuleId(module.id);
                       if (contents[module.id]?.length > 0) setActiveContentId(contents[module.id][0].id);
+                      setShowSimultaneousWorkbook(false);
                     }}
                     className={`w-full text-left p-4 rounded-2xl transition-all border-2 flex items-center gap-4 relative overflow-hidden group ${
                       activeModuleId === module.id 
@@ -582,6 +626,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                       key={content.id}
                       onClick={() => {
                         setActiveContentId(content.id);
+                        setShowSimultaneousWorkbook(false);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className={`w-full text-left p-4 rounded-[1.5rem] transition-all flex items-center gap-4 border-2 ${
