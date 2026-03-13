@@ -35,6 +35,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRefs = useRef<Record<number, HTMLCanvasElement>>({});
   const fabricCanvases = useRef<Record<number, fabric.Canvas>>({});
+  const renderTasks = useRef<Record<number, any>>({});
   
   const [numPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,7 +70,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       version: "1.0",
       viewport: {
         width: canvas.getWidth(),
-        height: canvas.height
+        height: canvas.getHeight()
       },
       objects
     };
@@ -167,6 +168,8 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
   }, [materialId, currentPage, numPages, getCleanJson]);
 
   useEffect(() => {
+    let isCancelled = false;
+
     async function initPdf() {
       if (!pdfUrl) return;
       setLoading(true);
@@ -175,13 +178,19 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       try {
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
+        if (isCancelled) return;
+        
         setTotalPages(pdf.numPages);
 
         const draft = localStorage.getItem(`workbook_draft_${materialId}`);
         const savedData = draft ? JSON.parse(draft) : null;
 
         for (let i = 1; i <= pdf.numPages; i++) {
+          if (isCancelled) break;
+
           const page = await pdf.getPage(i);
+          if (isCancelled) break;
+
           const viewport = page.getViewport({ scale: 1.5 });
           
           const canvas = canvasRefs.current[i];
@@ -191,7 +200,22 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
           canvas.height = viewport.height;
           canvas.width = viewport.width;
 
-          await page.render({ canvasContext: context!, viewport }).promise;
+          // Cancelar renderização anterior se houver
+          if (renderTasks.current[i]) {
+            renderTasks.current[i].cancel();
+          }
+
+          const renderTask = page.render({ canvasContext: context!, viewport });
+          renderTasks.current[i] = renderTask;
+
+          try {
+            await renderTask.promise;
+          } catch (err: any) {
+            if (err.name === 'RenderingCancelledException') continue;
+            throw err;
+          }
+
+          if (isCancelled) break;
 
           context!.font = "bold 14px Inter";
           context!.fillStyle = "rgba(0, 0, 0, 0.05)";
@@ -203,6 +227,11 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
             }
           }
           context!.restore();
+
+          // Limpar canvas do Fabric se já existir
+          if (fabricCanvases.current[i]) {
+            fabricCanvases.current[i].dispose();
+          }
 
           const fCanvas = new fabric.Canvas(`fabric-canvas-${i}`, {
             height: viewport.height,
@@ -221,19 +250,25 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
           fabricCanvases.current[i] = fCanvas;
         }
 
-        if (savedData?.lastPage) setCurrentPage(savedData.lastPage);
+        if (!isCancelled && savedData?.lastPage) {
+          setCurrentPage(savedData.lastPage);
+        }
 
       } catch (err: any) {
-        console.error("Erro PDF:", err);
-        setError("Não foi possível carregar o documento. Verifique sua conexão.");
+        if (!isCancelled) {
+          console.error("Erro PDF:", err);
+          setError("Não foi possível carregar o documento. Verifique sua conexão.");
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) setLoading(false);
       }
     }
 
     initPdf();
 
     return () => {
+      isCancelled = true;
+      Object.values(renderTasks.current).forEach(task => task.cancel());
       Object.values(fabricCanvases.current).forEach(c => c.dispose());
     };
   }, [pdfUrl, materialId, userName, userCpf]);
