@@ -62,6 +62,13 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Estados para o Pan (Arraste)
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,9 +99,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     if (!fabricCanvasRef.current) return;
 
     const objects = fabricCanvasRef.current.getObjects().map((obj: any) => {
-      // Salvar posição relativa ao tamanho atual para permitir rescale posterior
-      const item = obj.toObject();
-      return item;
+      return obj.toObject();
     });
 
     const pageData = {
@@ -225,13 +230,11 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         selection: activeTool === 'eraser'
       });
 
-      // Carregar anotações e aplicar rescale
       const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
       const draft = draftStr ? JSON.parse(draftStr) : null;
       const pageDraft = draft?.annotations?.[pageNum];
 
       if (pageDraft) {
-        // Cálculo do fator de escala entre o que foi salvo e o viewport atual
         const oldWidth = pageDraft.viewport.width;
         const scaleFactor = viewport.width / oldWidth;
 
@@ -248,7 +251,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         });
       }
 
-      // Configurar Brush Atual
       if (activeTool === 'pencil') {
         fCanvas.freeDrawingBrush = new fabric.PencilBrush(fCanvas);
         fCanvas.freeDrawingBrush.color = brushColor;
@@ -295,6 +297,51 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
       fabricCanvasRef.current.freeDrawingBrush.color = highlightColor;
       fabricCanvasRef.current.freeDrawingBrush.width = 20 * zoom;
     }
+  };
+
+  // LOGICA DE PAN (ARRANTE)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (activeTool !== 'pan' || !containerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - containerRef.current.offsetLeft);
+    setStartY(e.pageY - containerRef.current.offsetTop);
+    setScrollLeft(containerRef.current.scrollLeft);
+    setScrollTop(containerRef.current.scrollTop);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || activeTool !== 'pan' || !containerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const y = e.pageY - containerRef.current.offsetTop;
+    const walkX = (x - startX);
+    const walkY = (y - startY);
+    containerRef.current.scrollLeft = scrollLeft - walkX;
+    containerRef.current.scrollTop = scrollTop - walkY;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    setIsDragging(false);
+  };
+
+  // Suporte Touch para Pan
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (activeTool !== 'pan' || !containerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - containerRef.current.offsetLeft);
+    setStartY(e.touches[0].pageY - containerRef.current.offsetTop);
+    setScrollLeft(containerRef.current.scrollLeft);
+    setScrollTop(containerRef.current.scrollTop);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || activeTool !== 'pan' || !containerRef.current) return;
+    const x = e.touches[0].pageX - containerRef.current.offsetLeft;
+    const y = e.touches[0].pageY - containerRef.current.offsetTop;
+    const walkX = (x - startX);
+    const walkY = (y - startY);
+    containerRef.current.scrollLeft = scrollLeft - walkX;
+    containerRef.current.scrollTop = scrollTop - walkY;
   };
 
   if (error) return (
@@ -376,7 +423,19 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
       </div>
 
       {/* ÁREA DO DOCUMENTO */}
-      <div ref={containerRef} className={`flex-1 overflow-auto p-4 md:p-10 flex justify-center items-start bg-slate-900 scrollbar-hide no-swipe ${activeTool === 'pan' ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}>
+      <div 
+        ref={containerRef} 
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleMouseUpOrLeave}
+        className={`flex-1 overflow-auto p-4 md:p-10 flex justify-center items-start bg-slate-900 scrollbar-hide no-swipe transition-all duration-300 ${
+          activeTool === 'pan' ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
+        }`}
+      >
         <div className="relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] rounded-sm bg-white overflow-hidden origin-top transition-transform duration-200">
           {loading && (
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-sm gap-4">
