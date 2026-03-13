@@ -33,7 +33,7 @@ export async function GET() {
   try {
     // Executa uma geração mínima para validar a chave e o ID do modelo
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: 'gemini-1.5-flash',
       prompt: 'Responder apenas com OK',
       config: { maxOutputTokens: 5 }
     });

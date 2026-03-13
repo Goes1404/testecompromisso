@@ -24,13 +24,13 @@ const EssayTopicOutputSchema = z.object({
 
 const prompt = ai.definePrompt({
   name: 'essayTopicGeneratorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'gemini-1.5-flash',
   input: { schema: EssayTopicInputSchema },
   output: { schema: EssayTopicOutputSchema },
   system: `Você é a Aurora, mentora de redação nota 1000. 
   Sua missão é criar propostas de redação IDÊNTICAS às do ENEM.
   REGRAS:
-  1. O tema deve ser um problema social brasileiro atual e relevante.
+  1. O tema deve ser um problem social brasileiro atual e relevante.
   2. Inclua EXATAMENTE 3 ou 4 textos motivadores curtos e impactantes.
   3. Os textos devem conter dados estatísticos fictícios mas verossímeis, citações ou reflexões sociológicas.
   4. O tom deve ser formal, sério e pedagógico.`,

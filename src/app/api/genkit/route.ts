@@ -51,22 +51,28 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, result });
   } catch (error: any) {
-    // CAPTURAR O ERRO REAL PARA DIAGNÓSTICO DO USUÁRIO
     const errorMsg = error?.message || 'Erro desconhecido no servidor de IA.';
     
     console.error(`[AURORA ERROR LOG]:`, errorMsg);
 
-    // Identificação de problemas específicos
-    if (errorMsg.includes('API key expired') || errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('400')) {
+    // Mapeamento de Erros Comuns para o Usuário
+    if (errorMsg.includes('404') || errorMsg.includes('not found')) {
       return NextResponse.json(
-        { error: `⚠️ FALHA DE CREDENCIAL: A chave de API parece inválida ou foi bloqueada por estar em repositório público. Detalhe: ${errorMsg}` },
+        { error: `⚠️ ERRO DE MODELO (404): O modelo 'gemini-1.5-flash' não foi localizado. Verifique se a sua chave de API tem acesso a esta versão.` },
+        { status: 404 }
+      );
+    }
+
+    if (errorMsg.includes('API key expired') || errorMsg.includes('API_KEY_INVALID') || errorMsg.includes('401')) {
+      return NextResponse.json(
+        { error: `⚠️ FALHA DE CREDENCIAL (401): A chave de API fornecida é inválida ou foi revogada.` },
         { status: 401 }
       );
     }
 
     if (errorMsg.includes('quota') || errorMsg.includes('429')) {
       return NextResponse.json(
-        { error: '⚠️ LIMITE DE COTA: A Aurora atingiu o limite de requisições do plano gratuito. Aguarde um minuto.' },
+        { error: '⚠️ LIMITE DE COTA (429): A Aurora atingiu o limite de requisições do plano gratuito. Aguarde um minuto.' },
         { status: 429 }
       );
     }
