@@ -13,6 +13,7 @@ import Image from "next/image";
 const studentItems = [
   { icon: Home, label: "Página Inicial", href: "/dashboard/home" },
   { icon: Compass, label: "Trilhas de Estudo", href: "/dashboard/trails" },
+  { icon: BookOpen, label: "Apostilas", href: "/dashboard/library" },
   { icon: FilePenLine, label: "Redação Master", href: "/dashboard/student/essays" },
   { icon: FileText, label: "Simulados", href: "/dashboard/student/simulados" },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live" },
