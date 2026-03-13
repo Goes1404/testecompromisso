@@ -31,11 +31,11 @@ export async function GET() {
 
   // 2. Testar Aurora IA (Genkit)
   try {
-    // Executa uma geração mínima para validar a chave e a conexão
+    // Executa uma geração mínima para validar a chave e o ID do modelo
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      prompt: 'ping',
-      config: { maxOutputTokens: 2 }
+      prompt: 'Responder apenas com OK',
+      config: { maxOutputTokens: 5 }
     });
     
     if (response.text) {
@@ -45,11 +45,7 @@ export async function GET() {
     }
   } catch (e: any) {
     const msg = e.message || '';
-    if (msg.includes('API key expired') || msg.includes('API_KEY_INVALID') || msg.includes('400')) {
-      diagnostics.genkit = { status: 'error', details: 'Chave INVÁLIDA ou VAZADA. Certifique-se de que o repositório é PRIVADO.' };
-    } else {
-      diagnostics.genkit = { status: 'error', details: 'Falha na engine de IA: ' + msg };
-    }
+    diagnostics.genkit = { status: 'error', details: 'Falha na engine de IA: ' + msg };
   }
 
   const allOk = diagnostics.supabase.status === 'ok' && diagnostics.genkit.status === 'ok';

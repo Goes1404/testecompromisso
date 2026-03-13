@@ -2,7 +2,6 @@
 
 /**
  * @fileOverview Aurora - Extrator de Provas em Massa.
- * Transforma texto bruto em questões estruturadas utilizando Gemini 1.5 Flash.
  */
 
 import { ai } from '@/ai/genkit';
@@ -35,14 +34,8 @@ const prompt = ai.definePrompt({
   output: { schema: BulkQuestionParserOutputSchema },
   config: { temperature: 0.2 },
   system: `Você é um assistente de digitalização pedagógica. 
-  Sua missão é ler textos brutos de provas e extrair TODAS as questões de múltipla escolha.
-  
-  REGRAS:
-  1. Formate rigorosamente em JSON conforme o esquema.
-  2. Garanta que cada questão tenha EXATAMENTE 5 alternativas (A a E).
-  3. Se o texto não contiver o gabarito explicitamente, tente inferir a resposta correta logicamente.
-  4. Preserve a formatação matemática ou técnica básica no enunciado.`,
-  prompt: `Analise the seguinte conteúdo e extraia as questões:
+  Sua missão é ler textos brutos de provas e extrair TODAS as questões de múltipla escolha.`,
+  prompt: `Analise o seguinte conteúdo e extraia as questões:
   
   {{{rawText}}}`,
 });

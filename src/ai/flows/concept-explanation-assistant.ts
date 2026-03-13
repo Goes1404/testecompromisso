@@ -3,33 +3,10 @@
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
  * Fornece explicações e suporte utilizando Gemini 1.5 Flash.
- * 
- * Removido o try/catch interno para que erros de API (como chave inválida)
- * cheguem ao front-end e possam ser diagnosticados pelo usuário.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-const searchEducationalContent = ai.defineTool(
-  {
-    name: 'searchEducationalContent',
-    description: 'Busca temas educacionais e questões de exemplo para ilustrar o aprendizado.',
-    inputSchema: z.object({
-      topic: z.string().describe('O tema da busca (ex: "segunda lei de newton").'),
-    }),
-    outputSchema: z.array(z.object({
-      title: z.string(),
-      description: z.string(),
-    })),
-  },
-  async (input) => {
-    return [
-      { title: `Conceito de ${input.topic}`, description: `O estudo de ${input.topic} é fundamental para o ENEM.` },
-      { title: `Questão Clássica`, description: `Como ${input.topic} se aplica no cotidiano?` }
-    ];
-  }
-);
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'model']).describe('Papel.'),
@@ -51,7 +28,6 @@ export type ConceptExplanationAssistantOutput = z.infer<typeof ConceptExplanatio
 const prompt = ai.definePrompt({
   name: 'conceptExplanationAssistantPrompt',
   model: 'googleai/gemini-1.5-flash',
-  tools: [searchEducationalContent],
   input: { schema: ConceptExplanationAssistantInputSchema },
   output: { schema: ConceptExplanationAssistantOutputSchema },
   config: { temperature: 1.0 },
