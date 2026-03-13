@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 
-// Configurar o worker do PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configurar o worker do PDF.js - Ajustado para .mjs (Versão 4+)
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface InteractiveWorkbookProps {
   materialId: string;
@@ -97,11 +97,9 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
 
   const syncWithSupabase = useCallback(async () => {
     if (isSaving) return;
+    setIsSaving(true);
     
-    // Calcular progresso
     const percentage = Math.round((currentPage / numPages) * 100);
-    
-    // Consolidar anotações
     const allAnnotations: Record<number, any> = {};
     Object.keys(fabricCanvases.current).forEach(pageNum => {
       const page = parseInt(pageNum);
@@ -119,7 +117,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
     };
 
     try {
-      // Upsert no Supabase
       const { error: syncError } = await supabase
         .from('material_annotations')
         .upsert(payload, { onConflict: 'user_id,material_id' });
@@ -130,10 +127,11 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       toast({ title: "Progresso Sincronizado!", description: "Suas anotações estão salvas na nuvem." });
     } catch (e) {
       console.error("Erro na sincronização Bulk:", e);
+    } finally {
+      setIsSaving(false);
     }
   }, [materialId, currentPage, numPages, getCleanJson, isSaving, toast]);
 
-  // Listener para fechamento da aba (Bulk Save Strategy)
   useEffect(() => {
     const handleBeforeUnload = () => {
       const percentage = Math.round((currentPage / numPages) * 100);
