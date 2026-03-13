@@ -11,10 +11,11 @@ import {
   Search, 
   FileText, 
   Video, 
-  Download, 
+  BookOpen, 
   ExternalLink, 
   Filter, 
   Loader2,
+  PenLine
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
+import Link from "next/link";
 
 const categories = ["Todos", "Matemática", "Física", "Tecnologia", "Linguagens", "História", "Saúde"];
 const types = ["Todos", "PDF", "Video", "E-book", "Artigo"];
@@ -37,7 +39,6 @@ export default function LibraryPage() {
   const [activeType, setActiveType] = useState("Todos");
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadResources() {
@@ -66,51 +67,6 @@ export default function LibraryPage() {
     const matchesType = activeType === "Todos" || resource.type === activeType;
     return matchesSearch && matchesCategory && matchesType;
   });
-
-  const handleDownload = async (resource: any) => {
-    // Link de teste caso o banco esteja vazio ou com link quebrado
-    const downloadUrl = resource.url || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
-    const fileName = `${resource.title || 'material-educativo'}.pdf`;
-
-    setIsDownloading(resource.id);
-    toast({ title: "Iniciando Download", description: "O arquivo está sendo preparado para o seu dispositivo." });
-    
-    try {
-      // Método robusto: Fetch Blob para forçar o download no dispositivo
-      const response = await fetch(downloadUrl);
-      
-      if (!response.ok) throw new Error("Falha ao acessar arquivo remoto");
-
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Limpa a memória
-      window.URL.revokeObjectURL(blobUrl);
-      
-      toast({ title: "Concluído!", description: "Verifique sua pasta de downloads." });
-    } catch (e) {
-      console.warn("CORS bloqueou fetch direto, tentando abertura em nova aba...", e);
-      // Fallback: Método tradicional se o CORS do servidor remoto impedir o fetch direto
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.target = '_blank';
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({ title: "Acesso Externo", description: "O arquivo foi aberto para visualização e download manual." });
-    } finally {
-      setIsDownloading(null);
-    }
-  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
@@ -181,7 +137,7 @@ export default function LibraryPage() {
                     alt={item.title || "Material"} 
                     fill 
                     className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                    data-ai-hint="educational cover"
+                    unoptimized
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
                     <Badge className="bg-white/80 backdrop-blur-md text-primary border-none shadow-lg flex items-center gap-2 px-4 py-1.5 rounded-xl">
@@ -205,16 +161,21 @@ export default function LibraryPage() {
                 
                 <CardFooter className="p-8 pt-0 mt-auto">
                   <div className="flex gap-3 w-full pt-6 border-t border-muted/10">
-                    <Button 
-                      onClick={() => handleDownload(item)}
-                      disabled={isDownloading === item.id}
-                      className="flex-1 bg-primary text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all"
-                    >
-                      {isDownloading === item.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
-                      Baixar Agora
-                    </Button>
+                    {item.type !== "Video" ? (
+                      <Button asChild className="flex-1 bg-primary text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all">
+                        <Link href={`/dashboard/library/book/${item.id}`}>
+                          <PenLine className="h-4 w-4 mr-2 text-accent" /> Estudar Agora
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button asChild className="flex-1 bg-slate-900 text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all">
+                        <a href={item.url} target="_blank" rel="noopener noreferrer">
+                          <Video className="h-4 w-4 mr-2 text-accent" /> Ver Videoaula
+                        </a>
+                      </Button>
+                    )}
                     <Button asChild variant="outline" className="h-12 w-12 rounded-xl border-2 border-muted/20 hover:border-accent hover:text-accent transition-all">
-                      <a href={item.url || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-5 w-5" /></a>
+                      <a href={item.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-5 w-5" /></a>
                     </Button>
                   </div>
                 </CardFooter>
