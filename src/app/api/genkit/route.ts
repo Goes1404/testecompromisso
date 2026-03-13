@@ -9,10 +9,11 @@ import { trailStructureGeneratorFlow } from '@/ai/flows/trail-structure-generato
 
 /**
  * @fileOverview Gateway de API Blindado para a Aurora IA.
- * Garante que a GEMINI_API_KEY nunca saia do servidor.
+ * Este endpoint é o único ponto de entrada para a IA, garantindo que as chaves 
+ * permaneçam protegidas no ambiente seguro do servidor.
  */
 
-export const maxDuration = 60; // Aumentado para lidar com gerações longas
+export const maxDuration = 60; 
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,22 +54,23 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     const errorMsg = error?.message || '';
     
-    // Tratamento especializado para erros de API Key
+    console.error(`[AURORA ERROR LOG]:`, errorMsg);
+
+    // Identificação de problemas de chave vazada, inválida ou de cota
     if (errorMsg.includes('API key expired') || errorMsg.includes('400 Bad Request') || errorMsg.includes('API_KEY_INVALID')) {
       return NextResponse.json(
-        { error: '⚠️ A chave da Aurora IA é inválida ou expirou. Por favor, gere uma nova no Google AI Studio e atualize sua GEMINI_API_KEY.' },
+        { error: '⚠️ Conexão interrompida com a Aurora. Se você estiver em um repositório público, a chave pode ter sido revogada automaticamente pelo Google.' },
         { status: 401 }
       );
     }
 
-    if (errorMsg.includes('quota')) {
+    if (errorMsg.includes('quota') || errorMsg.includes('429')) {
       return NextResponse.json(
-        { error: '⚠️ Limite de requisições atingido. Aguarde um minuto antes de tentar novamente.' },
+        { error: '⚠️ A Aurora atingiu o limite de testes gratuitos para este minuto. Aguarde um instante para continuar.' },
         { status: 429 }
       );
     }
 
-    console.error(`[AURORA API ERROR]:`, error);
     return NextResponse.json(
       { error: 'A Aurora encontrou uma instabilidade técnica. Tente novamente em alguns instantes.' },
       { status: 500 }
