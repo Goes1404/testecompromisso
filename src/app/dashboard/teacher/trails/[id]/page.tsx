@@ -4,7 +4,8 @@
  * @fileOverview Gestão de Conteúdo de Trilha - Visão do Mentor.
  * - handleAddModule: Cria novos capítulos.
  * - handleBatchSaveContent: Publica materiais em massa.
- * - handleDeleteModule/Content: Limpeza de dados.
+ * - handleEditContent: Permite alterar materiais existentes.
+ * - Integração com Apostilas: Vincula recursos da biblioteca às aulas.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -32,11 +33,13 @@ import {
   ListPlus,
   X,
   Layers,
-  ArrowRight,
   PlusCircle,
   FileUp,
   Link2,
-  Layout
+  Layout,
+  Pencil,
+  BookOpen,
+  Save
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -45,7 +48,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -69,6 +71,7 @@ export default function TrailManagementPage() {
   const [trail, setTrail] = useState<any>(null);
   const [modules, setModules] = useState<any[]>([]);
   const [contents, setContents] = useState<Record<string, any[]>>({});
+  const [libraryResources, setLibraryResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -77,6 +80,7 @@ export default function TrailManagementPage() {
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const [editingContentId, setEditingContentId] = useState<string | null>(null);
 
   const [moduleForm, setModuleForm] = useState({ title: '' });
   const [pendingItems, setPendingItems] = useState<any[]>([]);
@@ -85,6 +89,7 @@ export default function TrailManagementPage() {
     type: 'video',
     url: '',
     description: '',
+    workbook_id: '',
   });
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -93,6 +98,7 @@ export default function TrailManagementPage() {
     if (!trailId) return;
     setLoading(true);
     try {
+      // 1. Trail & Modules
       const { data: trailData, error: trailError } = await supabase
         .from('trails')
         .select('*')
@@ -112,6 +118,7 @@ export default function TrailManagementPage() {
       const sortedModules = modulesData || [];
       setModules(sortedModules);
 
+      // 2. Learning Contents
       if (sortedModules.length > 0) {
         const moduleIds = sortedModules.map((m) => m.id);
         const { data: contentsData, error: contentsError } = await supabase
@@ -129,6 +136,14 @@ export default function TrailManagementPage() {
         });
         setContents(contentMap);
       }
+
+      // 3. Library Resources (for workbook linking)
+      const { data: resources } = await supabase
+        .from('library_resources')
+        .select('id, title, category')
+        .order('title');
+      setLibraryResources(resources || []);
+
     } catch (e: any) {
       console.error('Erro ao carregar estúdio:', e);
       toast({
@@ -193,6 +208,20 @@ export default function TrailManagementPage() {
     setIsSubmitting(false);
   };
 
+  const startEditContent = (content: any) => {
+    setActiveModuleId(content.module_id);
+    setEditingContentId(content.id);
+    setContentForm({
+      title: content.title || '',
+      type: content.type || 'video',
+      url: content.url || '',
+      description: content.description || '',
+      workbook_id: content.workbook_id || '',
+    });
+    setPendingItems([]);
+    setIsContentDialogOpen(true);
+  };
+
   const addToQueue = async () => {
     if (!contentForm.title.trim()) {
       toast({ title: 'Título Obrigatório', variant: 'destructive' });
@@ -226,15 +255,43 @@ export default function TrailManagementPage() {
         .getPublicUrl(filePath).data;
 
       fileUrl = publicUrl;
-      setFile(null); // Reset file input
+      setFile(null);
     }
 
-    setPendingItems([
-      ...pendingItems,
-      { ...contentForm, url: fileUrl, id: Date.now().toString() },
-    ]);
-    setContentForm({ title: '', type: 'video', url: '', description: '' });
-    setUploading(false);
+    if (editingContentId) {
+      // Direct update for single editing
+      setIsSubmitting(true);
+      try {
+        const { error } = await supabase
+          .from('learning_contents')
+          .update({
+            title: contentForm.title,
+            type: contentForm.type,
+            url: fileUrl,
+            description: contentForm.description,
+            workbook_id: contentForm.workbook_id || null,
+          })
+          .eq('id', editingContentId);
+
+        if (error) throw error;
+
+        toast({ title: 'Aula Atualizada!' });
+        setIsContentDialogOpen(false);
+        setEditingContentId(null);
+        loadData();
+      } catch (e: any) {
+        toast({ title: 'Erro ao atualizar', description: e.message, variant: 'destructive' });
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      setPendingItems([
+        ...pendingItems,
+        { ...contentForm, url: fileUrl, id: Date.now().toString() },
+      ]);
+      setContentForm({ title: '', type: 'video', url: '', description: '', workbook_id: '' });
+      setUploading(false);
+    }
   };
 
   const removeFromQueue = (id: string) => {
@@ -252,6 +309,7 @@ export default function TrailManagementPage() {
       type: item.type,
       url: item.url,
       description: item.description,
+      workbook_id: item.workbook_id || null,
       order_index: currentModuleContents.length + idx,
     }));
 
@@ -424,7 +482,9 @@ export default function TrailManagementPage() {
                     <Button
                       onClick={() => {
                         setActiveModuleId(mod.id);
+                        setEditingContentId(null);
                         setPendingItems([]);
+                        setContentForm({ title: '', type: 'video', url: '', description: '', workbook_id: '' });
                         setIsContentDialogOpen(true);
                       }}
                       className='bg-accent text-accent-foreground font-black text-[9px] uppercase rounded-xl h-10 px-5 shadow-md hover:scale-105 active:scale-95 transition-all'
@@ -457,27 +517,44 @@ export default function TrailManagementPage() {
                           )}
                         </div>
                         <div className='min-w-0'>
-                          <p className='font-black text-xs md:text-sm text-primary truncate leading-none'>
-                            {content.title}
-                          </p>
+                          <div className='flex items-center gap-2'>
+                            <p className='font-black text-xs md:text-sm text-primary truncate leading-none'>
+                              {content.title}
+                            </p>
+                            {content.workbook_id && (
+                              <Badge className='bg-accent/10 text-accent border-none text-[7px] font-black h-4 px-1.5 flex items-center gap-1'>
+                                <BookOpen className='h-2 w-2' /> APOSTILA
+                              </Badge>
+                            )}
+                          </div>
                           <p className='text-[8px] font-bold text-muted-foreground uppercase mt-1 opacity-60'>
                             {content.type}
                           </p>
                         </div>
                       </div>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-9 w-9 rounded-full hover:bg-red-500 hover:text-white opacity-0 group-hover/item:opacity-100 transition-all'
-                        onClick={() => handleDeleteContent(content.id)}
-                        disabled={deletingId === content.id}
-                      >
-                        {deletingId === content.id ? (
-                          <Loader2 className='h-4 w-4 animate-spin' />
-                        ) : (
-                          <Trash2 className='h-4 w-4' />
-                        )}
-                      </Button>
+                      <div className='flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-all'>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='h-9 w-9 rounded-full hover:bg-primary/10 text-primary'
+                          onClick={() => startEditContent(content)}
+                        >
+                          <Pencil className='h-4 w-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='h-9 w-9 rounded-full hover:bg-red-500 hover:text-white'
+                          onClick={() => handleDeleteContent(content.id)}
+                          disabled={deletingId === content.id}
+                        >
+                          {deletingId === content.id ? (
+                            <Loader2 className='h-4 w-4 animate-spin' />
+                          ) : (
+                            <Trash2 className='h-4 w-4' />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   {(!contents[mod.id] || contents[mod.id].length === 0) && (
@@ -557,6 +634,7 @@ export default function TrailManagementPage() {
         </div>
       </div>
 
+      {/* DIÁLOGO MÓDULO */}
       <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
         <DialogContent className='rounded-[2.5rem] p-10 bg-white border-none shadow-2xl max-w-sm mx-auto'>
           <DialogHeader>
@@ -592,29 +670,30 @@ export default function TrailManagementPage() {
         </DialogContent>
       </Dialog>
 
+      {/* DIÁLOGO CONTEÚDO (CRIAÇÃO/EDIÇÃO) */}
       <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
         <DialogContent className='rounded-[3rem] p-0 md:p-0 max-w-4xl bg-white border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden mx-auto'>
           <div className="flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 md:p-12 bg-primary text-white shrink-0">
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shadow-lg">
-                  <PlusCircle className="h-7 w-7" />
+                  {editingContentId ? <Pencil className="h-7 w-7" /> : <PlusCircle className="h-7 w-7" />}
                 </div>
                 <div>
                   <DialogTitle className='text-2xl md:text-3xl font-black italic tracking-tighter uppercase leading-none'>
-                    Anexar Materiais
+                    {editingContentId ? 'Ajustar Material' : 'Anexar Materiais'}
                   </DialogTitle>
                   <p className='text-white/60 text-xs md:text-sm font-medium italic mt-1.5'>
-                    Construa a sequência didática para este capítulo antes de publicar.
+                    {editingContentId ? 'Altere as propriedades do material pedagógico.' : 'Construa a sequência didática para este capítulo antes de publicar.'}
                   </p>
                 </div>
               </div>
             </DialogHeader>
 
             <ScrollArea className="flex-1">
-              <div className='grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-0 h-full'>
+              <div className={`grid grid-cols-1 ${editingContentId ? '' : 'lg:grid-cols-2'} gap-0 h-full`}>
                 {/* FORMULÁRIO DE ENTRADA */}
-                <div className='p-8 md:p-12 space-y-8 border-r border-dashed border-muted/20 bg-slate-50/50'>
+                <div className={`p-8 md:p-12 space-y-8 ${editingContentId ? '' : 'border-r border-dashed border-muted/20'} bg-slate-50/50`}>
                   <div className='space-y-6'>
                     <div className='space-y-2'>
                       <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
@@ -655,10 +734,33 @@ export default function TrailManagementPage() {
                       />
                     </div>
 
+                    <div className='space-y-2'>
+                      <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2 flex items-center gap-2'>
+                        <BookOpen className='h-3 w-3 text-accent' /> Vincular Apostila Interativa (Opcional)
+                      </Label>
+                      <Select
+                        value={contentForm.workbook_id}
+                        onValueChange={(v) =>
+                          setContentForm((prev) => ({ ...prev, workbook_id: v }))
+                        }
+                        disabled={isSubmitting || uploading}
+                      >
+                        <SelectTrigger className='h-14 rounded-2xl bg-white border-none shadow-sm font-bold italic text-primary'>
+                          <SelectValue placeholder="Nenhuma apostila selecionada" />
+                        </SelectTrigger>
+                        <SelectContent className='rounded-2xl border-none shadow-2xl p-2'>
+                          <SelectItem value="none" className='py-3 font-bold rounded-xl'>Sem Apostila</SelectItem>
+                          {libraryResources.map(res => (
+                            <SelectItem key={res.id} value={res.id} className='py-3 font-bold rounded-xl'>📚 {res.category}: {res.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {contentForm.type === 'file' || contentForm.type === 'pdf' ? (
                       <div className='space-y-2'>
                         <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
-                          Upload de Arquivo
+                          Upload de Arquivo {editingContentId && '(Deixe vazio para manter atual)'}
                         </Label>
                         <div className="relative group">
                           <Input
@@ -708,88 +810,92 @@ export default function TrailManagementPage() {
                       />
                     </div>
 
-                    <Button
-                      onClick={addToQueue}
-                      disabled={isSubmitting || uploading || !contentForm.title || (contentForm.type === 'file' && !file)}
-                      className='w-full h-16 rounded-2xl bg-accent text-accent-foreground font-black uppercase text-xs tracking-widest gap-3 shadow-xl hover:scale-105 active:scale-95 transition-all shadow-accent/20'
-                    >
-                      {uploading ? (
-                        <Loader2 className='h-6 w-6 animate-spin' />
-                      ) : (
-                        <PlusCircle className='h-6 w-6' />
-                      )}
-                      {uploading ? 'Enviando Dados...' : 'Adicionar à Fila'}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* FILA DE REVISÃO */}
-                <div className='p-8 md:p-12 space-y-8 bg-white'>
-                  <div className="flex items-center justify-between">
-                    <h3 className='text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 flex items-center gap-3'>
-                      <Layers className='h-4 w-4 text-accent' /> 
-                      Fila de Publicação
-                    </h3>
-                    <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] px-3">
-                      {pendingItems.length} ITENS
-                    </Badge>
-                  </div>
-
-                  <div className='space-y-4 min-h-[300px]'>
-                    {pendingItems.length === 0 ? (
-                      <div className='h-full min-h-[300px] flex flex-col items-center justify-center text-center opacity-20 border-4 border-dashed rounded-[3rem] bg-muted/5 gap-4'>
-                        <Layout className='h-16 w-16 text-primary' />
-                        <div className="space-y-1">
-                          <p className='text-xs font-black uppercase tracking-widest'>Estúdio Vazio</p>
-                          <p className="text-[10px] font-medium italic">Adicione materiais para ver a fila.</p>
-                        </div>
-                      </div>
-                    ) : (
-                      pendingItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className='flex items-center justify-between p-5 rounded-2xl bg-slate-50 shadow-sm border border-slate-100 animate-in slide-in-from-right-4 duration-500 hover:shadow-md transition-all group'
-                        >
-                          <div className='flex items-center gap-4 overflow-hidden'>
-                            <div
-                              className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${
-                                item.type === 'video'
-                                  ? 'bg-red-50 text-red-600'
-                                  : 'bg-primary/5 text-primary'
-                              }`}>
-                              {item.type === 'video' ? (
-                                <Video className='h-6 w-6' />
-                              ) : (
-                                <FileText className='h-6 w-6' />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className='font-black text-sm text-primary truncate max-w-[180px] italic'>
-                                {item.title}
-                              </p>
-                              <Badge variant="outline" className="text-[7px] font-bold h-4 border-muted/30 uppercase mt-1 opacity-60">
-                                {item.type}
-                              </Badge>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => removeFromQueue(item.id)}
-                            className='h-10 w-10 rounded-full bg-white text-muted-foreground hover:text-red-600 hover:bg-red-50 shadow-sm transition-all flex items-center justify-center opacity-0 group-hover:opacity-100'
-                          >
-                            <X className='h-5 w-5' />
-                          </button>
-                        </div>
-                      ))
+                    {!editingContentId && (
+                      <Button
+                        onClick={addToQueue}
+                        disabled={isSubmitting || uploading || !contentForm.title || (contentForm.type === 'file' && !file)}
+                        className='w-full h-16 rounded-2xl bg-accent text-accent-foreground font-black uppercase text-xs tracking-widest gap-3 shadow-xl hover:scale-105 active:scale-95 transition-all shadow-accent/20'
+                      >
+                        {uploading ? (
+                          <Loader2 className='h-6 w-6 animate-spin' />
+                        ) : (
+                          <PlusCircle className='h-6 w-6' />
+                        )}
+                        {uploading ? 'Enviando Dados...' : 'Adicionar à Fila'}
+                      </Button>
                     )}
                   </div>
                 </div>
+
+                {/* FILA DE REVISÃO (Só aparece se não estiver editando) */}
+                {!editingContentId && (
+                  <div className='p-8 md:p-12 space-y-8 bg-white'>
+                    <div className="flex items-center justify-between">
+                      <h3 className='text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 flex items-center gap-3'>
+                        <Layers className='h-4 w-4 text-accent' /> 
+                        Fila de Publicação
+                      </h3>
+                      <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] px-3">
+                        {pendingItems.length} ITENS
+                      </Badge>
+                    </div>
+
+                    <div className='space-y-4 min-h-[300px]'>
+                      {pendingItems.length === 0 ? (
+                        <div className='h-full min-h-[300px] flex flex-col items-center justify-center text-center opacity-20 border-4 border-dashed rounded-[3rem] bg-muted/5 gap-4'>
+                          <Layout className='h-16 w-16 text-primary' />
+                          <div className="space-y-1">
+                            <p className='text-xs font-black uppercase tracking-widest'>Estúdio Vazio</p>
+                            <p className="text-[10px] font-medium italic">Adicione materiais para ver a fila.</p>
+                          </div>
+                        </div>
+                      ) : (
+                        pendingItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className='flex items-center justify-between p-5 rounded-2xl bg-slate-50 shadow-sm border border-slate-100 animate-in slide-in-from-right-4 duration-500 hover:shadow-md transition-all group'
+                          >
+                            <div className='flex items-center gap-4 overflow-hidden'>
+                              <div
+                                className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${
+                                  item.type === 'video'
+                                    ? 'bg-red-50 text-red-600'
+                                    : 'bg-primary/5 text-primary'
+                                }`}>
+                                {item.type === 'video' ? (
+                                  <Video className='h-6 w-6' />
+                                ) : (
+                                  <FileText className='h-6 w-6' />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className='font-black text-sm text-primary truncate max-w-[180px] italic'>
+                                  {item.title}
+                                </p>
+                                <Badge variant="outline" className="text-[7px] font-bold h-4 border-muted/30 uppercase mt-1 opacity-60">
+                                  {item.type}
+                                </Badge>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeFromQueue(item.id)}
+                              className='h-10 w-10 rounded-full bg-white text-muted-foreground hover:text-red-600 hover:bg-red-50 shadow-sm transition-all flex items-center justify-center opacity-0 group-hover:opacity-100'
+                            >
+                              <X className='h-5 w-5' />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </ScrollArea>
 
             <DialogFooter className='p-8 md:p-12 bg-slate-50 border-t shrink-0'>
               <Button
-                onClick={() => handleBatchSaveContent(activeModuleId)}
-                disabled={isSubmitting || pendingItems.length === 0}
+                onClick={() => editingContentId ? addToQueue() : handleBatchSaveContent(activeModuleId)}
+                disabled={isSubmitting || (!editingContentId && pendingItems.length === 0)}
                 className='w-full h-20 bg-primary text-white font-black text-lg md:text-xl rounded-2xl md:rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] transition-all hover:scale-[1.02] active:scale-95 border-none'
               >
                 {isSubmitting ? (
@@ -800,7 +906,7 @@ export default function TrailManagementPage() {
                 ) : (
                   <div className="flex items-center gap-4">
                     <CheckCircle2 className='h-8 w-8 text-accent' /> 
-                    <span>PUBLICAR NO CAPÍTULO AGORA</span>
+                    <span>{editingContentId ? 'SALVAR ALTERAÇÕES AGORA' : 'PUBLICAR NO CAPÍTULO AGORA'}</span>
                   </div>
                 )}
               </Button>
