@@ -9,19 +9,21 @@ import {
   Pencil, 
   Eraser, 
   Save, 
-  ZoomIn, 
-  ZoomOut, 
-  RotateCcw, 
-  ChevronUp, 
-  ChevronDown,
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronsLeft, 
+  ChevronsRight,
   Cloud,
-  AlertTriangle
+  AlertTriangle,
+  Maximize,
+  Hash
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 
-// Configurar o worker do PDF.js - Ajustado para .mjs (Versão 4+)
+// Configurar o worker do PDF.js - Versão 4.x usa .mjs
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface InteractiveWorkbookProps {
@@ -33,26 +35,27 @@ interface InteractiveWorkbookProps {
 
 export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: InteractiveWorkbookProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRefs = useRef<Record<number, HTMLCanvasElement>>({});
-  const fabricCanvases = useRef<Record<number, fabric.Canvas>>({});
-  const renderTasks = useRef<Record<number, any>>({});
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  const renderTaskRef = useRef<any>(null);
   
+  const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [numPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [inputPage, setInputPage] = useState("1");
   const [loading, setLoading] = useState(true);
   const [brushColor, setBrushColor] = useState("#FF0000");
-  const [brushWidth, setBrushWidth] = useState(2);
   const [isEraser, setIsEraser] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { toast } = useToast();
 
-  const getCleanJson = useCallback((page: number) => {
-    const canvas = fabricCanvases.current[page];
-    if (!canvas) return null;
+  // Salva anotações da página atual no LocalStorage
+  const savePageDraft = useCallback(() => {
+    if (!fabricCanvasRef.current) return;
 
-    const objects = canvas.getObjects().map((obj: any) => {
+    const objects = fabricCanvasRef.current.getObjects().map((obj: any) => {
       if (obj.type === 'path') {
         return {
           type: 'path',
@@ -66,257 +69,202 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       return null;
     }).filter(Boolean);
 
-    return {
+    const pageData = {
       version: "1.0",
       viewport: {
-        width: canvas.getWidth(),
-        height: canvas.getHeight()
+        width: fabricCanvasRef.current.getWidth(),
+        height: fabricCanvasRef.current.getHeight()
       },
       objects
     };
-  }, []);
 
-  const saveToLocalStorage = useCallback(() => {
-    const allAnnotations: Record<number, any> = {};
-    Object.keys(fabricCanvases.current).forEach(pageNum => {
-      const page = parseInt(pageNum);
-      const data = getCleanJson(page);
-      if (data && data.objects.length > 0) {
-        allAnnotations[page] = data;
-      }
-    });
+    const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
+    const draft = draftStr ? JSON.parse(draftStr) : { annotations: {} };
+    
+    draft.annotations[currentPage] = pageData;
+    draft.lastPage = currentPage;
+    draft.timestamp = Date.now();
 
-    const payload = {
-      materialId,
-      annotations: allAnnotations,
-      lastPage: currentPage,
-      timestamp: Date.now()
-    };
+    localStorage.setItem(`workbook_draft_${materialId}`, JSON.stringify(draft));
+  }, [materialId, currentPage]);
 
-    localStorage.setItem(`workbook_draft_${materialId}`, JSON.stringify(payload));
-  }, [materialId, currentPage, getCleanJson]);
-
+  // Sincronização final com Supabase
   const syncWithSupabase = useCallback(async () => {
     if (isSaving) return;
     setIsSaving(true);
     
-    const percentage = Math.round((currentPage / numPages) * 100);
-    const allAnnotations: Record<number, any> = {};
-    Object.keys(fabricCanvases.current).forEach(pageNum => {
-      const page = parseInt(pageNum);
-      const data = getCleanJson(page);
-      if (data && data.objects.length > 0) {
-        allAnnotations[page] = data;
-      }
-    });
+    const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
+    if (!draftStr) {
+      setIsSaving(false);
+      return;
+    }
 
-    const payload = {
-      material_id: materialId,
-      percentage_explored: percentage,
-      drawing_data: { pages: allAnnotations },
-      updated_at: new Date().toISOString()
-    };
+    const draft = JSON.parse(draftStr);
+    const percentage = Math.round((currentPage / numPages) * 100);
 
     try {
       const { error: syncError } = await supabase
         .from('material_annotations')
-        .upsert(payload, { onConflict: 'user_id,material_id' });
+        .upsert({
+          material_id: materialId,
+          percentage_explored: percentage,
+          drawing_data: { pages: draft.annotations },
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,material_id' });
 
       if (syncError) throw syncError;
-      
-      localStorage.removeItem(`workbook_draft_${materialId}`);
-      toast({ title: "Progresso Sincronizado!", description: "Suas anotações estão salvas na nuvem." });
+      toast({ title: "Progresso Salvo!", description: "Anotações sincronizadas com a nuvem." });
     } catch (e) {
-      console.error("Erro na sincronização Bulk:", e);
+      console.error("Erro sincronização:", e);
     } finally {
       setIsSaving(false);
     }
-  }, [materialId, currentPage, numPages, getCleanJson, isSaving, toast]);
+  }, [materialId, currentPage, numPages, isSaving, toast]);
 
+  // Carregar PDF inicial
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      const percentage = Math.round((currentPage / numPages) * 100);
-      const allAnnotations: Record<number, any> = {};
-      Object.keys(fabricCanvases.current).forEach(pageNum => {
-        const page = parseInt(pageNum);
-        const data = getCleanJson(page);
-        if (data && data.objects.length > 0) {
-          allAnnotations[page] = data;
-        }
-      });
-
-      const body = JSON.stringify({
-        material_id: materialId,
-        percentage_explored: percentage,
-        drawing_data: { pages: allAnnotations }
-      });
-
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/material_annotations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          'Prefer': 'resolution=merge-duplicates'
-        },
-        body,
-        keepalive: true
-      });
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [materialId, currentPage, numPages, getCleanJson]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function initPdf() {
+    async function loadPdf() {
       if (!pdfUrl) return;
       setLoading(true);
-      setError(null);
-
       try {
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
-        if (isCancelled) return;
-        
+        setPdfDoc(pdf);
         setTotalPages(pdf.numPages);
-
-        const draft = localStorage.getItem(`workbook_draft_${materialId}`);
-        const savedData = draft ? JSON.parse(draft) : null;
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          if (isCancelled) break;
-
-          const page = await pdf.getPage(i);
-          if (isCancelled) break;
-
-          const viewport = page.getViewport({ scale: 1.5 });
-          
-          const canvas = canvasRefs.current[i];
-          if (!canvas) continue;
-
-          const context = canvas.getContext('2d');
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          // Cancelar renderização anterior se houver
-          if (renderTasks.current[i]) {
-            renderTasks.current[i].cancel();
+        
+        const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
+        if (draftStr) {
+          const draft = JSON.parse(draftStr);
+          if (draft.lastPage) {
+            setCurrentPage(draft.lastPage);
+            setInputPage(draft.lastPage.toString());
           }
-
-          const renderTask = page.render({ canvasContext: context!, viewport });
-          renderTasks.current[i] = renderTask;
-
-          try {
-            await renderTask.promise;
-          } catch (err: any) {
-            if (err.name === 'RenderingCancelledException') continue;
-            throw err;
-          }
-
-          if (isCancelled) break;
-
-          context!.font = "bold 14px Inter";
-          context!.fillStyle = "rgba(0, 0, 0, 0.05)";
-          context!.save();
-          context!.rotate(-Math.PI / 4);
-          for(let x=-500; x<canvas.width; x+=200) {
-            for(let y=-500; y<canvas.height; y+=150) {
-              context!.fillText(`${userName} • ${userCpf}`, x, y);
-            }
-          }
-          context!.restore();
-
-          // Limpar canvas do Fabric se já existir
-          if (fabricCanvases.current[i]) {
-            fabricCanvases.current[i].dispose();
-          }
-
-          const fCanvas = new fabric.Canvas(`fabric-canvas-${i}`, {
-            height: viewport.height,
-            width: viewport.width,
-            isDrawingMode: true
-          });
-
-          fCanvas.freeDrawingBrush.color = brushColor;
-          fCanvas.freeDrawingBrush.width = brushWidth;
-
-          if (savedData?.annotations?.[i]) {
-            fCanvas.loadFromJSON(savedData.annotations[i], () => fCanvas.renderAll());
-          }
-
-          fCanvas.on('path:created', () => saveToLocalStorage());
-          fabricCanvases.current[i] = fCanvas;
         }
-
-        if (!isCancelled && savedData?.lastPage) {
-          setCurrentPage(savedData.lastPage);
-        }
-
-      } catch (err: any) {
-        if (!isCancelled) {
-          console.error("Erro PDF:", err);
-          setError("Não foi possível carregar o documento. Verifique sua conexão.");
-        }
+      } catch (err) {
+        setError("Erro ao carregar o arquivo PDF.");
       } finally {
-        if (!isCancelled) setLoading(false);
+        setLoading(false);
       }
     }
+    loadPdf();
+  }, [pdfUrl, materialId]);
 
-    initPdf();
+  // Renderizar Página Atual
+  const renderPage = useCallback(async (pageNum: number) => {
+    if (!pdfDoc || !canvasRef.current) return;
+    setLoading(true);
 
-    return () => {
-      isCancelled = true;
-      Object.values(renderTasks.current).forEach(task => task.cancel());
-      Object.values(fabricCanvases.current).forEach(c => c.dispose());
-    };
-  }, [pdfUrl, materialId, userName, userCpf]);
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      
+      // Cálculo de Escala Responsiva
+      const containerWidth = containerRef.current?.clientWidth || 800;
+      const unscaledViewport = page.getViewport({ scale: 1 });
+      const scale = (containerWidth - 40) / unscaledViewport.width;
+      const viewport = page.getViewport({ scale: Math.min(scale, 2) }); // Limite de 2x para nitidez
+
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      if (renderTaskRef.current) renderTaskRef.current.cancel();
+      const renderTask = page.render({ canvasContext: context!, viewport });
+      renderTaskRef.current = renderTask;
+      await renderTask.promise;
+
+      // Injetar Marca d'água
+      context!.font = "bold 12px Inter";
+      context!.fillStyle = "rgba(0, 0, 0, 0.04)";
+      context!.save();
+      context!.rotate(-Math.PI / 4);
+      for(let x=-500; x<canvas.width; x+=200) {
+        for(let y=-500; y<canvas.height; y+=150) {
+          context!.fillText(`${userName} • ${userCpf}`, x, y);
+        }
+      }
+      context!.restore();
+
+      // Configurar Camada de Desenho (Fabric)
+      if (fabricCanvasRef.current) fabricCanvasRef.current.dispose();
+      
+      const fCanvas = new fabric.Canvas('fabric-layer', {
+        height: viewport.height,
+        width: viewport.width,
+        isDrawingMode: !isEraser
+      });
+
+      fCanvas.freeDrawingBrush.color = brushColor;
+      fCanvas.freeDrawingBrush.width = 2;
+
+      // Carregar anotações existentes para esta página
+      const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
+      const draft = draftStr ? JSON.parse(draftStr) : null;
+      if (draft?.annotations?.[pageNum]) {
+        fCanvas.loadFromJSON(draft.annotations[pageNum], () => fCanvas.renderAll());
+      }
+
+      fCanvas.on('path:created', () => savePageDraft());
+      fabricCanvasRef.current = fCanvas;
+
+    } catch (err: any) {
+      if (err.name !== 'RenderingCancelledException') {
+        console.error("Erro render:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [pdfDoc, userName, userCpf, materialId, brushColor, isEraser, savePageDraft]);
+
+  useEffect(() => {
+    if (pdfDoc) renderPage(currentPage);
+  }, [currentPage, pdfDoc, renderPage]);
+
+  const changePage = (offset: number) => {
+    const next = Math.max(1, Math.min(numPages, currentPage + offset));
+    if (next !== currentPage) {
+      setCurrentPage(next);
+      setInputPage(next.toString());
+    }
+  };
+
+  const jumpToPage = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseInt(inputPage);
+    if (!isNaN(target) && target >= 1 && target <= numPages) {
+      setCurrentPage(target);
+    } else {
+      setInputPage(currentPage.toString());
+    }
+  };
 
   const toggleTool = (eraser: boolean) => {
     setIsEraser(eraser);
-    Object.values(fabricCanvases.current).forEach(c => {
-      c.isDrawingMode = !eraser;
-      if (!eraser) {
-        c.freeDrawingBrush.color = brushColor;
-        c.freeDrawingBrush.width = brushWidth;
-      }
-    });
-  };
-
-  const changeColor = (color: string) => {
-    setBrushColor(color);
-    setIsEraser(false);
-    Object.values(fabricCanvases.current).forEach(c => {
-      c.isDrawingMode = true;
-      c.freeDrawingBrush.color = color;
-    });
+    if (fabricCanvasRef.current) {
+      fabricCanvasRef.current.isDrawingMode = !eraser;
+    }
   };
 
   if (error) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center gap-4 bg-slate-900">
-        <div className="h-20 w-20 rounded-3xl bg-red-500/10 flex items-center justify-center text-red-500">
-          <AlertTriangle className="h-10 w-10" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-black text-white italic">Falha de Renderização</h2>
-          <p className="text-sm text-slate-400 max-w-xs">{error}</p>
-        </div>
-        <Button onClick={() => window.location.reload()} className="bg-primary text-white font-black rounded-xl h-12 px-8">Tentar Novamente</Button>
+      <div className="h-full flex flex-col items-center justify-center p-8 bg-slate-900 text-white gap-4">
+        <AlertTriangle className="h-12 w-12 text-red-500" />
+        <p className="font-bold italic">{error}</p>
+        <Button onClick={() => window.location.reload()} variant="outline">Tentar Novamente</Button>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col md:flex-row bg-slate-900">
-      <aside className="w-full md:w-20 bg-slate-950 border-b md:border-b-0 md:border-r border-white/5 p-4 flex flex-row md:flex-col items-center justify-between md:justify-center gap-6 z-20 overflow-x-auto">
-        <div className="flex flex-row md:flex-col gap-4">
+    <div className="h-full flex flex-col bg-slate-900 overflow-hidden select-none">
+      {/* TOOLBAR SUPERIOR - RESPONSIVA */}
+      <div className="bg-slate-950 border-b border-white/5 p-2 md:p-4 flex flex-wrap items-center justify-between gap-4 z-30 shadow-2xl">
+        <div className="flex items-center gap-2">
           <Button 
             variant={!isEraser ? "default" : "ghost"} 
             size="icon" 
             onClick={() => toggleTool(false)}
-            className={`h-12 w-12 rounded-2xl transition-all shadow-xl ${!isEraser ? 'bg-primary text-white' : 'text-slate-400 hover:bg-white/10'}`}
+            className={`h-10 w-10 md:h-12 md:w-12 rounded-xl ${!isEraser ? 'bg-primary text-white' : 'text-slate-400'}`}
           >
             <Pencil className="h-5 w-5" />
           </Button>
@@ -324,100 +272,80 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
             variant={isEraser ? "default" : "ghost"} 
             size="icon" 
             onClick={() => toggleTool(true)}
-            className={`h-12 w-12 rounded-2xl transition-all shadow-xl ${isEraser ? 'bg-accent text-accent-foreground' : 'text-slate-400 hover:bg-white/10'}`}
+            className={`h-10 w-10 md:h-12 md:w-12 rounded-xl ${isEraser ? 'bg-accent text-accent-foreground' : 'text-slate-400'}`}
           >
             <Eraser className="h-5 w-5" />
           </Button>
+          <div className="w-px h-8 bg-white/10 mx-1 hidden sm:block" />
+          <div className="flex gap-2">
+            {["#FF0000", "#0088FF", "#00FF00", "#FFFFFF"].map(color => (
+              <button 
+                key={color} 
+                onClick={() => { setBrushColor(color); toggleTool(false); }}
+                className={`h-6 w-6 md:h-8 md:w-8 rounded-full border-2 transition-all ${brushColor === color ? 'border-white scale-110' : 'border-transparent opacity-50'}`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="w-px h-8 md:w-8 md:h-px bg-white/10" />
-
-        <div className="flex flex-row md:flex-col gap-3">
-          {["#FF0000", "#0088FF", "#00FF00", "#FFFFFF"].map(color => (
-            <button 
-              key={color} 
-              onClick={() => changeColor(color)}
-              className={`h-8 w-8 rounded-full border-2 transition-all hover:scale-110 active:scale-90 ${brushColor === color ? 'border-white ring-4 ring-white/10' : 'border-transparent opacity-60'}`}
-              style={{ backgroundColor: color }}
-            />
-          ))}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={syncWithSupabase} disabled={isSaving} className="text-slate-400 hover:text-white">
+            {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Cloud className="h-5 w-5" />}
+          </Button>
         </div>
-
-        <div className="w-px h-8 md:w-8 md:h-px bg-white/10" />
-
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={syncWithSupabase} 
-          disabled={isSaving}
-          className="h-12 w-12 rounded-2xl text-slate-400 hover:bg-white/10"
-        >
-          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Cloud className="h-5 w-5" />}
-        </Button>
-      </aside>
-
-      <div 
-        ref={containerRef}
-        onContextMenu={(e) => e.preventDefault()}
-        className="flex-1 overflow-y-auto scrollbar-hide bg-slate-900 p-4 md:p-8 flex flex-col items-center gap-12 relative no-swipe"
-      >
-        {loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md z-10 gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-accent" />
-            <p className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Sincronizando Páginas...</p>
-          </div>
-        )}
-
-        {Array.from({ length: numPages }).map((_, i) => (
-          <div 
-            key={i + 1} 
-            className="relative shadow-[0_30px_100px_rgba(0,0,0,0.5)] rounded-sm bg-white overflow-hidden transition-transform duration-500 hover:scale-[1.01]"
-            onMouseEnter={() => setCurrentPage(i + 1)}
-          >
-            <canvas 
-              ref={el => { if(el) canvasRefs.current[i + 1] = el; }} 
-              className="block"
-            />
-            <div className="absolute inset-0 z-10">
-              <canvas id={`fabric-canvas-${i + 1}`} />
-            </div>
-            <div className="absolute bottom-4 right-4 z-20 pointer-events-none opacity-20">
-              <p className="text-[8px] font-black text-black uppercase tracking-widest">{userName} | ID {userCpf}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-950/90 backdrop-blur-2xl px-6 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-6 z-30">
-        <p className="text-[10px] font-black text-white uppercase tracking-widest">
-          PÁGINA <span className="text-accent italic text-sm">{currentPage}</span> / {numPages}
-        </p>
-        <div className="w-px h-4 bg-white/10" />
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            disabled={currentPage === 1}
-            onClick={() => {
-              const prevPage = Math.max(1, currentPage - 1);
-              containerRef.current?.children[prevPage - 1]?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="h-8 w-8 rounded-lg text-white hover:bg-white/10"
-          >
-            <ChevronUp className="h-4 w-4" />
+      {/* ÁREA DO DOCUMENTO */}
+      <div ref={containerRef} className="flex-1 overflow-auto p-4 md:p-8 flex justify-center items-start bg-slate-900 scrollbar-hide no-swipe">
+        <div className="relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] rounded-sm bg-white overflow-hidden">
+          {loading && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-sm gap-4">
+              <Loader2 className="h-12 w-12 animate-spin text-accent" />
+              <p className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Sincronizando Página...</p>
+            </div>
+          )}
+          <canvas ref={canvasRef} className="block" />
+          <div className="absolute inset-0 z-10">
+            <canvas id="fabric-layer" />
+          </div>
+        </div>
+      </div>
+
+      {/* NAVEGAÇÃO INFERIOR - VIRTUALIZADA */}
+      <div className="bg-slate-950/90 backdrop-blur-2xl border-t border-white/5 p-4 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 z-30 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+        <div className="flex items-center gap-1 md:gap-2">
+          <Button variant="ghost" size="icon" onClick={() => changePage(-currentPage)} disabled={currentPage === 1} className="text-white hover:bg-white/10 h-10 w-10">
+            <ChevronsLeft className="h-5 w-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            disabled={currentPage === numPages}
-            onClick={() => {
-              const nextPage = Math.min(numPages, currentPage + 1);
-              containerRef.current?.children[nextPage - 1]?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="h-8 w-8 rounded-lg text-white hover:bg-white/10"
-          >
-            <ChevronDown className="h-4 w-4" />
+          <Button variant="ghost" size="icon" onClick={() => changePage(-1)} disabled={currentPage === 1} className="text-white hover:bg-white/10 h-10 w-10">
+            <ChevronLeft className="h-6 w-6" />
           </Button>
+        </div>
+
+        <form onSubmit={jumpToPage} className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/10">
+          <Hash className="h-3 w-3 text-accent" />
+          <Input 
+            value={inputPage}
+            onChange={(e) => setInputPage(e.target.value)}
+            className="w-12 h-8 bg-transparent border-none text-center font-black text-white p-0 focus-visible:ring-0 text-lg italic"
+          />
+          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">DE {numPages}</span>
+          <button type="submit" className="hidden" />
+        </form>
+
+        <div className="flex items-center gap-1 md:gap-2">
+          <Button variant="ghost" size="icon" onClick={() => changePage(1)} disabled={currentPage === numPages} className="text-white hover:bg-white/10 h-10 w-10">
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => changePage(numPages - currentPage)} disabled={currentPage === numPages} className="text-white hover:bg-white/10 h-10 w-10">
+            <ChevronsRight className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="hidden lg:flex items-center gap-2 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">
+          <Maximize className="h-3 w-3" />
+          Auto-Fit Ativo
         </div>
       </div>
     </div>
