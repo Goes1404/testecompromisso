@@ -34,11 +34,11 @@ export default function LandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white relative overflow-x-hidden">
-      {/* HEADER */}
-      <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-muted/20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-white p-1 shadow-lg border border-muted/10">
+      {/* HEADER - AMPLIADO PARA h-24 */}
+      <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-muted/20 shadow-sm transition-all duration-500">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-white p-1.5 shadow-xl border border-muted/10">
               <Image 
                 src={cityLogo} 
                 alt="Prefeitura de Santana de Parnaíba" 
@@ -48,26 +48,27 @@ export default function LandingPage() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-black italic tracking-tighter text-primary leading-none">
+              <span className="text-2xl font-black italic tracking-tighter text-primary leading-none">
                 Compro<span className="text-accent">misso</span>
               </span>
-              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mt-1">Educação Inteligente</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground mt-1.5 opacity-60">Educação Inteligente</span>
             </div>
           </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Ecossistema</Link>
-            <Link href="#impact" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Nosso Cursinho</Link>
-            <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-primary">
+          <nav className="hidden md:flex items-center gap-10">
+            <Link href="#features" className="text-xs font-black uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-colors">Ecossistema</Link>
+            <Link href="#impact" className="text-xs font-black uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-colors">Nosso Cursinho</Link>
+            <div className="h-8 w-px bg-muted/20 mx-2" />
+            <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/5">
               <Link href="/login">Entrar</Link>
             </Button>
-            <Button asChild className="bg-primary text-white font-black px-8 h-12 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none">
+            <Button asChild className="bg-primary text-white font-black px-10 h-14 rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all border-none">
               <Link href="/register">Começar Agora</Link>
             </Button>
           </nav>
         </div>
       </header>
 
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-24">
         {/* HERO SECTION */}
         <section className="relative py-16 md:py-32 overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-white">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2" />
