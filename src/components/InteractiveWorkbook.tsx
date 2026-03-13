@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -23,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
+import { useAuth } from "@/lib/AuthProvider";
 
 // Configurar o worker do PDF.js - Versão 4.x usa .mjs
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -35,6 +35,7 @@ interface InteractiveWorkbookProps {
 }
 
 export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: InteractiveWorkbookProps) {
+  const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
@@ -91,7 +92,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
 
   // Sincronização final com Supabase
   const syncWithSupabase = useCallback(async () => {
-    if (isSaving) return;
+    if (isSaving || !user) return;
     setIsSaving(true);
     
     const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
@@ -100,13 +101,14 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
       return;
     }
 
-    const draft = JSON.parse(draftStr);
-    const percentage = Math.round((currentPage / numPages) * 100);
-
     try {
+      const draft = JSON.parse(draftStr);
+      const percentage = Math.round((currentPage / numPages) * 100);
+
       const { error: syncError } = await supabase
         .from('material_annotations')
         .upsert({
+          user_id: user.id,
           material_id: materialId,
           percentage_explored: percentage,
           drawing_data: { pages: draft.annotations },
@@ -114,13 +116,19 @@ export function InteractiveWorkbook({ materialId, pdfUrl, userName, userCpf }: I
         }, { onConflict: 'user_id,material_id' });
 
       if (syncError) throw syncError;
+      
       toast({ title: "Progresso Salvo!", description: "Anotações sincronizadas com a nuvem." });
-    } catch (e) {
-      console.error("Erro sincronização:", e);
+    } catch (e: any) {
+      console.error("Erro sincronização:", e.message || e);
+      toast({ 
+        title: "Erro ao sincronizar", 
+        description: "Houve um problema ao salvar na nuvem, mas seu rascunho local está seguro.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsSaving(false);
     }
-  }, [materialId, currentPage, numPages, isSaving, toast]);
+  }, [materialId, currentPage, numPages, isSaving, toast, user]);
 
   // Carregar PDF inicial
   useEffect(() => {
