@@ -187,16 +187,17 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
   }, [currentPdfUrl, materialId]);
 
   const renderPage = useCallback(async (pageNum: number, currentZoom: number) => {
-    if (!pdfDoc || !canvasRef.current) return;
+    if (!pdfDoc || !canvasRef.current || !containerRef.current) return;
     setLoading(true);
 
     try {
       const page = await pdfDoc.getPage(pageNum);
       
-      const containerWidth = containerRef.current?.clientWidth || 800;
+      // Cálculo de escala industrial para preenchimento de tela
+      const containerWidth = containerRef.current.clientWidth - 80;
       const unscaledViewport = page.getViewport({ scale: 1 });
-      const scale = (containerWidth - 60) / unscaledViewport.width;
-      const finalScale = scale * currentZoom;
+      const baseScale = containerWidth / unscaledViewport.width;
+      const finalScale = baseScale * currentZoom;
       const viewport = page.getViewport({ scale: finalScale }); 
 
       const canvas = canvasRef.current;
@@ -209,7 +210,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
       renderTaskRef.current = renderTask;
       await renderTask.promise;
 
-      // Marca d'água robusta
+      // Marca d'água de segurança
       context!.font = "bold 14px Inter";
       context!.fillStyle = "rgba(0, 0, 0, 0.05)";
       context!.save();
@@ -287,6 +288,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     if (!fabricCanvasRef.current) return;
     
     fabricCanvasRef.current.isDrawingMode = tool !== 'eraser' && tool !== 'pan';
+    fabricCanvasRef.current.selection = tool === 'eraser';
     
     if (tool === 'pencil') {
       fabricCanvasRef.current.freeDrawingBrush = new fabric.PencilBrush(fabricCanvasRef.current);
@@ -299,7 +301,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     }
   };
 
-  // LOGICA DE PAN (ARRANTE)
   const handleMouseDown = (e: React.MouseEvent) => {
     if (activeTool !== 'pan' || !containerRef.current) return;
     setIsDragging(true);
@@ -320,11 +321,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     containerRef.current.scrollTop = scrollTop - walkY;
   };
 
-  const handleMouseUpOrLeave = () => {
-    setIsDragging(false);
-  };
-
-  // Suporte Touch para Pan
   const handleTouchStart = (e: React.TouchEvent) => {
     if (activeTool !== 'pan' || !containerRef.current) return;
     setIsDragging(true);
@@ -343,6 +339,8 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     containerRef.current.scrollLeft = scrollLeft - walkX;
     containerRef.current.scrollTop = scrollTop - walkY;
   };
+
+  const handleMouseUpOrLeave = () => setIsDragging(false);
 
   if (error) return (
     <div className="h-full flex flex-col items-center justify-center p-8 bg-slate-900 text-white gap-4">
@@ -422,7 +420,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         </div>
       </div>
 
-      {/* ÁREA DO DOCUMENTO */}
+      {/* ÁREA DO DOCUMENTO - REFINADA PARA SCROLL NATIVO */}
       <div 
         ref={containerRef} 
         onMouseDown={handleMouseDown}
@@ -432,11 +430,18 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleMouseUpOrLeave}
-        className={`flex-1 overflow-auto p-4 md:p-10 flex justify-center items-start bg-slate-900 scrollbar-hide no-swipe transition-all duration-300 ${
+        className={`flex-1 overflow-auto p-4 md:p-10 flex justify-center items-start bg-slate-900 no-swipe transition-all duration-300 ${
           activeTool === 'pan' ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
         }`}
       >
-        <div className="relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] rounded-sm bg-white overflow-hidden origin-top transition-transform duration-200">
+        {/* Este div garante que o tamanho total (zoom) seja percebido pelo container overflow-auto */}
+        <div 
+          className="relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] rounded-sm bg-white overflow-hidden shrink-0"
+          style={{ 
+            width: canvasRef.current?.width || 'auto',
+            height: canvasRef.current?.height || 'auto'
+          }}
+        >
           {loading && (
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-sm gap-4">
               <Loader2 className="h-12 w-12 animate-spin text-accent" />
