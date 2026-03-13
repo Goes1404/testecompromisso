@@ -21,7 +21,6 @@ const studentItems = [
   { icon: MessagesSquare, label: "Fóruns de Discussão", href: "/dashboard/forum" },
   { icon: MessageSquare, label: "Chat com Mentores", href: "/dashboard/chat", badge: true },
   { icon: FileCheck, label: "Documentação", href: "/dashboard/student/documents" },
-  { icon: Calculator, label: "Simulador de Isenção", href: "/dashboard/financial-aid" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ];
 

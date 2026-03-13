@@ -79,7 +79,7 @@ export default function StudentAdmissionCentral() {
   const [savingDoc, setSavingDoc] = useState(false);
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
-  // Estados do Simulador de Isenção
+  // Estados do Cálculo de Renda
   const [loadingCalc, setLoadingCalc] = useState(false);
   const [members, setFamilyMembers] = useState<FamilyMember[]>([
     { id: '1', label: 'Você', income: '' }
@@ -137,7 +137,7 @@ export default function StudentAdmissionCentral() {
     }
   };
 
-  // Lógica do Simulador
+  // Lógica do Cálculo de Renda
   const totalFamilyIncome = useMemo(() => {
     return members.reduce((acc, m) => acc + (Number(m.income) || 0), 0);
   }, [members]);
@@ -187,7 +187,7 @@ export default function StudentAdmissionCentral() {
             <div className="space-y-2">
               <Badge className="bg-accent text-accent-foreground border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest mb-2">Padrão SiSU/ProUni</Badge>
               <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none">Central de <span className="text-accent">Ingresso</span></h1>
-              <p className="text-sm md:text-lg text-white/60 font-medium italic">Gerencie sua isenção e organize sua documentação oficial.</p>
+              <p className="text-sm md:text-lg text-white/60 font-medium italic">Gerencie seus dados e organize sua documentação oficial.</p>
             </div>
             <div className="flex flex-col items-end gap-3 bg-white/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
               <div className="flex justify-between w-40 text-[9px] font-black uppercase text-white/40 tracking-widest">
@@ -208,7 +208,7 @@ export default function StudentAdmissionCentral() {
             <ClipboardList className="h-4 w-4 mr-2" /> Checklist de Documentos
           </TabsTrigger>
           <TabsTrigger value="exemption" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-            <Calculator className="h-4 w-4 mr-2" /> Simulador de Isenção
+            <Calculator className="h-4 w-4 mr-2" /> Cálculo de Renda
           </TabsTrigger>
         </TabsList>
 
@@ -285,7 +285,7 @@ export default function StudentAdmissionCentral() {
           </div>
         </TabsContent>
 
-        {/* ABA SIMULADOR */}
+        {/* ABA CÁLCULO DE RENDA */}
         <TabsContent value="exemption" className="animate-in slide-in-from-right-4 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-4 space-y-6">
@@ -293,12 +293,12 @@ export default function StudentAdmissionCentral() {
                 <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
                 <CardHeader className="p-8">
                   <div className="h-12 w-12 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center mb-6 shadow-xl rotate-3"><Scale className="h-6 w-6" /></div>
-                  <CardTitle className="text-2xl font-black italic">Regra de 1,5 SM</CardTitle>
-                  <CardDescription className="text-white/60 font-medium italic">O critério oficial do Governo Federal.</CardDescription>
+                  <CardTitle className="text-2xl font-black italic">Critério Social</CardTitle>
+                  <CardDescription className="text-white/60 font-medium italic">O parâmetro de 1,5 salário mínimo per capita.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 pt-0 space-y-6">
                   <div className="p-5 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-sm space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2"><CheckCircle2 className="h-3 w-3" /> Teto Atualizado</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2"><CheckCircle2 className="h-3 w-3" /> Teto de Isenção</p>
                     <p className="text-sm font-medium leading-relaxed italic">Até <strong className="text-accent text-lg">R$ {THRESHOLD.toLocaleString('pt-BR')}</strong> por morador.</p>
                   </div>
                   <div className="space-y-4">
@@ -321,8 +321,8 @@ export default function StudentAdmissionCentral() {
                 <CardHeader className="bg-muted/10 p-10 border-b border-muted/20">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-3">Calculadora de Renda <Sparkles className="h-5 w-5 text-accent" /></CardTitle>
-                      <CardDescription className="font-medium italic">Adicione cada integrante da sua casa.</CardDescription>
+                      <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-3">Cálculo de Renda <Sparkles className="h-5 w-5 text-accent" /></CardTitle>
+                      <CardDescription className="font-medium italic">Adicione cada integrante da sua residência.</CardDescription>
                     </div>
                     <div className="text-right hidden sm:block">
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Soma Familiar</p>
@@ -367,8 +367,8 @@ export default function StudentAdmissionCentral() {
                         {calcResult.eligible ? <CheckCircle2 className="h-10 w-10" /> : <FileWarning className="h-10 w-10" />}
                       </div>
                       <div>
-                        <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter leading-none">{calcResult.eligible ? "Elegível para Isenção" : "Fora do Critério"}</h3>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mt-2">Diagnóstico Industrial: {calcResult.familySize} moradores</p>
+                        <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter leading-none">{calcResult.eligible ? "Elegível para Isenção" : "Fora do Critério Social"}</h3>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mt-2">Diagnóstico: {calcResult.familySize} moradores registrados</p>
                       </div>
                     </div>
                     <CardContent className="p-10 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -377,7 +377,7 @@ export default function StudentAdmissionCentral() {
                         <p className={`text-3xl font-black italic ${calcResult.eligible ? 'text-green-600' : 'text-red-600'}`}>R$ {calcResult.perCapita.toLocaleString('pt-BR')}</p>
                       </div>
                       <div className="p-6 bg-white rounded-3xl border-2 border-muted/10 shadow-inner">
-                        <span className="text-[9px] font-black text-muted-foreground uppercase">Limite do Governo</span>
+                        <span className="text-[9px] font-black text-muted-foreground uppercase">Limite do Governo (1,5 SM)</span>
                         <p className="text-3xl font-black text-primary italic">R$ {calcResult.threshold.toLocaleString('pt-BR')}</p>
                       </div>
                     </CardContent>
