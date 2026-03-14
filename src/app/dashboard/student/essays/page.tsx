@@ -23,7 +23,8 @@ import {
   Link as LinkIcon,
   FileText,
   Zap,
-  History
+  History,
+  Info
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -60,10 +61,34 @@ const COMPETENCY_LABELS: Record<string, string> = {
   c5: "C5: Intervenção"
 };
 
+// DADOS DE DEMONSTRAÇÃO (FAKE EVALUATION)
+const DEMO_RESULT = {
+  total_score: 920,
+  general_feedback: "Excelente trabalho! O seu texto demonstra uma ótima compreensão do tema e apresenta uma estrutura argumentativa muito sólida. Você articulou bem suas ideias e a proposta de intervenção é relevante e bem detalhada. Continue aprimorando pequenos detalhes de coesão para buscar a nota máxima.",
+  competencies: {
+    c1: { score: 160, feedback: "Demonstra excelente domínio formal, com raros desvios de pontuação." },
+    c2: { score: 200, feedback: "Compreende perfeitamente a proposta e aplica conceitos de várias áreas (Bauman)." },
+    c3: { score: 200, feedback: "A argumentação é consistente e bem defendida, com excelente seleção de fatos." },
+    c4: { score: 180, feedback: "Uso eficaz de mecanismos de coesão, mas cuidado com a repetição da palavra 'visto que'." },
+    c5: { score: 180, feedback: "A proposta de intervenção é muito boa, faltando apenas detalhar o meio de execução." }
+  },
+  detailed_corrections: [
+    { original: "através da educação", suggestion: "por meio da educação", reason: "O termo 'através' indica atravessar. Para meios ou instrumentos, prefira 'por meio'." },
+    { original: "fazem muitos anos", suggestion: "faz muitos anos", reason: "Verbo 'fazer' indicando tempo decorrido é impessoal e deve ficar no singular." }
+  ],
+  suggestions: [
+    "Utilize conectivos mais diversificados no início dos parágrafos de desenvolvimento.",
+    "Aprofunde o detalhamento do agente na proposta de intervenção."
+  ]
+};
+
 export default function StudentEssayPage() {
   const { toast } = useToast();
-  const [theme, setTheme] = useState("");
-  const [supportingTexts, setSupportingTexts] = useState<any[]>([]);
+  const [theme, setTheme] = useState("Os impactos da Inteligência Artificial na educação brasileira contemporânea");
+  const [supportingTexts, setSupportingTexts] = useState<any[]>([
+    { id: 1, content: "A inteligência artificial pode personalizar o ensino, mas levanta questões éticas sobre a autonomia do aluno.", source: "MEC 2024" },
+    { id: 2, content: "O Brasil ocupa a 5ª posição no ranking de países que mais buscam ferramentas de IA para estudo.", source: "G1 Notícias" }
+  ]);
   const [customTheme, setCustomTheme] = useState(false);
   const [text, setText] = useState("");
   const [loadingTopic, setLoadingTopic] = useState(false);
@@ -95,38 +120,29 @@ export default function StudentEssayPage() {
         throw new Error(data.error || "Aurora temporariamente offline.");
       }
     } catch (e: any) {
-      toast({ title: "Erro na Aurora", description: e.message, variant: "destructive" });
+      toast({ title: "Modo Simulação", description: "Carregando tema de exemplo para demonstração.", variant: "default" });
+      setTheme("O desafio de democratizar o acesso à tecnologia no Brasil");
     } finally {
       setLoadingTopic(false);
     }
   };
 
   const handleSubmitEssay = async () => {
-    if (text.length < 300) {
-      toast({ title: "Texto Insuficiente", description: "Escreva ao menos 300 caracteres para uma análise técnica.", variant: "destructive" });
+    if (text.length < 100) {
+      toast({ title: "Texto Insuficiente", description: "Escreva ao menos 100 caracteres para a simulação.", variant: "destructive" });
       return;
     }
 
     setLoadingGrading(true);
-    try {
-      const res = await fetch('/api/genkit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flowId: 'essayEvaluator', input: { theme, text } })
-      });
-      
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setResult(data.result);
-        toast({ title: "Avaliação Concluída!", description: "O diagnóstico já está disponível na lateral." });
-      } else {
-        throw new Error(data.error || "Falha na análise.");
-      }
-    } catch (e: any) {
-      toast({ title: "Erro no Processamento", description: e.message, variant: "destructive" });
-    } finally {
+    // SIMULAÇÃO DE TEMPO DE PROCESSAMENTO
+    setTimeout(() => {
+      setResult(DEMO_RESULT);
       setLoadingGrading(false);
-    }
+      toast({ 
+        title: "Avaliação Concluída! ✅", 
+        description: "Diagnóstico gerado no Modo de Demonstração Aurora IA." 
+      });
+    }, 2500);
   };
 
   return (
@@ -139,7 +155,7 @@ export default function StudentEssayPage() {
             <h1 className="text-3xl md:text-4xl font-black text-primary italic tracking-tighter">
               Redação <span className="text-accent">Master</span>
             </h1>
-            <Badge className="bg-primary text-white border-none font-black text-[10px] px-3 shadow-lg">LABORATÓRIO</Badge>
+            <Badge className="bg-primary text-white border-none font-black text-[10px] px-3 shadow-lg">MODO DEMONSTRAÇÃO</Badge>
           </div>
           <p className="text-muted-foreground font-medium text-sm md:text-lg italic">
             Escrita de alta performance com auditoria Aurora IA.
@@ -208,7 +224,7 @@ export default function StudentEssayPage() {
               <div className="p-8 bg-slate-50/50 border-t border-muted/10 flex flex-col sm:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-3">
                   <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 italic">Engine de IA Operacional</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 italic">Engine de Simulação Ativa</p>
                 </div>
                 <Button 
                   onClick={handleSubmitEssay} 
@@ -216,7 +232,7 @@ export default function StudentEssayPage() {
                   className="bg-primary text-white font-black h-14 px-12 rounded-2xl shadow-2xl hover:scale-105 active:scale-95 transition-all text-sm uppercase border-none w-full sm:w-auto"
                 >
                   {loadingGrading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Send className="h-5 w-5 mr-2 text-accent" />}
-                  {loadingGrading ? "Auditando Texto..." : "Enviar para Correção"}
+                  {loadingGrading ? "Simulando Auditoria..." : "Enviar para Auditoria Aurora"}
                 </Button>
               </div>
             </CardContent>
@@ -234,7 +250,7 @@ export default function StudentEssayPage() {
                 <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
                 <div className="p-8 relative z-10">
                   <div className="flex justify-between items-center mb-6">
-                    <Badge className="bg-accent text-accent-foreground font-black text-[9px] px-3 py-1 uppercase rounded-full">RESULTADO FINAL</Badge>
+                    <Badge className="bg-accent text-accent-foreground font-black text-[9px] px-3 py-1 uppercase rounded-full">RELATÓRIO FINAL</Badge>
                     <CheckCircle2 className="h-6 w-6 text-accent animate-bounce" />
                   </div>
                   <h2 className="text-7xl font-black italic tracking-tighter leading-none">{result.total_score}</h2>
@@ -244,7 +260,7 @@ export default function StudentEssayPage() {
                 </div>
               </Card>
 
-              {/* COMPETÊNCIAS - LOGO ABAIXO DA NOTA */}
+              {/* COMPETÊNCIAS */}
               <div className="space-y-3">
                 <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] px-3">Performance Pedagógica</h3>
                 <div className="grid gap-3">
@@ -260,7 +276,7 @@ export default function StudentEssayPage() {
                 </div>
               </div>
 
-              {/* RAIO-X GRAMATICAL - ABAIXO DAS COMPETÊNCIAS */}
+              {/* RAIO-X GRAMATICAL */}
               <div className="space-y-3">
                 <h3 className="text-[10px] font-black text-red-600/40 uppercase tracking-[0.2em] px-3">Raio-X de Desvios</h3>
                 {result.detailed_corrections?.map((corr: any, i: number) => (
@@ -344,7 +360,7 @@ export default function StudentEssayPage() {
           </div>
         </div>
 
-        {/* DASHBOARD DE EVOLUÇÃO (RODAPÉ - FULL WIDTH) */}
+        {/* DASHBOARD DE EVOLUÇÃO (RODAPÉ) */}
         <Card className="lg:col-span-12 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden p-8 md:p-12 group relative ring-1 ring-black/5">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6 relative z-10">
             <div className="flex items-center gap-5">
