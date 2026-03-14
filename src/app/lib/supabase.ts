@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 /**
  * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - COMPROMISSO 360
- * Versão Estável (Rollback 736a0dc)
+ * Versão Estabilizada com Resiliência contra "Lock Broken"
  */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -24,8 +24,19 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
 });
 
 /**
- * Utilitário de execução segura (Simplificado para estabilidade)
+ * 🛡️ safeExecute: Utilitário para tratar AbortError (Lock Broken) no Next.js 15 / Netlify.
+ * Realiza re-tentativas automáticas se uma requisição for abortada por conflito de abas.
  */
-export async function safeExecute<T = any>(fn: () => Promise<T>): Promise<T> {
-  return await fn();
+export async function safeExecute<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    const isAbortError = error?.name === 'AbortError' || error?.message?.includes('steal');
+    if (isAbortError && retries > 0) {
+      // Espera curta antes da re-tentativa (Exponential Backoff)
+      await new Promise(resolve => setTimeout(resolve, 300 * (4 - retries)));
+      return safeExecute(fn, retries - 1);
+    }
+    throw error;
+  }
 }

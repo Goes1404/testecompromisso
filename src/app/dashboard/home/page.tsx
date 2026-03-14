@@ -23,15 +23,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
-import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
+import { supabase, isSupabaseConfigured, safeExecute } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
-
-interface LibraryItem {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-}
 
 interface Announcement {
   id: string;
@@ -50,7 +43,7 @@ export default function DashboardHome() {
   const { user, profile, userRole, loading: isUserLoading } = useAuth();
   const router = useRouter();
   
-  const [recommendedTrails, setRecommendedTrails] = useState<LibraryItem[]>([]);
+  const [recommendedTrails, setRecommendedTrails] = useState<any[]>([]);
   const [libraryResources, setLibraryResources] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
@@ -72,11 +65,12 @@ export default function DashboardHome() {
     setLoadingData(true);
 
     try {
+      // Uso de safeExecute para garantir o carregamento do conteúdo no Netlify
       const [annRes, trailRes, progressRes, libRes] = await Promise.all([
-        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
-        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
-        supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
-        supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)
+        safeExecute(() => supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
+        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
+        safeExecute(() => supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
+        safeExecute(() => supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3))
       ]);
 
       if (annRes.data) setAnnouncements(annRes.data);
@@ -85,7 +79,7 @@ export default function DashboardHome() {
       if (libRes.data) setLibraryResources(libRes.data);
 
     } catch (e: any) {
-      console.error("❌ [DASHBOARD ERROR]:", e);
+      console.warn("⚠️ [DASHBOARD DATA ERROR]:", e);
     } finally {
       setLoadingData(false);
     }
