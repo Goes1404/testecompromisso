@@ -38,7 +38,7 @@ export async function GET() {
     try {
       // Teste minimalista para validar a chave com o modelo padronizado
       const response = await ai.generate({
-        model: 'googleai/gemini-1.5-flash',
+        model: 'googleai/gemini-1.5-flash-latest',
         prompt: 'ok',
         config: { maxOutputTokens: 2 }
       });

@@ -42,7 +42,6 @@ export default function DirectChatPage() {
             { id: 'initial', sender_id: 'aurora-ai', content: 'Olá! Sou a Aurora. Como posso te ajudar a acelerar seus estudos hoje?', created_at: new Date().toISOString() }
           ]);
         } else {
-          // Carregar Perfil do Contato
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -53,10 +52,9 @@ export default function DirectChatPage() {
             setContact(profileData);
           } else {
             console.error("Contato não localizado:", profileError);
-            setContact({ name: "Mentor da Rede", institution: "Educori 360" });
+            setContact({ name: "Mentor da Rede", institution: "Compromisso 360" });
           }
 
-          // Carregar Histórico de Mensagens
           const { data: msgs, error: msgsError } = await supabase
             .from('direct_messages')
             .select('*')
@@ -79,7 +77,6 @@ export default function DirectChatPage() {
 
     loadChatData();
 
-    // Inscrição Real-time
     if (!isAurora && user) {
       const channel = supabase
         .channel(`chat_realtime_${contactId}`)
@@ -107,7 +104,6 @@ export default function DirectChatPage() {
     }
   }, [user, contactId, isAurora, toast]);
 
-  // Scroll Automático
   useEffect(() => {
     if (scrollRef.current) {
       const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
@@ -154,11 +150,10 @@ export default function DirectChatPage() {
             created_at: new Date().toISOString(),
           }]);
         } else {
-          // EXIBIR ERRO NO CHAT CONFORME SOLICITADO
           setMessages(prev => [...prev, {
             id: `ai-error-${Date.now()}`,
             sender_id: "aurora-ai",
-            content: data.error || "Houve um erro desconhecido ao processar sua dúvida.",
+            content: data.error || "Houve um erro inesperado ao processar sua dúvida.",
             created_at: new Date().toISOString(),
             isError: true
           }]);
@@ -167,7 +162,7 @@ export default function DirectChatPage() {
         setMessages(prev => [...prev, {
           id: `ai-crit-${Date.now()}`,
           sender_id: "aurora-ai",
-          content: `⚠️ [ERRO CRÍTICO]: ${err.message || "Oscilação na rede detectada."}`,
+          content: `⚠️ [ERRO REDE]: ${err.message || "Oscilação detectada."}`,
           created_at: new Date().toISOString(),
           isError: true
         }]);
@@ -228,7 +223,7 @@ export default function DirectChatPage() {
             <div className="min-w-0">
               <h1 className="text-base md:text-xl font-black text-primary italic leading-none truncate">{contact?.name || "Mentor da Rede"}</h1>
               <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-2 truncate">
-                {isAurora ? 'Engine de Apoio 24/7' : (contact?.institution || 'Educori 360')}
+                {isAurora ? 'Engine de Apoio 24/7' : (contact?.institution || 'Compromisso 360')}
               </p>
             </div>
           </div>
