@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from "react";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Loader2, Sparkles, AlertCircle, BookOpen, User, ShieldCheck, GraduationCap } from "lucide-react";
+import { ChevronRight, Loader2, Sparkles, AlertCircle, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,7 +19,6 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const router = useRouter();
   const { toast } = useToast();
   
   const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
@@ -58,27 +56,6 @@ export function LoginForm() {
       setLoading(false);
       setAuthError("Erro de rede.");
     }
-  };
-
-  const handleQuickLogin = (role: 'student' | 'teacher' | 'admin') => {
-    setIsRedirecting(true);
-    const mockUser = {
-      id: role === 'admin' ? '00000000-0000-0000-0000-000000000001' : 
-          role === 'teacher' ? '00000000-0000-0000-0000-000000000002' : 
-          '00000000-0000-0000-0000-000000000003',
-      email: `${role}@compromisso.com`,
-    };
-    const mockProfile = {
-      id: mockUser.id,
-      name: `Usuário ${role.toUpperCase()}`,
-      profile_type: role,
-      institution: 'Rede Central',
-    };
-    localStorage.setItem('compromisso_mock_session', JSON.stringify({ user: mockUser, profile: mockProfile }));
-    
-    setTimeout(() => {
-      window.location.href = role === 'admin' ? "/dashboard/admin/home" : role === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home";
-    }, 800);
   };
 
   return (
@@ -152,27 +129,6 @@ export function LoginForm() {
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Acessar Portal <ChevronRight className="h-5 w-5 ml-1 text-accent" /></>}
             </Button>
           </form>
-
-          <div className="space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-dashed" /></div>
-              <div className="relative flex justify-center text-[10px] uppercase font-black"><span className="bg-white px-4 text-muted-foreground tracking-widest">Acesso Rápido</span></div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <button onClick={() => handleQuickLogin('student')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-primary/5 transition-all group border border-transparent hover:border-primary/20">
-                <GraduationCap className="h-5 w-5 text-primary/40 group-hover:text-primary" />
-                <span className="text-[8px] font-black uppercase text-primary/60">Aluno</span>
-              </button>
-              <button onClick={() => handleQuickLogin('teacher')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-accent/5 transition-all group border border-transparent hover:border-accent/20">
-                <ShieldCheck className="h-5 w-5 text-accent/40 group-hover:text-accent" />
-                <span className="text-[8px] font-black uppercase text-accent/60">Mentor</span>
-              </button>
-              <button onClick={() => handleQuickLogin('admin')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-red-50 transition-all group border border-transparent hover:border-red-200">
-                <User className="h-5 w-5 text-red-400/40 group-hover:text-red-500" />
-                <span className="text-[8px] font-black uppercase text-red-500/60">Admin</span>
-              </button>
-            </div>
-          </div>
 
           <div className="pt-6 text-center border-t border-dashed">
             <p className="text-xs font-medium text-muted-foreground italic">
