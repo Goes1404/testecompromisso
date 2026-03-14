@@ -11,19 +11,18 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 3.0: Alta Permissividade e Resiliência Next.js 15.
+ * Versão 4.0: Resiliência Total e Serialização Industrial.
  */
 
 export const maxDuration = 60; 
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Payload Extraction (Prioritária)
     const body = await req.json();
     const { flowId, input } = body;
 
-    // 2. Validação de Segurança Silenciosa
-    // Permitimos o fluxo para testes mesmo se o cookie falhar temporariamente
+    // Validação de Segurança Silenciosa para Next.js 15
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -43,23 +42,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Motor '${flowId}' não localizado.` }, { status: 404 });
     }
 
-    console.log(`[AURORA]: Sintonizando ${flowId} para ${user?.email || 'MODO_SINAL_ABERTO'}...`);
+    console.log(`[AURORA]: Processando ${flowId} para ${user?.email || 'SINAL_ABERTO'}...`);
     
-    // 3. Execução do Fluxo Genkit
+    // Execução do Fluxo Genkit
     const result = await targetFlow(input);
 
-    return NextResponse.json({ success: true, result });
+    // Garante que o resultado seja um POJO serializável
+    return NextResponse.json({ 
+      success: true, 
+      result: JSON.parse(JSON.stringify(result)) 
+    });
+
   } catch (error: any) {
-    const errorMessage = error?.message || 'Falha na sintonia do motor de IA';
-    console.error(`[AURORA CRITICAL]:`, errorMessage);
+    console.error(`[AURORA ERROR]:`, error?.message || error);
 
     return NextResponse.json(
       { 
-        error: '⚠️ Falha no sinal da Aurora IA', 
-        details: errorMessage,
-        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        success: false,
+        error: '⚠️ Erro de Sintonia na Aurora IA', 
+        details: error?.message || 'Falha desconhecida no motor.'
       }, 
-      { status: 500 }
+      { status: 200 } // Retornamos 200 com flag success:false para evitar o erro 500 no navegador
     );
   }
 }
