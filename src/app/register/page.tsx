@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -71,7 +70,7 @@ export default function RegisterPage() {
     }
 
     if (!isSupabaseConfigured) {
-      toast({ variant: "destructive", title: "Erro de Configuração", description: "O sistema não está conectado ao Supabase." });
+      toast({ variant: "destructive", title: "Erro de Configuração", description: "O sistema não está conectado ao banco de dados." });
       return;
     }
 
@@ -130,12 +129,12 @@ export default function RegisterPage() {
 
       toast({ 
         title: "Cadastro Realizado! 🚀", 
-        description: "Seu perfil foi criado com sucesso. Verifique seu e-mail." 
+        description: "Seu perfil foi criado com sucesso. Redirecionando..." 
       });
       
       setTimeout(() => {
         window.location.href = profileType === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home";
-      }, 2000);
+      }, 1000);
 
     } catch (err: any) {
       console.error("Erro no cadastro:", err);
@@ -163,7 +162,6 @@ export default function RegisterPage() {
 
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg')] bg-cover bg-center grayscale opacity-10 pointer-events-none"></div>
       
       <div className="w-full max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative z-10">
         <div className="space-y-4 text-center">

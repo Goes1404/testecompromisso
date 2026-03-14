@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from "react";
@@ -21,7 +20,6 @@ export function LoginForm() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
-  const router = useRouter();
   
   const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
@@ -30,7 +28,7 @@ export function LoginForm() {
     setAuthError(null);
     
     if (!isSupabaseConfigured) {
-      setAuthError("Erro de Configuração: NEXT_PUBLIC_SUPABASE_URL não detectada no ambiente.");
+      setAuthError("Erro: Banco de dados não conectado.");
       return;
     }
 
@@ -51,13 +49,13 @@ export function LoginForm() {
 
       if (data.user) {
         setIsRedirecting(true);
-        // Redirecionamento instantâneo via window.location para limpar o estado pesado da SPA e entrar na área autenticada
+        // Redirecionamento forçado para garantir carregamento limpo do dashboard
         window.location.href = "/dashboard";
       }
 
     } catch (err: any) {
       setLoading(false);
-      setAuthError("Erro de comunicação com o servidor.");
+      setAuthError("Falha na rede industrial.");
     }
   };
 
@@ -65,13 +63,13 @@ export function LoginForm() {
     <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 z-10 relative">
       
       {isRedirecting && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-primary text-white animate-in fade-in duration-300">
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 shadow-2xl mb-6 animate-pulse">
-            <BookOpen className="h-10 w-10 text-accent" />
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-primary text-white">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 shadow-2xl mb-6">
+            <BookOpen className="h-10 w-10 text-accent animate-pulse" />
           </div>
           <div className="flex items-center gap-3">
             <Loader2 className="h-4 w-4 animate-spin text-accent" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Autenticando Rede...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Sincronizando...</p>
           </div>
         </div>
       )}
@@ -113,13 +111,13 @@ export function LoginForm() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="font-bold text-primary/60">E-mail Corporativo ou Aluno</Label>
+              <Label htmlFor="email" className="font-bold text-primary/60">E-mail</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-white rounded-lg border-muted/20" placeholder="seu@email.com" required disabled={loading} />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="password" title="Senha" className="font-bold text-primary/60">Senha de Segurança</Label>
-                <Link href="#" className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline">Recuperar</Link>
+                <Label htmlFor="password" title="Senha" className="font-bold text-primary/60">Senha</Label>
+                <button type="button" className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline">Esqueci</button>
               </div>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 bg-white rounded-lg border-muted/20" placeholder="••••••••" required disabled={loading} />
             </div>
@@ -130,7 +128,7 @@ export function LoginForm() {
 
           <div className="pt-6 text-center border-t border-dashed">
             <p className="text-xs font-medium text-muted-foreground italic">
-              Ainda não possui conta? <Link href="/register" className="text-primary font-black uppercase text-[10px] tracking-widest hover:text-accent transition-colors">Criar Cadastro</Link>
+              Não possui conta? <Link href="/register" className="text-primary font-black uppercase text-[10px] tracking-widest hover:text-accent transition-colors">Criar Cadastro</Link>
             </p>
           </div>
         </CardContent>

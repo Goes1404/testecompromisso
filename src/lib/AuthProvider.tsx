@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
@@ -87,13 +86,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
 
     const initAuth = async () => {
-      // Timeout de segurança para evitar hang eterno se o Supabase/Rede falhar
+      // Timeout agressivo para performance (3s)
       const timeoutId = setTimeout(() => {
         if (loading && isMounted) {
-          console.warn("⚠️ [AUTH TIMEOUT]: Supabase demorou demais para responder.");
+          console.warn("⚠️ [AUTH TIMEOUT]: Liberando interface para carregar.");
           setLoading(false);
         }
-      }, 6000);
+      }, 3000);
 
       try {
         if (!isSupabaseConfigured) {
