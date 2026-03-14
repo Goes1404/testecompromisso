@@ -4,23 +4,20 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * 🔒 MOTOR DE INTELIGÊNCIA AURORA IA - COMPROMISSO 360
- * 
- * Configuração centralizada para alta disponibilidade.
- * A chave de API é injetada globalmente para garantir visibilidade pelo SDK.
+ * Configuração otimizada para Next.js 15 e Firebase Studio.
  */
 
-const OFFICIAL_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
 
-// Injeção redundante para máxima compatibilidade em ambientes Cloud/Next.js
+// Injeção global para garantir que os modelos localizem a chave no runtime
 if (typeof process !== 'undefined') {
-  process.env.GOOGLE_GENAI_API_KEY = OFFICIAL_KEY;
-  process.env.GEMINI_API_KEY = OFFICIAL_KEY;
+  process.env.GOOGLE_GENAI_API_KEY = apiKey;
 }
 
 export const ai = genkit({
   plugins: [
     googleAI({
-      apiKey: OFFICIAL_KEY,
+      apiKey: apiKey,
     }),
   ],
 });

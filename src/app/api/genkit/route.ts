@@ -10,22 +10,23 @@ import { trailStructureGeneratorFlow } from '@/ai/flows/trail-structure-generato
 import { createClient } from '@/utils/supabase/server';
 
 /**
- * @fileOverview Gateway de API Blindado para a Aurora IA.
- * Suporta autenticação Supabase e bypass para sessões de teste industriais.
+ * @fileOverview Gateway de API Aurora IA.
+ * Corrigido para Next.js 15 (Aguardando inicialização assíncrona do Supabase).
  */
 
 export const maxDuration = 60; 
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
+    // 1. Inicializar Supabase com suporte a cookies assíncronos (Next 15)
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Lógica de Bypass Industrial: Permite IDs de teste do Firebase Studio
+    // Lógica de Bypass para sessões de teste industriais do Firebase Studio
     const isMockUser = user?.id?.startsWith('00000000-');
     
     if (!user && !isMockUser) {
-      return NextResponse.json({ error: 'Unauthorized - Login real ou de teste necessário.' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized - Faça login para usar a IA.' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -47,19 +48,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Flow ${flowId} not found` }, { status: 404 });
     }
 
-    console.log(`[AURORA IA]: Executando ${flowId} para usuário ${user?.id || 'MOCK'}...`);
+    console.log(`[AURORA IA]: Executando ${flowId} para ${user?.email || 'MOCK_USER'}...`);
     const result = await targetFlow(input);
 
     return NextResponse.json({ success: true, result });
   } catch (error: any) {
     const errorMsg = error?.message || 'Erro desconhecido na Engine de IA';
-    console.error(`[AURORA CRITICAL]:`, error);
+    console.error(`[AURORA CRITICAL]:`, errorMsg);
 
     return NextResponse.json(
       { 
-        error: '⚠️ Falha no processamento da IA.', 
-        details: errorMsg,
-        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        error: '⚠️ Erro de Processamento', 
+        details: errorMsg
       }, 
       { status: 500 }
     );
