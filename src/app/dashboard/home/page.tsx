@@ -9,15 +9,12 @@ import { Progress } from "@/components/ui/progress";
 import {
   Library,
   Bot,
-  ShieldCheck,
   Loader2,
-  Sparkles,
   Megaphone,
   AlertOctagon,
   Info,
   TrendingUp,
   PlayCircle,
-  ChevronRight,
   Zap,
   FileText,
   Video,
@@ -29,7 +26,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
-import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
+import { supabase, isSupabaseConfigured, safeExecute } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 
 interface LibraryItem {
@@ -44,7 +41,6 @@ interface Announcement {
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high';
-  target_group?: string;
 }
 
 const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: string; bgColor: string }> = {
@@ -64,7 +60,6 @@ export default function DashboardHome() {
   const [loadingData, setLoadingData] = useState(true);
   const [errorState, setErrorState] = useState<string | null>(null);
 
-  // Guard de Papel
   useEffect(() => {
     if (!isUserLoading && userRole !== 'student') {
       if (userRole === 'admin') router.replace("/dashboard/admin/home");
@@ -78,27 +73,22 @@ export default function DashboardHome() {
       return;
     }
 
-    try {
-      console.log("🔍 [DASHBOARD]: Sincronizando dados de rede...");
-      
-      const [annRes, trailRes, progressRes, libRes] = await Promise.all([
-        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
-        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
-        supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
-        supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)
-      ]);
+    setLoadingData(true);
+    setErrorState(null);
 
-      if (annRes.error) console.error("Erro Avisos:", annRes.error);
-      if (trailRes.error) console.error("Erro Trilhas:", trailRes.error);
+    try {
+      // Uso de safeExecute para tratar erros de Lock no ambiente Netlify
+      const [annRes, trailRes, progressRes, libRes] = await Promise.all([
+        safeExecute(() => supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
+        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
+        safeExecute(() => supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
+        safeExecute(() => supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3))
+      ]);
 
       if (annRes.data) setAnnouncements(annRes.data);
       if (trailRes.data) setRecommendedTrails(trailRes.data);
-      if (progressRes.data) setRecentProgress(progressRes.data.filter(p => p.trail));
+      if (progressRes.data) setRecentProgress(progressRes.data.filter((p: any) => p.trail));
       if (libRes.data) setLibraryResources(libRes.data);
-
-      if (!trailRes.data?.length && !annRes.data?.length) {
-        console.warn("⚠️ [DASHBOARD]: Banco de dados respondeu mas retornou vazio.");
-      }
 
     } catch (e: any) {
       console.error("❌ [DASHBOARD ERROR]:", e);
@@ -137,7 +127,7 @@ export default function DashboardHome() {
             <AlertOctagon className="h-10 w-10 shrink-0" />
             <div>
               <p className="text-sm font-black uppercase tracking-widest">Erro de Infraestrutura</p>
-              <p className="text-xs font-medium italic mt-1">O Supabase não está conectado. Adicione as chaves no painel do Netlify e faça um novo deploy com 'Clear Cache'.</p>
+              <p className="text-xs font-medium italic mt-1">Variáveis NEXT_PUBLIC_SUPABASE_URL ou KEY ausentes.</p>
             </div>
           </div>
         </Card>
@@ -148,8 +138,8 @@ export default function DashboardHome() {
           <div className="flex items-center gap-4 text-amber-700">
             <Database className="h-10 w-10 shrink-0" />
             <div>
-              <p className="text-sm font-black uppercase tracking-widest">Oscilação de Rede</p>
-              <p className="text-xs font-medium italic mt-1">Houve um problema ao buscar os dados: {errorState}. Tente recarregar a página.</p>
+              <p className="text-sm font-black uppercase tracking-widest">Sincronização em Curso</p>
+              <p className="text-xs font-medium italic mt-1">Estamos estabilizando o sinal de rede. Se o conteúdo não carregar, limpe o cache do navegador.</p>
             </div>
           </div>
         </Card>
@@ -197,8 +187,8 @@ export default function DashboardHome() {
               ) : announcements.length === 0 ? (
                 <p className="text-xs italic text-muted-foreground px-4 opacity-50">Nenhum aviso no momento.</p>
               ) : (
-                announcements.map(ann => {
-                  const styles = priorityStyles[ann.priority] || priorityStyles.low;
+                announcements.map((ann: any) => {
+                  const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                   const Icon = styles.icon;
                   return (
                     <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${styles.bgColor} border border-black/5`}>
@@ -228,7 +218,7 @@ export default function DashboardHome() {
                 </div>
               ) : (
                 recentProgress.map((prog) => {
-                  const trailData = Array.isArray(prog.trail) ? prog.trail[0] : prog.trail;
+                  const trailData = prog.trail;
                   return (
                     <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
                       <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col">
@@ -258,21 +248,25 @@ export default function DashboardHome() {
             <div className="space-y-4">
               {loadingData ? (
                 Array(3).fill(0).map((_, i) => <div key={i} className="h-16 bg-muted/20 animate-pulse rounded-2xl" />)
-              ) : libraryResources.map((res) => (
-                <Card key={res.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
-                      {res.type === 'Video' ? <Video className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+              ) : libraryResources.length === 0 ? (
+                <p className="text-xs italic text-muted-foreground px-4 opacity-50">Biblioteca em sincronização.</p>
+              ) : (
+                libraryResources.map((res) => (
+                  <Card key={res.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
+                        {res.type === 'Video' ? <Video className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-xs text-primary truncate italic">{res.title}</h4>
+                      </div>
+                      <Button asChild size="icon" variant="ghost" className="h-8 w-8 rounded-full text-accent">
+                        <Link href="/dashboard/library"><TrendingUp className="h-4 w-4" /></Link>
+                      </Button>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-xs text-primary truncate italic">{res.title}</h4>
-                    </div>
-                    <Button asChild size="icon" variant="ghost" className="h-8 w-8 rounded-full text-accent">
-                      <Link href="/dashboard/library"><ChevronRight className="h-4 w-4" /></Link>
-                    </Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
             </div>
         </div>
       </div>

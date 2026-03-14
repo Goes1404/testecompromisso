@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card, CardFooter, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthProvider";
-import { supabase } from "@/app/lib/supabase";
+import { supabase, safeExecute } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 const TRAIL_CATEGORIES = ["Todos", "Matemática", "Tecnologia", "Linguagens", "Física", "Biologia", "História", "Geografia"];
@@ -50,47 +50,54 @@ export default function LearningTrailsPage() {
   const [loading, setLoading] = useState(true);
   const [pinningId, setPinningId] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data: trails, error: trailsError } = await supabase
-        .from('trails')
-        .select('*')
-        .or('status.eq.active,status.eq.published')
-        .order('created_at', { ascending: false });
+      // Uso de safeExecute para lidar com conflitos de concorrência/lock no Netlify
+      const { data: trails, error: trailsError } = await safeExecute(() => 
+        supabase
+          .from('trails')
+          .select('*')
+          .or('status.eq.active,status.eq.published')
+          .order('created_at', { ascending: false })
+      );
 
       if (trailsError) throw trailsError;
 
-      const { data: progress } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user.id);
+      const { data: progress } = await safeExecute(() => 
+        supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', user.id)
+      );
 
       setDbTrails(trails || []);
       setAllProgress(progress || []);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Erro ao sincronizar trilhas:", e);
+      toast({ title: "Sinal Oscilando", description: "Tentando reconectar ao estúdio...", variant: "default" });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [fetchData]);
 
   const handlePinTrail = async (trailId: string) => {
     if (!user || pinningId) return;
     setPinningId(trailId);
     
     try {
-      // Upsert progress with 0% if it doesn't exist, which "pins" it to the home page
-      const { error } = await supabase.from('user_progress').upsert({
-        user_id: user.id,
-        trail_id: trailId,
-        last_accessed: new Date().toISOString()
-      }, { onConflict: 'user_id,trail_id' });
+      const { error } = await safeExecute(() => 
+        supabase.from('user_progress').upsert({
+          user_id: user.id,
+          trail_id: trailId,
+          last_accessed: new Date().toISOString()
+        }, { onConflict: 'user_id,trail_id' })
+      );
 
       if (error) throw error;
 
@@ -136,7 +143,6 @@ export default function LearningTrailsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1 md:px-4">
-      {/* Header Visual Industrial */}
       <section className="relative overflow-hidden bg-primary rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl">
         <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-accent/20 rounded-full blur-[80px]" />
         <div className="relative z-10 space-y-6 max-w-3xl">
@@ -150,7 +156,6 @@ export default function LearningTrailsPage() {
         </div>
       </section>
 
-      {/* Controles Dinâmicos */}
       <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
           <div className="relative w-full sm:w-80 group">
@@ -197,7 +202,6 @@ export default function LearningTrailsPage() {
         </div>
       </div>
 
-      {/* Grid de Trilhas - Simétrico e Industrial */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredTrails.map((trail) => {
           const userProgress = allProgress?.find(p => p.trail_id === trail.id);
@@ -221,7 +225,6 @@ export default function LearningTrailsPage() {
                   </Badge>
                 </div>
                 
-                {/* Botão Fixar (Pin) - Overlay */}
                 <button 
                   onClick={() => handlePinTrail(trail.id)}
                   disabled={pinningId === trail.id}

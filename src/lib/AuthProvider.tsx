@@ -1,8 +1,8 @@
 
 'use client';
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { supabase, isSupabaseConfigured, safeExecute } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const isInitializing = useRef(false);
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
@@ -56,11 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured) return null;
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await safeExecute(() => 
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+      );
 
       if (!error && data) {
         if (data.status === 'suspended') {
@@ -71,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return null;
     } catch (error) {
-      console.error('⚠️ [SUPABASE PROFILE ERROR]:', error);
+      console.error('⚠️ [AUTH PROFILE ERROR]:', error);
       return null;
     }
   }, [router]);
@@ -84,26 +87,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    if (isInitializing.current) return;
+    isInitializing.current = true;
+
     let isMounted = true;
 
     const initAuth = async () => {
-      // Timeout estendido para 10s para ambientes de nuvem (Netlify/Vercel)
-      const timeoutId = setTimeout(() => {
-        if (loading && isMounted) {
-          console.warn("⚠️ [AUTH TIMEOUT]: A conexão com o Supabase está demorando. Verifique as chaves no Netlify.");
-          setLoading(false);
-        }
-      }, 10000);
-
       try {
         if (!isSupabaseConfigured) {
-          console.error("❌ [SUPABASE CONFIG MISSING]: Verifique as variáveis de ambiente NEXT_PUBLIC_SUPABASE_URL e KEY.");
           setLoading(false);
-          clearTimeout(timeoutId);
           return;
         }
 
-        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        // Busca a sessão inicial com retry em caso de lock error
+        const { data: { session: initialSession }, error: sessionError } = await safeExecute(() => 
+          supabase.auth.getSession()
+        );
         
         if (sessionError) throw sessionError;
 
@@ -111,15 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(initialSession);
           setUser(initialSession.user);
           const p = await fetchProfile(initialSession.user.id);
-          if (p && isMounted) {
-            setProfile(p);
-          }
+          if (p && isMounted) setProfile(p);
         }
       } catch (e) {
         console.warn("⚠️ [AUTH INIT ERROR]:", e);
       } finally {
         if (isMounted) setLoading(false);
-        clearTimeout(timeoutId);
       }
     };
 
@@ -128,8 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!isMounted) return;
       
-      console.log(`🔐 [AUTH EVENT]: ${event}`);
-
       if (currentSession) {
         setSession(currentSession);
         setUser(currentSession.user);
