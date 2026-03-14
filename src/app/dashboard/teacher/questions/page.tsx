@@ -48,7 +48,7 @@ type ParsedQuestion = {
 export default function QuestionBankPage() {
     const { toast } = useToast();
     const { user } = useAuth();
-    const [entryMode, setEntryMode] = useState<'bulk' | 'manual' | 'ai'>('bulk');
+    const [entryMode, setEntryMode] = useState<'bulk' | 'manual'>('bulk');
     const [isSaving, setIsSaving] = useState(false);
     const [subjects, setSubjects] = useState<Subject[]>([]);
     
@@ -56,9 +56,7 @@ export default function QuestionBankPage() {
     const [rawText, setRawText] = useState('');
     const [extractedQuestions, setExtractedQuestions] = useState<ParsedQuestion[]>([]);
     
-    // AI Wizard States
-    const [aiTopic, setAiTopic] = useState('');
-    const [aiContext, setAiContext] = useState('');
+    // AI Status State (Used for bulk extraction)
     const [isGenerating, setIsGenerating] = useState(false);
     
     // Manual States
@@ -106,42 +104,6 @@ export default function QuestionBankPage() {
         }
     };
 
-    const handleGenerateAI = async () => {
-        if (!aiTopic.trim() || isGenerating) return;
-        setIsGenerating(true);
-        setExtractedQuestions([]);
-        try {
-            const response = await fetch('/api/genkit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    flowId: 'quizGenerator',
-                    input: { topic: aiTopic, description: aiContext }
-                })
-            });
-            const data = await response.json();
-            if (data.success && data.result?.questions) {
-                // Map the AI output to our database format
-                const mapped: ParsedQuestion[] = data.result.questions.map((q: any) => ({
-                    question_text: q.question,
-                    options: q.options.map((opt: string, idx: number) => ({
-                        key: String.fromCharCode(65 + idx), // 0 -> A, 1 -> B...
-                        text: opt
-                    })),
-                    correct_answer: String.fromCharCode(65 + q.correctIndex),
-                    year: new Date().getFullYear(),
-                    explanation: q.explanation
-                }));
-                setExtractedQuestions(mapped);
-                toast({ title: "Quiz Gerado!", description: "Revise as questões antes de salvar." });
-            }
-        } catch (error: any) {
-            toast({ title: "Erro na Geração", description: error.message, variant: 'destructive' });
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
     const handleSaveProcessed = async () => {
         if (!user || extractedQuestions.length === 0 || !bulkSubjectId) return;
         setIsSaving(true);
@@ -159,8 +121,6 @@ export default function QuestionBankPage() {
             toast({ title: "Banco Atualizado!", description: "Questões gravadas com sucesso." });
             setExtractedQuestions([]);
             setRawText('');
-            setAiTopic('');
-            setAiContext('');
         } catch (e: any) {
             toast({ title: "Erro ao gravar", description: e.message, variant: "destructive" });
         } finally {
@@ -211,63 +171,16 @@ export default function QuestionBankPage() {
             <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
                 <CardHeader className="bg-slate-50/50 border-b border-dashed p-8 md:p-12">
                     <div className="flex flex-wrap bg-white/80 backdrop-blur-sm p-1.5 rounded-2xl border w-fit mx-auto md:mx-0 shadow-sm">
-                        <Button variant={entryMode === 'ai' ? 'default' : 'ghost'} onClick={() => {setEntryMode('ai'); setExtractedQuestions([]);}} className={`rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6 ${entryMode === 'ai' ? 'bg-accent text-accent-foreground shadow-lg' : ''}`}>
-                            <Wand2 className="h-4 w-4 mr-2"/> Gerador IA
-                        </Button>
-                        <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => {setEntryMode('bulk'); setExtractedQuestions([]);}} className="rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6">
+                        <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => {setEntryMode('bulk'); setExtractedQuestions([]);}} className={`rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6 ${entryMode === 'bulk' ? 'bg-primary text-white shadow-lg' : ''}`}>
                             <ListChecks className="h-4 w-4 mr-2"/> Carga em Massa
                         </Button>
-                        <Button variant={entryMode === 'manual' ? 'default' : 'ghost'} onClick={() => setEntryMode('manual')} className="rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6">
+                        <Button variant={entryMode === 'manual' ? 'default' : 'ghost'} onClick={() => setEntryMode('manual')} className={`rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6 ${entryMode === 'manual' ? 'bg-primary text-white shadow-lg' : ''}`}>
                             <PlusCircle className="h-4 w-4 mr-2"/> Manual
                         </Button>
                     </div>
                 </CardHeader>
                 
                 <CardContent className="p-8 md:p-12">
-                    {entryMode === 'ai' && (
-                        <div className="space-y-8 animate-in slide-in-from-top-4 duration-500">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Tópico de Estudo</Label>
-                                        <Input 
-                                            placeholder="Ex: Revolução Industrial ou Equações de 2º Grau" 
-                                            value={aiTopic}
-                                            onChange={(e) => setAiTopic(e.target.value)}
-                                            className="h-14 rounded-2xl bg-muted/30 border-none font-bold italic text-lg"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Contexto Adicional (Opcional)</Label>
-                                        <Textarea 
-                                            placeholder="Ex: Focar em causas econômicas ou estilo prova da Fuvest..."
-                                            value={aiContext}
-                                            onChange={(e) => setAiContext(e.target.value)}
-                                            className="min-h-[100px] rounded-2xl bg-muted/30 border-none font-medium italic resize-none"
-                                        />
-                                    </div>
-                                    <Button 
-                                        onClick={handleGenerateAI} 
-                                        disabled={isGenerating || !aiTopic.trim()} 
-                                        className="w-full h-16 rounded-2xl bg-accent text-accent-foreground font-black text-base shadow-xl shadow-accent/20 transition-all hover:scale-[1.02]"
-                                    >
-                                        {isGenerating ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Sparkles className="h-6 w-6 mr-2" />}
-                                        {isGenerating ? "Aurora Criando Questões..." : "Gerar Questões Inéditas"}
-                                    </Button>
-                                </div>
-                                <Card className="border-none shadow-inner bg-slate-50 p-8 rounded-[2rem] flex flex-col justify-center items-center text-center space-y-4">
-                                    <div className="h-16 w-16 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
-                                        <BrainCircuit className="h-10 w-10" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-black text-primary uppercase tracking-widest">Co-criação Aurora IA</h4>
-                                        <p className="text-xs text-muted-foreground italic mt-2">Nossa IA gera questões com base no estilo dos grandes vestibulares brasileiros, incluindo gabaritos comentados.</p>
-                                    </div>
-                                </Card>
-                            </div>
-                        </div>
-                    )}
-
                     {entryMode === 'bulk' && (
                         <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                             <div className="space-y-2">
