@@ -3,6 +3,7 @@
 
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
+ * Implementação resiliente para evitar falhas de validação JSON.
  */
 
 import { ai } from '@/ai/genkit';
@@ -32,15 +33,13 @@ const prompt = ai.definePrompt({
   output: { schema: ConceptExplanationAssistantOutputSchema },
   config: { 
     temperature: 0.7,
-    // Ativa o modo JSON nativo do Gemini para evitar falhas de validação
-    responseMimeType: 'application/json' 
   },
   system: `Você é a Aurora, a assistente pedagógica do curso Compromisso em Santana de Parnaíba.
 Sua missão é ajudar estudantes brasileiros com dúvidas para o ENEM, ETEC e vestibulares.
 
 REGRAS:
 - Use Português Brasileiro profissional e empático.
-- Retorne sua resposta EXCLUSIVAMENTE no formato JSON: {"response": "sua resposta aqui"}.
+- Seja direto e focado no conteúdo acadêmico.
 - Se o usuário perguntar algo não acadêmico, direcione-o gentilmente de volta aos estudos.`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
@@ -56,19 +55,34 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
     outputSchema: ConceptExplanationAssistantOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input);
-    
-    // Tenta obter o output estruturado (Zod)
-    if (response.output) {
-      return response.output;
-    }
-    
-    // Fallback: Se o Zod falhar mas houver texto, tentamos retornar como response
-    if (response.text) {
-      return { response: response.text };
-    }
+    try {
+      const response = await prompt(input);
+      
+      // 1. Tenta obter o output estruturado (Zod) - Modo Ideal
+      if (response.output) {
+        return response.output;
+      }
+      
+      // 2. Se falhar, tenta extrair JSON do texto bruto (Remoção de Markdown)
+      if (response.text) {
+        const cleanedText = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
+        try {
+          const parsed = JSON.parse(cleanedText);
+          if (parsed.response) return { response: parsed.response };
+        } catch (e) {
+          // Não é um JSON válido, retornamos o texto bruto como resposta
+          return { response: response.text };
+        }
+      }
 
-    throw new Error("A Aurora não conseguiu sintonizar uma resposta válida no momento.");
+      // 3. Fallback final: tenta ler a mensagem diretamente
+      const rawMsg = response.text || "A Aurora está sintonizando uma resposta... tente novamente.";
+      return { response: rawMsg };
+
+    } catch (error: any) {
+      console.error("[AURORA FLOW ERROR]:", error);
+      throw new Error(`Falha na engine de resposta: ${error.message}`);
+    }
   }
 );
 

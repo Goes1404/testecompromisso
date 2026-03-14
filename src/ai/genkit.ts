@@ -9,9 +9,10 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
 
-// Garante que a chave esteja disponível no ambiente global do processo
+// Garante que a chave esteja disponível no ambiente global do processo para os plugins
 if (typeof process !== 'undefined') {
   process.env.GOOGLE_GENAI_API_KEY = apiKey;
+  process.env.GEMINI_API_KEY = apiKey;
 }
 
 export const ai = genkit({

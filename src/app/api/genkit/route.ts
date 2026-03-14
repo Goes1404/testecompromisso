@@ -11,7 +11,7 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 4.0: Resiliência Total e Serialização Industrial.
+ * Versão 5.0: Resiliência Máxima e Depuração Verbosa.
  */
 
 export const maxDuration = 60; 
@@ -22,9 +22,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { flowId, input } = body;
 
-    // Validação de Segurança Silenciosa para Next.js 15
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // Log de Entrada para Depuração no Console do Servidor
+    console.log(`[AURORA REQ]: ${flowId}`, JSON.stringify(input).substring(0, 100));
 
     const flows: Record<string, any> = {
       conceptExplanationAssistant: conceptExplanationAssistantFlow,
@@ -42,27 +41,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Motor '${flowId}' não localizado.` }, { status: 404 });
     }
 
-    console.log(`[AURORA]: Processando ${flowId} para ${user?.email || 'SINAL_ABERTO'}...`);
-    
     // Execução do Fluxo Genkit
     const result = await targetFlow(input);
 
-    // Garante que o resultado seja um POJO serializável
+    // Log de Saída
+    console.log(`[AURORA RES]: Sucesso para ${flowId}`);
+
     return NextResponse.json({ 
       success: true, 
-      result: JSON.parse(JSON.stringify(result)) 
+      result: result 
     });
 
   } catch (error: any) {
-    console.error(`[AURORA ERROR]:`, error?.message || error);
+    console.error(`[AURORA CRITICAL ERROR]:`, error?.message || error);
 
     return NextResponse.json(
       { 
         success: false,
-        error: '⚠️ Erro de Sintonia na Aurora IA', 
-        details: error?.message || 'Falha desconhecida no motor.'
+        error: '⚠️ Falha na Sintonia Aurora', 
+        details: error?.message || 'Erro interno no motor.'
       }, 
-      { status: 200 } // Retornamos 200 com flag success:false para evitar o erro 500 no navegador
+      { status: 200 } // Retornamos 200 para capturar o erro no frontend sem travar o Next.js
     );
   }
 }
