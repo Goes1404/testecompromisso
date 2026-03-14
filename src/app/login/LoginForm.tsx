@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Loader2, Sparkles, AlertCircle, BookOpen } from "lucide-react";
+import { ChevronRight, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -56,6 +56,15 @@ export function LoginForm() {
       setAuthError("Erro de sincronização.");
     }
   };
+
+  if (isRedirecting) {
+    return (
+      <div className="flex flex-col items-center gap-4 text-white">
+        <Loader2 className="h-10 w-10 animate-spin text-accent" />
+        <p className="text-sm font-black uppercase italic tracking-widest">Acessando Gabinete...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500 z-10 relative">

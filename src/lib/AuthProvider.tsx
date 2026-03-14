@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { supabase, isSupabaseConfigured, safeExecute } from '@/app/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -56,10 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured) return null;
     try {
-      // Uso de safeExecute para blindar a busca do perfil contra AbortError
-      const { data, error } = await safeExecute(() => 
-        supabase.from('profiles').select('*').eq('id', userId).single()
-      );
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
       if (!error && data) {
         if (data.status === 'suspended') {
@@ -70,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return null;
     } catch (error) {
-      console.warn('⚠️ [AUTH PROFILE ERROR]:', error);
+      console.error('Error fetching profile:', error);
       return null;
     }
   }, [router]);
@@ -93,10 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Recuperação resiliente da sessão
-        const { data: { session: initialSession } } = await safeExecute(() => 
-          supabase.auth.getSession()
-        );
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (initialSession) {
           setSession(initialSession);
@@ -105,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (p) setProfile(p);
         }
       } catch (e) {
-        console.warn("⚠️ [AUTH INIT ERROR]:", e);
+        console.error("Auth init error:", e);
       } finally {
         setLoading(false);
       }

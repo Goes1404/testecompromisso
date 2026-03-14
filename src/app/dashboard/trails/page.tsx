@@ -27,7 +27,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthProvider";
-import { supabase, safeExecute } from "@/app/lib/supabase";
+import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 const TRAIL_CATEGORIES = ["Todos", "Matemática", "Tecnologia", "Linguagens", "Física", "Biologia", "História", "Geografia"];
@@ -53,18 +53,15 @@ export default function LearningTrailsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const trailsRes = await safeExecute(() => 
-        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false })
-      );
-      
-      const progressRes = await safeExecute(() => 
+      const [trailsRes, progressRes] = await Promise.all([
+        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false }),
         supabase.from('user_progress').select('*').eq('user_id', user.id)
-      );
+      ]);
 
       setDbTrails(trailsRes.data || []);
       setAllProgress(progressRes.data || []);
     } catch (e: any) {
-      console.warn("⚠️ [TRAILS DATA ERROR]:", e);
+      console.error("Error loading trails:", e);
     } finally {
       setLoading(false);
     }
@@ -79,13 +76,11 @@ export default function LearningTrailsPage() {
     setPinningId(trailId);
     
     try {
-      const { error } = await safeExecute(() => 
-        supabase.from('user_progress').upsert({
-          user_id: user.id,
-          trail_id: trailId,
-          last_accessed: new Date().toISOString()
-        }, { onConflict: 'user_id,trail_id' })
-      );
+      const { error } = await supabase.from('user_progress').upsert({
+        user_id: user.id,
+        trail_id: trailId,
+        last_accessed: new Date().toISOString()
+      }, { onConflict: 'user_id,trail_id' });
 
       if (error) throw error;
 
