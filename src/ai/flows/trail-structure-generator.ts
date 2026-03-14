@@ -4,7 +4,7 @@
  * @fileOverview Aurora - Arquiteta de Trilhas.
  */
 
-import { ai, gemini15Flash } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ModuleStructureSchema = z.object({
@@ -28,7 +28,7 @@ export type TrailStructureOutput = z.infer<typeof TrailStructureOutputSchema>;
 
 const prompt = ai.definePrompt({
   name: 'trailStructureGeneratorPrompt',
-  model: gemini15Flash,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: TrailStructureInputSchema },
   output: { schema: TrailStructureOutputSchema },
   config: { temperature: 0.7 },

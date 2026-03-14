@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Corpo da requisição vazio.' }, { status: 400 });
     }
 
-    const { flowId, input } = JSON.parse(text);
+    const body = JSON.parse(text);
+    const { flowId, input } = body;
 
     if (!flowId) {
       return NextResponse.json({ error: 'Identificador do motor (flowId) é obrigatório.' }, { status: 400 });
@@ -45,12 +46,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log(`[AURORA EXEC]: Executando fluxo ${flowId}...`);
     const result = await targetFlow(input);
 
     return NextResponse.json({ success: true, result });
   } catch (error: any) {
     const errorMsg = error?.message || 'Erro desconhecido no servidor de IA.';
-    console.error(`[AURORA CRITICAL ERROR]:`, errorMsg);
+    console.error(`[AURORA CRITICAL ERROR]:`, error); // Log completo para depuração no servidor
 
     return NextResponse.json(
       { error: `⚠️ ERRO DE PROCESSAMENTO: ${errorMsg}` },
