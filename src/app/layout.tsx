@@ -21,7 +21,6 @@ export const metadata = {
 function LoadingShell() {
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-gradient gap-6 overflow-hidden relative">
-      <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
       <div className="relative z-10 flex flex-col items-center gap-6">
         <div className="relative">
           <div className="h-20 w-20 rounded-[2.5rem] bg-white/10 flex items-center justify-center animate-pulse shadow-2xl border border-white/20">

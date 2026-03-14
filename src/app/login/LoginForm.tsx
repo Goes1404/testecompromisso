@@ -24,7 +24,6 @@ export function LoginForm() {
   const { toast } = useToast();
   
   const logoImg = placeholderData.placeholderImages.find(img => img.id === "prefeitura-logo");
-  const bgImg = placeholderData.placeholderImages.find(img => img.id === "santana-landmark");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +48,7 @@ export function LoginForm() {
         const { data: profile } = await supabase.from('profiles').select('profile_type').eq('id', data.user.id).single();
         const role = (profile?.profile_type || 'student').toLowerCase();
         
+        // Redirecionamento direto para evitar delays
         if (['admin', 'gestor', 'coordenador'].includes(role)) window.location.href = "/dashboard/admin/home";
         else if (['teacher', 'mentor', 'professor'].includes(role)) window.location.href = "/dashboard/teacher/home";
         else window.location.href = "/dashboard/home";
@@ -62,10 +62,7 @@ export function LoginForm() {
 
   return (
     <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 z-10 relative">
-      <div 
-        className="bg-santana-fixed" 
-        style={{ backgroundImage: `url('${bgImg?.imageUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg"}')` }} 
-      />
+      <div className="bg-santana-fixed bg-blue-gradient opacity-20" />
 
       {isRedirecting && (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-primary text-white animate-in fade-in duration-300">

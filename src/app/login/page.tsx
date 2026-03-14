@@ -20,8 +20,8 @@ export default function LoginPage() {
         </Button>
       </div>
 
-      {/* Imagem de Fundo Atualizada para Igreja Matriz */}
-      <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg')] bg-cover bg-center grayscale opacity-10"></div>
+      {/* Camada de textura leve para substituir imagens pesadas da Wikipedia */}
+      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0,transparent_100%)]"></div>
       
       <LoginForm />
     </div>

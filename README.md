@@ -1,4 +1,4 @@
-# Plataforma Compromisso 360
+shs# Plataforma Compromisso 360
 
 O ecossistema oficial de aprendizado e gestão educacional de Santana de Parnaíba.
 
