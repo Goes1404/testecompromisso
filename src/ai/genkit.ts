@@ -13,8 +13,8 @@ if (typeof window !== 'undefined') {
   throw new Error("⚠️ [SEGURANÇA] A configuração da Aurora IA não pode ser carregada no navegador.");
 }
 
-// Chave oficial do AI Studio fornecida pelo usuário
-const apiKey = "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
+// Chave oficial do AI Studio (Goes1404)
+const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
 
 export const ai = genkit({
   plugins: [
