@@ -49,8 +49,8 @@ export function LoginForm() {
 
       if (data.user) {
         setIsRedirecting(true);
-        // Redirecionamento forçado para garantir carregamento limpo do dashboard
-        window.location.href = "/dashboard";
+        // Redirecionamento forçado e imediato
+        window.location.assign("/dashboard");
       }
 
     } catch (err: any) {
@@ -69,7 +69,7 @@ export function LoginForm() {
           </div>
           <div className="flex items-center gap-3">
             <Loader2 className="h-4 w-4 animate-spin text-accent" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Sincronizando...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Carregando Dashboard...</p>
           </div>
         </div>
       )}

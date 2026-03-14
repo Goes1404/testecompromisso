@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -23,13 +22,18 @@ export default function DashboardRoot() {
       }
 
       // Redirecionamento instantâneo baseado no papel (role)
-      if (userRole === 'admin') {
-        router.replace("/dashboard/admin/home");
-      } else if (userRole === 'teacher') {
-        router.replace("/dashboard/teacher/home");
-      } else {
-        router.replace("/dashboard/home");
-      }
+      // Usamos um timeout de 0 para garantir que o redirecionamento ocorra após o ciclo de render
+      const timer = setTimeout(() => {
+        if (userRole === 'admin') {
+          router.replace("/dashboard/admin/home");
+        } else if (userRole === 'teacher') {
+          router.replace("/dashboard/teacher/home");
+        } else {
+          router.replace("/dashboard/home");
+        }
+      }, 0);
+
+      return () => clearTimeout(timer);
     }
   }, [userRole, loading, user, router]);
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { supabase, isSupabaseConfigured, safeExecute } from '@/app/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -56,20 +56,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured) return null;
     try {
-      const result = (await safeExecute(async () => 
-        await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single()
-      )) as any;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-      if (!result.error && result.data) {
-        if (result.data.status === 'suspended') {
+      if (!error && data) {
+        if (data.status === 'suspended') {
           router.replace('/suspended');
           return null;
         }
-        return result.data as Profile;
+        return data as Profile;
       }
       return null;
     } catch (error) {
@@ -94,17 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         if (!isSupabaseConfigured) {
-          setLoading(false);
+          if (isMounted) setLoading(false);
           return;
         }
 
-        // Cast explícito para evitar erros de tipagem unknown no build do Netlify
-        const sessionResult = (await safeExecute(async () => 
-          await supabase.auth.getSession()
-        )) as any;
-        
-        const initialSession = sessionResult.data?.session;
-        const sessionError = sessionResult.error;
+        // Recuperação direta da sessão para evitar conflitos de Lock na inicialização
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) throw sessionError;
 
@@ -168,7 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     refreshProfile,
-  }), [user, session, profile, userRole, loading]);
+  }), [user, session, profile, userRole, loading, signOut, refreshProfile]);
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
