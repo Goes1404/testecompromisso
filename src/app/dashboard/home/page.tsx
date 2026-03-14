@@ -58,12 +58,9 @@ export default function DashboardHome() {
   }, [userRole, isUserLoading, router]);
 
   const fetchData = useCallback(async () => {
-    // Otimização de requisições: Prevenir múltiplos disparos se o usuário for estável
-    if (!user || !isSupabaseConfigured || dataFetchedRef.current) {
-      if (dataFetchedRef.current) setLoadingData(false);
-      return;
-    }
-
+    // Garante que os dados só sejam buscados uma vez e com usuário autenticado
+    if (!user || !isSupabaseConfigured || dataFetchedRef.current) return;
+    
     setLoadingData(true);
     dataFetchedRef.current = true;
 
@@ -82,20 +79,22 @@ export default function DashboardHome() {
 
     } catch (e: any) {
       console.error("Error loading dashboard data:", e);
-      dataFetchedRef.current = false; // Permitir re-tentativa em caso de erro real
+      dataFetchedRef.current = false;
     } finally {
       setLoadingData(false);
     }
   }, [user]);
 
   useEffect(() => {
-    if (user && userRole === 'student') fetchData();
+    if (user && userRole === 'student') {
+      fetchData();
+    }
   }, [user, userRole, fetchData]);
 
-  if (isUserLoading) return (
+  if (isUserLoading || (loadingData && !dataFetchedRef.current)) return (
     <div className="flex flex-col h-96 items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sintonizando...</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sintonizando Rede...</p>
     </div>
   );
 

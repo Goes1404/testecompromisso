@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const isInitialized = useRef(false);
+  const authInitialized = useRef(false);
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
@@ -55,10 +55,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured || !userId) return null;
-    
-    // Otimização: Evitar requisição se o perfil já for o correto
-    if (profile && profile.id === userId) return profile;
-
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -78,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error fetching profile:', error);
       return null;
     }
-  }, [router, profile]);
+  }, [router]);
 
   const refreshProfile = async () => {
     if (user) {
@@ -88,58 +84,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
+    if (authInitialized.current) return;
+    authInitialized.current = true;
 
-    // LÓGICA DE UNIFICAÇÃO (LOCK FIX):
-    // Usamos apenas o listener para evitar que chamadas paralelas de getSession()
-    // briguem pelo lock do navegador.
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      // console.log(`[AUTH EVENT]: ${event}`);
+    // LÓGICA DE UNIFICAÇÃO: Evita chamadas paralelas que causam "Lock broken"
+    const initAuth = async () => {
+      // 1. Tenta recuperar sessão existente de forma silenciosa
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
       
-      const currentUser = currentSession?.user ?? null;
-      
-      // Estabilização de estado: Só atualiza se o ID do usuário mudar
-      if (currentUser?.id !== user?.id || !isInitialized.current) {
-        setSession(currentSession);
-        setUser(currentUser);
-
-        if (currentUser) {
-          const p = await fetchProfile(currentUser.id);
-          setProfile(p);
-        } else {
-          setProfile(null);
-        }
+      if (initialSession) {
+        setSession(initialSession);
+        setUser(initialSession.user);
+        const p = await fetchProfile(initialSession.user.id);
+        setProfile(p);
       }
 
       setLoading(false);
-      
-      if (event === 'SIGNED_OUT') {
-        router.replace('/login');
-      }
-    });
 
-    // Fallback de segurança caso o listener demore (comum no Next.js 15)
-    const checkInitialSession = async () => {
-      if (loading) {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (s && !user) {
-          setSession(s);
-          setUser(s.user);
-          const p = await fetchProfile(s.user.id);
-          setProfile(p);
-          setLoading(false);
+      // 2. Configura o listener para mudanças futuras
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+        const currentUser = currentSession?.user ?? null;
+        
+        if (currentUser?.id !== user?.id) {
+          setSession(currentSession);
+          setUser(currentUser);
+          if (currentUser) {
+            const p = await fetchProfile(currentUser.id);
+            setProfile(p);
+          } else {
+            setProfile(null);
+          }
         }
-      }
+
+        if (event === 'SIGNED_OUT') {
+          router.replace('/login');
+        }
+      });
+
+      return authListener;
     };
-    
-    const timeout = setTimeout(checkInitialSession, 1500);
+
+    const listenerPromise = initAuth();
 
     return () => {
-      clearTimeout(timeout);
-      authListener?.subscription.unsubscribe();
+      listenerPromise.then(l => l?.subscription.unsubscribe());
     };
-  }, [fetchProfile, router, user?.id, loading]);
+  }, [fetchProfile, router, user?.id]);
 
   const signOut = async () => {
     setLoading(true);

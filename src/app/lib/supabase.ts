@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 /**
  * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - COMPROMISSO 360
- * Versão Estabilizada - Cliente Direto
+ * Versão Estabilizada - Cliente Único para evitar conflitos de Lock.
  */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -14,11 +14,13 @@ export const isSupabaseConfigured = Boolean(
   !supabaseAnonKey.includes('placeholder')
 )
 
+// Configuração otimizada para evitar AbortError: Lock broken
 export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: 'educore-360-v1', 
+    storageKey: 'educore-360-auth-v1',
+    flowType: 'pkce'
   }
 });

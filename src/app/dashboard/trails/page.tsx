@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Card, CardFooter, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ const AUDIENCE_FILTERS = [
 export default function LearningTrailsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const dataFetchedRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [activeAudience, setActiveAudience] = useState("all");
@@ -50,26 +51,30 @@ export default function LearningTrailsPage() {
   const [pinningId, setPinningId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    if (!user || dataFetchedRef.current) return;
+    
     setLoading(true);
+    dataFetchedRef.current = true;
+
     try {
       const [trailsRes, progressRes] = await Promise.all([
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false }),
         supabase.from('user_progress').select('*').eq('user_id', user.id)
       ]);
 
-      setDbTrails(trailsRes.data || []);
-      setAllProgress(progressRes.data || []);
+      if (trailsRes.data) setDbTrails(trailsRes.data);
+      if (progressRes.data) setAllProgress(progressRes.data);
     } catch (e: any) {
       console.error("Error loading trails:", e);
+      dataFetchedRef.current = false;
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (user) fetchData();
+  }, [user, fetchData]);
 
   const handlePinTrail = async (trailId: string) => {
     if (!user || pinningId) return;
@@ -86,9 +91,12 @@ export default function LearningTrailsPage() {
 
       toast({
         title: "Trilha Fixada! 📌",
-        description: "Agora você pode acessá-la rapidamente pela Página Inicial."
+        description: "Acesse rapidamente pela Página Inicial."
       });
-      fetchData();
+      
+      // Atualiza apenas o progresso localmente
+      const { data: progressRes } = await supabase.from('user_progress').select('*').eq('user_id', user.id);
+      if (progressRes) setAllProgress(progressRes);
     } catch (e: any) {
       toast({ title: "Falha ao fixar", variant: "destructive" });
     } finally {
@@ -111,7 +119,7 @@ export default function LearningTrailsPage() {
     });
   }, [dbTrails, searchTerm, activeCategory, activeAudience]);
 
-  if (loading) {
+  if (loading && !dataFetchedRef.current) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
