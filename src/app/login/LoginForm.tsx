@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -101,7 +102,7 @@ export function LoginForm() {
       )}
 
       <div className="flex flex-col items-center gap-4 text-center">
-        <Link href="/" className="relative h-20 w-20 overflow-hidden rounded-2xl shadow-2xl transition-all duration-500 hover:scale-110 bg-white p-2">
+        <Link href="/" className="relative h-20 w-20 overflow-hidden rounded-2xl shadow-xl transition-all duration-500 hover:scale-110 bg-white p-2">
           <Image 
             src={logoUrl} 
             alt="Logo Santana de Parnaíba" 
@@ -158,15 +159,15 @@ export function LoginForm() {
               <div className="relative flex justify-center text-[10px] uppercase font-black"><span className="bg-white px-4 text-muted-foreground tracking-widest">Acesso Rápido</span></div>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <button onClick={() => handleQuickLogin('student')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-primary/5 transition-all group">
+              <button onClick={() => handleQuickLogin('student')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-primary/5 transition-all group border border-transparent hover:border-primary/20">
                 <GraduationCap className="h-5 w-5 text-primary/40 group-hover:text-primary" />
                 <span className="text-[8px] font-black uppercase text-primary/60">Aluno</span>
               </button>
-              <button onClick={() => handleQuickLogin('teacher')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-accent/5 transition-all group">
+              <button onClick={() => handleQuickLogin('teacher')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-accent/5 transition-all group border border-transparent hover:border-accent/20">
                 <ShieldCheck className="h-5 w-5 text-accent/40 group-hover:text-accent" />
                 <span className="text-[8px] font-black uppercase text-accent/60">Mentor</span>
               </button>
-              <button onClick={() => handleQuickLogin('admin')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-red-50 transition-all group">
+              <button onClick={() => handleQuickLogin('admin')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-red-50 transition-all group border border-transparent hover:border-red-200">
                 <User className="h-5 w-5 text-red-400/40 group-hover:text-red-500" />
                 <span className="text-[8px] font-black uppercase text-red-500/60">Admin</span>
               </button>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,12 @@ import placeholderData from "@/app/lib/placeholder-images.json";
 
 export default function LandingPage() {
   const heroImage = placeholderData.placeholderImages.find(img => img.id === "hero-educational");
+  const galleryImages = [
+    { id: "gallery-classroom", title: "Salas Inteligentes", hint: "modern school classroom" },
+    { id: "gallery-lab", title: "Laboratórios Digitais", hint: "science lab education" },
+    { id: "gallery-live", title: "Estúdios de Live", hint: "video broadcast studio" },
+    { id: "gallery-mentorship", title: "Espaços de Mentoria", hint: "co-working study space" },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -134,7 +141,6 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {/* JORNADA DO ALUNO */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-blue-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(37,99,235,0.5)] group-hover:rotate-6 transition-all duration-500">
                   <GraduationCap className="h-10 w-10" />
@@ -152,7 +158,6 @@ export default function LandingPage() {
                 </ul>
               </Card>
 
-              {/* STUDIO MASTER */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-orange-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(234,88,12,0.5)] group-hover:rotate-6 transition-all duration-500">
                   <School className="h-10 w-10" />
@@ -170,7 +175,6 @@ export default function LandingPage() {
                 </ul>
               </Card>
 
-              {/* GABINETE DE GESTÃO */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-white text-primary flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)] group-hover:rotate-6 transition-all duration-500">
                   <BarChart3 className="h-10 w-10" />
@@ -205,12 +209,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { title: "Salas Inteligentes", hint: "modern school classroom", id: "gallery-classroom" },
-                { title: "Laboratórios Digitais", hint: "science lab education", id: "gallery-lab" },
-                { title: "Estúdios de Live", hint: "video broadcast studio", id: "gallery-3" },
-                { title: "Espaços de Mentoria", hint: "co-working study space", id: "gallery-4" },
-              ].map((item, i) => {
+              {galleryImages.map((item, i) => {
                 const galleryImg = placeholderData.placeholderImages.find(img => img.id === item.id);
                 return (
                   <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">

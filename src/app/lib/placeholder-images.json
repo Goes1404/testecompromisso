@@ -5,31 +5,31 @@
       "id": "hero-educational",
       "description": "Jornada Literária e Educação em Santana de Parnaíba",
       "imageUrl": "https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg",
-      "imageHint": "classroom students"
+      "imageHint": "classroom students lecture"
     },
     {
-      "id": "gallery-1",
-      "description": "Projeto Compromisso - Foco Acadêmico",
+      "id": "gallery-classroom",
+      "description": "Alunos em sala de aula - Santana de Parnaíba",
       "imageUrl": "https://i.postimg.cc/QMnBTzsK/4.jpg",
       "imageHint": "student classroom"
     },
     {
-      "id": "gallery-2",
-      "description": "Projeto Compromisso - Ambiente de Estudo",
+      "id": "gallery-lab",
+      "description": "Ambiente de estudo e tecnologia",
       "imageUrl": "https://i.postimg.cc/mgvJgL14/Whats-App-Image-2026-03-12-at-17-48-36.jpg",
-      "imageHint": "study environment"
+      "imageHint": "science lab education"
     },
     {
-      "id": "gallery-3",
-      "description": "Projeto Compromisso - Interação",
+      "id": "gallery-live",
+      "description": "Estudantes em atividade prática e lives",
       "imageUrl": "https://i.postimg.cc/Px4Ry13T/2.jpg",
-      "imageHint": "group study"
+      "imageHint": "video broadcast studio"
     },
     {
-      "id": "gallery-4",
-      "description": "Projeto Compromisso - Mentoria",
+      "id": "gallery-mentorship",
+      "description": "Mentoria e foco acadêmico individualizado",
       "imageUrl": "https://i.postimg.cc/J0YdVMCd/Whats-App-Image-2026-03-12-at-2.jpg",
-      "imageHint": "mentorship session"
+      "imageHint": "co-working study space"
     },
     {
       "id": "prefeitura-logo",
@@ -39,15 +39,9 @@
     },
     {
       "id": "santana-landmark",
-      "description": "Igreja Matriz de Santana de Parnaíba",
+      "description": "Igreja Matriz de Santana de Parnaíba - Coração da Cidade",
       "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg",
       "imageHint": "historic church"
-    },
-    {
-      "id": "abstract-3d-element",
-      "description": "Abstract 3D Shape for UI Depth",
-      "imageUrl": "https://picsum.photos/seed/3dabs/600/600",
-      "imageHint": "abstract 3d glass"
     }
   ]
 }

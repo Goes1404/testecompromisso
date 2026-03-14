@@ -1,8 +1,9 @@
+
 'use server';
 
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
- * Implementação resiliente para evitar falhas de validação JSON.
+ * Implementação ultra-resiliente com tratamento de erros verboso.
  */
 
 import { ai } from '@/ai/genkit';
@@ -55,15 +56,18 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     try {
+      console.log("[AURORA FLOW START]: Processando query:", input.query);
       const response = await prompt(input);
       
       // 1. Tenta obter o output estruturado (Zod) - Modo Ideal
       if (response.output) {
+        console.log("[AURORA FLOW SUCCESS]: Resposta estruturada obtida.");
         return response.output;
       }
       
       // 2. Se falhar, tenta extrair JSON do texto bruto (Remoção de Markdown)
       if (response.text) {
+        console.log("[AURORA FLOW FALLBACK]: Tentando extração manual de texto.");
         const cleanedText = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
         try {
           const parsed = JSON.parse(cleanedText);
