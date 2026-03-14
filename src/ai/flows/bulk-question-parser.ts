@@ -4,7 +4,7 @@
  * @fileOverview Aurora - Extrator de Provas em Massa.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, gemini15Flash } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const QuestionSchema = z.object({
@@ -29,7 +29,7 @@ export type BulkQuestionParserOutput = z.infer<typeof BulkQuestionParserOutputSc
 
 const prompt = ai.definePrompt({
   name: 'bulkQuestionParserPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: gemini15Flash,
   input: { schema: BulkQuestionParserInputSchema },
   output: { schema: BulkQuestionParserOutputSchema },
   config: { temperature: 0.2 },

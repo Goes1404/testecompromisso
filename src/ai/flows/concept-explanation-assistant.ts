@@ -4,7 +4,7 @@
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, gemini15Flash } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const MessageSchema = z.object({
@@ -26,7 +26,7 @@ export type ConceptExplanationAssistantOutput = z.infer<typeof ConceptExplanatio
 
 const prompt = ai.definePrompt({
   name: 'conceptExplanationAssistantPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: gemini15Flash,
   input: { schema: ConceptExplanationAssistantInputSchema },
   output: { schema: ConceptExplanationAssistantOutputSchema },
   config: { temperature: 1.0 },

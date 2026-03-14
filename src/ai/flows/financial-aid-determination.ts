@@ -4,7 +4,7 @@
  * @fileOverview Aurora - Consultora de Auxílio Financeiro.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, gemini15Flash } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const FinancialAidDeterminationInputSchema = z.object({
@@ -32,7 +32,7 @@ export async function financialAidDetermination(
 
 const prompt = ai.definePrompt({
   name: 'financialAidDeterminationPrompt',
-  model: 'gemini-1.5-flash',
+  model: gemini15Flash,
   input: { schema: FinancialAidDeterminationInputSchema },
   output: { schema: FinancialAidDeterminationOutputSchema },
   system: `Você é a Aurora, uma consultora especialista em auxílio estudantil do curso Compromisso. 

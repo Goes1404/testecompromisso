@@ -4,7 +4,7 @@
  * @fileOverview Aurora - Gerador de Temas de Redação Estilo ENEM.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, gemini15Flash } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const EssayTopicInputSchema = z.object({
@@ -23,7 +23,7 @@ const EssayTopicOutputSchema = z.object({
 
 const prompt = ai.definePrompt({
   name: 'essayTopicGeneratorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: gemini15Flash,
   input: { schema: EssayTopicInputSchema },
   output: { schema: EssayTopicOutputSchema },
   system: `Você é a Aurora, mentora de redação nota 1000. 

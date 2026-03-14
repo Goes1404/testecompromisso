@@ -1,5 +1,5 @@
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
+import { googleAI, gemini15Flash } from '@genkit-ai/google-genai';
 
 /**
  * 🔒 BLINDAGEM INDUSTRIAL AURORA IA - COMPROMISSO
@@ -28,3 +28,6 @@ export const ai = genkit({
     }),
   ],
 });
+
+// Exporta o modelo nativo para garantir que todos os fluxos usem a referência correta
+export { gemini15Flash };
