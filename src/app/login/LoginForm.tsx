@@ -48,8 +48,6 @@ export function LoginForm() {
 
       if (data.user) {
         setIsRedirecting(true);
-        // Redirecionamento forçado via window.location para garantir que o Next.js 15
-        // limpe o cache de rota e carregue o dashboard do zero.
         window.location.assign("/dashboard");
       }
 
@@ -61,19 +59,6 @@ export function LoginForm() {
 
   return (
     <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500 z-10 relative">
-      
-      {isRedirecting && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-primary text-white">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 mb-6">
-            <BookOpen className="h-8 w-8 text-accent animate-pulse" />
-          </div>
-          <div className="flex items-center gap-3">
-            <Loader2 className="h-4 w-4 animate-spin text-accent" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em]">Entrando...</p>
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="relative h-16 w-16 overflow-hidden rounded-2xl shadow-xl bg-white p-2">
           <Image 

@@ -27,7 +27,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthProvider";
-import { supabase, safeExecute } from "@/app/lib/supabase";
+import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 const TRAIL_CATEGORIES = ["Todos", "Matemática", "Tecnologia", "Linguagens", "Física", "Biologia", "História", "Geografia"];
@@ -53,31 +53,19 @@ export default function LearningTrailsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Uso de safeExecute com cast explícito para satisfazer o compilador TS no build do Netlify
-      const trailsResult = (await safeExecute(async () => 
-        await supabase
-          .from('trails')
-          .select('*')
-          .or('status.eq.active,status.eq.published')
-          .order('created_at', { ascending: false })
-      )) as any;
+      const [trailsRes, progressRes] = await Promise.all([
+        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false }),
+        supabase.from('user_progress').select('*').eq('user_id', user.id)
+      ]);
 
-      const progressResult = (await safeExecute(async () => 
-        await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id)
-      )) as any;
-
-      setDbTrails(trailsResult.data || []);
-      setAllProgress(progressResult.data || []);
+      setDbTrails(trailsRes.data || []);
+      setAllProgress(progressRes.data || []);
     } catch (e: any) {
       console.error("Erro ao sincronizar trilhas:", e);
-      toast({ title: "Sinal Oscilando", description: "Tentando reconectar ao estúdio...", variant: "default" });
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -88,16 +76,13 @@ export default function LearningTrailsPage() {
     setPinningId(trailId);
     
     try {
-      // Cast explícito no safeExecute para evitar o erro "Property 'error' does not exist on type 'unknown'"
-      const result = (await safeExecute(async () => 
-        await supabase.from('user_progress').upsert({
-          user_id: user.id,
-          trail_id: trailId,
-          last_accessed: new Date().toISOString()
-        }, { onConflict: 'user_id,trail_id' })
-      )) as any;
+      const { error } = await supabase.from('user_progress').upsert({
+        user_id: user.id,
+        trail_id: trailId,
+        last_accessed: new Date().toISOString()
+      }, { onConflict: 'user_id,trail_id' });
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
       toast({
         title: "Trilha Fixada! 📌",
@@ -105,11 +90,7 @@ export default function LearningTrailsPage() {
       });
       fetchData();
     } catch (e: any) {
-      toast({
-        title: "Falha ao fixar",
-        description: e.message,
-        variant: "destructive"
-      });
+      toast({ title: "Falha ao fixar", variant: "destructive" });
     } finally {
       setPinningId(null);
     }
@@ -141,14 +122,14 @@ export default function LearningTrailsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1 md:px-4">
-      <section className="relative overflow-hidden bg-primary rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl">
+      <section className="relative overflow-hidden bg-primary rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl text-center">
         <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-accent/20 rounded-full blur-[80px]" />
-        <div className="relative z-10 space-y-6 max-w-3xl">
+        <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
           <Badge className="bg-accent text-accent-foreground border-none font-black text-[10px] px-4 py-1.5 uppercase tracking-wider shadow-xl">COMPROMISSO 360</Badge>
           <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase">
             Sua Rota de <br/><span className="text-accent">Alta Performance</span>
           </h1>
-          <p className="text-sm md:text-xl text-white/60 font-medium italic leading-relaxed max-w-xl">
+          <p className="text-sm md:text-xl text-white/60 font-medium italic leading-relaxed max-w-xl mx-auto">
             Escolha um dos eixos temáticos e inicie sua jornada guiada pelos melhores mentores da rede.
           </p>
         </div>
@@ -294,13 +275,6 @@ export default function LearningTrailsPage() {
             </Card>
           );
         })}
-        {filteredTrails.length === 0 && !loading && (
-          <div className="col-span-full py-32 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-white/50 opacity-40">
-            <BookOpen className="h-20 w-20 mx-auto mb-6 text-primary/20" />
-            <p className="font-black italic text-2xl uppercase tracking-tighter text-primary">Nenhuma trilha localizada</p>
-            <p className="text-muted-foreground font-medium mt-2 italic">Tente ajustar seus filtros ou pesquisar por outro termo.</p>
-          </div>
-        )}
       </div>
     </div>
   );

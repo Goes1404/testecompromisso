@@ -94,7 +94,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Recuperação ultra-rápida de sessão sem safeExecute para evitar deadlocks de carregamento
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (initialSession) {

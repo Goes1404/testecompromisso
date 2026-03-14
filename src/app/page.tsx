@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -65,12 +64,11 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 pt-20">
-        {/* HERO SECTION - REESTRUTURADA SEM IMAGEM QUEBRADA */}
-        <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white flex items-center justify-center">
+        <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white flex items-center justify-center text-center">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
           <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] -z-10 -translate-x-1/2 translate-y-1/2" />
           
-          <div className="max-w-5xl mx-auto px-6 text-center space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="max-w-5xl mx-auto px-6 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <div className="flex items-center gap-3 bg-accent/10 text-accent border border-accent/20 font-black px-5 py-2 uppercase text-[10px] tracking-[0.3em] rounded-full w-fit shadow-inner mx-auto">
               <Sparkles className="h-4 w-4" />
               Tecnologia Industrial na Educação
@@ -91,16 +89,6 @@ export default function LandingPage() {
               <Button asChild variant="outline" size="lg" className="h-20 px-12 border-4 border-primary/10 rounded-[2rem] font-black text-primary hover:bg-primary hover:text-white transition-all text-xl shadow-xl">
                 <Link href="/login">Acessar Portal</Link>
               </Button>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-8 pt-10 border-t border-muted/20">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 shadow-sm"><ShieldCheck className="h-6 w-6" /></div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Padrão INEP/ENEM</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm"><Globe className="h-6 w-6" /></div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Rede Nacional</span>
-              </div>
             </div>
           </div>
         </section>
@@ -170,7 +158,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* EXEMPLOS ESCOLARES SECTION */}
         <section className="py-32 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
@@ -208,7 +195,6 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* FOOTER */}
       <footer className="bg-primary py-20 text-white relative overflow-hidden">
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-[100px]" />
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10">
@@ -255,14 +241,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
-  return (
-    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${className}`}>
-      {children}
     </div>
   );
 }

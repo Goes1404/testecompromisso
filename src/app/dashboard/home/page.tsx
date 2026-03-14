@@ -14,18 +14,16 @@ import {
   Info,
   TrendingUp,
   PlayCircle,
-  Zap,
-  FileText,
   Video,
+  FileText,
   FileCheck,
   Calculator,
-  BrainCircuit,
-  Database
+  BrainCircuit
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
-import { supabase, isSupabaseConfigured, safeExecute } from "@/app/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 
 interface LibraryItem {
@@ -74,15 +72,12 @@ export default function DashboardHome() {
     setLoadingData(true);
 
     try {
-      // Cast any para evitar erros de tipagem do Supabase no build do Netlify
-      const results = await Promise.all([
-        safeExecute(async () => await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)) as any,
-        safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)) as any,
-        safeExecute(async () => await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)) as any,
-        safeExecute(async () => await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)) as any
+      const [annRes, trailRes, progressRes, libRes] = await Promise.all([
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
+        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
+        supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
+        supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)
       ]);
-
-      const [annRes, trailRes, progressRes, libRes] = results;
 
       if (annRes.data) setAnnouncements(annRes.data);
       if (trailRes.data) setRecommendedTrails(trailRes.data);
