@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ import placeholderData from "@/app/lib/placeholder-images.json";
 
 export default function LandingPage() {
   const heroImage = placeholderData.placeholderImages.find(img => img.id === "hero-educational");
+  const logoImg = placeholderData.placeholderImages.find(img => img.id === "prefeitura-logo");
+  
   const galleryImages = [
     { id: "gallery-classroom", title: "Salas Inteligentes", hint: "modern school classroom" },
     { id: "gallery-lab", title: "Laboratórios Digitais", hint: "science lab education" },
@@ -38,7 +41,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <div className="relative h-12 w-12 overflow-hidden rounded-xl shadow-xl bg-white p-1.5 rotate-3">
               <Image 
-                src="https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG" 
+                src={logoImg?.imageUrl || "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG"} 
                 alt="Logo Santana de Parnaíba" 
                 fill 
                 unoptimized
@@ -79,7 +82,7 @@ export default function LandingPage() {
                 <span className="text-accent drop-shadow-sm">é o nosso Compromisso.</span>
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground font-medium italic leading-relaxed max-w-xl border-l-4 border-accent/30 pl-6">
-                Plataforma 360º que integra Inteligência Artificial, gestão de dados e trilhas de alta performance para o sucesso do aluno.
+                Plataforma 360º que integra Inteligência Artificial, gestão de dados e trilhas de alta performance para o sucesso do aluno em Santana de Parnaíba.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 pt-4">
                 <Button asChild size="lg" className="h-20 px-12 bg-primary text-white font-black text-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group">
@@ -106,8 +109,8 @@ export default function LandingPage() {
             <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
               <div className="relative aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[12px] border-white group">
                 <Image 
-                  src={heroImage?.imageUrl || "https://picsum.photos/seed/school-life/1000/1200"} 
-                  alt="Educação de Futuro" 
+                  src={heroImage?.imageUrl || "https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg"} 
+                  alt="Educação de Futuro Santana de Parnaíba" 
                   fill 
                   priority
                   className="object-cover group-hover:scale-110 transition-transform duration-1000"
@@ -200,7 +203,7 @@ export default function LandingPage() {
             <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
               <div className="space-y-4 max-w-2xl">
                 <h2 className="text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">Ambiente de <span className="text-accent">Alta Performance</span></h2>
-                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa tecnologia transforma o cotidiano das instituições parceiras.</p>
+                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa tecnologia transforma o cotidiano das instituições parceiras em Santana de Parnaíba.</p>
               </div>
               <Button asChild variant="outline" className="h-14 px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
                 <Link href="/register">Ver Demonstração Completa</Link>
@@ -213,7 +216,7 @@ export default function LandingPage() {
                 return (
                   <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
                     <Image 
-                      src={galleryImg?.imageUrl || `https://picsum.photos/seed/school-${i}/600/800`} 
+                      src={galleryImg?.imageUrl || `https://picsum.photos/seed/sp-${i}/600/800`} 
                       alt={item.title} 
                       fill 
                       className="object-cover group-hover:scale-110 transition-transform duration-1000"
@@ -221,7 +224,7 @@ export default function LandingPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-8 left-8 right-8">
-                      <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">INFRAESTRUTURA</p>
+                      <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">INFRAESTRUTURA REAL</p>
                       <h4 className="text-xl font-black text-white italic">{item.title}</h4>
                     </div>
                   </div>
@@ -240,7 +243,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-12 overflow-hidden rounded-xl shadow-xl bg-white p-1.5">
                 <Image 
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG" 
+                  src={logoImg?.imageUrl || "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG"} 
                   alt="Logo Santana de Parnaíba" 
                   fill 
                   unoptimized
@@ -250,7 +253,7 @@ export default function LandingPage() {
               <span className="text-3xl font-black italic tracking-tighter">Compromisso</span>
             </div>
             <p className="text-white/40 font-medium italic text-lg max-w-sm">
-              Transformando a gestão educacional através de dados e inteligência artificial de ponta.
+              Transformando a gestão educacional através de dados e inteligência artificial de ponta em Santana de Parnaíba.
             </p>
           </div>
           <div className="space-y-6">

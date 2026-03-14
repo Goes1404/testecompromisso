@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -12,6 +13,7 @@ import { supabase } from "@/app/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import Image from "next/image";
+import placeholderData from "@/app/lib/placeholder-images.json";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -21,8 +23,8 @@ export function LoginForm() {
   const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
-  const bgUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg";
+  const logoImg = placeholderData.placeholderImages.find(img => img.id === "prefeitura-logo");
+  const bgImg = placeholderData.placeholderImages.find(img => img.id === "santana-landmark");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +64,7 @@ export function LoginForm() {
     <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 z-10 relative">
       <div 
         className="bg-santana-fixed" 
-        style={{ backgroundImage: `url('${bgUrl}')` }} 
+        style={{ backgroundImage: `url('${bgImg?.imageUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg"}')` }} 
       />
 
       {isRedirecting && (
@@ -81,7 +83,7 @@ export function LoginForm() {
       <div className="flex flex-col items-center gap-4 text-center">
         <Link href="/" className="relative h-20 w-20 overflow-hidden rounded-2xl shadow-xl transition-all duration-500 hover:scale-110 bg-white p-2">
           <Image 
-            src={logoUrl} 
+            src={logoImg?.imageUrl || "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG"} 
             alt="Logo Santana de Parnaíba" 
             fill 
             unoptimized
