@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -71,13 +70,13 @@ export default function LibraryManagementPage() {
           .update(formData)
           .eq('id', editingId);
         if (error) throw error;
-        toast({ title: "Material Atualizado!" });
+        toast({ title: "Apostila Atualizada!" });
       } else {
         const { error } = await supabase
           .from('library_resources')
           .insert([formData]);
         if (error) throw error;
-        toast({ title: "Material Cadastrado!" });
+        toast({ title: "Apostila Cadastrada!" });
       }
       
       setIsDialogOpen(false);
@@ -92,7 +91,7 @@ export default function LibraryManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja remover este material?")) return;
+    if (!confirm("Tem certeza que deseja remover esta apostila?")) return;
     
     try {
       const { error } = await supabase.from('library_resources').delete().eq('id', id);
@@ -126,8 +125,8 @@ export default function LibraryManagementPage() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary italic leading-none">Gestão de Acervo</h1>
-          <p className="text-muted-foreground font-medium italic">Curadoria industrial da Biblioteca Digital.</p>
+          <h1 className="text-3xl font-black text-primary italic leading-none">Gestão de Apostilas</h1>
+          <p className="text-muted-foreground font-medium italic">Curadoria industrial das apostilas e materiais didáticos.</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -139,12 +138,12 @@ export default function LibraryManagementPage() {
         }}>
           <DialogTrigger asChild>
             <Button className="rounded-2xl h-14 bg-accent text-accent-foreground font-black px-8 shadow-xl hover:scale-105 transition-all">
-              <Plus className="h-6 w-6 mr-2" /> Novo Material
+              <Plus className="h-6 w-6 mr-2" /> Nova Apostila
             </Button>
           </DialogTrigger>
           <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black italic text-primary">Configurar Material</DialogTitle>
+              <DialogTitle className="text-2xl font-black italic text-primary">Configurar Apostila</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
@@ -168,7 +167,7 @@ export default function LibraryManagementPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase opacity-40">Link do Material</Label>
+                <Label className="text-[10px] font-black uppercase opacity-40">Link do PDF ou Recurso</Label>
                 <Input value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} placeholder="URL do PDF ou Vídeo" className="h-12 rounded-xl bg-muted/30 border-none font-medium" />
               </div>
               <div className="space-y-2">
@@ -176,14 +175,14 @@ export default function LibraryManagementPage() {
                 <Input value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." className="h-12 rounded-xl bg-muted/30 border-none font-medium" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase opacity-40">Descrição</Label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Resumo pedagógico..." className="min-h-[80px] w-full rounded-xl bg-muted/30 border-none px-3 py-2 text-sm font-medium resize-none" />
+                <Label className="text-[10px] font-black uppercase opacity-40">Resumo Pedagógico</Label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descrição breve para o aluno..." className="min-h-[80px] w-full rounded-xl bg-muted/30 border-none px-3 py-2 text-sm font-medium resize-none" />
               </div>
             </div>
             <DialogFooter>
               <Button onClick={handleSave} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
                 {isSubmitting ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
-                {editingId ? "Atualizar Material" : "Publicar no Acervo"}
+                {editingId ? "Atualizar Apostila" : "Publicar Apostila"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -193,7 +192,7 @@ export default function LibraryManagementPage() {
       <div className="relative max-w-xl group">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
         <Input 
-          placeholder="Pesquisar no acervo..." 
+          placeholder="Pesquisar entre as apostilas..." 
           className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] italic focus-visible:ring-accent"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
@@ -205,7 +204,7 @@ export default function LibraryManagementPage() {
       ) : filtered.length === 0 ? (
         <div className="py-20 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-muted/5">
           <BookOpen className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-          <p className="font-black text-primary italic text-xl">Nenhum material cadastrado</p>
+          <p className="font-black text-primary italic text-xl">Nenhuma apostila localizada</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

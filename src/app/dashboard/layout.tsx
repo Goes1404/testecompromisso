@@ -13,10 +13,10 @@ import Image from "next/image";
 const studentItems = [
   { icon: Home, label: "Página Inicial", href: "/dashboard/home" },
   { icon: Compass, label: "Trilhas de Estudo", href: "/dashboard/trails" },
+  { icon: BookOpen, label: "Minhas Apostilas", href: "/dashboard/library" },
   { icon: FilePenLine, label: "Redação Master", href: "/dashboard/student/essays" },
   { icon: FileText, label: "Simulados", href: "/dashboard/student/simulados" },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live" },
-  { icon: Library, label: "Biblioteca Digital", href: "/dashboard/library" },
   { icon: MessagesSquare, label: "Fóruns de Discussão", href: "/dashboard/forum" },
   { icon: MessageSquare, label: "Chat com Mentores", href: "/dashboard/chat", badge: true },
   { icon: FileCheck, label: "Documentação", href: "/dashboard/student/documents" },
@@ -25,10 +25,10 @@ const studentItems = [
 
 const teacherItems = [
   { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home" },
+  { icon: BookOpen, label: "Gestão de Apostilas", href: "/dashboard/teacher/library" },
   { icon: ClipboardList, label: "Minhas Trilhas", href: "/dashboard/teacher/trails" },
   { icon: Database, label: "Banco de Questões", href: "/dashboard/teacher/questions" },
   { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics" },
-  { icon: Library, label: "Gestão de Biblioteca", href: "/dashboard/teacher/library" },
   { icon: MonitorPlay, label: "Gerenciar Lives", href: "/dashboard/teacher/live" },
   { icon: MessagesSquare, label: "Fórum Pedagógico", href: "/dashboard/forum" },
   { icon: MessageSquare, label: "Chats com Alunos", href: "/dashboard/chat", badge: true },
@@ -91,7 +91,6 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: any[], pathname
     if (pathname === itemHref) return true;
     if (pathname.startsWith(itemHref + '/')) return true;
     
-    // Mapeamento especial para sub-páginas que não compartilham o prefixo exato
     if (itemHref === '/dashboard/trails' && pathname.startsWith('/dashboard/classroom/')) return true;
     if (itemHref === '/dashboard/library' && pathname.startsWith('/dashboard/library/book/')) return true;
     
@@ -141,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user, isUserLoading, router, hasHydrated]);
 
   const isFullBleedPage = useMemo(() => {
-    return pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/');
+    return pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/');
   }, [pathname]);
 
   if (!hasHydrated || isUserLoading) return (
