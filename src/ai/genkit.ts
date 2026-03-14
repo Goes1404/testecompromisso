@@ -1,21 +1,20 @@
-
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * 🔒 BLINDAGEM INDUSTRIAL AURORA IA - COMPROMISSO
  * 
- * Este arquivo centraliza a inteligência da plataforma.
- * A configuração é EXCLUSIVAMENTE servidora para proteger as credenciais de rede.
+ * Este arquivo configura o motor de inteligência da rede.
+ * A chave de API está fixada para garantir o funcionamento imediato
+ * na nova conta do AI Studio.
  */
 
 if (typeof window !== 'undefined') {
-  throw new Error("⚠️ [SEGURANÇA] A Aurora IA só pode ser operada no Gabinete de Gestão (Servidor).");
+  throw new Error("⚠️ [SEGURANÇA] A configuração da Aurora IA não pode ser carregada no navegador.");
 }
 
-// Chave de API: Prioriza variável de ambiente para produção.
-// Caso não encontrada, utiliza a chave de teste configurada no projeto Goes1404.
-const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
+// Chave oficial do AI Studio fornecida pelo usuário
+const apiKey = "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
 
 export const ai = genkit({
   plugins: [

@@ -1,10 +1,9 @@
-
 import { NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 import { ai } from '@/ai/genkit';
 
 /**
- * @fileOverview API de Diagnóstico Blindada.
+ * @fileOverview API de Diagnóstico Maestro.
  * Verifica a saúde da infraestrutura sem expor chaves.
  */
 
@@ -19,7 +18,7 @@ export async function GET() {
 
   // 1. Testar Supabase
   if (!isSupabaseConfigured) {
-    diagnostics.supabase = { status: 'error', details: 'Configuração NEXT_PUBLIC_SUPABASE_URL ou ANON_KEY ausente.' };
+    diagnostics.supabase = { status: 'error', details: 'Configuração do Supabase ausente.' };
   } else {
     try {
       const { error } = await supabase.from('profiles').select('id').limit(1);
@@ -30,33 +29,25 @@ export async function GET() {
     }
   }
 
-  // 2. Testar Genkit (GEMINI_API_KEY)
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || "AIzaSyBSKWVh8V9HsDXUhLBuIAoSSBRPetzV-gM";
-  if (!apiKey) {
-    diagnostics.genkit = { status: 'error', details: 'Chave de API não configurada no ambiente.' };
-  } else {
-    try {
-      // Teste minimalista para validar a chave com o modelo padronizado
-      const response = await ai.generate({
-        model: 'googleai/gemini-1.5-flash',
-        prompt: 'ok',
-        config: { maxOutputTokens: 2 }
-      });
-      
-      if (response.text) {
-        diagnostics.genkit = { status: 'ok', details: 'Aurora IA operacional.' };
-      } else {
-        throw new Error("Resposta vazia da IA.");
-      }
-    } catch (e: any) {
-      const msg = e.message || '';
-      if (msg.includes('API key expired') || msg.includes('API_KEY_INVALID')) {
-        diagnostics.genkit = { status: 'error', details: 'Chave INVÁLIDA ou EXPIROU. Gere uma nova no Google AI Studio.' };
-      } else if (msg.includes('404')) {
-        diagnostics.genkit = { status: 'error', details: 'Erro de Modelo (404). Verifique se o Gemini 1.5 Flash está habilitado para sua conta.' };
-      } else {
-        diagnostics.genkit = { status: 'error', details: `Falha técnica: ${msg.substring(0, 150)}` };
-      }
+  // 2. Testar Genkit (Gemini 1.5 Flash)
+  try {
+    const response = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      prompt: 'ok',
+      config: { maxOutputTokens: 2 }
+    });
+    
+    if (response.text) {
+      diagnostics.genkit = { status: 'ok', details: 'Aurora IA operacional.' };
+    } else {
+      throw new Error("Resposta vazia da IA.");
+    }
+  } catch (e: any) {
+    const msg = e.message || '';
+    if (msg.includes('404')) {
+      diagnostics.genkit = { status: 'error', details: 'Erro 404: Modelo não localizado na API do Google.' };
+    } else {
+      diagnostics.genkit = { status: 'error', details: `Falha técnica: ${msg.substring(0, 100)}` };
     }
   }
 

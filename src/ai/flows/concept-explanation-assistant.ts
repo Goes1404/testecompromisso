@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -53,7 +52,7 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    if (!output) throw new Error("A Aurora não conseguiu formular uma resposta técnica no momento.");
+    if (!output) throw new Error("A Aurora não conseguiu processar esta dúvida no momento.");
     return output;
   }
 );

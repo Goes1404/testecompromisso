@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -46,7 +45,7 @@ const prompt = ai.definePrompt({
   config: { temperature: 0.3 },
   system: `Você é a Aurora, corretora sênior nota 1000 padrão INEP. 
   Sua análise deve ser rigorosa, técnica e construtiva.`,
-  prompt: `Analise the following essay:
+  prompt: `Analise a seguinte redação:
   
   TEMA: {{{theme}}}
   TEXTO:
@@ -61,7 +60,7 @@ export const essayEvaluatorFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    if (!output) throw new Error("A Aurora não conseguiu processar este texto.");
+    if (!output) throw new Error("A Aurora não conseguiu analisar este texto.");
     return output;
   }
 );
