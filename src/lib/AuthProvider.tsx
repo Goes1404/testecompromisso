@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
@@ -70,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return null;
     } catch (error) {
-      console.error('Erro ao buscar perfil:', error);
+      console.error('⚠️ [SUPABASE PROFILE ERROR]:', error);
       return null;
     }
   }, [router]);
@@ -86,23 +87,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
 
     const initAuth = async () => {
-      // Timeout agressivo para performance (3s)
+      // Timeout estendido para 10s para ambientes de nuvem (Netlify/Vercel)
       const timeoutId = setTimeout(() => {
         if (loading && isMounted) {
-          console.warn("⚠️ [AUTH TIMEOUT]: Liberando interface para carregar.");
+          console.warn("⚠️ [AUTH TIMEOUT]: A conexão com o Supabase está demorando. Verifique as chaves no Netlify.");
           setLoading(false);
         }
-      }, 3000);
+      }, 10000);
 
       try {
         if (!isSupabaseConfigured) {
+          console.error("❌ [SUPABASE CONFIG MISSING]: Verifique as variáveis de ambiente NEXT_PUBLIC_SUPABASE_URL e KEY.");
           setLoading(false);
           clearTimeout(timeoutId);
           return;
         }
 
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
         
+        if (sessionError) throw sessionError;
+
         if (initialSession && isMounted) {
           setSession(initialSession);
           setUser(initialSession.user);
@@ -112,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (e) {
-        console.warn("Auth init error:", e);
+        console.warn("⚠️ [AUTH INIT ERROR]:", e);
       } finally {
         if (isMounted) setLoading(false);
         clearTimeout(timeoutId);
@@ -124,6 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!isMounted) return;
       
+      console.log(`🔐 [AUTH EVENT]: ${event}`);
+
       if (currentSession) {
         setSession(currentSession);
         setUser(currentSession.user);

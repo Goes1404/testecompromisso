@@ -24,7 +24,7 @@ import {
   FileCheck,
   Calculator,
   BrainCircuit,
-  History as HistoryIcon
+  Database
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -62,8 +62,7 @@ export default function DashboardHome() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  
-  const [urgentAlert, setUrgentAlert] = useState<Announcement | null>(null);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   // Guard de Papel
   useEffect(() => {
@@ -80,7 +79,8 @@ export default function DashboardHome() {
     }
 
     try {
-      // Carregamento paralelo para máxima performance
+      console.log("🔍 [DASHBOARD]: Sincronizando dados de rede...");
+      
       const [annRes, trailRes, progressRes, libRes] = await Promise.all([
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
@@ -88,18 +88,21 @@ export default function DashboardHome() {
         supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)
       ]);
 
-      if (annRes.data) {
-        setAnnouncements(annRes.data);
-        const urgent = annRes.data.find(a => a.priority === 'high');
-        if (urgent) setUrgentAlert(urgent);
-      }
-      
+      if (annRes.error) console.error("Erro Avisos:", annRes.error);
+      if (trailRes.error) console.error("Erro Trilhas:", trailRes.error);
+
+      if (annRes.data) setAnnouncements(annRes.data);
       if (trailRes.data) setRecommendedTrails(trailRes.data);
       if (progressRes.data) setRecentProgress(progressRes.data.filter(p => p.trail));
       if (libRes.data) setLibraryResources(libRes.data);
 
-    } catch (e) {
-      console.warn("Erro ao sincronizar dashboard:", e);
+      if (!trailRes.data?.length && !annRes.data?.length) {
+        console.warn("⚠️ [DASHBOARD]: Banco de dados respondeu mas retornou vazio.");
+      }
+
+    } catch (e: any) {
+      console.error("❌ [DASHBOARD ERROR]:", e);
+      setErrorState(e.message);
     } finally {
       setLoadingData(false);
     }
@@ -109,10 +112,10 @@ export default function DashboardHome() {
     if (user && userRole === 'student') fetchData();
   }, [user, userRole, fetchData]);
 
-  if (isUserLoading || userRole !== 'student') return (
+  if (isUserLoading) return (
     <div className="flex flex-col h-96 items-center justify-center gap-4">
       <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sincronizando Gestão...</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Autenticando Rede...</p>
     </div>
   );
 
@@ -128,15 +131,28 @@ export default function DashboardHome() {
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-700 px-1 relative">
       
-      {/* Alerta de Configuração no Netlify */}
       {!isSupabaseConfigured && (
-        <Alert variant="destructive" className="bg-red-50 border-red-200 rounded-2xl p-6 mb-8 shadow-xl">
-          <AlertOctagon className="h-6 w-6" />
-          <AlertDescription className="text-sm font-bold italic ml-2">
-            ⚠️ Atenção: O Supabase não está configurado. Os dados abaixo são meramente ilustrativos. 
-            Adicione NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no painel do Netlify.
-          </AlertDescription>
-        </Alert>
+        <Card className="bg-red-50 border-red-200 rounded-3xl p-8 mb-8 shadow-xl border-2 border-dashed">
+          <div className="flex items-center gap-4 text-red-700">
+            <AlertOctagon className="h-10 w-10 shrink-0" />
+            <div>
+              <p className="text-sm font-black uppercase tracking-widest">Erro de Infraestrutura</p>
+              <p className="text-xs font-medium italic mt-1">O Supabase não está conectado. Adicione as chaves no painel do Netlify e faça um novo deploy com 'Clear Cache'.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {errorState && (
+        <Card className="bg-amber-50 border-amber-200 rounded-3xl p-8 mb-8 shadow-xl">
+          <div className="flex items-center gap-4 text-amber-700">
+            <Database className="h-10 w-10 shrink-0" />
+            <div>
+              <p className="text-sm font-black uppercase tracking-widest">Oscilação de Rede</p>
+              <p className="text-xs font-medium italic mt-1">Houve um problema ao buscar os dados: {errorState}. Tente recarregar a página.</p>
+            </div>
+          </div>
+        </Card>
       )}
 
       <section className="bg-primary p-8 md:p-12 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl">
@@ -176,22 +192,25 @@ export default function DashboardHome() {
               <Megaphone className="h-5 w-5 text-accent" /> Mural de Avisos
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {announcements.length === 0 && !loadingData && (
+              {loadingData ? (
+                Array(2).fill(0).map((_, i) => <div key={i} className="h-24 bg-muted/20 animate-pulse rounded-2xl" />)
+              ) : announcements.length === 0 ? (
                 <p className="text-xs italic text-muted-foreground px-4 opacity-50">Nenhum aviso no momento.</p>
-              )}
-              {announcements.map(ann => {
-                const styles = priorityStyles[ann.priority] || priorityStyles.low;
-                const Icon = styles.icon;
-                return (
-                  <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${styles.bgColor} border border-black/5`}>
-                    <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${styles.color}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-bold text-sm ${styles.color} truncate`}>{ann.title}</p>
-                      <p className="text-[10px] text-slate-600 line-clamp-2 leading-relaxed font-medium italic">{ann.message}</p>
+              ) : (
+                announcements.map(ann => {
+                  const styles = priorityStyles[ann.priority] || priorityStyles.low;
+                  const Icon = styles.icon;
+                  return (
+                    <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${styles.bgColor} border border-black/5`}>
+                      <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${styles.color}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-bold text-sm ${styles.color} truncate`}>{ann.title}</p>
+                        <p className="text-[10px] text-slate-600 line-clamp-2 leading-relaxed font-medium italic">{ann.message}</p>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
           </div>
 
@@ -200,31 +219,34 @@ export default function DashboardHome() {
               <TrendingUp className="h-5 w-5 text-accent" /> Continuar Aprendizado
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {recentProgress.length === 0 && !loadingData && (
+              {loadingData ? (
+                Array(2).fill(0).map((_, i) => <div key={i} className="aspect-video bg-muted/20 animate-pulse rounded-[2rem]" />)
+              ) : recentProgress.length === 0 ? (
                 <div className="col-span-full py-12 text-center border-4 border-dashed rounded-[2.5rem] bg-muted/5 opacity-40">
                   <PlayCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                  <p className="font-black italic text-primary">Inicie uma trilha agora</p>
+                  <p className="font-black italic text-primary">Inicie uma trilha agora para ver seu progresso aqui.</p>
                 </div>
+              ) : (
+                recentProgress.map((prog) => {
+                  const trailData = Array.isArray(prog.trail) ? prog.trail[0] : prog.trail;
+                  return (
+                    <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
+                      <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col">
+                        <div className="relative aspect-[21/9] overflow-hidden bg-slate-100">
+                          {trailData?.image_url && (
+                            <Image src={trailData.image_url} alt={trailData.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent" />
+                        </div>
+                        <CardContent className="p-5 space-y-3">
+                          <h3 className="font-black text-sm text-primary italic truncate">{trailData?.title || 'Trilha'}</h3>
+                          <Progress value={prog.percentage} className="h-1 rounded-full" />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )
+                })
               )}
-              {recentProgress.map((prog) => {
-                const trailData = Array.isArray(prog.trail) ? prog.trail[0] : prog.trail;
-                return (
-                  <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
-                    <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col">
-                      <div className="relative aspect-[21/9] overflow-hidden bg-slate-100">
-                        {trailData?.image_url && (
-                          <Image src={trailData.image_url} alt={trailData.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent" />
-                      </div>
-                      <CardContent className="p-5 space-y-3">
-                        <h3 className="font-black text-sm text-primary italic truncate">{trailData?.title || 'Trilha'}</h3>
-                        <Progress value={prog.percentage} className="h-1 rounded-full" />
-                      </CardContent>
-                    </Card>
-                  </Link>
-                )
-              })}
             </div>
           </div>
         </div>
@@ -234,7 +256,9 @@ export default function DashboardHome() {
               <Library className="h-5 w-5 text-accent" /> Acervo Digital
             </h3>
             <div className="space-y-4">
-              {libraryResources.map((res) => (
+              {loadingData ? (
+                Array(3).fill(0).map((_, i) => <div key={i} className="h-16 bg-muted/20 animate-pulse rounded-2xl" />)
+              ) : libraryResources.map((res) => (
                 <Card key={res.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
@@ -254,11 +278,4 @@ export default function DashboardHome() {
       </div>
     </div>
   );
-}
-
-function Alert({ children, variant, className }: any) {
-  return <div className={`p-4 border rounded-lg ${className}`}>{children}</div>;
-}
-function AlertDescription({ children, className }: any) {
-  return <div className={className}>{children}</div>;
 }
