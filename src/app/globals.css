@@ -54,8 +54,7 @@
     overflow-x: hidden;
     min-height: 100vh;
     position: relative;
-    
-    /* Gradientes nativos de alta performance */
+    /* Gradientes nativos de alta performance em vez de imagens pesadas */
     background-image: 
       radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.03) 0px, transparent 50%),
       radial-gradient(at 100% 100%, hsla(45, 100% , 50%, 0.02) 0px, transparent 50%);
@@ -72,7 +71,7 @@
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;

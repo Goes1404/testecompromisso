@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!profile) return 'student';
     const rawType = (profile.profile_type || '').toLowerCase().trim();
     if (['admin', 'gestor', 'coordenador'].includes(rawType)) return 'admin';
-    if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
+    if (['teacher', 'mentor', 'professor', 'docente', 'staff'].includes(rawType)) return 'teacher';
     return 'student';
   }, [profile]);
 
@@ -87,43 +87,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isInitializing.current) return;
     isInitializing.current = true;
 
-    let isMounted = true;
-
     const initAuth = async () => {
       try {
         if (!isSupabaseConfigured) {
-          if (isMounted) setLoading(false);
+          setLoading(false);
           return;
         }
 
-        // Recuperação direta da sessão para evitar conflitos de Lock na inicialização
-        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        // Recuperação ultra-rápida de sessão sem safeExecute para evitar deadlocks de carregamento
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         
-        if (sessionError) throw sessionError;
-
-        if (initialSession && isMounted) {
+        if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
           const p = await fetchProfile(initialSession.user.id);
-          if (p && isMounted) setProfile(p);
+          if (p) setProfile(p);
         }
       } catch (e) {
         console.warn("⚠️ [AUTH INIT ERROR]:", e);
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
 
     initAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      if (!isMounted) return;
-      
       if (currentSession) {
         setSession(currentSession);
         setUser(currentSession.user);
-        const p = await fetchProfile(currentSession.user.id);
-        if (p && isMounted) setProfile(p);
+        if (event === 'SIGNED_IN' || !profile) {
+          const p = await fetchProfile(currentSession.user.id);
+          if (p) setProfile(p);
+        }
       } else {
         setSession(null);
         setUser(null);
@@ -136,10 +132,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      isMounted = false;
       authListener?.subscription.unsubscribe();
     };
-  }, [fetchProfile, router]);
+  }, [fetchProfile, router, profile]);
 
   const signOut = async () => {
     setLoading(true);
@@ -161,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     refreshProfile,
-  }), [user, session, profile, userRole, loading, signOut, refreshProfile]);
+  }), [user, session, profile, userRole, loading]);
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }

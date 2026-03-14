@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 /**
  * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - COMPROMISSO 360
- * Versão 7.5: Otimizada para evitar erros de Web Locks no Next.js 15.
+ * Versão 8.0: Otimizada para Next.js 15 e Prevenção de Concorrência.
  */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -29,15 +29,16 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
 
 /**
  * 🛠️ safeExecute: Wrapper para chamadas Supabase que trata AbortError (Lock Broken).
+ * Garantido para build do Netlify com tipagem flexível.
  */
-export async function safeExecute<T = any>(fn: () => Promise<T>, retries = 3, delay = 500): Promise<T> {
+export async function safeExecute<T = any>(fn: () => Promise<T>, retries = 3, delay = 300): Promise<T> {
   try {
     const result = await fn();
     return result;
   } catch (error: any) {
     const isLockError = error?.message?.includes('Lock broken') || error?.name === 'AbortError';
     if (isLockError && retries > 0) {
-      console.warn(`[SUPABASE LOCK]: Tentando recuperar sinal... (${retries} restantes)`);
+      console.warn(`[SUPABASE LOCK]: Sintonizando sinal... (${retries} restantes)`);
       await new Promise(resolve => setTimeout(resolve, delay));
       return safeExecute(fn, retries - 1, delay * 2);
     }

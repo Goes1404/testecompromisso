@@ -57,7 +57,6 @@ export default function DashboardHome() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [errorState, setErrorState] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && userRole !== 'student') {
@@ -73,16 +72,15 @@ export default function DashboardHome() {
     }
 
     setLoadingData(true);
-    setErrorState(null);
 
     try {
-      // Uso de safeExecute com cast explícito para satisfazer o compilador TS no build
+      // Cast any para evitar erros de tipagem do Supabase no build do Netlify
       const results = await Promise.all([
-        safeExecute(async () => await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
-        safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
-        safeExecute(async () => await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
-        safeExecute(async () => await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3))
-      ]) as any[];
+        safeExecute(async () => await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)) as any,
+        safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)) as any,
+        safeExecute(async () => await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)) as any,
+        safeExecute(async () => await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)) as any
+      ]);
 
       const [annRes, trailRes, progressRes, libRes] = results;
 
@@ -93,7 +91,6 @@ export default function DashboardHome() {
 
     } catch (e: any) {
       console.error("❌ [DASHBOARD ERROR]:", e);
-      setErrorState(e.message);
     } finally {
       setLoadingData(false);
     }
@@ -105,8 +102,8 @@ export default function DashboardHome() {
 
   if (isUserLoading) return (
     <div className="flex flex-col h-96 items-center justify-center gap-4">
-      <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Autenticando Rede...</p>
+      <Loader2 className="h-10 w-10 animate-spin text-accent" />
+      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sintonizando...</p>
     </div>
   );
 
@@ -120,43 +117,18 @@ export default function DashboardHome() {
   ];
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-700 px-1 relative">
-      
-      {!isSupabaseConfigured && (
-        <Card className="bg-red-50 border-red-200 rounded-3xl p-8 mb-8 shadow-xl border-2 border-dashed">
-          <div className="flex items-center gap-4 text-red-700">
-            <AlertOctagon className="h-10 w-10 shrink-0" />
-            <div>
-              <p className="text-sm font-black uppercase tracking-widest">Erro de Infraestrutura</p>
-              <p className="text-xs font-medium italic mt-1">Variáveis NEXT_PUBLIC_SUPABASE_URL ou KEY ausentes.</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {errorState && (
-        <Card className="bg-amber-50 border-amber-200 rounded-3xl p-8 mb-8 shadow-xl">
-          <div className="flex items-center gap-4 text-amber-700">
-            <Database className="h-10 w-10 shrink-0" />
-            <div>
-              <p className="text-sm font-black uppercase tracking-widest">Sincronização em Curso</p>
-              <p className="text-xs font-medium italic mt-1">Estamos estabilizando o sinal de rede. Se o conteúdo não carregar, limpe o cache do navegador.</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
+    <div className="space-y-8 pb-12 animate-in fade-in duration-500 px-1 relative">
       <section className="bg-primary p-8 md:p-12 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl">
          <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
          <div className="relative z-10 space-y-4">
            <div className="flex items-center gap-3">
              <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-tight">Olá, {userName}! 👋</h1>
-             <Badge className="bg-accent text-accent-foreground border-none font-black px-3 py-1 shadow-lg animate-bounce">
+             <Badge className="bg-accent text-accent-foreground border-none font-black px-3 py-1 shadow-lg">
                <Bot className="h-3 w-3 mr-1.5" /> IA ATIVA
              </Badge>
            </div>
            <p className="text-sm md:text-lg text-white/80 font-medium leading-relaxed italic max-w-2xl">
-             Sua jornada rumo à aprovação está sendo monitorada com inteligência industrial.
+             Sua jornada rumo à aprovação está sendo monitorada com inteligência.
            </p>
          </div>
       </section>
@@ -215,7 +187,7 @@ export default function DashboardHome() {
               ) : recentProgress.length === 0 ? (
                 <div className="col-span-full py-12 text-center border-4 border-dashed rounded-[2.5rem] bg-muted/5 opacity-40">
                   <PlayCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                  <p className="font-black italic text-primary">Inicie uma trilha agora para ver seu progresso aqui.</p>
+                  <p className="font-black italic text-primary">Inicie uma trilha agora.</p>
                 </div>
               ) : (
                 recentProgress.map((prog) => {
@@ -250,7 +222,7 @@ export default function DashboardHome() {
               {loadingData ? (
                 Array(3).fill(0).map((_, i) => <div key={i} className="h-16 bg-muted/20 animate-pulse rounded-2xl" />)
               ) : libraryResources.length === 0 ? (
-                <p className="text-xs italic text-muted-foreground px-4 opacity-50">Biblioteca em sincronização.</p>
+                <p className="text-xs italic text-muted-foreground px-4 opacity-50">Acervo vazio.</p>
               ) : (
                 libraryResources.map((res) => (
                   <Card key={res.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">
