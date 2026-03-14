@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -54,26 +53,24 @@ export default function LearningTrailsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Uso de safeExecute com chamada assíncrona explícita para evitar erros de tipagem no build
-      const { data: trails, error: trailsError }: any = await safeExecute(async () => 
+      // Uso de safeExecute com cast explícito para satisfazer o compilador TS no build do Netlify
+      const trailsResult = (await safeExecute(async () => 
         await supabase
           .from('trails')
           .select('*')
           .or('status.eq.active,status.eq.published')
           .order('created_at', { ascending: false })
-      );
+      )) as any;
 
-      if (trailsError) throw trailsError;
-
-      const { data: progress }: any = await safeExecute(async () => 
+      const progressResult = (await safeExecute(async () => 
         await supabase
           .from('user_progress')
           .select('*')
           .eq('user_id', user.id)
-      );
+      )) as any;
 
-      setDbTrails(trails || []);
-      setAllProgress(progress || []);
+      setDbTrails(trailsResult.data || []);
+      setAllProgress(progressResult.data || []);
     } catch (e: any) {
       console.error("Erro ao sincronizar trilhas:", e);
       toast({ title: "Sinal Oscilando", description: "Tentando reconectar ao estúdio...", variant: "default" });
@@ -91,15 +88,16 @@ export default function LearningTrailsPage() {
     setPinningId(trailId);
     
     try {
-      const { error } = await safeExecute(async () => 
+      // Cast explícito no safeExecute para evitar o erro "Property 'error' does not exist on type 'unknown'"
+      const result = (await safeExecute(async () => 
         await supabase.from('user_progress').upsert({
           user_id: user.id,
           trail_id: trailId,
           last_accessed: new Date().toISOString()
         }, { onConflict: 'user_id,trail_id' })
-      );
+      )) as any;
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       toast({
         title: "Trilha Fixada! 📌",

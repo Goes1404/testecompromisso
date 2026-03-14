@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -57,20 +56,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured) return null;
     try {
-      const { data, error }: any = await safeExecute(async () => 
+      const result = (await safeExecute(async () => 
         await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
           .single()
-      );
+      )) as any;
 
-      if (!error && data) {
-        if (data.status === 'suspended') {
+      if (!result.error && result.data) {
+        if (result.data.status === 'suspended') {
           router.replace('/suspended');
           return null;
         }
-        return data as Profile;
+        return result.data as Profile;
       }
       return null;
     } catch (error) {
@@ -99,11 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Busca a sessão inicial com retry em caso de lock error
-        // Chamada assíncrona explícita para evitar erros de tipagem no build
-        const sessionResult: any = await safeExecute(async () => 
+        // Cast explícito para evitar erros de tipagem unknown no build do Netlify
+        const sessionResult = (await safeExecute(async () => 
           await supabase.auth.getSession()
-        );
+        )) as any;
         
         const initialSession = sessionResult.data?.session;
         const sessionError = sessionResult.error;

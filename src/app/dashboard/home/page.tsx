@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -77,14 +76,15 @@ export default function DashboardHome() {
     setErrorState(null);
 
     try {
-      // Uso de safeExecute para tratar erros de Lock no ambiente Netlify
-      // Chamadas explicitamente assíncronas para satisfazer o compilador TS
-      const [annRes, trailRes, progressRes, libRes]: any[] = await Promise.all([
+      // Uso de safeExecute com cast explícito para satisfazer o compilador TS no build
+      const results = await Promise.all([
         safeExecute(async () => await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
         safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
         safeExecute(async () => await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
         safeExecute(async () => await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3))
-      ]);
+      ]) as any[];
+
+      const [annRes, trailRes, progressRes, libRes] = results;
 
       if (annRes.data) setAnnouncements(annRes.data);
       if (trailRes.data) setRecommendedTrails(trailRes.data);
