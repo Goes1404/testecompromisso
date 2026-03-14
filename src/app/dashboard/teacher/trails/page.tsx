@@ -33,14 +33,12 @@ export default function TeacherTrailsPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   
   const [trails, setTrails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newTrail, setNewTrail] = useState({ title: "", category: "Geral", description: "" });
-  const [aiTopic, setAiTopic] = useState("");
 
   const fetchTrails = async () => {
     if (!user) return;
@@ -101,69 +99,6 @@ export default function TeacherTrailsPage() {
     }
   };
 
-  const handleGenerateAiTrail = async () => {
-    if (!aiTopic.trim() || !user || isSubmitting) return;
-    setIsSubmitting(true);
-
-    try {
-      // 1. Chamar Aurora para projetar a estrutura
-      const response = await fetch('/api/genkit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          flowId: 'trailStructureGenerator',
-          input: { topic: aiTopic }
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || "Falha na Aurora");
-
-      const structure = data.result;
-
-      // 2. Criar a Trilha no Banco
-      const { data: trailData, error: trailError } = await supabase
-        .from('trails')
-        .insert([{
-          title: structure.title,
-          category: structure.category,
-          description: structure.description,
-          teacher_id: user.id,
-          teacher_name: profile?.name || "Mentor Compromisso",
-          status: "draft",
-          image_url: `https://picsum.photos/seed/${Date.now()}/600/400`
-        }])
-        .select()
-        .single();
-
-      if (trailError) throw trailError;
-
-      // 3. Criar os Módulos sugeridos
-      const modulesToInsert = structure.modules.map((mod: any, idx: number) => ({
-        trail_id: trailData.id,
-        title: mod.title,
-        order_index: idx
-      }));
-
-      const { error: modulesError } = await supabase.from('modules').insert(modulesToInsert);
-      if (modulesError) throw modulesError;
-
-      toast({ 
-        title: "Trilha Projetada com Sucesso!", 
-        description: `${structure.modules.length} módulos foram estruturados pela Aurora.` 
-      });
-
-      setTrails(prev => [trailData, ...prev]);
-      setIsAiDialogOpen(false);
-      setAiTopic("");
-      
-    } catch (e: any) {
-      toast({ title: "Erro na Geração", description: e.message, variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const filteredTrails = trails.filter(t => 
     t.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     t.category?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -178,47 +113,6 @@ export default function TeacherTrailsPage() {
         </div>
         <div className="flex items-center gap-3">
           
-          {/* GERADOR IA */}
-          <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="rounded-xl md:rounded-2xl h-12 md:h-14 border-dashed border-accent text-accent font-black px-6 shadow-xl hover:bg-accent/5 transition-all">
-                <Sparkles className="h-5 w-5 mr-2" /> Gerar com Aurora IA
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] p-8 md:p-12 bg-white max-w-lg border-none shadow-2xl">
-              <DialogHeader>
-                <div className="h-14 w-14 rounded-2xl bg-accent/10 flex items-center justify-center text-accent mb-4">
-                  <Wand2 className="h-8 w-8" />
-                </div>
-                <DialogTitle className="text-2xl font-black italic text-primary">Arquiteta de Trilhas</DialogTitle>
-                <DialogDescription className="font-medium italic">Insira o tema e a Aurora projetará toda a ementa pedagógica para você.</DialogDescription>
-              </DialogHeader>
-              <div className="py-6 space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase opacity-40 ml-2 tracking-widest">Qual o tema da jornada?</Label>
-                  <Input 
-                    placeholder="Ex: Fundamentos de Redação ou Cálculo Integral" 
-                    value={aiTopic} 
-                    onChange={(e) => setAiTopic(e.target.value)}
-                    disabled={isSubmitting}
-                    className="h-14 rounded-2xl bg-muted/30 border-none font-bold italic text-lg"
-                  />
-                </div>
-                <div className="bg-primary/5 p-4 rounded-2xl border border-primary/5">
-                  <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest leading-relaxed">
-                    A IA criará o título, descrição e de 3 a 6 capítulos estruturados prontos para receberem materiais.
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleGenerateAiTrail} disabled={isSubmitting || !aiTopic.trim()} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20">
-                  {isSubmitting ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Sparkles className="h-6 w-6 mr-2 text-accent" />}
-                  {isSubmitting ? "Aurora Projetando..." : "Projetar Trilha Completa"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
           {/* CRIAÇÃO MANUAL */}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -246,7 +140,7 @@ export default function TeacherTrailsPage() {
               </div>
               <DialogFooter>
                 <Button onClick={handleCreateTrail} disabled={isSubmitting || !newTrail.title} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
-                  {isSubmitting ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
+                  {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
                   {isSubmitting ? "Gravando..." : "Criar Trilha"}
                 </Button>
               </DialogFooter>
