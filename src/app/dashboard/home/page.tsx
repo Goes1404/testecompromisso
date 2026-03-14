@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: stri
 export default function DashboardHome() {
   const { user, profile, userRole, loading: isUserLoading } = useAuth();
   const router = useRouter();
+  const dataFetchedRef = useRef(false);
   
   const [recommendedTrails, setRecommendedTrails] = useState<any[]>([]);
   const [libraryResources, setLibraryResources] = useState<any[]>([]);
@@ -57,12 +58,14 @@ export default function DashboardHome() {
   }, [userRole, isUserLoading, router]);
 
   const fetchData = useCallback(async () => {
-    if (!user || !isSupabaseConfigured) {
-      setLoadingData(false);
+    // Otimização de requisições: Prevenir múltiplos disparos se o usuário for estável
+    if (!user || !isSupabaseConfigured || dataFetchedRef.current) {
+      if (dataFetchedRef.current) setLoadingData(false);
       return;
     }
 
     setLoadingData(true);
+    dataFetchedRef.current = true;
 
     try {
       const [annRes, trailRes, progressRes, libRes] = await Promise.all([
@@ -79,6 +82,7 @@ export default function DashboardHome() {
 
     } catch (e: any) {
       console.error("Error loading dashboard data:", e);
+      dataFetchedRef.current = false; // Permitir re-tentativa em caso de erro real
     } finally {
       setLoadingData(false);
     }
@@ -100,7 +104,7 @@ export default function DashboardHome() {
   const quickActions = [
     { label: "Checklist", icon: FileCheck, href: "/dashboard/student/documents", color: "bg-blue-500" },
     { label: "Simulado", icon: BrainCircuit, href: "/dashboard/student/simulados", color: "bg-purple-500" },
-    { label: "Isenção", icon: Calculator, href: "/dashboard/financial-aid", color: "bg-amber-500" },
+    { label: "Isenção", icon: Calculator, href: "/dashboard/student/documents?tab=exemption", color: "bg-amber-500" },
     { label: "Biblioteca", icon: Library, href: "/dashboard/library", color: "bg-green-500" },
   ];
 

@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const isInitializing = useRef(false);
+  const isInitialized = useRef(false);
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
@@ -54,7 +54,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [profile]);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    if (!isSupabaseConfigured) return null;
+    if (!isSupabaseConfigured || !userId) return null;
+    
+    // Otimização: Evitar requisição se o perfil já for o correto
+    if (profile && profile.id === userId) return profile;
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -74,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error fetching profile:', error);
       return null;
     }
-  }, [router]);
+  }, [router, profile]);
 
   const refreshProfile = async () => {
     if (user) {
@@ -84,56 +88,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (isInitializing.current) return;
-    isInitializing.current = true;
+    if (isInitialized.current) return;
+    isInitialized.current = true;
 
-    const initAuth = async () => {
-      try {
-        if (!isSupabaseConfigured) {
-          setLoading(false);
-          return;
-        }
-
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
-        if (initialSession) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          const p = await fetchProfile(initialSession.user.id);
-          if (p) setProfile(p);
-        }
-      } catch (e) {
-        console.error("Auth init error:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-
+    // LÓGICA DE UNIFICAÇÃO (LOCK FIX):
+    // Usamos apenas o listener para evitar que chamadas paralelas de getSession()
+    // briguem pelo lock do navegador.
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      if (currentSession) {
+      // console.log(`[AUTH EVENT]: ${event}`);
+      
+      const currentUser = currentSession?.user ?? null;
+      
+      // Estabilização de estado: Só atualiza se o ID do usuário mudar
+      if (currentUser?.id !== user?.id || !isInitialized.current) {
         setSession(currentSession);
-        setUser(currentSession.user);
-        if (event === 'SIGNED_IN' || !profile) {
-          const p = await fetchProfile(currentSession.user.id);
-          if (p) setProfile(p);
+        setUser(currentUser);
+
+        if (currentUser) {
+          const p = await fetchProfile(currentUser.id);
+          setProfile(p);
+        } else {
+          setProfile(null);
         }
-      } else {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
       }
+
+      setLoading(false);
       
       if (event === 'SIGNED_OUT') {
         router.replace('/login');
       }
     });
 
+    // Fallback de segurança caso o listener demore (comum no Next.js 15)
+    const checkInitialSession = async () => {
+      if (loading) {
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (s && !user) {
+          setSession(s);
+          setUser(s.user);
+          const p = await fetchProfile(s.user.id);
+          setProfile(p);
+          setLoading(false);
+        }
+      }
+    };
+    
+    const timeout = setTimeout(checkInitialSession, 1500);
+
     return () => {
+      clearTimeout(timeout);
       authListener?.subscription.unsubscribe();
     };
-  }, [fetchProfile, router, profile]);
+  }, [fetchProfile, router, user?.id, loading]);
 
   const signOut = async () => {
     setLoading(true);
