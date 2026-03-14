@@ -2,9 +2,9 @@
 
 O ecossistema oficial de aprendizado e gestão educacional de Santana de Parnaíba.
 
-## Status: Migração Concluída para @Duduzcx
+## 🚀 Migração de Propriedade: @Duduzcx
 
-Este repositório contém o código-fonte da plataforma Compromisso, focada em alta performance acadêmica através de Inteligência Artificial (Aurora), BI e Trilhas de Estudo.
+Este repositório foi transferido para a conta oficial de **@Duduzcx**. Todas as atualizações futuras devem ser realizadas no endereço: `https://github.com/Duduzcx/educore`.
 
 ### Tecnologias:
 - **Frontend**: Next.js 15
@@ -14,22 +14,27 @@ Este repositório contém o código-fonte da plataforma Compromisso, focada em a
 
 ---
 
-## 🚀 Guia de Migração via Terminal
+## 🛠️ Como sincronizar seu terminal com a nova conta
 
-Se você estiver tendo problemas de autenticação ao subir o código para a nova conta, siga este comando:
+Se o seu terminal ainda estiver apontando para o endereço antigo (`goes`), execute os comandos abaixo para sintonizar com o novo repositório:
 
-1. **Remova o antigo e adicione o novo com seu Token:**
+1. **Atualize a URL de origem (Origin):**
 ```bash
-# Substitua SEU_TOKEN pelo Personal Access Token gerado no GitHub
-git remote set-url origin https://SEU_TOKEN@github.com/Duduzcx/educore.git
+# Se você usar HTTPS (Substitua SEU_TOKEN pelo seu Personal Access Token se necessário)
+git remote set-url origin https://github.com/Duduzcx/educore.git
 ```
 
-2. **Envie as alterações:**
+2. **Verifique se a mudança foi aplicada:**
 ```bash
-git push
+git remote -v
 ```
 
-*Nota: O uso do Token na URL evita erros de "Password authentication is not supported".*
+3. **Envie seu código para a nova casa:**
+```bash
+git push -u origin main
+```
+
+*Nota: Certifique-se de ter permissão de escrita no repositório Duduzcx/educore.*
 
 ---
 © 2024 Rede Educacional Santana de Parnaíba
