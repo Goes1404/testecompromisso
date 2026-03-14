@@ -4,7 +4,7 @@ O ecossistema oficial de aprendizado e gestão educacional de Santana de Parnaí
 
 ## 🚀 Migração de Propriedade: @Duduzcx
 
-Este repositório foi transferido para a conta oficial de **@Duduzcx**. Todas as atualizações futuras devem ser realizadas no endereço: `https://github.com/Duduzcx/educore`.
+Este repositório foi transferido para a conta oficial de **@Duduzcx**. Todas as atualizações futuras devem ser realizadas no endereço: `https://github.com/Duduzcx/educore.git`.
 
 ### Tecnologias:
 - **Frontend**: Next.js 15
@@ -16,11 +16,10 @@ Este repositório foi transferido para a conta oficial de **@Duduzcx**. Todas as
 
 ## 🛠️ Como sincronizar seu terminal com a nova conta
 
-Se o seu terminal ainda estiver apontando para o endereço antigo (`goes`), execute os comandos abaixo para sintonizar com o novo repositório:
+Se o seu terminal ainda estiver apontando para o endereço antigo, execute os comandos abaixo para sintonizar com o novo repositório:
 
 1. **Atualize a URL de origem (Origin):**
 ```bash
-# Se você usar HTTPS (Substitua SEU_TOKEN pelo seu Personal Access Token se necessário)
 git remote set-url origin https://github.com/Duduzcx/educore.git
 ```
 

@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { conceptExplanationAssistantFlow } from '@/ai/flows/concept-explanation-assistant';
 import { financialAidDeterminationFlow } from '@/ai/flows/financial-aid-determination';
@@ -11,7 +10,7 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 5.0: Resiliência Máxima e Depuração Verbosa.
+ * Versão 6.0: Resiliência Máxima e Suporte a Next.js 15.
  */
 
 export const maxDuration = 60; 
@@ -19,10 +18,20 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Validar Usuário (Aguardando Cookies Assíncronos do Next.js 15)
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Em ambiente de teste, permitimos IDs mock (00000000...)
+    const isTestUser = user?.id?.includes('00000000');
+    
+    if (!user && !isTestUser) {
+      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+    }
+
     const body = await req.json();
     const { flowId, input } = body;
 
-    // Log de Entrada para Depuração no Console do Servidor
     console.log(`[AURORA REQ]: ${flowId}`, JSON.stringify(input).substring(0, 100));
 
     const flows: Record<string, any> = {
@@ -41,10 +50,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Motor '${flowId}' não localizado.` }, { status: 404 });
     }
 
-    // Execução do Fluxo Genkit
+    // 2. Execução do Fluxo Genkit
     const result = await targetFlow(input);
 
-    // Log de Saída
     console.log(`[AURORA RES]: Sucesso para ${flowId}`);
 
     return NextResponse.json({ 
@@ -61,7 +69,7 @@ export async function POST(req: NextRequest) {
         error: '⚠️ Falha na Sintonia Aurora', 
         details: error?.message || 'Erro interno no motor.'
       }, 
-      { status: 200 } // Retornamos 200 para capturar o erro no frontend sem travar o Next.js
+      { status: 200 }
     );
   }
 }
