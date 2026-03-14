@@ -1,8 +1,8 @@
-
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
+// @ts-ignore
 import { fabric } from "fabric";
 import { 
   Loader2, 
@@ -43,7 +43,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
   const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  const fabricCanvasRef = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
   
   const [pdfDoc, setPdfDoc] = useState<any>(null);
@@ -240,7 +240,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
 
         fCanvas.loadFromJSON(pageDraft, () => {
           const objects = fCanvas.getObjects();
-          objects.forEach(obj => {
+          objects.forEach((obj: any) => {
             obj.scaleX = (obj.scaleX || 1) * scaleFactor;
             obj.scaleY = (obj.scaleY || 1) * scaleFactor;
             obj.left = (obj.left || 0) * scaleFactor;
@@ -261,7 +261,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         fCanvas.freeDrawingBrush.width = 20 * currentZoom;
       }
 
-      fCanvas.on('mouse:down', (options) => {
+      fCanvas.on('mouse:down', (options: any) => {
         if (activeTool === 'eraser' && options.target) {
           fCanvas.remove(options.target);
           savePageDraft();
