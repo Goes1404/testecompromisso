@@ -6,22 +6,26 @@ import { bulkQuestionParserFlow } from '@/ai/flows/bulk-question-parser';
 import { essayTopicGeneratorFlow } from '@/ai/flows/essay-topic-generator';
 import { essayEvaluatorFlow } from '@/ai/flows/essay-evaluator';
 import { trailStructureGeneratorFlow } from '@/ai/flows/trail-structure-generator';
+import { createClient } from '@/utils/supabase/server';
 
 /**
  * @fileOverview Gateway de API Blindado para a Aurora IA.
- * Inclui log de erro detalhado para diagnóstico industrial.
+ * Retorna detalhes técnicos do erro para diagnóstico no Firebase Studio.
  */
 
 export const maxDuration = 60; 
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { flowId, input } = body;
-
-    if (!flowId) {
-      return NextResponse.json({ error: 'flowId is required' }, { status: 400 });
-    }
 
     const flows: Record<string, any> = {
       conceptExplanationAssistant: conceptExplanationAssistantFlow,
@@ -44,18 +48,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, result });
   } catch (error: any) {
-    // Log detalhado para o desenvolvedor identificar a causa exata no terminal
-    const errorDetail = error?.message || 'Erro desconhecido';
-    const errorStack = error?.stack || '';
-    
-    console.error(`[AURORA CRITICAL]: ${errorDetail}`);
-    console.error(errorStack);
+    const errorMsg = error?.message || 'Erro desconhecido na Engine de IA';
+    console.error(`[AURORA CRITICAL]:`, error);
 
     return NextResponse.json(
       { 
         error: '⚠️ Falha no processamento da IA.', 
-        details: errorDetail,
-        code: error?.code || 'INTERNAL_ERROR'
+        details: errorMsg,
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
       }, 
       { status: 500 }
     );

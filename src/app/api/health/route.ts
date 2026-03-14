@@ -4,7 +4,7 @@ import { ai } from '@/ai/genkit';
 
 /**
  * @fileOverview API de Diagnóstico Maestro - Compromisso 360.
- * Verifica a saúde da infraestrutura e testa a Aurora IA.
+ * Verifica a saúde da infraestrutura e testa a Aurora IA com o modelo flash.
  */
 
 export const dynamic = 'force-dynamic';
@@ -33,17 +33,16 @@ export async function GET() {
   try {
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      prompt: 'Responda apenas: SINAL OK',
-      config: { maxOutputTokens: 10 }
+      prompt: 'ok',
+      config: { maxOutputTokens: 2 }
     });
     
     if (response.text) {
-      diagnostics.genkit = { status: 'ok', details: 'Aurora IA sintonizada e respondendo.' };
+      diagnostics.genkit = { status: 'ok', details: 'Aurora IA sintonizada.' };
     } else {
       throw new Error("Resposta vazia da IA.");
     }
   } catch (e: any) {
-    console.error("[HEALTH CHECK FAIL]:", e.message);
     diagnostics.genkit = { 
         status: 'error', 
         details: `Erro de Conexão: ${e.message}` 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ export default function LandingPage() {
                   src={heroImage?.imageUrl || "https://picsum.photos/seed/school-life/1000/1200"} 
                   alt="Educação de Futuro" 
                   fill 
+                  priority
                   className="object-cover group-hover:scale-110 transition-transform duration-1000"
                   data-ai-hint="student classroom"
                 />
