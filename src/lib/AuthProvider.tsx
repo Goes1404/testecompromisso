@@ -1,7 +1,8 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { supabase } from '@/app/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [profile]);
 
   const fetchProfile = useCallback(async (userId: string) => {
+    if (!isSupabaseConfigured) return null;
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -85,20 +87,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
 
     const initAuth = async () => {
-      try {
-        setLoading(true);
-        
-        // 1. Verificar Mock Session (Prioridade para Testes Rápidos)
-        const mockData = typeof window !== 'undefined' ? localStorage.getItem('compromisso_mock_session') : null;
-        if (mockData && isMounted) {
-          const parsed = JSON.parse(mockData);
-          setUser(parsed.user);
-          setProfile(parsed.profile);
+      // Timeout de segurança para evitar hang eterno se o Supabase/Rede falhar
+      const timeoutId = setTimeout(() => {
+        if (loading && isMounted) {
+          console.warn("⚠️ [AUTH TIMEOUT]: Supabase demorou demais para responder.");
           setLoading(false);
+        }
+      }, 6000);
+
+      try {
+        if (!isSupabaseConfigured) {
+          setLoading(false);
+          clearTimeout(timeoutId);
           return;
         }
 
-        // 2. Verificar Sessão Real Supabase
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (initialSession && isMounted) {
@@ -113,18 +116,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("Auth init error:", e);
       } finally {
         if (isMounted) setLoading(false);
+        clearTimeout(timeoutId);
       }
     };
 
     initAuth();
 
-    // Listener de Mudança de Estado (Login/Logout)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!isMounted) return;
       
-      // Se houver uma sessão mock, ignoramos eventos do Supabase para não quebrar a simulação
-      if (typeof window !== 'undefined' && localStorage.getItem('compromisso_mock_session')) return;
-
       if (currentSession) {
         setSession(currentSession);
         setUser(currentSession.user);
@@ -149,7 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     setLoading(true);
-    if (typeof window !== 'undefined') localStorage.removeItem('compromisso_mock_session');
     try {
       await supabase.auth.signOut();
     } catch (e) {}

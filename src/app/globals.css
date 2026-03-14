@@ -56,17 +56,13 @@
     min-height: 100vh;
     position: relative;
     
+    /* Gradientes nativos em vez de imagens pesadas para performance */
     background-image: 
-      radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(45, 100% , 50%, 0.03) 0px, transparent 50%),
-      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.02) 1px, transparent 0);
+      radial-gradient(at 0% 0%, hsla(215, 100% , 45%, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(45, 100% , 50%, 0.02) 0px, transparent 50%),
+      radial-gradient(circle at 2px 2px, rgba(0, 71, 171, 0.01) 1px, transparent 0);
     background-size: 100% 100%, 100% 100%, 24px 24px;
     background-attachment: fixed;
-  }
-
-  /* Imagem removida do body para otimização de performance inicial */
-  body::before {
-    display: none;
   }
 }
 
@@ -90,8 +86,4 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.2);
-}
-
-.bg-santana-fixed {
-  @apply fixed inset-0 z-0 bg-cover bg-center grayscale opacity-10 pointer-events-none;
 }
