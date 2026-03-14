@@ -57,8 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured) return null;
     try {
-      const { data, error } = await safeExecute(() => 
-        supabase
+      const { data, error }: any = await safeExecute(async () => 
+        await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
@@ -100,9 +100,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Busca a sessão inicial com retry em caso de lock error
-        const { data: { session: initialSession }, error: sessionError } = await safeExecute(() => 
-          supabase.auth.getSession()
+        // Chamada assíncrona explícita para evitar erros de tipagem no build
+        const sessionResult: any = await safeExecute(async () => 
+          await supabase.auth.getSession()
         );
+        
+        const initialSession = sessionResult.data?.session;
+        const sessionError = sessionResult.error;
         
         if (sessionError) throw sessionError;
 

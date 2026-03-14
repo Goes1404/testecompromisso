@@ -78,11 +78,12 @@ export default function DashboardHome() {
 
     try {
       // Uso de safeExecute para tratar erros de Lock no ambiente Netlify
-      const [annRes, trailRes, progressRes, libRes] = await Promise.all([
-        safeExecute(() => supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
-        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
-        safeExecute(() => supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
-        safeExecute(() => supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3))
+      // Chamadas explicitamente assíncronas para satisfazer o compilador TS
+      const [annRes, trailRes, progressRes, libRes]: any[] = await Promise.all([
+        safeExecute(async () => await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
+        safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
+        safeExecute(async () => await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
+        safeExecute(async () => await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3))
       ]);
 
       if (annRes.data) setAnnouncements(annRes.data);

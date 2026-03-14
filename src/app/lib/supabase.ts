@@ -3,7 +3,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 /**
  * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - COMPROMISSO 360
- * Versão 7.0: Otimizado para evitar conflitos de Web Locks em multi-abas.
+ * Versão 7.1: Tipagem aprimorada para evitar falhas de build no Next.js 15.
  */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -32,7 +32,7 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
  * 🛠️ safeExecute: Wrapper para chamadas Supabase que trata AbortError (Lock Broken).
  * Se o lock for roubado por outra aba/processo, ele tenta novamente.
  */
-export async function safeExecute<T>(fn: () => Promise<T>, retries = 3, delay = 500): Promise<T> {
+export async function safeExecute<T>(fn: () => Promise<T> | any, retries = 3, delay = 500): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {

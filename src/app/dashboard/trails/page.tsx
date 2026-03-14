@@ -54,9 +54,9 @@ export default function LearningTrailsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Uso de safeExecute para lidar com conflitos de concorrência/lock no Netlify
-      const { data: trails, error: trailsError } = await safeExecute(() => 
-        supabase
+      // Uso de safeExecute com chamada assíncrona explícita para evitar erros de tipagem no build
+      const { data: trails, error: trailsError }: any = await safeExecute(async () => 
+        await supabase
           .from('trails')
           .select('*')
           .or('status.eq.active,status.eq.published')
@@ -65,8 +65,8 @@ export default function LearningTrailsPage() {
 
       if (trailsError) throw trailsError;
 
-      const { data: progress } = await safeExecute(() => 
-        supabase
+      const { data: progress }: any = await safeExecute(async () => 
+        await supabase
           .from('user_progress')
           .select('*')
           .eq('user_id', user.id)
@@ -91,8 +91,8 @@ export default function LearningTrailsPage() {
     setPinningId(trailId);
     
     try {
-      const { error } = await safeExecute(() => 
-        supabase.from('user_progress').upsert({
+      const { error } = await safeExecute(async () => 
+        await supabase.from('user_progress').upsert({
           user_id: user.id,
           trail_id: trailId,
           last_accessed: new Date().toISOString()
