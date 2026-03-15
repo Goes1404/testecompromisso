@@ -23,7 +23,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
-import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
+import { supabase, isSupabaseConfigured, safeExecute } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 
 interface Announcement {
@@ -58,18 +58,18 @@ export default function DashboardHome() {
   }, [userRole, isUserLoading, router]);
 
   const fetchData = useCallback(async () => {
-    // Garante que os dados só sejam buscados uma vez e com usuário autenticado
-    if (!user || !isSupabaseConfigured || dataFetchedRef.current) return;
+    if (!user || !isSupabaseConfigured || dataFetchedRef.current || !profile) return;
     
     setLoadingData(true);
     dataFetchedRef.current = true;
 
     try {
+      // Uso de safeExecute para tratar erros de Lock no ambiente Netlify
       const [annRes, trailRes, progressRes, libRes] = await Promise.all([
-        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
-        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
-        supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
-        supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)
+        safeExecute(() => supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)) as any,
+        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)) as any,
+        safeExecute(() => supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)) as any,
+        safeExecute(() => supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)) as any
       ]);
 
       if (annRes.data) setAnnouncements(annRes.data);
@@ -83,13 +83,13 @@ export default function DashboardHome() {
     } finally {
       setLoadingData(false);
     }
-  }, [user]);
+  }, [user, profile]);
 
   useEffect(() => {
-    if (user && userRole === 'student') {
+    if (user && userRole === 'student' && profile) {
       fetchData();
     }
-  }, [user, userRole, fetchData]);
+  }, [user, userRole, profile, fetchData]);
 
   if (isUserLoading || (loadingData && !dataFetchedRef.current)) return (
     <div className="flex flex-col h-96 items-center justify-center gap-4">

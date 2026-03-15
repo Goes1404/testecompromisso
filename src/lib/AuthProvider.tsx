@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
+import { supabase, isSupabaseConfigured, safeExecute } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -56,11 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured || !userId) return null;
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await safeExecute(() => 
+        supabase.from('profiles').select('*').eq('id', userId).single()
+      );
 
       if (!error && data) {
         if (data.status === 'suspended') {
@@ -87,41 +85,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (authInitialized.current) return;
     authInitialized.current = true;
 
-    // LÓGICA DE UNIFICAÇÃO: Evita chamadas paralelas que causam "Lock broken"
     const initAuth = async () => {
-      // 1. Tenta recuperar sessão existente de forma silenciosa
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      
-      if (initialSession) {
-        setSession(initialSession);
-        setUser(initialSession.user);
-        const p = await fetchProfile(initialSession.user.id);
-        setProfile(p);
-      }
-
-      setLoading(false);
-
-      // 2. Configura o listener para mudanças futuras
-      const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-        const currentUser = currentSession?.user ?? null;
+      try {
+        // Fluxo Sequencial para evitar "Lock Broken"
+        const { data: { session: initialSession } } = await safeExecute(() => supabase.auth.getSession());
         
-        if (currentUser?.id !== user?.id) {
-          setSession(currentSession);
-          setUser(currentUser);
-          if (currentUser) {
-            const p = await fetchProfile(currentUser.id);
-            setProfile(p);
-          } else {
-            setProfile(null);
+        if (initialSession) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+          const p = await fetchProfile(initialSession.user.id);
+          setProfile(p);
+        }
+
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+          const currentUser = currentSession?.user ?? null;
+          
+          if (currentUser?.id !== user?.id) {
+            setSession(currentSession);
+            setUser(currentUser);
+            if (currentUser) {
+              const p = await fetchProfile(currentUser.id);
+              setProfile(p);
+            } else {
+              setProfile(null);
+            }
           }
-        }
 
-        if (event === 'SIGNED_OUT') {
-          router.replace('/login');
-        }
-      });
+          if (event === 'SIGNED_OUT') {
+            router.replace('/login');
+          }
+        });
 
-      return authListener;
+        setLoading(false);
+        return authListener;
+      } catch (e) {
+        console.error("Auth init failure:", e);
+        setLoading(false);
+      }
     };
 
     const listenerPromise = initAuth();

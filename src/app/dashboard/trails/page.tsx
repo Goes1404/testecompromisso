@@ -27,7 +27,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthProvider";
-import { supabase } from "@/app/lib/supabase";
+import { supabase, safeExecute } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 const TRAIL_CATEGORIES = ["Todos", "Matemática", "Tecnologia", "Linguagens", "Física", "Biologia", "História", "Geografia"];
@@ -38,7 +38,7 @@ const AUDIENCE_FILTERS = [
 ];
 
 export default function LearningTrailsPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const dataFetchedRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,15 +51,16 @@ export default function LearningTrailsPage() {
   const [pinningId, setPinningId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!user || dataFetchedRef.current) return;
+    if (!user || !profile || dataFetchedRef.current) return;
     
     setLoading(true);
     dataFetchedRef.current = true;
 
     try {
+      // Uso de safeExecute para garantir o carregamento em ambientes multi-aba
       const [trailsRes, progressRes] = await Promise.all([
-        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false }),
-        supabase.from('user_progress').select('*').eq('user_id', user.id)
+        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false })) as any,
+        safeExecute(() => supabase.from('user_progress').select('*').eq('user_id', user.id)) as any
       ]);
 
       if (trailsRes.data) setDbTrails(trailsRes.data);
@@ -70,22 +71,24 @@ export default function LearningTrailsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, profile]);
 
   useEffect(() => {
-    if (user) fetchData();
-  }, [user, fetchData]);
+    if (user && profile) fetchData();
+  }, [user, profile, fetchData]);
 
   const handlePinTrail = async (trailId: string) => {
     if (!user || pinningId) return;
     setPinningId(trailId);
     
     try {
-      const { error } = await supabase.from('user_progress').upsert({
-        user_id: user.id,
-        trail_id: trailId,
-        last_accessed: new Date().toISOString()
-      }, { onConflict: 'user_id,trail_id' });
+      const { error } = await safeExecute(async () => 
+        await supabase.from('user_progress').upsert({
+          user_id: user.id,
+          trail_id: trailId,
+          last_accessed: new Date().toISOString()
+        }, { onConflict: 'user_id,trail_id' })
+      ) as any;
 
       if (error) throw error;
 
@@ -94,8 +97,9 @@ export default function LearningTrailsPage() {
         description: "Acesse rapidamente pela Página Inicial."
       });
       
-      // Atualiza apenas o progresso localmente
-      const { data: progressRes } = await supabase.from('user_progress').select('*').eq('user_id', user.id);
+      const { data: progressRes } = await safeExecute(() => 
+        supabase.from('user_progress').select('*').eq('user_id', user.id)
+      ) as any;
       if (progressRes) setAllProgress(progressRes);
     } catch (e: any) {
       toast({ title: "Falha ao fixar", variant: "destructive" });
