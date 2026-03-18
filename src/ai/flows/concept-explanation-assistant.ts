@@ -46,7 +46,7 @@ Sua missão é ajudar estudantes com dúvidas para o ENEM, ETEC e vestibulares.
 REGRAS:
 - Use Português Brasileiro profissional e empático.
 - Responda APENAS com o texto da explicação.
-- NUNCA use blocos de código Markdown (```json ou ```text).`,
+- NUNCA use blocos de código Markdown (\`\`\`json ou \`\`\`text).`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
 {{#if history}}Histórico de Conversa:
