@@ -60,7 +60,14 @@ export default function LandingPage() {
           </div>
           <nav className="hidden md:flex items-center gap-10">
             <Link href="#features" className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Metodologia</Link>
-            <Link href="#impact" className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Pólo SP</Link>
+            <a 
+              href="https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
+            >
+              Pólo SP
+            </a>
             <Button asChild className="bg-primary text-white font-black px-10 h-14 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none text-sm uppercase tracking-wider">
               <Link href="/login">Entrar no Portal</Link>
             </Button>
