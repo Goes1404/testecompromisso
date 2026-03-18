@@ -14,6 +14,9 @@ if (!apiKey) {
   console.error("❌ [CRÍTICO] Nenhuma chave de API (GEMINI_API_KEY) encontrada nas variáveis de ambiente!");
 }
 
+// Permite trocar o modelo via ENV ou usar o 2.0 Flash como padrão de alta performance
+export const AURORA_MODEL = process.env.AURORA_MODEL_ID || 'googleai/gemini-2.0-flash';
+
 export const ai = genkit({
   plugins: [
     googleAI({

@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -6,7 +5,7 @@
  * Sintonizado para Gemini 2.0 Flash com tratamento de erros de sintaxe.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, AURORA_MODEL } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const MessageSchema = z.object({
@@ -28,7 +27,7 @@ export type ConceptExplanationAssistantOutput = z.infer<typeof ConceptExplanatio
 
 const prompt = ai.definePrompt({
   name: 'conceptExplanationAssistantPrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: AURORA_MODEL,
   input: { schema: ConceptExplanationAssistantInputSchema },
   output: { schema: ConceptExplanationAssistantOutputSchema },
   config: { 
@@ -46,7 +45,7 @@ Sua missão é ajudar estudantes com dúvidas para o ENEM, ETEC e vestibulares.
 REGRAS:
 - Use Português Brasileiro profissional e empático.
 - Responda APENAS com o texto da explicação.
-- NUNCA use blocos de código Markdown (\`json ou \`text).`,
+- NUNCA use blocos de código Markdown (\`\`\`json ou \`\`\`text).`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
 {{#if history}}Histórico de Conversa:
@@ -74,6 +73,12 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
 
     } catch (error: any) {
       console.error("[AURORA FLOW ERROR]:", error);
+      
+      // Tratamento amigável para chave vazada
+      if (error.message?.includes('leaked') || error.message?.includes('403')) {
+        throw new Error("⚠️ [CHAVE VAZADA]: Esta API Key foi desativada pelo Google. Por favor, atualize o segredo GEMINI_API_KEY no painel de controle.");
+      }
+      
       throw error;
     }
   }
