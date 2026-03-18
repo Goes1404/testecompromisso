@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/request';
 import { conceptExplanationAssistantFlow } from '@/ai/flows/concept-explanation-assistant';
 import { financialAidDeterminationFlow } from '@/ai/flows/financial-aid-determination';
@@ -11,7 +12,7 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 10.0: Proteção contra erros de autenticação em ambiente serverless.
+ * Versão 11.0: Diagnóstico detalhado de permissão para ambiente de teste.
  */
 
 export const maxDuration = 120;
@@ -22,13 +23,13 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     
     // Verificação de autenticação industrial para Next.js 15
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (authError || !session?.user) {
-      console.warn("[AURORA AUTH]: Acesso negado ou sessão inválida.");
+    if (authError || !user) {
+      console.warn("[AURORA AUTH]: Acesso negado. Sessão não identificada.");
       return new Response(JSON.stringify({ 
         success: false,
-        error: "🔒 Acesso negado à Engine Aurora. Por favor, realize o login novamente no portal."
+        error: "🔒 Acesso negado. A Engine Aurora não identificou seu login. Por favor, saia e entre novamente no portal."
       }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: `❌ Motor '${flowId}' não localizado.` }), { status: 404 });
     }
 
+    // Execução do fluxo Genkit (Gemini 2.0 Flash)
     const result = await targetFlow(input);
 
     return new Response(JSON.stringify({ 
@@ -64,7 +66,7 @@ export async function POST(req: Request) {
 
     return new Response(JSON.stringify({ 
       success: false,
-      error: `⚠️ [FALHA NA ENGINE]: ${error.message || 'Erro interno no motor de IA.'}`
+      error: `⚠️ [FALHA NA ENGINE]: ${error.message || 'Houve uma oscilação no motor de IA. Verifique sua chave API.'}`
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 }

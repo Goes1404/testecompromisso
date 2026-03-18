@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -87,43 +88,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (authInitialized.current) return;
     authInitialized.current = true;
 
-    const initAuth = async () => {
-      try {
-        // No Next.js 15, evitamos chamar getSession e onAuthStateChange em paralelo para não quebrar o Lock
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-          const currentUser = currentSession?.user ?? null;
-          
-          if (currentUser?.id !== user?.id || !profile) {
-            setSession(currentSession);
-            setUser(currentUser);
-            if (currentUser) {
-              const p = await fetchProfile(currentUser.id);
-              setProfile(p);
-            } else {
-              setProfile(null);
-            }
-          }
+    // ATÔMICO: No Next.js 15, utilizamos APENAS o onAuthStateChange para evitar AbortError (Web Locks)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      const currentUser = currentSession?.user ?? null;
+      
+      setUser(currentUser);
+      setSession(currentSession);
 
-          if (event === 'SIGNED_OUT') {
-            router.replace('/login');
-          }
-          
-          setLoading(false);
-        });
-
-        return authListener;
-      } catch (e) {
-        console.error("Auth critical initialization failure:", e);
-        setLoading(false);
+      if (currentUser) {
+        const p = await fetchProfile(currentUser.id);
+        setProfile(p);
+      } else {
+        setProfile(null);
       }
-    };
 
-    const listenerPromise = initAuth();
+      if (event === 'SIGNED_OUT') {
+        router.replace('/login');
+      }
+      
+      setLoading(false);
+    });
 
     return () => {
-      listenerPromise.then(l => l?.subscription.unsubscribe());
+      subscription.unsubscribe();
     };
-  }, [fetchProfile, router, user?.id, profile]);
+  }, [fetchProfile, router]);
 
   const signOut = async () => {
     setLoading(true);
