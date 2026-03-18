@@ -76,7 +76,8 @@ export default function StudentEssayPage() {
   const [theme, setTheme] = useState("Os impactos da Inteligência Artificial na educação brasileira contemporânea");
   const [supportingTexts, setSupportingTexts] = useState<any[]>([
     { id: 1, content: "A inteligência artificial pode personalizar o ensino, mas levanta questões éticas sobre a autonomia do aluno.", source: "MEC 2024" },
-    { id: 2, content: "O Brasil ocupa a 5ª posição no ranking de países que mais buscam ferramentas de IA para estudo.", source: "G1 Notícias" }
+    { id: 2, content: "O Brasil ocupa a 5ª posição no ranking de países que mais buscam ferramentas de IA para estudo.", source: "G1 Notícias" },
+    { id: 3, content: "A desigualdade digital no Brasil ainda é um entrave para a implementação plena de tecnologias educacionais.", source: "IBGE" }
   ]);
   const [customTheme, setCustomTheme] = useState(false);
   const [text, setText] = useState("");
@@ -111,6 +112,10 @@ export default function StudentEssayPage() {
     } catch (e: any) {
       toast({ title: "Modo Simulação", description: "Carregando tema de exemplo para demonstração.", variant: "default" });
       setTheme("O desafio de democratizar o acesso à tecnologia no Brasil");
+      setSupportingTexts([
+        { id: 1, content: "O acesso à internet no Brasil ainda é desigual, afetando principalmente as áreas rurais e as classes D e E.", source: "TIC Domicílios" },
+        { id: 2, content: "A educação mediada pela tecnologia exige infraestrutura e capacitação docente.", source: "Portal Educação" }
+      ]);
     } finally {
       setLoadingTopic(false);
     }
@@ -130,7 +135,6 @@ export default function StudentEssayPage() {
         title: "Avaliação Concluída! ✅", 
         description: "Diagnóstico gerado no Modo de Demonstração Aurora IA." 
       });
-      // Scroll suave para os resultados
       setTimeout(() => {
         const resultSection = document.getElementById('audit-results');
         resultSection?.scrollIntoView({ behavior: 'smooth' });
@@ -141,7 +145,6 @@ export default function StudentEssayPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700 pb-24 px-4 md:px-6">
       
-      {/* HEADER DINÂMICO */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
@@ -173,7 +176,6 @@ export default function StudentEssayPage() {
         </div>
       </div>
 
-      {/* ÁREA DE ESCRITA - FULL WIDTH */}
       <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden ring-1 ring-black/5">
         <CardHeader className="bg-primary/5 p-8 md:p-12 border-b border-dashed border-primary/10">
           {customTheme ? (
@@ -248,7 +250,6 @@ export default function StudentEssayPage() {
         </CardContent>
       </Card>
 
-      {/* SEÇÃO DE RESULTADOS - ABAIXO DA REDAÇÃO */}
       {result && (
         <div id="audit-results" className="space-y-12 py-10 animate-in slide-in-from-bottom-10 duration-1000">
           <div className="flex items-center gap-4 px-2">
@@ -360,25 +361,39 @@ export default function StudentEssayPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {!result && supportingTexts.map((st) => (
-              <Card key={st.id} className="border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:-translate-y-1 transition-all group">
-                <p className="text-sm font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
-                <div className="flex justify-between items-center mt-6 pt-4 border-t border-muted/10">
-                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Fonte: {st.source}</span>
-                  <Badge variant="outline" className="border-accent/30 text-accent font-black text-[7px] uppercase">Motivador</Badge>
-                </div>
-              </Card>
-            ))}
+            {supportingTexts.length > 0 ? (
+              supportingTexts.map((st) => (
+                <Card key={st.id} className="border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:-translate-y-1 transition-all group border-l-4 border-accent">
+                  <p className="text-sm font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
+                  <div className="flex justify-between items-center mt-6 pt-4 border-t border-muted/10">
+                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Fonte: {st.source}</span>
+                    <Badge variant="outline" className="border-accent/30 text-accent font-black text-[7px] uppercase">Motivador</Badge>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center opacity-30 italic">
+                Nenhum texto motivador carregado para este tema.
+              </div>
+            )}
+            
             {result && (
-              <Card className="col-span-full border-none shadow-xl bg-white p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center gap-8">
-                <div className="h-20 w-20 rounded-[2rem] bg-accent/10 flex items-center justify-center shrink-0">
+              <Card className="col-span-full border-none shadow-xl bg-primary text-white p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center gap-8 relative overflow-hidden mt-4">
+                <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
+                <div className="h-20 w-20 rounded-[2rem] bg-white/10 flex items-center justify-center shrink-0 shadow-xl relative z-10">
                   <History className="h-10 w-10 text-accent" />
                 </div>
-                <div className="space-y-2 text-center md:text-left">
-                  <h3 className="text-xl font-black text-primary italic uppercase">Foco na Próxima Escrita</h3>
-                  <p className="text-sm font-medium text-muted-foreground italic">Seus textos motivadores e dicas foram arquivados. Continue treinando para atingir a nota 1000.</p>
+                <div className="space-y-2 text-center md:text-left relative z-10 flex-1">
+                  <h3 className="text-xl font-black italic uppercase">Foco na Próxima Escrita</h3>
+                  <p className="text-sm font-medium opacity-80 italic">Seus textos motivadores e dicas foram arquivados para consulta futura.</p>
                 </div>
-                <Button variant="outline" className="ml-auto rounded-xl h-12 border-primary/20 font-black text-[10px] uppercase">Nova Simulação</Button>
+                <Button 
+                  onClick={() => { setResult(null); setText(""); }}
+                  variant="outline" 
+                  className="ml-auto rounded-xl h-12 bg-white text-primary border-none font-black text-[10px] uppercase shadow-lg relative z-10"
+                >
+                  Nova Simulação
+                </Button>
               </Card>
             )}
           </div>
