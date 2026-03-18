@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -37,11 +38,11 @@ export default function LandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* HEADER */}
+      {/* HEADER - AMPLIADO E PROPORCIONAL */}
       <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-muted/20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12 rounded-2xl bg-primary flex items-center justify-center text-accent shadow-xl shadow-primary/20 rotate-3 p-1.5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative h-14 w-14 rounded-2xl bg-primary flex items-center justify-center text-accent shadow-xl shadow-primary/20 rotate-3 p-2 overflow-hidden">
               {logoImg && (
                 <Image 
                   src={logoImg.imageUrl} 
@@ -53,24 +54,24 @@ export default function LandingPage() {
                 />
               )}
             </div>
-            <span className="text-2xl font-black italic tracking-tighter text-primary">
+            <span className="text-3xl font-black italic tracking-tighter text-primary">
               Compro<span className="text-accent">misso</span>
             </span>
           </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Metodologia</Link>
-            <Link href="#impact" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Pólo SP</Link>
-            <Button asChild className="bg-primary text-white font-black px-8 h-12 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none">
+          <nav className="hidden md:flex items-center gap-10">
+            <Link href="#features" className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Metodologia</Link>
+            <Link href="#impact" className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Pólo SP</Link>
+            <Button asChild className="bg-primary text-white font-black px-10 h-14 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none text-sm uppercase tracking-wider">
               <Link href="/login">Entrar no Portal</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-primary">
+            <Button asChild variant="ghost" className="text-sm font-black uppercase tracking-widest text-primary">
               <Link href="/register">Nova Matrícula</Link>
             </Button>
           </nav>
         </div>
       </header>
 
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-24">
         {/* HERO SECTION */}
         <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
