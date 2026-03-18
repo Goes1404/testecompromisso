@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,8 @@ import {
   Globe,
   Sparkles,
   GraduationCap,
-  School
+  School,
+  ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -233,51 +233,66 @@ export default function LandingPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-primary py-20 text-white relative overflow-hidden">
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-[100px]" />
+      <footer className="bg-gradient-to-br from-primary via-primary to-slate-950 py-24 text-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] -z-0 translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[100px] -z-0 -translate-x-1/2 -translate-y-1/2" />
+        
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10">
-          <div className="space-y-6 col-span-1 lg:col-span-2">
-            <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12 overflow-hidden rounded-xl shadow-xl bg-white p-1.5">
+          <div className="space-y-8 col-span-1 lg:col-span-2">
+            <div className="flex items-center gap-4">
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl shadow-2xl bg-white p-2 rotate-3 group-hover:rotate-0 transition-transform duration-500">
                 {logoImg && (
                   <Image 
                     src={logoImg.imageUrl} 
                     alt={logoImg.description} 
                     fill 
                     unoptimized
-                    className="object-contain"
+                    className="object-contain p-1"
                   />
                 )}
               </div>
-              <span className="text-3xl font-black italic tracking-tighter">Compromisso</span>
+              <span className="text-4xl font-black italic tracking-tighter uppercase">Compro<span className="text-accent">misso</span></span>
             </div>
-            <p className="text-white/40 font-medium italic text-lg max-w-sm">
-              Transformando o futuro dos jovens de Santana de Parnaíba através da educação de alta performance.
+            <p className="text-white/50 font-medium italic text-xl max-w-sm leading-relaxed">
+              Transformando o futuro dos jovens de Santana de Parnaíba através da educação de alta performance e compromisso real.
             </p>
           </div>
-          <div className="space-y-6">
-            <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Acesso Rápido</h5>
-            <ul className="space-y-4 text-white/60 font-bold text-sm">
-              <li><Link href="/login" className="hover:text-white transition-colors font-black uppercase text-[10px]">Portal do Aluno</Link></li>
-              <li><Link href="/register" className="hover:text-white transition-colors">Nova Matrícula</Link></li>
-              <li><Link href="#features" className="hover:text-white transition-colors">Nossa Metodologia</Link></li>
+          <div className="space-y-8">
+            <h5 className="font-black uppercase text-[11px] tracking-[0.5em] text-accent/80 border-l-4 border-accent pl-4">Acesso Rápido</h5>
+            <ul className="space-y-5 text-white/60 font-bold text-sm">
+              <li><Link href="/login" className="hover:text-white transition-all hover:translate-x-2 inline-block font-black uppercase text-[11px] tracking-widest">Portal do Aluno</Link></li>
+              <li><Link href="/register" className="hover:text-white transition-all hover:translate-x-2 inline-block">Nova Matrícula</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-all hover:translate-x-2 inline-block">Nossa Metodologia</Link></li>
             </ul>
           </div>
-          <div className="space-y-6">
-            <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Atendimento</h5>
-            <ul className="space-y-4 text-white/60 font-bold text-sm">
-              <li>contato@compromisso.edu.br</li>
-              <li>Pólo Santana de Parnaíba - Centro</li>
-              <li>Secretaria: Segunda a Sexta</li>
+          <div className="space-y-8">
+            <h5 className="font-black uppercase text-[11px] tracking-[0.5em] text-accent/80 border-l-4 border-accent pl-4">Atendimento</h5>
+            <ul className="space-y-5 text-white/60 font-bold text-sm">
+              <li className="flex items-center gap-3">
+                <div className="h-1 w-4 bg-accent/30 rounded-full" />
+                contato@compromisso.edu.br
+              </li>
+              <li className="flex items-center gap-3">
+                <div className="h-1 w-4 bg-accent/30 rounded-full" />
+                Pólo Santana de Parnaíba - Centro
+              </li>
+              <li className="flex items-center gap-3">
+                <div className="h-1 w-4 bg-accent/30 rounded-full" />
+                Secretaria: Segunda a Sexta
+              </li>
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">© 2024 Curso Compromisso • Educação de Alta Performance</p>
-          <div className="flex gap-8 opacity-40">
-            <Globe className="h-5 w-5" />
-            <ShieldCheck className="h-5 w-5" />
-            <Zap className="h-5 w-5" />
+        
+        <div className="max-w-7xl mx-auto px-6 mt-24 pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-10 relative z-10">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <p className="text-[11px] font-black uppercase tracking-[0.5em] opacity-30 italic">© 2024 Curso Compromisso • Educação de Alta Performance</p>
+          </div>
+          <div className="flex gap-10 opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
+            <Globe className="h-6 w-6 hover:text-accent transition-colors cursor-pointer" />
+            <ShieldCheck className="h-6 w-6 hover:text-accent transition-colors cursor-pointer" />
+            <Zap className="h-6 w-6 hover:text-accent transition-colors cursor-pointer" />
           </div>
         </div>
       </footer>
