@@ -3,32 +3,32 @@
   "placeholderImages": [
     {
       "id": "hero-main",
-      "description": "Estudante em ambiente de alta performance",
-      "imageUrl": "https://picsum.photos/seed/hero-360/1200/1200",
-      "imageHint": "student classroom"
+      "description": "Jornada Literária e Educação em Santana de Parnaíba",
+      "imageUrl": "https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg",
+      "imageHint": "classroom students"
     },
     {
       "id": "gallery-classroom",
       "description": "Salas Inteligentes - Santana de Parnaíba",
-      "imageUrl": "https://picsum.photos/seed/classroom-sp/600/800",
-      "imageHint": "modern classroom"
+      "imageUrl": "https://i.postimg.cc/QMnBTzsK/4.jpg",
+      "imageHint": "student classroom"
     },
     {
       "id": "gallery-lab",
-      "description": "Laboratórios Digitais",
-      "imageUrl": "https://picsum.photos/seed/lab-sp/600/800",
+      "description": "Ambiente de estudo e tecnologia",
+      "imageUrl": "https://i.postimg.cc/mgvJgL14/Whats-App-Image-2026-03-12-at-17-48-36.jpg",
       "imageHint": "science lab"
     },
     {
       "id": "gallery-live",
       "description": "Estúdios de Live e Transmissão",
-      "imageUrl": "https://picsum.photos/seed/live-sp/600/800",
+      "imageUrl": "https://i.postimg.cc/Px4Ry13T/2.jpg",
       "imageHint": "video studio"
     },
     {
       "id": "gallery-mentorship",
-      "description": "Espaços de Mentoria Individual",
-      "imageUrl": "https://picsum.photos/seed/mentor-sp/600/800",
+      "description": "Espaços de Mentoria e Foco Acadêmico",
+      "imageUrl": "https://i.postimg.cc/J0YdVMCd/Whats-App-Image-2026-03-12-at-2.jpg",
       "imageHint": "study space"
     },
     {

@@ -41,7 +41,7 @@ export default function LandingPage() {
       <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-muted/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12 rounded-2xl bg-primary flex items-center justify-center text-accent shadow-xl shadow-primary/20 rotate-3 p-1.5">
+            <div className="relative h-12 w-12 rounded-2xl bg-primary flex items-center justify-center text-accent shadow-xl shadow-primary/20 rotate-3 p-1.5 overflow-hidden">
               {logoImg && (
                 <Image 
                   src={logoImg.imageUrl} 
@@ -86,7 +86,7 @@ export default function LandingPage() {
                 <span className="text-accent drop-shadow-sm">é o nosso Compromisso.</span>
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground font-medium italic leading-relaxed max-w-xl border-l-4 border-accent/30 pl-6">
-                Plataforma 360º que integra Inteligência Artificial, gestão de dados e trilhas de alta performance para o sucesso do aluno.
+                Plataforma 360º que integra Inteligência Artificial, gestão de dados e trilhas de alta performance para o sucesso do aluno em Santana de Parnaíba.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 pt-4">
                 <Button asChild size="lg" className="h-20 px-12 bg-primary text-white font-black text-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group border-none">
@@ -101,7 +101,7 @@ export default function LandingPage() {
             </div>
             
             <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
-              <div className="relative aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[12px] border-white group">
+              <div className="relative aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[12px] border-white group bg-slate-100">
                 {heroImg && (
                   <Image 
                     src={heroImg.imageUrl} 
@@ -115,7 +115,7 @@ export default function LandingPage() {
                 <div className="absolute bottom-10 left-10 right-10 p-8 bg-primary/80 backdrop-blur-xl rounded-[2.5rem] text-white border border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status: Em Aula</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status: Rede Ativa</span>
                   </div>
                   <p className="text-lg font-black italic">"A tecnologia industrial aplicada à educação acelera a curva de aprendizado em até 3x."</p>
                 </div>
@@ -135,7 +135,6 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {/* JORNADA DO ALUNO */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-blue-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(37,99,235,0.5)] group-hover:rotate-6 transition-all duration-500">
                   <GraduationCap className="h-10 w-10" />
@@ -153,7 +152,6 @@ export default function LandingPage() {
                 </ul>
               </Card>
 
-              {/* STUDIO MASTER */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-orange-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(234,88,12,0.5)] group-hover:rotate-6 transition-all duration-500">
                   <School className="h-10 w-10" />
@@ -171,7 +169,6 @@ export default function LandingPage() {
                 </ul>
               </Card>
 
-              {/* GABINETE DE GESTÃO */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-white text-primary flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)] group-hover:rotate-6 transition-all duration-500">
                   <BarChart3 className="h-10 w-10" />
@@ -198,7 +195,7 @@ export default function LandingPage() {
             <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
               <div className="space-y-4 max-w-2xl">
                 <h2 className="text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">Ambiente de <span className="text-accent">Alta Performance</span></h2>
-                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa tecnologia transforma o cotidiano das instituições parceiras.</p>
+                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa tecnologia transforma o cotidiano das instituições parceiras em Santana de Parnaíba.</p>
               </div>
               <Button asChild variant="outline" className="h-14 px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
                 <Link href="/register">Ver Demonstração Completa</Link>
@@ -209,7 +206,7 @@ export default function LandingPage() {
               {galleryItems.map((item, i) => {
                 const img = getPlaceholder(item.id);
                 return (
-                  <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
+                  <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700 bg-slate-100">
                     {img && (
                       <Image 
                         src={img.imageUrl} 
@@ -221,7 +218,7 @@ export default function LandingPage() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-8 left-8 right-8">
-                      <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">INFRAESTRUTURA</p>
+                      <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">INFRAESTRUTURA REAL</p>
                       <h4 className="text-xl font-black text-white italic">{item.title}</h4>
                     </div>
                   </div>
@@ -238,7 +235,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10">
           <div className="space-y-6 col-span-1 lg:col-span-2">
             <div className="flex items-center gap-3">
-              <Shield className="h-10 w-10 text-accent" />
+              <div className="relative h-12 w-12 overflow-hidden rounded-xl shadow-xl bg-white p-1.5">
+                {logoImg && (
+                  <Image 
+                    src={logoImg.imageUrl} 
+                    alt={logoImg.description} 
+                    fill 
+                    unoptimized
+                    className="object-contain"
+                  />
+                )}
+              </div>
               <span className="text-3xl font-black italic tracking-tighter">Compromisso</span>
             </div>
             <p className="text-white/40 font-medium italic text-lg max-w-sm">
@@ -271,6 +278,14 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
+  return (
+    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${className}`}>
+      {children}
     </div>
   );
 }
