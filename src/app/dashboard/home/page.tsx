@@ -23,7 +23,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider"; 
-import { supabase, isSupabaseConfigured, safeExecute } from "@/app/lib/supabase";
+import { supabase, safeExecute } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 
 interface Announcement {
@@ -58,13 +58,14 @@ export default function DashboardHome() {
   }, [userRole, isUserLoading, router]);
 
   const fetchData = useCallback(async () => {
-    // Só buscamos dados se o perfil estiver estabilizado e ainda não tivermos buscado
+    // PROTEÇÃO: Só busca dados se o perfil estiver estabilizado e ainda não tivermos buscado
     if (!user || !profile || dataFetchedRef.current) return;
     
     setLoadingData(true);
     dataFetchedRef.current = true;
 
     try {
+      // Uso de safeExecute para tratar erros de Lock no ambiente Netlify
       const [annRes, trailRes, progressRes, libRes] = await Promise.all([
         safeExecute(() => supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
         safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
@@ -74,12 +75,12 @@ export default function DashboardHome() {
 
       if (annRes?.data) setAnnouncements(annRes.data);
       if (trailRes?.data) setRecommendedTrails(trailRes.data);
-      if (progressRes?.data) setRecentProgress(progressRes.data.filter((p: any) => p.trail));
+      if (progressRes?.data) setRecentProgress((progressRes.data as any[]).filter((p: any) => p.trail));
       if (libRes?.data) setLibraryResources(libRes.data);
 
     } catch (e: any) {
       console.error("Dashboard data load error:", e);
-      // Permitimos re-tentativa manual se necessário, mas resetamos a trava em caso de erro fatal
+      // Permitimos re-tentativa se falhar totalmente
       dataFetchedRef.current = false;
     } finally {
       setLoadingData(false);

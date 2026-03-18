@@ -27,15 +27,16 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
 /**
  * Motor de Execução Seguro com Re-tentativa (Retry Logic)
  * Protege contra o erro "Lock broken by another request" comum no Next.js 15 + Netlify.
+ * Agora com tipagem explícita para evitar erros de build.
  */
-export async function safeExecute<T = any>(fn: () => Promise<T> | any): Promise<T> {
+export async function safeExecute<T = any>(fn: () => Promise<any>): Promise<{ data: T | null; error: any }> {
   let retries = 3;
-  let delay = 250;
+  let delay = 300;
 
   while (retries > 0) {
     try {
-      // Forçamos a execução como Promise e aguardamos o resultado
       const result = await fn();
+      // O Supabase retorna um objeto com { data, error }
       return result;
     } catch (error: any) {
       const isLockError = error?.message?.includes('Lock broken') || 
@@ -43,14 +44,14 @@ export async function safeExecute<T = any>(fn: () => Promise<T> | any): Promise<
                          error?.message?.includes('steal');
       
       if (isLockError && retries > 1) {
-        console.warn(`[SUPABASE LOCK] Conflito de trava detectado. Re-tentando em ${delay}ms...`);
+        console.warn(`[SUPABASE LOCK] Conflito detectado. Re-tentando em ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         retries--;
-        delay *= 2; // Exponential backoff
+        delay *= 2;
         continue;
       }
-      throw error;
+      return { data: null, error };
     }
   }
-  return await fn();
+  return { data: null, error: 'Max retries reached' };
 }

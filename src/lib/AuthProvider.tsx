@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { supabase, isSupabaseConfigured, safeExecute } from '@/app/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -56,9 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured || !userId) return null;
     try {
-      const { data, error } = await safeExecute(() => 
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-      );
+      // Busca direta do perfil para evitar loops
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -89,17 +92,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        // Fluxo Sequencial Blindado: 1. Pegar sessão uma vez
-        const { data: { session: initialSession } } = await safeExecute(() => supabase.auth.getSession());
+        // FLUXO SEQUENCIAL: Evita o erro "Lock broken by another request"
+        // 1. Pegamos a sessão atual
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (initialSession?.user) {
           setSession(initialSession);
           setUser(initialSession.user);
           const p = await fetchProfile(initialSession.user.id);
-          if (p) setProfile(p);
+          setProfile(p);
         }
 
-        // 2. Só depois ativar o listener de mudanças
+        // 2. Iniciamos o listener apenas após a verificação inicial
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
           const currentUser = currentSession?.user ?? null;
           
