@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
- * Implementação ultra-resiliente com tratamento de erros verboso e filtros de segurança acadêmicos.
+ * Implementação ultra-resiliente com tratamento de erros e limpeza de Markdown.
  */
 
 import { ai } from '@/ai/genkit';
@@ -45,13 +45,12 @@ Sua missão é ajudar estudantes brasileiros com dúvidas para o ENEM, ETEC e ve
 REGRAS:
 - Use Português Brasileiro profissional e empático.
 - Seja direto e focado no conteúdo acadêmico.
-- NÃO use blocos de código Markdown (como \`\`\`json) na sua resposta final. Retorne apenas o objeto puro.
 - Se o usuário perguntar algo não acadêmico, direcione-o gentilmente de volta aos estudos.`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
 {{#if history}}Histórico:
 {{#each history}}{{{role}}}: {{{content}}}
-{{/each}}{{if}}`,
+{{/each}}{{/if}}`,
 });
 
 export const conceptExplanationAssistantFlow = ai.defineFlow(
@@ -62,33 +61,34 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      console.log("[AURORA FLOW START]: Processando query:", input.query);
       const response = await prompt(input);
       
       if (response.output) {
         return response.output;
       }
       
+      // Fallback e limpeza de Markdown agressiva
       if (response.text) {
-        // Limpeza agressiva de Markdown para evitar erros de parse
         const cleanedText = response.text
           .replace(/```json/g, '')
           .replace(/```/g, '')
           .trim();
           
         try {
+          // Tenta extrair a resposta se vier em formato JSON string
           const parsed = JSON.parse(cleanedText);
           if (parsed.response) return { response: parsed.response };
         } catch (e) {
+          // Se não for JSON, retorna o texto puro como resposta
           return { response: response.text };
         }
       }
 
-      return { response: "A Aurora está sintonizando uma resposta... tente novamente." };
+      return { response: "A Aurora está sintonizando uma resposta... tente novamente em alguns instantes." };
 
     } catch (error: any) {
       console.error("[AURORA FLOW ERROR]:", error);
-      throw new Error(`Falha na engine de resposta: ${error.message}`);
+      throw new Error(`Falha na engine de resposta Aurora: ${error.message}`);
     }
   }
 );
