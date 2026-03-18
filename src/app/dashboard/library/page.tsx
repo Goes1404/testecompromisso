@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,38 +24,47 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/app/lib/supabase";
+import { supabase, safeExecute } from "@/app/lib/supabase";
+import { useAuth } from "@/lib/AuthProvider";
 import Link from "next/link";
 
 const categories = ["Todos", "Matemática", "Física", "Tecnologia", "Linguagens", "História", "Saúde"];
 const types = ["Todos", "PDF", "Video", "E-book", "Artigo"];
 
 export default function LibraryPage() {
+  const { user, profile } = useAuth();
   const { toast } = useToast();
+  const dataFetchedRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [activeType, setActiveType] = useState("Todos");
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadResources() {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('library_resources')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (!error) setResources(data || []);
-      } catch (err) {
-        console.error("Erro ao carregar acervo:", err);
-      } finally {
-        setLoading(false);
-      }
+  const loadResources = useCallback(async () => {
+    if (!user || !profile || dataFetchedRef.current) return;
+    
+    setLoading(true);
+    dataFetchedRef.current = true;
+
+    try {
+      const { data, error } = await safeExecute(() => 
+        supabase.from('library_resources').select('*').order('created_at', { ascending: false })
+      );
+      
+      if (error) throw error;
+      if (data) setResources(data);
+    } catch (err: any) {
+      console.error("Erro ao carregar acervo:", err);
+      dataFetchedRef.current = false;
+    } finally {
+      setLoading(false);
     }
-    loadResources();
-  }, []);
+  }, [user, profile]);
+
+  useEffect(() => {
+    if (user && profile) loadResources();
+  }, [user, profile, loadResources]);
 
   const filteredResources = resources.filter(resource => {
     const title = (resource.title || '').toLowerCase();
@@ -66,12 +75,21 @@ export default function LibraryPage() {
     return matchesSearch && matchesCategory && matchesType;
   });
 
+  if (loading && !dataFetchedRef.current) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-accent" />
+        <p className="font-black text-muted-foreground uppercase text-xs tracking-widest animate-pulse">Carregando Acervo Digital...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-black tracking-tight text-primary italic leading-none">Minhas Apostilas</h1>
-          <p className="text-muted-foreground text-lg font-medium">Acervo oficial de materiais e apostilas interativas.</p>
+          <p className="text-muted-foreground text-lg font-medium">Acervo oficial de materiais e apostilas interativas da rede.</p>
         </div>
         <div className="relative w-full md:w-80 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
@@ -85,7 +103,7 @@ export default function LibraryPage() {
       </div>
 
       <Tabs defaultValue="Todos" className="w-full">
-        <div className="flex items-center justify-between mb-6 overflow-x-auto pb-2 scrollbar-hide gap-4">
+        <div className="flex items-center justify-between mb-6 overflow-x-auto pb-4 scrollbar-hide gap-4">
           <TabsList className="bg-white/50 backdrop-blur-md p-1.5 h-14 rounded-2xl border-none shadow-sm shrink-0">
             {categories.map(cat => (
               <TabsTrigger 
@@ -120,15 +138,10 @@ export default function LibraryPage() {
           </DropdownMenu>
         </div>
 
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-accent" />
-            <p className="font-black text-muted-foreground uppercase text-xs tracking-widest animate-pulse">Carregando Apostilas...</p>
-          </div>
-        ) : filteredResources.length > 0 ? (
+        {filteredResources.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredResources.map((item, index) => (
-              <Card key={item.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group bg-white rounded-[2.5rem] flex flex-col animate-in fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+              <Card key={item.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group bg-white rounded-[2.5rem] flex flex-col animate-in fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <Image 
                     src={item.image_url || `https://picsum.photos/seed/${item.id}/400/250`} 
@@ -160,13 +173,13 @@ export default function LibraryPage() {
                 <CardFooter className="p-8 pt-0 mt-auto">
                   <div className="flex gap-3 w-full pt-6 border-t border-muted/10">
                     {item.type !== "Video" ? (
-                      <Button asChild className="flex-1 bg-primary text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all">
+                      <Button asChild className="flex-1 bg-primary text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
                         <Link href={`/dashboard/library/book/${item.id}`}>
                           <PenLine className="h-4 w-4 mr-2 text-accent" /> Estudar Agora
                         </Link>
                       </Button>
                     ) : (
-                      <Button asChild className="flex-1 bg-slate-900 text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all">
+                      <Button asChild className="flex-1 bg-slate-900 text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
                         <a href={item.url} target="_blank" rel="noopener noreferrer">
                           <Video className="h-4 w-4 mr-2 text-accent" /> Ver Videoaula
                         </a>
@@ -178,7 +191,7 @@ export default function LibraryPage() {
             ))}
           </div>
         ) : (
-          <div className="py-20 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-white/50 animate-in zoom-in-95 duration-500">
+          <div className="py-24 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-white/50 animate-in zoom-in-95 duration-500">
             <FileText className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
             <p className="font-black italic text-xl text-primary/40">Acervo em Sincronização</p>
             <p className="text-sm text-muted-foreground mt-2">Nenhuma apostila encontrada para os filtros atuais.</p>

@@ -58,27 +58,28 @@ export default function DashboardHome() {
   }, [userRole, isUserLoading, router]);
 
   const fetchData = useCallback(async () => {
-    if (!user || !isSupabaseConfigured || dataFetchedRef.current || !profile) return;
+    // Só buscamos dados se o perfil estiver estabilizado e ainda não tivermos buscado
+    if (!user || !profile || dataFetchedRef.current) return;
     
     setLoadingData(true);
     dataFetchedRef.current = true;
 
     try {
-      // Uso de safeExecute para tratar erros de Lock no ambiente Netlify
       const [annRes, trailRes, progressRes, libRes] = await Promise.all([
-        safeExecute(() => supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)) as any,
-        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)) as any,
-        safeExecute(() => supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)) as any,
-        safeExecute(() => supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)) as any
+        safeExecute(() => supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
+        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
+        safeExecute(() => supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
+        safeExecute(() => supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3))
       ]);
 
-      if (annRes.data) setAnnouncements(annRes.data);
-      if (trailRes.data) setRecommendedTrails(trailRes.data);
-      if (progressRes.data) setRecentProgress(progressRes.data.filter((p: any) => p.trail));
-      if (libRes.data) setLibraryResources(libRes.data);
+      if (annRes?.data) setAnnouncements(annRes.data);
+      if (trailRes?.data) setRecommendedTrails(trailRes.data);
+      if (progressRes?.data) setRecentProgress(progressRes.data.filter((p: any) => p.trail));
+      if (libRes?.data) setLibraryResources(libRes.data);
 
     } catch (e: any) {
-      console.error("Error loading dashboard data:", e);
+      console.error("Dashboard data load error:", e);
+      // Permitimos re-tentativa manual se necessário, mas resetamos a trava em caso de erro fatal
       dataFetchedRef.current = false;
     } finally {
       setLoadingData(false);
@@ -86,15 +87,15 @@ export default function DashboardHome() {
   }, [user, profile]);
 
   useEffect(() => {
-    if (user && userRole === 'student' && profile) {
+    if (user && profile && userRole === 'student') {
       fetchData();
     }
-  }, [user, userRole, profile, fetchData]);
+  }, [user, profile, userRole, fetchData]);
 
   if (isUserLoading || (loadingData && !dataFetchedRef.current)) return (
     <div className="flex flex-col h-96 items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sintonizando Rede...</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Gabinete...</p>
     </div>
   );
 
@@ -119,7 +120,7 @@ export default function DashboardHome() {
              </Badge>
            </div>
            <p className="text-sm md:text-lg text-white/80 font-medium leading-relaxed italic max-w-2xl">
-             Sua jornada rumo à aprovação está sendo monitorada com inteligência.
+             Sua jornada rumo à aprovação está sendo monitorada com inteligência industrial.
            </p>
          </div>
       </section>
@@ -149,7 +150,7 @@ export default function DashboardHome() {
               {loadingData ? (
                 Array(2).fill(0).map((_, i) => <div key={i} className="h-24 bg-muted/20 animate-pulse rounded-2xl" />)
               ) : announcements.length === 0 ? (
-                <p className="text-xs italic text-muted-foreground px-4 opacity-50">Nenhum aviso no momento.</p>
+                <div className="col-span-full py-10 text-center border-2 border-dashed rounded-2xl opacity-30 italic">Nenhum aviso no momento.</div>
               ) : (
                 announcements.map((ann: any) => {
                   const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
@@ -185,7 +186,7 @@ export default function DashboardHome() {
                   const trailData = prog.trail;
                   return (
                     <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
-                      <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col">
+                      <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col h-full">
                         <div className="relative aspect-[21/9] overflow-hidden bg-slate-100">
                           {trailData?.image_url && (
                             <Image src={trailData.image_url} alt={trailData.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
@@ -213,7 +214,7 @@ export default function DashboardHome() {
               {loadingData ? (
                 Array(3).fill(0).map((_, i) => <div key={i} className="h-16 bg-muted/20 animate-pulse rounded-2xl" />)
               ) : libraryResources.length === 0 ? (
-                <p className="text-xs italic text-muted-foreground px-4 opacity-50">Acervo vazio.</p>
+                <div className="py-10 text-center opacity-30 italic text-xs">Acervo em sincronização...</div>
               ) : (
                 libraryResources.map((res) => (
                   <Card key={res.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">

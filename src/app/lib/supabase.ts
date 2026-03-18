@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 /**
  * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - COMPROMISSO 360
- * Versão Estabilizada - Cliente Único com tratamento de Web Locks.
+ * Versão Ultra-Resiliente: Cliente único com motor de re-tentativa para Web Locks.
  */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -14,7 +14,6 @@ export const isSupabaseConfigured = Boolean(
   !supabaseAnonKey.includes('placeholder')
 )
 
-// Configuração otimizada para evitar AbortError: Lock broken
 export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -26,21 +25,25 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
 });
 
 /**
- * Utilitário para executar comandos do Supabase com re-tentativa automática
- * Protege contra o erro "Lock broken by another request with the 'steal' option"
+ * Motor de Execução Seguro com Re-tentativa (Retry Logic)
+ * Protege contra o erro "Lock broken by another request" comum no Next.js 15 + Netlify.
  */
-export async function safeExecute<T = any>(fn: () => Promise<T>): Promise<T> {
+export async function safeExecute<T = any>(fn: () => Promise<T> | any): Promise<T> {
   let retries = 3;
-  let delay = 200;
+  let delay = 250;
 
   while (retries > 0) {
     try {
-      return await fn();
+      // Forçamos a execução como Promise e aguardamos o resultado
+      const result = await fn();
+      return result;
     } catch (error: any) {
-      const isLockError = error?.message?.includes('Lock broken') || error?.name === 'AbortError';
+      const isLockError = error?.message?.includes('Lock broken') || 
+                         error?.name === 'AbortError' || 
+                         error?.message?.includes('steal');
       
       if (isLockError && retries > 1) {
-        console.warn(`[SUPABASE LOCK] Re-tentando em ${delay}ms... (${retries} tentativas restantes)`);
+        console.warn(`[SUPABASE LOCK] Conflito de trava detectado. Re-tentando em ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         retries--;
         delay *= 2; // Exponential backoff
@@ -49,5 +52,5 @@ export async function safeExecute<T = any>(fn: () => Promise<T>): Promise<T> {
       throw error;
     }
   }
-  return await fn(); // Última tentativa sem captura
+  return await fn();
 }

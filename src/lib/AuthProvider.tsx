@@ -57,10 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isSupabaseConfigured || !userId) return null;
     try {
       const { data, error } = await safeExecute(() => 
-        supabase.from('profiles').select('*').eq('id', userId).single()
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
       );
 
-      if (!error && data) {
+      if (error) throw error;
+
+      if (data) {
         if (data.status === 'suspended') {
           router.replace('/suspended');
           return null;
@@ -75,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const refreshProfile = async () => {
-    if (user) {
+    if (user?.id) {
       const p = await fetchProfile(user.id);
       if (p) setProfile(p);
     }
@@ -87,16 +89,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        // Fluxo Sequencial para evitar "Lock Broken"
+        // Fluxo Sequencial Blindado: 1. Pegar sessão uma vez
         const { data: { session: initialSession } } = await safeExecute(() => supabase.auth.getSession());
         
-        if (initialSession) {
+        if (initialSession?.user) {
           setSession(initialSession);
           setUser(initialSession.user);
           const p = await fetchProfile(initialSession.user.id);
-          setProfile(p);
+          if (p) setProfile(p);
         }
 
+        // 2. Só depois ativar o listener de mudanças
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
           const currentUser = currentSession?.user ?? null;
           
@@ -119,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         return authListener;
       } catch (e) {
-        console.error("Auth init failure:", e);
+        console.error("Auth critical initialization failure:", e);
         setLoading(false);
       }
     };
