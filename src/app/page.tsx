@@ -60,11 +60,11 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-8">
             <Link href="#features" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Metodologia</Link>
             <Link href="#impact" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Pólo SP</Link>
-            <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-primary">
-              <Link href="/login">Portal do Aluno</Link>
-            </Button>
             <Button asChild className="bg-primary text-white font-black px-8 h-12 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none">
-              <Link href="/register">Inscrever-se Agora</Link>
+              <Link href="/login">Entrar no Portal</Link>
+            </Button>
+            <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-primary">
+              <Link href="/register">Nova Matrícula</Link>
             </Button>
           </nav>
         </div>
@@ -90,12 +90,12 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-6 pt-4">
                 <Button asChild size="lg" className="h-20 px-12 bg-primary text-white font-black text-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group border-none">
-                  <Link href="/register" className="flex items-center gap-4">
-                    Iniciar Matrícula <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
+                  <Link href="/login" className="flex items-center gap-4">
+                    Acessar Meu Portal <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="h-20 px-12 border-4 border-primary/10 rounded-[2rem] font-black text-primary hover:bg-primary hover:text-white transition-all text-xl shadow-xl">
-                  <Link href="/login">Área Restrita</Link>
+                  <Link href="/register">Iniciar Matrícula</Link>
                 </Button>
               </div>
             </div>
@@ -135,6 +135,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              {/* JORNADA DO ALUNO */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-blue-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(37,99,235,0.5)] group-hover:rotate-6 transition-all duration-500">
                   <GraduationCap className="h-10 w-10" />
@@ -152,6 +153,7 @@ export default function LandingPage() {
                 </ul>
               </Card>
 
+              {/* STUDIO MASTER */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-orange-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(234,88,12,0.5)] group-hover:rotate-6 transition-all duration-500">
                   <School className="h-10 w-10" />
@@ -169,6 +171,7 @@ export default function LandingPage() {
                 </ul>
               </Card>
 
+              {/* MONITORAMENTO */}
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-white text-primary flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)] group-hover:rotate-6 transition-all duration-500">
                   <BarChart3 className="h-10 w-10" />
@@ -198,7 +201,7 @@ export default function LandingPage() {
                 <p className="text-slate-500 font-medium italic text-lg">Veja como nossa infraestrutura transforma o cotidiano dos nossos alunos em Santana de Parnaíba.</p>
               </div>
               <Button asChild variant="outline" className="h-14 px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
-                <Link href="/register">Conhecer o Nosso Pólo</Link>
+                <Link href="/login">Acessar Meu Portal</Link>
               </Button>
             </div>
 
@@ -255,7 +258,7 @@ export default function LandingPage() {
           <div className="space-y-6">
             <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Acesso Rápido</h5>
             <ul className="space-y-4 text-white/60 font-bold text-sm">
-              <li><Link href="/login" className="hover:text-white transition-colors">Portal do Aluno</Link></li>
+              <li><Link href="/login" className="hover:text-white transition-colors font-black uppercase text-[10px]">Portal do Aluno</Link></li>
               <li><Link href="/register" className="hover:text-white transition-colors">Nova Matrícula</Link></li>
               <li><Link href="#features" className="hover:text-white transition-colors">Nossa Metodologia</Link></li>
             </ul>

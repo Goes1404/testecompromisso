@@ -54,11 +54,11 @@ export default function Home2Page() {
           <nav className="hidden md:flex items-center gap-8">
             <Link href="#features" className="text-xs font-black uppercase tracking-widest text-white/60 hover:text-white transition-colors">Pilares</Link>
             <Link href="#impact" className="text-xs font-black uppercase tracking-widest text-white/60 hover:text-white transition-colors">Impacto</Link>
-            <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-white hover:bg-white/10">
-              <Link href="/login">Entrar</Link>
-            </Button>
             <Button asChild className="bg-white text-primary font-black px-8 h-12 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none">
-              <Link href="/register">Começar Agora</Link>
+              <Link href="/login">Entrar no Portal</Link>
+            </Button>
+            <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-white hover:bg-white/10">
+              <Link href="/register">Nova Matrícula</Link>
             </Button>
           </nav>
         </div>
@@ -83,12 +83,12 @@ export default function Home2Page() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 pt-4 justify-center">
               <Button asChild size="lg" className="h-20 px-12 bg-primary text-white font-black text-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group">
-                <Link href="/register" className="flex items-center gap-4">
-                  Iniciar Jornada <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
+                <Link href="/login" className="flex items-center gap-4">
+                  Acessar Meu Portal <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="h-20 px-12 border-4 border-primary/10 rounded-[2rem] font-black text-primary hover:bg-primary hover:text-white transition-all text-xl shadow-xl">
-                <Link href="/login">Acessar Portal</Link>
+                <Link href="/register">Nova Matrícula</Link>
               </Button>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-8 pt-10 border-t border-muted/20">
@@ -117,7 +117,7 @@ export default function Home2Page() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
                 <div className="h-20 w-20 rounded-3xl bg-blue-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(37,99,235,0.5)] group-hover:rotate-6 transition-all duration-500">
-                  <GraduationCap className="h-10 w-10" />
+                  <SmallGraduationCap className="h-10 w-10" />
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-3xl font-black italic text-white leading-none">Jornada do Aluno</h3>
@@ -177,7 +177,7 @@ export default function Home2Page() {
                 <p className="text-slate-500 font-medium italic text-lg">Veja como nossa tecnologia transforma o cotidiano das instituições parceiras em Santana de Parnaíba.</p>
               </div>
               <Button asChild variant="outline" className="h-14 px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
-                <Link href="/register">Ver Demonstração Completa</Link>
+                <Link href="/login">Acessar Meu Portal</Link>
               </Button>
             </div>
 
@@ -229,8 +229,8 @@ export default function Home2Page() {
           <div className="space-y-6">
             <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Links Rápidos</h5>
             <ul className="space-y-4 text-white/60 font-bold text-sm">
-              <li><Link href="/login" className="hover:text-white transition-colors">Acesso Restrito</Link></li>
-              <li><Link href="/register" className="hover:text-white transition-colors">Novo Cadastro</Link></li>
+              <li><Link href="/login" className="hover:text-white transition-colors font-black uppercase text-[10px]">Entrar no Portal</Link></li>
+              <li><Link href="/register" className="hover:text-white transition-colors">Nova Matrícula</Link></li>
               <li><Link href="#features" className="hover:text-white transition-colors">Metodologia</Link></li>
             </ul>
           </div>
@@ -262,4 +262,8 @@ function Badge({ children, className }: { children: React.ReactNode, className?:
       {children}
     </div>
   );
+}
+
+function SmallGraduationCap({ className }: { className?: string }) {
+  return <GraduationCap className={className} />
 }
