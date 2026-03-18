@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -7,7 +8,7 @@ import { useRouter } from 'next/navigation';
 
 /**
  * 🔒 PROVEDOR DE IDENTIDADE INDUSTRIAL - COMPROMISSO 360
- * Versão Estabilizada para Netlify: Elimina travamentos de Web Locks e sincronização.
+ * Versão Estabilizada: Elimina travamentos de sincronização e melhora a resiliência do perfil.
  */
 
 type UserRole = 'admin' | 'teacher' | 'student';
@@ -60,14 +61,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured || !userId) return null;
+    
     try {
+      // Consulta com tratamento de erro amigável
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        // Se a tabela não existe ou há erro de RLS, logamos como aviso detalhado
+        console.warn(`[AUTH] Tentativa de busca de perfil falhou: ${error.message || 'Erro de permissão ou infraestrutura'}`);
+        return null;
+      }
 
       if (data) {
         if (data.status === 'suspended') {
@@ -76,9 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return data as Profile;
       }
+      
+      // Se não encontrou o perfil, pode ser um novo usuário (trigger do banco ainda rodando)
       return null;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+    } catch (err: any) {
+      // Captura erros inesperados de rede ou execução, extraindo a mensagem se possível
+      const errorMsg = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
+      console.error('[AUTH] Erro inesperado ao buscar perfil:', errorMsg);
       return null;
     }
   }, [router]);
@@ -94,7 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (authInitialized.current) return;
     authInitialized.current = true;
 
-    // Fluxo Atômico: Recupera a sessão atual e inicia o listener
     async function initAuth() {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
@@ -105,13 +115,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const p = await fetchProfile(initialSession.user.id);
           setProfile(p);
         }
-      } catch (e) {
-        console.error("Auth Init Error:", e);
+      } catch (e: any) {
+        console.error("[AUTH] Erro ao inicializar sessão:", e?.message || e);
       } finally {
         setLoading(false);
       }
 
-      // Listener de mudanças de estado
       supabase.auth.onAuthStateChange(async (event, currentSession) => {
         const currentUser = currentSession?.user ?? null;
         
@@ -126,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (event === 'SIGNED_OUT') {
+          setProfile(null);
           router.replace('/login');
         }
       });
