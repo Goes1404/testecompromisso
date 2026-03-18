@@ -426,11 +426,10 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
           ) : (
             /* CONSOLE DE ESTUDOS PADRÃO - COM ROLAGEM INTERNA */
             <Tabs defaultValue="summary" className="flex flex-col flex-1 overflow-hidden">
-              <TabsList className="grid w-full grid-cols-4 h-14 bg-slate-900 p-0 gap-0 shadow-2xl border-b border-white/5 shrink-0">
+              <TabsList className="grid w-full grid-cols-3 h-14 bg-slate-900 p-0 gap-0 shadow-2xl border-b border-white/5 shrink-0">
                 {[
                   { id: "summary", label: "Roteiro", icon: BookOpen },
                   { id: "quiz", label: "Prática", icon: BrainCircuit },
-                  { id: "support", label: "Links", icon: Video },
                   { id: "attachments", label: "Anexos", icon: Paperclip }
                 ].map((tab) => (
                   <TabsTrigger 
@@ -508,25 +507,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                             <p className="text-[10px] font-black uppercase italic tracking-[0.4em]">Sem atividades extras</p>
                           </div>
                         )}
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="support" className="mt-0 outline-none">
-                    <div className="max-w-4xl mx-auto py-10">
-                      {activeContent?.url && (
-                        <Card className="p-8 border-none shadow-xl bg-white rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
-                          <div className="flex items-center gap-6">
-                            <div className="h-12 w-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shadow-inner"><PlayCircle className="h-6 w-6" /></div>
-                            <div>
-                              <p className="text-lg font-black text-primary italic">Ver no YouTube</p>
-                              <p className="text-xs text-muted-foreground">Assista na plataforma original se preferir.</p>
-                            </div>
-                          </div>
-                          <Button asChild variant="outline" className="h-12 px-8 rounded-xl border-2 border-primary/10 font-black text-[10px] uppercase">
-                            <a href={activeContent?.url} target="_blank" rel="noopener noreferrer">ABRIR LINK <ExternalLink className="ml-2 h-4 w-4 text-accent" /></a>
-                          </Button>
-                        </Card>
-                      )}
                     </div>
                 </TabsContent>
 
