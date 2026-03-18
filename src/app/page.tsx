@@ -29,10 +29,10 @@ export default function LandingPage() {
   const heroImg = getPlaceholder("hero-main");
 
   const galleryItems = [
-    { id: "gallery-classroom", title: "Salas Inteligentes" },
-    { id: "gallery-lab", title: "Laboratórios Digitais" },
-    { id: "gallery-live", title: "Estúdios de Live" },
-    { id: "gallery-mentorship", title: "Espaços de Mentoria" },
+    { id: "gallery-classroom", title: "Aulas Dinâmicas" },
+    { id: "gallery-lab", title: "Inovação no Ensino" },
+    { id: "gallery-live", title: "Apoio Remoto" },
+    { id: "gallery-mentorship", title: "Espaços de Foco" },
   ];
 
   return (
@@ -58,13 +58,13 @@ export default function LandingPage() {
             </span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Pilares</Link>
-            <Link href="#impact" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Impacto</Link>
+            <Link href="#features" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Metodologia</Link>
+            <Link href="#impact" className="text-xs font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Pólo SP</Link>
             <Button asChild variant="ghost" className="text-xs font-black uppercase tracking-widest text-primary">
-              <Link href="/login">Entrar</Link>
+              <Link href="/login">Portal do Aluno</Link>
             </Button>
             <Button asChild className="bg-primary text-white font-black px-8 h-12 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none">
-              <Link href="/register">Começar Agora</Link>
+              <Link href="/register">Inscrever-se Agora</Link>
             </Button>
           </nav>
         </div>
@@ -79,23 +79,23 @@ export default function LandingPage() {
             <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
               <div className="flex items-center gap-3 bg-accent/10 text-accent border border-accent/20 font-black px-5 py-2 uppercase text-[10px] tracking-[0.3em] rounded-full w-fit shadow-inner">
                 <Sparkles className="h-4 w-4" />
-                Tecnologia Industrial na Educação
+                Educação de Excelência em Santana de Parnaíba
               </div>
               <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-primary leading-[0.85]">
                 Sua Aprovação <br />
                 <span className="text-accent drop-shadow-sm">é o nosso Compromisso.</span>
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground font-medium italic leading-relaxed max-w-xl border-l-4 border-accent/30 pl-6">
-                Plataforma 360º que integra Inteligência Artificial, gestão de dados e trilhas de alta performance para o sucesso do aluno em Santana de Parnaíba.
+                O curso preparatório oficial que une tradição pedagógica, mentoria especializada e trilhas de alta performance para o seu sucesso acadêmico.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 pt-4">
                 <Button asChild size="lg" className="h-20 px-12 bg-primary text-white font-black text-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group border-none">
                   <Link href="/register" className="flex items-center gap-4">
-                    Iniciar Jornada <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
+                    Iniciar Matrícula <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="h-20 px-12 border-4 border-primary/10 rounded-[2rem] font-black text-primary hover:bg-primary hover:text-white transition-all text-xl shadow-xl">
-                  <Link href="/login">Acessar Portal</Link>
+                  <Link href="/login">Área Restrita</Link>
                 </Button>
               </div>
             </div>
@@ -115,9 +115,9 @@ export default function LandingPage() {
                 <div className="absolute bottom-10 left-10 right-10 p-8 bg-primary/80 backdrop-blur-xl rounded-[2.5rem] text-white border border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status: Rede Ativa</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status: Matrículas Abertas</span>
                   </div>
-                  <p className="text-lg font-black italic">"A tecnologia industrial aplicada à educação acelera a curva de aprendizado em até 3x."</p>
+                  <p className="text-lg font-black italic">"O Curso Compromisso acelera a curva de aprendizado e garante foco total nos seus objetivos."</p>
                 </div>
               </div>
             </div>
@@ -130,8 +130,8 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-24 space-y-6">
               <div className="h-1 w-20 bg-accent mx-auto rounded-full" />
-              <h2 className="text-5xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">Ecossistema <span className="text-accent">Compromisso 360</span></h2>
-              <p className="text-slate-400 font-medium text-lg italic">Ferramentas de nível industrial para alunos, mentores e gestores.</p>
+              <h2 className="text-5xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">Diferenciais do <span className="text-accent">Nosso Ensino</span></h2>
+              <p className="text-slate-400 font-medium text-lg italic">Metodologia industrial aplicada à educação para alunos, mentores e gestores de Santana de Parnaíba.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -140,11 +140,11 @@ export default function LandingPage() {
                   <GraduationCap className="h-10 w-10" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-3xl font-black italic text-white leading-none">Jornada do Aluno</h3>
-                  <p className="text-slate-400 font-medium leading-relaxed italic">Trilhas de estudo adaptativas, simulados técnicos e correção de redação assistida pela Aurora IA.</p>
+                  <h3 className="text-3xl font-black italic text-white leading-none">Jornada de Estudo</h3>
+                  <p className="text-slate-400 font-medium leading-relaxed italic">Aulas dinâmicas, material didático atualizado e suporte pedagógico integral para ENEM e ETEC.</p>
                 </div>
                 <ul className="space-y-4 pt-6 border-t border-white/5">
-                  {["Aurora IA 24/7", "Central de Redação", "Checklist SiSU/ProUni"].map((item, i) => (
+                  {["Apoio Pedagógico 24/7", "Central de Redação", "Checklist SiSU/ProUni"].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-xs font-black uppercase text-slate-300 tracking-widest">
                       <CheckCircle2 className="h-4 w-4 text-accent" /> {item}
                     </li>
@@ -157,11 +157,11 @@ export default function LandingPage() {
                   <School className="h-10 w-10" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-3xl font-black italic text-white leading-none">Studio do Mentor</h3>
-                  <p className="text-slate-400 font-medium leading-relaxed italic">Ambiente de autoria para mentores. Crie trilhas, gerencie bancos de questões e monitore aulas ao vivo.</p>
+                  <h3 className="text-3xl font-black italic text-white leading-none">Corpo Docente</h3>
+                  <p className="text-slate-400 font-medium leading-relaxed italic">Professores e mentores dedicados, focados no acompanhamento individual e na evolução constante de cada aluno.</p>
                 </div>
                 <ul className="space-y-4 pt-6 border-t border-white/5">
-                  {["Autoria de Trilhas", "Banco de Questões", "Console de Transmissão"].map((item, i) => (
+                  {["Mentoria Especializada", "Banco de Questões", "Aulas de Revisão"].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-xs font-black uppercase text-slate-300 tracking-widest">
                       <CheckCircle2 className="h-4 w-4 text-accent" /> {item}
                     </li>
@@ -174,11 +174,11 @@ export default function LandingPage() {
                   <BarChart3 className="h-10 w-10" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-3xl font-black italic text-white leading-none">Gestão de Dados</h3>
-                  <p className="text-slate-400 font-medium leading-relaxed italic">Inteligência de rede para administradores. Dashboards de BI, auditoria de chats e supervisão ética.</p>
+                  <h3 className="text-3xl font-black italic text-white leading-none">Monitoramento</h3>
+                  <p className="text-slate-400 font-medium leading-relaxed italic">Acompanhamento de performance baseado em simulados reais e diagnóstico contínuo de aprendizagem.</p>
                 </div>
                 <ul className="space-y-4 pt-6 border-t border-white/5">
-                  {["Analytics em Tempo Real", "Auditoria de Mensagens", "Gestão de Matrículas"].map((item, i) => (
+                  {["Simulados Regulares", "Auditoria de Evolução", "Gestão de Matrículas"].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-xs font-black uppercase text-slate-300 tracking-widest">
                       <CheckCircle2 className="h-4 w-4 text-accent" /> {item}
                     </li>
@@ -194,11 +194,11 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
               <div className="space-y-4 max-w-2xl">
-                <h2 className="text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">Ambiente de <span className="text-accent">Alta Performance</span></h2>
-                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa tecnologia transforma o cotidiano das instituições parceiras em Santana de Parnaíba.</p>
+                <h2 className="text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">Ambiente de <span className="text-accent">Foco Total</span></h2>
+                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa infraestrutura transforma o cotidiano dos nossos alunos em Santana de Parnaíba.</p>
               </div>
               <Button asChild variant="outline" className="h-14 px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
-                <Link href="/register">Ver Demonstração Completa</Link>
+                <Link href="/register">Conhecer o Nosso Pólo</Link>
               </Button>
             </div>
 
@@ -249,28 +249,28 @@ export default function LandingPage() {
               <span className="text-3xl font-black italic tracking-tighter">Compromisso</span>
             </div>
             <p className="text-white/40 font-medium italic text-lg max-w-sm">
-              Transformando a gestão educacional através de dados e inteligência artificial de ponta em Santana de Parnaíba.
+              Transformando o futuro dos jovens de Santana de Parnaíba através da educação de alta performance.
             </p>
           </div>
           <div className="space-y-6">
-            <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Links Rápidos</h5>
+            <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Acesso Rápido</h5>
             <ul className="space-y-4 text-white/60 font-bold text-sm">
-              <li><Link href="/login" className="hover:text-white transition-colors">Acesso Restrito</Link></li>
-              <li><Link href="/register" className="hover:text-white transition-colors">Novo Cadastro</Link></li>
-              <li><Link href="#features" className="hover:text-white transition-colors">Metodologia</Link></li>
+              <li><Link href="/login" className="hover:text-white transition-colors">Portal do Aluno</Link></li>
+              <li><Link href="/register" className="hover:text-white transition-colors">Nova Matrícula</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Nossa Metodologia</Link></li>
             </ul>
           </div>
           <div className="space-y-6">
-            <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Contato</h5>
+            <h5 className="font-black uppercase text-[10px] tracking-[0.4em] text-accent">Atendimento</h5>
             <ul className="space-y-4 text-white/60 font-bold text-sm">
               <li>contato@compromisso.edu.br</li>
-              <li>Polo Central - SP</li>
-              <li>Atendimento 24/7</li>
+              <li>Pólo Santana de Parnaíba - Centro</li>
+              <li>Secretaria: Segunda a Sexta</li>
             </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-6 mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">© 2024 Compromisso Smart Education • Tecnologia Industrial</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">© 2024 Curso Compromisso • Educação de Alta Performance</p>
           <div className="flex gap-8 opacity-40">
             <Globe className="h-5 w-5" />
             <ShieldCheck className="h-5 w-5" />
