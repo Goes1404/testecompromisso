@@ -34,6 +34,21 @@
         "average_rating": { "type": "number" }
       }
     },
+    "EssaySubmission": {
+      "title": "EssaySubmission",
+      "type": "object",
+      "description": "Submissões de redação e seus resultados de avaliação da IA.",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "theme": { "type": "string" },
+        "content": { "type": "string" },
+        "score": { "type": "number" },
+        "feedback": { "type": "string" },
+        "result_data": { "type": "object", "description": "Objeto JSON completo com as 5 competências." },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
     "LearningContent": {
       "title": "LearningContent",
       "type": "object",

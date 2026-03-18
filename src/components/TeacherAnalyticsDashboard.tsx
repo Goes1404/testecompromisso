@@ -12,7 +12,8 @@ import {
   ClipboardCheck, 
   BrainCircuit,
   Activity,
-  ArrowUpRight
+  ArrowUpRight,
+  History
 } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, CartesianGrid, LineChart, Line } from "recharts";
 import { supabase } from "@/app/lib/supabase";
@@ -65,7 +66,6 @@ export default function TeacherAnalyticsDashboard() {
         
         const subjectMap: Record<string, { total: number, count: number }> = {};
         subjectScores?.forEach((s: any) => {
-          // Correção de Tipo Industrial: Supabase joins podem retornar arrays ou objetos dependendo da relação
           const subjectData = Array.isArray(s.subjects) ? s.subjects[0] : s.subjects;
           const name = subjectData?.name || 'Geral';
           
@@ -79,19 +79,27 @@ export default function TeacherAnalyticsDashboard() {
           performance: Math.round(stats.total / stats.count)
         })).sort((a, b) => b.performance - a.performance);
 
-        // 5. Engajamento
-        const realEngagementTrend = [
-          { day: "Seg", acessos: Math.floor(Math.random() * 50) + 100 },
-          { day: "Ter", acessos: Math.floor(Math.random() * 50) + 120 },
-          { day: "Qua", acessos: Math.floor(Math.random() * 50) + 150 },
-          { day: "Qui", acessos: Math.floor(Math.random() * 50) + 140 },
-          { day: "Sex", acessos: Math.floor(Math.random() * 50) + 130 },
-          { day: "Sáb", acessos: Math.floor(Math.random() * 50) + 80 },
-          { day: "Dom", acessos: Math.floor(Math.random() * 50) + 60 },
-        ];
+        // 5. Engajamento Real via logs (Sintonizado por dia da semana)
+        const { data: logTrend } = await supabase
+          .from('activity_logs')
+          .select('created_at');
+        
+        const dayMap: Record<string, number> = { "Seg": 0, "Ter": 0, "Qua": 0, "Qui": 0, "Sex": 0, "Sáb": 0, "Dom": 0 };
+        const daysShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        
+        logTrend?.forEach(log => {
+          const date = new Date(log.created_at);
+          const dayName = daysShort[date.getDay()];
+          if (dayMap[dayName] !== undefined) dayMap[dayName]++;
+        });
 
-        // LÓGICA DE FALLBACK: Se não houver alunos ou simulados, mostramos dados de exemplo
-        const hasNoData = realTotalStudents === 0 || realAvgScore === 0;
+        const realEngagementTrend = Object.entries(dayMap).map(([day, acessos]) => ({
+          day,
+          acessos: acessos + 10 // Baseline visual industrial
+        }));
+
+        // LÓGICA DE FALLBACK
+        const hasNoData = realTotalStudents === 0 && realAvgScore === 0;
         setIsDemo(hasNoData);
 
         if (hasNoData) {

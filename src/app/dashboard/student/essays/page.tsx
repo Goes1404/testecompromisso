@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,15 +33,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const mockHistory = [
-  { date: '01/05', score: 560 },
-  { date: '05/05', score: 620 },
-  { date: '10/05', score: 780 },
-  { date: '15/05', score: 740 },
-  { date: '20/05', score: 880 },
-  { date: '25/05', score: 920 },
-];
+import { useAuth } from "@/lib/AuthProvider";
+import { supabase } from "@/app/lib/supabase";
+import { format } from "date-fns";
 
 const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: string }> = {
   c1: { label: "C1: Norma Culta", icon: PenTool, color: "text-blue-500" },
@@ -51,27 +45,8 @@ const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: strin
   c5: { label: "C5: Intervenção", icon: ShieldCheck, color: "text-green-500" }
 };
 
-const DEMO_RESULT = {
-  total_score: 920,
-  general_feedback: "Excelente trabalho! O seu texto demonstra uma ótima compreensão do tema e apresenta uma estrutura argumentativa muito sólida. Você articulou bem suas ideias e a proposta de intervenção é relevante e bem detalhada. Continue aprimorando pequenos detalhes de coesão para buscar a nota máxima.",
-  competencies: {
-    c1: { score: 160, feedback: "Demonstra excelente domínio formal, com raros desvios de pontuação." },
-    c2: { score: 200, feedback: "Compreende perfeitamente a proposta e aplica conceitos de várias áreas (Bauman)." },
-    c3: { score: 200, feedback: "A argumentação é consistente e bem defendida, com excelente seleção de fatos." },
-    c4: { score: 180, feedback: "Uso eficaz de mecanismos de coesão, mas cuidado com a repetição da palavra 'visto que'." },
-    c5: { score: 180, feedback: "A proposta de intervenção é muito boa, faltando apenas detalhar o meio de execução." }
-  },
-  detailed_corrections: [
-    { original: "através da educação", suggestion: "por meio da educação", reason: "O termo 'através' indica atravessar. Para meios ou instrumentos, prefira 'por meio'." },
-    { original: "fazem muitos anos", suggestion: "faz muitos anos", reason: "Verbo 'fazer' indicando tempo decorrido é impessoal e deve ficar no singular." }
-  ],
-  suggestions: [
-    "Utilize conectivos mais diversificados no início dos parágrafos de desenvolvimento.",
-    "Aprofunde o detalhamento do agente na proposta de intervenção."
-  ]
-};
-
 export default function StudentEssayPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [theme, setTheme] = useState("Os impactos da Inteligência Artificial na educação brasileira contemporânea");
   const [supportingTexts, setSupportingTexts] = useState<any[]>([
@@ -85,10 +60,35 @@ export default function StudentEssayPage() {
   const [loadingGrading, setLoadingGrading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [charCount, setCharCount] = useState(0);
+  const [history, setHistory] = useState<any[]>([]);
+
+  const fetchHistory = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('essay_submissions')
+        .select('created_at, score')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+      
+      if (data) {
+        setHistory(data.map(d => ({
+          date: format(new Date(d.created_at), 'dd/MM'),
+          score: d.score
+        })));
+      }
+    } catch (e) {
+      console.warn("Histórico ainda em sincronização.");
+    }
+  }, [user]);
 
   useEffect(() => {
     setCharCount(text.length);
   }, [text]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const handleGenerateTopic = async () => {
     setLoadingTopic(true);
@@ -107,10 +107,10 @@ export default function StudentEssayPage() {
         setSupportingTexts(data.result.supporting_texts || []);
         toast({ title: "Proposta ENEM Gerada!", description: "A Aurora carregou os textos motivadores." });
       } else {
-        throw new Error(data.error || "Aurora temporariamente offline.");
+        throw new Error(data.error || "IA falhou");
       }
     } catch (e: any) {
-      toast({ title: "Modo Simulação", description: "Carregando tema de exemplo para demonstração.", variant: "default" });
+      toast({ title: "Base de Apoio", description: "Carregando tema de exemplo para foco." });
       setTheme("O desafio de democratizar o acesso à tecnologia no Brasil");
       setSupportingTexts([
         { id: 1, content: "O acesso à internet no Brasil ainda é desigual, afetando principalmente as áreas rurais e as classes D e E.", source: "TIC Domicílios" },
@@ -123,35 +123,62 @@ export default function StudentEssayPage() {
 
   const handleSubmitEssay = async () => {
     if (text.length < 100) {
-      toast({ title: "Texto Insuficiente", description: "Escreva ao menos 100 caracteres para a simulação.", variant: "destructive" });
+      toast({ title: "Texto Insuficiente", description: "Escreva ao menos 100 caracteres.", variant: "destructive" });
       return;
     }
 
     setLoadingGrading(true);
-    setTimeout(() => {
-      setResult(DEMO_RESULT);
-      setLoadingGrading(false);
-      toast({ 
-        title: "Avaliação Concluída! ✅", 
-        description: "Diagnóstico gerado no Modo de Demonstração Aurora IA." 
+    try {
+      const res = await fetch('/api/genkit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          flowId: 'essayEvaluator', 
+          input: { theme, text } 
+        })
       });
-      setTimeout(() => {
-        const resultSection = document.getElementById('audit-results');
-        resultSection?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }, 2500);
+      
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const aiOutput = data.result;
+        setResult(aiOutput);
+        
+        // Salvar no Supabase para o gráfico de evolução
+        if (user) {
+          await supabase.from('essay_submissions').insert({
+            user_id: user.id,
+            theme: theme,
+            content: text,
+            score: aiOutput.total_score,
+            feedback: aiOutput.general_feedback,
+            result_data: aiOutput
+          });
+          fetchHistory();
+        }
+
+        toast({ title: "Avaliação Concluída! ✅" });
+        setTimeout(() => {
+          document.getElementById('audit-results')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        throw new Error(data.error || "IA offline");
+      }
+    } catch (e: any) {
+      toast({ title: "Erro de Sincronização", description: "Houve uma oscilação na rede Aurora. Tente novamente.", variant: "destructive" });
+    } finally {
+      setLoadingGrading(false);
+    }
   };
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700 pb-24 px-4 md:px-6">
-      
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl md:text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">
               Redação <span className="text-accent">Master</span>
             </h1>
-            <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest h-6">MODO DEMONSTRAÇÃO</Badge>
+            <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest h-6">SINAL ATIVO</Badge>
           </div>
           <p className="text-muted-foreground font-medium text-sm md:text-lg italic">
             Refine sua escrita com o motor de auditoria Aurora IA.
@@ -258,12 +285,11 @@ export default function StudentEssayPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* CARD DE NOTA MESTRE */}
             <Card className="lg:col-span-4 border-none shadow-2xl bg-primary text-white rounded-[3rem] overflow-hidden relative group">
               <div className="absolute top-[-10%] right-[-10%] w-48 h-48 bg-accent/20 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000" />
               <div className="p-12 relative z-10 space-y-8">
                 <div className="flex justify-between items-center">
-                  <Badge className="bg-accent text-accent-foreground font-black text-[10px] px-4 py-1.5 uppercase rounded-xl shadow-lg">RESULTADO FINAL</Badge>
+                  <Badge className="bg-accent text-accent-foreground font-black text-[10px] px-4 py-1.5 uppercase rounded-xl shadow-lg">SINAL FINAL</Badge>
                   <Star className="h-8 w-8 text-accent fill-accent animate-pulse" />
                 </div>
                 <div>
@@ -279,10 +305,10 @@ export default function StudentEssayPage() {
               </div>
             </Card>
 
-            {/* GRID DE COMPETÊNCIAS */}
             <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               {Object.entries(result.competencies || {}).map(([key, comp]: any) => {
                 const info = COMPETENCY_LABELS[key];
+                if (!info) return null;
                 const Icon = info.icon;
                 return (
                   <Card key={key} className="border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:shadow-2xl transition-all border-b-8 border-transparent hover:border-accent group">
@@ -305,7 +331,6 @@ export default function StudentEssayPage() {
             </div>
           </div>
 
-          {/* RAIO-X DE DESVIOS E SUGESTÕES */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
               <CardHeader className="bg-red-50/50 p-8 border-b border-dashed border-red-100">
@@ -314,19 +339,23 @@ export default function StudentEssayPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
-                {result.detailed_corrections?.map((corr: any, i: number) => (
-                  <div key={i} className="p-6 bg-slate-50 rounded-3xl space-y-4 border border-slate-100 hover:bg-white hover:shadow-lg transition-all group">
-                    <div className="flex flex-wrap gap-3 items-center">
-                      <Badge className="bg-red-100 text-red-600 border-none font-black text-[10px] px-3 line-through opacity-60 decoration-2">{corr.original}</Badge>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px] px-4 py-1.5 shadow-sm">{corr.suggestion}</Badge>
+                {result.detailed_corrections?.length > 0 ? (
+                  result.detailed_corrections.map((corr: any, i: number) => (
+                    <div key={i} className="p-6 bg-slate-50 rounded-3xl space-y-4 border border-slate-100 hover:bg-white hover:shadow-lg transition-all group">
+                      <div className="flex flex-wrap gap-3 items-center">
+                        <Badge className="bg-red-100 text-red-600 border-none font-black text-[10px] px-3 line-through opacity-60 decoration-2">{corr.original}</Badge>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px] px-4 py-1.5 shadow-sm">{corr.suggestion}</Badge>
+                      </div>
+                      <p className="text-xs font-bold text-primary/60 italic leading-relaxed flex items-start gap-3">
+                        <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                        {corr.reason}
+                      </p>
                     </div>
-                    <p className="text-xs font-bold text-primary/60 italic leading-relaxed flex items-start gap-3">
-                      <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                      {corr.reason}
-                    </p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="py-10 text-center opacity-30 italic">Nenhum desvio gramatical detectado pela Aurora.</div>
+                )}
               </CardContent>
             </Card>
 
@@ -344,7 +373,7 @@ export default function StudentEssayPage() {
                   </div>
                 ))}
                 <Button className="w-full h-16 bg-white text-primary hover:bg-white/90 font-black rounded-2xl shadow-xl uppercase text-xs tracking-widest mt-4">
-                  Arquivar no Meu Histórico
+                  Sincronizado no Meu Mural
                 </Button>
               </CardContent>
             </Card>
@@ -352,7 +381,6 @@ export default function StudentEssayPage() {
         </div>
       )}
 
-      {/* BASE DE APOIO E HISTÓRICO - RODAPÉ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-10 border-t border-muted/20">
         <div className="lg:col-span-2 space-y-8">
           <div className="flex items-center gap-3 px-2">
@@ -361,41 +389,15 @@ export default function StudentEssayPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {supportingTexts.length > 0 ? (
-              supportingTexts.map((st) => (
-                <Card key={st.id} className="border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:-translate-y-1 transition-all group border-l-4 border-accent">
-                  <p className="text-sm font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
-                  <div className="flex justify-between items-center mt-6 pt-4 border-t border-muted/10">
-                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Fonte: {st.source}</span>
-                    <Badge variant="outline" className="border-accent/30 text-accent font-black text-[7px] uppercase">Motivador</Badge>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <div className="col-span-full py-10 text-center opacity-30 italic">
-                Nenhum texto motivador carregado para este tema.
-              </div>
-            )}
-            
-            {result && (
-              <Card className="col-span-full border-none shadow-xl bg-primary text-white p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center gap-8 relative overflow-hidden mt-4">
-                <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
-                <div className="h-20 w-20 rounded-[2rem] bg-white/10 flex items-center justify-center shrink-0 shadow-xl relative z-10">
-                  <History className="h-10 w-10 text-accent" />
+            {supportingTexts.map((st) => (
+              <Card key={st.id} className="border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:-translate-y-1 transition-all group border-l-4 border-accent">
+                <p className="text-sm font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
+                <div className="flex justify-between items-center mt-6 pt-4 border-t border-muted/10">
+                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Fonte: {st.source}</span>
+                  <Badge variant="outline" className="border-accent/30 text-accent font-black text-[7px] uppercase">Motivador</Badge>
                 </div>
-                <div className="space-y-2 text-center md:text-left relative z-10 flex-1">
-                  <h3 className="text-xl font-black italic uppercase">Foco na Próxima Escrita</h3>
-                  <p className="text-sm font-medium opacity-80 italic">Seus textos motivadores e dicas foram arquivados para consulta futura.</p>
-                </div>
-                <Button 
-                  onClick={() => { setResult(null); setText(""); }}
-                  variant="outline" 
-                  className="ml-auto rounded-xl h-12 bg-white text-primary border-none font-black text-[10px] uppercase shadow-lg relative z-10"
-                >
-                  Nova Simulação
-                </Button>
               </Card>
-            )}
+            ))}
           </div>
         </div>
 
@@ -405,24 +407,31 @@ export default function StudentEssayPage() {
             <h2 className="text-xl font-black text-primary italic uppercase tracking-widest">Evolução</h2>
           </div>
           <Card className="border-none shadow-2xl rounded-[3rem] bg-white p-8 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockHistory}>
-                <defs>
-                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" hide />
-                <YAxis hide domain={[0, 1000]} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', padding: '1rem', backgroundColor: 'hsl(var(--primary))' }} 
-                  itemStyle={{ fontWeight: '900', color: 'hsl(var(--accent))' }}
-                />
-                <Area type="monotone" dataKey="score" stroke="hsl(var(--accent))" strokeWidth={4} fillOpacity={1} fill="url(#colorScore)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {history.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={history}>
+                  <defs>
+                    <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" hide />
+                  <YAxis hide domain={[0, 1000]} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', padding: '1rem', backgroundColor: 'hsl(var(--primary))' }} 
+                    itemStyle={{ fontWeight: '900', color: 'hsl(var(--accent))' }}
+                  />
+                  <Area type="monotone" dataKey="score" stroke="hsl(var(--accent))" strokeWidth={4} fillOpacity={1} fill="url(#colorScore)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center opacity-20 italic text-center">
+                <History className="h-10 w-10 mb-2" />
+                <p className="text-[10px] font-black uppercase">Aguardando primeira auditoria</p>
+              </div>
+            )}
           </Card>
         </div>
       </div>
