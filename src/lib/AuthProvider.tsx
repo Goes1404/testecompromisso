@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
+import { supabase, isSupabaseConfigured, safeExecute } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -56,12 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured || !userId) return null;
     try {
-      // Busca direta do perfil para evitar loops
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+      const { data, error } = await safeExecute(() => 
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+      );
 
       if (error) throw error;
 
@@ -92,22 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initAuth = async () => {
       try {
-        // FLUXO SEQUENCIAL: Evita o erro "Lock broken by another request"
-        // 1. Pegamos a sessão atual
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
-        if (initialSession?.user) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          const p = await fetchProfile(initialSession.user.id);
-          setProfile(p);
-        }
-
-        // 2. Iniciamos o listener apenas após a verificação inicial
+        // No Next.js 15, evitamos chamar getSession e onAuthStateChange em paralelo para não quebrar o Lock
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
           const currentUser = currentSession?.user ?? null;
           
-          if (currentUser?.id !== user?.id) {
+          if (currentUser?.id !== user?.id || !profile) {
             setSession(currentSession);
             setUser(currentUser);
             if (currentUser) {
@@ -121,9 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (event === 'SIGNED_OUT') {
             router.replace('/login');
           }
+          
+          setLoading(false);
         });
 
-        setLoading(false);
         return authListener;
       } catch (e) {
         console.error("Auth critical initialization failure:", e);
@@ -136,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       listenerPromise.then(l => l?.subscription.unsubscribe());
     };
-  }, [fetchProfile, router, user?.id]);
+  }, [fetchProfile, router, user?.id, profile]);
 
   const signOut = async () => {
     setLoading(true);

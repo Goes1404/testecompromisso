@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/request';
 import { conceptExplanationAssistantFlow } from '@/ai/flows/concept-explanation-assistant';
 import { financialAidDeterminationFlow } from '@/ai/flows/financial-aid-determination';
 import { quizGeneratorFlow } from '@/ai/flows/quiz-generator';
@@ -11,26 +11,25 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 9.0: Diagnóstico de Autenticação e Suporte Gemini 2.0.
+ * Versão 10.0: Proteção contra erros de autenticação em ambiente serverless.
  */
 
 export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Verificação de autenticação industrial para Next.js 15
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
 
-    // Verificação de segurança industrial
-    if (!user) {
-      // Log interno para diagnóstico do desenvolvedor
-      console.warn("[AURORA AUTH]: Tentativa de acesso sem sessão ativa.");
-      return NextResponse.json({ 
+    if (authError || !session?.user) {
+      console.warn("[AURORA AUTH]: Acesso negado ou sessão inválida.");
+      return new Response(JSON.stringify({ 
         success: false,
-        error: "🔒 Acesso negado à Engine Aurora. Sua sessão expirou ou não foi detectada. Por favor, faça login novamente.",
-        debug: "Auth session returned null in API Route"
-      }, { status: 401 });
+        error: "🔒 Acesso negado à Engine Aurora. Por favor, realize o login novamente no portal."
+      }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     const body = await req.json();
@@ -50,26 +49,22 @@ export async function POST(req: NextRequest) {
     const targetFlow = flows[flowId];
 
     if (!targetFlow) {
-      return NextResponse.json({ error: `❌ Motor '${flowId}' não localizado no inventário Aurora.` }, { status: 404 });
+      return new Response(JSON.stringify({ error: `❌ Motor '${flowId}' não localizado.` }), { status: 404 });
     }
 
     const result = await targetFlow(input);
 
-    return NextResponse.json({ 
+    return new Response(JSON.stringify({ 
       success: true, 
       result: result 
-    });
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
   } catch (error: any) {
     console.error(`[AURORA CRITICAL ERROR]:`, error);
 
-    return NextResponse.json(
-      { 
-        success: false,
-        error: `⚠️ [FALHA NA ENGINE]: ${error.message || 'Erro interno no motor de IA.'}`, 
-        details: error?.stack || 'Sem rastreamento disponível.'
-      }, 
-      { status: 200 } // Retornamos 200 para que o JSON chegue ao chat e exiba o balão de erro
-    );
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: `⚠️ [FALHA NA ENGINE]: ${error.message || 'Erro interno no motor de IA.'}`
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 }

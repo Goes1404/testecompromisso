@@ -27,7 +27,6 @@ export type ConceptExplanationAssistantOutput = z.infer<typeof ConceptExplanatio
 
 const prompt = ai.definePrompt({
   name: 'conceptExplanationAssistantPrompt',
-  // Sintonizado para o modelo mais recente disponível
   model: 'googleai/gemini-2.0-flash',
   input: { schema: ConceptExplanationAssistantInputSchema },
   output: { schema: ConceptExplanationAssistantOutputSchema },
@@ -46,7 +45,7 @@ Sua missão é ajudar estudantes com dúvidas para o ENEM, ETEC e vestibulares.
 REGRAS:
 - Use Português Brasileiro profissional e empático.
 - Responda APENAS com o texto da explicação.
-- NUNCA use blocos de código Markdown (\`\`\`json ou \`\`\`text).`,
+- NUNCA use blocos de código Markdown (\` \` \`json ou \` \` \`text).`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
 {{#if history}}Histórico de Conversa:
@@ -88,7 +87,7 @@ function cleanAiResponse(text: string): string {
     .replace(/```text/g, '')
     .replace(/```/g, '')
     .replace(/\{"response":/g, '')
-    .replace(/\}$/g, '')
+    .replace(/\}/g, '')
     .trim()
     .replace(/^"+|"+$/g, '');
 }

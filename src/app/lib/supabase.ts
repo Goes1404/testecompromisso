@@ -20,23 +20,22 @@ export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'educore-360-auth-v1',
-    flowType: 'pkce'
+    flowType: 'pkce',
+    lockType: 'auto'
   }
 });
 
 /**
  * Motor de Execução Seguro com Re-tentativa (Retry Logic)
- * Protege contra o erro "Lock broken by another request" comum no Next.js 15 + Netlify.
- * Agora com tipagem explícita para evitar erros de build.
+ * Protege contra o erro "Lock broken by another request" comum no Next.js 15.
  */
 export async function safeExecute<T = any>(fn: () => Promise<any>): Promise<{ data: T | null; error: any }> {
   let retries = 3;
-  let delay = 300;
+  let delay = 500;
 
   while (retries > 0) {
     try {
       const result = await fn();
-      // O Supabase retorna um objeto com { data, error }
       return result;
     } catch (error: any) {
       const isLockError = error?.message?.includes('Lock broken') || 
