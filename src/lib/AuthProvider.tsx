@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -57,9 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     if (!isSupabaseConfigured || !userId) return null;
     try {
-      const { data, error } = await safeExecute(() => 
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-      );
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
 
       if (error) throw error;
 
@@ -88,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (authInitialized.current) return;
     authInitialized.current = true;
 
-    // ATÔMICO: No Next.js 15, utilizamos APENAS o onAuthStateChange para evitar AbortError (Web Locks)
+    // FLUXO ÚNICO: Next.js 15 gerencia melhor se usarmos apenas o listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       const currentUser = currentSession?.user ?? null;
       
@@ -123,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setProfile(null);
     setLoading(false);
-    window.location.href = "/login";
+    window.location.assign("/login");
   };
 
   const contextValue = useMemo(() => ({

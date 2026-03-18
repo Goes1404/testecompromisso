@@ -27,7 +27,7 @@ export function LoginForm() {
     setAuthError(null);
     
     if (!isSupabaseConfigured) {
-      setAuthError("Erro: Conexão pendente.");
+      setAuthError("Erro: Conexão com banco de dados não configurada.");
       return;
     }
 
@@ -42,18 +42,19 @@ export function LoginForm() {
 
       if (error) {
         setLoading(false);
-        setAuthError("Credenciais inválidas.");
+        setAuthError("E-mail ou senha incorretos.");
         return;
       }
 
       if (data.user) {
         setIsRedirecting(true);
+        // Hard redirect para limpar caches de Web Locks do navegador
         window.location.assign("/dashboard");
       }
 
     } catch (err: any) {
       setLoading(false);
-      setAuthError("Erro de sincronização.");
+      setAuthError("Falha crítica na autenticação.");
     }
   };
 
@@ -61,7 +62,7 @@ export function LoginForm() {
     return (
       <div className="flex flex-col items-center gap-4 text-white">
         <Loader2 className="h-10 w-10 animate-spin text-accent" />
-        <p className="text-sm font-black uppercase italic tracking-widest">Acessando Gabinete...</p>
+        <p className="text-sm font-black uppercase italic tracking-widest">Iniciando Sessão...</p>
       </div>
     );
   }
@@ -79,20 +80,20 @@ export function LoginForm() {
           />
         </div>
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic">
+          <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic leading-none">
             Compro<span className="text-accent">misso</span>
           </h1>
-          <p className="text-white/60 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
+          <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2">
             <Sparkles className="h-3 w-3 text-accent" />
-            Portal Santana de Parnaíba
+            Rede Santana de Parnaíba
           </p>
         </div>
       </div>
 
-      <Card className="border-none shadow-2xl overflow-hidden bg-white rounded-[2rem]">
+      <Card className="border-none shadow-2xl overflow-hidden bg-white/95 backdrop-blur-md rounded-[2rem]">
         <CardHeader className="space-y-1 pb-6 pt-8 text-center bg-primary/5 border-b border-dashed">
           <CardTitle className="text-xl font-black text-primary italic uppercase">Acesso Restrito</CardTitle>
-          <CardDescription className="text-xs font-medium italic">Insira suas credenciais oficiais.</CardDescription>
+          <CardDescription className="text-xs font-medium italic">Insira suas credenciais para entrar.</CardDescription>
         </CardHeader>
         <CardContent className="px-8 pt-8 space-y-6">
           
@@ -105,21 +106,21 @@ export function LoginForm() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[10px] font-black uppercase text-primary/40 px-2">E-mail</Label>
+              <Label htmlFor="email" className="text-[10px] font-black uppercase text-primary/40 px-2">E-mail Corporativo</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold" required disabled={loading} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" title="Senha" className="text-[10px] font-black uppercase text-primary/40 px-2">Senha</Label>
+              <Label htmlFor="password" title="Senha" className="text-[10px] font-black uppercase text-primary/40 px-2">Senha de Segurança</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold" required disabled={loading} />
             </div>
             <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none">
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Acessar Portal <ChevronRight className="h-5 w-5 ml-1 text-accent" /></>}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Entrar no Sistema <ChevronRight className="h-5 w-5 ml-1 text-accent" /></>}
             </Button>
           </form>
 
           <div className="pt-6 text-center border-t border-dashed">
             <p className="text-xs font-medium text-muted-foreground italic">
-              Ainda não tem conta? <Link href="/register" className="text-primary font-black uppercase text-[10px] tracking-widest">Criar Cadastro</Link>
+              Ainda não tem conta? <Link href="/register" className="text-primary font-black uppercase text-[10px] tracking-widest">Criar Cadastro Grátis</Link>
             </p>
           </div>
         </CardContent>

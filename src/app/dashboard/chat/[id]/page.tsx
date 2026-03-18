@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -211,7 +210,7 @@ export default function DirectChatPage() {
       <div className="flex items-center justify-between p-3 md:p-5 bg-white shadow-sm border-b shrink-0 z-10">
         <div className="flex items-center gap-4 overflow-hidden min-w-0">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full h-11 w-11 shrink-0 hover:bg-primary/5">
-            <ChevronLeft className="h-7 w-7 text-primary" />
+            <ChevronLeft className="h-6 w-6 text-primary" />
           </Button>
           <div className="flex items-center gap-4 overflow-hidden min-w-0">
             <div className="relative shrink-0">
