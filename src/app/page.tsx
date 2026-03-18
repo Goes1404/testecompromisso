@@ -95,9 +95,6 @@ export default function LandingPage() {
                     Acessar Meu Portal <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="h-20 px-12 border-4 border-primary/10 rounded-[2rem] font-black text-primary hover:bg-primary hover:text-white transition-all text-xl shadow-xl">
-                  <Link href="/register">Iniciar Matrícula</Link>
-                </Button>
               </div>
             </div>
             
