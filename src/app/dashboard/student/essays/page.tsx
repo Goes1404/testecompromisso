@@ -16,6 +16,7 @@ import {
   CheckCircle2, 
   TrendingUp,
   ChevronRight,
+  ArrowRight,
   PenTool,
   AlertCircle,
   Lightbulb,
