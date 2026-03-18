@@ -11,10 +11,10 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 7.0: Suporte a TTS e Resiliência de Filtros.
+ * Versão 8.0: Diagnóstico em Tempo Real para Ambiente de Teste.
  */
 
-export const maxDuration = 120; // Aumentado para 2 min devido ao processamento de áudio
+export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
@@ -22,16 +22,15 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Permite usuários de teste ou autenticados
     const isTestUser = user?.id?.includes('00000000');
     
     if (!user && !isTestUser) {
-      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+      return NextResponse.json({ error: "🔒 Acesso negado à Engine Aurora. Autentique-se." }, { status: 401 });
     }
 
     const body = await req.json();
     const { flowId, input } = body;
-
-    console.log(`[AURORA REQ]: ${flowId}`);
 
     const flows: Record<string, any> = {
       conceptExplanationAssistant: conceptExplanationAssistantFlow,
@@ -47,7 +46,7 @@ export async function POST(req: NextRequest) {
     const targetFlow = flows[flowId];
 
     if (!targetFlow) {
-      return NextResponse.json({ error: `Motor '${flowId}' não localizado.` }, { status: 404 });
+      return NextResponse.json({ error: `❌ Motor '${flowId}' não localizado no inventário Aurora.` }, { status: 404 });
     }
 
     const result = await targetFlow(input);
@@ -58,13 +57,14 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error(`[AURORA CRITICAL ERROR]:`, error?.message || error);
+    // Reporta o erro real para o chat em ambiente de teste
+    console.error(`[AURORA ERROR]:`, error);
 
     return NextResponse.json(
       { 
         success: false,
-        error: '⚠️ Falha na Sintonia Aurora', 
-        details: error?.message || 'Erro interno no motor.'
+        error: `⚠️ [ERRO AURORA]: ${error.message || 'Falha interna no motor de IA.'}`, 
+        details: error?.stack || 'Sem rastreamento disponível.'
       }, 
       { status: 200 }
     );

@@ -8,11 +8,19 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, ChevronLeft, Loader2, MessageSquare, Bot, ShieldCheck } from "lucide-react";
+import { Send, ChevronLeft, Loader2, MessageSquare, Bot, ShieldCheck, AlertCircle } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
+
+interface ChatMessage {
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  isError?: boolean;
+}
 
 export default function DirectChatPage() {
   const params = useParams();
@@ -25,7 +33,7 @@ export default function DirectChatPage() {
   const [input, setInput] = useState("");
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -51,7 +59,6 @@ export default function DirectChatPage() {
           if (!profileError) {
             setContact(profileData);
           } else {
-            console.error("Contato não localizado:", profileError);
             setContact({ name: "Mentor da Rede", institution: "Compromisso 360" });
           }
 
@@ -64,7 +71,6 @@ export default function DirectChatPage() {
           if (!msgsError) {
             setMessages(msgs || []);
           } else {
-            console.error("Erro histórico mensagens:", msgsError);
             toast({ title: "Falha ao carregar mensagens", description: "Verifique sua conexão.", variant: "destructive" });
           }
         }
@@ -251,9 +257,10 @@ export default function DirectChatPage() {
                       isMe 
                         ? 'bg-primary text-white border-transparent rounded-tr-none shadow-primary/10' 
                         : isError 
-                          ? 'bg-red-50 text-red-700 border-red-100 rounded-tl-none font-black italic' 
+                          ? 'bg-red-50 text-red-700 border-red-100 rounded-tl-none font-black italic flex items-start gap-3' 
                           : 'bg-white text-primary border-slate-100 rounded-tl-none'
                     }`}>
+                     {isError && <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />}
                      {msg.content}
                   </div>
                 </div>

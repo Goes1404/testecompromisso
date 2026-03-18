@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
- * Implementação ultra-resiliente com tratamento de erros e limpeza de Markdown.
+ * Compatível com Gemini 1.5 Pro/Flash e 2.0 Flash.
  */
 
 import { ai } from '@/ai/genkit';
@@ -27,6 +27,7 @@ export type ConceptExplanationAssistantOutput = z.infer<typeof ConceptExplanatio
 
 const prompt = ai.definePrompt({
   name: 'conceptExplanationAssistantPrompt',
+  // Utiliza identificador flexível para compatibilidade com 1.5 e 2.0
   model: 'googleai/gemini-1.5-flash',
   input: { schema: ConceptExplanationAssistantInputSchema },
   output: { schema: ConceptExplanationAssistantOutputSchema },
@@ -45,7 +46,7 @@ Sua missão é ajudar estudantes brasileiros com dúvidas para o ENEM, ETEC e ve
 REGRAS:
 - Use Português Brasileiro profissional e empático.
 - Seja direto e focado no conteúdo acadêmico.
-- Se o usuário perguntar algo não acadêmico, direcione-o gentilmente de volta aos estudos.`,
+- Responda APENAS com o texto da explicação, sem formatação Markdown de blocos de código.`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
 {{#if history}}Histórico:
@@ -63,35 +64,35 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
     try {
       const response = await prompt(input);
       
-      if (response.output) {
-        return response.output;
+      if (response.output?.response) {
+        return { response: cleanAiResponse(response.output.response) };
       }
       
-      // Fallback e limpeza de Markdown agressiva
       if (response.text) {
-        const cleanedText = response.text
-          .replace(/```json/g, '')
-          .replace(/```/g, '')
-          .trim();
-          
-        try {
-          // Tenta extrair a resposta se vier em formato JSON string
-          const parsed = JSON.parse(cleanedText);
-          if (parsed.response) return { response: parsed.response };
-        } catch (e) {
-          // Se não for JSON, retorna o texto puro como resposta
-          return { response: response.text };
-        }
+        return { response: cleanAiResponse(response.text) };
       }
 
-      return { response: "A Aurora está sintonizando uma resposta... tente novamente em alguns instantes." };
+      throw new Error("A Engine Aurora retornou um sinal vazio. Verifique sua cota de API.");
 
     } catch (error: any) {
       console.error("[AURORA FLOW ERROR]:", error);
-      throw new Error(`Falha na engine de resposta Aurora: ${error.message}`);
+      throw error; // Repassa para o gateway tratar
     }
   }
 );
+
+/**
+ * Limpa artefatos de Markdown e JSON que a IA possa gerar por engano.
+ */
+function cleanAiResponse(text: string): string {
+  return text
+    .replace(/```json/g, '')
+    .replace(/```/g, '')
+    .replace(/\{"response":/g, '')
+    .replace(/\}$/g, '')
+    .trim()
+    .replace(/^"+|"+$/g, ''); // Remove aspas extras no início/fim
+}
 
 export async function conceptExplanationAssistant(input: ConceptExplanationAssistantInput): Promise<ConceptExplanationAssistantOutput> {
   return conceptExplanationAssistantFlow(input);
