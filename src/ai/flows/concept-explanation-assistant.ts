@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
- * Compatível com Gemini 1.5 Pro/Flash e 2.0 Flash.
+ * Atualizado para Gemini 2.0 Flash (Alta Performance).
  */
 
 import { ai } from '@/ai/genkit';
@@ -27,8 +27,8 @@ export type ConceptExplanationAssistantOutput = z.infer<typeof ConceptExplanatio
 
 const prompt = ai.definePrompt({
   name: 'conceptExplanationAssistantPrompt',
-  // Utiliza identificador flexível para compatibilidade com 1.5 e 2.0
-  model: 'googleai/gemini-1.5-flash',
+  // Sintonizado para o modelo mais recente disponível
+  model: 'googleai/gemini-2.0-flash',
   input: { schema: ConceptExplanationAssistantInputSchema },
   output: { schema: ConceptExplanationAssistantOutputSchema },
   config: { 
@@ -41,15 +41,15 @@ const prompt = ai.definePrompt({
     ]
   },
   system: `Você é a Aurora, a assistente pedagógica do curso Compromisso em Santana de Parnaíba.
-Sua missão é ajudar estudantes brasileiros com dúvidas para o ENEM, ETEC e vestibulares.
+Sua missão é ajudar estudantes com dúvidas para o ENEM, ETEC e vestibulares.
 
 REGRAS:
 - Use Português Brasileiro profissional e empático.
-- Seja direto e focado no conteúdo acadêmico.
-- Responda APENAS com o texto da explicação, sem formatação Markdown de blocos de código.`,
+- Responda APENAS com o texto da explicação.
+- NUNCA use blocos de código Markdown (```json ou ```text).`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
-{{#if history}}Histórico:
+{{#if history}}Histórico de Conversa:
 {{#each history}}{{{role}}}: {{{content}}}
 {{/each}}{{/if}}`,
 });
@@ -64,34 +64,33 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
     try {
       const response = await prompt(input);
       
-      if (response.output?.response) {
-        return { response: cleanAiResponse(response.output.response) };
-      }
+      const rawText = response.output?.response || response.text;
       
-      if (response.text) {
-        return { response: cleanAiResponse(response.text) };
+      if (!rawText) {
+        throw new Error("A Aurora não conseguiu gerar uma resposta. Verifique os filtros de segurança ou sua chave de API.");
       }
 
-      throw new Error("A Engine Aurora retornou um sinal vazio. Verifique sua cota de API.");
+      return { response: cleanAiResponse(rawText) };
 
     } catch (error: any) {
       console.error("[AURORA FLOW ERROR]:", error);
-      throw error; // Repassa para o gateway tratar
+      throw error;
     }
   }
 );
 
 /**
- * Limpa artefatos de Markdown e JSON que a IA possa gerar por engano.
+ * Limpeza agressiva de artefatos de IA.
  */
 function cleanAiResponse(text: string): string {
   return text
     .replace(/```json/g, '')
+    .replace(/```text/g, '')
     .replace(/```/g, '')
     .replace(/\{"response":/g, '')
     .replace(/\}$/g, '')
     .trim()
-    .replace(/^"+|"+$/g, ''); // Remove aspas extras no início/fim
+    .replace(/^"+|"+$/g, '');
 }
 
 export async function conceptExplanationAssistant(input: ConceptExplanationAssistantInput): Promise<ConceptExplanationAssistantOutput> {

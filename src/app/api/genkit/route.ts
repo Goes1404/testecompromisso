@@ -11,7 +11,7 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 8.0: Diagnóstico em Tempo Real para Ambiente de Teste.
+ * Versão 9.0: Diagnóstico de Autenticação e Suporte Gemini 2.0.
  */
 
 export const maxDuration = 120;
@@ -22,11 +22,15 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Permite usuários de teste ou autenticados
-    const isTestUser = user?.id?.includes('00000000');
-    
-    if (!user && !isTestUser) {
-      return NextResponse.json({ error: "🔒 Acesso negado à Engine Aurora. Autentique-se." }, { status: 401 });
+    // Verificação de segurança industrial
+    if (!user) {
+      // Log interno para diagnóstico do desenvolvedor
+      console.warn("[AURORA AUTH]: Tentativa de acesso sem sessão ativa.");
+      return NextResponse.json({ 
+        success: false,
+        error: "🔒 Acesso negado à Engine Aurora. Sua sessão expirou ou não foi detectada. Por favor, faça login novamente.",
+        debug: "Auth session returned null in API Route"
+      }, { status: 401 });
     }
 
     const body = await req.json();
@@ -57,16 +61,15 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    // Reporta o erro real para o chat em ambiente de teste
-    console.error(`[AURORA ERROR]:`, error);
+    console.error(`[AURORA CRITICAL ERROR]:`, error);
 
     return NextResponse.json(
       { 
         success: false,
-        error: `⚠️ [ERRO AURORA]: ${error.message || 'Falha interna no motor de IA.'}`, 
+        error: `⚠️ [FALHA NA ENGINE]: ${error.message || 'Erro interno no motor de IA.'}`, 
         details: error?.stack || 'Sem rastreamento disponível.'
       }, 
-      { status: 200 }
+      { status: 200 } // Retornamos 200 para que o JSON chegue ao chat e exiba o balão de erro
     );
   }
 }

@@ -156,10 +156,11 @@ export default function DirectChatPage() {
             created_at: new Date().toISOString(),
           }]);
         } else {
+          // EXIBE O ERRO TÉCNICO DIRETAMENTE NO CHAT (MODO TESTE)
           setMessages(prev => [...prev, {
             id: `ai-error-${Date.now()}`,
             sender_id: "aurora-ai",
-            content: data.error || "Houve um erro inesperado ao processar sua dúvida.",
+            content: `⚠️ [ERRO AURORA]: ${data.error || "Houve um problema técnico ao processar sua dúvida."}`,
             created_at: new Date().toISOString(),
             isError: true
           }]);
@@ -168,7 +169,7 @@ export default function DirectChatPage() {
         setMessages(prev => [...prev, {
           id: `ai-crit-${Date.now()}`,
           sender_id: "aurora-ai",
-          content: `⚠️ [ERRO REDE]: ${err.message || "Oscilação detectada."}`,
+          content: `⚠️ [FALHA DE REDE]: ${err.message || "Oscilação detectada no sinal da IA."}`,
           created_at: new Date().toISOString(),
           isError: true
         }]);
