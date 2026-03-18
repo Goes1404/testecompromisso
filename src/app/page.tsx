@@ -36,6 +36,8 @@ export default function LandingPage() {
     { id: "gallery-mentorship", title: "Espaços de Foco" },
   ];
 
+  const mapsUrl = "https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010";
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       {/* HEADER - AMPLIADO E PROPORCIONAL */}
@@ -61,7 +63,7 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-10">
             <Link href="#features" className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors">Metodologia</Link>
             <a 
-              href="https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010" 
+              href={mapsUrl} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
@@ -280,7 +282,14 @@ export default function LandingPage() {
               </li>
               <li className="flex items-center gap-3">
                 <div className="h-1 w-4 bg-accent/30 rounded-full" />
-                Pólo Santana de Parnaíba - Centro
+                <a 
+                  href={mapsUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-accent transition-colors"
+                >
+                  Endereço: R. Cel. Raimundo, N.32 - Centro, Santana de Parnaíba - SP, 06501-010
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <div className="h-1 w-4 bg-accent/30 rounded-full" />
