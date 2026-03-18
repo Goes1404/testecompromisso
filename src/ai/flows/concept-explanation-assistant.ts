@@ -32,6 +32,7 @@ const prompt = ai.definePrompt({
   output: { schema: ConceptExplanationAssistantOutputSchema },
   config: { 
     temperature: 0.7,
+    // Configurações de segurança ajustadas para ambiente pedagógico
     safetySettings: [
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
@@ -45,7 +46,7 @@ Sua missão é ajudar estudantes com dúvidas para o ENEM, ETEC e vestibulares.
 REGRAS:
 - Use Português Brasileiro profissional e empático.
 - Responda APENAS com o texto da explicação.
-- NUNCA use blocos de código Markdown (\`\`\`json ou \`\`\`text).`,
+- NUNCA use blocos de código Markdown (\`\`` + '`json' + ` ou \`\`` + '`text' + `).`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
 {{#if history}}Histórico de Conversa:
@@ -74,9 +75,9 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
     } catch (error: any) {
       console.error("[AURORA FLOW ERROR]:", error);
       
-      // Tratamento amigável para chave vazada
-      if (error.message?.includes('leaked') || error.message?.includes('403')) {
-        throw new Error("⚠️ [CHAVE VAZADA]: Esta API Key foi desativada pelo Google. Por favor, atualize o segredo GEMINI_API_KEY no painel de controle.");
+      // Tratamento amigável para chave vazada ou problemas de acesso
+      if (error.message?.includes('leaked') || error.message?.includes('403') || error.message?.includes('API_KEY_INVALID')) {
+        throw new Error("⚠️ [ERRO DE CHAVE]: A chave de API fornecida é inválida ou foi desativada pelo Google.");
       }
       
       throw error;
@@ -85,7 +86,7 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
 );
 
 /**
- * Limpeza agressiva de artefatos de IA.
+ * Limpeza agressiva de artefatos de IA para garantir integridade da UI.
  */
 function cleanAiResponse(text: string): string {
   return text

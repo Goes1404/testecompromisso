@@ -8,14 +8,16 @@ import { googleAI } from '@genkit-ai/google-genai';
  * Sintonizado para suportar Gemini 1.5 Pro/Flash e 2.0 Flash.
  */
 
-const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY;
+// Chave fornecida para ambiente de teste (fallback)
+const PROVIDED_KEY = 'AIzaSyBFeIreOaaCnGn2lD6Cz7SacnTpbEhSRQg';
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || PROVIDED_KEY;
 
 if (!apiKey) {
-  console.error("❌ [CRÍTICO] Nenhuma chave de API (GEMINI_API_KEY) encontrada nas variáveis de ambiente!");
+  console.error("❌ [CRÍTICO] Nenhuma chave de API encontrada!");
 }
 
-// Permite trocar o modelo via ENV ou usar o 2.0 Flash como padrão de alta performance
-export const AURORA_MODEL = process.env.AURORA_MODEL_ID || 'googleai/gemini-2.0-flash';
+// Modelo de alta performance (2.0 Flash) - Sintonizado para velocidade industrial
+export const AURORA_MODEL = 'googleai/gemini-2.0-flash';
 
 export const ai = genkit({
   plugins: [
