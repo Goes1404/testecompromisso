@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
+    dangerouslyAllowSVG: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'i.postimg.cc', pathname: '/**' },
       { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },

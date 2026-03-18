@@ -2,46 +2,46 @@
 {
   "placeholderImages": [
     {
-      "id": "hero-educational",
-      "description": "Jornada Literária e Educação em Santana de Parnaíba",
-      "imageUrl": "https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg",
-      "imageHint": "classroom students lecture"
-    },
-    {
-      "id": "gallery-classroom",
-      "description": "Alunos em sala de aula - Santana de Parnaíba",
-      "imageUrl": "https://i.postimg.cc/QMnBTzsK/4.jpg",
+      "id": "hero-main",
+      "description": "Estudante em ambiente de alta performance",
+      "imageUrl": "https://picsum.photos/seed/hero-360/1200/1200",
       "imageHint": "student classroom"
     },
     {
+      "id": "gallery-classroom",
+      "description": "Salas Inteligentes - Santana de Parnaíba",
+      "imageUrl": "https://picsum.photos/seed/classroom-sp/600/800",
+      "imageHint": "modern classroom"
+    },
+    {
       "id": "gallery-lab",
-      "description": "Ambiente de estudo e tecnologia",
-      "imageUrl": "https://i.postimg.cc/mgvJgL14/Whats-App-Image-2026-03-12-at-17-48-36.jpg",
-      "imageHint": "science lab education"
+      "description": "Laboratórios Digitais",
+      "imageUrl": "https://picsum.photos/seed/lab-sp/600/800",
+      "imageHint": "science lab"
     },
     {
       "id": "gallery-live",
-      "description": "Estudantes em atividade prática e lives",
-      "imageUrl": "https://i.postimg.cc/Px4Ry13T/2.jpg",
-      "imageHint": "video broadcast studio"
+      "description": "Estúdios de Live e Transmissão",
+      "imageUrl": "https://picsum.photos/seed/live-sp/600/800",
+      "imageHint": "video studio"
     },
     {
       "id": "gallery-mentorship",
-      "description": "Mentoria e foco acadêmico individualizado",
-      "imageUrl": "https://i.postimg.cc/J0YdVMCd/Whats-App-Image-2026-03-12-at-2.jpg",
-      "imageHint": "co-working study space"
+      "description": "Espaços de Mentoria Individual",
+      "imageUrl": "https://picsum.photos/seed/mentor-sp/600/800",
+      "imageHint": "study space"
     },
     {
       "id": "prefeitura-logo",
-      "description": "Logomarca Oficial da Prefeitura de Santana de Parnaíba SP",
+      "description": "Brasão Oficial de Santana de Parnaíba",
       "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG",
       "imageHint": "city logo"
     },
     {
-      "id": "santana-landmark",
-      "description": "Igreja Matriz de Santana de Parnaíba - Coração da Cidade",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg/1280px-Igreja_Matriz_de_Santana_de_Parna%C3%ADba.jpg",
-      "imageHint": "historic church"
+      "id": "login-bg",
+      "description": "Centro Histórico de Santana de Parnaíba",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg",
+      "imageHint": "historic city"
     }
   ]
 }
