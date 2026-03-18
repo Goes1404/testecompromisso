@@ -1,9 +1,8 @@
-
 'use server';
 
 /**
  * @fileOverview Aurora - Assistente Pedagógica do Compromisso.
- * Implementação ultra-resiliente com tratamento de erros verboso.
+ * Implementação ultra-resiliente com tratamento de erros verboso e filtros de segurança acadêmicos.
  */
 
 import { ai } from '@/ai/genkit';
@@ -33,6 +32,12 @@ const prompt = ai.definePrompt({
   output: { schema: ConceptExplanationAssistantOutputSchema },
   config: { 
     temperature: 0.7,
+    safetySettings: [
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' }
+    ]
   },
   system: `Você é a Aurora, a assistente pedagógica do curso Compromisso em Santana de Parnaíba.
 Sua missão é ajudar estudantes brasileiros com dúvidas para o ENEM, ETEC e vestibulares.
@@ -40,12 +45,13 @@ Sua missão é ajudar estudantes brasileiros com dúvidas para o ENEM, ETEC e ve
 REGRAS:
 - Use Português Brasileiro profissional e empático.
 - Seja direto e focado no conteúdo acadêmico.
+- NÃO use blocos de código Markdown (como \`\`\`json) na sua resposta final. Retorne apenas o objeto puro.
 - Se o usuário perguntar algo não acadêmico, direcione-o gentilmente de volta aos estudos.`,
   prompt: `Pergunta: {{{query}}}
 {{#if context}}Contexto: {{{context}}}{{/if}}
 {{#if history}}Histórico:
 {{#each history}}{{{role}}}: {{{content}}}
-{{/each}}{{/if}}`,
+{{/each}}{{if}}`,
 });
 
 export const conceptExplanationAssistantFlow = ai.defineFlow(
@@ -59,28 +65,26 @@ export const conceptExplanationAssistantFlow = ai.defineFlow(
       console.log("[AURORA FLOW START]: Processando query:", input.query);
       const response = await prompt(input);
       
-      // 1. Tenta obter o output estruturado (Zod) - Modo Ideal
       if (response.output) {
-        console.log("[AURORA FLOW SUCCESS]: Resposta estruturada obtida.");
         return response.output;
       }
       
-      // 2. Se falhar, tenta extrair JSON do texto bruto (Remoção de Markdown)
       if (response.text) {
-        console.log("[AURORA FLOW FALLBACK]: Tentando extração manual de texto.");
-        const cleanedText = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
+        // Limpeza agressiva de Markdown para evitar erros de parse
+        const cleanedText = response.text
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .trim();
+          
         try {
           const parsed = JSON.parse(cleanedText);
           if (parsed.response) return { response: parsed.response };
         } catch (e) {
-          // Não é um JSON válido, retornamos o texto bruto como resposta
           return { response: response.text };
         }
       }
 
-      // 3. Fallback final: tenta ler a mensagem diretamente
-      const rawMsg = response.text || "A Aurora está sintonizando uma resposta... tente novamente.";
-      return { response: rawMsg };
+      return { response: "A Aurora está sintonizando uma resposta... tente novamente." };
 
     } catch (error: any) {
       console.error("[AURORA FLOW ERROR]:", error);

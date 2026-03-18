@@ -6,23 +6,22 @@ import { bulkQuestionParserFlow } from '@/ai/flows/bulk-question-parser';
 import { essayTopicGeneratorFlow } from '@/ai/flows/essay-topic-generator';
 import { essayEvaluatorFlow } from '@/ai/flows/essay-evaluator';
 import { trailStructureGeneratorFlow } from '@/ai/flows/trail-structure-generator';
+import { audioSimpleFlow } from '@/ai/flows/audio-simple-flow';
 import { createClient } from '@/utils/supabase/server';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão 6.0: Resiliência Máxima e Suporte a Next.js 15.
+ * Versão 7.0: Suporte a TTS e Resiliência de Filtros.
  */
 
-export const maxDuration = 60; 
+export const maxDuration = 120; // Aumentado para 2 min devido ao processamento de áudio
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Validar Usuário (Aguardando Cookies Assíncronos do Next.js 15)
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Em ambiente de teste, permitimos IDs mock (00000000...)
     const isTestUser = user?.id?.includes('00000000');
     
     if (!user && !isTestUser) {
@@ -32,7 +31,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { flowId, input } = body;
 
-    console.log(`[AURORA REQ]: ${flowId}`, JSON.stringify(input).substring(0, 100));
+    console.log(`[AURORA REQ]: ${flowId}`);
 
     const flows: Record<string, any> = {
       conceptExplanationAssistant: conceptExplanationAssistantFlow,
@@ -42,6 +41,7 @@ export async function POST(req: NextRequest) {
       essayTopicGenerator: essayTopicGeneratorFlow,
       essayEvaluator: essayEvaluatorFlow,
       trailStructureGenerator: trailStructureGeneratorFlow,
+      audioSimple: audioSimpleFlow,
     };
 
     const targetFlow = flows[flowId];
@@ -50,10 +50,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Motor '${flowId}' não localizado.` }, { status: 404 });
     }
 
-    // 2. Execução do Fluxo Genkit
     const result = await targetFlow(input);
-
-    console.log(`[AURORA RES]: Sucesso para ${flowId}`);
 
     return NextResponse.json({ 
       success: true, 
