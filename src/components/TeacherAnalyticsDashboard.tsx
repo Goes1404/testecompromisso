@@ -13,16 +13,19 @@ import {
   BrainCircuit,
   Activity,
   ArrowUpRight,
-  History
+  History,
+  FileDown
 } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, CartesianGrid, LineChart, Line } from "recharts";
 import { supabase } from "@/app/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 const COLORS = ["#1a2c4b", "#f59e0b", "#64748b", "#94a3b8", "#cbd5e1"];
 
 export default function TeacherAnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
+  const { toast } = useToast();
   const [data, setData] = useState({
     totalStudents: 0,
     avgScore: 0,
@@ -35,7 +38,6 @@ export default function TeacherAnalyticsDashboard() {
     async function fetchAnalytics() {
       setLoading(true);
       try {
-        // 1. Contagem de Alunos (Lógica Inclusiva)
         const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
         const { data: profiles } = await supabase.from('profiles').select('profile_type');
         
@@ -44,7 +46,6 @@ export default function TeacherAnalyticsDashboard() {
           return studentKeywords.some(key => type.includes(key)) || type === '';
         }).length || 0;
 
-        // 2. Média de Simulados (Escala 0-1000)
         const { data: scores } = await supabase.from('simulation_attempts').select('score, total_questions');
         let realAvgScore = 0;
         if (scores && scores.length > 0) {
@@ -52,14 +53,12 @@ export default function TeacherAnalyticsDashboard() {
           realAvgScore = Math.round((totalPoints / scores.length) * 1000);
         }
 
-        // 3. Progresso Real
         const { data: progress } = await supabase.from('user_progress').select('percentage');
         let realAvgProg = 0;
         if (progress && progress.length > 0) {
           realAvgProg = Math.round(progress.reduce((acc, p) => acc + (p.percentage || 0), 0) / progress.length);
         }
 
-        // 4. Performance por Matéria
         const { data: subjectScores } = await supabase
           .from('simulation_attempts')
           .select('score, total_questions, subjects(name)');
@@ -79,7 +78,6 @@ export default function TeacherAnalyticsDashboard() {
           performance: Math.round(stats.total / stats.count)
         })).sort((a, b) => b.performance - a.performance);
 
-        // 5. Engajamento Real via logs (Sintonizado por dia da semana)
         const { data: logTrend } = await supabase
           .from('activity_logs')
           .select('created_at');
@@ -95,10 +93,9 @@ export default function TeacherAnalyticsDashboard() {
 
         const realEngagementTrend = Object.entries(dayMap).map(([day, acessos]) => ({
           day,
-          acessos: acessos + 10 // Baseline visual industrial
+          acessos: acessos + 10 
         }));
 
-        // LÓGICA DE FALLBACK
         const hasNoData = realTotalStudents === 0 && realAvgScore === 0;
         setIsDemo(hasNoData);
 
@@ -142,6 +139,18 @@ export default function TeacherAnalyticsDashboard() {
     fetchAnalytics();
   }, []);
 
+  const handleDownloadReport = () => {
+    toast({
+      title: "Gerando Relatório...",
+      description: "Preparando diagnóstico industrial para impressão.",
+    });
+    
+    // Pequeno delay para garantir que o toast apareça antes de travar a thread com o print dialog
+    setTimeout(() => {
+      window.print();
+    }, 1000);
+  };
+
   if (loading) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
       <Loader2 className="animate-spin h-12 w-12 text-accent" />
@@ -150,13 +159,13 @@ export default function TeacherAnalyticsDashboard() {
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 print:p-0 print:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 print:flex-row">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary italic leading-none">Inteligência Pedagógica (BI)</h1>
-          <p className="text-muted-foreground font-medium text-lg italic">Visão térmica de engajamento e performance acadêmica.</p>
+          <h1 className="text-3xl font-black text-primary italic leading-none print:text-2xl">Inteligência Pedagógica (BI)</h1>
+          <p className="text-muted-foreground font-medium text-lg italic print:text-sm">Visão térmica de engajamento e performance acadêmica.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 print:hidden">
           {isDemo && (
             <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-black px-4 py-2 flex items-center gap-2">
               MODO DEMONSTRAÇÃO
@@ -169,58 +178,58 @@ export default function TeacherAnalyticsDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-xl bg-primary text-white overflow-hidden rounded-[2.5rem] p-8 relative group">
-          <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 print:grid-cols-3">
+        <Card className="border-none shadow-xl bg-primary text-white overflow-hidden rounded-[2.5rem] p-8 relative group print:rounded-2xl print:p-6 print:shadow-none print:border">
+          <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 print:hidden" />
           <div className="flex items-center gap-6 relative z-10">
-            <div className="h-16 w-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-lg">
-              <Users className="h-8 w-8 text-accent" />
+            <div className="h-16 w-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-lg print:h-12 print:w-12">
+              <Users className="h-8 w-8 text-accent print:h-6 print:w-6" />
             </div>
             <div>
-              <p className="text-3xl font-black italic">{data.totalStudents}</p>
+              <p className="text-3xl font-black italic print:text-xl">{data.totalStudents}</p>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Alunos na Rede</p>
             </div>
           </div>
         </Card>
 
-        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-8 group hover:shadow-2xl transition-all duration-500">
+        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-8 group hover:shadow-2xl transition-all duration-500 print:rounded-2xl print:p-6 print:shadow-none print:border">
           <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-2xl bg-accent/10 flex items-center justify-center shadow-inner group-hover:bg-accent group-hover:text-white transition-all">
-              <ClipboardCheck className="h-8 w-8 text-accent group-hover:text-white" />
+            <div className="h-16 w-16 rounded-2xl bg-accent/10 flex items-center justify-center shadow-inner group-hover:bg-accent group-hover:text-white transition-all print:h-12 print:w-12">
+              <ClipboardCheck className="h-8 w-8 text-accent group-hover:text-white print:h-6 print:w-6" />
             </div>
             <div>
-              <p className="text-3xl font-black text-primary italic">{data.avgScore}</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Média de Acertos (Simulados)</p>
+              <p className="text-3xl font-black text-primary italic print:text-xl">{data.avgScore}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Média de Acertos</p>
             </div>
           </div>
         </Card>
 
-        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-8">
+        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-8 print:rounded-2xl print:p-6 print:shadow-none print:border">
           <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-2xl bg-green-50 flex items-center justify-center">
-              <Activity className="h-8 w-8 text-green-600" />
+            <div className="h-16 w-16 rounded-2xl bg-green-50 flex items-center justify-center print:h-12 print:w-12">
+              <Activity className="h-8 w-8 text-green-600 print:h-6 print:w-6" />
             </div>
             <div>
-              <p className="text-3xl font-black text-primary italic">{data.completionRate}%</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Conclusão de Trilhas</p>
+              <p className="text-3xl font-black text-primary italic print:text-xl">{data.completionRate}%</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Conclusão Trilhas</p>
             </div>
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-          <CardHeader className="p-10 pb-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
+        <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden print:rounded-2xl print:shadow-none print:border">
+          <CardHeader className="p-10 pb-0 print:p-6">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-xl font-black text-primary italic flex items-center gap-3">
+              <CardTitle className="text-xl font-black text-primary italic flex items-center gap-3 print:text-lg">
                 <TrendingUp className="h-5 w-5 text-accent" />
                 Performance por Matéria
               </CardTitle>
-              <Badge className="bg-muted text-primary font-black text-[8px] px-3">SIMULADOS</Badge>
+              <Badge className="bg-muted text-primary font-black text-[8px] px-3 print:hidden">SIMULADOS</Badge>
             </div>
           </CardHeader>
-          <CardContent className="p-10">
-            <div className="h-[350px] w-full">
+          <CardContent className="p-10 print:p-6">
+            <div className="h-[350px] w-full print:h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.performanceBySubject} layout="vertical" margin={{ left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -241,18 +250,18 @@ export default function TeacherAnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-          <CardHeader className="p-10 pb-0">
+        <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden print:rounded-2xl print:shadow-none print:border">
+          <CardHeader className="p-10 pb-0 print:p-6">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-xl font-black text-primary italic flex items-center gap-3">
+              <CardTitle className="text-xl font-black text-primary italic flex items-center gap-3 print:text-lg">
                 <Activity className="h-5 w-5 text-accent" />
                 Engajamento Semanal
               </CardTitle>
-              <span className="text-[10px] font-black text-green-600 uppercase">Monitoramento Ativo</span>
+              <span className="text-[10px] font-black text-green-600 uppercase print:hidden">Monitoramento Ativo</span>
             </div>
           </CardHeader>
-          <CardContent className="p-10">
-            <div className="h-[350px] w-full">
+          <CardContent className="p-10 print:p-6">
+            <div className="h-[350px] w-full print:h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.engagementTrend}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -276,14 +285,14 @@ export default function TeacherAnalyticsDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="border-none shadow-2xl bg-accent text-accent-foreground rounded-[3rem] p-10 flex flex-col justify-center items-center text-center space-y-6 md:col-span-2">
-          <div className="h-20 w-20 rounded-[2rem] bg-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl rotate-3">
-            <BrainCircuit className="h-10 w-10 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:grid-cols-1">
+        <Card className="border-none shadow-2xl bg-accent text-accent-foreground rounded-[3rem] p-10 flex flex-col justify-center items-center text-center space-y-6 md:col-span-2 print:rounded-2xl print:p-8 print:border print:shadow-none">
+          <div className="h-20 w-20 rounded-[2rem] bg-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl rotate-3 print:h-12 print:w-12">
+            <BrainCircuit className="h-10 w-10 text-white print:h-6 print:w-6" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-3xl font-black italic italic tracking-tighter uppercase">Insights Aurora</h3>
-            <p className="text-sm font-medium leading-relaxed opacity-80 max-w-2xl mx-auto">
+            <h3 className="text-3xl font-black italic tracking-tighter uppercase print:text-xl">Insights Aurora</h3>
+            <p className="text-sm font-medium leading-relaxed opacity-80 max-w-2xl mx-auto print:text-xs">
               {isDemo ? (
                 `"Em modo de demonstração, observamos um potencial de média de 782 pontos. A taxa de engajamento simulada de 42% sugere que as trilhas de Redação e Linguagens são as mais acessadas inicialmente pela rede."`
               ) : (
@@ -291,8 +300,11 @@ export default function TeacherAnalyticsDashboard() {
               )}
             </p>
           </div>
-          <button className="h-14 px-8 bg-primary text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-none text-xs uppercase tracking-widest">
-            Baixar Relatório Executivo <ArrowUpRight className="h-4 w-4" />
+          <button 
+            onClick={handleDownloadReport}
+            className="h-14 px-8 bg-primary text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-none text-xs uppercase tracking-widest print:hidden"
+          >
+            Gerar Relatório Executivo <FileDown className="h-4 w-4" />
           </button>
         </Card>
       </div>

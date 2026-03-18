@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
@@ -8,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo, memo, useRef, Suspense } from "react";
 import { useAuth } from "@/lib/AuthProvider"; 
+import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
 
 const studentItems = [
@@ -106,7 +108,7 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: any[], pathname
               <item.icon className="h-5 w-5" />
               <span className="font-bold text-sm">{item.label}</span>
               {unreadCount > 0 && item.badge && (
-                <Badge className="ml-auto bg-white/20 text-white text-[8px] h-5 min-w-5 rounded-full animate-in zoom-in">{unreadCount}</Badge>
+                <Badge className="ml-auto bg-accent text-accent-foreground text-[10px] font-black h-5 min-w-5 rounded-full animate-in zoom-in">{unreadCount}</Badge>
               )}
             </Link>
           </SidebarMenuButton>
@@ -122,10 +124,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { user, profile, userRole, loading: isUserLoading, signOut } = useAuth();
   const [hasHydrated, setHasHydrated] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
   useEffect(() => { setHasHydrated(true); }, []);
+
+  // Monitoramento de mensagens não lidas
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUnread = async () => {
+      const { count, error } = await supabase
+        .from('direct_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', user.id)
+        .eq('is_read', false);
+      
+      if (!error) setUnreadCount(count || 0);
+    };
+
+    fetchUnread();
+
+    const channel = supabase
+      .channel('unread_sidebar')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'direct_messages',
+        filter: `receiver_id=eq.${user.id}`
+      }, () => {
+        fetchUnread();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const navItems = useMemo(() => {
     if (userRole === 'admin') return adminItems;
@@ -184,7 +220,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarHeader>
         <SidebarContent className="px-3">
           <SidebarGroup>
-            <NavMenu items={navItems} pathname={pathname || ''} unreadCount={0} />
+            <NavMenu items={navItems} pathname={pathname || ''} unreadCount={unreadCount} />
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="p-4 border-t border-white/5">
@@ -199,7 +235,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background flex flex-col h-screen overflow-hidden relative">
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
           <SidebarTrigger className="h-9 w-9 rounded-full hover:bg-muted" />
           <div className="flex-1" />
           <Link href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all">

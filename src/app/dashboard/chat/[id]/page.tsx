@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -20,6 +21,7 @@ interface ChatMessage {
   content: string;
   created_at: string;
   isError?: boolean;
+  is_read?: boolean;
 }
 
 export default function DirectChatPage() {
@@ -37,6 +39,22 @@ export default function DirectChatPage() {
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Marcar mensagens como lidas
+  useEffect(() => {
+    if (!user || isAurora || !contactId) return;
+
+    const markAsRead = async () => {
+      await supabase
+        .from('direct_messages')
+        .update({ is_read: true })
+        .eq('receiver_id', user.id)
+        .eq('sender_id', contactId)
+        .eq('is_read', false);
+    };
+
+    markAsRead();
+  }, [user, contactId, isAurora, messages.length]);
 
   useEffect(() => {
     async function loadChatData() {
@@ -181,7 +199,8 @@ export default function DirectChatPage() {
         const { data, error } = await supabase.from('direct_messages').insert({
           sender_id: user.id,
           receiver_id: contactId,
-          content: userText
+          content: userText,
+          is_read: false
         }).select().single();
 
         if (error) throw error;

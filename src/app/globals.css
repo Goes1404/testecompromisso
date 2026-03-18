@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -81,4 +82,38 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.2);
+}
+
+/* REGRAS DE IMPRESSÃO - RELATÓRIO EXECUTIVO */
+@media print {
+  body {
+    background: white !important;
+    background-image: none !important;
+    color: black !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  header, aside, .sidebar, button, footer, .accessibility-widget {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #eee !important;
+    break-inside: avoid;
+  }
+
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 300px !important;
+  }
 }
