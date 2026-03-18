@@ -9,10 +9,10 @@ import { audioSimpleFlow } from '@/ai/flows/audio-simple-flow';
 
 /**
  * 🚀 GATEWAY DE INTELIGÊNCIA AURORA - COMPROMISSO 360
- * Versão de Teste: Autenticação removida para garantir sinal estável em todos os perfis.
+ * Versão Netlify-Ready: Timeout estendido e autenticação flexível para testes.
  */
 
-export const maxDuration = 120;
+export const maxDuration = 120; // Aumentado para lidar com gerações complexas em serverless
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -34,7 +34,10 @@ export async function POST(req: Request) {
     const targetFlow = flows[flowId];
 
     if (!targetFlow) {
-      return new Response(JSON.stringify({ error: `❌ Motor '${flowId}' não localizado.` }), { status: 404 });
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: `❌ Motor '${flowId}' não localizado no servidor.` 
+      }), { status: 404 });
     }
 
     // Execução do fluxo Genkit (Gemini 2.0 Flash)
@@ -43,14 +46,20 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ 
       success: true, 
       result: result 
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
 
   } catch (error: any) {
-    console.error(`[AURORA CRITICAL ERROR]:`, error);
+    console.error(`[AURORA GATEWAY ERROR]:`, error);
 
     return new Response(JSON.stringify({ 
       success: false,
-      error: `⚠️ [FALHA NA ENGINE]: ${error.message || 'Houve uma oscilação no motor de IA. Verifique sua chave API.'}`
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      error: `⚠️ [FALHA NA ENGINE]: ${error.message || 'Erro de comunicação com o motor Gemini.'}`
+    }), { 
+      status: 200, // Retornamos 200 para que o frontend possa exibir o erro no balão de chat
+      headers: { 'Content-Type': 'application/json' } 
+    });
   }
 }

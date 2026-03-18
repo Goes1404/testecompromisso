@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useToast } from "@/hooks/use-toast";
 import { Virtuoso } from 'react-virtuoso';
 import { usePathname } from "next/navigation";
+import { createClient } from "@/utils/supabase/client"; // Cliente Supabase para Frontend
 
 interface Message {
   role: "assistant" | "user";
@@ -24,6 +26,7 @@ export function AccessibilityWidget() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const pathname = usePathname();
+  const supabase = createClient(); // Instancia o cliente
 
   const isInputHeavyPage = 
     pathname.includes('/chat/') || 
@@ -35,11 +38,26 @@ export function AccessibilityWidget() {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
+    setLoading(true);
+
+    // 1. Verificação de Autenticação no Frontend
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Esta funcionalidade é exclusiva para membros. Por favor, faça login ou registre-se para interagir com a Aurora IA.",
+        isError: true
+      }]);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Continua com o envio da mensagem se o usuário estiver logado
     const userMsg: Message = { role: "user", content: input };
     setMessages(prev => [...prev, userMsg]);
     const currentInput = input;
     setInput("");
-    setLoading(true);
 
     try {
       const history = messages.map(m => ({
@@ -61,7 +79,6 @@ export function AccessibilityWidget() {
       if (response.ok && data.success && data.result.response) {
         setMessages(prev => [...prev, { role: "assistant", content: data.result.response }]);
       } else {
-        // EXIBIR ERRO DETALHADO NO CHAT
         setMessages(prev => [...prev, { 
           role: "assistant", 
           content: data.error || "Houve um erro inesperado ao conectar com a Aurora.",
