@@ -8,4 +8,7 @@ declare module 'wav' {
       bitDepth?: number;
     });
   }
+  
+  const content: any;
+  export default content;
 }

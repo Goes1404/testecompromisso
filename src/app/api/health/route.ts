@@ -46,9 +46,9 @@ export async function GET() {
   } catch (e: any) {
     const msg = e.message || '';
     if (msg.includes('leaked') || msg.includes('403')) {
-      diagnostics.genkit = { status: 'error', details: 'CHAVE VAZADA: Gere uma nova chave no AI Studio.' };
+      diagnostics.genkit = { status: 'error', details: 'CHAVE VAZADA: Gere uma nova chave no AI Studio.', model: AURORA_MODEL };
     } else {
-      diagnostics.genkit = { status: 'error', details: `Falha de sinal: ${msg}` };
+      diagnostics.genkit = { status: 'error', details: `Falha de sinal: ${msg}`, model: AURORA_MODEL };
     }
   }
 
