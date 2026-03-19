@@ -8,12 +8,10 @@ import { googleAI } from '@genkit-ai/google-genai';
  * Sintonizado para suporte total no Netlify e ambientes Serverless.
  */
 
-// Chave fornecida para ambiente de teste (fallback de sinal)
-const TEST_KEY = '''AIzaSyBFeIreOaaCnGn2lD6Cz7SacnTpbEhSRQg''';
-const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || TEST_KEY;
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
 
 if (!apiKey) {
-  console.error("❌ [CRÍTICO] Nenhuma chave de API detectada no ambiente!");
+  console.error("❌ [CRÍTICO] Nenhuma chave de API detectada no ambiente! O deploy pode falhar.");
 }
 
 // Modelo de alta performance (1.5 Flash) - Otimizado para velocidade e custo-benefício
