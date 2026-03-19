@@ -1,60 +1,47 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
-  Shield, 
-  TrendingUp, 
-  BookOpen, 
   ShieldCheck, 
   CheckCircle2, 
   ArrowRight, 
-  Users, 
   BarChart3, 
   Zap,
   Globe,
   Sparkles,
   GraduationCap,
-  School,
-  ChevronRight
+  School
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import placeholderData from "@/app/lib/placeholder-images.json";
 
 export default function LandingPage() {
-  const getPlaceholder = (id: string) => placeholderData.placeholderImages.find(img => img.id === id);
-  
-  const logoImg = getPlaceholder("prefeitura-logo");
-  const heroImg = getPlaceholder("hero-main");
+  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
   const galleryItems = [
-    { id: "gallery-classroom", title: "Aulas Dinâmicas" },
-    { id: "gallery-lab", title: "Inovação no Ensino" },
-    { id: "gallery-live", title: "Apoio Remoto" },
-    { id: "gallery-mentorship", title: "Espaços de Foco" },
+    { title: "Aulas Dinâmicas", img: "/images/carrosel1.jpeg" },
+    { title: "Inovação no Ensino", img: "/images/carrosel2.jpeg" },
+    { title: "Apoio Remoto", img: "/images/carrosel3.jpeg" },
+    { title: "Espaços de Foco", img: "/images/carrosel4.jpeg" },
   ];
 
   const mapsUrl = "https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010";
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* HEADER - AMPLIADO E PROPORCIONAL */}
+      {/* HEADER */}
       <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-muted/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative h-14 w-14 rounded-2xl bg-primary flex items-center justify-center text-accent shadow-xl shadow-primary/20 rotate-3 p-2 overflow-hidden">
-              {logoImg && (
-                <Image 
-                  src={logoImg.imageUrl} 
-                  alt={logoImg.description} 
-                  fill 
-                  className="object-contain" 
-                  unoptimized 
-                  data-ai-hint={logoImg.imageHint}
-                />
-              )}
+            <div className="relative h-14 w-14 rounded-2xl bg-white shadow-xl flex items-center justify-center p-1 shrink-0 overflow-hidden">
+              <Image 
+                src={logoUrl} 
+                alt="Brasão Oficial de Santana de Parnaíba" 
+                fill 
+                className="object-contain p-1" 
+                unoptimized 
+              />
             </div>
             <span className="text-3xl font-black italic tracking-tighter text-primary">
               Compro<span className="text-accent">misso</span>
@@ -109,15 +96,13 @@ export default function LandingPage() {
             
             <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
               <div className="relative aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[12px] border-white group bg-slate-100">
-                {heroImg && (
-                  <Image 
-                    src={heroImg.imageUrl} 
-                    alt={heroImg.description} 
-                    fill 
-                    className="object-cover group-hover:scale-110 transition-transform duration-1000"
-                    data-ai-hint={heroImg.imageHint}
-                  />
-                )}
+                <Image 
+                  src="/images/capa1.jpeg" 
+                  alt="Jornada Literária e Educação em Santana de Parnaíba" 
+                  fill 
+                  className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                  unoptimized={true}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent" />
                 <div className="absolute bottom-10 left-10 right-10 p-8 bg-primary/80 backdrop-blur-xl rounded-[2.5rem] text-white border border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
@@ -214,18 +199,15 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {galleryItems.map((item, i) => {
-                const img = getPlaceholder(item.id);
                 return (
                   <div key={i} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700 bg-slate-100">
-                    {img && (
-                      <Image 
-                        src={img.imageUrl} 
-                        alt={img.description} 
-                        fill 
-                        className="object-cover group-hover:scale-110 transition-transform duration-1000"
-                        data-ai-hint={img.imageHint}
-                      />
-                    )}
+                    <Image 
+                      src={item.img} 
+                      alt={item.title} 
+                      fill 
+                      className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                      unoptimized={true}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-8 left-8 right-8">
                       <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">INFRAESTRUTURA REAL</p>
@@ -248,16 +230,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10">
           <div className="space-y-8 col-span-1 lg:col-span-2">
             <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 overflow-hidden rounded-2xl shadow-2xl bg-white p-2 rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                {logoImg && (
-                  <Image 
-                    src={logoImg.imageUrl} 
-                    alt={logoImg.description} 
-                    fill 
-                    unoptimized
-                    className="object-contain p-1"
-                  />
-                )}
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl shadow-xl bg-white p-1 rotate-3 group-hover:rotate-0 transition-transform duration-500 shrink-0">
+                <Image 
+                  src={logoUrl} 
+                  alt="Logo Prefeitura" 
+                  fill 
+                  unoptimized
+                  className="object-contain p-1"
+                />
               </div>
               <span className="text-4xl font-black italic tracking-tighter uppercase">Compro<span className="text-accent">misso</span></span>
             </div>
@@ -310,14 +290,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
-  return (
-    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${className}`}>
-      {children}
     </div>
   );
 }
