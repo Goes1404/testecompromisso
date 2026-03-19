@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { gradeEssayFlow } from '@/lib/ai/essay-grading-flow';
 
-export const maxDuration = 60;
+/**
+ * @fileOverview Rota de API para correção de redação (Endpoint Legado).
+ * Encaminha a requisição para o fluxo unificado da Aurora IA.
+ */
+
+export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
@@ -24,13 +29,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Executa o fluxo de IA unificado
     const result = await gradeEssayFlow(theme, text);
     return NextResponse.json(result);
 
   } catch (error: any) {
-    console.error('Erro na API de correção de redação:', error);
+    console.error('[API REDAÇÃO ERROR]:', error);
     return NextResponse.json(
-      { error: `Ocorreu um erro inesperado: ${error.message || 'Falha na comunicação'}` },
+      { error: `Erro na Engine Aurora: ${error.message || 'Falha de comunicação industrial'}` },
       { status: 500 }
     );
   }
