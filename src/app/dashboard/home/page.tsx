@@ -26,6 +26,23 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase, safeExecute } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 
+const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
+
+const localImagesFallback = [
+  "/images/capa1.jpeg",
+  "/images/carrosel1.jpeg",
+  "/images/carrosel2.jpeg",
+  "/images/carrosel3.jpeg",
+  "/images/carrosel4.jpeg"
+];
+
+function getSafeImageUrl(url: string | null | undefined, index: number) {
+  if (!url || url.includes("picsum.photos")) {
+    return localImagesFallback[index % localImagesFallback.length];
+  }
+  return url;
+}
+
 interface Announcement {
   id: string;
   title: string;
@@ -114,13 +131,18 @@ export default function DashboardHome() {
       <section className="bg-primary p-8 md:p-12 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl">
          <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
          <div className="relative z-10 space-y-4">
-           <div className="flex items-center gap-3">
-             <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-tight">Olá, {userName}! 👋</h1>
-             <Badge className="bg-accent text-accent-foreground border-none font-black px-3 py-1 shadow-lg">
-               <Bot className="h-3 w-3 mr-1.5" /> IA ATIVA
-             </Badge>
+           <div className="flex items-center gap-4">
+             <div className="relative h-14 w-14 rounded-2xl bg-white shadow-xl flex items-center justify-center p-1 shrink-0">
+               <Image src={logoUrl} alt="Logo Santana de Parnaíba" fill className="object-contain p-1" unoptimized />
+             </div>
+             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+               <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-tight">Olá, {userName}! 👋</h1>
+               <Badge className="bg-accent text-accent-foreground border-none font-black px-3 py-1 shadow-lg w-fit">
+                 <Bot className="h-3 w-3 mr-1.5" /> IA ATIVA
+               </Badge>
+             </div>
            </div>
-           <p className="text-sm md:text-lg text-white/80 font-medium leading-relaxed italic max-w-2xl">
+           <p className="text-sm md:text-lg text-white/80 font-medium leading-relaxed italic max-w-2xl mt-2">
              Sua jornada rumo à aprovação está sendo monitorada com inteligência industrial.
            </p>
          </div>
@@ -183,15 +205,13 @@ export default function DashboardHome() {
                   <p className="font-black italic text-primary">Inicie uma trilha agora.</p>
                 </div>
               ) : (
-                recentProgress.map((prog) => {
+                recentProgress.map((prog, i) => {
                   const trailData = prog.trail;
                   return (
                     <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
                       <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col h-full">
                         <div className="relative aspect-[21/9] overflow-hidden bg-slate-100">
-                          {trailData?.image_url && (
-                            <Image src={trailData.image_url} alt={trailData.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
-                          )}
+                          <Image src={getSafeImageUrl(trailData?.image_url, i)} alt={trailData?.title || "Trilha"} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
                           <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent" />
                         </div>
                         <CardContent className="p-5 space-y-3">
