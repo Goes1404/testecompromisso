@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -62,7 +63,6 @@ export default function AdminChecklistAuditPage() {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<StudentProgress[]>([]);
   
-  // Estados para Ações em Massa
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
   const [bulkContent, setBulkContent] = useState("");
@@ -196,7 +196,7 @@ export default function AdminChecklistAuditPage() {
           <p className="text-muted-foreground font-medium italic">Supervisão da prontidão documental para vestibulares.</p>
         </div>
         <div className="relative w-full md:w-80 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
           <Input 
             placeholder="Buscar por nome..." 
             className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl italic font-medium focus-visible:ring-accent"
@@ -265,7 +265,6 @@ export default function AdminChecklistAuditPage() {
         </div>
 
         <div className="flex items-end gap-3">
-          {/* BOTÃO MENSAGEM EM MASSA */}
           <Dialog open={isMessageOpen} onOpenChange={setIsMessageOpen}>
             <DialogTrigger asChild>
               <Button disabled={filtered.length === 0} className="h-12 bg-primary text-white font-black text-[10px] uppercase px-6 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all gap-2">
@@ -296,7 +295,6 @@ export default function AdminChecklistAuditPage() {
             </DialogContent>
           </Dialog>
 
-          {/* BOTÃO AVISO EM MASSA */}
           <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
             <DialogTrigger asChild>
               <Button disabled={filtered.length === 0} variant="outline" className="h-12 border-2 border-primary/20 text-primary font-black text-[10px] uppercase px-6 rounded-xl hover:bg-primary/5 transition-all gap-2">

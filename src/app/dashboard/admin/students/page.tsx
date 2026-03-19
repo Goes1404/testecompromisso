@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,7 +23,6 @@ import {
   X,
   Sparkles,
   MapPin,
-  MessagesSquare,
   Layers,
   ExternalLink,
   GitMerge
@@ -66,22 +66,18 @@ export default function AdminStudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
   const [newCohort, setNewCohort] = useState({ name: "", description: "" });
   
-  // Estados para Mesclagem
   const [sourceCohortId, setSourceCohortId] = useState<string>("");
   const [destCohortId, setDestCohortId] = useState<string>("");
 
-  // Filtros ativos
   const [selectedCohortId, setSelectedCohortId] = useState<string | null>(null);
   const [selectedPoloName, setSelectedPoloName] = useState<string | null>(null);
 
-  // Estados para Edição de Aluno (Unidade/Fórum)
   const [editingStudent, setEditingStudent] = useState<any>(null);
   const [newInstitution, setNewInstitution] = useState("");
 
   async function fetchData() {
     setLoading(true);
     try {
-      // 1. Buscar Turmas (Classes)
       const { data: classData } = await supabase
         .from('classes')
         .select('*')
@@ -89,7 +85,6 @@ export default function AdminStudentsPage() {
       
       if (classData) setCohorts(classData);
 
-      // 2. Buscar Fóruns de Polo (Comunidades Regionais)
       const { data: forumsData } = await supabase
         .from('forums')
         .select('*')
@@ -98,7 +93,6 @@ export default function AdminStudentsPage() {
       
       if (forumsData) setPoloForums(forumsData);
 
-      // 3. Buscar Todos os Alunos
       const { data: allProfiles, error: pError } = await supabase
         .from('profiles')
         .select('*')
@@ -112,7 +106,6 @@ export default function AdminStudentsPage() {
         return studentKeywords.some(key => type.includes(key)) || type === '';
       }) || [];
 
-      // 4. Buscar Progresso para cálculo de engajamento
       const { data: progressData } = await supabase
         .from('user_progress')
         .select('user_id, percentage');
@@ -188,7 +181,6 @@ export default function AdminStudentsPage() {
 
     setIsSubmitting(true);
     try {
-      // 1. Mover alunos da turma de origem para a de destino
       const { error: moveError } = await supabase
         .from('profiles')
         .update({ class_id: destCohortId })
@@ -196,7 +188,6 @@ export default function AdminStudentsPage() {
 
       if (moveError) throw moveError;
 
-      // 2. Apagar a turma de origem
       const sourceName = cohorts.find(c => c.id === sourceCohortId)?.name;
       const destName = cohorts.find(c => c.id === destCohortId)?.name;
 
@@ -207,7 +198,6 @@ export default function AdminStudentsPage() {
 
       if (deleteError) throw deleteError;
 
-      // 3. Logar a ação
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         user_name: profile?.name || 'Administrador',
@@ -234,7 +224,6 @@ export default function AdminStudentsPage() {
     
     setIsSubmitting(true);
     try {
-      // 1. Atualizar Perfil do Aluno
       const { error: profileErr } = await supabase
         .from('profiles')
         .update({ institution: institutionClean })
@@ -242,7 +231,6 @@ export default function AdminStudentsPage() {
 
       if (profileErr) throw profileErr;
 
-      // 2. Garantir que o fórum exista
       const forumName = `Comunidade: ${institutionClean}`;
       
       const { data: existingForum } = await supabase
@@ -326,7 +314,6 @@ export default function AdminStudentsPage() {
             </Button>
           )}
 
-          {/* BOTÃO MESCLAR TURMAS */}
           <Dialog open={isMergeOpen} onOpenChange={setIsMergeOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="rounded-2xl h-14 border-dashed border-primary/20 text-primary font-black px-6 hover:bg-primary/5 transition-all flex items-center justify-center gap-3">
@@ -403,7 +390,7 @@ export default function AdminStudentsPage() {
               </div>
               <DialogFooter>
                 <Button onClick={handleCreateCohort} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
-                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Registrar Turma"}
+                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : "Registrar Turma"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -411,7 +398,6 @@ export default function AdminStudentsPage() {
         </div>
       </div>
 
-      {/* SEÇÃO DE CARDS: TURMAS E POLOS */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <Layers className="h-4 w-4 text-accent" />
@@ -423,7 +409,6 @@ export default function AdminStudentsPage() {
             <div className="col-span-full py-10 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-accent" /></div>
           ) : (
             <>
-              {/* TURMAS (CLASSES) */}
               {cohorts.map((cohort) => (
                 <Card 
                   key={cohort.id} 
@@ -446,7 +431,6 @@ export default function AdminStudentsPage() {
                 </Card>
               ))}
 
-              {/* POLOS (FORUMS) */}
               {poloForums.map((forum) => {
                 const poloName = forum.name.replace('Comunidade: ', '');
                 return (

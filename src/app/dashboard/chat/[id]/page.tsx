@@ -40,7 +40,6 @@ export default function DirectChatPage() {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Marcar mensagens como lidas
   useEffect(() => {
     if (!user || isAurora || !contactId) return;
 
@@ -296,7 +295,6 @@ export default function DirectChatPage() {
           </div>
         </ScrollArea>
 
-        {/* ÁREA DE TESTE RÁPIDO (MODO DEV) */}
         {isAurora && !isAiThinking && messages.length < 3 && (
           <div className="px-4 md:px-16 max-w-5xl mx-auto w-full mb-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="flex flex-wrap gap-2">
