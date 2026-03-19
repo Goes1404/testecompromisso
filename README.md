@@ -16,7 +16,7 @@ Este repositório foi transferido para a conta oficial de **@Duduzcx**. Todas as
 
 ## 🛠️ Como sincronizar seu terminal com a nova conta
 
-Se o seu terminal ainda estiver apontando para o endereço antigo, execute os comandos abaixo para sintonizar com o novo repositório:
+Se o seu terminal ainda estiver apontando para o endereço antigo, execute os comandos abaixo para sintonizar com o novo repositaaaaaório:
 
 1. **Atualize a URL de origem (Origin):**
 ```bash

@@ -1,12 +1,14 @@
 declare module 'wav' {
   import { Writable } from 'stream';
 
+  export interface WriterOptions {
+    channels?: number;
+    sampleRate?: number;
+    bitDepth?: number;
+  }
+
   export class Writer extends Writable {
-    constructor(options?: {
-      channels?: number;
-      sampleRate?: number;
-      bitDepth?: number;
-    });
+    constructor(options?: WriterOptions);
   }
   
   const content: any;
