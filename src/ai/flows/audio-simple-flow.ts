@@ -5,7 +5,7 @@
  * Utiliza o modelo gemini-2.5-flash-preview-tts para acessibilidade.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from '../genkit';
 import { z } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import wav from 'wav';

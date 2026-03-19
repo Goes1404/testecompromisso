@@ -4,7 +4,7 @@
  * @fileOverview Aurora - Gerador de Temas de Redação Estilo ENEM.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from '../genkit';
 import { z } from 'genkit';
 
 const EssayTopicInputSchema = z.object({

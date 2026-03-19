@@ -4,7 +4,7 @@
  * @fileOverview Gerador de Quizzes via IA para Professores.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from '../genkit';
 import { z } from 'genkit';
 
 const QuestionSchema = z.object({

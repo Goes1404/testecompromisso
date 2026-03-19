@@ -5,7 +5,7 @@
  * Sintonizado para Gemini 2.0 Flash com tratamento de erros de sintaxe.
  */
 
-import { ai, AURORA_MODEL } from '@/ai/genkit';
+import { ai, AURORA_MODEL } from '../genkit';
 import { z } from 'genkit';
 
 const MessageSchema = z.object({

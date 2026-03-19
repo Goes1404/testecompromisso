@@ -4,7 +4,7 @@
  * @fileOverview Aurora - Consultora de Auxílio Financeiro.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from '../genkit';
 import { z } from 'genkit';
 
 const FinancialAidDeterminationInputSchema = z.object({

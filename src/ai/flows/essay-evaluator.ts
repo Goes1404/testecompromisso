@@ -5,7 +5,7 @@
  * Atualizado para AURORA_MODEL (Gemini 2.0 Flash).
  */
 
-import { ai, AURORA_MODEL } from '@/ai/genkit';
+import { ai, AURORA_MODEL } from '../genkit';
 import { z } from 'genkit';
 
 const CorrectionSchema = z.object({

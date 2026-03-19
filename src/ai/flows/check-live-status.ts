@@ -4,7 +4,7 @@
  * @fileOverview Verificador de status de lives no YouTube.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from '../genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 
