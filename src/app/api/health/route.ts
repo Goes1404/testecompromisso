@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
-import { ai, AURORA_MODEL } from '../../ai/genkit';
+import { ai, AURORA_MODEL } from '../../../ai/genkit';
 
 /**
  * 🏥 DIAGNÓSTICO DE INFRAESTRUTURA - COMPROMISSO 360
