@@ -29,8 +29,8 @@ export default function RegisterPage() {
 
   const [formData, setFormData] = useState({
     firstName: "",
+    middleName: "",
     lastName: "",
-    username: "",
     email: "",
     password: "",
     school: "",
@@ -41,8 +41,8 @@ export default function RegisterPage() {
   });
 
   const nextStep = () => {
-    if (step === 1 && (!formData.email || !formData.password || !formData.firstName)) {
-      toast({ title: "Dados Incompletos", description: "Preencha os campos obrigatórios.", variant: "destructive" });
+    if (step === 1 && (!formData.email || !formData.password || !formData.firstName || !formData.lastName)) {
+      toast({ title: "Dados Incompletos", description: "Nome, sobrenome, e-mail e senha são obrigatórios.", variant: "destructive" });
       return;
     }
     setStep((s) => (s + 1) as Step);
@@ -55,8 +55,8 @@ export default function RegisterPage() {
   };
 
   const handleFinish = async () => {
-    if (!formData.email || !formData.password || !formData.firstName || !formData.username) {
-      toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha nome, usuário, e-mail e senha." });
+    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+      toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha todos os campos obrigatórios." });
       return;
     }
 
@@ -68,8 +68,15 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // PADRÃO CORPORATIVO: Nome de exibição é sempre Primeiro + Último
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-      const cleanUsername = formData.username.replace('@', '').toLowerCase();
+      
+      // CONTROLE DE DUPLICIDADE: Username gerado inclui nome do meio se disponível para evitar conflitos
+      const rawUsername = `${formData.firstName}${formData.middleName || ''}${formData.lastName}`
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // remove acentos
+        .replace(/[^a-z0-9]/g, ""); // remove caracteres especiais
 
       let institutionValue = "";
       let courseValue = "";
@@ -88,7 +95,7 @@ export default function RegisterPage() {
         options: {
           data: {
             full_name: fullName,
-            username: cleanUsername,
+            username: rawUsername,
             profile_type: profileType,
             institution: institutionValue,
             course: courseValue
@@ -184,23 +191,21 @@ export default function RegisterPage() {
           <CardContent className="pt-8 min-h-[450px]">
              {step === 1 && (
               <div key="step1" className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="font-bold text-primary/60 ml-2">Nome</Label>
                     <Input id="firstName" placeholder="Seu nome" value={formData.firstName} onChange={(e) => updateField("firstName", e.target.value)} className="h-12 bg-white/50 rounded-2xl border-muted/20" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="middleName" className="font-bold text-primary/60 ml-2">Nome do Meio</Label>
+                    <Input id="middleName" placeholder="Opcional" value={formData.middleName} onChange={(e) => updateField("middleName", e.target.value)} className="h-12 bg-white/50 rounded-2xl border-muted/20" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="font-bold text-primary/60 ml-2">Sobrenome</Label>
                     <Input id="lastName" placeholder="Seu sobrenome" value={formData.lastName} onChange={(e) => updateField("lastName", e.target.value)} className="h-12 bg-white/50 rounded-2xl border-muted/20" />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="font-bold text-primary/60 ml-2">Nome de Usuário (@)</Label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                    <Input id="username" placeholder="ex: joaosilva" value={formData.username} onChange={(e) => updateField("username", e.target.value)} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" />
-                  </div>
-                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-bold text-primary/60 ml-2">E-mail</Label>
                   <div className="relative group">
@@ -212,7 +217,7 @@ export default function RegisterPage() {
                   <Label htmlFor="password" title="Senha" className="font-bold text-primary/60 ml-2">Senha de Segurança</Label>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                    <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={formData.password} onChange={(e) => updateField("password", e.target.value)} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" />
+                    <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" />
                   </div>
                 </div>
               </div>
