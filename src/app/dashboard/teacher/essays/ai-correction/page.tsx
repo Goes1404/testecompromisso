@@ -145,7 +145,7 @@ export default function AICorrectionPage() {
                           <div className="flex-1">
                             <span className="italic font-black text-primary/80">{key}</span>
                             <div className="flex items-center gap-2 mt-1">
-                              <Progress value={value.nota / 2} className="h-2 flex-1" indicatorColor={`bg-[${color}]`}/>
+                              <Progress value={value.nota / 2} className="h-2 flex-1" />
                               <Badge variant="outline" className="font-black text-xs w-16 justify-center" style={{borderColor: color, color: color}}>{value.nota}/200</Badge>
                             </div>
                           </div>
