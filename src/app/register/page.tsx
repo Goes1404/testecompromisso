@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { GraduationCap, School, User, ArrowRight, Loader2, Mail, Lock, Sparkles, UserPlus, MapPin, ShieldCheck, AlertCircle, ChevronLeft } from "lucide-react";
+import { GraduationCap, School, User, ArrowRight, Loader2, Mail, Lock, Sparkles, UserPlus, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
@@ -15,15 +16,12 @@ import Link from "next/link";
 import Image from "next/image";
 
 type Step = 1 | 2 | 3;
-type ProfileType = "etec" | "cpop_santana" | "cpop_osasco" | "enem" | "teacher";
-
-const TEACHER_CODE_REQUIRED = "COMPROMISSO2024";
+type ProfileType = "etec" | "enem";
 
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>(1);
   const [profileType, setProfileType] = useState<ProfileType>("etec");
   const [loading, setLoading] = useState(false);
-  const [teacherCode, setTeacherCode] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   
@@ -39,8 +37,6 @@ export default function RegisterPage() {
     course: "",
     university: "",
     major: "",
-    subject: "",
-    experience: "",
     interests: ""
   });
 
@@ -64,11 +60,6 @@ export default function RegisterPage() {
       return;
     }
 
-    if (profileType === 'teacher' && teacherCode.toUpperCase() !== TEACHER_CODE_REQUIRED) {
-      toast({ variant: "destructive", title: "Código Inválido", description: "O código de acesso para mentores está incorreto." });
-      return;
-    }
-
     if (!isSupabaseConfigured) {
       toast({ variant: "destructive", title: "Erro de Configuração", description: "O sistema não está conectado ao banco de dados." });
       return;
@@ -83,18 +74,9 @@ export default function RegisterPage() {
       let institutionValue = "";
       let courseValue = "";
 
-      if (profileType === 'teacher') {
-        institutionValue = formData.subject || "Mentoria Geral";
-        courseValue = `Mentor ${formData.subject || ""}`;
-      } else if (profileType === 'etec') {
+      if (profileType === 'etec') {
         institutionValue = formData.school || "ETEC";
         courseValue = formData.course;
-      } else if (profileType === 'cpop_santana') {
-        institutionValue = "CPOP Santana";
-        courseValue = formData.course || "Aluno CPOP";
-      } else if (profileType === 'cpop_osasco') {
-        institutionValue = "CPOP Osasco";
-        courseValue = formData.course || "Aluno CPOP";
       } else if (profileType === 'enem') {
         institutionValue = formData.university || "ENEM";
         courseValue = formData.major || "Vestibulando";
@@ -133,7 +115,7 @@ export default function RegisterPage() {
       });
       
       setTimeout(() => {
-        window.location.href = profileType === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home";
+        window.location.href = "/dashboard/home";
       }, 1000);
 
     } catch (err: any) {
@@ -241,72 +223,67 @@ export default function RegisterPage() {
                  <RadioGroup 
                   value={profileType} 
                   onValueChange={(v) => setProfileType(v as ProfileType)} 
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
                 >
-                  {[
-                    { id: "etec", label: "Aluno ETEC", icon: School, desc: "Formação Técnica" },
-                    { id: "cpop_santana", label: "CPOP Santana", icon: MapPin, desc: "Polo Regional" },
-                    { id: "cpop_osasco", label: "CPOP Osasco", icon: MapPin, desc: "Polo Regional" },
-                    { id: "enem", label: "Vestibulando", icon: GraduationCap, desc: "Foco ENEM/FUVEST" },
-                    { id: "teacher", label: "Mentor da Rede", icon: ShieldCheck, desc: "Acesso Docente" }
-                  ].map((p) => (
-                    <div key={p.id}>
-                      <Label
-                        htmlFor={p.id}
-                        className={`flex flex-col items-center justify-center rounded-[2rem] border-4 p-6 hover:bg-white cursor-pointer transition-all h-full text-center group ${
-                          profileType === p.id ? "border-accent bg-white shadow-xl ring-8 ring-accent/5" : "border-transparent bg-white/50"
-                        }`}
-                      >
-                        <RadioGroupItem value={p.id} id={p.id} className="sr-only" />
-                        <div className={`p-4 rounded-2xl mb-3 transition-all shadow-md ${profileType === p.id ? "bg-accent text-accent-foreground scale-110" : "bg-muted text-primary"}`}>
-                          <p.icon className="h-8 w-8" />
-                        </div>
-                        <p className="font-black text-primary italic leading-none text-sm">{p.label}</p>
-                        <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold mt-2">{p.desc}</p>
-                      </Label>
-                    </div>
-                  ))}
+                  <div key="etec">
+                    <Label
+                      htmlFor="etec"
+                      className={`flex flex-col items-center justify-center rounded-[2rem] border-4 p-8 hover:bg-white cursor-pointer transition-all h-full text-center group ${
+                        profileType === "etec" ? "border-accent bg-white shadow-xl ring-8 ring-accent/5" : "border-transparent bg-white/50"
+                      }`}
+                    >
+                      <RadioGroupItem value="etec" id="etec" className="sr-only" />
+                      <div className={`p-6 rounded-2xl mb-4 transition-all shadow-md ${profileType === "etec" ? "bg-accent text-accent-foreground scale-110" : "bg-muted text-primary"}`}>
+                        <School className="h-10 w-10" />
+                      </div>
+                      <p className="font-black text-primary italic leading-none text-lg">Aluno ETEC</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-3">Formação Técnica</p>
+                    </Label>
+                  </div>
+
+                  <div key="enem">
+                    <Label
+                      htmlFor="enem"
+                      className={`flex flex-col items-center justify-center rounded-[2rem] border-4 p-8 hover:bg-white cursor-pointer transition-all h-full text-center group ${
+                        profileType === "enem" ? "border-accent bg-white shadow-xl ring-8 ring-accent/5" : "border-transparent bg-white/50"
+                      }`}
+                    >
+                      <RadioGroupItem value="enem" id="enem" className="sr-only" />
+                      <div className={`p-6 rounded-2xl mb-4 transition-all shadow-md ${profileType === "enem" ? "bg-accent text-accent-foreground scale-110" : "bg-muted text-primary"}`}>
+                        <GraduationCap className="h-10 w-10" />
+                      </div>
+                      <p className="font-black text-primary italic leading-none text-lg">Aluno ENEM</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-3">Foco Vestibular</p>
+                    </Label>
+                  </div>
                 </RadioGroup>
               </div>
             )}
 
             {step === 3 && (
               <div key="step3" className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                {profileType === "teacher" && (
-                  <div className="space-y-6 animate-in zoom-in-95">
-                    <div className="p-6 bg-accent/5 border-2 border-dashed border-accent/20 rounded-3xl flex items-start gap-4">
-                      <AlertCircle className="h-6 w-6 text-accent shrink-0 mt-1" />
-                      <div>
-                        <p className="font-black text-primary text-xs uppercase tracking-widest">Atenção Mentor</p>
-                        <p className="text-xs font-medium italic text-primary/60 mt-1 leading-relaxed">
-                          Para validar seu acesso como docente, você deve inserir o código fornecido pela coordenação geral.
-                        </p>
-                      </div>
+                {profileType === "etec" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="school" className="font-bold text-primary/60 ml-2">Unidade ETEC</Label>
+                      <Input id="school" placeholder="Ex: ETEC Jorge Street" value={formData.school} onChange={(e) => updateField("school", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="teacher-code" className="font-bold text-accent ml-2 uppercase text-[10px] tracking-widest">Código de Acesso Docente</Label>
-                      <Input 
-                        id="teacher-code" 
-                        placeholder="••••••••••••" 
-                        value={teacherCode} 
-                        onChange={(e) => setTeacherCode(e.target.value)} 
-                        className="h-14 rounded-2xl bg-white border-2 border-accent/20 text-center font-black tracking-[0.5em] text-lg uppercase"
-                      />
+                      <Label htmlFor="course" className="font-bold text-primary/60 ml-2">Curso Atual ou Série</Label>
+                      <Input id="course" placeholder="Ex: Informática ou 3º Ano Médio" value={formData.course} onChange={(e) => updateField("course", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                     </div>
                   </div>
                 )}
 
-                {(profileType === "etec" || profileType === "cpop_santana" || profileType === "cpop_osasco") && (
+                {profileType === "enem" && (
                   <div className="space-y-4">
-                    {profileType === "etec" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="school" className="font-bold text-primary/60 ml-2">Unidade ETEC</Label>
-                        <Input id="school" placeholder="Ex: ETEC Jorge Street" value={formData.school} onChange={(e) => updateField("school", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
-                      </div>
-                    )}
                     <div className="space-y-2">
-                      <Label htmlFor="course" className="font-bold text-primary/60 ml-2">Curso Atual ou Série</Label>
-                      <Input id="course" placeholder="Ex: Informática ou 3º Ano Médio" value={formData.course} onChange={(e) => updateField("course", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                      <Label htmlFor="university" className="font-bold text-primary/60 ml-2">Instituição Alvo</Label>
+                      <Input id="university" placeholder="Ex: USP, FATEC, UNESP" value={formData.university} onChange={(e) => updateField("university", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="major" className="font-bold text-primary/60 ml-2">Carreira Desejada</Label>
+                      <Input id="major" placeholder="Ex: Medicina, Engenharia..." value={formData.major} onChange={(e) => updateField("major", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                     </div>
                   </div>
                 )}
@@ -335,7 +312,7 @@ export default function RegisterPage() {
             ) : (
               <Button onClick={handleFinish} disabled={loading} className="bg-accent text-accent-foreground px-12 h-14 font-black rounded-2xl shadow-xl shadow-accent/20 group transition-all text-lg">
                 {loading ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <UserPlus className="mr-2 h-6 w-6" /> }
-                Finalizar Cadastro
+                Finalizar Matrícula
               </Button>
             )}
           </CardFooter>
