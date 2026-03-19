@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -38,7 +39,7 @@ import {
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
-import { formatDistanceToNow, subDays, subMonths, subYears } from "date-fns";
+import { formatDistanceToNow, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 
@@ -72,7 +73,6 @@ export default function CoordinatorDashboard() {
 
   const TEACHER_CODE = "COMPROMISSO2024";
 
-  // Guard de Papel: Apenas administradores entram aqui
   useEffect(() => {
     if (!isUserLoading && userRole !== 'admin') {
       router.replace(userRole === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home");
@@ -101,7 +101,7 @@ export default function CoordinatorDashboard() {
     const health = await checkHealth();
     
     try {
-      // 1. Buscar Perfis
+      // 1. BUSCA DE PERFIS (ESTATÍSTICAS GERAIS)
       const { data: allProfiles, error: pErr } = await supabase
         .from('profiles')
         .select('id, profile_type, name, last_access, is_financial_aid_eligible');
@@ -111,91 +111,71 @@ export default function CoordinatorDashboard() {
       let eligibleCount = 0;
       let inactiveStudents = 0;
 
-      if (!pErr && allProfiles) {
-        const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
-        const sevenDaysAgo = subDays(new Date(), 7);
-        
-        const classified = allProfiles.map(p => {
-          const type = (p.profile_type || '').toLowerCase().trim();
-          const isStaff = !studentKeywords.some(key => type.includes(key)) && type !== '';
-          
-          if (!isStaff) {
-            if (p.last_access && new Date(p.last_access) < sevenDaysAgo) {
-              inactiveStudents++;
-            }
-          }
-          
-          return { ...p, isStaff };
-        });
+      const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
+      const sevenDaysAgo = subDays(new Date(), 7);
 
-        studentCount = classified.filter(p => !p.isStaff).length;
-        teacherCount = classified.filter(p => p.isStaff).length;
-        eligibleCount = classified.filter(p => p.is_financial_aid_eligible === true).length;
+      if (!pErr && allProfiles) {
+        allProfiles.forEach(p => {
+          const type = (p.profile_type || '').toLowerCase();
+          const isStudent = studentKeywords.some(key => type.includes(key)) || type === '';
+          
+          if (isStudent) {
+            studentCount++;
+            if (p.is_financial_aid_eligible) eligibleCount++;
+            if (!p.last_access || new Date(p.last_access) < sevenDaysAgo) inactiveStudents++;
+          } else {
+            teacherCount++;
+          }
+        });
       }
 
-      // 2. Buscar Documentação
+      // 2. BUSCA DE DOCUMENTAÇÃO (CHECKLISTS)
       const { data: checklists } = await supabase.from('student_checklists').select('user_id');
       const studentsWithDocs = new Set(checklists?.map(c => c.user_id) || []);
-      const documentationRisk = studentCount - studentsWithDocs.size;
+      const documentationRisk = Math.max(0, studentCount - studentsWithDocs.size);
 
-      // 3. Buscar Progresso
-      const { data: progressData } = await supabase.from('user_progress').select('user_id, percentage, last_accessed');
+      // 3. BUSCA DE PROGRESSO
+      const { data: progressData } = await supabase.from('user_progress').select('user_id, percentage');
       const stuckStudents = progressData?.filter(p => p.percentage < 20 && p.percentage > 0).length || 0;
 
-      // 4. Montar Alertas de Risco
+      // 4. MONTAR ALERTAS DE RISCO REAIS
       const alerts: RiskAlert[] = [];
       
       if (health.db === 'offline' || health.ai === 'offline') {
         alerts.push({
-          id: 'system',
-          type: 'system',
-          label: 'Sinal Instável',
-          count: 1,
+          id: 'system', type: 'system', label: 'Sinal Instável', count: 1,
           description: 'Falha detectada nos serviços de infraestrutura.',
-          icon: ZapOff,
-          color: 'text-red-400'
+          icon: ZapOff, color: 'text-red-400'
         });
       }
 
       if (inactiveStudents > 0) {
         alerts.push({
-          id: 'inactivity',
-          type: 'inactivity',
-          label: 'Inatividade Crítica',
-          count: inactiveStudents,
+          id: 'inactivity', type: 'inactivity', label: 'Inatividade Crítica', count: inactiveStudents,
           description: 'Alunos sem acesso há mais de 7 dias.',
-          icon: UserX,
-          color: 'text-orange-400'
+          icon: UserX, color: 'text-orange-400'
         });
       }
 
       if (documentationRisk > 0) {
         alerts.push({
-          id: 'docs',
-          type: 'documentation',
-          label: 'Vácuo Documental',
-          count: documentationRisk,
+          id: 'docs', type: 'documentation', label: 'Vácuo Documental', count: documentationRisk,
           description: 'Estudantes sem nenhum item no checklist.',
-          icon: FileWarning,
-          color: 'text-amber-400'
+          icon: FileWarning, color: 'text-amber-400'
         });
       }
 
       if (stuckStudents > 0) {
         alerts.push({
-          id: 'progress',
-          type: 'progress',
-          label: 'Engajamento Baixo',
-          count: stuckStudents,
+          id: 'progress', type: 'progress', label: 'Engajamento Baixo', count: stuckStudents,
           description: 'Alunos estagnados no início das trilhas.',
-          icon: Activity,
-          color: 'text-blue-400'
+          icon: Activity, color: 'text-blue-400'
         });
       }
 
       setRiskAlerts(alerts);
 
-      // Logs e Stats
+      // LOGS E STATS FINAIS
       const { data: logData } = await supabase
         .from('activity_logs')
         .select('*')
@@ -263,7 +243,7 @@ export default function CoordinatorDashboard() {
         </div>
       </div>
 
-      {/* CARD DE CÓDIGO DOCENTE - EXCLUSIVO ADMIN */}
+      {/* CARD DE CÓDIGO DOCENTE */}
       <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-l-[12px] border-accent animate-in zoom-in-95 duration-700">
         <div className="flex items-center gap-6">
           <div className="h-16 w-16 rounded-[2rem] bg-accent/10 flex items-center justify-center text-accent shadow-inner">
@@ -303,14 +283,14 @@ export default function CoordinatorDashboard() {
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
+              <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <Users className="h-7 w-7" />
               </div>
               <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px] tracking-widest px-3 py-1">REDE</Badge>
             </div>
             <div className="mt-6">
               <p className="text-4xl font-black text-primary leading-none italic">{stats.totalStudents}</p>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Alunos Ativos</p>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Alunos na Base</p>
             </div>
           </CardContent>
         </Card>
@@ -319,14 +299,14 @@ export default function CoordinatorDashboard() {
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-purple-50 text-purple-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
+              <div className="p-4 rounded-2xl bg-purple-50 text-purple-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <BookOpen className="h-7 w-7" />
               </div>
               <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px] tracking-widest px-3 py-1">EQUIPE</Badge>
             </div>
             <div className="mt-6">
               <p className="text-4xl font-black text-primary leading-none italic">{stats.totalTeachers}</p>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Corpo Docente</p>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Staff / Mentoria</p>
             </div>
           </CardContent>
         </Card>
@@ -335,24 +315,24 @@ export default function CoordinatorDashboard() {
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-green-50 text-green-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
+              <div className="p-4 rounded-2xl bg-green-50 text-green-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <CheckCircle2 className="h-7 w-7" />
               </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-700 border-none font-black text-[8px] tracking-widest px-3 py-1">CONCLUÍDAS</Badge>
+              <Badge variant="secondary" className="bg-green-100 text-green-700 border-none font-black text-[8px] tracking-widest px-3 py-1">SUCESSO</Badge>
             </div>
             <div className="mt-6 space-y-4">
               <div>
                 <p className="text-4xl font-black text-primary leading-none italic">{stats.finishedTrails}</p>
-                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2">Trilhas Terminadas</p>
+                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2">Trilhas Concluídas</p>
               </div>
               <div className="pt-3 border-t border-muted/10 grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-black text-primary italic">{stats.startedTrails}</p>
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase">Iniciadas</p>
+                  <p className="text-[8px] font-bold text-muted-foreground uppercase">Engajados</p>
                 </div>
                 <div>
                   <p className="text-sm font-black text-green-600 italic">{stats.avgFinishedPerStudent}</p>
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase">Média / Aluno</p>
+                  <p className="text-[8px] font-bold text-muted-foreground uppercase">Média Geral</p>
                 </div>
               </div>
             </div>
@@ -363,14 +343,14 @@ export default function CoordinatorDashboard() {
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-orange-50 text-orange-600 shadow-sm group-hover:scale-110 transition-transform duration-500">
+              <div className="p-4 rounded-2xl bg-orange-50 text-orange-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <HandHeart className="h-7 w-7" />
               </div>
               <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-none font-black text-[8px] tracking-widest px-3 py-1">SOCIAL</Badge>
             </div>
             <div className="mt-6">
               <p className="text-4xl font-black text-primary leading-none italic">{stats.eligibleStudents}</p>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Isenções Sociais</p>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Elegíveis Isenção</p>
             </div>
           </CardContent>
         </Card>
@@ -379,8 +359,8 @@ export default function CoordinatorDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
           <CardHeader className="p-10 pb-0">
-            <CardTitle className="text-2xl font-black text-primary italic">Auditoria de Atividades</CardTitle>
-            <CardDescription className="font-medium text-lg">Rastro operacional de gestores e mentores.</CardDescription>
+            <CardTitle className="text-2xl font-black text-primary italic">Rastro Operacional</CardTitle>
+            <CardDescription className="font-medium text-lg">Auditoria de atividades em tempo real.</CardDescription>
           </CardHeader>
           <CardContent className="p-10 space-y-4">
             {logs.length === 0 ? (
@@ -410,7 +390,7 @@ export default function CoordinatorDashboard() {
         <div className="space-y-8">
           <Card className="border-none shadow-xl bg-white rounded-[3rem] p-10 overflow-hidden group">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em]">Sinal da Rede</h3>
+              <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em]">Status de Sinal</h3>
               <Activity className={`h-5 w-5 ${networkStatus.db === 'online' ? 'text-green-500 animate-pulse' : 'text-red-500'}`} />
             </div>
             <div className="space-y-6">
@@ -428,12 +408,6 @@ export default function CoordinatorDashboard() {
                   {networkStatus.ai.toUpperCase()}
                 </Badge>
               </div>
-              <div className="pt-4 border-t border-muted/10">
-                <div className="flex items-center justify-between text-[11px] font-bold">
-                  <span className="text-primary/60 uppercase tracking-widest">Sincronização</span>
-                  <span className="text-green-600 font-black italic">ESTÁVEL 100%</span>
-                </div>
-              </div>
             </div>
           </Card>
 
@@ -442,13 +416,13 @@ export default function CoordinatorDashboard() {
             <CardHeader className="pb-2 p-10 relative z-10">
               <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 text-accent">
                 <AlertCircle className="h-5 w-5" />
-                Alertas Críticos
+                Alertas de Risco
               </CardTitle>
             </CardHeader>
             <CardContent className="px-10 pb-10 space-y-5 relative z-10">
               {riskAlerts.length === 0 ? (
                 <div className="py-12 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
-                  <p className="text-[10px] font-bold italic tracking-widest">REDE LIVRE DE RISCOS</p>
+                  <p className="text-[10px] font-bold italic tracking-widest uppercase">Rede em Conformidade Total</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -468,8 +442,8 @@ export default function CoordinatorDashboard() {
                   ))}
                 </div>
               )}
-              <Button asChild className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black text-xs uppercase shadow-xl hover:scale-105 transition-transform mt-4">
-                <Link href="/dashboard/admin/checklists">Intervenção Direta</Link>
+              <Button asChild className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black text-xs uppercase shadow-xl hover:scale-105 transition-transform mt-4 border-none">
+                <Link href="/dashboard/admin/checklists">Aplicar Intervenção</Link>
               </Button>
             </CardContent>
           </Card>
