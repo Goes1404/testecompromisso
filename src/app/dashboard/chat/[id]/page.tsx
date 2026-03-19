@@ -184,7 +184,7 @@ export default function DirectChatPage() {
         }
       } catch (err: any) {
         setMessages(prev => [...prev, {
-          id: `ai-crit-${Date.now()}`,\
+          id: `ai-crit-${Date.now()}`,
           sender_id: "aurora-ai",
           content: `⚠️ [FALHA DE REDE]: ${err.message || "Oscilação detectada no sinal da IA."}`,
           created_at: new Date().toISOString(),
