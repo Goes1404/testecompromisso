@@ -59,8 +59,8 @@ export default function LearningTrailsPage() {
 
     try {
       const [trailsRes, progressRes] = await Promise.all([
-        safeExecute(() => supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false })),
-        safeExecute(() => supabase.from('user_progress').select('*').eq('user_id', user.id))
+        safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false })),
+        safeExecute(async () => await supabase.from('user_progress').select('*').eq('user_id', user.id))
       ]);
 
       if (trailsRes?.data) setDbTrails(trailsRes.data);
@@ -82,8 +82,8 @@ export default function LearningTrailsPage() {
     setPinningId(trailId);
     
     try {
-      const { error } = await safeExecute(() => 
-        supabase.from('user_progress').upsert({
+      const { error } = await safeExecute(async () => 
+        await supabase.from('user_progress').upsert({
           user_id: user.id,
           trail_id: trailId,
           last_accessed: new Date().toISOString()
@@ -97,8 +97,8 @@ export default function LearningTrailsPage() {
         description: "Acesse rapidamente pela Página Inicial."
       });
       
-      const { data: progressRes } = await safeExecute(() => 
-        supabase.from('user_progress').select('*').eq('user_id', user.id)
+      const { data: progressRes } = await safeExecute(async () => 
+        await supabase.from('user_progress').select('*').eq('user_id', user.id)
       );
       if (progressRes) setAllProgress(progressRes);
     } catch (e: any) {

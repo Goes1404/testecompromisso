@@ -48,8 +48,8 @@ export default function LibraryPage() {
     dataFetchedRef.current = true;
 
     try {
-      const { data, error } = await safeExecute(() => 
-        supabase.from('library_resources').select('*').order('created_at', { ascending: false })
+      const { data, error } = await safeExecute(async () => 
+        await supabase.from('library_resources').select('*').order('created_at', { ascending: false })
       );
       
       if (error) throw error;
