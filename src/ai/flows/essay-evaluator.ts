@@ -2,9 +2,10 @@
 
 /**
  * @fileOverview Aurora - Avaliador de Redação Profissional.
+ * Atualizado para AURORA_MODEL (Gemini 2.0 Flash).
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, AURORA_MODEL } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const CorrectionSchema = z.object({
@@ -39,7 +40,7 @@ const EssayEvaluatorOutputSchema = z.object({
 
 const prompt = ai.definePrompt({
   name: 'essayEvaluatorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: AURORA_MODEL,
   input: { schema: EssayEvaluatorInputSchema },
   output: { schema: EssayEvaluatorOutputSchema },
   config: { temperature: 0.3 },
