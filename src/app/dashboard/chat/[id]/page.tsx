@@ -113,9 +113,10 @@ export default function DirectChatPage() {
             (payload.new.sender_id === contactId && payload.new.receiver_id === user.id);
 
           if (isFromCurrentChat) {
-            setMessages(prev => {
+            setMessages((prev: ChatMessage[]) => {
+              if (!payload.new || typeof payload.new.id !== 'string') return prev;
               const exists = prev.some(m => m.id === payload.new.id);
-              return exists ? prev : [...prev, payload.new];
+              return exists ? prev : [...prev, payload.new as ChatMessage];
             });
           }
         })
@@ -183,7 +184,7 @@ export default function DirectChatPage() {
         }
       } catch (err: any) {
         setMessages(prev => [...prev, {
-          id: `ai-crit-${Date.now()}`,
+          id: `ai-crit-${Date.now()}`,\
           sender_id: "aurora-ai",
           content: `⚠️ [FALHA DE REDE]: ${err.message || "Oscilação detectada no sinal da IA."}`,
           created_at: new Date().toISOString(),
@@ -206,7 +207,7 @@ export default function DirectChatPage() {
         
         setMessages(prev => {
           if (prev.some(m => m.id === data.id)) return prev;
-          return [...prev, data];
+          return [...prev, data as ChatMessage];
         });
       } catch (err: any) {
         toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" });
