@@ -4,31 +4,31 @@
     {
       "id": "hero-main",
       "description": "Jornada Literária e Educação em Santana de Parnaíba",
-      "imageUrl": "https://i.postimg.cc/ZRCdsSjy/Whats-App-Image-2026-03-12-at-17-49-18.jpg",
+      "imageUrl": "/images/capa1.jpeg",
       "imageHint": "classroom students"
     },
     {
       "id": "gallery-classroom",
       "description": "Salas Inteligentes - Santana de Parnaíba",
-      "imageUrl": "https://i.postimg.cc/QMnBTzsK/4.jpg",
+      "imageUrl": "/images/carrosel1.jpeg",
       "imageHint": "student classroom"
     },
     {
       "id": "gallery-lab",
       "description": "Ambiente de estudo e tecnologia",
-      "imageUrl": "https://i.postimg.cc/mgvJgL14/Whats-App-Image-2026-03-12-at-17-48-36.jpg",
+      "imageUrl": "/images/carrosel2.jpeg",
       "imageHint": "science lab"
     },
     {
       "id": "gallery-live",
       "description": "Estúdios de Live e Transmissão",
-      "imageUrl": "https://i.postimg.cc/Px4Ry13T/2.jpg",
+      "imageUrl": "/images/carrosel3.jpeg",
       "imageHint": "video studio"
     },
     {
       "id": "gallery-mentorship",
       "description": "Espaços de Mentoria e Foco Acadêmico",
-      "imageUrl": "https://i.postimg.cc/J0YdVMCd/Whats-App-Image-2026-03-12-at-2.jpg",
+      "imageUrl": "/images/carrosel4.jpeg",
       "imageHint": "study space"
     },
     {
@@ -40,7 +40,7 @@
     {
       "id": "login-bg",
       "description": "Centro Histórico de Santana de Parnaíba",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg",
+      "imageUrl": "/images/carrosel5.jpeg",
       "imageHint": "historic city"
     }
   ]
