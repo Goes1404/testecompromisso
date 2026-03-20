@@ -32,7 +32,7 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col bg-white">
       {/* HEADER */}
       <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-muted/20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative h-14 w-14 rounded-2xl bg-white shadow-xl flex items-center justify-center p-1 shrink-0 overflow-hidden">
               <Image 
@@ -55,13 +55,10 @@ export default function LandingPage() {
               rel="noopener noreferrer" 
               className="text-sm font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors"
             >
-              Pólo SP
+              Nosso Pólo
             </a>
             <Button asChild className="bg-primary text-white font-black px-10 h-14 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none text-sm uppercase tracking-wider">
               <Link href="/login">Entrar no Portal</Link>
-            </Button>
-            <Button asChild variant="ghost" className="text-sm font-black uppercase tracking-widest text-primary">
-              <Link href="/register">Nova Matrícula</Link>
             </Button>
           </nav>
         </div>
@@ -69,7 +66,7 @@ export default function LandingPage() {
 
       <main className="flex-1 pt-24">
         {/* HERO SECTION */}
-        <section className="relative py-24 md:py-40 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white">
+        <section className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white">
           <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
           
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
@@ -78,17 +75,17 @@ export default function LandingPage() {
                 <Sparkles className="h-4 w-4" />
                 Educação de Excelência em Santana de Parnaíba
               </div>
-              <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-primary leading-[0.85]">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black italic tracking-tighter text-primary leading-[0.85]">
                 Sua Aprovação <br />
                 <span className="text-accent drop-shadow-sm">é o nosso Compromisso.</span>
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground font-medium italic leading-relaxed max-w-xl border-l-4 border-accent/30 pl-6">
-                O curso preparatório oficial que une tradição pedagógica, mentoria especializada e trilhas de alta performance para o seu sucesso acadêmico.
+              <p className="text-lg md:text-xl text-muted-foreground font-medium italic leading-relaxed max-w-xl border-l-4 border-accent/30 pl-6">
+                O preparatório oficial que une tradição pedagógica, mentoria conectada e inteligência artificial para maximizar sua performance no ENEM e ETEC.
               </p>
-              <div className="flex flex-col sm:flex-row gap-6 pt-4">
-                <Button asChild size="lg" className="h-20 px-12 bg-primary text-white font-black text-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group border-none">
-                  <Link href="/login" className="flex items-center gap-4">
-                    Acessar Meu Portal <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
+              <div className="flex flex-col md:flex-row gap-4 pt-4">
+                <Button asChild size="lg" className="h-14 md:h-16 px-8 md:px-10 bg-primary text-white font-black text-base md:text-lg rounded-2xl md:rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all group border-none">
+                  <Link href="/login" className="flex items-center justify-center gap-3">
+                    Acessar Meu Portal <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform" />
                   </Link>
                 </Button>
               </div>
@@ -107,9 +104,9 @@ export default function LandingPage() {
                 <div className="absolute bottom-10 left-10 right-10 p-8 bg-primary/80 backdrop-blur-xl rounded-[2.5rem] text-white border border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status: Matrículas Abertas</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Plataforma Ativa</span>
                   </div>
-                  <p className="text-lg font-black italic">"O Curso Compromisso acelera a curva de aprendizado e garante foco total nos seus objetivos."</p>
+                  <p className="text-lg font-black italic">"Preparatório intensivo e tecnológico para garantir sua aprovação na ETEC e no Ensino Superior."</p>
                 </div>
               </div>
             </div>
@@ -117,65 +114,65 @@ export default function LandingPage() {
         </section>
 
         {/* PILARES SECTION */}
-        <section id="features" className="py-32 bg-slate-900 text-white relative overflow-hidden">
+        <section id="features" className="py-20 md:py-28 bg-slate-900 text-white relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-24 space-y-6">
+            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 md:space-y-6">
               <div className="h-1 w-20 bg-accent mx-auto rounded-full" />
-              <h2 className="text-5xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">Diferenciais do <span className="text-accent">Nosso Ensino</span></h2>
-              <p className="text-slate-400 font-medium text-lg italic">Metodologia industrial aplicada à educação para alunos, mentores e gestores de Santana de Parnaíba.</p>
+              <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-none">Diferenciais do <span className="text-accent">Nosso Ensino</span></h2>
+              <p className="text-slate-400 font-medium text-base md:text-lg italic">Metodologia industrial aplicada à educação para alunos, mentores e gestores de Santana de Parnaíba.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {/* JORNADA DO ALUNO */}
-              <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
-                <div className="h-20 w-20 rounded-3xl bg-blue-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(37,99,235,0.5)] group-hover:rotate-6 transition-all duration-500">
-                  <GraduationCap className="h-10 w-10" />
+              <Card className="border-none shadow-xl rounded-[2rem] md:rounded-[2.5rem] bg-slate-800/50 backdrop-blur-xl p-8 md:p-10 space-y-6 md:space-y-8 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-2 group ring-1 ring-white/5">
+                <div className="h-16 w-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(37,99,235,0.5)] group-hover:rotate-6 transition-all duration-500">
+                  <GraduationCap className="h-8 w-8" />
                 </div>
-                <div className="space-y-4">
-                  <h3 className="text-3xl font-black italic text-white leading-none">Jornada de Estudo</h3>
-                  <p className="text-slate-400 font-medium leading-relaxed italic">Aulas dinâmicas, material didático atualizado e suporte pedagógico integral para ENEM e ETEC.</p>
+                <div className="space-y-3 md:space-y-4">
+                  <h3 className="text-2xl font-black italic text-white leading-none">Jornada de Estudo</h3>
+                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed italic">Aulas dinâmicas, material didático atualizado e suporte pedagógico integral para ENEM e ETEC.</p>
                 </div>
-                <ul className="space-y-4 pt-6 border-t border-white/5">
-                  {["Apoio Pedagógico 24/7", "Central de Redação", "Checklist SiSU/ProUni"].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-xs font-black uppercase text-slate-300 tracking-widest">
-                      <CheckCircle2 className="h-4 w-4 text-accent" /> {item}
+                <ul className="space-y-3 pt-4 border-t border-white/5">
+                  {["Apoio 24/7 com Aurora IA", "Correção de Redação via IA", "Checklist SiSU/ProUni"].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs font-black uppercase text-slate-300 tracking-widest">
+                      <CheckCircle2 className="h-4 w-4 text-accent shrink-0" /> {item}
                     </li>
                   ))}
                 </ul>
               </Card>
 
               {/* STUDIO MASTER */}
-              <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
-                <div className="h-20 w-20 rounded-3xl bg-orange-600 text-white flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(234,88,12,0.5)] group-hover:rotate-6 transition-all duration-500">
-                  <School className="h-10 w-10" />
+              <Card className="border-none shadow-xl rounded-[2rem] md:rounded-[2.5rem] bg-slate-800/50 backdrop-blur-xl p-8 md:p-10 space-y-6 md:space-y-8 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-2 group ring-1 ring-white/5">
+                <div className="h-16 w-16 rounded-2xl bg-orange-600 text-white flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(234,88,12,0.5)] group-hover:rotate-6 transition-all duration-500">
+                  <School className="h-8 w-8" />
                 </div>
-                <div className="space-y-4">
-                  <h3 className="text-3xl font-black italic text-white leading-none">Corpo Docente</h3>
-                  <p className="text-slate-400 font-medium leading-relaxed italic">Professores e mentores dedicados, focados no acompanhamento individual e na evolução constante de cada aluno.</p>
+                <div className="space-y-3 md:space-y-4">
+                  <h3 className="text-2xl font-black italic text-white leading-none">Corpo Docente</h3>
+                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed italic">Professores e mentores dedicados, focados no acompanhamento individual e na evolução constante de cada aluno.</p>
                 </div>
-                <ul className="space-y-4 pt-6 border-t border-white/5">
-                  {["Mentoria Especializada", "Banco de Questões", "Aulas de Revisão"].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-xs font-black uppercase text-slate-300 tracking-widest">
-                      <CheckCircle2 className="h-4 w-4 text-accent" /> {item}
+                <ul className="space-y-3 pt-4 border-t border-white/5">
+                  {["Mentoria Personalizada", "Milhares de Questões", "Trilhas Direcionadas"].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs font-black uppercase text-slate-300 tracking-widest">
+                      <CheckCircle2 className="h-4 w-4 text-accent shrink-0" /> {item}
                     </li>
                   ))}
                 </ul>
               </Card>
 
               {/* MONITORAMENTO */}
-              <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-800/50 backdrop-blur-xl p-12 space-y-10 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-4 group ring-1 ring-white/5">
-                <div className="h-20 w-20 rounded-3xl bg-white text-primary flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)] group-hover:rotate-6 transition-all duration-500">
-                  <BarChart3 className="h-10 w-10" />
+              <Card className="border-none shadow-xl rounded-[2rem] md:rounded-[2.5rem] bg-slate-800/50 backdrop-blur-xl p-8 md:p-10 space-y-6 md:space-y-8 hover:bg-slate-800 transition-all duration-500 hover:-translate-y-2 group ring-1 ring-white/5">
+                <div className="h-16 w-16 rounded-2xl bg-white text-primary flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(255,255,255,0.2)] group-hover:rotate-6 transition-all duration-500">
+                  <BarChart3 className="h-8 w-8" />
                 </div>
-                <div className="space-y-4">
-                  <h3 className="text-3xl font-black italic text-white leading-none">Monitoramento</h3>
-                  <p className="text-slate-400 font-medium leading-relaxed italic">Acompanhamento de performance baseado em simulados reais e diagnóstico contínuo de aprendizagem.</p>
+                <div className="space-y-3 md:space-y-4">
+                  <h3 className="text-2xl font-black italic text-white leading-none">Monitoramento</h3>
+                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed italic">Acompanhamento de performance baseado em simulados reais e diagnóstico contínuo de aprendizagem.</p>
                 </div>
-                <ul className="space-y-4 pt-6 border-t border-white/5">
+                <ul className="space-y-3 pt-4 border-t border-white/5">
                   {["Simulados Regulares", "Auditoria de Evolução", "Gestão de Matrículas"].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-xs font-black uppercase text-slate-300 tracking-widest">
-                      <CheckCircle2 className="h-4 w-4 text-accent" /> {item}
+                    <li key={i} className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs font-black uppercase text-slate-300 tracking-widest">
+                      <CheckCircle2 className="h-4 w-4 text-accent shrink-0" /> {item}
                     </li>
                   ))}
                 </ul>
@@ -185,14 +182,14 @@ export default function LandingPage() {
         </section>
 
         {/* EXEMPLOS ESCOLARES SECTION */}
-        <section className="py-32 bg-white">
+        <section className="py-20 md:py-28 bg-white">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
-              <div className="space-y-4 max-w-2xl">
-                <h2 className="text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">Ambiente de <span className="text-accent">Foco Total</span></h2>
-                <p className="text-slate-500 font-medium italic text-lg">Veja como nossa infraestrutura transforma o cotidiano dos nossos alunos em Santana de Parnaíba.</p>
+            <div className="flex flex-col md:flex-row items-end justify-between mb-12 md:mb-16 gap-6 md:gap-8">
+              <div className="space-y-3 md:space-y-4 max-w-2xl">
+                <h2 className="text-4xl md:text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">Ambiente de <span className="text-accent">Foco Total</span></h2>
+                <p className="text-slate-500 font-medium italic text-base md:text-lg">Veja como nossa infraestrutura transforma o cotidiano dos nossos alunos em Santana de Parnaíba.</p>
               </div>
-              <Button asChild variant="outline" className="h-14 px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
+              <Button asChild variant="outline" className="h-12 md:h-14 px-6 md:px-8 rounded-2xl border-2 border-primary/10 text-primary font-black uppercase text-xs tracking-widest hover:bg-slate-50">
                 <Link href="/login">Acessar Meu Portal</Link>
               </Button>
             </div>
@@ -222,7 +219,7 @@ export default function LandingPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-gradient-to-br from-primary via-primary to-slate-950 py-24 text-white relative overflow-hidden">
+      <footer className="bg-gradient-to-br from-primary via-primary to-slate-950 py-16 md:py-20 text-white relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] -z-0 translate-x-1/2 translate-y-1/2" />
         <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[100px] -z-0 -translate-x-1/2 -translate-y-1/2" />
@@ -249,7 +246,6 @@ export default function LandingPage() {
             <h5 className="font-black uppercase text-[11px] tracking-[0.5em] text-accent/80 border-l-4 border-accent pl-4">Acesso Rápido</h5>
             <ul className="space-y-5 text-white/60 font-bold text-sm">
               <li><Link href="/login" className="hover:text-white transition-all hover:translate-x-2 inline-block font-black uppercase text-[11px] tracking-widest">Portal do Aluno</Link></li>
-              <li><Link href="/register" className="hover:text-white transition-all hover:translate-x-2 inline-block">Nova Matrícula</Link></li>
               <li><Link href="#features" className="hover:text-white transition-all hover:translate-x-2 inline-block">Nossa Metodologia</Link></li>
             </ul>
           </div>
