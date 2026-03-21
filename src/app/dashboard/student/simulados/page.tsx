@@ -199,13 +199,13 @@ export default function SimuladoPage() {
                 <Progress value={progress} className="h-1.5 bg-muted rounded-full" />
             </div>
 
-            <Card className="border-none shadow-xl rounded-[2.5rem] md:rounded-[2.5rem] bg-white overflow-hidden">
-            <CardHeader className='p-6 md:p-12 bg-muted/5'>
-                <CardDescription className="text-sm md:text-xl font-medium text-slate-800 leading-relaxed italic">
-                "{currentQuestion.question_text}"
+            <Card className="border-none shadow-xl rounded-3xl bg-white overflow-hidden">
+            <CardHeader className='p-6 md:p-8 bg-muted/5'>
+                <CardDescription className="text-sm md:text-lg font-medium text-slate-800 leading-[1.8] italic whitespace-pre-wrap break-words">
+                {currentQuestion.question_text}
                 </CardDescription>
             </CardHeader>
-            <CardContent className='p-6 md:p-12 pt-2'>
+            <CardContent className='p-6 md:p-8 pt-4'>
                 <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer} className="space-y-3">
                 {(currentQuestion.options || []).map((opt: any) => (
                     <Label 
@@ -216,10 +216,10 @@ export default function SimuladoPage() {
                     >
                     <RadioGroupItem value={opt.letter || opt.key} id={opt.letter || opt.key} className="mt-1" />
                     <div className="flex gap-2 md:gap-4">
-                        <span className={`font-black italic ${selectedAnswer === (opt.letter || opt.key) ? 'text-accent' : 'text-primary/30'}`}>
+                        <span className={`font-black italic shrink-0 ${selectedAnswer === (opt.letter || opt.key) ? 'text-accent' : 'text-primary/30'}`}>
                         {(opt.letter || opt.key).toUpperCase()}.
                         </span>
-                        <span className="font-medium text-slate-700">{opt.text}</span>
+                        <span className="font-medium text-slate-700 whitespace-pre-wrap break-words">{opt.text}</span>
                     </div>
                     </Label>
                 ))}

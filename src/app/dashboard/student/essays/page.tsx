@@ -166,11 +166,11 @@ export default function StudentEssayPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700 pb-24 px-4 md:px-6">
+    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-700 pb-12 px-4 md:px-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl md:text-5xl font-black text-primary italic tracking-tighter uppercase leading-none">
+            <h1 className="text-2xl md:text-4xl font-extrabold text-primary italic tracking-tighter uppercase leading-none">
               Redação <span className="text-accent">Master</span>
             </h1>
             <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest h-6">SINAL ATIVO</Badge>
@@ -198,10 +198,10 @@ export default function StudentEssayPage() {
         </div>
       </div>
 
-      <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden ring-1 ring-black/5">
-        <CardHeader className="bg-primary/5 p-8 md:p-12 border-b border-dashed border-primary/10">
+      <Card className="border-none shadow-xl rounded-3xl bg-white overflow-hidden ring-1 ring-black/5">
+        <CardHeader className="bg-primary/5 p-6 md:p-8 border-b border-dashed border-primary/10">
           {customTheme ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase text-primary/40 ml-2 tracking-widest flex items-center gap-2">
                 <PenTool className="h-3 w-3" /> Sua Proposta de Tema
               </Label>
@@ -209,7 +209,7 @@ export default function StudentEssayPage() {
                 value={theme} 
                 onChange={(e) => setTheme(e.target.value)} 
                 placeholder="Ex: A inteligência artificial na educação brasileira..."
-                className="h-16 rounded-2xl bg-white border-none shadow-inner font-black italic text-xl md:text-2xl text-primary placeholder:opacity-30"
+                className="h-12 rounded-xl bg-white border-none shadow-inner font-bold italic text-lg md:text-xl text-primary placeholder:opacity-30"
               />
             </div>
           ) : (
@@ -219,13 +219,13 @@ export default function StudentEssayPage() {
                   <Sparkles className="h-4 w-4" />
                   <p className="text-[10px] font-black uppercase tracking-[0.3em]">IA Sintonizada</p>
                 </div>
-                <CardTitle className="text-2xl md:text-4xl font-black text-primary italic leading-[1.1] uppercase tracking-tighter">
+                <CardTitle className="text-xl md:text-3xl font-extrabold text-primary italic leading-[1.1] uppercase tracking-tighter">
                   {theme || "Aguardando geração de tema..."}
                 </CardTitle>
               </div>
               <div className="bg-white p-6 rounded-3xl border border-muted/10 shadow-sm shrink-0 flex flex-col items-center min-w-[120px]">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Contagem</p>
-                <p className="text-3xl font-black text-primary italic leading-none mt-1">{charCount}</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contagem</p>
+                <p className="text-2xl font-black text-primary italic leading-none mt-1">{charCount}</p>
                 <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Sinais</p>
               </div>
             </div>
@@ -238,10 +238,10 @@ export default function StudentEssayPage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={loadingGrading}
-            className="min-h-[500px] md:min-h-[650px] border-none p-10 md:p-20 font-medium text-lg md:text-2xl leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary/90 scrollbar-hide"
+            className="min-h-[300px] md:min-h-[450px] border-none p-6 md:p-10 font-medium text-base md:text-lg leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary/90 scrollbar-hide"
           />
           
-          <div className="p-8 md:p-12 bg-slate-50/80 backdrop-blur-sm border-t border-muted/10 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="p-6 md:p-8 bg-slate-50/80 backdrop-blur-sm border-t border-muted/10 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-white shadow-xl flex items-center justify-center">
                 <ShieldCheck className="h-6 w-6 text-accent" />
@@ -254,7 +254,7 @@ export default function StudentEssayPage() {
             <Button 
               onClick={handleSubmitEssay} 
               disabled={loadingGrading || !text || !theme}
-              className="bg-primary text-white font-black h-20 px-16 rounded-[2rem] shadow-[0_25px_50px_-12px_rgba(26,44,75,0.4)] hover:scale-105 active:scale-95 transition-all text-lg md:text-xl uppercase border-none group w-full md:w-auto"
+              className="bg-primary text-white font-extrabold h-14 px-8 rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all text-sm md:text-base uppercase border-none group w-full md:w-auto"
             >
               {loadingGrading ? (
                 <div className="flex items-center gap-4">
@@ -280,19 +280,19 @@ export default function StudentEssayPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <Card className="lg:col-span-4 border-none shadow-2xl bg-primary text-white rounded-[3rem] overflow-hidden relative group">
-              <div className="absolute top-[-10%] right-[-10%] w-48 h-48 bg-accent/20 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000" />
-              <div className="p-12 relative z-10 space-y-8">
+            <Card className="lg:col-span-4 border-none shadow-2xl bg-primary text-white rounded-[2rem] overflow-hidden relative group">
+              <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-[60px] group-hover:scale-150 transition-transform duration-1000" />
+              <div className="p-8 relative z-10 space-y-6">
                 <div className="flex justify-between items-center">
-                  <Badge className="bg-accent text-accent-foreground font-black text-[10px] px-4 py-1.5 uppercase rounded-xl shadow-lg">SINAL FINAL</Badge>
-                  <Star className="h-8 w-8 text-accent fill-accent animate-pulse" />
+                  <Badge className="bg-accent text-accent-foreground font-bold text-[10px] px-3 py-1 uppercase rounded-lg shadow-md">SINAL FINAL</Badge>
+                  <Star className="h-6 w-6 text-accent fill-accent animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">Pontuação Maestro</p>
-                  <h2 className="text-9xl font-black italic tracking-tighter leading-none mt-2 drop-shadow-2xl">{result.total_score}</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Pontuação Maestro</p>
+                  <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none mt-2 drop-shadow-xl">{result.total_score}</h2>
                 </div>
-                <div className="pt-8 border-t border-white/10">
-                  <p className="text-sm md:text-lg font-medium italic opacity-90 leading-relaxed text-white/80">
+                <div className="pt-6 border-t border-white/10">
+                  <p className="text-sm font-medium italic opacity-90 leading-relaxed text-white/80">
                     <MessageSquareQuote className="h-6 w-6 text-accent mb-3" />
                     "{result.general_feedback}"
                   </p>

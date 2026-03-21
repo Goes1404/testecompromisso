@@ -159,16 +159,16 @@ export default function DashboardHome() {
   ];
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-500 px-1 relative">
-      <section className="bg-primary p-8 md:p-12 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl">
-         <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
+    <div className="space-y-6 pb-8 animate-in fade-in duration-500 px-1 relative">
+      <section className="bg-primary p-6 md:p-8 rounded-3xl text-white relative overflow-hidden shadow-2xl">
+         <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-accent/20 rounded-full blur-3xl" />
          <div className="relative z-10 space-y-6">
            <div className="flex items-center gap-4">
-             <div className="relative h-14 w-14 rounded-2xl bg-white shadow-xl flex items-center justify-center p-1 shrink-0">
+             <div className="relative h-12 w-12 rounded-xl bg-white shadow-xl flex items-center justify-center p-1 shrink-0">
                <Image src={logoUrl} alt="Logo Santana de Parnaíba" fill className="object-contain p-1" unoptimized />
              </div>
              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-               <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-tight">Olá, {userName}! 👋</h1>
+               <h1 className="text-2xl md:text-3xl font-extrabold italic tracking-tighter leading-tight">Olá, {userName}! 👋</h1>
                <Badge className="bg-accent text-accent-foreground border-none font-black px-3 py-1 shadow-lg w-fit">
                  <Bot className="h-3 w-3 mr-1.5" /> IA ATIVA
                </Badge>

@@ -193,10 +193,10 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         else if (vidUrl.includes('/embed/')) vidId = vidUrl.split('/embed/')[1].split('?')[0];
         else vidId = vidUrl;
 
-        if (vidId && (window as any).YT) {
+        if (vidId && (window as any).YT && typeof (window as any).YT.Player === 'function') {
           playerRef.current = new (window as any).YT.Player('youtube-player', {
             videoId: vidId,
-            playerVars: { 'autoplay': 0, 'modestbranding': 1, 'rel': 0, 'showinfo': 0 },
+            playerVars: { 'autoplay': 1, 'modestbranding': 1, 'rel': 0, 'showinfo': 0 },
             events: { 'onStateChange': onPlayerStateChange }
           });
         }
@@ -269,13 +269,13 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <div className="flex flex-col bg-slate-50 animate-in fade-in duration-500 min-h-screen overflow-hidden">
+    <div className={`flex flex-col bg-slate-50 animate-in fade-in duration-500 min-h-screen ${showSimultaneousWorkbook ? 'overflow-hidden' : ''}`}>
       <Script 
         src="https://www.youtube.com/iframe_api" 
         strategy="afterInteractive"
         onLoad={() => {
           (window as any).onYouTubeIframeAPIReady = () => setIsApiReady(true);
-          if ((window as any).YT) setIsApiReady(true);
+          if ((window as any).YT && typeof (window as any).YT.Player === 'function') setIsApiReady(true);
         }}
       />
       
@@ -309,8 +309,8 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row items-start relative h-[calc(100vh-64px)] overflow-hidden">
-        <main className="flex-1 flex flex-col bg-white min-w-0 transition-all duration-500 h-full overflow-hidden">
+      <div className={`flex flex-col lg:flex-row items-start relative ${showSimultaneousWorkbook ? 'h-[calc(100vh-64px)] overflow-hidden' : 'min-h-[calc(100vh-64px)]'}`}>
+        <main className={`flex-1 flex flex-col bg-white min-w-0 transition-all duration-500 ${showSimultaneousWorkbook ? 'h-full overflow-hidden' : ''}`}>
           {modules.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-10 gap-6 opacity-40">
               <Layout className="h-20 w-24 text-primary" />
@@ -355,11 +355,11 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
 
                 <div className={`w-full h-full ${showSimultaneousWorkbook ? 'mt-10' : ''}`} style={showSimultaneousWorkbook ? { height: 'calc(100% - 40px)' } : {}}>
                   {activeContent?.type === 'video' ? (
-                    <div id="youtube-player" className="w-full h-full" />
+                    <div key={activeContentId} id="youtube-player" className="w-full h-full bg-slate-950" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center gap-4">
-                      <Layout className="h-10 w-10 text-accent opacity-20" />
-                      <h3 className="text-lg font-black italic uppercase">{activeContent?.title || "Selecione um material ao lado"}</h3>
+                      <Layout className="h-8 w-8 text-accent opacity-20" />
+                      <h3 className="text-base font-bold italic uppercase">{activeContent?.title || "Selecione um material ao lado"}</h3>
                     </div>
                   )}
                 </div>
@@ -370,42 +370,42 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                   <InteractiveWorkbook materialId={activeContent.workbook_id} userName={profile?.name || "Estudante"} userCpf={profile?.id?.substring(0, 8) || "ID"} />
                 </div>
               ) : (
-                <Tabs defaultValue="summary" className="flex flex-col flex-1 overflow-hidden">
-                  <TabsList className="grid w-full grid-cols-3 h-14 bg-slate-900 p-0 gap-0 shadow-2xl border-b border-white/5 shrink-0">
+                <Tabs defaultValue="summary" className={`flex flex-col flex-1 ${showSimultaneousWorkbook ? 'overflow-hidden' : ''}`}>
+                  <TabsList className="grid w-full grid-cols-3 h-12 bg-white p-0 gap-0 shadow-sm border-b border-muted/20 shrink-0">
                     {[
                       { id: "summary", label: "Roteiro", icon: BookOpen },
                       { id: "quiz", label: "Apoio", icon: BrainCircuit },
                       { id: "attachments", label: "Anexos", icon: Paperclip }
                     ].map((tab) => (
-                      <TabsTrigger key={tab.id} value={tab.id} className="data-[state=active]:bg-white data-[state=active]:text-primary h-full rounded-none font-black text-[10px] uppercase tracking-[0.2em] gap-2 text-white/30 border-none transition-all">
+                      <TabsTrigger key={tab.id} value={tab.id} className="data-[state=active]:bg-slate-50/80 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary h-full rounded-none font-bold text-[10px] uppercase tracking-widest gap-2 text-muted-foreground border-none transition-all">
                         <tab.icon className="h-4 w-4" />
                         <span className="hidden md:inline">{tab.label}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
                   
-                  <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-10">
+                  <div className={`flex-1 bg-slate-50 p-6 md:p-10 ${showSimultaneousWorkbook ? 'overflow-y-auto' : ''}`}>
                     <TabsContent value="summary" className="mt-0 outline-none animate-in fade-in">
-                        <div className="max-w-5xl mx-auto space-y-8">
+                        <div className="max-w-4xl mx-auto space-y-8">
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div className="lg:col-span-2 space-y-6">
-                              <div className="space-y-3">
-                                <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 flex items-center gap-2"><Target className="h-4 w-4" /> Unidade Atual</h2>
-                                <h3 className="text-2xl md:text-4xl font-black text-primary italic leading-tight">{activeContent?.title}</h3>
-                                <p className="text-sm md:text-lg font-medium text-primary/70 leading-relaxed italic border-l-4 border-accent pl-6 bg-white py-4 rounded-r-2xl shadow-sm">
+                            <div className="lg:col-span-2 space-y-4">
+                              <div className="space-y-2">
+                                <h2 className="text-[10px] font-black uppercase tracking-widest text-primary/40 flex items-center gap-2"><Target className="h-3 w-3" /> Unidade Atual</h2>
+                                <h3 className="text-xl md:text-3xl font-black text-primary italic leading-tight">{activeContent?.title}</h3>
+                                <p className="text-sm md:text-base font-medium text-primary/70 leading-relaxed italic border-l-[3px] border-accent pl-5 bg-white py-3 pr-4 rounded-r-xl shadow-sm">
                                   {activeContent?.description || "Acompanhe este material técnico focado na sua aprovação."}
                                 </p>
                               </div>
                             </div>
                             <div className="space-y-6">
-                              <Card className="p-8 border-none shadow-2xl bg-primary text-white rounded-[2.5rem] relative overflow-hidden">
-                                <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
-                                <div className="relative z-10 space-y-4">
-                                  <div className="flex items-center gap-3">
-                                    <Lightbulb className="h-5 w-5 text-accent animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em]">IA Insight</span>
+                              <Card className="p-6 border-none shadow-xl bg-primary text-white rounded-3xl relative overflow-hidden">
+                                <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-accent/20 rounded-full blur-xl" />
+                                <div className="relative z-10 space-y-3">
+                                  <div className="flex items-center gap-2">
+                                    <Lightbulb className="h-4 w-4 text-accent animate-pulse" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">IA Insight</span>
                                   </div>
-                                  <p className="text-sm font-medium italic opacity-90 leading-relaxed">
+                                  <p className="text-xs font-medium italic opacity-90 leading-relaxed">
                                     "A revisão imediata fixa até 3x mais o conhecimento. Utilize as apostilas vinculadas."
                                   </p>
                                 </div>
@@ -416,38 +416,38 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                     </TabsContent>
 
                     <TabsContent value="quiz" className="mt-0 outline-none">
-                        <div className="max-w-4xl mx-auto space-y-6">
+                        <div className="max-w-3xl mx-auto space-y-6">
                             {activeContent?.workbook_id ? (
-                              <Card className="p-8 md:p-12 border-none shadow-2xl bg-white rounded-[3rem] group hover:shadow-primary/10 transition-all overflow-hidden relative">
-                                <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                                  <div className="h-20 w-20 rounded-[2rem] bg-accent/10 flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform">
-                                    <BookOpen className="h-10 w-10 text-accent" />
+                              <Card className="p-6 md:p-8 border border-muted/20 shadow-lg bg-white rounded-3xl group hover:shadow-primary/5 transition-all overflow-hidden relative">
+                                <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+                                  <div className="h-16 w-16 rounded-2xl bg-accent/10 flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform">
+                                    <BookOpen className="h-8 w-8 text-accent" />
                                   </div>
-                                  <div className="flex-1 text-center md:text-left space-y-2">
-                                    <Badge className="bg-accent text-accent-foreground border-none font-black text-[8px] px-3 h-5 uppercase tracking-widest">Pedagógico</Badge>
-                                    <h3 className="text-2xl font-black text-primary italic leading-none">Apostila Interativa</h3>
-                                    <p className="text-sm font-medium italic text-muted-foreground">Estude simultaneamente com o vídeo usando o modo split-screen.</p>
+                                  <div className="flex-1 text-center md:text-left space-y-1">
+                                    <Badge className="bg-accent/10 text-accent border-none font-bold text-[8px] px-2 h-4 uppercase tracking-widest">Pedagógico</Badge>
+                                    <h3 className="text-xl font-black text-primary italic leading-none">Apostila Interativa</h3>
+                                    <p className="text-xs font-medium italic text-muted-foreground mt-1">Estude simultaneamente com o vídeo usando o modo split-screen.</p>
                                   </div>
                                   <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto">
-                                    <Button onClick={() => setShowSimultaneousWorkbook(true)} className="bg-primary text-white h-14 rounded-2xl font-black text-[10px] uppercase shadow-xl hover:scale-105 transition-all gap-2">
+                                    <Button onClick={() => setShowSimultaneousWorkbook(true)} className="bg-primary text-white h-12 rounded-xl font-bold text-[10px] uppercase shadow-md hover:scale-105 transition-all gap-2 px-6">
                                       <Maximize2 className="h-4 w-4 text-accent" /> ESTUDO SIMULTÂNEO
                                     </Button>
                                   </div>
                                 </div>
                               </Card>
                             ) : (
-                              <div className="text-center py-20 opacity-30 border-4 border-dashed rounded-[3rem] flex flex-col items-center gap-4">
-                                <BrainCircuit className="h-12 w-12" />
-                                <p className="text-[10px] font-black uppercase italic tracking-[0.4em]">Sem atividades vinculadas</p>
+                              <div className="text-center py-16 opacity-30 border-2 border-dashed rounded-3xl flex flex-col items-center gap-3">
+                                <BrainCircuit className="h-8 w-8" />
+                                <p className="text-[10px] font-bold uppercase italic tracking-[0.2em]">Sem atividades vinculadas</p>
                               </div>
                             )}
                         </div>
                     </TabsContent>
 
                     <TabsContent value="attachments" className="mt-0 outline-none">
-                        <div className="max-w-4xl mx-auto py-10 text-center opacity-20">
-                          <Paperclip className="h-12 w-12 mx-auto mb-4" />
-                          <p className="text-[10px] font-black uppercase italic tracking-[0.4em]">Nenhum anexo adicional</p>
+                        <div className="max-w-3xl mx-auto py-10 text-center opacity-20">
+                          <Paperclip className="h-8 w-8 mx-auto mb-3" />
+                          <p className="text-[10px] font-bold uppercase italic tracking-[0.2em]">Nenhum anexo adicional</p>
                         </div>
                     </TabsContent>
                   </div>
@@ -458,40 +458,40 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         </main>
 
         {sidebarOpen && (
-          <aside className="lg:w-[350px] w-full border-l bg-white sticky top-16 self-start h-[calc(100vh-64px)] overflow-y-auto shrink-0 transition-all duration-500 shadow-2xl z-40">
-            <div className="p-6 bg-slate-50 border-b">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 mb-6">Jornada Maestro</h2>
-              <div className="space-y-2">
+          <aside className="lg:w-[350px] w-full border-l border-muted/20 bg-slate-50/50 sticky top-16 self-start h-[calc(100vh-64px)] overflow-y-auto shrink-0 transition-all duration-500 z-40">
+            <div className="p-5 bg-white border-b border-muted/20">
+              <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/40 mb-4">Jornada Maestro</h2>
+              <div className="space-y-1.5">
                 {modules.map((module, idx) => (
                   <button 
                     key={module.id}
                     onClick={() => { setActiveModuleId(module.id); if (contents[module.id]?.length > 0) setActiveContentId(contents[module.id][0].id); setShowSimultaneousWorkbook(false); }}
-                    className={`w-full text-left p-4 rounded-2xl transition-all border-2 flex items-center gap-4 relative overflow-hidden ${
-                      activeModuleId === module.id ? 'bg-primary text-white border-primary shadow-xl translate-x-2' : 'bg-white border-transparent hover:border-accent/30'
+                    className={`w-full text-left p-3 rounded-xl transition-all border flex items-center gap-3 relative overflow-hidden ${
+                      activeModuleId === module.id ? 'bg-white text-primary border-primary/20 shadow-sm translate-x-1' : 'bg-transparent border-transparent hover:bg-white'
                     }`}>
-                    <span className={`text-sm font-black italic ${activeModuleId === module.id ? 'text-accent' : 'text-primary/20'}`}>{(idx + 1).toString().padStart(2, '0')}</span>
-                    <p className="font-black text-[10px] uppercase tracking-wide truncate flex-1">{module.title}</p>
+                    <span className={`text-xs font-black italic ${activeModuleId === module.id ? 'text-accent' : 'text-primary/20'}`}>{(idx + 1).toString().padStart(2, '0')}</span>
+                    <p className="font-bold text-[10px] uppercase tracking-wider truncate flex-1">{module.title}</p>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
-               <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] px-2">Materiais</h3>
-               <div className="space-y-2 pb-10">
+            <div className="p-5 space-y-3">
+               <h3 className="text-[9px] font-bold text-primary/40 uppercase tracking-widest px-2">Materiais</h3>
+               <div className="space-y-1.5 pb-10">
                  {contents[activeModuleId || ""]?.map((content) => (
                     <button 
                       key={content.id}
                       onClick={() => { setActiveContentId(content.id); setShowSimultaneousWorkbook(false); }}
-                      className={`w-full text-left p-4 rounded-[1.5rem] transition-all flex items-center gap-4 border-2 ${
-                        activeContentId === content.id ? 'bg-accent/10 border-accent/40 shadow-xl' : 'bg-slate-50 border-transparent hover:bg-white'
+                      className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center gap-3 border ${
+                        activeContentId === content.id ? 'bg-white border-primary/10 shadow-sm' : 'bg-transparent border-transparent hover:bg-white'
                       }`}>
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${activeContentId === content.id ? 'bg-accent text-white shadow-lg' : 'bg-slate-200 text-primary/30'}`}>
-                           {content.type === 'video' ? <PlayCircle className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${activeContentId === content.id ? 'bg-primary/5 text-primary' : 'bg-slate-200/50 text-primary/30'}`}>
+                           {content.type === 'video' ? <PlayCircle className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={`font-black text-[10px] uppercase tracking-wide truncate ${activeContentId === content.id ? 'text-primary' : 'text-primary/60'}`}>{content.title}</p>
-                          <Badge variant="outline" className="text-[7px] font-black h-4 px-1.5 border-muted/30 uppercase mt-1 opacity-60">{content.type}</Badge>
+                          <p className={`font-bold text-[10px] tracking-wide truncate ${activeContentId === content.id ? 'text-primary' : 'text-primary/60'}`}>{content.title}</p>
+                          <Badge variant="outline" className="text-[7px] font-bold h-4 px-1 border-muted/30 uppercase mt-0.5 opacity-60 bg-white">{content.type}</Badge>
                         </div>
                     </button>
                  ))}

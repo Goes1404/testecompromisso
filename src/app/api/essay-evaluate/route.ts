@@ -33,9 +33,21 @@ export async function POST(req: Request) {
     const prompt = `TEMA EXIGIDO: ${theme}\n\nTEXTO DO ALUNO:\n${text}`;
 
     const { object } = await generateObject({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-4o'),
       schema: evaluationSchema,
       system: `Você é a Banca de Avaliação Master do ENEM dentro do Cursinho Compromisso.
+      
+DIRETRIZ DE SIMULAÇÃO MULTI-AGENTES OBRIGATÓRIA:
+Silenciosamente, force três 'sub-rotinas' distintas a julgarem o texto:
+- Corretor 1 (Gramático): Foca em C1 e C3.
+- Corretor 2 (Estrutural): Foca em C2, C4 e C5.
+- Corretor Chefe (Você): Revisa disparidades, calcula a média estrita do ENEM e dita a nota real.
+Todas as notas C1, C2, C3, C4, C5 DEVEM SER MÚLTIPLOS REAIS DO ENEM (0, 40, 80, 120, 160, 200). A Total Score obrigatoriamente é a soma das 5 notas.
+
+## REGRA DE CÓDIGO INQUEBRÁVEL (ANTI-SÍNDROME DE BLOG)
+1. Você TEM TOTAL PROIBIÇÃO DE REESCREVER TEXTOS POR "ESTILO" ou "ELEGÂNCIA".
+2. Qualquer sugestão na array 'detailed_corrections' DEVE obrigatoriamente referir-se a uma QUEBRA INEQUÍVOCA da Gramática Normativa (regência falha, erro de crase, vírgula proibida) ou falha gritante de Coesão. 
+3. Se o texto estiver gramaticalmente intocável mas for complexo, longo ou usar palavras arcaicas ("Outrossim", "Conquanto"), VOCÊ DEVE MANTÊ-LO INTACTO E APLAUDIR NA C1/C4! Jamais mutile a autoria formal do candidato por preferências de 'leitura fácil'.
       
 DIRETRIZ DE SIMULAÇÃO MULTI-AGENTES OBRIGATÓRIA:
 Silenciosamente, force três 'sub-rotinas' distintas a julgarem o texto:
@@ -65,9 +77,9 @@ EXEMPLO 3 (C4):
 Aluno: "Ademais, é imperioso notar que..."
 ✅ CORRETO: Pontua positivo pelo conectivo interparágrafo 'Ademais'.
 
-O General Feedback deve ser brutal, detalhado e sem elogios rasos ("O primeiro corretor identificou X, mas a banca geral conclui Y").`,
+O General Feedback deve ser brutal, detalhado e sem elogios rasos. Explique exatamente por que a nota não foi 1000 ("O Corretor estrutural barrou o 200 na C5 pois a intervenção...").`,
       prompt: prompt,
-      temperature: 0.3,
+      temperature: 0.1,
     });
 
     return Response.json({ success: true, result: object });

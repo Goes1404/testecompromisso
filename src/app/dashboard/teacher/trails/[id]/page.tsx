@@ -98,6 +98,7 @@ export default function TrailManagementPage() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState<number>(Date.now());
 
   const loadData = useCallback(async () => {
     if (!trailId) return;
@@ -348,6 +349,7 @@ export default function TrailManagementPage() {
       ]);
       setContentForm({ title: '', type: 'video', url: '', description: '', workbook_id: '' });
       setUploading(false);
+      setFileInputKey(Date.now()); // Força a DOM a limpar o input de arquivos
     }
   };
 
@@ -709,22 +711,22 @@ export default function TrailManagementPage() {
 
       {/* DIÁLOGO EDITAR TRILHA */}
       <Dialog open={isEditTrailDialogOpen} onOpenChange={setIsEditTrailDialogOpen}>
-        <DialogContent className='rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-2xl max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='rounded-2xl md:rounded-3xl p-6 md:p-8 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-xl max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
-            <DialogTitle className='text-xl md:text-2xl font-black italic text-primary'>Editar Rótulo da Trilha</DialogTitle>
+            <DialogTitle className='text-lg md:text-xl font-black italic text-primary'>Editar Rótulo da Trilha</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 md:gap-6 py-4 md:py-6">
+          <div className="grid gap-4 md:gap-5 py-2 md:py-4">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Título Principal</Label>
-              <Input placeholder="Ex: Fundamentos de Redação" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={editTrailForm.title} onChange={(e) => setEditTrailForm({ ...editTrailForm, title: e.target.value })} disabled={isSubmitting} />
+              <Input placeholder="Ex: Fundamentos de Redação" className="h-11 rounded-xl bg-muted/30 border-none font-bold" value={editTrailForm.title} onChange={(e) => setEditTrailForm({ ...editTrailForm, title: e.target.value })} disabled={isSubmitting} />
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Matéria Central</Label>
               <Select value={editTrailForm.category} onValueChange={(v) => setEditTrailForm({ ...editTrailForm, category: v })} disabled={isSubmitting}>
-                <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
+                <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-none font-bold">
                   <SelectValue placeholder="Selecione a disciplina" />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl border-none shadow-2xl max-h-60">
+                <SelectContent className="rounded-xl border-none shadow-xl max-h-60">
                     {EDUCATIONAL_CATEGORIES.map(category => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -733,12 +735,12 @@ export default function TrailManagementPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Breve Descrição</Label>
-              <Textarea placeholder="Qual o propósito deste conjunto de módulos?" className="min-h-[100px] md:min-h-[120px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={editTrailForm.description} onChange={(e) => setEditTrailForm({ ...editTrailForm, description: e.target.value })} disabled={isSubmitting} />
+              <Textarea placeholder="Qual o propósito deste conjunto de módulos?" className="min-h-[80px] md:min-h-[100px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={editTrailForm.description} onChange={(e) => setEditTrailForm({ ...editTrailForm, description: e.target.value })} disabled={isSubmitting} />
             </div>
           </div>
           <DialogFooter className="mt-2 md:mt-0">
-            <Button onClick={handleUpdateTrail} disabled={isSubmitting || !editTrailForm.title} className="w-full h-14 md:h-16 bg-primary text-white font-black text-base md:text-lg rounded-2xl shadow-xl">
-              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />}
+            <Button onClick={handleUpdateTrail} disabled={isSubmitting || !editTrailForm.title} className="w-full h-12 md:h-12 bg-primary text-white font-black text-sm md:text-base rounded-xl shadow-lg">
+              {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Salvar Alterações
             </Button>
           </DialogFooter>
@@ -747,13 +749,13 @@ export default function TrailManagementPage() {
 
       {/* DIÁLOGO MÓDULO */}
       <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
-        <DialogContent className='rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white border-none shadow-2xl w-[95vw] sm:w-full max-w-sm mx-auto'>
+        <DialogContent className='rounded-2xl md:rounded-3xl p-6 md:p-8 bg-white border-none shadow-xl w-[95vw] sm:w-full max-w-sm mx-auto'>
           <DialogHeader>
-            <DialogTitle className='text-xl md:text-2xl font-black italic text-primary'>
+            <DialogTitle className='text-lg md:text-xl font-black italic text-primary'>
               Novo Capítulo
             </DialogTitle>
           </DialogHeader>
-          <div className='py-6 md:py-8 space-y-2'>
+          <div className='py-4 space-y-2'>
             <Label className='text-[10px] font-black uppercase tracking-widest opacity-40 ml-2'>
               Título da Unidade Didática
             </Label>
@@ -762,17 +764,17 @@ export default function TrailManagementPage() {
               value={moduleForm.title}
               onChange={(e) => setModuleForm({ title: e.target.value || '' })}
               disabled={isSubmitting}
-              className='h-14 rounded-2xl bg-muted/30 border-none font-bold italic text-lg focus:ring-accent'
+              className='h-11 rounded-xl bg-muted/30 border-none font-bold italic text-base focus:ring-accent'
             />
           </div>
           <DialogFooter>
             <Button
               onClick={handleAddModule}
               disabled={isSubmitting || !moduleForm.title}
-              className='w-full h-14 md:h-16 bg-primary text-white font-black rounded-2xl shadow-xl'
+              className='w-full h-12 bg-primary text-white font-black rounded-xl shadow-lg'
             >
               {isSubmitting ? (
-                <Loader2 className='h-6 w-6 animate-spin mr-2' />
+                <Loader2 className='h-5 w-5 animate-spin mr-2' />
               ) : (
                 'Criar Unidade'
               )}
@@ -783,15 +785,15 @@ export default function TrailManagementPage() {
 
       {/* DIÁLOGO CONTEÚDO (CRIAÇÃO/EDIÇÃO) */}
       <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
-        <DialogContent className='rounded-[2rem] md:rounded-[3rem] p-0 w-[95vw] sm:w-full max-w-4xl bg-white border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden mx-auto'>
-          <div className="flex flex-col max-h-[90vh]">
-            <DialogHeader className="p-6 md:p-12 bg-primary text-white shrink-0">
+        <DialogContent className='rounded-2xl max-h-[95vh] md:rounded-3xl p-0 w-[95vw] sm:w-full max-w-4xl bg-white border-none shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden mx-auto flex flex-col'>
+          <div className="flex flex-col h-full max-h-[90vh]">
+            <DialogHeader className="p-6 md:p-8 bg-primary text-white shrink-0">
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 md:h-12 md:w-12 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shadow-lg shrink-0">
-                  {editingContentId ? <Pencil className="h-5 w-5 md:h-7 md:w-7" /> : <PlusCircle className="h-5 w-5 md:h-7 md:w-7" />}
+                <div className="h-10 w-10 md:h-10 md:w-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center shadow-lg shrink-0">
+                  {editingContentId ? <Pencil className="h-5 w-5 md:h-5 md:w-5" /> : <PlusCircle className="h-5 w-5 md:h-5 md:w-5" />}
                 </div>
                 <div>
-                  <DialogTitle className='text-xl md:text-3xl font-black italic tracking-tighter uppercase leading-none'>
+                  <DialogTitle className='text-lg md:text-2xl font-black italic tracking-tighter uppercase leading-none'>
                     {editingContentId ? 'Ajustar Material' : 'Anexar Materiais'}
                   </DialogTitle>
                   <p className='text-white/60 text-xs md:text-sm font-medium italic mt-1.5'>
@@ -801,12 +803,12 @@ export default function TrailManagementPage() {
               </div>
             </DialogHeader>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 overflow-auto">
               <div className={`grid grid-cols-1 ${editingContentId ? '' : 'lg:grid-cols-2'} gap-0 h-full`}>
                 {/* FORMULÁRIO DE ENTRADA */}
-                <div className={`p-8 md:p-12 space-y-8 ${editingContentId ? '' : 'border-r border-dashed border-muted/20'} bg-slate-50/50`}>
-                  <div className='space-y-6'>
-                    <div className='space-y-2'>
+                <div className={`p-6 md:p-8 space-y-5 ${editingContentId ? '' : 'border-r border-dashed border-muted/20'} bg-slate-50/50`}>
+                  <div className='space-y-4'>
+                    <div className='space-y-1.5'>
                       <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
                         Categoria do Item
                       </Label>
@@ -817,20 +819,20 @@ export default function TrailManagementPage() {
                         }
                         disabled={isSubmitting || uploading}
                       >
-                        <SelectTrigger className='h-14 rounded-2xl bg-white border-none shadow-sm font-black italic text-primary'>
+                        <SelectTrigger className='h-11 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary'>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className='rounded-2xl border-none shadow-2xl p-2'>
-                          <SelectItem value='video' className='py-3 font-bold rounded-xl'>🎞️ Videoaula Youtube</SelectItem>
-                          <SelectItem value='quiz' className='py-3 font-bold rounded-xl'>🧠 Quiz Interativo</SelectItem>
-                          <SelectItem value='pdf' className='py-3 font-bold rounded-xl'>📄 Documento PDF</SelectItem>
-                          <SelectItem value='text' className='py-3 font-bold rounded-xl'>📝 Conteúdo em Texto</SelectItem>
-                          <SelectItem value='file' className='py-3 font-bold rounded-xl'>📎 Anexo Geral</SelectItem>
+                        <SelectContent className='rounded-xl border-none shadow-xl p-2'>
+                          <SelectItem value='video' className='py-2 font-bold'>🎞️ Videoaula Youtube</SelectItem>
+                          <SelectItem value='quiz' className='py-2 font-bold'>🧠 Quiz Interativo</SelectItem>
+                          <SelectItem value='pdf' className='py-2 font-bold'>📄 Documento PDF</SelectItem>
+                          <SelectItem value='text' className='py-2 font-bold'>📝 Conteúdo em Texto</SelectItem>
+                          <SelectItem value='file' className='py-2 font-bold'>📎 Anexo Geral</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <div className='space-y-2'>
+                    <div className='space-y-1.5'>
                       <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
                         Título do Conteúdo
                       </Label>
@@ -841,13 +843,13 @@ export default function TrailManagementPage() {
                           setContentForm((prev) => ({ ...prev, title: e.target.value || '' }))
                         }
                         disabled={isSubmitting || uploading}
-                        className='h-14 rounded-2xl bg-white border-none shadow-sm font-bold italic text-primary'
+                        className='h-11 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary'
                       />
                     </div>
 
-                    <div className='space-y-2'>
+                    <div className='space-y-1.5'>
                       <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2 flex items-center gap-2'>
-                        <BookOpen className='h-3 w-3 text-accent' /> Vincular Apostila Interativa (Opcional)
+                        <BookOpen className='h-3 w-3 text-accent' /> Vincular Apostila Interativa
                       </Label>
                       <Select
                         value={contentForm.workbook_id}
@@ -856,36 +858,37 @@ export default function TrailManagementPage() {
                         }
                         disabled={isSubmitting || uploading}
                       >
-                        <SelectTrigger className='h-14 rounded-2xl bg-white border-none shadow-sm font-bold italic text-primary'>
+                        <SelectTrigger className='h-11 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary'>
                           <SelectValue placeholder="Nenhuma apostila selecionada" />
                         </SelectTrigger>
-                        <SelectContent className='rounded-2xl border-none shadow-2xl p-2'>
-                          <SelectItem value="none" className='py-3 font-bold rounded-xl'>Sem Apostila</SelectItem>
+                        <SelectContent className='rounded-xl border-none shadow-xl p-2'>
+                          <SelectItem value="none" className='py-2 font-bold'>Sem Apostila</SelectItem>
                           {libraryResources.map(res => (
-                            <SelectItem key={res.id} value={res.id} className='py-3 font-bold rounded-xl'>📚 {res.category}: {res.title}</SelectItem>
+                            <SelectItem key={res.id} value={res.id} className='py-2 font-bold'>📚 {res.category}: {res.title}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
 
                     {contentForm.type === 'file' || contentForm.type === 'pdf' ? (
-                      <div className='space-y-2'>
+                      <div className='space-y-1.5'>
                         <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
-                          Upload de Arquivo {editingContentId && '(Deixe vazio para manter atual)'}
+                          Upload de Arquivo {editingContentId && '(Deixe vazio p/ não alterar)'}
                         </Label>
                         <div className="relative group">
                           <Input
+                            key={fileInputKey}
                             type='file'
                             accept={contentForm.type === 'pdf' ? '.pdf' : '*'}
                             onChange={(e) => setFile(e.target.files?.[0] || null)}
                             disabled={isSubmitting || uploading}
-                            className='h-14 rounded-2xl bg-white border-2 border-dashed border-muted/30 p-2 cursor-pointer transition-all hover:border-accent file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white'
+                            className='h-11 rounded-xl bg-white border-2 border-dashed border-muted/30 p-1.5 cursor-pointer transition-all hover:border-accent file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white text-xs'
                           />
-                          <FileUp className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground opacity-30 group-hover:opacity-100 transition-opacity" />
+                          <FileUp className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-30 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </div>
                     ) : (
-                      <div className='space-y-2'>
+                      <div className='space-y-1.5'>
                         <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
                           Link Externo (URL)
                         </Label>
@@ -897,14 +900,14 @@ export default function TrailManagementPage() {
                               setContentForm((prev) => ({ ...prev, url: e.target.value || '' }))
                             }
                             disabled={isSubmitting || uploading}
-                            className='h-14 rounded-2xl bg-white border-none shadow-sm font-medium italic text-primary pl-12'
+                            className='h-11 rounded-xl bg-white border-none shadow-sm font-medium italic text-primary pl-10'
                           />
-                          <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-accent opacity-40" />
+                          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent opacity-40" />
                         </div>
                       </div>
                     )}
 
-                    <div className='space-y-2'>
+                    <div className='space-y-1.5'>
                       <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
                         Notas do Mentor (Opcional)
                       </Label>
@@ -918,7 +921,7 @@ export default function TrailManagementPage() {
                           }))
                         }
                         disabled={isSubmitting || uploading}
-                        className='h-24 rounded-2xl bg-white border-none shadow-sm font-medium italic resize-none text-xs p-4'
+                        className='h-20 rounded-xl bg-white border-none shadow-sm font-medium italic resize-none text-xs p-3'
                       />
                     </div>
 
@@ -926,14 +929,14 @@ export default function TrailManagementPage() {
                       <Button
                         onClick={addToQueue}
                         disabled={isSubmitting || uploading || !contentForm.title || ((contentForm.type === 'file' || contentForm.type === 'pdf') && !file)}
-                        className='w-full h-16 rounded-2xl bg-accent text-accent-foreground font-black uppercase text-xs tracking-widest gap-3 shadow-xl hover:scale-105 active:scale-95 transition-all shadow-accent/20'
+                        className='w-full h-12 rounded-xl bg-accent text-accent-foreground font-black uppercase text-[10px] tracking-widest gap-2 shadow-md hover:scale-105 active:scale-95 transition-all'
                       >
                         {uploading ? (
-                          <Loader2 className='h-6 w-6 animate-spin' />
+                          <Loader2 className='h-4 w-4 animate-spin' />
                         ) : (
-                          <PlusCircle className='h-6 w-6' />
+                          <PlusCircle className='h-4 w-4' />
                         )}
-                        {uploading ? 'Enviando Dados...' : 'Adicionar à Fila'}
+                        {uploading ? 'Enviando...' : 'Adicionar à Fila'}
                       </Button>
                     )}
                   </div>
@@ -941,59 +944,59 @@ export default function TrailManagementPage() {
 
                 {/* FILA DE REVISÃO (Só aparece se não estiver editando) */}
                 {!editingContentId && (
-                  <div className='p-8 md:p-12 space-y-8 bg-white'>
+                  <div className='p-6 md:p-8 space-y-6 bg-white'>
                     <div className="flex items-center justify-between">
-                      <h3 className='text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 flex items-center gap-3'>
+                      <h3 className='text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 flex items-center gap-2'>
                         <Layers className='h-4 w-4 text-accent' /> 
                         Fila de Publicação
                       </h3>
-                      <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] px-3">
+                      <Badge className="bg-primary/5 text-primary border-none font-bold text-[10px] px-2">
                         {pendingItems.length} ITENS
                       </Badge>
                     </div>
 
-                    <div className='space-y-4 min-h-[300px]'>
+                    <div className='space-y-3 min-h-[200px]'>
                       {pendingItems.length === 0 ? (
-                        <div className='h-full min-h-[300px] flex flex-col items-center justify-center text-center opacity-20 border-4 border-dashed rounded-[3rem] bg-muted/5 gap-4'>
-                          <Layout className='h-16 w-16 text-primary' />
+                        <div className='h-full min-h-[200px] flex flex-col items-center justify-center text-center opacity-30 border-2 border-dashed rounded-3xl bg-muted/5 gap-3'>
+                          <Layout className='h-12 w-12 text-primary' />
                           <div className="space-y-1">
-                            <p className='text-xs font-black uppercase tracking-widest'>Estúdio Vazio</p>
-                            <p className="text-[10px] font-medium italic">Adicione materiais para ver a fila.</p>
+                            <p className='text-[10px] font-black uppercase tracking-widest'>Estúdio Vazio</p>
+                            <p className="text-[9px] font-medium italic">Adicione materiais para ver a fila.</p>
                           </div>
                         </div>
                       ) : (
                         pendingItems.map((item) => (
                           <div
                             key={item.id}
-                            className='flex items-center justify-between p-5 rounded-2xl bg-slate-50 shadow-sm border border-slate-100 animate-in slide-in-from-right-4 duration-500 hover:shadow-md transition-all group'
+                            className='flex items-center justify-between p-3 rounded-xl bg-slate-50 shadow-sm border border-slate-100 animate-in slide-in-from-right-4 duration-500 hover:shadow-md transition-all group'
                           >
-                            <div className='flex items-center gap-4 overflow-hidden'>
+                            <div className='flex items-center gap-3 overflow-hidden'>
                               <div
-                                className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${
+                                className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 shadow-inner ${
                                   item.type === 'video'
                                     ? 'bg-red-50 text-red-600'
                                     : 'bg-primary/5 text-primary'
                                 }`}>
                                 {item.type === 'video' ? (
-                                  <Video className='h-6 w-6' />
+                                  <Video className='h-4 w-4' />
                                 ) : (
-                                  <FileText className='h-6 w-6' />
+                                  <FileText className='h-4 w-4' />
                                 )}
                               </div>
-                              <div className="min-w-0">
-                                <p className='font-black text-sm text-primary truncate max-w-[180px] italic'>
+                              <div className="min-w-0 pr-2">
+                                <p className='font-bold text-xs text-primary truncate max-w-[180px] italic'>
                                   {item.title}
                                 </p>
-                                <Badge variant="outline" className="text-[7px] font-bold h-4 border-muted/30 uppercase mt-1 opacity-60">
+                                <Badge variant="outline" className="text-[7px] font-bold h-4 border-muted/30 uppercase mt-0.5 opacity-60">
                                   {item.type}
                                 </Badge>
                               </div>
                             </div>
                             <button
                               onClick={() => removeFromQueue(item.id)}
-                              className='h-10 w-10 rounded-full bg-white text-muted-foreground hover:text-red-600 hover:bg-red-50 shadow-sm transition-all flex items-center justify-center opacity-0 group-hover:opacity-100'
+                              className='h-8 w-8 rounded-full bg-white text-muted-foreground hover:text-red-600 hover:bg-red-50 shadow-sm transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 shrink-0'
                             >
-                              <X className='h-5 w-5' />
+                              <X className='h-3 w-3' />
                             </button>
                           </div>
                         ))
@@ -1004,21 +1007,36 @@ export default function TrailManagementPage() {
               </div>
             </ScrollArea>
 
-            <DialogFooter className='p-8 md:p-12 bg-slate-50 border-t shrink-0'>
+            <DialogFooter className='p-6 bg-slate-50 border-t shrink-0 flex flex-col md:flex-row md:justify-between items-center gap-4'> 
+              {/* Alerta de Item Não Salvo */}
+              <div className="flex-1 w-full text-left">
+                {!editingContentId && contentForm.title.trim() && (
+                  <p className="text-[10px] font-bold text-orange-500 animate-pulse bg-orange-50 p-2 rounded-lg border border-orange-100">
+                    ⚠️ Você começou a preencher um item, mas não clicou em "Adicionar à Fila".
+                  </p>
+                )}
+              </div>
+
               <Button
-                onClick={() => editingContentId ? addToQueue() : handleBatchSaveContent(activeModuleId)}
+                onClick={() => {
+                  if (!editingContentId && contentForm.title.trim()) {
+                     toast({ title: 'Adicione o item à fila primeiro!', variant: 'destructive', description: 'Clique no botão Adicionar à Fila antes de publicar.' });
+                     return;
+                  }
+                  editingContentId ? addToQueue() : handleBatchSaveContent(activeModuleId);
+                }}
                 disabled={isSubmitting || (!editingContentId && pendingItems.length === 0)}
-                className='w-full h-20 bg-primary text-white font-black text-lg md:text-xl rounded-2xl md:rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] transition-all hover:scale-[1.02] active:scale-95 border-none'
+                className='w-full md:w-auto h-12 bg-primary text-white font-black text-xs rounded-xl shadow-[0_10px_30px_-10px_rgba(26,44,75,0.4)] transition-all hover:scale-[1.02] active:scale-95 border-none px-8 uppercase tracking-widest'
               >
                 {isSubmitting ? (
-                  <div className="flex items-center gap-4">
-                    <Loader2 className='animate-spin h-8 w-8' /> 
-                    <span>Sincronizando com a Rede...</span>
+                  <div className="flex items-center gap-2">
+                    <Loader2 className='animate-spin h-4 w-4' /> 
+                    <span>Sincronizando...</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-4">
-                    <CheckCircle2 className='h-8 w-8 text-accent' /> 
-                    <span>{editingContentId ? 'SALVAR ALTERAÇÕES AGORA' : 'PUBLICAR NO CAPÍTULO AGORA'}</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className='h-4 w-4 text-accent' /> 
+                    <span>{editingContentId ? 'Salvar Edição' : 'Publicar Capítulo'}</span>
                   </div>
                 )}
               </Button>
