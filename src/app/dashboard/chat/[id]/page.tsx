@@ -155,12 +155,11 @@ export default function DirectChatPage() {
           content: m.content
         }));
 
-        const response = await fetch('/api/genkit', {
+        const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            flowId: 'conceptExplanationAssistant',
-            input: { query: userText, history: history },
+            messages: history,
           }),
         });
 
