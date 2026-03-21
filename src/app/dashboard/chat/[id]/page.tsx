@@ -151,7 +151,7 @@ export default function DirectChatPage() {
       setIsAiThinking(true);
       try {
         const history = [...messages, newUserMessage].slice(-6).map(m => ({
-          role: (m.sender_id === "aurora-ai" ? 'model' : 'user') as 'user' | 'model',
+          role: (m.sender_id === "aurora-ai" ? 'assistant' : 'user') as 'user' | 'assistant',
           content: m.content
         }));
 

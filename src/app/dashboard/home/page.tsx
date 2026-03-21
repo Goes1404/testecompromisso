@@ -32,11 +32,11 @@ import { useRouter } from "next/navigation";
 const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
 const localImagesFallback = [
-  "/images/capa1.jpeg?v=tx1",
-  "/images/carrosel1.jpeg?v=tx1",
-  "/images/carrosel2.jpeg?v=tx1",
-  "/images/carrosel3.jpeg?v=tx1",
-  "/images/carrosel4.jpeg?v=tx1"
+  "/images/capa1.jpeg",
+  "/images/carrosel1.jpeg",
+  "/images/carrosel2.jpeg",
+  "/images/carrosel3.jpeg",
+  "/images/carrosel4.jpeg"
 ];
 
 function getSafeImageUrl(url: string | null | undefined, index: number) {

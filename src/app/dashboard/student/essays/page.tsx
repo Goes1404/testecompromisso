@@ -94,10 +94,9 @@ export default function StudentEssayPage() {
     setResult(null);
     setCustomTheme(false);
     try {
-      const res = await fetch('/api/genkit', {
+      const res = await fetch('/api/essay-theme', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flowId: 'essayTopicGenerator', input: {} })
+        headers: { 'Content-Type': 'application/json' }
       });
       
       const data = await res.json();
@@ -128,13 +127,10 @@ export default function StudentEssayPage() {
 
     setLoadingGrading(true);
     try {
-      const res = await fetch('/api/genkit', {
+      const res = await fetch('/api/essay-evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          flowId: 'essayEvaluator', 
-          input: { theme, text } 
-        })
+        body: JSON.stringify({ theme, text })
       });
       
       const data = await res.json();

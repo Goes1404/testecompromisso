@@ -40,20 +40,7 @@ export function AccessibilityWidget() {
 
     setLoading(true);
 
-    // 1. Verificação de Autenticação no Frontend
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "Esta funcionalidade é exclusiva para membros. Por favor, faça login ou registre-se para interagir com a Aurora IA.",
-        isError: true
-      }]);
-      setLoading(false);
-      return;
-    }
-
-    // 2. Continua com o envio da mensagem se o usuário estiver logado
+    // Liberado acesso universal à IA (Sem restrição de login)
     const userMsg: Message = { role: "user", content: input };
     setMessages(prev => [...prev, userMsg]);
     const currentInput = input;
@@ -61,16 +48,15 @@ export function AccessibilityWidget() {
 
     try {
       const history = messages.map(m => ({
-        role: (m.role === 'assistant' ? 'model' : 'user') as 'user' | 'model',
+        role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
         content: m.content
       }));
 
-      const response = await fetch('/api/genkit', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          flowId: 'conceptExplanationAssistant',
-          input: { query: currentInput, history }
+          messages: history
         })
       });
 
