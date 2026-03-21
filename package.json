@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.47",
+    "@ai-sdk/react": "^3.0.136",
     "@genkit-ai/firebase": "1.28.0",
     "@genkit-ai/google-genai": "1.28.0",
     "@genkit-ai/next": "1.28.0",
