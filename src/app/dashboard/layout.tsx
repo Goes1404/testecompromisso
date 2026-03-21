@@ -11,6 +11,7 @@ import { useEffect, useState, useMemo, memo, useRef, Suspense } from "react";
 import { useAuth } from "@/lib/AuthProvider"; 
 import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
+import { AuroraWidget } from "@/components/chat/AuroraWidget";
 
 const studentItems = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home" },
@@ -258,6 +259,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {children}
               </Suspense>
             </div>
+            {/* IA Tutora Flutuante (Somente para Alunos) */}
+            {userRole === 'student' && <AuroraWidget />}
           </main>
         </SwipeHandler>
       </SidebarInset>
