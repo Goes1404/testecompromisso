@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,16 +13,16 @@ import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
 
 const studentItems = [
-  { icon: Home, label: "Página Inicial", href: "/dashboard/home" },
-  { icon: Compass, label: "Trilhas de Estudo", href: "/dashboard/trails" },
-  { icon: BookOpen, label: "Minhas Apostilas", href: "/dashboard/library" },
-  { icon: FilePenLine, label: "Redação Master", href: "/dashboard/student/essays" },
-  { icon: FileText, label: "Simulados", href: "/dashboard/student/simulados" },
+  { icon: Home, label: "Meu Painel", href: "/dashboard/home" },
+  { icon: Compass, label: "Assistir Aulas", href: "/dashboard/trails" },
+  { icon: BookOpen, label: "Biblioteca", href: "/dashboard/library" },
+  { icon: FilePenLine, label: "Treinar Redação", href: "/dashboard/student/essays" },
+  { icon: FileText, label: "Fazer Simulados", href: "/dashboard/student/simulados" },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live" },
-  { icon: MessagesSquare, label: "Fóruns de Discussão", href: "/dashboard/forum" },
-  { icon: MessageSquare, label: "Chat com Mentores", href: "/dashboard/chat", badge: true },
-  { icon: FileCheck, label: "Documentação", href: "/dashboard/student/documents" },
-  { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
+  { icon: MessagesSquare, label: "Comunidade", href: "/dashboard/forum" },
+  { icon: MessageSquare, label: "Tirar Dúvidas", href: "/dashboard/chat", badge: true },
+  { icon: FileCheck, label: "Meus Documentos", href: "/dashboard/student/documents" },
+  { icon: Settings, label: "Meu Perfil", href: "/dashboard/settings" },
 ];
 
 const teacherItems = [
@@ -30,6 +30,7 @@ const teacherItems = [
   { icon: BookOpen, label: "Gestão de Apostilas", href: "/dashboard/teacher/library" },
   { icon: ClipboardList, label: "Minhas Trilhas", href: "/dashboard/teacher/trails" },
   { icon: Database, label: "Banco de Questões", href: "/dashboard/teacher/questions" },
+  { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays" },
   { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics" },
   { icon: MonitorPlay, label: "Gerenciar Lives", href: "/dashboard/teacher/live" },
   { icon: MessagesSquare, label: "Fórum Pedagógico", href: "/dashboard/forum" },
@@ -46,6 +47,7 @@ const adminItems = [
   { icon: FileCheck, label: "Status de Documentos", href: "/dashboard/admin/checklists" },
   { icon: Eye, label: "Auditoria de Chats", href: "/dashboard/admin/chats" },
   { icon: Database, label: "Gestão de Turmas", href: "/dashboard/admin/students" },
+  { icon: AlertCircle, label: "Alunos em Risco/Gestão", href: "/dashboard/teacher/students" },
   { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails" },
   { icon: Bell, label: "Comunicados Globais", href: "/dashboard/teacher/communication" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
@@ -189,7 +191,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-accent animate-pulse" />
         </div>
-        <h2 className="text-sm font-black text-white italic tracking-tighter uppercase opacity-40">Sincronizando Rede...</h2>
+        <h2 className="text-sm font-black text-white italic tracking-tighter uppercase opacity-40">Carregando seu ambiente...</h2>
       </div>
     </div>
   );

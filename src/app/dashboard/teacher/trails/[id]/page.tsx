@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { EDUCATIONAL_CATEGORIES } from '@/lib/constants';
 import {
   Dialog,
   DialogContent,
@@ -80,9 +81,12 @@ export default function TrailManagementPage() {
 
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
+  const [isEditTrailDialogOpen, setIsEditTrailDialogOpen] = useState(false);
+  
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [editingContentId, setEditingContentId] = useState<string | null>(null);
 
+  const [editTrailForm, setEditTrailForm] = useState({ title: '', category: '', description: '' });
   const [moduleForm, setModuleForm] = useState({ title: '' });
   const [pendingItems, setPendingItems] = useState<any[]>([]);
   const [contentForm, setContentForm] = useState({
@@ -183,6 +187,57 @@ export default function TrailManagementPage() {
       });
     }
     setIsPublishing(false);
+  };
+
+  const openEditTrailDialog = () => {
+    if (trail) {
+      setEditTrailForm({
+        title: trail.title || '',
+        category: trail.category || 'Multidisciplinar e Geral',
+        description: trail.description || ''
+      });
+      setIsEditTrailDialogOpen(true);
+    }
+  };
+
+  const handleUpdateTrail = async () => {
+    if (!editTrailForm.title.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase
+        .from('trails')
+        .update({
+          title: editTrailForm.title,
+          category: editTrailForm.category,
+          description: editTrailForm.description
+        })
+        .eq('id', trailId);
+
+      if (error) throw error;
+      
+      setTrail((prev: any) => ({ ...prev, ...editTrailForm }));
+      toast({ title: 'Detalhes Atualizados!' });
+      setIsEditTrailDialogOpen(false);
+    } catch (e: any) {
+      toast({ title: 'Erro ao atualizar', description: e.message, variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteTrail = async () => {
+    if (confirm('ATENÇÃO: Deseja realmente excluir esta trilha inteira? Esta ação apagará todas as aulas e módulos associados irreversivelmente.')) {
+      setIsSubmitting(true);
+      const { error } = await supabase.from('trails').delete().eq('id', trailId);
+      if (error) {
+        toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+        setIsSubmitting(false);
+      } else {
+        toast({ title: 'Trilha Excluída', description: 'Todo o conteúdo foi apagado permanentemente.' });
+        router.push('/dashboard/teacher/trails');
+      }
+    }
   };
 
   const handleAddModule = async () => {
@@ -415,6 +470,22 @@ export default function TrailManagementPage() {
         </div>
         <div className='flex items-center gap-3'>
           <Button
+            variant='ghost'
+            size='icon'
+            onClick={handleDeleteTrail}
+            title='Excluir Trilha Definitivamente'
+            className='rounded-xl h-12 w-12 text-red-500 hover:bg-red-50 hover:text-red-700 transition-all hidden sm:flex shrink-0'
+          >
+            <Trash2 className='h-5 w-5' />
+          </Button>
+          <Button
+            variant='outline'
+            onClick={openEditTrailDialog}
+            className='rounded-xl h-12 border-primary/20 text-primary font-black px-6 shadow-sm hover:bg-primary/5 transition-all hidden sm:flex'
+          >
+            <Pencil className='h-5 w-5 mr-2 text-primary/50' /> Detalhes
+          </Button>
+          <Button
             variant='outline'
             className='rounded-xl h-12 border-primary/20 text-primary font-black px-6 shadow-sm hover:bg-primary/5 transition-all hidden sm:flex'
             asChild
@@ -636,15 +707,53 @@ export default function TrailManagementPage() {
         </div>
       </div>
 
+      {/* DIÁLOGO EDITAR TRILHA */}
+      <Dialog open={isEditTrailDialogOpen} onOpenChange={setIsEditTrailDialogOpen}>
+        <DialogContent className='rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-2xl max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle className='text-xl md:text-2xl font-black italic text-primary'>Editar Rótulo da Trilha</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 md:gap-6 py-4 md:py-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Título Principal</Label>
+              <Input placeholder="Ex: Fundamentos de Redação" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={editTrailForm.title} onChange={(e) => setEditTrailForm({ ...editTrailForm, title: e.target.value })} disabled={isSubmitting} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Matéria Central</Label>
+              <Select value={editTrailForm.category} onValueChange={(v) => setEditTrailForm({ ...editTrailForm, category: v })} disabled={isSubmitting}>
+                <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
+                  <SelectValue placeholder="Selecione a disciplina" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-none shadow-2xl max-h-60">
+                    {EDUCATIONAL_CATEGORIES.map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Breve Descrição</Label>
+              <Textarea placeholder="Qual o propósito deste conjunto de módulos?" className="min-h-[100px] md:min-h-[120px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={editTrailForm.description} onChange={(e) => setEditTrailForm({ ...editTrailForm, description: e.target.value })} disabled={isSubmitting} />
+            </div>
+          </div>
+          <DialogFooter className="mt-2 md:mt-0">
+            <Button onClick={handleUpdateTrail} disabled={isSubmitting || !editTrailForm.title} className="w-full h-14 md:h-16 bg-primary text-white font-black text-base md:text-lg rounded-2xl shadow-xl">
+              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />}
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* DIÁLOGO MÓDULO */}
       <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
-        <DialogContent className='rounded-[2.5rem] p-10 bg-white border-none shadow-2xl max-w-sm mx-auto'>
+        <DialogContent className='rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white border-none shadow-2xl w-[95vw] sm:w-full max-w-sm mx-auto'>
           <DialogHeader>
-            <DialogTitle className='text-2xl font-black italic text-primary'>
+            <DialogTitle className='text-xl md:text-2xl font-black italic text-primary'>
               Novo Capítulo
             </DialogTitle>
           </DialogHeader>
-          <div className='py-8 space-y-2'>
+          <div className='py-6 md:py-8 space-y-2'>
             <Label className='text-[10px] font-black uppercase tracking-widest opacity-40 ml-2'>
               Título da Unidade Didática
             </Label>
@@ -660,7 +769,7 @@ export default function TrailManagementPage() {
             <Button
               onClick={handleAddModule}
               disabled={isSubmitting || !moduleForm.title}
-              className='w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl'
+              className='w-full h-14 md:h-16 bg-primary text-white font-black rounded-2xl shadow-xl'
             >
               {isSubmitting ? (
                 <Loader2 className='h-6 w-6 animate-spin mr-2' />
@@ -674,15 +783,15 @@ export default function TrailManagementPage() {
 
       {/* DIÁLOGO CONTEÚDO (CRIAÇÃO/EDIÇÃO) */}
       <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
-        <DialogContent className='rounded-[3rem] p-0 md:p-0 max-w-4xl bg-white border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden mx-auto'>
+        <DialogContent className='rounded-[2rem] md:rounded-[3rem] p-0 w-[95vw] sm:w-full max-w-4xl bg-white border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden mx-auto'>
           <div className="flex flex-col max-h-[90vh]">
-            <DialogHeader className="p-8 md:p-12 bg-primary text-white shrink-0">
+            <DialogHeader className="p-6 md:p-12 bg-primary text-white shrink-0">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shadow-lg">
-                  {editingContentId ? <Pencil className="h-7 w-7" /> : <PlusCircle className="h-7 w-7" />}
+                <div className="h-10 w-10 md:h-12 md:w-12 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shadow-lg shrink-0">
+                  {editingContentId ? <Pencil className="h-5 w-5 md:h-7 md:w-7" /> : <PlusCircle className="h-5 w-5 md:h-7 md:w-7" />}
                 </div>
                 <div>
-                  <DialogTitle className='text-2xl md:text-3xl font-black italic tracking-tighter uppercase leading-none'>
+                  <DialogTitle className='text-xl md:text-3xl font-black italic tracking-tighter uppercase leading-none'>
                     {editingContentId ? 'Ajustar Material' : 'Anexar Materiais'}
                   </DialogTitle>
                   <p className='text-white/60 text-xs md:text-sm font-medium italic mt-1.5'>
@@ -767,6 +876,7 @@ export default function TrailManagementPage() {
                         <div className="relative group">
                           <Input
                             type='file'
+                            accept={contentForm.type === 'pdf' ? '.pdf' : '*'}
                             onChange={(e) => setFile(e.target.files?.[0] || null)}
                             disabled={isSubmitting || uploading}
                             className='h-14 rounded-2xl bg-white border-2 border-dashed border-muted/30 p-2 cursor-pointer transition-all hover:border-accent file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white'
@@ -815,7 +925,7 @@ export default function TrailManagementPage() {
                     {!editingContentId && (
                       <Button
                         onClick={addToQueue}
-                        disabled={isSubmitting || uploading || !contentForm.title || (contentForm.type === 'file' && !file)}
+                        disabled={isSubmitting || uploading || !contentForm.title || ((contentForm.type === 'file' || contentForm.type === 'pdf') && !file)}
                         className='w-full h-16 rounded-2xl bg-accent text-accent-foreground font-black uppercase text-xs tracking-widest gap-3 shadow-xl hover:scale-105 active:scale-95 transition-all shadow-accent/20'
                       >
                         {uploading ? (

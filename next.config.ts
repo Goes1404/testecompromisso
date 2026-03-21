@@ -2,7 +2,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // output: 'export', <-- CAUSA CONFLITO COM ROTAS DINÂMICAS E APIS
   images: {
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
     remotePatterns: [

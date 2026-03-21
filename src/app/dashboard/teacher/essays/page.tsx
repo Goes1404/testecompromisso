@@ -41,19 +41,41 @@ export default function AssessmentsGraderPage() {
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // 1. Fetch essays without generic RLS/Foreign Key Joins
+      const { data: essays, error: essayError } = await supabase
         .from('essay_submissions')
-        .select('*, profiles(name, profile_type)')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSubmissions(data || []);
+      if (essayError) throw essayError;
+      
+      const loadedSubmissions = essays || [];
+
+      // 2. Resolve Profile relationships manually to guarantee display integrity
+      if (loadedSubmissions.length > 0) {
+        const userIds = [...new Set(loadedSubmissions.map(s => s.user_id).filter(Boolean))];
+        
+        if (userIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, name, profile_type')
+            .in('id', userIds);
+            
+          loadedSubmissions.forEach(sub => {
+             const matchedProfile = profilesData?.find(p => p.id === sub.user_id);
+             sub.profiles = matchedProfile || { name: 'Aluno Oculto' };
+          });
+        }
+      }
+
+      setSubmissions(loadedSubmissions);
     } catch (e: any) {
-      console.error("Erro ao carregar redações:", e);
+      console.error("Erro explícito no Supabase:", e.message || JSON.stringify(e));
+      toast({ title: "Erro no Banco", description: e.message || "Falha ao conectar com auth.users", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchSubmissions();

@@ -122,7 +122,7 @@ export default function ManageLivePage() {
               <PlusCircle className="h-5 w-5 md:h-6 md:w-6" /> Agendar Aula
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white max-w-lg border-none shadow-2xl">
+          <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto border-none shadow-2xl">
             <DialogHeader>
               <DialogTitle className="text-xl md:text-2xl font-black italic text-primary">Nova Sala Online</DialogTitle>
             </DialogHeader>

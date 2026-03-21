@@ -12,9 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
-
-const categories = ["Matemática", "Física", "Tecnologia", "Linguagens", "História", "Saúde", "Outros"];
-const types = ["PDF", "Video", "E-book", "Artigo"];
+import { EDUCATIONAL_CATEGORIES, RESOURCE_TYPES } from "@/lib/constants";
 
 export default function LibraryManagementPage() {
   const { toast } = useToast();
@@ -33,6 +31,8 @@ export default function LibraryManagementPage() {
     url: "",
     image_url: ""
   });
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   async function fetchResources() {
     setLoading(true);
@@ -57,34 +57,60 @@ export default function LibraryManagementPage() {
   }, []);
 
   const handleSave = async () => {
-    if (!formData.title || !formData.url) {
-      toast({ title: "Campos obrigatórios", description: "Título e Link são necessários.", variant: "destructive" });
+    if (!formData.title || (!formData.url && !file)) {
+      toast({ title: "Campos obrigatórios", description: "Título e Arquivo (ou Link) são necessários.", variant: "destructive" });
       return;
     }
 
     setIsSubmitting(true);
+    let finalUrl = formData.url;
+
     try {
+      if (file) {
+        setUploading(true);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `library/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('learning-contents')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { publicUrl } = supabase.storage
+          .from('learning-contents')
+          .getPublicUrl(filePath).data;
+
+        finalUrl = publicUrl;
+      }
+
+      const payload = { ...formData, url: finalUrl };
+
       if (editingId) {
         const { error } = await supabase
           .from('library_resources')
-          .update(formData)
+          .update(payload)
           .eq('id', editingId);
         if (error) throw error;
         toast({ title: "Apostila Atualizada!" });
       } else {
         const { error } = await supabase
           .from('library_resources')
-          .insert([formData]);
+          .insert([payload]);
         if (error) throw error;
         toast({ title: "Apostila Cadastrada!" });
       }
       
       setIsDialogOpen(false);
       setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "" });
+      setFile(null);
+      setUploading(false);
       setQuestionToEdit(null);
       fetchResources();
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+      setUploading(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +131,7 @@ export default function LibraryManagementPage() {
 
   const startEdit = (resource: any) => {
     setQuestionToEdit(resource.id);
+    setFile(null);
     setFormData({
       title: resource.title,
       description: resource.description || "",
@@ -133,6 +160,7 @@ export default function LibraryManagementPage() {
           setIsDialogOpen(open);
           if(!open) {
             setQuestionToEdit(null);
+            setFile(null);
             setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "" });
           }
         }}>
@@ -141,7 +169,7 @@ export default function LibraryManagementPage() {
               <Plus className="h-6 w-6 mr-2" /> Nova Apostila
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
+          <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto border-none shadow-2xl">
             <DialogHeader>
               <DialogTitle className="text-2xl font-black italic text-primary">Configurar Apostila</DialogTitle>
             </DialogHeader>
@@ -155,20 +183,35 @@ export default function LibraryManagementPage() {
                   <Label className="text-[10px] font-black uppercase opacity-40">Categoria</Label>
                   <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v})}>
                     <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent>{categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    <SelectContent>{EDUCATIONAL_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase opacity-40">Tipo</Label>
                   <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
                     <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent>{types.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    <SelectContent>{RESOURCE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase opacity-40">Link do PDF ou Recurso</Label>
-                <Input value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} placeholder="URL do PDF ou Vídeo" className="h-12 rounded-xl bg-muted/30 border-none font-medium" />
+                <Label className="text-[10px] font-black uppercase opacity-40">Arquivo a ser enviado (Ou Link Externo)</Label>
+                <div className="flex flex-col gap-2">
+                  <Input 
+                    type="file" 
+                    accept={formData.type === 'PDF' ? '.pdf' : '*'} 
+                    onChange={e => setFile(e.target.files?.[0] || null)} 
+                    className="h-14 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-accent p-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white"
+                  />
+                  {!file && (
+                    <Input 
+                      value={formData.url} 
+                      onChange={e => setFormData({...formData, url: e.target.value})} 
+                      placeholder="Ou cole a URL..." 
+                      className="h-12 rounded-xl bg-muted/30 border-none font-medium text-xs mt-2" 
+                    />
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase opacity-40">Capa (Opcional - URL)</Label>
@@ -180,9 +223,9 @@ export default function LibraryManagementPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleSave} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
-                {isSubmitting ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
-                {editingId ? "Atualizar Apostila" : "Publicar Apostila"}
+              <Button onClick={handleSave} disabled={isSubmitting || uploading} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
+                {(isSubmitting || uploading) ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
+                {uploading ? "Enviando arquivo..." : (editingId ? "Atualizar Apostila" : "Publicar Apostila")}
               </Button>
             </DialogFooter>
           </DialogContent>

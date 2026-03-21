@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
+import { SCHOOL_LIST } from "@/lib/constants";
 
 type Step = 1 | 2 | 3;
 type ProfileType = "etec" | "enem";
@@ -270,8 +272,18 @@ export default function RegisterPage() {
                 {profileType === "etec" && (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="school" className="font-bold text-primary/60 ml-2">Unidade ETEC</Label>
-                      <Input id="school" placeholder="Ex: ETEC Jorge Street" value={formData.school} onChange={(e) => updateField("school", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                      <Label htmlFor="school" className="font-bold text-primary/60 ml-2">Unidade Escolar / Polo</Label>
+                      <Select value={formData.school} onValueChange={(v) => updateField("school", v)}>
+                        <SelectTrigger className="h-12 bg-white/50 rounded-xl border-muted/20">
+                          <SelectValue placeholder="Selecione sua escola..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-xl max-h-80">
+                          {SCHOOL_LIST.map(school => (
+                            <SelectItem key={school} value={school}>{school}</SelectItem>
+                          ))}
+                          <SelectItem value="Outra Rede">Outra Rede / Não Listada</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="course" className="font-bold text-primary/60 ml-2">Curso Atual ou Série</Label>

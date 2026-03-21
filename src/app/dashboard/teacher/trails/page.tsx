@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Plus, 
   LayoutDashboard, 
@@ -27,6 +28,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
+import { EDUCATIONAL_CATEGORIES } from "@/lib/constants";
 
 export default function TeacherTrailsPage() {
   const { user, profile } = useAuth();
@@ -38,7 +40,7 @@ export default function TeacherTrailsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [newTrail, setNewTrail] = useState({ title: "", category: "Geral", description: "" });
+  const [newTrail, setNewTrail] = useState({ title: "", category: "Matemática", description: "" });
 
   const fetchTrails = async () => {
     if (!user) return;
@@ -90,7 +92,7 @@ export default function TeacherTrailsPage() {
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
       setTrails(prev => [data, ...prev]);
       setIsCreateDialogOpen(false);
-      setNewTrail({ title: "", category: "Geral", description: "" });
+      setNewTrail({ title: "", category: "Matemática", description: "" });
     } catch (e: any) {
       console.error("Falha ao criar trilha:", e);
       toast({ title: "Erro de Persistência", description: e.message, variant: "destructive" });
@@ -120,26 +122,35 @@ export default function TeacherTrailsPage() {
                 <Plus className="h-5 w-5 md:h-6 md:w-6 mr-2" /> Nova Trilha Manual
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] p-6 md:p-10 bg-white max-w-lg border-none shadow-2xl">
+            <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black italic text-primary">Configurar Trilha</DialogTitle>
+                <DialogTitle className="text-xl md:text-2xl font-black italic text-primary">Configurar Trilha</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-6 py-6">
+              <div className="grid gap-4 md:gap-6 py-4 md:py-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase opacity-40">Título da Trilha</Label>
                   <Input placeholder="Ex: Fundamentos de IA" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.title} onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })} disabled={isSubmitting} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase opacity-40">Categoria</Label>
-                  <Input placeholder="Ex: Tecnologia" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.category} onChange={(e) => setNewTrail({ ...newTrail, category: e.target.value })} disabled={isSubmitting} />
+                  <Select value={newTrail.category} onValueChange={(v) => setNewTrail({ ...newTrail, category: v })} disabled={isSubmitting}>
+                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
+                      <SelectValue placeholder="Matéria Principal" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-none shadow-2xl max-h-60">
+                      {EDUCATIONAL_CATEGORIES.map(category => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase opacity-40">Descrição Geral</Label>
-                  <Textarea placeholder="O que o aluno aprenderá nesta jornada?" className="min-h-[120px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={newTrail.description} onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })} disabled={isSubmitting} />
+                  <Textarea placeholder="O que o aluno aprenderá nesta jornada?" className="min-h-[100px] md:min-h-[120px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={newTrail.description} onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })} disabled={isSubmitting} />
                 </div>
               </div>
-              <DialogFooter>
-                <Button onClick={handleCreateTrail} disabled={isSubmitting || !newTrail.title} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
+              <DialogFooter className="mt-2 md:mt-0">
+                <Button onClick={handleCreateTrail} disabled={isSubmitting || !newTrail.title} className="w-full h-14 md:h-16 bg-primary text-white font-black text-base md:text-lg rounded-2xl shadow-xl">
                   {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
                   {isSubmitting ? "Gravando..." : "Criar Trilha"}
                 </Button>
