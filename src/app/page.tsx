@@ -20,10 +20,10 @@ export default function LandingPage() {
   const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
   const galleryItems = [
-    { title: "Aulas Dinâmicas", img: "/images/carrosel1.jpeg" },
-    { title: "Inovação no Ensino", img: "/images/carrosel2.jpeg" },
-    { title: "Apoio Remoto", img: "/images/carrosel3.jpeg" },
-    { title: "Espaços de Foco", img: "/images/carrosel4.jpeg" },
+    { title: "Aulas Dinâmicas", img: "/images/carrosel1.jpeg?v=tx1" },
+    { title: "Inovação no Ensino", img: "/images/carrosel2.jpeg?v=tx1" },
+    { title: "Apoio Remoto", img: "/images/carrosel3.jpeg?v=tx1" },
+    { title: "Espaços de Foco", img: "/images/carrosel4.jpeg?v=tx1" },
   ];
 
   const mapsUrl = "https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010";
@@ -94,7 +94,7 @@ export default function LandingPage() {
             <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
               <div className="relative aspect-[4/5] md:aspect-square rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[12px] border-white group bg-slate-100">
                 <Image 
-                  src="/images/capa1.jpeg" 
+                  src="/images/capa1.jpeg?v=tx1" 
                   alt="Jornada Literária e Educação em Santana de Parnaíba" 
                   fill 
                   className="object-cover group-hover:scale-110 transition-transform duration-1000"
