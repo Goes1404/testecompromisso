@@ -32,7 +32,7 @@ export default function DashboardRoot() {
   }, [userRole, loading, user, router]);
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-gradient gap-6 relative overflow-hidden">
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-brand-gradient gap-6 relative overflow-hidden">
       <div className="relative z-10 flex flex-col items-center gap-4">
         <div className="h-16 w-16 rounded-2xl bg-white/5 flex items-center justify-center shadow-2xl animate-pulse">
           <BookOpen className="h-8 w-8 text-accent" />

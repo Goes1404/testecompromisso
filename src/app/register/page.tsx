@@ -141,19 +141,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-blue-gradient p-4 sm:p-8 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-login-gradient p-4 sm:p-8 relative overflow-hidden">
       <div className="absolute top-4 left-4 md:top-8 md:left-8 z-50">
-        <Button asChild className="bg-white text-primary hover:bg-white/90 font-black uppercase text-[10px] tracking-[0.2em] gap-2 rounded-xl shadow-2xl transition-all active:scale-95 border-none h-10 px-4 md:px-6">
+        <Button asChild className="bg-white/10 text-white hover:bg-white/20 font-bold uppercase text-[10px] tracking-[0.15em] gap-2 rounded-xl backdrop-blur-md transition-all active:scale-95 border border-white/10 h-10 px-4 md:px-6">
           <Link href="/">
-            <ChevronLeft className="h-4 w-4 text-accent" />
+            <ChevronLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Voltar ao Início</span>
             <span className="sm:hidden">Início</span>
           </Link>
         </Button>
       </div>
 
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#FF6B00]/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#FF6B00]/5 rounded-full blur-[100px] pointer-events-none" />
       
       <div className="w-full max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative z-10">
         <div className="space-y-4 text-center">

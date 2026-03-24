@@ -65,6 +65,9 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        success: 'hsl(var(--success))',
+        'text-body': 'hsl(var(--text-body))',
+        'brand-dark': 'hsl(var(--brand-dark))',
       },
       borderRadius: {
         lg: 'var(--radius)',

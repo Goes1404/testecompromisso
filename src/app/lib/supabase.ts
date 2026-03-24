@@ -5,13 +5,13 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
  * Versão Estabilizada: Cliente único singleton para evitar erros de Web Locks.
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
 
 export const isSupabaseConfigured = Boolean(
-  supabaseUrl && 
-  supabaseAnonKey && 
-  !supabaseAnonKey.includes('placeholder')
+  process.env.NEXT_PUBLIC_SUPABASE_URL && 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && 
+  !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder')
 )
 
 export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {

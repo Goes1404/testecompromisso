@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,32 +11,34 @@ import { useEffect, useState, useMemo, memo, useRef, Suspense } from "react";
 import { useAuth } from "@/lib/AuthProvider"; 
 import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 const studentItems = [
-  { icon: Home, label: "Meu Painel", href: "/dashboard/home" },
-  { icon: Compass, label: "Assistir Aulas", href: "/dashboard/trails" },
-  { icon: BookOpen, label: "Biblioteca", href: "/dashboard/library" },
-  { icon: FilePenLine, label: "Treinar Redação", href: "/dashboard/student/essays" },
-  { icon: FileText, label: "Fazer Simulados", href: "/dashboard/student/simulados" },
-  { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live" },
-  { icon: MessagesSquare, label: "Comunidade", href: "/dashboard/forum" },
-  { icon: MessageSquare, label: "Tirar Dúvidas", href: "/dashboard/chat", badge: true },
-  { icon: FileCheck, label: "Meus Documentos", href: "/dashboard/student/documents" },
-  { icon: Settings, label: "Meu Perfil", href: "/dashboard/settings" },
+  { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
+  { icon: Compass, label: "Assistir Aulas", href: "/dashboard/trails", id: "nav-trails" },
+  { icon: BookOpen, label: "Biblioteca", href: "/dashboard/library", id: "nav-library" },
+  { icon: FilePenLine, label: "Treinar Redação", href: "/dashboard/student/essays", id: "nav-essays" },
+  { icon: FileText, label: "Fazer Simulados", href: "/dashboard/student/simulados", id: "nav-simulados" },
+  { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live", id: "nav-live" },
+  { icon: MessagesSquare, label: "Comunidade", href: "/dashboard/forum", id: "nav-forum" },
+  { icon: MessageSquare, label: "Tirar Dúvidas", href: "/dashboard/chat", badge: true, id: "nav-chat" },
+  { icon: FileCheck, label: "Meus Documentos", href: "/dashboard/student/documents", id: "nav-documents" },
+  { icon: Settings, label: "Meu Perfil", href: "/dashboard/settings", id: "nav-settings" },
 ];
 
 const teacherItems = [
-  { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home" },
-  { icon: BookOpen, label: "Gestão de Apostilas", href: "/dashboard/teacher/library" },
-  { icon: ClipboardList, label: "Minhas Trilhas", href: "/dashboard/teacher/trails" },
-  { icon: Database, label: "Banco de Questões", href: "/dashboard/teacher/questions" },
-  { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays" },
-  { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics" },
-  { icon: MonitorPlay, label: "Gerenciar Lives", href: "/dashboard/teacher/live" },
-  { icon: MessagesSquare, label: "Fórum Pedagógico", href: "/dashboard/forum" },
-  { icon: MessageSquare, label: "Chats com Alunos", href: "/dashboard/chat", badge: true },
-  { icon: Bell, label: "Mural de Avisos", href: "/dashboard/teacher/communication" },
-  { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
+  { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home", id: "nav-teacher-home" },
+  { icon: BookOpen, label: "Gestão de Apostilas", href: "/dashboard/teacher/library", id: "nav-teacher-library" },
+  { icon: ClipboardList, label: "Minhas Trilhas", href: "/dashboard/teacher/trails", id: "nav-teacher-trails" },
+  { icon: Database, label: "Banco de Questões", href: "/dashboard/teacher/questions", id: "nav-teacher-questions" },
+  { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays", id: "nav-teacher-essays" },
+  { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics", id: "nav-teacher-analytics" },
+  { icon: MonitorPlay, label: "Gerenciar Lives", href: "/dashboard/teacher/live", id: "nav-teacher-live" },
+  { icon: MessagesSquare, label: "Fórum Pedagógico", href: "/dashboard/forum", id: "nav-teacher-forum" },
+  { icon: MessageSquare, label: "Chats com Alunos", href: "/dashboard/chat", badge: true, id: "nav-teacher-chat" },
+  { icon: Bell, label: "Mural de Avisos", href: "/dashboard/teacher/communication", id: "nav-teacher-communication" },
+  { icon: HelpCircle, label: "Central de Ajuda", href: "/dashboard/teacher/help", id: "nav-teacher-help" },
+  { icon: Settings, label: "Configurações", href: "/dashboard/settings", id: "nav-teacher-settings" },
 ];
 
 const adminItems = [
@@ -106,7 +108,7 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: any[], pathname
       {items.map((item) => (
         <SidebarMenuItem key={item.label}>
           <SidebarMenuButton asChild isActive={isItemActive(item.href)} tooltip={item.label} className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-all duration-200">
-            <Link href={item.href} onClick={() => isMobile && setOpenMobile(false)} className="flex items-center gap-3">
+            <Link id={item.id} href={item.href} onClick={() => isMobile && setOpenMobile(false)} className="flex items-center gap-3">
               <item.icon className="h-5 w-5" />
               <span className="font-bold text-sm">{item.label}</span>
               {unreadCount > 0 && item.badge && (
@@ -182,7 +184,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   if (!hasHydrated || isUserLoading) return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-gradient gap-6 relative overflow-hidden">
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-brand-gradient gap-6 relative overflow-hidden">
       <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
       <div className="relative z-10 flex flex-col items-center gap-4">
         <div className="relative">
@@ -204,7 +206,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <SidebarProvider>
       <Sidebar side="left" collapsible="icon" className="bg-sidebar border-none">
         <SidebarHeader className="p-6">
-           <div className="flex items-center gap-4">
+           <div id="sidebar-logo" className="flex items-center gap-4">
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white p-1.5 shadow-lg">
               <Image 
                 src={logoUrl} 
@@ -240,7 +242,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
           <SidebarTrigger className="h-9 w-9 rounded-full hover:bg-muted" />
           <div className="flex-1" />
-          <Link href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all">
+          <Link id="header-profile" href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all">
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">{profile?.name || "Usuário"}</span>
               <span className="text-[8px] font-black text-accent uppercase tracking-widest">{userRole.toUpperCase()}</span>
@@ -260,6 +262,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </main>
         </SwipeHandler>
+        <OnboardingTour />
       </SidebarInset>
     </SidebarProvider>
   );
