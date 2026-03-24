@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { GraduationCap, School, User, ArrowRight, Loader2, Mail, Lock, Sparkles, UserPlus, ChevronLeft } from "lucide-react";
+import { GraduationCap, School, User, ArrowRight, Loader2, Mail, Lock, Sparkles, UserPlus, ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
@@ -41,6 +41,7 @@ export default function RegisterPage() {
     major: "",
     interests: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const nextStep = () => {
     if (step === 1 && (!formData.email || !formData.password || !formData.firstName || !formData.lastName)) {
@@ -219,7 +220,22 @@ export default function RegisterPage() {
                   <Label htmlFor="password" title="Senha" className="font-bold text-primary/60 ml-2">Senha de Segurança</Label>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                    <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" />
+                    <Input 
+                      id="password" 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="Mínimo 6 caracteres" 
+                      value={formData.password} 
+                      onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                      className="pl-12 pr-12 h-12 bg-white/50 rounded-2xl border-muted/20" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </div>
               </div>
