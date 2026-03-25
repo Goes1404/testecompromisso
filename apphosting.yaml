@@ -14,3 +14,6 @@ env:
     availability: [RUNTIME]
   - variable: WOLFRAM_ALPHA_APP_ID
     availability: [RUNTIME]
+  - variable: NODE_OPTIONS
+    value: --max-old-space-size=4096
+    availability: [BUILD, RUNTIME]
