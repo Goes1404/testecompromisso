@@ -403,7 +403,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                                 <div className="relative z-10 space-y-3">
                                   <div className="flex items-center gap-2">
                                     <Lightbulb className="h-4 w-4 text-accent animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">IA Insight</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Dica do Mentor</span>
                                   </div>
                                   <p className="text-xs font-medium italic opacity-90 leading-relaxed">
                                     "A revisão imediata fixa até 3x mais o conhecimento. Utilize as apostilas vinculadas."
