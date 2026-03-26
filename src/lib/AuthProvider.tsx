@@ -59,44 +59,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return 'student';
   }, [profile]);
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string, retries = 3, delayMs = 1000) => {
     if (!isSupabaseConfigured || !userId) return null;
     
-    try {
-      // Consulta com tratamento de erro amigável
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        // Consulta com tratamento de erro
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
 
-      if (error) {
-        // Se a tabela não existe ou há erro de RLS, logamos como aviso detalhado
-        console.warn(`[AUTH] Tentativa de busca de perfil falhou: ${error.message || 'Erro de permissão ou infraestrutura'}`);
-        return null;
-      }
-
-      if (data) {
-        if (data.status === 'suspended') {
-          router.replace('/suspended');
-          return null;
+        if (error) {
+          console.warn(`[AUTH] Tentativa ${attempt + 1} falhou: ${error.message}`);
+          if (attempt === retries - 1) return null;
         }
-        return data as Profile;
+
+        if (data) {
+          if (data.status === 'suspended') {
+            router.replace('/suspended');
+            return null;
+          }
+          return data as Profile;
+        }
+        
+        // Se não encontrou o perfil e ainda há tentativas, espera antes de tentar de novo
+        // Isso resolve o bug do "loading infinito" causado pelo delay do trigger no banco
+        if (attempt < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+
+      } catch (err: any) {
+        const errorMsg = err?.message || JSON.stringify(err);
+        console.error(`[AUTH] Erro na tentativa ${attempt + 1}:`, errorMsg);
+        if (attempt === retries - 1) return null;
       }
-      
-      // Se não encontrou o perfil, pode ser um novo usuário (trigger do banco ainda rodando)
-      return null;
-    } catch (err: any) {
-      // Captura erros inesperados de rede ou execução, extraindo a mensagem se possível
-      const errorMsg = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
-      console.error('[AUTH] Erro inesperado ao buscar perfil:', errorMsg);
-      return null;
     }
+    
+    return null;
   }, [router]);
 
   const refreshProfile = async () => {
     if (user?.id) {
-      const p = await fetchProfile(user.id);
+      const p = await fetchProfile(user.id, 1); // Sem retry no refresh manual
       if (p) setProfile(p);
     }
   };
