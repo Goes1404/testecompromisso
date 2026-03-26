@@ -14,8 +14,19 @@ import { Badge } from "@/components/ui/badge";
 export default function ChatListPage() {
   const { user, profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState("Todos");
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const categories = [
+    "Todos",
+    "Redação",
+    "Matemática",
+    "Linguagens",
+    "Ciências da Natureza",
+    "Ciências Humanas",
+    "Apoio Pedagógico"
+  ];
 
   useEffect(() => {
     async function fetchData() {
@@ -64,11 +75,17 @@ export default function ChatListPage() {
     fetchData();
   }, [user, profile]);
 
-  const filteredContacts = contacts.filter(c => 
-    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.institution?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredContacts = contacts.filter((c) => {
+    const matchesSearch = 
+      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.institution?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const mentorCourse = c.course || "Apoio Pedagógico";
+    const matchesCategory = activeCategory === "Todos" || mentorCourse.includes(activeCategory);
+    
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500 pb-20 px-1 md:px-4">
@@ -86,7 +103,7 @@ export default function ChatListPage() {
         </div>
       </div>
 
-      <div className="relative max-w-xl group w-full">
+      <div className="relative max-w-xl group w-full pt-4">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
         <Input 
           placeholder="Buscar mentor por nome ou polo..." 
@@ -94,6 +111,24 @@ export default function ChatListPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+      </div>
+
+      {/* CATEGORIAS (FILTROS) */}
+      <div className="w-full flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide snap-x">
+        {categories.map((cat) => (
+          <Button
+            key={cat}
+            variant="ghost"
+            onClick={() => setActiveCategory(cat)}
+            className={`rounded-full px-6 h-10 font-black text-[10px] uppercase tracking-widest whitespace-nowrap shadow-sm border-2 snap-center transition-all flex-shrink-0 ${
+              activeCategory === cat 
+                ? 'bg-accent border-accent text-accent-foreground shadow-accent/20' 
+                : 'bg-white border-muted/20 text-muted-foreground hover:border-accent hover:text-accent'
+            }`}
+          >
+            {cat}
+          </Button>
+        ))}
       </div>
 
       {/* CARD DESTAQUE AURORA */}

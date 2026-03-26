@@ -14,6 +14,8 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessage {
   id: string;
@@ -279,7 +281,30 @@ export default function DirectChatPage() {
                           : 'bg-white text-primary border-slate-100 rounded-tl-none'
                     }`}>
                      {isError && <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />}
-                     {msg.content}
+                     
+                     <div className="w-full text-sm leading-relaxed overflow-hidden">
+                       <ReactMarkdown
+                         remarkPlugins={[remarkGfm]}
+                         components={{
+                           p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                           ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+                           ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+                           li: ({node, ...props}) => <li className="" {...props} />,
+                           strong: ({node, ...props}) => <strong className="font-extrabold" {...props} />,
+                           em: ({node, ...props}) => <em className="italic opacity-90" {...props} />,
+                           h1: ({node, ...props}) => <h1 className="text-lg font-black mt-4 mb-2 uppercase" {...props} />,
+                           h2: ({node, ...props}) => <h2 className="text-base font-black mt-3 mb-2 uppercase" {...props} />,
+                           h3: ({node, ...props}) => <h3 className="text-sm font-black mt-2 mb-1 uppercase" {...props} />,
+                           a: ({node, ...props}) => <a className="underline underline-offset-2 break-all opacity-90 hover:opacity-100" target="_blank" rel="noopener noreferrer" {...props} />,
+                           code: ({node, inline, ...props}: any) => inline 
+                             ? <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono" {...props} /> 
+                             : <pre className="bg-black/10 p-3 rounded-lg text-xs overflow-x-auto my-3"><code className="font-mono" {...props} /></pre>,
+                           blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-current opacity-70 pl-3 my-2 italic" {...props} />
+                         }}
+                       >
+                         {msg.content}
+                       </ReactMarkdown>
+                     </div>
                   </div>
                 </div>
               );
