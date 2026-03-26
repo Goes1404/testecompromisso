@@ -91,8 +91,13 @@ export default function TeacherTrailsPage() {
 
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
       setTrails(prev => [data, ...prev]);
-      setIsCreateDialogOpen(false);
-      setNewTrail({ title: "", category: "Matemática", description: "" });
+      
+      setTimeout(() => {
+        setIsCreateDialogOpen(false);
+        setNewTrail({ title: "", category: "Matemática", description: "" });
+        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
+      }, 50);
+
     } catch (e: any) {
       console.error("Falha ao criar trilha:", e);
       toast({ title: "Erro de Persistência", description: e.message, variant: "destructive" });
@@ -116,7 +121,10 @@ export default function TeacherTrailsPage() {
         <div className="flex items-center gap-3">
           
           {/* CRIAÇÃO MANUAL */}
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+            setIsCreateDialogOpen(open);
+            if (!open) setTimeout(() => document.body.style.pointerEvents = "", 100);
+          }}>
             <DialogTrigger asChild>
               <Button className="rounded-xl md:rounded-2xl h-12 md:h-14 bg-primary text-white font-black px-6 md:px-8 shadow-xl hover:scale-105 transition-all">
                 <Plus className="h-5 w-5 md:h-6 md:w-6 mr-2" /> Nova Trilha Manual

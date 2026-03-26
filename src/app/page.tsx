@@ -72,9 +72,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
             <Link href="/" className="relative transition-all active:scale-95 group">
-              <div className="relative h-10 w-44 md:h-12 md:w-52 overflow-hidden transition-all">
+            <div className="relative h-10 w-44 md:h-12 md:w-52 overflow-hidden transition-all rounded-xl">
                 <Image 
-                  src="/logocompromisso.png" 
+                  src="/images/logocompromisso.png" 
                   alt="Logo Compromisso" 
                   fill 
                   className="object-contain" 
@@ -347,18 +347,20 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row justify-between items-start gap-16 border-b border-gray-100 pb-16">
             <div className="space-y-8 max-w-sm">
                <div className="flex items-center">
-                 <div className="relative h-12 w-48 md:h-14 md:w-56">
-                    <Image src="/logocompromisso.png" alt="Logo Compromisso" fill className="object-contain" unoptimized />
+                 <div className="relative h-12 w-48 md:h-14 md:w-56 overflow-hidden rounded-xl">
+                    <Image src="/images/logocompromisso.png" alt="Logo Compromisso" fill className="object-contain" unoptimized />
                  </div>
                </div>
                <div className="space-y-4">
                  <p className="text-sm text-gray-500 font-medium leading-relaxed italic">"Referência em aprovação nas instituições mais concorridas de Santana de Parnaíba e região."</p>
-                 <div className="inline-flex flex-col gap-2 p-5 bg-orange-50/50 rounded-3xl border border-primary/10 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-primary" />
-                      <span className="text-[10px] font-black uppercase text-gray-900 tracking-wider">Instituição de Elite</span>
+                 <div className="inline-flex flex-col gap-3 p-6 bg-orange-50/50 rounded-3xl border border-primary/10 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-8 w-8 shrink-0 bg-white rounded-lg p-1 shadow-sm border border-primary/5">
+                        <Image src="https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG" alt="Logo Prefeitura" fill className="object-contain" unoptimized />
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-gray-900 tracking-wider">Patrocinador Oficial</span>
                     </div>
-                    <p className="text-xs font-bold text-primary leading-tight">Trabalhamos em parceria com a Prefeitura de Santana de Parnaíba para garantir o melhor ensino preparatório da região.</p>
+                    <p className="text-xs font-bold text-primary leading-tight">Esta plataforma é integralmente patrocinada pela Prefeitura de Santana de Parnaíba, garantindo ensino de elite gratuito para a nossa comunidade.</p>
                  </div>
                </div>
                <div className="flex gap-4">

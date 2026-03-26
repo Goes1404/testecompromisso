@@ -130,7 +130,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [hasHydrated, setHasHydrated] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   
-  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
+  const logoUrl = "/images/logocompromisso.png";
+  const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
   useEffect(() => { setHasHydrated(true); }, []);
 
@@ -207,18 +208,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar side="left" collapsible="icon" className="bg-sidebar border-none">
         <SidebarHeader className="p-6">
            <div id="sidebar-logo" className="flex items-center gap-4">
-            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white p-1.5 shadow-lg">
-              <Image 
-                src={logoUrl} 
-                alt="Logo Santana de Parnaíba" 
-                fill 
-                unoptimized
-                className="object-contain"
-              />
-            </div>
+            <div className="relative h-10 w-40 overflow-hidden rounded-xl">
+                <Image 
+                  src="/images/logocompromisso.png" 
+                  alt="Logo Compromisso" 
+                  fill 
+                  className="object-contain" 
+                  unoptimized 
+                />
+              </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="text-lg font-black text-white italic leading-none">Compromisso</span>
-              <span className="text-[8px] text-white/40 uppercase tracking-widest font-black">Santana de Parnaíba</span>
+              <span className="text-[8px] text-white/40 uppercase tracking-widest font-black">Ensino de Elite</span>
             </div>
           </div>
         </SidebarHeader>
@@ -227,7 +228,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavMenu items={navItems} pathname={pathname || ''} unreadCount={unreadCount} />
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter className="p-4 border-t border-white/5">
+        <SidebarFooter className="p-4 border-t border-white/5 space-y-4">
+           <div className="flex flex-col gap-3 px-2 py-3 bg-white/5 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2">
+                <div className="relative h-6 w-6 shrink-0 bg-white rounded-md p-0.5">
+                  <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" unoptimized />
+                </div>
+                <span className="text-[7px] font-black text-white/60 uppercase tracking-widest leading-tight">Plataforma Patrocinada pela Prefeitura</span>
+              </div>
+           </div>
+           
            <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={() => signOut()} className="text-red-400 hover:bg-red-500/10 h-11 rounded-lg">

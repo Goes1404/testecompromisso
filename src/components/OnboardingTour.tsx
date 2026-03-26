@@ -171,7 +171,7 @@ export function OnboardingTour() {
     const timer = setTimeout(() => {
       start();
       setShouldShow(false);
-    }, 1500);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [shouldShow, start]);

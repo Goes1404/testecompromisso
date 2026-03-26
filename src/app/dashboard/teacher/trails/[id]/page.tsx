@@ -9,7 +9,7 @@
  * - Integração com Apostilas: Vincula recursos da biblioteca às aulas.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,6 +84,7 @@ export default function TrailManagementPage() {
   const [isEditTrailDialogOpen, setIsEditTrailDialogOpen] = useState(false);
   
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const activeModuleRef = useRef<string | null>(null);
   const [editingContentId, setEditingContentId] = useState<string | null>(null);
 
   const [editTrailForm, setEditTrailForm] = useState({ title: '', category: '', description: '' });
@@ -259,8 +260,12 @@ export default function TrailManagementPage() {
       setModules((prev) => [...prev, data]);
       setContents((prev) => ({ ...prev, [data.id]: [] }));
       toast({ title: 'Módulo Criado!' });
-      setModuleForm({ title: '' });
-      setIsModuleDialogOpen(false);
+      
+      setTimeout(() => {
+        setModuleForm({ title: '' });
+        setIsModuleDialogOpen(false);
+        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
+      }, 50);
     }
     setIsSubmitting(false);
   };
@@ -334,8 +339,13 @@ export default function TrailManagementPage() {
         if (error) throw error;
 
         toast({ title: 'Aula Atualizada!' });
-        setIsContentDialogOpen(false);
-        setEditingContentId(null);
+        
+        setTimeout(() => {
+          setIsContentDialogOpen(false);
+          setEditingContentId(null);
+          setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
+        }, 50);
+        
         loadData();
       } catch (e: any) {
         toast({ title: 'Erro ao atualizar', description: e.message, variant: 'destructive' });
@@ -358,7 +368,10 @@ export default function TrailManagementPage() {
   };
 
   const handleBatchSaveContent = async (moduleId: string | null) => {
-    if (!moduleId || pendingItems.length === 0 || isSubmitting) return;
+    // Use a ref como fallback caso o estado seja limpo antes da execução
+    const resolvedModuleId = moduleId || activeModuleRef.current;
+    if (!resolvedModuleId || pendingItems.length === 0 || isSubmitting) return;
+    moduleId = resolvedModuleId;
     setIsSubmitting(true);
 
     const currentModuleContents = contents[moduleId] || [];
@@ -386,8 +399,12 @@ export default function TrailManagementPage() {
         title: 'Materiais Publicados!',
         description: `${data.length} itens foram adicionados ao capítulo.`,
       });
-      setPendingItems([]);
-      setIsContentDialogOpen(false);
+      
+      setTimeout(() => {
+        setPendingItems([]);
+        setIsContentDialogOpen(false);
+        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
+      }, 50);
     } else {
       toast({ title: 'Erro ao salvar', description: error?.message || 'Ocorreu um erro desconhecido', variant: 'destructive' });
     }
@@ -556,6 +573,7 @@ export default function TrailManagementPage() {
                     </Button>
                     <Button
                       onClick={() => {
+                        activeModuleRef.current = mod.id;
                         setActiveModuleId(mod.id);
                         setEditingContentId(null);
                         setPendingItems([]);
@@ -784,7 +802,15 @@ export default function TrailManagementPage() {
       </Dialog>
 
       {/* DIÁLOGO CONTEÚDO (CRIAÇÃO/EDIÇÃO) */}
-      <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
+      <Dialog open={isContentDialogOpen} onOpenChange={(open) => {
+        // Só reseta o estado quando fechar (não ao abrir)
+        if (!open) {
+          // Preserva o activeModuleRef para não perder o contexto
+          setIsContentDialogOpen(false);
+        } else {
+          setIsContentDialogOpen(true);
+        }
+      }}>
         <DialogContent className='rounded-2xl max-h-[95vh] md:rounded-3xl p-0 w-[95vw] sm:w-full max-w-4xl bg-white border-none shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden mx-auto flex flex-col'>
           <div className="flex flex-col h-full max-h-[90vh]">
             <DialogHeader className="p-6 md:p-8 bg-primary text-white shrink-0">

@@ -269,6 +269,12 @@ export default function StudentEssayPage() {
               )}
             </Button>
           </div>
+          <div className="px-6 pb-6 bg-slate-50/80 backdrop-blur-sm text-center flex items-center justify-center gap-2">
+            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest italic font-bold">
+              A Aurora IA é uma inteligência artificial e sua correção pode apresentar imprecisões.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

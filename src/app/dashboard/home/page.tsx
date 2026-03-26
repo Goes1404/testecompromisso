@@ -21,15 +21,22 @@ import {
   BrainCircuit,
   Sparkles,
   Zap,
-  FilePenLine
+  FilePenLine,
+  ArrowRight,
+  ChevronRight,
+  BookOpen,
+  Target,
+  Clock,
+  Star
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuth } from "@/lib/AuthProvider"; 
+import { useAuth } from "@/lib/AuthProvider";
 import { supabase, safeExecute } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 
-const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
+const logoUrl = "/images/logocompromisso.png";
+const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
 const localImagesFallback = [
   "/images/capa1.jpeg",
@@ -53,17 +60,24 @@ interface Announcement {
   priority: 'low' | 'medium' | 'high';
 }
 
-const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: string; bgColor: string }> = {
-  low: { icon: Info, color: 'text-slate-500', bgColor: 'bg-slate-100' },
-  medium: { icon: Megaphone, color: 'text-amber-600', bgColor: 'bg-amber-100' },
-  high: { icon: AlertOctagon, color: 'text-red-600', bgColor: 'bg-red-100' },
+const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: string; bgColor: string; border: string }> = {
+  low: { icon: Info, color: 'text-slate-500', bgColor: 'bg-slate-50', border: 'border-slate-200' },
+  medium: { icon: Megaphone, color: 'text-amber-600', bgColor: 'bg-amber-50', border: 'border-amber-200' },
+  high: { icon: AlertOctagon, color: 'text-red-600', bgColor: 'bg-red-50', border: 'border-red-200' },
+};
+
+const greetingByHour = () => {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
 };
 
 export default function DashboardHome() {
   const { user, profile, userRole, loading: isUserLoading } = useAuth();
   const router = useRouter();
   const dataFetchedRef = useRef(false);
-  
+
   const [recommendedTrails, setRecommendedTrails] = useState<any[]>([]);
   const [libraryResources, setLibraryResources] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -80,14 +94,11 @@ export default function DashboardHome() {
   }, [userRole, isUserLoading, router]);
 
   const fetchData = useCallback(async () => {
-    // PROTEÇÃO: Só busca dados se o perfil estiver estabilizado e ainda não tivermos buscado
     if (!user || !profile || dataFetchedRef.current) return;
-    
     setLoadingData(true);
     dataFetchedRef.current = true;
 
     try {
-      // Uso de safeExecute para tratar erros de Lock no ambiente Netlify
       const [annRes, trailRes, progressRes, libRes, essayRes, examRes] = await Promise.all([
         safeExecute(async () => await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
         safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
@@ -102,7 +113,6 @@ export default function DashboardHome() {
       if (progressRes?.data) setRecentProgress((progressRes.data as any[]).filter((p: any) => p.trail));
       if (libRes?.data) setLibraryResources(libRes.data);
 
-      // Calcular Estatisticas da Redacao
       if (essayRes?.data && essayRes.data.length > 0) {
         const essays = essayRes.data;
         const scoredEssays = essays.filter((e: any) => e.score !== null && e.score > 0);
@@ -112,14 +122,13 @@ export default function DashboardHome() {
         setEssayStats({ count: 0, average: 0, latest: null });
       }
 
-      // Calcular Media de Acertos
       if (examRes?.data && examRes.data.length > 0) {
         const exams = examRes.data;
         let totalScore = 0;
         let totalMax = 0;
         exams.forEach((ex: any) => {
-           totalScore += Number(ex.score || 0);
-           totalMax += Number(ex.total_questions || 0);
+          totalScore += Number(ex.score || 0);
+          totalMax += Number(ex.total_questions || 0);
         });
         const avg = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
         setExamStats({ totalAssessed: exams.length, averageScore: Math.round(avg) });
@@ -129,7 +138,6 @@ export default function DashboardHome() {
 
     } catch (e: any) {
       console.error("Dashboard data load error:", e);
-      // Permitimos re-tentativa se falhar totalmente
       dataFetchedRef.current = false;
     } finally {
       setLoadingData(false);
@@ -143,295 +151,383 @@ export default function DashboardHome() {
   }, [user, profile, userRole, fetchData]);
 
   if (isUserLoading || (loadingData && !dataFetchedRef.current)) return (
-    <div className="flex flex-col h-96 items-center justify-center gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Carregando seu ambiente...</p>
+    <div className="flex flex-col h-[70vh] items-center justify-center gap-5">
+      <div className="relative">
+        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
+      </div>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Carregando seu ambiente...</p>
     </div>
   );
 
   const userName = profile?.name?.split(' ')[0] || 'Estudante';
+  const greeting = greetingByHour();
 
   const quickActions = [
-    { label: "Checklist", icon: FileCheck, href: "/dashboard/student/documents", color: "bg-blue-500" },
-    { label: "Simulado", icon: BrainCircuit, href: "/dashboard/student/simulados", color: "bg-purple-500" },
-    { label: "Isenção", icon: Calculator, href: "/dashboard/student/documents?tab=exemption", color: "bg-amber-500" },
-    { label: "Biblioteca", icon: Library, href: "/dashboard/library", color: "bg-green-500" },
+    { label: "Checklist", icon: FileCheck, href: "/dashboard/student/documents", color: "from-blue-500 to-blue-600", shadow: "shadow-blue-500/20" },
+    { label: "Simulado", icon: BrainCircuit, href: "/dashboard/student/simulados", color: "from-violet-500 to-purple-600", shadow: "shadow-purple-500/20" },
+    { label: "Isenção", icon: Calculator, href: "/dashboard/student/documents?tab=exemption", color: "from-amber-500 to-orange-500", shadow: "shadow-amber-500/20" },
+    { label: "Biblioteca", icon: Library, href: "/dashboard/library", color: "from-emerald-500 to-green-600", shadow: "shadow-green-500/20" },
   ];
 
-  return (
-    <div className="space-y-6 pb-8 animate-in fade-in duration-500 px-1 relative">
-      <section className="bg-primary p-6 md:p-8 rounded-3xl text-white relative overflow-hidden shadow-2xl">
-         <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-accent/20 rounded-full blur-3xl" />
-         <div className="relative z-10 space-y-6">
-           <div className="flex items-center gap-4">
-             <div className="relative h-12 w-12 rounded-xl bg-white shadow-xl flex items-center justify-center p-1 shrink-0">
-               <Image src={logoUrl} alt="Logo Santana de Parnaíba" fill className="object-contain p-1" unoptimized />
-             </div>
-             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-               <h1 className="text-2xl md:text-3xl font-extrabold italic tracking-tighter leading-tight">Olá, {userName}! 👋</h1>
-               <Badge className="bg-accent text-accent-foreground border-none font-black px-3 py-1 shadow-lg w-fit">
-                 <Bot className="h-3 w-3 mr-1.5" /> IA ATIVA
-               </Badge>
-             </div>
-           </div>
-           <p className="text-sm md:text-lg text-white/80 font-medium leading-relaxed italic max-w-2xl mt-2 mb-4">
-             Sua jornada rumo à aprovação está sendo monitorada com inteligência industrial.
-           </p>
-           
-           {/* Gamification Stats */}
-           <div className="flex flex-wrap gap-4 pt-4 border-t border-white/10">
-              <div className="flex items-center gap-3 bg-white/10 rounded-2xl p-3 px-5 backdrop-blur-sm">
-                <BrainCircuit className="h-5 w-5 text-accent" />
-                <div>
-                  <p className="text-xs text-white/60 font-bold uppercase tracking-widest">Taxa de Acertos</p>
-                  <p className="font-black text-lg leading-none">{examStats?.totalAssessed ? `${examStats.averageScore}%` : 'Sem dados'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-white/10 rounded-2xl p-3 px-5 backdrop-blur-sm">
-                <FilePenLine className="h-5 w-5 text-green-400" />
-                <div>
-                  <p className="text-xs text-white/60 font-bold uppercase tracking-widest">Média Redação</p>
-                  <p className="font-black text-lg leading-none">{essayStats?.count ? `${essayStats.average} pts` : 'Sem dados'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-white/10 rounded-2xl p-3 px-5 backdrop-blur-sm">
-                <PlayCircle className="h-5 w-5 text-yellow-400" />
-                <div>
-                  <p className="text-xs text-white/60 font-bold uppercase tracking-widest">Trilhas Ativas</p>
-                  <p className="font-black text-lg leading-none">{recentProgress.length} Trilhas</p>
-                </div>
-              </div>
-           </div>
-         </div>
-      </section>
+  const score = examStats?.averageScore || 0;
+  const circumference = 2 * Math.PI * 42;
+  const dashOffset = circumference - (score / 100) * circumference;
 
-      {/* Aurora Insight */}
-      <Card className="border-none shadow-xl bg-gradient-to-r from-blue-50 to-indigo-50/50 rounded-3xl overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-2xl flex-shrink-0" />
-        <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
-          <div className="h-16 w-16 rounded-full bg-white shadow-lg flex items-center justify-center shrink-0 border-2 border-accent/20">
-            <Bot className="h-8 w-8 text-accent animate-pulse" />
-          </div>
-          <div className="flex-1 space-y-2 text-center md:text-left">
-            <h3 className="font-black text-primary uppercase text-xs tracking-widest flex items-center justify-center md:justify-start gap-2">
-              <Sparkles className="h-3 w-3 text-accent" /> Insight da Aurora ATIVO
-            </h3>
-            <p className="text-slate-600 font-medium italic text-sm md:text-base leading-relaxed pl-1">
-              "A constância é a chave da aprovação! Lembre-se de revisar detalhadamente os seus erros do último simulado antes de avançar para a próxima etapa. Eu estou aqui 24 horas por dia para corrigir suas redações quando precisar."
+  return (
+    <div className="space-y-6 pb-10 animate-in fade-in duration-700 px-0.5">
+
+      {/* ── HERO BANNER ── */}
+      <section className="relative rounded-3xl overflow-hidden bg-gray-950 min-h-[220px] flex items-end p-6 md:p-8 shadow-2xl">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-30%] right-[-10%] w-[400px] h-[400px] bg-primary/25 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-30%] left-[-5%] w-[300px] h-[300px] bg-accent/15 rounded-full blur-[80px]" />
+        </div>
+
+        {/* Decorative grid */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 w-full">
+          <div className="space-y-3">
+            {/* Greeting chip */}
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full">
+              <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{greeting}</span>
+            </div>
+
+            <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tighter">
+              {userName}! <span className="text-primary italic">Pronto para hoje?</span>
+            </h1>
+
+            <p className="text-sm text-white/50 font-medium max-w-md leading-relaxed">
+              Sua IA Aurora está monitorando seu progresso em tempo real. Continue de onde parou.
             </p>
           </div>
-          <Button asChild className="bg-primary text-white font-black rounded-xl shadow-lg border-none hover:scale-105 transition-transform shrink-0">
-            <Link href="/dashboard/student/documents">Falar com a IA</Link>
-          </Button>
-        </CardContent>
-      </Card>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {quickActions.map((action, i) => (
-          <Link key={i} href={action.href}>
-            <Card className="border-none shadow-xl bg-white hover:bg-muted/5 transition-all group rounded-2xl overflow-hidden cursor-pointer">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className={`h-10 w-10 rounded-xl ${action.color} text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                  <action.icon className="h-5 w-5" />
+          {/* Stats row */}
+          <div className="flex flex-wrap gap-3 shrink-0">
+            {[
+              { label: "Acertos", value: examStats?.totalAssessed ? `${examStats.averageScore}%` : '–', icon: BrainCircuit, color: "text-accent" },
+              { label: "Redação", value: essayStats?.count ? `${essayStats.average}pts` : '–', icon: FilePenLine, color: "text-green-400" },
+              { label: "Trilhas", value: `${recentProgress.length}`, icon: PlayCircle, color: "text-yellow-400" },
+            ].map(stat => (
+              <div key={stat.label} className="flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 min-w-[110px]">
+                <stat.icon className={`h-5 w-5 ${stat.color} shrink-0`} />
+                <div>
+                  <p className="font-black text-white text-base leading-none">{stat.value}</p>
+                  <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
                 </div>
-                <span className="font-black text-xs md:text-sm uppercase tracking-widest text-primary italic">{action.label}</span>
-              </CardContent>
-            </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── QUICK ACTIONS ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {quickActions.map((action) => (
+          <Link key={action.label} href={action.href}>
+            <div className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-5 shadow-xl ${action.shadow} hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 cursor-pointer`}>
+              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl translate-x-4 -translate-y-4 group-hover:scale-150 transition-transform duration-500" />
+              <action.icon className="h-6 w-6 text-white mb-3 relative z-10" />
+              <p className="font-black text-white uppercase text-xs tracking-widest relative z-10">{action.label}</p>
+              <ChevronRight className="absolute bottom-3 right-3 h-4 w-4 text-white/40 group-hover:translate-x-1 transition-transform" />
+            </div>
           </Link>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
-        {/* Essay Dashboard Widget */}
-        <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-6 md:p-8 space-y-6">
-            <h3 className="font-black text-primary text-xl md:text-2xl italic flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <FilePenLine className="h-5 w-5 text-accent" /> 
-              </div>
-              Laboratório de Redação
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 rounded-2xl p-4 md:p-6 border border-slate-100 flex flex-col items-center justify-center text-center shadow-inner">
-                <span className="text-4xl font-black text-primary">{essayStats?.count || 0}</span>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-2 border-b-2 border-accent/30 pb-1">Enviadas</span>
-              </div>
-              <div className="bg-slate-50 rounded-2xl p-4 md:p-6 border border-slate-100 flex flex-col items-center justify-center text-center shadow-inner">
-                <span className="text-4xl font-black text-accent">{essayStats?.average || 0}</span>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-2 border-b-2 border-accent/30 pb-1">Média (pts)</span>
-              </div>
+      {/* ── AURORA INSIGHT ── */}
+      <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/50 to-white p-6 md:p-7 shadow-xl">
+        <div className="absolute right-[-20px] top-[-20px] w-40 h-40 bg-accent/10 rounded-full blur-3xl" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 relative z-10">
+          <div className="h-14 w-14 rounded-2xl bg-white shadow-xl flex items-center justify-center shrink-0 border border-accent/10">
+            <Bot className="h-7 w-7 text-accent animate-pulse" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Sparkles className="h-3 w-3 text-accent" />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary">Aurora IA · Insight do Dia</span>
             </div>
-
-            <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <div className="h-px flex-1 bg-slate-200" />Última Redação<div className="h-px flex-1 bg-slate-200" />
-              </h4>
-              {essayStats?.latest ? (
-                <div className="p-4 rounded-xl bg-muted/30 border border-muted/50 flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="font-bold text-sm text-primary truncate italic">{essayStats.latest.theme}</p>
-                    <p className="text-xs font-black text-slate-500 uppercase tracking-widest shadow-sm border border-slate-200 bg-white/50 px-2 py-0.5 rounded-md w-fit mt-1">
-                      {essayStats.latest.status === 'reviewed' ? 'Corrigida ✅' : 'Aguardando ⏳'}
-                    </p>
-                  </div>
-                  <div className="shrink-0 bg-white shadow-md border border-black/5 px-3 py-2 rounded-lg text-center flex items-center justify-center">
-                    <span className="font-black text-xl text-primary">{essayStats.latest.score || '-'}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-6 text-center border-2 border-dashed rounded-xl opacity-50 bg-slate-50">
-                  <p className="text-sm font-medium italic">Laboratório vazio. Comece a escrever!</p>
-                </div>
-              )}
-            </div>
-            
-            <Button asChild className="w-full bg-primary text-white font-black hover:scale-[1.02] transition-transform rounded-2xl h-14 shadow-lg border-none text-sm uppercase tracking-wider">
-              <Link href="/dashboard/student/essays">Acessar Laboratório</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Exam Dashboard Widget */}
-        <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-6 md:p-8 space-y-6 flex flex-col h-full">
-            <h3 className="font-black text-primary text-xl md:text-2xl italic flex items-center gap-3">
-               <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <BrainCircuit className="h-5 w-5 text-accent" /> 
-              </div>
-              Média de Acertos
-            </h3>
-            
-            <div className="flex-1 flex flex-col items-center justify-center py-6">
-              <div className="relative h-40 w-40 rounded-full flex items-center justify-center shrink-0">
-                <svg className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-xl" viewBox="0 0 36 36">
-                  {/* Background Circle */}
-                  <path
-                    className="text-slate-100 stroke-current"
-                    strokeWidth="4"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  {/* Progress Circle */}
-                  <path
-                    className="text-accent stroke-current drop-shadow-sm"
-                    strokeWidth="4"
-                    strokeDasharray={`${examStats?.averageScore || 0}, 100`}
-                    strokeLinecap="round"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <div className="text-center absolute flex flex-col items-center">
-                  <span className="text-4xl font-black text-primary tracking-tighter">{examStats?.averageScore || 0}<span className="text-xl text-accent">%</span></span>
-                  <span className="text-[10px] md:text-xs font-black uppercase text-slate-400 tracking-[0.2em] mt-2">Aproveitamento</span>
-                </div>
-              </div>
-              <p className="text-sm font-medium text-slate-500 mt-6 italic text-center max-w-[250px] leading-relaxed">
-                Baseado no histórico de {examStats?.totalAssessed || 0} avaliações e simulados realizados.
-              </p>
-            </div>
-            
-            <Button asChild className="w-full bg-primary text-white font-black hover:scale-[1.02] transition-transform rounded-2xl h-14 shadow-lg border-none text-sm uppercase tracking-wider mt-auto">
-              <Link href="/dashboard/student/simulados">Banco de Questões</Link>
-            </Button>
-          </CardContent>
-        </Card>
+            <p className="text-slate-600 font-medium italic text-sm leading-relaxed">
+              "A constância é a chave da aprovação! Revise os erros do último simulado antes de avançar. Estou disponível 24h para corrigir redações."
+            </p>
+          </div>
+          <Button asChild className="bg-primary text-white font-black rounded-xl shadow-lg border-none hover:scale-105 transition-transform shrink-0 h-10 px-5 text-xs">
+            <Link href="/dashboard/student/documents">Falar com Aurora</Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      {/* ── MAIN CONTENT GRID ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* LEFT — 2/3 width */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Trilhas em Progresso */}
+          <div>
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h2 className="text-lg font-black text-primary italic flex items-center gap-2">
+                <div className="h-7 w-7 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                </div>
+                Por Onde Começar
+              </h2>
+              {recentProgress.length > 0 && (
+                <Link href="/dashboard/trails" className="text-[10px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors flex items-center gap-1">
+                  Ver todas <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
+
+            {loadingData ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Array(2).fill(0).map((_, i) => <div key={i} className="h-52 bg-muted/20 animate-pulse rounded-3xl" />)}
+              </div>
+            ) : recentProgress.length === 0 ? (
+              <div className="py-14 text-center border-2 border-dashed border-muted/20 rounded-3xl bg-muted/5 flex flex-col items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-primary/5 flex items-center justify-center">
+                  <PlayCircle className="h-6 w-6 text-primary/30" />
+                </div>
+                <div>
+                  <p className="font-black italic text-primary/60 text-sm">Nenhuma trilha iniciada</p>
+                  <p className="text-xs text-muted-foreground mt-1">Explore o catálogo e comece sua jornada.</p>
+                </div>
+                <Button asChild size="sm" className="mt-1 bg-primary text-white border-none rounded-xl font-black h-9 px-5 text-xs">
+                  <Link href="/dashboard/trails">Explorar Trilhas</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {recentProgress.map((prog, i) => {
+                  const trailData = prog.trail;
+                  return (
+                    <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
+                      <div className="group overflow-hidden rounded-3xl shadow-xl bg-white hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border border-muted/10">
+                        <div className="relative aspect-[16/7] overflow-hidden bg-slate-100">
+                          <Image
+                            src={getSafeImageUrl(trailData?.image_url, i)}
+                            alt={trailData?.title || "Trilha"}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute top-3 left-3">
+                            <Badge className="bg-primary/90 text-white border-none text-[9px] font-black uppercase px-2.5 h-5 backdrop-blur-sm">
+                              {trailData?.category || 'Curso'}
+                            </Badge>
+                          </div>
+                          <div className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform">
+                            <PlayCircle className="h-5 w-5 text-white" />
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-2.5">
+                          <h3 className="font-black text-sm text-primary italic truncate leading-tight">{trailData?.title || 'Trilha'}</h3>
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Progresso</span>
+                              <span className="text-[9px] font-black text-primary">{prog.percentage || 0}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-1000"
+                                style={{ width: `${prog.percentage || 0}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Anúncios */}
           {(!loadingData && announcements.length === 0) ? null : (
             <div>
-              <h2 className="text-xl font-black text-primary italic flex items-center gap-2 px-2 mb-4">
-                <Megaphone className="h-5 w-5 text-accent" /> Fique Atento
+              <h2 className="text-lg font-black text-primary italic flex items-center gap-2 px-1 mb-4">
+                <div className="h-7 w-7 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <Megaphone className="h-4 w-4 text-amber-600" />
+                </div>
+                Comunicados
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-3">
                 {loadingData ? (
-                  Array(2).fill(0).map((_, i) => <div key={i} className="h-24 bg-muted/20 animate-pulse rounded-2xl" />)
+                  Array(2).fill(0).map((_, i) => <div key={i} className="h-20 bg-muted/20 animate-pulse rounded-2xl" />)
                 ) : (
                   announcements.map((ann: any) => {
                     const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                     const Icon = styles.icon;
                     return (
-                      <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 shadow-sm ${styles.bgColor} border border-black/5`}>
-                        <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${styles.color}`} />
+                      <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} shadow-sm hover:shadow-md transition-shadow`}>
+                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 bg-white shadow-sm`}>
+                          <Icon className={`h-4 w-4 ${styles.color}`} />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`font-bold text-sm ${styles.color} truncate`}>{ann.title}</p>
-                          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium italic">{ann.message}</p>
+                          <p className={`font-black text-sm ${styles.color} truncate`}>{ann.title}</p>
+                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed font-medium mt-0.5 italic">{ann.message}</p>
                         </div>
                       </div>
-                    )
+                    );
                   })
                 )}
               </div>
             </div>
           )}
+        </div>
 
-          <div>
-            <h2 className="text-xl font-black text-primary italic flex items-center gap-2 px-2 mb-4">
-              <TrendingUp className="h-5 w-5 text-accent" /> Por Onde Começar
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {loadingData ? (
-                Array(2).fill(0).map((_, i) => <div key={i} className="aspect-video bg-muted/20 animate-pulse rounded-[2rem]" />)
-              ) : recentProgress.length === 0 ? (
-                <div className="col-span-full py-12 text-center border-4 border-dashed rounded-[2.5rem] bg-muted/5 opacity-40">
-                  <PlayCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                  <p className="font-black italic text-primary">Inicie uma trilha agora.</p>
+        {/* RIGHT — 1/3 width */}
+        <div className="space-y-5">
+
+          {/* Taxa de Acertos — Donut */}
+          <div className="bg-white rounded-3xl shadow-xl border border-muted/10 p-6 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-violet-100 flex items-center justify-center">
+                <BrainCircuit className="h-4 w-4 text-violet-600" />
+              </div>
+              <h3 className="font-black text-sm text-primary italic">Taxa de Acertos</h3>
+            </div>
+
+            <div className="flex flex-col items-center justify-center py-3">
+              <div className="relative h-32 w-32">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" className="stroke-slate-100" strokeWidth="10" fill="none" />
+                  <circle
+                    cx="50" cy="50" r="42"
+                    stroke="url(#donutGrad)" strokeWidth="10" fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={dashOffset}
+                    className="transition-all duration-1000"
+                  />
+                  <defs>
+                    <linearGradient id="donutGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" />
+                      <stop offset="100%" stopColor="hsl(var(--accent))" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-black text-primary leading-none">{score}</span>
+                  <span className="text-xs font-black text-accent">%</span>
                 </div>
+              </div>
+              <p className="text-xs text-slate-400 font-medium italic mt-3 text-center">
+                Baseado em {examStats?.totalAssessed || 0} avaliações
+              </p>
+            </div>
+
+            <Button asChild className="w-full h-11 bg-primary text-white font-black rounded-2xl border-none shadow-lg text-xs uppercase tracking-wider hover:scale-[1.02] transition-transform">
+              <Link href="/dashboard/student/simulados">Banco de Questões</Link>
+            </Button>
+          </div>
+
+          {/* Laboratório de Redação */}
+          <div className="bg-white rounded-3xl shadow-xl border border-muted/10 p-6 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-green-100 flex items-center justify-center">
+                <FilePenLine className="h-4 w-4 text-green-600" />
+              </div>
+              <h3 className="font-black text-sm text-primary italic">Lab. de Redação</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-4 text-center border border-slate-100">
+                <span className="text-3xl font-black text-primary">{essayStats?.count || 0}</span>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Enviadas</p>
+              </div>
+              <div className="bg-gradient-to-br from-accent/5 to-primary/5 rounded-2xl p-4 text-center border border-accent/10">
+                <span className="text-3xl font-black text-accent">{essayStats?.average || 0}</span>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Média pts</p>
+              </div>
+            </div>
+
+            {essayStats?.latest ? (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-50 to-white border border-muted/20 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <FileText className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-xs text-primary truncate italic">{essayStats.latest.theme}</p>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider mt-0.5">
+                    {essayStats.latest.status === 'reviewed' ? '✅ Corrigida' : '⏳ Aguardando'}
+                  </p>
+                </div>
+                {essayStats.latest.score && (
+                  <div className="shrink-0 bg-white shadow border border-muted/20 px-2.5 py-1.5 rounded-xl">
+                    <span className="font-black text-primary text-sm">{essayStats.latest.score}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="py-6 text-center border-2 border-dashed rounded-2xl bg-slate-50 opacity-50">
+                <p className="text-xs font-medium italic text-slate-400">Comece a escrever hoje!</p>
+              </div>
+            )}
+
+            <Button asChild className="w-full h-11 bg-primary text-white font-black rounded-2xl border-none shadow-lg text-xs uppercase tracking-wider hover:scale-[1.02] transition-transform">
+              <Link href="/dashboard/student/essays">Acessar Laboratório</Link>
+            </Button>
+          </div>
+
+          {/* Biblioteca */}
+          <div className="bg-white rounded-3xl shadow-xl border border-muted/10 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center">
+                  <Library className="h-4 w-4 text-emerald-600" />
+                </div>
+                <h3 className="font-black text-sm text-primary italic">Acervo & Apostilas</h3>
+              </div>
+              <Link href="/dashboard/library" className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors">Ver tudo</Link>
+            </div>
+
+            <div className="space-y-2.5">
+              {loadingData ? (
+                Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-muted/20 animate-pulse rounded-2xl" />)
+              ) : libraryResources.length === 0 ? (
+                <div className="py-8 text-center opacity-30 italic text-xs">Apostilas em sincronização...</div>
               ) : (
-                recentProgress.map((prog, i) => {
-                  const trailData = prog.trail;
-                  return (
-                    <Link key={prog.id} href={`/dashboard/classroom/${prog.trail_id}`}>
-                      <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2rem] flex flex-col h-full">
-                        <div className="relative aspect-[21/9] overflow-hidden bg-slate-100">
-                          <Image src={getSafeImageUrl(trailData?.image_url, i)} alt={trailData?.title || "Trilha"} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent" />
-                        </div>
-                        <CardContent className="p-5 space-y-3">
-                          <h3 className="font-black text-sm text-primary italic truncate">{trailData?.title || 'Trilha'}</h3>
-                          <Progress value={prog.percentage} className="h-1 rounded-full" />
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  )
-                })
+                libraryResources.map((res) => (
+                  <Link key={res.id} href="/dashboard/library">
+                    <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 hover:shadow-md transition-all group cursor-pointer border border-transparent hover:border-muted/20">
+                      <div className="h-9 w-9 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary/10 transition-colors">
+                        {res.type === 'Video' ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-xs text-primary truncate italic">{res.title}</h4>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors shrink-0" />
+                    </div>
+                  </Link>
+                ))
               )}
             </div>
           </div>
         </div>
-
-        <div className="space-y-8">
-            <h3 className="text-xl font-black text-primary italic px-2 flex items-center gap-2">
-              <Library className="h-5 w-5 text-accent" /> Acervo e Apostilas
-            </h3>
-            <div className="space-y-4">
-              {loadingData ? (
-                Array(3).fill(0).map((_, i) => <div key={i} className="h-16 bg-muted/20 animate-pulse rounded-2xl" />)
-              ) : libraryResources.length === 0 ? (
-                <div className="py-10 text-center opacity-30 italic text-xs">Apostilas em sincronização...</div>
-              ) : (
-                libraryResources.map((res) => (
-                  <Card key={res.id} className="p-4 border-none shadow-lg bg-white rounded-2xl hover:shadow-xl transition-all group">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
-                        {res.type === 'Video' ? <Video className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-bold text-xs text-primary truncate italic">{res.title}</h4>
-                      </div>
-                      <Button asChild size="icon" variant="ghost" className="h-8 w-8 rounded-full text-accent">
-                        <Link href="/dashboard/library"><TrendingUp className="h-4 w-4" /></Link>
-                      </Button>
-                    </div>
-                  </Card>
-                ))
-              )}
-            </div>
-        </div>
       </div>
+
+      {/* FOOTER DE PATROCÍNIO */}
+      <footer className="mt-12 py-8 border-t border-slate-100">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-60 hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-4">
+            <div className="relative h-10 w-10 shrink-0 bg-white rounded-xl shadow-md p-1.5 border border-slate-100 overflow-hidden">
+              <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" unoptimized />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary">Plataforma Educacional</p>
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">Patrocinada pela Prefeitura de Santana de Parnaíba</p>
+            </div>
+          </div>
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">Compromisso • 2024</p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -88,26 +88,34 @@ export default function LibraryManagementPage() {
       const payload = { ...formData, url: finalUrl };
 
       if (editingId) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('library_resources')
           .update(payload)
-          .eq('id', editingId);
+          .eq('id', editingId)
+          .select()
+          .single();
         if (error) throw error;
+        setResources(prev => prev.map(r => r.id === editingId ? data : r));
         toast({ title: "Apostila Atualizada!" });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('library_resources')
-          .insert([payload]);
+          .insert([payload])
+          .select()
+          .single();
         if (error) throw error;
+        setResources(prev => [data, ...prev]);
         toast({ title: "Apostila Cadastrada!" });
       }
       
-      setIsDialogOpen(false);
-      setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "" });
-      setFile(null);
-      setUploading(false);
-      setQuestionToEdit(null);
-      fetchResources();
+      setTimeout(() => {
+        setIsDialogOpen(false);
+        setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "" });
+        setFile(null);
+        setUploading(false);
+        setQuestionToEdit(null);
+        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500); // Fix Radix UI body lock bug
+      }, 50);
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
       setUploading(false);
@@ -162,6 +170,7 @@ export default function LibraryManagementPage() {
             setQuestionToEdit(null);
             setFile(null);
             setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "" });
+            setTimeout(() => document.body.style.pointerEvents = "", 100);
           }
         }}>
           <DialogTrigger asChild>
@@ -276,9 +285,6 @@ export default function LibraryManagementPage() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button asChild variant="outline" className="h-10 px-4 rounded-xl border-2 font-black text-[10px] uppercase">
-                  <a href={item.url} target="_blank" rel="noopener noreferrer">Acessar <ExternalLink className="h-3.5 w-3.5 ml-2" /></a>
-                </Button>
               </CardFooter>
             </Card>
           ))}

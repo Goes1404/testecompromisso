@@ -24,7 +24,7 @@ export function LoginForm() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
-  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
+  const logoUrl = "/images/logocompromisso.png";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,23 +173,23 @@ export function LoginForm() {
   return (
 
     <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500 z-10 relative">
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="relative h-16 w-16 overflow-hidden rounded-2xl shadow-xl bg-white p-2">
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div className="relative h-20 w-64 transition-transform hover:scale-105 duration-500 rounded-2xl overflow-hidden">
           <Image 
             src={logoUrl} 
-            alt="Logo" 
+            alt="Logo Compromisso" 
             fill 
             unoptimized
-            className="object-contain p-1"
+            className="object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
           />
         </div>
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic leading-none">
+          <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic leading-none sr-only">
             Compro<span className="text-accent">misso</span>
           </h1>
-          <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-            <Sparkles className="h-3 w-3 text-accent" />
-            Rede Santana de Parnaíba
+          <p className="text-white/90 text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 shadow-lg">
+            <Sparkles className="h-3.5 w-3.5 text-accent animate-pulse" />
+            Ensino de Elite
           </p>
         </div>
       </div>

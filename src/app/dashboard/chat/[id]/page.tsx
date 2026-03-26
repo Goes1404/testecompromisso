@@ -315,6 +315,11 @@ export default function DirectChatPage() {
         )}
 
         <div className="p-4 md:p-8 bg-white border-t shrink-0">
+          {isAurora && (
+            <p className="text-[10px] text-center text-muted-foreground/60 mb-3 px-4 uppercase tracking-widest italic font-bold">
+              A Aurora IA é uma inteligência artificial e pode cometer erros. Verifique informações importantes.
+            </p>
+          )}
           <form onSubmit={(e) => handleSend(e)} className="flex items-center gap-4 max-w-4xl mx-auto bg-slate-100 p-2 pl-8 rounded-[2.5rem] border border-slate-200 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
              <Input 
               value={input}
