@@ -72,12 +72,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
             <Link href="/" className="relative transition-all active:scale-95 group">
-            <div className="relative h-10 w-44 md:h-12 md:w-52 overflow-hidden transition-all rounded-xl">
+            <div className="relative h-10 w-44 md:h-12 md:w-52 overflow-hidden transition-all rounded-[1.25rem] bg-white shadow-sm">
                 <Image 
                   src="/images/logocompromisso.png" 
                   alt="Logo Compromisso" 
                   fill 
-                  className="object-contain" 
+                  className="object-contain p-1.5" 
                   unoptimized 
                 />
               </div>
@@ -347,8 +347,8 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row justify-between items-start gap-16 border-b border-gray-100 pb-16">
             <div className="space-y-8 max-w-sm">
                <div className="flex items-center">
-                 <div className="relative h-12 w-48 md:h-14 md:w-56 overflow-hidden rounded-xl">
-                    <Image src="/images/logocompromisso.png" alt="Logo Compromisso" fill className="object-contain" unoptimized />
+                 <div className="relative h-12 w-48 md:h-14 md:w-56 overflow-hidden rounded-[1.5rem] bg-white shadow-sm">
+                    <Image src="/images/logocompromisso.png" alt="Logo Compromisso" fill className="object-contain p-2" unoptimized />
                  </div>
                </div>
                <div className="space-y-4">

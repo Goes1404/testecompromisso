@@ -208,7 +208,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar side="left" collapsible="icon" className="bg-sidebar border-none">
         <SidebarHeader className="p-6">
            <div id="sidebar-logo" className="flex items-center gap-4">
-            <div className="relative h-10 w-40 overflow-hidden rounded-xl">
+            <div className="relative h-10 w-40 overflow-hidden rounded-full">
                 <Image 
                   src="/images/logocompromisso.png" 
                   alt="Logo Compromisso" 

@@ -21,6 +21,10 @@ export function LoginForm() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotStep, setForgotStep] = useState<'verify' | 'newpass'>('verify');
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [masterPassword, setMasterPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
@@ -66,6 +70,77 @@ export function LoginForm() {
     } catch (err: any) {
       setLoading(false);
       setAuthError("Falha crítica na autenticação.");
+    }
+  };
+
+  const handleForgotPasswordVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+
+    if (masterPassword !== "compromisso2026") {
+      setAuthError("Senha padrão/código de verificação incorreto.");
+      return;
+    }
+
+    if (!forgotEmail) {
+      setAuthError("Por favor, informe seu e-mail.");
+      return;
+    }
+
+    setForgotStep('newpass');
+  };
+
+  const handleForgotPasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+
+    if (newPassword.length < 6) {
+      setAuthError("A nova senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setAuthError("As senhas não coincidem.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Usaremos nossa API personalizada para permitir o reset via senha mestra
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: forgotEmail,
+          newPassword: newPassword,
+          masterPassword: masterPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao resetar senha.");
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: forgotEmail,
+        password: newPassword
+      });
+
+      if (signInError) {
+        setAuthError("Senha resetada com sucesso! Por favor, faça login com sua nova senha.");
+        setIsForgotPassword(false);
+        setLoading(false);
+        return;
+      }
+
+      setIsRedirecting(true);
+      window.location.assign("/dashboard");
+    } catch (err: any) {
+      setLoading(false);
+      setAuthError(err.message || "Erro ao atualizar senha.");
     }
   };
 
@@ -170,17 +245,113 @@ export function LoginForm() {
     );
   }
 
+  if (isForgotPassword) {
+    return (
+      <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500 z-10 relative">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-black text-white uppercase italic">Recuperar Acesso</h1>
+          <p className="text-white/70 text-xs">Use a senha padrão da instituição para redefinir.</p>
+        </div>
+
+        <Card className="border-none shadow-2xl overflow-hidden bg-white/95 backdrop-blur-md rounded-[2rem]">
+          <CardHeader className="space-y-1 pb-6 pt-8 text-center bg-accent/10 border-b border-dashed">
+            <CardTitle className="text-xl font-black text-primary italic uppercase">
+              {forgotStep === 'verify' ? 'Verificação' : 'Nova Senha'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-8 pt-8 space-y-6">
+            {authError && (
+              <Alert variant={authError.includes("sucesso") ? "default" : "destructive"} className={authError.includes("sucesso") ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-[10px] font-bold uppercase">{authError}</AlertDescription>
+              </Alert>
+            )}
+
+            {forgotStep === 'verify' ? (
+              <form onSubmit={handleForgotPasswordVerify} className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 px-2">E-mail Cadastrado</Label>
+                  <Input 
+                    type="email" 
+                    value={forgotEmail} 
+                    onChange={(e) => setForgotEmail(e.target.value)} 
+                    className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Senha Padrão Compromisso</Label>
+                  <Input 
+                    type="password" 
+                    value={masterPassword} 
+                    onChange={(e) => setMasterPassword(e.target.value)} 
+                    className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
+                    placeholder="Sempre use compromisso2026"
+                    required 
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-primary text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all">
+                  Confirmar Identidade
+                </Button>
+                <button 
+                  type="button" 
+                  onClick={() => setIsForgotPassword(false)} 
+                  className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors py-2"
+                >
+                  Voltar para o Login
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleForgotPasswordReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nova Senha</Label>
+                  <Input 
+                    type="password" 
+                    value={newPassword} 
+                    onChange={(e) => setNewPassword(e.target.value)} 
+                    className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Confirmar Senha</Label>
+                  <Input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)} 
+                    className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
+                    required 
+                  />
+                </div>
+                <Button type="submit" disabled={loading} className="w-full bg-accent text-accent-foreground font-black h-14 text-sm shadow-xl rounded-xl transition-all">
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Redefinir e Entrar"}
+                </Button>
+                <button 
+                  type="button" 
+                  onClick={() => setForgotStep('verify')} 
+                  className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors py-2"
+                >
+                  Alterar E-mail
+                </button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
 
     <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500 z-10 relative">
       <div className="flex flex-col items-center gap-6 text-center">
-        <div className="relative h-20 w-64 transition-transform hover:scale-105 duration-500 rounded-2xl overflow-hidden">
+        <div className="relative h-20 w-64 transition-transform hover:scale-105 duration-500 rounded-[2.5rem] overflow-hidden bg-white shadow-lg">
           <Image 
             src={logoUrl} 
             alt="Logo Compromisso" 
             fill 
             unoptimized
-            className="object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            className="object-contain p-4"
           />
         </div>
         <div className="space-y-1">
@@ -214,7 +385,9 @@ export function LoginForm() {
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold" required disabled={loading} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" title="Senha" className="text-[10px] font-black uppercase text-primary/40 px-2">Senha de Segurança</Label>
+              <div className="flex justify-between items-center px-2">
+                <Label htmlFor="password" title="Senha" className="text-[10px] font-black uppercase text-primary/40">Senha de Segurança</Label>
+              </div>
               <div className="relative group">
                 <Input 
                   id="password" 
@@ -232,6 +405,15 @@ export function LoginForm() {
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+              <div className="flex justify-center pt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setIsForgotPassword(true)}
+                  className="text-[11px] font-black uppercase text-primary hover:text-primary/80 transition-all underline decoration-primary/30 decoration-2 underline-offset-4 bg-primary/5 px-4 py-2 rounded-full"
+                >
+                  Esqueceu sua senha? Clique aqui para recuperar
                 </button>
               </div>
             </div>
