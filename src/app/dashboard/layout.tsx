@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { LoadingShell } from "@/components/LoadingShell";
 
 const studentItems = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
@@ -184,20 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/');
   }, [pathname]);
 
-  if (!hasHydrated || isUserLoading) return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-brand-gradient gap-6 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
-      <div className="relative z-10 flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="h-16 w-16 rounded-2xl bg-white/5 flex items-center justify-center shadow-2xl animate-pulse">
-            <BookOpen className="h-8 w-8 text-accent" />
-          </div>
-          <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-accent animate-pulse" />
-        </div>
-        <h2 className="text-sm font-black text-white italic tracking-tighter uppercase opacity-40">Carregando seu ambiente...</h2>
-      </div>
-    </div>
-  );
+  if (!hasHydrated || isUserLoading) return <LoadingShell />;
 
   if (!user) return null;
 
@@ -249,8 +237,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background flex flex-col h-screen overflow-hidden relative">
-        {/* Minimalist dot texture */}
-        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, black 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        {/* Animated Background Effects */}
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '12s', animationDelay: '2s' }} />
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
           <SidebarTrigger className="h-9 w-9 rounded-full hover:bg-muted" />
           <div className="flex-1" />
