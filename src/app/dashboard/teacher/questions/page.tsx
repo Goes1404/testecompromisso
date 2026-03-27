@@ -18,7 +18,7 @@ import {
     Trash2, 
     Database, 
     BrainCircuit,
-    Wand2,
+    ZapOff,
     Save,
     ArrowRight
 } from 'lucide-react';
@@ -81,27 +81,7 @@ export default function QuestionBankPage() {
     }, []);
 
     const handleAnalyzeBulk = async () => {
-        if (!rawText.trim() || isGenerating) return;
-        setIsGenerating(true);
-        try {
-            const response = await fetch('/api/genkit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    flowId: 'bulkQuestionParser',
-                    input: { rawText: rawText }
-                })
-            });
-            const data = await response.json();
-            if (data.success && data.result?.questions) {
-                setExtractedQuestions(data.result.questions);
-                toast({ title: "Extração Concluída!", description: `${data.result.questions.length} questões identificadas.` });
-            }
-        } catch (error: any) {
-            toast({ title: "Erro na Aurora", description: error.message, variant: 'destructive' });
-        } finally {
-            setIsGenerating(false);
-        }
+        toast({ title: "Funcionalidade Indisponível", description: "O motor de IA (Aurora) foi desativado.", variant: 'destructive' });
     };
 
     const handleSaveProcessed = async () => {
@@ -192,9 +172,9 @@ export default function QuestionBankPage() {
                                     onChange={(e) => setRawText(e.target.value)} 
                                 />
                             </div>
-                            <Button onClick={handleAnalyzeBulk} disabled={isGenerating || !rawText.trim()} className="w-full h-16 rounded-2xl bg-primary text-white font-black text-lg shadow-xl transition-all">
-                                {isGenerating ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Wand2 className="h-6 w-6 mr-2 text-accent" />}
-                                {isGenerating ? "Extraindo Dados..." : "Extrair Questões com IA"}
+                            <Button disabled className="w-full h-16 rounded-2xl bg-slate-100 text-slate-400 font-black text-lg shadow-none cursor-not-allowed">
+                                <ZapOff className="h-6 w-6 mr-2" />
+                                Extração IA Desabilitada
                             </Button>
                         </div>
                     )}

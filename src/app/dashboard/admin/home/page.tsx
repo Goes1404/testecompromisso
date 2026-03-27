@@ -401,13 +401,6 @@ export default function CoordinatorDashboard() {
                   {networkStatus.db.toUpperCase()}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between text-[11px] font-bold">
-                <span className="text-primary/60 uppercase tracking-widest">Aurora IA</span>
-                <Badge variant="outline" className={`border-none ${networkStatus.ai === 'online' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} uppercase text-[9px] px-3 py-1 font-black`}>
-                  {networkStatus.ai === 'online' ? <Wifi className="h-3 w-3 mr-2" /> : <WifiOff className="h-3 w-3 mr-2" />}
-                  {networkStatus.ai.toUpperCase()}
-                </Badge>
-              </div>
             </div>
           </Card>
 

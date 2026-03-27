@@ -14,7 +14,10 @@ export const isSupabaseConfigured = Boolean(
   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder')
 )
 
-export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+// Ensure valid URL for prevent build-time crashes
+const validUrl = supabaseUrl.startsWith('http') ? supabaseUrl : `https://${supabaseUrl}`;
+
+export const supabase = createSupabaseClient(validUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,

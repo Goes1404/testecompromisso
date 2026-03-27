@@ -78,40 +78,7 @@ export default function AuroraSupportPage() {
     setLoading(true);
 
     try {
-      const historyForAi = messages.map(m => ({
-        role: (m.role === 'assistant' ? 'model' : 'user') as 'user' | 'model',
-        content: m.content
-      }));
-
-      const response = await fetch('/api/genkit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          flowId: 'conceptExplanationAssistant',
-          input: { 
-            query: textToSend,
-            history: historyForAi
-          },
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok && data.success && data.result?.response) {
-        setMessages(prev => [...prev, { role: "assistant", content: data.result.response }]);
-      } else {
-        setMessages(prev => [...prev, { 
-          role: "assistant", 
-          content: `⚠️ [ERRO DA ENGINE]: ${data.error || "Houve uma oscilação no sinal da Aurora. Tente novamente."}`,
-          isError: true 
-        }]);
-      }
-    } catch (error: any) {
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
-        content: `❌ [FALHA DE INFRAESTRUTURA]: ${error.message || "A conexão com o servidor foi interrompida."}`,
-        isError: true 
-      }]);
+      toast({ title: "Serviço Indisponível", description: "O chat da Aurora foi desativado pelo administrador.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
