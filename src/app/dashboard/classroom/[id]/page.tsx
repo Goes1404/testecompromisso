@@ -293,6 +293,14 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
           if ((window as any).YT && typeof (window as any).YT.Player === 'function') setIsApiReady(true);
         }}
       />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" 
+        strategy="beforeInteractive"
+      />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" 
+        strategy="beforeInteractive"
+      />
       
       <header className="sticky top-0 bg-primary text-white px-4 h-16 flex items-center justify-between shrink-0 z-[60] shadow-xl border-b border-white/5">
         <div className="flex items-center gap-4 overflow-hidden">

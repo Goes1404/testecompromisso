@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import * as pdfjsLib from "pdfjs-dist";
-// @ts-ignore
-import { fabric } from "fabric";
+// As bibliotecas serão carregadas via CDN e acessadas pelo window
+const getPdfJs = () => typeof window !== 'undefined' ? (window as any).pdfjsLib : null;
+const getFabric = () => typeof window !== 'undefined' ? (window as any).fabric : null;
 import { 
   Loader2, 
   Pencil, 
@@ -26,9 +26,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
-
-// Configurar o worker do PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface InteractiveWorkbookProps {
   materialId: string;
@@ -161,8 +158,16 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
   useEffect(() => {
     async function loadPdf() {
       if (!currentPdfUrl) return;
+      const pdfjsLib = getPdfJs();
+      if (!pdfjsLib) {
+        // Se ainda não carregou, tentamos novamente em 500ms
+        setTimeout(loadPdf, 500);
+        return;
+      }
+
       setLoading(true);
       try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`;
         const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
         const pdf = await loadingTask.promise;
         setPdfDoc(pdf);
@@ -188,6 +193,9 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
 
   const renderPage = useCallback(async (pageNum: number, currentZoom: number) => {
     if (!pdfDoc || !canvasRef.current || !containerRef.current) return;
+    const fabric = getFabric();
+    if (!fabric) return;
+    
     setLoading(true);
 
     try {
@@ -284,7 +292,8 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
 
   const updateTool = (tool: Tool) => {
     setActiveTool(tool);
-    if (!fabricCanvasRef.current) return;
+    const fabric = getFabric();
+    if (!fabricCanvasRef.current || !fabric) return;
     
     fabricCanvasRef.current.isDrawingMode = tool !== 'eraser' && tool !== 'pan';
     fabricCanvasRef.current.selection = tool === 'eraser';

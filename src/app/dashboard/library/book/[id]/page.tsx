@@ -7,6 +7,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { useAuth } from "@/lib/AuthProvider";
+import Script from "next/script";
 
 const InteractiveWorkbook = dynamic(
   () => import("@/components/InteractiveWorkbook").then(mod => mod.InteractiveWorkbook),
@@ -68,6 +69,22 @@ export default function BookViewerPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="h-screen flex flex-col bg-slate-900 overflow-hidden select-none">
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" 
+        strategy="beforeInteractive"
+      />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" 
+        strategy="beforeInteractive"
+      />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" 
+        strategy="beforeInteractive"
+      />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" 
+        strategy="beforeInteractive"
+      />
       <header className="h-16 bg-slate-950 border-b border-white/5 flex items-center justify-between px-4 md:px-8 shrink-0 z-50">
         <div className="flex items-center gap-4 min-w-0">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-white hover:bg-white/10 rounded-full shrink-0">

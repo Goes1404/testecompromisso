@@ -13,7 +13,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "deploy": "firebase deploy",
-    "pages:build": "npx @cloudflare/next-on-pages --external fs,http,https,url,path,canvas"
+    "pages:build": "npx @cloudflare/next-on-pages"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
