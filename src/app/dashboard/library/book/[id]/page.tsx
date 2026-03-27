@@ -5,8 +5,21 @@ export const runtime = 'edge';
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { InteractiveWorkbook } from "@/components/InteractiveWorkbook";
+import dynamic from 'next/dynamic';
 import { useAuth } from "@/lib/AuthProvider";
+
+const InteractiveWorkbook = dynamic(
+  () => import("@/components/InteractiveWorkbook").then(mod => mod.InteractiveWorkbook),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-full flex flex-col items-center justify-center bg-slate-900 text-white gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Carregando Material Interativo...</p>
+      </div>
+    )
+  }
+);
 import { supabase } from "@/app/lib/supabase";
 import { Loader2, ChevronLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";

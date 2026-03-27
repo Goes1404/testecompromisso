@@ -39,7 +39,20 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import Script from "next/script";
 import Link from "next/link";
-import { InteractiveWorkbook } from "@/components/InteractiveWorkbook";
+import dynamic from 'next/dynamic';
+
+const InteractiveWorkbook = dynamic(
+  () => import("@/components/InteractiveWorkbook").then(mod => mod.InteractiveWorkbook),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-full flex flex-col items-center justify-center bg-slate-900 text-white gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Carregando Material Interativo...</p>
+      </div>
+    )
+  }
+);
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ClassroomPage({ params }: { params: Promise<{ id: string }> }) {
