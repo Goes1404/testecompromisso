@@ -20,6 +20,17 @@ const nextConfig: NextConfig = {
     ],
   },
   webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      fs: false,
+      http: false,
+      https: false,
+      url: false,
+      path: false,
+      canvas: false,
+      'pdfjs-dist': false,
+      fabric: false,
+    };
     return config;
   },
 };
