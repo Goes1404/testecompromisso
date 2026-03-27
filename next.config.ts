@@ -19,10 +19,16 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/**' },
     ],
   },
-  webpack: (config) => {
-    config.externals.push({
-      canvas: 'commonjs canvas',
-    });
+  transpilePackages: ['pdfjs-dist', 'fabric'],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        canvas: false,
+        'pdfjs-dist': false,
+        fabric: false,
+      };
+    }
     return config;
   },
 };
