@@ -2,7 +2,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: 'export', <-- CAUSA CONFLITO COM ROTAS DINÂMICAS E APIS
+  // Cloudflare Pages compatibility
+  // output: 'standalone', 
   images: {
     unoptimized: true,
     formats: ['image/avif', 'image/webp'],
