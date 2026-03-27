@@ -82,7 +82,7 @@ export default function LandingPage() {
   const mapsUrl = "https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010";
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-gray-950 selection:bg-primary/20 selection:text-primary scroll-smooth snap-y snap-mandatory relative">
+    <div className="flex min-h-screen flex-col bg-white text-gray-950 selection:bg-primary/20 selection:text-primary scroll-smooth relative">
       
       {/* Transição de Tela de Carregamento */}
       {isRedirecting && (
@@ -155,7 +155,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* HERO SECTION - REINVENTADA E COMPACTA (100vh) */}
-        <section className="relative h-screen flex flex-col justify-center overflow-hidden bg-gray-950 snap-start">
+        <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-gray-950 pt-20 md:pt-0">
           <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-black pointer-events-none" />
 
           {/* Efeitos de Luz Premium */}
@@ -230,7 +230,7 @@ export default function LandingPage() {
 
 
         {/* MISSÃO E VALORES - Nova seção para mais profissionalismo */}
-        <section className="py-20 bg-gray-50 relative overflow-hidden snap-start">
+        <section className="py-16 md:py-20 bg-gray-50 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             <div className="space-y-4">
               <div className="h-12 w-12 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white">
@@ -257,7 +257,7 @@ export default function LandingPage() {
         </section>
 
         {/* METODOLOGIA - Mais densa e informativa (100vh) */}
-        <section id="metodologia" className="h-[110vh] lg:h-screen py-16 flex flex-col justify-center bg-white scroll-mt-14 overflow-hidden relative snap-start animate-in fade-in slide-in-from-right duration-1000 fade-out-0 slide-out-to-left-1/4 pt-20">
+        <section id="metodologia" className="min-h-screen py-16 flex flex-col justify-center bg-white scroll-mt-20 overflow-hidden relative animate-in fade-in slide-in-from-right duration-1000">
           <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-6 w-full relative">
@@ -297,7 +297,7 @@ export default function LandingPage() {
                   features: ["Simulados Padrão Vunesp/ENEM", "Auditoria de Erros Recorrentes", "Gestão de Progresso em Real Time"]
                 }
               ].map((card, i) => (
-                <div key={card.title} className={`p-10 rounded-[2.5rem] border shadow-2xl shadow-black/5 hover:shadow-primary/10 transition-all duration-500 group relative overflow-hidden ${card.dark ? 'bg-gray-950 text-white border-white/5' : 'bg-white border-gray-100'}`}>
+                <div key={card.title} className={`p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] border shadow-2xl shadow-black/5 hover:shadow-primary/10 transition-all duration-500 group relative overflow-hidden ${card.dark ? 'bg-gray-950 text-white border-white/5' : 'bg-white border-gray-100'}`}>
                   {card.dark && <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary" />}
                   <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-8 shadow-inner transition-transform group-hover:scale-110 duration-500 ${card.dark ? 'bg-white/10 text-primary' : 'bg-primary/5 text-primary'}`}>
                     <card.icon className="h-7 w-7" />
@@ -323,7 +323,7 @@ export default function LandingPage() {
         </section>
 
         {/* INFRAESTRUTURA - Foco e Harmonia (100vh) */}
-        <section id="resultados" className="h-screen py-16 flex flex-col justify-center bg-gray-50 scroll-mt-14 relative overflow-hidden snap-start">
+        <section id="resultados" className="min-h-screen py-16 flex flex-col justify-center bg-gray-50 scroll-mt-20 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 w-full relative">
             <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6 pb-6 border-b border-gray-200">
               <div className="space-y-2">
