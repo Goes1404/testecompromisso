@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 /**
  * Rota de Lives Individuais compatível com Next.js 15.
  * Params devem ser tratados como uma Promise.

@@ -6,6 +6,7 @@ import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
  * Verifica a saúde do Supabase no ambiente de deploy.
  */
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {

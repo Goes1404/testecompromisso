@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
  * Limpa para uso em produção - Dados mock removidos.
  */
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
