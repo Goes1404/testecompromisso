@@ -20,6 +20,8 @@ export function LoginForm() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showMasterPassword, setShowMasterPassword] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [forgotStep, setForgotStep] = useState<'verify' | 'newpass'>('verify');
@@ -227,13 +229,22 @@ export function LoginForm() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Confirmar Nova Senha</Label>
-                <Input 
-                  type="password" 
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)} 
-                  className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
-                  required 
-                />
+                <div className="relative">
+                  <Input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)} 
+                    className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-accent text-accent-foreground font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none">
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Salvar e Entrar"}
@@ -281,14 +292,23 @@ export function LoginForm() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Senha Padrão Compromisso</Label>
-                  <Input 
-                    type="password" 
-                    value={masterPassword} 
-                    onChange={(e) => setMasterPassword(e.target.value)} 
-                    className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
-                    placeholder="Sempre use compromisso2026"
-                    required 
-                  />
+                  <div className="relative">
+                    <Input 
+                      type={showMasterPassword ? "text" : "password"} 
+                      value={masterPassword} 
+                      onChange={(e) => setMasterPassword(e.target.value)} 
+                      className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
+                      placeholder="Sempre use compromisso2026"
+                      required 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMasterPassword(!showMasterPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                    >
+                      {showMasterPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full bg-primary text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all">
                   Confirmar Identidade
@@ -305,23 +325,41 @@ export function LoginForm() {
               <form onSubmit={handleForgotPasswordReset} className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nova Senha</Label>
-                  <Input 
-                    type="password" 
-                    value={newPassword} 
-                    onChange={(e) => setNewPassword(e.target.value)} 
-                    className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
-                    required 
-                  />
+                  <div className="relative">
+                    <Input 
+                      type={showPassword ? "text" : "password"} 
+                      value={newPassword} 
+                      onChange={(e) => setNewPassword(e.target.value)} 
+                      className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
+                      required 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Confirmar Senha</Label>
-                  <Input 
-                    type="password" 
-                    value={confirmPassword} 
-                    onChange={(e) => setConfirmPassword(e.target.value)} 
-                    className="h-12 bg-muted/30 border-none rounded-xl font-bold" 
-                    required 
-                  />
+                  <div className="relative">
+                    <Input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      value={confirmPassword} 
+                      onChange={(e) => setConfirmPassword(e.target.value)} 
+                      className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
+                      required 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full bg-accent text-accent-foreground font-black h-14 text-sm shadow-xl rounded-xl transition-all">
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Redefinir e Entrar"}
@@ -345,13 +383,13 @@ export function LoginForm() {
 
     <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500 z-10 relative">
       <div className="flex flex-col items-center gap-6 text-center">
-        <div className="relative h-20 w-64 transition-transform hover:scale-105 duration-500 rounded-[2.5rem] overflow-hidden bg-white shadow-lg">
+        <div className="relative h-20 w-52 transition-transform hover:scale-105 duration-500 rounded-2xl overflow-hidden bg-white shadow-lg border border-white/20">
           <Image 
             src={logoUrl} 
             alt="Logo Compromisso" 
             fill 
             unoptimized
-            className="object-contain p-4"
+            className="object-contain p-3"
           />
         </div>
         <div className="space-y-1">
@@ -407,13 +445,13 @@ export function LoginForm() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-end pt-1">
                 <button 
                   type="button" 
                   onClick={() => setIsForgotPassword(true)}
-                  className="text-[11px] font-black uppercase text-primary hover:text-primary/80 transition-all underline decoration-primary/30 decoration-2 underline-offset-4 bg-primary/5 px-4 py-2 rounded-full"
+                  className="text-[10px] font-black uppercase text-primary/70 hover:text-primary transition-all underline decoration-transparent hover:decoration-primary/50 underline-offset-4"
                 >
-                  Esqueceu sua senha? Clique aqui para recuperar
+                  Esqueceu sua senha?
                 </button>
               </div>
             </div>

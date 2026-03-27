@@ -261,8 +261,8 @@ export default function LearningTrailsPage() {
               </CardContent>
               
               <CardFooter className="px-8 pb-8 pt-0 mt-auto">
-                <div className="flex items-center justify-between w-full pt-6 border-t border-muted/10">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full pt-6 border-t border-muted/10 gap-4 sm:gap-0">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
                     <div className="h-10 w-10 rounded-2xl bg-primary/5 flex items-center justify-center border border-muted/10 overflow-hidden shrink-0 shadow-sm">
                       <Image 
                         src={`https://picsum.photos/seed/prof-${trail.id}/100/100`} 
@@ -272,12 +272,12 @@ export default function LearningTrailsPage() {
                         className="object-cover"
                       />
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-primary italic leading-none truncate max-w-[120px]">{trail.teacher_name || "Mentor da Rede"}</span>
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="text-[10px] font-black text-primary italic leading-none truncate">{trail.teacher_name || "Mentor da Rede"}</span>
                       <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Especialista</span>
                     </div>
                   </div>
-                  <Button asChild className="bg-primary text-white font-black text-[10px] uppercase h-12 px-8 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all group/btn border-none">
+                  <Button asChild className="w-full sm:w-auto bg-primary text-white font-black text-[10px] uppercase h-12 px-6 sm:px-8 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all group/btn border-none shrink-0">
                     <Link href={`/dashboard/classroom/${trail.id}`}>
                       Entrar <ChevronRight className="h-4 w-4 ml-2 text-accent group-hover/btn:translate-x-1 transition-transform" />
                     </Link>

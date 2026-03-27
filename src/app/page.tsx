@@ -72,12 +72,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
             <Link href="/" className="relative transition-all active:scale-95 group">
-            <div className="relative h-10 w-44 md:h-12 md:w-52 overflow-hidden transition-all rounded-[1.25rem] bg-white shadow-sm">
+              <div className="relative h-10 w-40 md:h-12 md:w-48 overflow-hidden transition-all rounded-2xl bg-white shadow-sm border border-gray-100/50">
                 <Image 
                   src="/images/logocompromisso.png" 
                   alt="Logo Compromisso" 
                   fill 
-                  className="object-contain p-1.5" 
+                  className="object-contain p-2" 
                   unoptimized 
                 />
               </div>
@@ -85,8 +85,12 @@ export default function LandingPage() {
           </div>
 
           <nav className="hidden md:flex items-center gap-10">
-            <Link href="#metodologia" className={`text-sm font-black transition-all hover:translate-y-[-1px] ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>Metodologia</Link>
-            <Link href="#resultados" className={`text-sm font-black transition-all hover:translate-y-[-1px] ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>Resultados</Link>
+            <Link href="#metodologia" className={`text-sm font-black transition-all flex items-center group ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>
+              <span className="group-hover:translate-x-1 transition-transform">Metodologia</span>
+            </Link>
+            <Link href="#resultados" className={`text-sm font-black transition-all flex items-center group ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>
+              <span className="group-hover:translate-x-1 transition-transform">Resultados</span>
+            </Link>
             <Button asChild size="lg" className="bg-primary hover:bg-[#e06000] text-white font-black h-11 px-8 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
               <Link href="/login">Portal do Aluno</Link>
             </Button>
@@ -218,7 +222,7 @@ export default function LandingPage() {
         </section>
 
         {/* METODOLOGIA - Mais densa e informativa (100vh) */}
-        <section id="metodologia" className="h-[110vh] lg:h-screen py-16 flex flex-col justify-center bg-white scroll-mt-14 overflow-hidden relative snap-start">
+        <section id="metodologia" className="h-[110vh] lg:h-screen py-16 flex flex-col justify-center bg-white scroll-mt-14 overflow-hidden relative snap-start animate-in fade-in slide-in-from-right duration-1000 fade-out-0 slide-out-to-left-1/4 pt-20">
           <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
           
           <div className="max-w-7xl mx-auto px-6 w-full relative">
@@ -347,8 +351,8 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row justify-between items-start gap-16 border-b border-gray-100 pb-16">
             <div className="space-y-8 max-w-sm">
                <div className="flex items-center">
-                 <div className="relative h-12 w-48 md:h-14 md:w-56 overflow-hidden rounded-[1.5rem] bg-white shadow-sm">
-                    <Image src="/images/logocompromisso.png" alt="Logo Compromisso" fill className="object-contain p-2" unoptimized />
+                 <div className="relative h-12 w-44 md:h-14 md:w-52 overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
+                    <Image src="/images/logocompromisso.png" alt="Logo Compromisso" fill className="object-contain p-2.5" unoptimized />
                  </div>
                </div>
                <div className="space-y-4">
@@ -382,7 +386,7 @@ export default function LandingPage() {
                 </ul>
               </div>
               <div className="space-y-6">
-                <p className="text-sm font-bold text-gray-500">contato@compromisso.edu.br</p>
+                <p className="text-sm font-bold text-gray-500 break-words md:break-normal">contato@compromisso.edu.br</p>
                 <p className="text-sm font-bold text-gray-500">Unidade Central Parnaíba</p>
               </div>
               <div className="space-y-6 hidden sm:block">
