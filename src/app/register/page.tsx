@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
+  const logoUrl = "/images/logocompromisso.png";
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -223,7 +223,6 @@ export default function RegisterPage() {
                     <Input 
                       id="password" 
                       type={showPassword ? "text" : "password"} 
-                      placeholder="Mínimo 6 caracteres" 
                       value={formData.password} 
                       onChange={(e) => setFormData({...formData, password: e.target.value})} 
                       className="pl-12 pr-12 h-12 bg-white/50 rounded-2xl border-muted/20" 

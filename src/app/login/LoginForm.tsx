@@ -298,7 +298,6 @@ export function LoginForm() {
                       value={masterPassword} 
                       onChange={(e) => setMasterPassword(e.target.value)} 
                       className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
-                      placeholder="Sempre use compromisso2026"
                       required 
                     />
                     <button
