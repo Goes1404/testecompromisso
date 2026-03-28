@@ -40,7 +40,7 @@ export default function TeacherTrailsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [newTrail, setNewTrail] = useState({ title: "", category: "Matemática", description: "" });
+  const [newTrail, setNewTrail] = useState({ title: "", category: "Matemática", description: "", target_audience: "all" });
 
   const fetchTrails = async () => {
     if (!user) return;
@@ -82,7 +82,7 @@ export default function TeacherTrailsPage() {
           teacher_name: profile?.name || user.user_metadata?.full_name || "Professor",
           status: "draft",
           image_url: `https://picsum.photos/seed/trail-${Date.now()}/600/400`,
-          target_audience: "all"
+          target_audience: newTrail.target_audience
         }])
         .select()
         .single();
@@ -94,7 +94,7 @@ export default function TeacherTrailsPage() {
       
       setTimeout(() => {
         setIsCreateDialogOpen(false);
-        setNewTrail({ title: "", category: "Matemática", description: "" });
+        setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all" });
         setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
       }, 50);
 
@@ -149,6 +149,19 @@ export default function TeacherTrailsPage() {
                       {EDUCATIONAL_CATEGORIES.map(category => (
                         <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase opacity-40">Público-Alvo</Label>
+                  <Select value={newTrail.target_audience} onValueChange={(v) => setNewTrail({ ...newTrail, target_audience: v })} disabled={isSubmitting}>
+                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
+                      <SelectValue placeholder="Todos os Alunos" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectItem value="all">Todos os Alunos</SelectItem>
+                      <SelectItem value="etec">Apenas Turma ETEC</SelectItem>
+                      <SelectItem value="enem">Apenas Turma ENEM</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -29,7 +29,8 @@ export default function LibraryManagementPage() {
     category: "Matemática",
     type: "PDF",
     url: "",
-    image_url: ""
+    image_url: "",
+    target_audience: "all"
   });
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -110,7 +111,7 @@ export default function LibraryManagementPage() {
       
       setTimeout(() => {
         setIsDialogOpen(false);
-        setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "" });
+        setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "", target_audience: "all" });
         setFile(null);
         setUploading(false);
         setQuestionToEdit(null);
@@ -146,7 +147,8 @@ export default function LibraryManagementPage() {
       category: resource.category || "Matemática",
       type: resource.type || "PDF",
       url: resource.url || "",
-      image_url: resource.image_url || ""
+      image_url: resource.image_url || "",
+      target_audience: resource.target_audience || "all"
     });
     setIsDialogOpen(true);
   };
@@ -169,7 +171,7 @@ export default function LibraryManagementPage() {
           if(!open) {
             setQuestionToEdit(null);
             setFile(null);
-            setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "" });
+            setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "", target_audience: "all" });
             setTimeout(() => document.body.style.pointerEvents = "", 100);
           }
         }}>
@@ -195,14 +197,29 @@ export default function LibraryManagementPage() {
                     <SelectContent>{EDUCATIONAL_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase opacity-40">Tipo</Label>
-                  <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent>{RESOURCE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                  </Select>
                 </div>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Tipo</Label>
+                    <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
+                      <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent>{RESOURCE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Público-Alvo</Label>
+                    <Select value={formData.target_audience} onValueChange={v => setFormData({...formData, target_audience: v})}>
+                      <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
+                        <SelectValue placeholder="Todos os Alunos" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        <SelectItem value="all">Todos os Alunos</SelectItem>
+                        <SelectItem value="etec">Apenas Turma ETEC</SelectItem>
+                        <SelectItem value="enem">Apenas Turma ENEM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase opacity-40">Arquivo a ser enviado (Ou Link Externo)</Label>
                 <div className="flex flex-col gap-2">

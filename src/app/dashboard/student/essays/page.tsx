@@ -45,7 +45,7 @@ const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: strin
 };
 
 export default function StudentEssayPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [theme, setTheme] = useState("Os impactos da Inteligência Artificial na educação brasileira contemporânea");
   const [supportingTexts, setSupportingTexts] = useState<any[]>([
@@ -108,12 +108,22 @@ export default function StudentEssayPage() {
         throw new Error(data.error || "IA falhou");
       }
     } catch (e: any) {
-      toast({ title: "Base de Apoio", description: "Carregando tema de exemplo para foco." });
-      setTheme("O desafio de democratizar o acesso à tecnologia no Brasil");
-      setSupportingTexts([
-        { id: 1, content: "O acesso à internet no Brasil ainda é desigual, afetando principalmente as áreas rurais e as classes D e E.", source: "TIC Domicílios" },
-        { id: 2, content: "A educação mediada pela tecnologia exige infraestrutura e capacitação docente.", source: "Portal Educação" }
-      ]);
+      const etecThemes = [
+        { theme: "A importância da qualificação técnica profissional para a juventude no mercado atual", texts: [{ id: 1, content: "Os cursos técnicos favorecem o contato com a prática profissional e aceleram a empregabilidade.", source: "Censo Inep" }, { id: 2, content: "A demanda por profissionais de tecnologia e indústria se mantém alta no interior paulista.", source: "Guia do Estudante" }] },
+        { theme: "O papel do jovem na construção de mobilidade urbana sustentável nas grandes cidades", texts: [{ id: 1, content: "O planejamento urbano frequentemente negligencia o transporte coletivo sustentável.", source: "Mobilize Brasil" }] }
+      ];
+      
+      const enemThemes = [
+        { theme: "O desafio de democratizar o acesso à tecnologia e informação no Brasil", texts: [{ id: 1, content: "O acesso à internet no Brasil ainda é desigual, afetando principalmente as áreas rurais e as classes D e E.", source: "TIC Domicílios" }, { id: 2, content: "A educação mediada pela tecnologia exige infraestrutura e capacitação docente contínua.", source: "Portal Educação" }] },
+        { theme: "Caminhos para combater a insegurança alimentar no Brasil contemporâneo", texts: [{ id: 1, content: "O desperdício na cadeia logística de alimentos agrava as crises sociais.", source: "ONU Brasil" }] }
+      ];
+
+      const pool = profile?.profile_type === 'etec' ? etecThemes : enemThemes;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+
+      toast({ title: "Banco de Apoio", description: `Gerado tema formatado para padrão ${profile?.profile_type === 'etec' ? 'ETEC (Dissertação)' : 'ENEM'}.` });
+      setTheme(pick.theme);
+      setSupportingTexts(pick.texts);
     } finally {
       setLoadingTopic(false);
     }

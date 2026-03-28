@@ -30,7 +30,7 @@ export default function TeacherStudentsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState<"all" | "at_risk" | "financial_aid">("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "at_risk" | "financial_aid" | "etec" | "enem">("all");
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -91,6 +91,12 @@ export default function TeacherStudentsPage() {
     if (activeFilter === "financial_aid") {
       return matchesSearch && student.is_financial_aid_eligible === true;
     }
+    if (activeFilter === "etec") {
+      return matchesSearch && student.profile_type === "etec";
+    }
+    if (activeFilter === "enem") {
+      return matchesSearch && student.profile_type === "enem";
+    }
     return matchesSearch;
   });
 
@@ -112,15 +118,21 @@ export default function TeacherStudentsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Button onClick={() => setActiveFilter("all")} variant={activeFilter === "all" ? "default" : "outline"} className={`h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'all' ? 'bg-primary scale-105 shadow-primary/20' : 'bg-white border-none'}`}>
-          <UserCircle className="h-5 w-5 mr-2" /> Total Rede ({students.length})
+      <div className="flex flex-wrap items-center gap-4">
+        <Button onClick={() => setActiveFilter("all")} variant={activeFilter === "all" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'all' ? 'bg-primary scale-105 shadow-primary/20' : 'bg-white border-none'}`}>
+          <UserCircle className="h-5 w-5 md:mr-2" /> <span className="hidden md:inline">Total Rede ({students.length})</span>
         </Button>
-        <Button onClick={() => setActiveFilter("at_risk")} variant={activeFilter === "at_risk" ? "default" : "outline"} className={`h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'at_risk' ? 'bg-red-600 scale-105 text-white' : 'bg-white text-red-600 border-none'}`}>
-          <AlertCircle className="h-5 w-5 mr-2" /> Alunos em Risco
+        <Button onClick={() => setActiveFilter("etec")} variant={activeFilter === "etec" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'etec' ? 'bg-indigo-600 scale-105 text-white' : 'bg-white text-indigo-600 border-none'}`}>
+          <Filter className="h-5 w-5 md:mr-2" /> Turma ETEC
         </Button>
-        <Button onClick={() => setActiveFilter("financial_aid")} variant={activeFilter === "financial_aid" ? "default" : "outline"} className={`h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'financial_aid' ? 'bg-green-600 scale-105 text-white' : 'bg-white text-green-600 border-none'}`}>
-          <ShieldCheck className="h-5 w-5 mr-2" /> Isenção Social
+        <Button onClick={() => setActiveFilter("enem")} variant={activeFilter === "enem" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'enem' ? 'bg-purple-600 scale-105 text-white' : 'bg-white text-purple-600 border-none'}`}>
+          <Filter className="h-5 w-5 md:mr-2" /> Turma ENEM
+        </Button>
+        <Button onClick={() => setActiveFilter("at_risk")} variant={activeFilter === "at_risk" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'at_risk' ? 'bg-red-600 scale-105 text-white' : 'bg-white text-red-600 border-none'}`}>
+          <AlertCircle className="h-5 w-5 md:mr-2" /> Alunos em Risco
+        </Button>
+        <Button onClick={() => setActiveFilter("financial_aid")} variant={activeFilter === "financial_aid" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'financial_aid' ? 'bg-green-600 scale-105 text-white' : 'bg-white text-green-600 border-none'}`}>
+          <ShieldCheck className="h-5 w-5 md:mr-2" /> Isenção Social
         </Button>
       </div>
 

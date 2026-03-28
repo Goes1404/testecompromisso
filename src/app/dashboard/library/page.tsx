@@ -48,8 +48,13 @@ export default function LibraryPage() {
     dataFetchedRef.current = true;
 
     try {
+      const userAudience = profile?.profile_type === 'enem' ? 'enem' : 'etec';
+
       const { data, error } = await safeExecute(async () => 
-        await supabase.from('library_resources').select('*').order('created_at', { ascending: false })
+        await supabase.from('library_resources')
+          .select('*')
+          .or(`target_audience.eq.all,target_audience.eq.${userAudience},target_audience.is.null`)
+          .order('created_at', { ascending: false })
       );
       
       if (error) throw error;

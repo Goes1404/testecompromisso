@@ -37,7 +37,7 @@ type Answer = {
 };
 
 export default function SimuladoPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [gameState, setGameState] = useState<'loading_subjects' | 'idle' | 'loading_questions' | 'active' | 'finished' | 'error'>('loading_subjects');
@@ -95,33 +95,30 @@ export default function SimuladoPage() {
     setGameState('loading_questions');
     setActiveSubjectId(subjectId);
     try {
-        const { data, error } = await supabase.rpc('get_random_questions_for_subject', {
-            p_subject_id: subjectId,
-            p_limit: SIMULATION_SIZE
-        });
-
-        let formattedQuestions: Question[] = [];
-
-        if (error) {
-          const { data: fallbackQuestions, error: fallbackError } = await supabase
+        let query = supabase
             .from('questions')
             .select(`*, subjects(name)`)
             .eq('subject_id', subjectId)
-            .limit(SIMULATION_SIZE);
-          
-          if (fallbackError) throw fallbackError;
-          
-          formattedQuestions = (fallbackQuestions || []).map((q: any) => ({
-            ...q,
-            options: typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || [])
-          }));
+            .limit(200); // Traz até 200 questões parecidas para poder embaralhar
+
+        if (profile?.profile_type) {
+            query = query.or(`target_audience.eq.all,target_audience.eq.${profile.profile_type},target_audience.is.null`);
         } else {
-          formattedQuestions = (data || []).map((q: any) => ({
-              ...q,
-              subjects: typeof q.subjects === 'string' ? JSON.parse(q.subjects) : q.subjects,
-              options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
-          }));
+            // Se por acaso não logou direito ou é dev test: default para todos
+            query = query.or('target_audience.eq.all,target_audience.is.null');
         }
+
+        const { data: rawQuestions, error: fetchError } = await query;
+        if (fetchError) throw fetchError;
+
+        // Shuffle in JS to pick SIMULATION_SIZE random questions
+        const shuffled = (rawQuestions || []).sort(() => 0.5 - Math.random()).slice(0, SIMULATION_SIZE);
+
+        const formattedQuestions: Question[] = shuffled.map((q: any) => ({
+            ...q,
+            subjects: typeof q.subjects === 'string' ? JSON.parse(q.subjects) : q.subjects,
+            options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+        }));
 
         if (formattedQuestions.length === 0) {
             toast({

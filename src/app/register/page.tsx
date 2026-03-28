@@ -34,6 +34,7 @@ export default function RegisterPage() {
     middleName: "",
     lastName: "",
     email: "",
+    cpf: "",
     password: "",
     school: "",
     course: "",
@@ -44,17 +45,35 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const nextStep = () => {
-    if (step === 1 && (!formData.email || !formData.password || !formData.firstName || !formData.lastName)) {
-      toast({ title: "Dados Incompletos", description: "Nome, sobrenome, e-mail e senha são obrigatórios.", variant: "destructive" });
+    if (step === 1 && (!formData.email || !formData.password || !formData.firstName || !formData.lastName || !formData.cpf)) {
+      toast({ title: "Dados Incompletos", description: "Nome, sobrenome, CPF, e-mail e senha são obrigatórios.", variant: "destructive" });
       return;
     }
+    
+    if (step === 1 && formData.cpf.length < 14) {
+      toast({ title: "CPF Inválido", description: "Por favor, insira um CPF válido.", variant: "destructive" });
+      return;
+    }
+
     setStep((s) => (s + 1) as Step);
   };
   
   const prevStep = () => setStep((s) => (s - 1) as Step);
 
   const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    let finalValue = value;
+    
+    // Máscara de CPF simples
+    if (field === 'cpf') {
+      finalValue = value
+        .replace(/\D/g, '')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+        .replace(/(-\d{2})\d+?$/, '$1');
+    }
+
+    setFormData(prev => ({ ...prev, [field]: finalValue }));
   };
 
   const handleFinish = async () => {
@@ -101,7 +120,8 @@ export default function RegisterPage() {
             username: rawUsername,
             profile_type: profileType,
             institution: institutionValue,
-            course: courseValue
+            course: courseValue,
+            cpf: formData.cpf.replace(/\D/g, '') // Salva apenas números
           }
         }
       });
@@ -209,11 +229,21 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="font-bold text-primary/60 ml-2">E-mail</Label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                    <Input id="email" type="email" placeholder="nome@exemplo.com" value={formData.email} onChange={(e) => updateField("email", e.target.value)} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf" className="font-bold text-primary/60 ml-2">CPF</Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
+                      <Input id="cpf" placeholder="000.000.000-00" value={formData.cpf} onChange={(e) => updateField("cpf", e.target.value)} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" maxLength={14} />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="font-bold text-primary/60 ml-2">E-mail</Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
+                      <Input id="email" type="email" placeholder="nome@exemplo.com" value={formData.email} onChange={(e) => updateField("email", e.target.value)} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" />
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">

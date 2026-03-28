@@ -58,8 +58,14 @@ export default function LearningTrailsPage() {
     dataFetchedRef.current = true;
 
     try {
+      const userAudience = profile?.profile_type === 'enem' ? 'enem' : 'etec';
+      
       const [trailsRes, progressRes] = await Promise.all([
-        safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').order('created_at', { ascending: false })),
+        safeExecute(async () => await supabase.from('trails')
+          .select('*')
+          .or('status.eq.active,status.eq.published')
+          .or(`target_audience.eq.all,target_audience.eq.${userAudience},target_audience.is.null`)
+          .order('created_at', { ascending: false })),
         safeExecute(async () => await supabase.from('user_progress').select('*').eq('user_id', user.id))
       ]);
 

@@ -60,10 +60,11 @@ export default function QuestionBankPage() {
     const [isGenerating, setIsGenerating] = useState(false);
     
     // Manual States
-    const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '' });
+    const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '', target_audience: 'all' });
     const [manualOptions, setManualOptions] = useState({ A: '', B: '', C: '', D: '', E: '' });
     
     const [bulkSubjectId, setBulkSubjectId] = useState<string>('');
+    const [bulkTargetAudience, setBulkTargetAudience] = useState<string>('all');
 
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -94,6 +95,7 @@ export default function QuestionBankPage() {
                 correct_answer: q.correct_answer,
                 year: q.year,
                 subject_id: bulkSubjectId,
+                target_audience: bulkTargetAudience,
                 teacher_id: user.id
             }));
             const { error } = await supabase.from('questions').insert(itemsToInsert);
@@ -193,7 +195,7 @@ export default function QuestionBankPage() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
                                 <div className="space-y-2">
                                     <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Gabarito</Label>
                                     <Select value={manualQuestion.correct_answer} onValueChange={val => setManualQuestion(prev => ({...prev, correct_answer: val}))}>
@@ -209,6 +211,17 @@ export default function QuestionBankPage() {
                                         <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue placeholder="Matéria" /></SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-2xl">
                                             {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold">{s.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Público Alvo</Label>
+                                    <Select value={manualQuestion.target_audience} onValueChange={val => setManualQuestion(prev => ({...prev, target_audience: val}))}>
+                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue placeholder="Turma" /></SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                                            <SelectItem value="all" className="font-bold">Todos (Geral)</SelectItem>
+                                            <SelectItem value="etec" className="font-bold border-l-4 border-l-blue-500">Foco ETEC / FATEC</SelectItem>
+                                            <SelectItem value="enem" className="font-bold border-l-4 border-l-amber-500">Foco ENEM</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -231,14 +244,22 @@ export default function QuestionBankPage() {
                                     <h3 className="text-xl font-black text-primary italic">Área de Curadoria ({extractedQuestions.length})</h3>
                                     <p className="text-xs text-muted-foreground font-medium">Vincule as questões a uma matéria para finalizar a importação.</p>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <Select value={bulkSubjectId} onValueChange={setBulkSubjectId}>
-                                        <SelectTrigger className="w-56 h-12 rounded-xl bg-white border-none shadow-md font-bold"><SelectValue placeholder="Vincular Matéria" /></SelectTrigger>
+                                <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
+                                    <Select value={bulkTargetAudience} onValueChange={setBulkTargetAudience}>
+                                        <SelectTrigger className="w-full md:w-40 h-12 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue placeholder="Público Alvo" /></SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-2xl">
-                                            {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold">{s.name}</SelectItem>)}
+                                            <SelectItem value="all" className="font-bold text-xs">Todos</SelectItem>
+                                            <SelectItem value="etec" className="font-bold text-xs border-l-4 border-l-blue-500">ETEC/FATEC</SelectItem>
+                                            <SelectItem value="enem" className="font-bold text-xs border-l-4 border-l-amber-500">ENEM</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <Button onClick={handleSaveProcessed} disabled={isSaving || !bulkSubjectId} className="h-12 px-8 rounded-xl bg-primary text-white font-black shadow-lg">
+                                    <Select value={bulkSubjectId} onValueChange={setBulkSubjectId}>
+                                        <SelectTrigger className="w-full md:w-56 h-12 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue placeholder="Vincular Matéria" /></SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                                            {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-xs">{s.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button onClick={handleSaveProcessed} disabled={isSaving || !bulkSubjectId} className="w-full md:w-auto h-12 px-8 rounded-xl bg-primary text-white font-black shadow-lg">
                                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-accent" />}
                                         Validar e Salvar Tudo
                                     </Button>
