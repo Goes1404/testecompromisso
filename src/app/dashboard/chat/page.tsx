@@ -20,12 +20,7 @@ export default function ChatListPage() {
 
   const categories = [
     "Todos",
-    "Redação",
-    "Matemática",
-    "Linguagens",
-    "Ciências da Natureza",
-    "Ciências Humanas",
-    "Apoio Pedagógico"
+    ...(profile?.profile_type === 'teacher' ? ["ETEC", "ENEM"] : ["Redação", "Matemática", "Linguagens", "Ciências da Natureza", "Ciências Humanas", "Apoio Pedagógico"])
   ];
 
   useEffect(() => {
@@ -37,12 +32,20 @@ export default function ChatListPage() {
         const userType = (profile.profile_type || 'student').toLowerCase();
         const userInstitution = (profile.institution || '').toLowerCase().trim();
         
-        // Query para buscar mentores
+        // Query para buscar contatos
         let query = supabase
           .from('profiles')
           .select('*')
-          .neq('id', user.id)
-          .eq('profile_type', 'teacher');
+          .neq('id', user.id);
+
+        if (userType === 'teacher') {
+          // Professor vê alunos
+          const studentKeywords = ['etec', 'uni', 'enem', 'student'];
+          query = query.or(studentKeywords.map(k => `profile_type.ilike.%${k}%`).join(','));
+        } else {
+          // Aluno vê mentores
+          query = query.eq('profile_type', 'teacher');
+        }
 
         const { data, error } = await query.order('name', { ascending: true });
         
@@ -81,8 +84,15 @@ export default function ChatListPage() {
       c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.institution?.toLowerCase().includes(searchTerm.toLowerCase());
       
+    if (activeCategory === "Todos") return matchesSearch;
+
+    if (profile?.profile_type === 'teacher') {
+      // Filtro por perfil para o professor
+      return matchesSearch && (c.profile_type || '').toLowerCase().includes(activeCategory.toLowerCase());
+    }
+
     const mentorCourse = c.course || "Apoio Pedagógico";
-    const matchesCategory = activeCategory === "Todos" || mentorCourse.includes(activeCategory);
+    const matchesCategory = mentorCourse.includes(activeCategory);
     
     return matchesSearch && matchesCategory;
   });
@@ -92,13 +102,18 @@ export default function ChatListPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl md:text-4xl font-black text-primary italic leading-none">Mentoria Especializada</h1>
+            <h1 className="text-3xl md:text-4xl font-black text-primary italic leading-none">
+              {profile?.profile_type === 'teacher' ? "Gestão de Conversas" : "Mentoria Especializada"}
+            </h1>
             <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest flex items-center gap-2">
               <ShieldCheck className="h-3 w-3 text-accent" /> CANAL SEGURO
             </Badge>
           </div>
           <p className="text-muted-foreground font-medium text-sm md:text-xl italic">
-            Conectado aos especialistas do polo: <span className="text-accent font-black uppercase">{profile?.institution || 'Rede Geral'}</span>
+            {profile?.profile_type === 'teacher' 
+              ? "Atendimento direto aos estudantes da rede." 
+              : <>Conectado aos especialistas do polo: <span className="text-accent font-black uppercase">{profile?.institution || 'Rede Geral'}</span></>
+            }
           </p>
         </div>
       </div>
@@ -141,9 +156,14 @@ export default function ChatListPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-center md:justify-start gap-3">
                 <CardTitle className="text-2xl md:text-4xl font-black italic">Aurora IA</CardTitle>
-                <Badge className="bg-white/10 text-white border-none text-[8px] font-black uppercase">Mentoria 24/7</Badge>
+                <Badge className="bg-white/10 text-white border-none text-[8px] font-black uppercase">Assistência 24/7</Badge>
               </div>
-              <p className="text-white/60 font-medium text-sm md:text-lg italic max-w-md">Engine de Apoio Pedagógico para dúvidas imediatas em qualquer polo.</p>
+              <p className="text-white/60 font-medium text-sm md:text-lg italic max-w-md">
+                {profile?.profile_type === 'teacher' 
+                  ? "Utilize a Aurora para gerar materiais de apoio ou tirar dúvidas técnicas."
+                  : "Engine de Apoio Pedagógico para dúvidas imediatas em qualquer polo."
+                }
+              </p>
             </div>
           </div>
           <Button className="bg-white text-primary hover:bg-white/90 font-black h-14 md:h-16 px-10 md:px-12 rounded-2xl shadow-xl transition-all border-none w-full md:w-auto text-lg" asChild>
@@ -183,7 +203,9 @@ export default function ChatListPage() {
                   </div>
                 </div>
                 <Button className="w-full bg-primary text-white hover:bg-primary/95 font-black h-14 rounded-2xl shadow-xl transition-all active:scale-95 border-none" asChild>
-                  <Link href={`/dashboard/chat/${contact.id}`}>Abrir Mentoria</Link>
+                  <Link href={`/dashboard/chat/${contact.id}`}>
+                    {profile?.profile_type === 'teacher' ? "Enviar Mensagem" : "Abrir Mentoria"}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

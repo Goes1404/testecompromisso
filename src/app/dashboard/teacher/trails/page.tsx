@@ -72,20 +72,30 @@ export default function TeacherTrailsPage() {
 
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase
+      const trailData: any = {
+        title: newTrail.title,
+        category: newTrail.category,
+        description: newTrail.description,
+        teacher_id: user.id,
+        teacher_name: profile?.name || user.user_metadata?.full_name || "Professor",
+        status: "draft",
+        image_url: `https://picsum.photos/seed/trail-${Date.now()}/600/400`,
+        target_audience: newTrail.target_audience
+      };
+
+      let { data, error } = await supabase
         .from('trails')
-        .insert([{
-          title: newTrail.title,
-          category: newTrail.category,
-          description: newTrail.description,
-          teacher_id: user.id,
-          teacher_name: profile?.name || user.user_metadata?.full_name || "Professor",
-          status: "draft",
-          image_url: `https://picsum.photos/seed/trail-${Date.now()}/600/400`,
-          target_audience: newTrail.target_audience
-        }])
+        .insert([trailData])
         .select()
         .single();
+
+      if (error && (error.message.includes('target_audience') || error.code === '42703')) {
+        console.warn("Coluna target_audience ausente ao criar trilha. Retrying sem segmentação.");
+        const { target_audience, ...fallbackData } = trailData;
+        const retry = await supabase.from('trails').insert([fallbackData]).select().single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw new Error(error.message);
 

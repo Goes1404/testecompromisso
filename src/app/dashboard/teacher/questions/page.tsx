@@ -98,7 +98,15 @@ export default function QuestionBankPage() {
                 target_audience: bulkTargetAudience,
                 teacher_id: user.id
             }));
-            const { error } = await supabase.from('questions').insert(itemsToInsert);
+            let { error } = await supabase.from('questions').insert(itemsToInsert);
+            
+            if (error && (error.message.includes('target_audience') || error.code === '42703')) {
+                console.warn("Coluna target_audience ausente ao salvar lote de questões. Retrying sem segmentação.");
+                const fallbackItems = itemsToInsert.map(({ target_audience, ...rest }: any) => rest);
+                const retry = await supabase.from('questions').insert(fallbackItems);
+                error = retry.error;
+            }
+
             if (error) throw error;
             toast({ title: "Banco Atualizado!", description: "Questões gravadas com sucesso." });
             setExtractedQuestions([]);
@@ -118,11 +126,23 @@ export default function QuestionBankPage() {
                 .filter(([_, text]) => text.trim() !== '')
                 .map(([key, text]) => ({ key, text }));
             
-            const { error } = await supabase.from('questions').insert([{ 
+            let { error } = await supabase.from('questions').insert([{ 
                 ...manualQuestion, 
                 options,
                 teacher_id: user.id
             }]);
+
+            if (error && (error.message.includes('target_audience') || error.code === '42703')) {
+                console.warn("Coluna target_audience ausente ao salvar questão manual. Retrying sem segmentação.");
+                const { target_audience, ...fallbackQuestion } = manualQuestion;
+                const retry = await supabase.from('questions').insert([{ 
+                    ...fallbackQuestion, 
+                    options,
+                    teacher_id: user.id
+                }]);
+                error = retry.error;
+            }
+
             if (error) throw error;
             toast({ title: "Questão Salva!" });
             setManualQuestion(prev => ({ ...prev, question_text: '' }));

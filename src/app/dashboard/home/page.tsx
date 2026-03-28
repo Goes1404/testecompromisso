@@ -32,7 +32,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
-import { supabase, safeExecute } from "@/app/lib/supabase";
+import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 
 const logoUrl = "/images/logocompromisso.png";
@@ -99,46 +99,54 @@ export default function DashboardHome() {
     dataFetchedRef.current = true;
 
     try {
-      const [annRes, trailRes, progressRes, libRes, essayRes, examRes] = await Promise.all([
-        safeExecute(async () => await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4)),
-        safeExecute(async () => await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3)),
-        safeExecute(async () => await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4)),
-        safeExecute(async () => await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)),
-        safeExecute(async () => await supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false })),
-        safeExecute(async () => await supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id))
-      ]);
+      // Queries diretas (sem safeExecute que causa double-wrap)
+      const annRes = await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4).then(r => r).catch(() => ({ data: null, error: null }));
+      const trailRes = await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3).then(r => r).catch(() => ({ data: null, error: null }));
+      const progressRes = await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4).then(r => r).catch(() => ({ data: null, error: null }));
+      const libRes = await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3).then(r => r).catch(() => ({ data: null, error: null }));
+      
+      // Essay e Exam com fallback para tabelas que podem não existir
+      let essayData: any[] = [];
+      let examData: any[] = [];
+
+      try {
+        const essayRes = await supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false });
+        if (essayRes.data) essayData = essayRes.data;
+      } catch (e) { console.warn("Tabela essay_submissions indisponível."); }
+
+      try {
+        const examRes = await supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id);
+        if (examRes.data) examData = examRes.data;
+      } catch (e) { console.warn("Tabela simulation_attempts indisponível."); }
 
       if (annRes?.data) setAnnouncements(annRes.data);
       if (trailRes?.data) setRecommendedTrails(trailRes.data);
       if (progressRes?.data) setRecentProgress((progressRes.data as any[]).filter((p: any) => p.trail));
       if (libRes?.data) setLibraryResources(libRes.data);
 
-      if (essayRes?.data && essayRes.data.length > 0) {
-        const essays = essayRes.data;
-        const scoredEssays = essays.filter((e: any) => e.score !== null && e.score > 0);
+      if (essayData.length > 0) {
+        const scoredEssays = essayData.filter((e: any) => e.score !== null && e.score > 0);
         const avg = scoredEssays.length > 0 ? scoredEssays.reduce((acc: number, curr: any) => acc + Number(curr.score), 0) / scoredEssays.length : 0;
-        setEssayStats({ count: essays.length, average: Math.round(avg), latest: essays[0] });
+        setEssayStats({ count: essayData.length, average: Math.round(avg), latest: essayData[0] });
       } else {
         setEssayStats({ count: 0, average: 0, latest: null });
       }
 
-      if (examRes?.data && examRes.data.length > 0) {
-        const exams = examRes.data;
+      if (examData.length > 0) {
         let totalScore = 0;
         let totalMax = 0;
-        exams.forEach((ex: any) => {
+        examData.forEach((ex: any) => {
           totalScore += Number(ex.score || 0);
           totalMax += Number(ex.total_questions || 0);
         });
         const avg = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
-        setExamStats({ totalAssessed: exams.length, averageScore: Math.round(avg) });
+        setExamStats({ totalAssessed: examData.length, averageScore: Math.round(avg) });
       } else {
         setExamStats({ totalAssessed: 0, averageScore: 0 });
       }
 
     } catch (e: any) {
       console.error("Dashboard data load error:", e);
-      dataFetchedRef.current = false;
     } finally {
       setLoadingData(false);
     }

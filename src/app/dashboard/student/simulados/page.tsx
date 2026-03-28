@@ -83,12 +83,23 @@ export default function SimuladoPage() {
   const saveSimulationResult = async (score: number, total: number) => {
     if (!user || !activeSubjectId) return;
     
-    await supabase.from('simulation_attempts').insert({
-      user_id: user.id,
-      subject_id: activeSubjectId,
-      score: score,
-      total_questions: total
-    });
+    try {
+      const { error } = await supabase.from('simulation_attempts').insert({
+        user_id: user.id,
+        subject_id: activeSubjectId,
+        score: score,
+        total_questions: total
+      });
+      
+      if (error) {
+        console.warn("Não foi possível salvar resultado do simulado:", error.message);
+        // Se a tabela não existir, apenas loga e não trava
+      } else {
+        console.log(`✅ Simulado salvo: ${score}/${total} acertos`);
+      }
+    } catch (e) {
+      console.warn("Tabela simulation_attempts indisponível. Resultado não salvo.");
+    }
   };
 
   const fetchQuestions = useCallback(async (subjectId: string) => {
@@ -108,17 +119,40 @@ export default function SimuladoPage() {
             query = query.or('target_audience.eq.all,target_audience.is.null');
         }
 
-        const { data: rawQuestions, error: fetchError } = await query;
-        if (fetchError) throw fetchError;
+        let rawQuestions: any[] = [];
+        const { data: fetch1, error: error1 } = await query;
+        
+        if (error1) {
+            console.warn("Primeira query falhou. Tentando fallback seguro. Erro:", error1);
+            const { data: fetch2, error: error2 } = await supabase
+                .from('questions')
+                .select(`*, subjects(name)`)
+                .eq('subject_id', subjectId)
+                .limit(200);
+            if (error2) throw error2;
+            rawQuestions = fetch2 || [];
+        } else {
+            rawQuestions = fetch1 || [];
+        }
 
         // Shuffle in JS to pick SIMULATION_SIZE random questions
         const shuffled = (rawQuestions || []).sort(() => 0.5 - Math.random()).slice(0, SIMULATION_SIZE);
 
-        const formattedQuestions: Question[] = shuffled.map((q: any) => ({
-            ...q,
-            subjects: typeof q.subjects === 'string' ? JSON.parse(q.subjects) : q.subjects,
-            options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
-        }));
+        const formattedQuestions: Question[] = shuffled.map((q: any) => {
+            let parsedOpts = q.options;
+            if (typeof parsedOpts === 'string') {
+                try {
+                    parsedOpts = JSON.parse(parsedOpts);
+                } catch (e) {
+                    parsedOpts = [];
+                }
+            }
+            return {
+                ...q,
+                subjects: typeof q.subjects === 'string' ? JSON.parse(q.subjects) : q.subjects,
+                options: parsedOpts || []
+            };
+        });
 
         if (formattedQuestions.length === 0) {
             toast({

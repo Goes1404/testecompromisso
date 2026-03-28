@@ -88,23 +88,28 @@ export default function LibraryManagementPage() {
 
       const payload = { ...formData, url: finalUrl };
 
+      let { data, error } = await (editingId 
+        ? supabase.from('library_resources').update(payload).eq('id', editingId).select().single()
+        : supabase.from('library_resources').insert([payload]).select().single()
+      );
+
+      if (error && (error.message.includes('target_audience') || error.code === '42703')) {
+        console.warn("Coluna target_audience ausente na biblioteca. Retrying sem segmentação.");
+        const { target_audience, ...fallbackPayload } = payload;
+        const retry = await (editingId 
+          ? supabase.from('library_resources').update(fallbackPayload).eq('id', editingId).select().single()
+          : supabase.from('library_resources').insert([fallbackPayload]).select().single()
+        );
+        data = retry.data;
+        error = retry.error;
+      }
+
+      if (error) throw error;
+      
       if (editingId) {
-        const { data, error } = await supabase
-          .from('library_resources')
-          .update(payload)
-          .eq('id', editingId)
-          .select()
-          .single();
-        if (error) throw error;
         setResources(prev => prev.map(r => r.id === editingId ? data : r));
         toast({ title: "Apostila Atualizada!" });
       } else {
-        const { data, error } = await supabase
-          .from('library_resources')
-          .insert([payload])
-          .select()
-          .single();
-        if (error) throw error;
         setResources(prev => [data, ...prev]);
         toast({ title: "Apostila Cadastrada!" });
       }

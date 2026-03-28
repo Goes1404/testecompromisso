@@ -21,7 +21,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function generateQuestionsForSubject(subjectName) {
   const url = `https://api.openai.com/v1/chat/completions`;
-  const prompt = `Gere exatamente 2 questões inéditas estilo ENEM para a matéria de ${subjectName}. 
+  const prompt = `Gere exatamente 4 questões inéditas estilo ENEM para a matéria de ${subjectName}. 
 Responda EXCLUSIVAMENTE com um JSON object contendo a chave "questions" que mapeia para um array. Cada objeto do array deve ter este formato e chaves:
 {
   "question_text": "Texto completo da questão, incluindo textos base",

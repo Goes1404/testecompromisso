@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 // As bibliotecas serão carregadas via CDN e acessadas pelo window
-const getPdfJs = () => typeof window !== 'undefined' ? (window as any).pdfjsLib : null;
+const getPdfJs = () => {
+  if (typeof window === 'undefined') return null;
+  return (window as any).pdfjsLib;
+};
 const getFabric = () => typeof window !== 'undefined' ? (window as any).fabric : null;
 import { 
   Loader2, 
@@ -167,7 +170,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
 
       setLoading(true);
       try {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
         const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
         const pdf = await loadingTask.promise;
         setPdfDoc(pdf);

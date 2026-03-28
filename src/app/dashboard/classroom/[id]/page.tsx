@@ -294,12 +294,12 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         }}
       />
       <Script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" 
-        strategy="beforeInteractive"
+        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" 
+        strategy="afterInteractive"
       />
       <Script 
         src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" 
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
       />
       
       <header className="sticky top-0 bg-primary text-white px-4 h-16 flex items-center justify-between shrink-0 z-[60] shadow-xl border-b border-white/5">

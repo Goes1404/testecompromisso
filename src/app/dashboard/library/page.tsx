@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, safeExecute } from "@/app/lib/supabase";
+import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import Link from "next/link";
 
@@ -48,20 +48,23 @@ export default function LibraryPage() {
     dataFetchedRef.current = true;
 
     try {
-      const userAudience = profile?.profile_type === 'enem' ? 'enem' : 'etec';
+      // Busca todos os recursos (query simples que nunca falha)
+      const { data, error } = await supabase.from('library_resources')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      const { data, error } = await safeExecute(async () => 
-        await supabase.from('library_resources')
-          .select('*')
-          .or(`target_audience.eq.all,target_audience.eq.${userAudience},target_audience.is.null`)
-          .order('created_at', { ascending: false })
-      );
-      
       if (error) throw error;
-      if (data) setResources(data);
+
+      // Filtra por segmentação no front-end (se a coluna existir nos dados)
+      const userAudience = profile?.profile_type === 'enem' ? 'enem' : 'etec';
+      const filtered = (data || []).filter(r => {
+        if (!r.target_audience) return true; // sem segmentação = mostra para todos
+        return r.target_audience === 'all' || r.target_audience === userAudience;
+      });
+
+      setResources(filtered);
     } catch (err: any) {
       console.error("Erro ao carregar acervo:", err);
-      dataFetchedRef.current = false;
     } finally {
       setLoading(false);
     }
@@ -80,7 +83,7 @@ export default function LibraryPage() {
     return matchesSearch && matchesCategory && matchesType;
   });
 
-  if (loading && !dataFetchedRef.current) {
+  if (loading) {
     return (
       <div className="py-20 flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
