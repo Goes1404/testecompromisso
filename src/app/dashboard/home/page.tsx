@@ -100,10 +100,10 @@ export default function DashboardHome() {
 
     try {
       // Queries diretas (sem safeExecute que causa double-wrap)
-      const annRes = await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4).then(r => r).catch(() => ({ data: null, error: null }));
-      const trailRes = await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3).then(r => r).catch(() => ({ data: null, error: null }));
-      const progressRes = await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4).then(r => r).catch(() => ({ data: null, error: null }));
-      const libRes = await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3).then(r => r).catch(() => ({ data: null, error: null }));
+      const annRes = await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4);
+      const trailRes = await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3);
+      const progressRes = await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4);
+      const libRes = await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3);
       
       // Essay e Exam com fallback para tabelas que podem não existir
       let essayData: any[] = [];
