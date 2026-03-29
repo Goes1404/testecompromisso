@@ -1,6 +1,20 @@
 
+const fs = require('fs');
+const path = require('path');
+
+// Manually load .env.local
+const envPath = path.resolve(__dirname, '.env.local');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split('=');
+    if (key && valueParts.length > 0) {
+      process.env[key.trim()] = valueParts.join('=').trim().replace(/^"(.*)"$/, '$1');
+    }
+  });
+}
+
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config({ path: '.env.local' });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -42,42 +56,61 @@ const teachers = [
 ];
 
 async function createTeacher(teacher) {
-  console.log(`Processing: ${teacher.name} (${teacher.email})...`);
+  // Padronização de Nome e E-mail
+  const nameParts = teacher.name.trim().split(' ');
+  const firstName = nameParts[0];
+  const lastName = nameParts[nameParts.length - 1];
+  const displayName = `${firstName} ${lastName}`;
+  
+  const formattedEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "") + "@compromisso.com";
+
+  console.log(`Processing: ${displayName} (${formattedEmail})...`);
   
   // 1. Create User in Auth
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email: teacher.email,
-    password: "123456789",
+    email: formattedEmail,
+    password: "compromisso2026",
     email_confirm: true,
-    user_metadata: { full_name: teacher.name }
+    user_metadata: { 
+      full_name: displayName,
+      must_change_password: true,
+      role: 'teacher'
+    }
   });
 
   if (authError) {
     if (authError.message.includes('already been registered')) {
         console.log(`- User already exists in Auth. Fetching profile...`);
-        // We'll need to find the user ID if they already exist
         const { data: users, error: listError } = await supabase.auth.admin.listUsers();
         if (listError) throw listError;
-        const existingUser = users.users.find(u => u.email === teacher.email);
+        const existingUser = users.users.find(u => u.email === formattedEmail);
         if (!existingUser) throw new Error("User exists but not found in list");
-        return finalizeProfile(existingUser.id, teacher);
+        
+        // Update existing user to have the correct metadata if needed
+        await supabase.auth.admin.updateUserById(existingUser.id, {
+            user_metadata: { ...existingUser.user_metadata, full_name: displayName, role: 'teacher' }
+        });
+        
+        return finalizeProfile(existingUser.id, teacher, displayName);
     }
     console.error(`- Error creating auth user: ${authError.message}`);
     return;
   }
 
-  return finalizeProfile(authData.user.id, teacher);
+  return finalizeProfile(authData.user.id, teacher, displayName);
 }
 
-async function finalizeProfile(userId, teacher) {
+async function finalizeProfile(userId, teacher, displayName) {
   // 2. Create/Update Profile
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
       id: userId,
-      name: teacher.name,
-      full_name: teacher.name,
-      role: 'teacher',
+      name: displayName,
+      email: teacher.email, // Mantemos o email original no profile para referência ou usamos o novo? 
+      // O usuário disse: "para os professores que ja entraram e colocaram a senha deles, mantenha o email normal. apenas registre eles no banco de dados e coloque o nome de exibição correto"
       profile_type: 'teacher',
       status: 'active',
       updated_at: new Date().toISOString()
@@ -107,7 +140,7 @@ async function finalizeProfile(userId, teacher) {
         .from('trails')
         .update({
           teacher_id: userId,
-          teacher_name: teacher.name
+          teacher_name: displayName
         })
         .eq('id', trail.id);
       

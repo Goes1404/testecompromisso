@@ -170,7 +170,10 @@ export default function DashboardHome() {
     </div>
   );
 
-  const userName = profile?.name?.split(' ')[0] || 'Estudante';
+  const nameParts = (profile?.name || '').trim().split(' ');
+  const userName = nameParts.length > 1 
+    ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}` 
+    : nameParts[0] || 'Estudante';
   const greeting = greetingByHour();
 
   const quickActions = [

@@ -91,14 +91,30 @@ export default function RegisterPage() {
 
     try {
       // PADRÃO CORPORATIVO: Nome de exibição é sempre Primeiro + Último
-      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      const firstName = formData.firstName.trim();
+      const lastName = formData.lastName.trim();
+      const fullName = `${firstName} ${lastName}`;
       
-      // CONTROLE DE DUPLICIDADE: Username gerado inclui nome do meio se disponível para evitar conflitos
-      const rawUsername = `${formData.firstName}${formData.middleName || ''}${formData.lastName}`
+      // Validação de E-mail: Caso seja professor, ou se quisermos padronizar geral
+      // A pedido do usuário: "manter um padrao de emails. com o primeiro e ultimo nome do aluno e professor"
+      const expectedEmailPart = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+        .replace(/[^a-z0-9]/g, "");
+      
+      if (!formData.email.toLowerCase().includes(expectedEmailPart)) {
+        toast({ 
+          title: "Sugestão de E-mail", 
+          description: `Para manter o padrão institucional, utilize um e-mail contendo '${expectedEmailPart}'.`, 
+          variant: "default" 
+        });
+      }
+
+      // CONTROLE DE DUPLICIDADE: Username gerado
+      const rawUsername = `${firstName}${lastName}`
         .toLowerCase()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // remove acentos
-        .replace(/[^a-z0-9]/g, ""); // remove caracteres especiais
+        .replace(/[\u0300-\u036f]/g, "") 
+        .replace(/[^a-z0-9]/g, "");
 
       let institutionValue = "";
       let courseValue = "";
@@ -121,7 +137,7 @@ export default function RegisterPage() {
             profile_type: profileType,
             institution: institutionValue,
             course: courseValue,
-            cpf: formData.cpf.replace(/\D/g, '') // Salva apenas números
+            cpf: formData.cpf.replace(/\D/g, '')
           }
         }
       });

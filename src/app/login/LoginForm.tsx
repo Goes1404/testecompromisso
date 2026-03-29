@@ -22,13 +22,13 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showMasterPassword, setShowMasterPassword] = useState(false);
-  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [forgotStep, setForgotStep] = useState<'verify' | 'newpass'>('verify');
+  const [forgotStep, setForgotStep] = useState<'verify' | 'verify_otp' | 'newpass'>('verify');
   const [forgotEmail, setForgotEmail] = useState("");
   const [masterPassword, setMasterPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   
   const logoUrl = "/images/logocompromisso.png";
 
@@ -57,18 +57,16 @@ export function LoginForm() {
       }
 
       if (data.user) {
-        // Check if user must change password
+        // Redireciona se for o primeiro acesso (troca de senha obrigatória)
         if (data.user.user_metadata?.must_change_password) {
-          setMustChangePassword(true);
-          setLoading(false);
+          setIsRedirecting(true);
+          window.location.assign("/dashboard/first-access");
           return;
         }
 
         setIsRedirecting(true);
-        // Hard redirect para limpar caches de Web Locks do navegador
         window.location.assign("/dashboard");
       }
-
     } catch (err: any) {
       setLoading(false);
       setAuthError("Falha crítica na autenticação.");
@@ -79,17 +77,78 @@ export function LoginForm() {
     e.preventDefault();
     setAuthError(null);
 
-    if (masterPassword !== "compromisso2026") {
-      setAuthError("Senha padrão/código de verificação incorreto.");
-      return;
-    }
-
     if (!forgotEmail) {
       setAuthError("Por favor, informe seu e-mail.");
       return;
     }
 
-    setForgotStep('newpass');
+    setLoading(true);
+
+    try {
+      // 1. Verificar se é aluno ou professor (tentativa de encontrar perfil)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('profile_type')
+        .eq('email', forgotEmail)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        setLoading(false);
+        setAuthError("E-mail não encontrado em nossa base de dados.");
+        return;
+      }
+
+      if (profile.profile_type === 'teacher' || profile.profile_type === 'admin') {
+        // Fluxo Professor: Usa Senha Mestra
+        if (masterPassword !== "compromisso2026") {
+          setLoading(false);
+          setAuthError("Senha padrão/código de segurança incorreto para professor.");
+          return;
+        }
+        setForgotStep('newpass');
+      } else {
+        // Fluxo Aluno: Envia Código por E-mail (OTP)
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          email: forgotEmail,
+          options: {
+            shouldCreateUser: false,
+          }
+        });
+
+        if (otpError) throw otpError;
+        
+        setAuthError("Código de verificação enviado! Confira seu e-mail.");
+        setForgotStep('verify_otp');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || "Erro ao processar solicitação.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setLoading(true);
+
+    try {
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email: forgotEmail,
+        token: otpCode,
+        type: 'email'
+      });
+
+      if (verifyError) throw verifyError;
+
+      // Se verificou, o usuário está logado. Redireciona para o primeiro acesso para trocar senha.
+      setIsRedirecting(true);
+      window.location.assign("/dashboard/first-access");
+    } catch (err: any) {
+      setAuthError("Código inválido ou expirado.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPasswordReset = async (e: React.FormEvent) => {
@@ -109,7 +168,6 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      // Usaremos nossa API personalizada para permitir o reset via senha mestra
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,49 +184,18 @@ export function LoginForm() {
         throw new Error(result.error || "Erro ao resetar senha.");
       }
 
+      setAuthError("Senha resetada com sucesso! Redirecionando...");
+      
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: forgotEmail,
         password: newPassword
       });
 
       if (signInError) {
-        setAuthError("Senha resetada com sucesso! Por favor, faça login com sua nova senha.");
         setIsForgotPassword(false);
         setLoading(false);
         return;
       }
-
-      setIsRedirecting(true);
-      window.location.assign("/dashboard");
-    } catch (err: any) {
-      setLoading(false);
-      setAuthError(err.message || "Erro ao atualizar senha.");
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError(null);
-
-    if (newPassword.length < 6) {
-      setAuthError("A nova senha deve ter pelo menos 6 caracteres.");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setAuthError("As senhas não coincidem.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-        data: { must_change_password: false }
-      });
-
-      if (error) throw error;
 
       setIsRedirecting(true);
       window.location.assign("/dashboard");
@@ -183,75 +210,6 @@ export function LoginForm() {
       <div className="flex flex-col items-center gap-4 text-white">
         <Loader2 className="h-10 w-10 animate-spin text-accent" />
         <p className="text-sm font-black uppercase italic tracking-widest">Iniciando Sessão...</p>
-      </div>
-    );
-  }
-
-  if (mustChangePassword) {
-    return (
-      <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500 z-10 relative">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-black text-white uppercase italic">Primeiro Acesso</h1>
-          <p className="text-white/70 text-xs">Por segurança, altere sua senha padrão para continuar.</p>
-        </div>
-
-        <Card className="border-none shadow-2xl overflow-hidden bg-white/95 backdrop-blur-md rounded-[2rem]">
-          <CardHeader className="space-y-1 pb-6 pt-8 text-center bg-accent/10 border-b border-dashed">
-            <CardTitle className="text-xl font-black text-primary italic uppercase">Nova Senha</CardTitle>
-          </CardHeader>
-          <CardContent className="px-8 pt-8 space-y-6">
-            {authError && (
-              <Alert variant="destructive" className="bg-red-50 border-red-200">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-[10px] font-bold uppercase">{authError}</AlertDescription>
-              </Alert>
-            )}
-
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nova Senha de Segurança</Label>
-                <div className="relative">
-                  <Input 
-                    type={showPassword ? "text" : "password"} 
-                    value={newPassword} 
-                    onChange={(e) => setNewPassword(e.target.value)} 
-                    className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
-                    required 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Confirmar Nova Senha</Label>
-                <div className="relative">
-                  <Input 
-                    type={showConfirmPassword ? "text" : "password"} 
-                    value={confirmPassword} 
-                    onChange={(e) => setConfirmPassword(e.target.value)} 
-                    className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
-                    required 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-              <Button type="submit" disabled={loading} className="w-full bg-accent text-accent-foreground font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Salvar e Entrar"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -290,15 +248,16 @@ export function LoginForm() {
                     required 
                   />
                 </div>
+                {/* Mostra campo de senha mestra apenas se for professor ou se o e-mail sugerir */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Senha Padrão Compromisso</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Código de Acesso (Professores)</Label>
                   <div className="relative">
                     <Input 
                       type={showMasterPassword ? "text" : "password"} 
                       value={masterPassword} 
                       onChange={(e) => setMasterPassword(e.target.value)} 
+                      placeholder="Somente para Professores"
                       className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
-                      required 
                     />
                     <button
                       type="button"
@@ -309,8 +268,8 @@ export function LoginForm() {
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-primary text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all">
-                  Confirmar Identidade
+                <Button type="submit" disabled={loading} className="w-full bg-primary text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all">
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Prosseguir"}
                 </Button>
                 <button 
                   type="button" 
@@ -318,6 +277,33 @@ export function LoginForm() {
                   className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors py-2"
                 >
                   Voltar para o Login
+                </button>
+              </form>
+            ) : forgotStep === 'verify_otp' ? (
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="text-center space-y-2 mb-4">
+                  <p className="text-[10px] font-bold text-primary/60 uppercase">Enviamos um código para {forgotEmail}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Código de 6 Dígitos</Label>
+                  <Input 
+                    type="text" 
+                    value={otpCode} 
+                    onChange={(e) => setOtpCode(e.target.value)} 
+                    placeholder="000000"
+                    className="h-14 bg-muted/30 border-none rounded-2xl font-black text-center text-2xl tracking-[0.5em]" 
+                    required 
+                  />
+                </div>
+                <Button type="submit" disabled={loading} className="w-full bg-accent text-accent-foreground font-black h-14 text-sm shadow-xl rounded-xl transition-all">
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verificar Código"}
+                </Button>
+                <button 
+                  type="button" 
+                  onClick={() => setForgotStep('verify')} 
+                  className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors py-2"
+                >
+                  Mudar E-mail
                 </button>
               </form>
             ) : (

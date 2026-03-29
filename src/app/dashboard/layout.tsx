@@ -176,10 +176,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [userRole]);
 
   useEffect(() => {
-    if (hasHydrated && !isUserLoading && !user) {
-      router.replace("/login");
+    if (hasHydrated && !isUserLoading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (user.user_metadata?.must_change_password && pathname !== "/dashboard/first-access") {
+        // Força primeiro acesso se a flag estiver ativa
+        window.location.assign("/dashboard/first-access");
+      }
     }
-  }, [user, isUserLoading, router, hasHydrated]);
+  }, [user, isUserLoading, router, hasHydrated, pathname]);
 
   const isFullBleedPage = useMemo(() => {
     return pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/');
@@ -245,7 +250,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex-1" />
           <Link id="header-profile" href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">{profile?.name || "Usuário"}</span>
+              <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">
+                {profile?.name 
+                  ? (profile.name.trim().split(' ').length > 1 
+                      ? `${profile.name.trim().split(' ')[0]} ${profile.name.trim().split(' ').pop()}` 
+                      : profile.name)
+                  : "Usuário"}
+              </span>
               <span className="text-[8px] font-black text-accent uppercase tracking-widest">{userRole.toUpperCase()}</span>
             </div>
             <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">

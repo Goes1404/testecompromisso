@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   // Cloudflare Pages compatibility
   // output: 'standalone', 
   images: {
-    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
     remotePatterns: [

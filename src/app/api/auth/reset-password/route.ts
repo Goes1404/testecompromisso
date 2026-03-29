@@ -41,16 +41,28 @@ export async function POST(request: Request) {
       }
     });
 
-    // 3. Resetar senha via RPC (Plano Nuclear Final)
-    // O RPC cuida de TUDO: deleta registros fantasmas, cria o usuário do zero,
-    // insere a identidade de email, e atualiza o profile.
-    const { error: rpcError } = await supabaseAdmin.rpc('force_reset_password', {
-      target_email: email,
-      new_password: newPassword
-    });
+    // 3. Validar se o e-mail existe no banco de dados
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (rpcError) {
-      throw rpcError;
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'E-mail não encontrado em nossa base de dados' },
+        { status: 404 }
+      );
+    }
+
+    // 4. Resetar senha via Admin API (Sem deletar/reproducir o usuário)
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      profile.id,
+      { password: newPassword }
+    );
+
+    if (updateError) {
+      throw updateError;
     }
 
     return NextResponse.json({ message: 'Senha atualizada com sucesso' });
