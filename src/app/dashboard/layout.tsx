@@ -181,6 +181,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/');
   }, [pathname]);
 
+  const displayName = useMemo(() => {
+    if (!profile?.name) return "Usuário";
+    const parts = profile.name.trim().split(/\s+/);
+    if (parts.length <= 1) return parts[0];
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  }, [profile?.name]);
+
   if (!hasHydrated || isUserLoading) return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-gradient gap-6 relative overflow-hidden">
       <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg/1280px-Centro_Hist%C3%B3rico_de_Santana_de_Parna%C3%ADba_-_SP.jpg')] bg-cover bg-center grayscale" />
@@ -242,7 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex-1" />
           <Link href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">{profile?.name || "Usuário"}</span>
+              <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">{displayName}</span>
               <span className="text-[8px] font-black text-accent uppercase tracking-widest">{userRole.toUpperCase()}</span>
             </div>
             <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">

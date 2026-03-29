@@ -3,7 +3,20 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { InteractiveWorkbook } from "@/components/InteractiveWorkbook";
+import dynamic from "next/dynamic";
+
+const InteractiveWorkbook = dynamic(
+  () => import("@/components/InteractiveWorkbook").then(mod => mod.InteractiveWorkbook),
+  { 
+    ssr: false, 
+    loading: () => (
+      <div className="h-full flex flex-col items-center justify-center bg-slate-900 gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-accent" />
+        <p className="text-[10px] font-black uppercase tracking-widest italic opacity-40 text-white">Carregando Material Interativo...</p>
+      </div>
+    )
+  }
+);
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { Loader2, ChevronLeft, ShieldCheck } from "lucide-react";

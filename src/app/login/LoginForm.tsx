@@ -235,6 +235,11 @@ export function LoginForm() {
                 </button>
               </div>
             </div>
+            <div className="pt-2 text-right">
+              <Link href="/forgot-password" title="Esqueci minha senha" className="text-primary/40 hover:text-primary font-black uppercase text-[9px] tracking-widest transition-colors">
+                Esqueci minha senha
+              </Link>
+            </div>
             <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none">
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Entrar no Sistema <ChevronRight className="h-5 w-5 ml-1 text-accent" /></>}
             </Button>
