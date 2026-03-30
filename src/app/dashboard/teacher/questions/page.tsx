@@ -13,8 +13,6 @@ import {
     FilePlus, 
     ListChecks, 
     PlusCircle, 
-    Sparkles, 
-    CheckCircle2, 
     Trash2, 
     Database, 
     BrainCircuit,
@@ -56,8 +54,6 @@ export default function QuestionBankPage() {
     const [rawText, setRawText] = useState('');
     const [extractedQuestions, setExtractedQuestions] = useState<ParsedQuestion[]>([]);
     
-    // AI Status State (Used for bulk extraction)
-    const [isGenerating, setIsGenerating] = useState(false);
     
     // Manual States
     const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '', target_audience: 'all' });
@@ -280,7 +276,7 @@ export default function QuestionBankPage() {
                                         </SelectContent>
                                     </Select>
                                     <Button onClick={handleSaveProcessed} disabled={isSaving || !bulkSubjectId} className="w-full md:w-auto h-12 px-8 rounded-xl bg-primary text-white font-black shadow-lg">
-                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-accent" />}
+                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2 text-accent" />}
                                         Validar e Salvar Tudo
                                     </Button>
                                 </div>
@@ -305,14 +301,6 @@ export default function QuestionBankPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                        {q.explanation && (
-                                            <div className="mt-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                                                <p className="text-[9px] font-black uppercase text-blue-600 mb-1 flex items-center gap-1.5">
-                                                    <BrainCircuit className="h-3 w-3" /> Resolução Comentada
-                                                </p>
-                                                <p className="text-[10px] text-blue-800 font-medium italic leading-relaxed">{q.explanation}</p>
-                                            </div>
-                                        )}
                                     </Card>
                                 ))}
                             </div>

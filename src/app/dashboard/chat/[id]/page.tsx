@@ -152,44 +152,11 @@ export default function DirectChatPage() {
       const newUserMessage = { id: `u-${Date.now()}`, sender_id: user.id, content: userText, created_at: new Date().toISOString() };
       setMessages(prev => [...prev, newUserMessage]);
       
-      setIsAiThinking(true);
       try {
-        const history = [...messages, newUserMessage].slice(-6).map(m => ({
-          role: (m.sender_id === "aurora-ai" ? 'assistant' : 'user') as 'user' | 'assistant',
-          content: m.content
-        }));
-
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: history,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success && data.result?.response) {
-          setMessages(prev => [...prev, {
-            id: `ai-${Date.now()}`,
-            sender_id: "aurora-ai",
-            content: data.result.response,
-            created_at: new Date().toISOString(),
-          }]);
-        } else {
-          setMessages(prev => [...prev, {
-            id: `ai-error-${Date.now()}`,
-            sender_id: "aurora-ai",
-            content: `⚠️ [ERRO TÉCNICO]: ${data.error || "Houve um problema ao processar sua dúvida. Verifique a Engine."}`,
-            created_at: new Date().toISOString(),
-            isError: true
-          }]);
-        }
-      } catch (err: any) {
         setMessages(prev => [...prev, {
-          id: `ai-crit-${Date.now()}`,
+          id: `ai-deactivated-${Date.now()}`,
           sender_id: "aurora-ai",
-          content: `⚠️ [FALHA DE REDE]: ${err.message || "Oscilação detectada no sinal da IA."}`,
+          content: "A Aurora IA foi temporariamente desativada. Em breve traremos novas funcionalidades!",
           created_at: new Date().toISOString(),
           isError: true
         }]);
