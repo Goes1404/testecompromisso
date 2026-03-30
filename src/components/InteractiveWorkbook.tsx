@@ -24,6 +24,9 @@ import {
   Highlighter,
   Hand
 } from "lucide-react";
+
+// FIX: Global in-memory cache para PDFs para evitar redundância de downloads
+const globalPdfCache: Record<string, any> = {};
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -61,6 +64,29 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
   
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const toolsRef = useRef({ activeTool, brushColor, highlightColor });
+  useEffect(() => {
+    toolsRef.current = { activeTool, brushColor, highlightColor };
+    
+    // Sync fabric when tools change without recreating the canvas
+    if (fabricCanvasRef.current) {
+      const fCanvas = fabricCanvasRef.current;
+      const fabricLib = getFabric();
+      fCanvas.isDrawingMode = activeTool !== 'eraser' && activeTool !== 'pan';
+      fCanvas.selection = activeTool === 'eraser';
+      
+      if (activeTool === 'pencil' && fabricLib) {
+        fCanvas.freeDrawingBrush = new fabricLib.PencilBrush(fCanvas);
+        fCanvas.freeDrawingBrush.color = brushColor;
+        fCanvas.freeDrawingBrush.width = 3 * zoom;
+      } else if (activeTool === 'highlighter' && fabricLib) {
+        fCanvas.freeDrawingBrush = new fabricLib.PencilBrush(fCanvas);
+        fCanvas.freeDrawingBrush.color = highlightColor;
+        fCanvas.freeDrawingBrush.width = 20 * zoom;
+      }
+    }
+  }, [activeTool, brushColor, highlightColor, zoom]);
 
   // Estados para o Pan (Arraste)
   const [isDragging, setIsDragging] = useState(false);
@@ -170,9 +196,16 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
 
       setLoading(true);
       try {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-        const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
-        const pdf = await loadingTask.promise;
+        let pdf: any;
+        if (globalPdfCache[currentPdfUrl]) {
+           pdf = globalPdfCache[currentPdfUrl];
+        } else {
+           pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+           const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
+           pdf = await loadingTask.promise;
+           globalPdfCache[currentPdfUrl] = pdf;
+        }
+
         setPdfDoc(pdf);
         setTotalPages(pdf.numPages);
         
@@ -193,6 +226,23 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     }
     loadPdf();
   }, [currentPdfUrl, materialId]);
+
+  // FIX: Recalibração de Escala no Mobile (Giro de Tela)
+  useEffect(() => {
+    let timeoutId: any;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        renderPage(currentPage, zoom);
+      }, 300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
+  }, [renderPage, currentPage, zoom]);
 
   const renderPage = useCallback(async (pageNum: number, currentZoom: number) => {
     if (!pdfDoc || !canvasRef.current || !containerRef.current) return;
@@ -234,11 +284,13 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
 
       if (fabricCanvasRef.current) fabricCanvasRef.current.dispose();
       
+      const { activeTool: currentTool, brushColor: currentBrush, highlightColor: currentHighlight } = toolsRef.current;
+      
       const fCanvas = new fabric.Canvas('fabric-layer', {
         height: viewport.height,
         width: viewport.width,
-        isDrawingMode: activeTool !== 'eraser' && activeTool !== 'pan',
-        selection: activeTool === 'eraser'
+        isDrawingMode: currentTool !== 'eraser' && currentTool !== 'pan',
+        selection: currentTool === 'eraser'
       });
 
       const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
@@ -262,18 +314,18 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         });
       }
 
-      if (activeTool === 'pencil') {
+      if (currentTool === 'pencil') {
         fCanvas.freeDrawingBrush = new fabric.PencilBrush(fCanvas);
-        fCanvas.freeDrawingBrush.color = brushColor;
+        fCanvas.freeDrawingBrush.color = currentBrush;
         fCanvas.freeDrawingBrush.width = 3 * currentZoom;
-      } else if (activeTool === 'highlighter') {
+      } else if (currentTool === 'highlighter') {
         fCanvas.freeDrawingBrush = new fabric.PencilBrush(fCanvas);
-        fCanvas.freeDrawingBrush.color = highlightColor;
+        fCanvas.freeDrawingBrush.color = currentHighlight;
         fCanvas.freeDrawingBrush.width = 20 * currentZoom;
       }
 
       fCanvas.on('mouse:down', (options: any) => {
-        if (activeTool === 'eraser' && options.target) {
+      if (toolsRef.current.activeTool === 'eraser' && options.target) {
           fCanvas.remove(options.target);
           savePageDraft();
         }
@@ -287,7 +339,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     } finally {
       setLoading(false);
     }
-  }, [pdfDoc, userName, userCpf, materialId, brushColor, highlightColor, activeTool, savePageDraft, zoom]);
+  }, [pdfDoc, userName, userCpf, materialId, savePageDraft]);
 
   useEffect(() => {
     if (pdfDoc) renderPage(currentPage, zoom);
@@ -441,6 +493,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleMouseUpOrLeave}
+        style={{ touchAction: activeTool === 'pan' ? 'auto' : 'none' }}
         className={`flex-1 overflow-auto p-4 md:p-10 flex justify-center items-start bg-slate-900 no-swipe transition-all duration-300 ${
           activeTool === 'pan' ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
         }`}

@@ -64,18 +64,25 @@ export default function QuestionBankPage() {
 
     useEffect(() => {
         const fetchSubjects = async () => {
-            const { data, error } = await supabase.from('subjects').select('id, name').order('name');
-            if (!error && data) {
-                setSubjects(data);
-                const uncat = data.find(s => s.name === 'Não Categorizado') || data[0];
-                if (uncat) {
-                    setManualQuestion(prev => ({ ...prev, subject_id: uncat.id }));
-                    setBulkSubjectId(uncat.id);
+            try {
+                const { data, error } = await supabase.from('subjects').select('id, name').order('name');
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setSubjects(data);
+                    const uncat = data.find(s => s.name === 'Não Categorizado') || data[0];
+                    if (uncat) {
+                        setManualQuestion(prev => ({ ...prev, subject_id: uncat.id }));
+                        setBulkSubjectId(uncat.id);
+                    }
+                } else {
+                    toast({ title: "Base Vazia", description: "Nenhuma disciplina cadastrada.", variant: "destructive" });
                 }
+            } catch (err: any) {
+                toast({ title: "Erro na Conexão", description: "Não foi possível carregar as disciplinas.", variant: "destructive" });
             }
         };
         fetchSubjects();
-    }, []);
+    }, [toast]);
 
     const handleAnalyzeBulk = async () => {
         toast({ title: "Funcionalidade Indisponível", description: "O motor de IA (Aurora) foi desativado.", variant: 'destructive' });

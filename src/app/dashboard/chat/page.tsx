@@ -187,7 +187,7 @@ export default function ChatListPage() {
                     <AvatarImage src={`https://picsum.photos/seed/${contact.id}/200/200`} className="object-cover" />
                     <AvatarFallback className="bg-primary text-white font-black text-3xl italic">{contact.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <div className="absolute bottom-1 right-1 h-5 w-5 bg-green-500 rounded-full border-4 border-white shadow-lg animate-pulse" />
+                  <div className="absolute bottom-1 right-1 h-6 w-6 bg-emerald-500 rounded-full border-4 border-white shadow-xl ring-1 ring-black/5 animate-pulse" />
                 </div>
                 <div className="space-y-2 w-full">
                   <CardTitle className="text-xl md:text-2xl font-black text-primary italic truncate px-2">{contact.name}</CardTitle>

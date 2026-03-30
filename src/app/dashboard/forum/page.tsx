@@ -126,6 +126,20 @@ export default function ForumPage() {
     }
   };
 
+  const getCategoryStyles = (cat: string) => {
+    switch (cat) {
+      case "Matemática": return { bg: "bg-blue-100", text: "text-blue-700", hoverBg: "group-hover:bg-blue-600", hoverText: "group-hover:text-white" };
+      case "Física": return { bg: "bg-indigo-100", text: "text-indigo-700", hoverBg: "group-hover:bg-indigo-600", hoverText: "group-hover:text-white" };
+      case "Química": return { bg: "bg-emerald-100", text: "text-emerald-700", hoverBg: "group-hover:bg-emerald-600", hoverText: "group-hover:text-white" };
+      case "Biologia": return { bg: "bg-green-100", text: "text-green-700", hoverBg: "group-hover:bg-green-600", hoverText: "group-hover:text-white" };
+      case "Linguagens": return { bg: "bg-rose-100", text: "text-rose-700", hoverBg: "group-hover:bg-rose-600", hoverText: "group-hover:text-white" };
+      case "História": return { bg: "bg-amber-100", text: "text-amber-700", hoverBg: "group-hover:bg-amber-600", hoverText: "group-hover:text-white" };
+      case "Geografia": return { bg: "bg-orange-100", text: "text-orange-700", hoverBg: "group-hover:bg-orange-600", hoverText: "group-hover:text-white" };
+      case "Polos": return { bg: "bg-purple-100", text: "text-purple-700", hoverBg: "group-hover:bg-purple-600", hoverText: "group-hover:text-white" };
+      default: return { bg: "bg-accent/10", text: "text-accent", hoverBg: "group-hover:bg-accent", hoverText: "group-hover:text-white" };
+    }
+  };
+
   return (
     <div className="flex flex-col space-y-8 animate-in fade-in duration-700 pb-20 max-w-full min-w-0 overflow-x-hidden px-1">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
@@ -211,12 +225,14 @@ export default function ForumPage() {
               <p className="font-black italic text-xl">Nenhuma discussão encontrada</p>
             </div>
           ) : (
-            filteredForums?.map((forum) => (
-                <Card key={forum.id} className="group relative overflow-hidden flex flex-col border-none shadow-xl rounded-[2.5rem] bg-white hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+            filteredForums?.map((forum) => {
+                const styles = getCategoryStyles(forum.category);
+                return (
+                <Card key={forum.id} className="group relative overflow-hidden flex flex-col border border-muted/20 shadow-xl rounded-[2.5rem] bg-white hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
                     <CardHeader className="p-8 pb-4">
                         <div className="flex items-center justify-between">
-                            <div className="h-12 w-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-inner">{getCategoryIcon(forum.category)}</div>
-                            <Badge className="bg-accent/10 text-accent border-none font-black text-[8px] uppercase px-3 py-1">{forum.category}</Badge>
+                            <div className={`h-12 w-12 rounded-2xl ${styles.bg} ${styles.text} flex items-center justify-center ${styles.hoverBg} ${styles.hoverText} transition-all shadow-inner`}>{getCategoryIcon(forum.category)}</div>
+                            <Badge className={`${styles.bg} ${styles.text} border-none font-black text-[8px] uppercase px-3 py-1`}>{forum.category}</Badge>
                         </div>
                         <CardTitle className="pt-6 text-xl font-black italic text-primary leading-tight group-hover:text-accent transition-colors line-clamp-2 min-h-[3rem]">{forum.name}</CardTitle>
                     </CardHeader>
@@ -233,7 +249,8 @@ export default function ForumPage() {
                         </div>
                     </CardContent>
                 </Card>
-            ))
+                )
+            })
           )}
         </div>
       )}

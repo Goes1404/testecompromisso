@@ -188,21 +188,21 @@ export default function DashboardHome() {
   const dashOffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="space-y-6 pb-10 animate-in fade-in duration-700 px-0.5">
+    <div className="space-y-6 pb-10 animate-in fade-in duration-700 px-3 md:px-0.5">
 
       {/* ── HERO BANNER ── */}
-      <section className="relative rounded-3xl overflow-hidden bg-gray-950 min-h-[220px] flex items-end p-6 md:p-8 shadow-2xl">
+      <section className="relative rounded-3xl overflow-hidden bg-slate-900 min-h-[160px] md:min-h-[200px] flex items-end p-5 md:p-6 shadow-2xl">
         {/* Background glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-30%] right-[-10%] w-[400px] h-[400px] bg-primary/25 rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-30%] left-[-5%] w-[300px] h-[300px] bg-accent/15 rounded-full blur-[80px]" />
+          <div className="absolute top-[-30%] right-[-10%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] bg-primary/25 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-30%] left-[-5%] w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-accent/15 rounded-full blur-[80px]" />
         </div>
 
         {/* Decorative grid */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 w-full">
-          <div className="space-y-3">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 w-full">
+          <div className="space-y-2 md:space-y-3">
             {/* Greeting chip */}
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full">
               <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
@@ -241,7 +241,7 @@ export default function DashboardHome() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {quickActions.map((action) => (
           <Link key={action.label} href={action.href}>
-            <div className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-5 shadow-xl ${action.shadow} hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 cursor-pointer`}>
+            <div className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-4 md:p-5 shadow-xl ${action.shadow} hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 cursor-pointer`}>
               <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl translate-x-4 -translate-y-4 group-hover:scale-150 transition-transform duration-500" />
               <action.icon className="h-6 w-6 text-white mb-3 relative z-10" />
               <p className="font-black text-white uppercase text-xs tracking-widest relative z-10">{action.label}</p>
@@ -397,7 +397,7 @@ export default function DashboardHome() {
         <div className="space-y-5">
 
           {/* Taxa de Acertos — Donut */}
-          <div className="bg-white rounded-3xl shadow-xl border border-muted/10 p-6 space-y-4">
+          <div className="bg-white rounded-3xl shadow-xl border border-muted/20 p-5 md:p-6 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-xl bg-violet-100 flex items-center justify-center">
                 <BrainCircuit className="h-4 w-4 text-violet-600" />
@@ -440,7 +440,7 @@ export default function DashboardHome() {
           </div>
 
           {/* Laboratório de Redação */}
-          <div className="bg-white rounded-3xl shadow-xl border border-muted/10 p-6 space-y-4">
+          <div className="bg-white rounded-3xl shadow-xl border border-muted/20 p-5 md:p-6 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-xl bg-green-100 flex items-center justify-center">
                 <FilePenLine className="h-4 w-4 text-green-600" />
@@ -488,7 +488,7 @@ export default function DashboardHome() {
           </div>
 
           {/* Biblioteca */}
-          <div className="bg-white rounded-3xl shadow-xl border border-muted/10 p-6 space-y-4">
+          <div className="bg-white rounded-3xl shadow-xl border border-muted/20 p-5 md:p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center">

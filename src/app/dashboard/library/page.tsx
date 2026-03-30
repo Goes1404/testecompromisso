@@ -34,7 +34,6 @@ const types = ["Todos", "PDF", "Video", "E-book", "Artigo"];
 export default function LibraryPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const dataFetchedRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [activeType, setActiveType] = useState("Todos");
@@ -42,10 +41,9 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
 
   const loadResources = useCallback(async () => {
-    if (!user || !profile || dataFetchedRef.current) return;
+    if (!user || !profile) return;
     
     setLoading(true);
-    dataFetchedRef.current = true;
 
     try {
       // Busca todos os recursos (query simples que nunca falha)

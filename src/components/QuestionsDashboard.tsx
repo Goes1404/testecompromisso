@@ -125,7 +125,7 @@ export function QuestionsDashboard() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-5xl font-black text-accent italic">{data.answeredRatio}%</div>
+                    <div className="text-4xl md:text-5xl font-black text-accent italic">{data.answeredRatio}%</div>
                     <p className="text-[10px] font-bold text-muted-foreground mt-2">TAXA DE COBERTURA</p>
                 </CardContent>
             </Card>

@@ -279,7 +279,7 @@ export function QuestionsList() {
             </AlertDialog>
 
             <Dialog open={!!questionToEdit} onOpenChange={(open) => !open && setQuestionToEdit(null)}>
-                <DialogContent className="max-w-3xl rounded-[2.5rem] p-10 bg-white border-none shadow-2xl">
+                <DialogContent className="max-w-3xl rounded-[2.5rem] p-6 md:p-10 bg-white border-none shadow-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black italic text-primary">Ajuste Pedagógico</DialogTitle>
                     </DialogHeader>

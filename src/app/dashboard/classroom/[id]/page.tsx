@@ -91,6 +91,15 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
     }
   }, [isMobile]);
 
+  // FIX: Garantir que a API do YT seja reconhecida caso o script já esteja em cache/carregado globalmente.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).YT && typeof (window as any).YT.Player === 'function') {
+      setIsApiReady(true);
+    } else {
+      (window as any).onYouTubeIframeAPIReady = () => setIsApiReady(true);
+    }
+  }, []);
+
   const loadTrailData = useCallback(async () => {
     if (!trailId || !user) return;
     try {
@@ -361,6 +370,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                 {showSimultaneousWorkbook && (
                   <div 
                     className="h-10 bg-slate-900 flex items-center justify-between px-4 cursor-move select-none z-20 absolute top-0 left-0 right-0 group"
+                    style={{ touchAction: 'none' }}
                     onMouseDown={handleDragStart}
                     onTouchStart={handleDragStart}
                   >
@@ -407,7 +417,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                     ))}
                   </TabsList>
                   
-                  <div className={`flex-1 bg-slate-50 p-6 md:p-10 ${showSimultaneousWorkbook ? 'overflow-y-auto' : ''}`}>
+                  <div className={`flex-1 bg-slate-50 p-4 md:p-6 ${showSimultaneousWorkbook ? 'overflow-y-auto' : ''}`}>
                     <TabsContent value="summary" className="mt-0 outline-none animate-in fade-in">
                         <div className="max-w-4xl mx-auto space-y-8">
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

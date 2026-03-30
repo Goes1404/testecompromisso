@@ -78,9 +78,9 @@ function SwipeHandler({ children }: { children: React.ReactNode }) {
     const deltaY = touchEnd.current.y - touchStart.current.y;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
-    if (absX > absY * 1.5 && absX > 50) {
-      if (deltaX > 50) setOpenMobile(true);
-      else if (deltaX < -50) setOpenMobile(false);
+    if (absX > absY * 1.5 && absX > 30) {
+      if (deltaX > 30) setOpenMobile(true);
+      else if (deltaX < -30) setOpenMobile(false);
     }
   };
 
