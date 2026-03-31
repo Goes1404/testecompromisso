@@ -64,10 +64,15 @@ async function updateExistingTeachers() {
       console.error(`  - Error updating profile ${profile.email}:`, updateProfileError.message);
     }
 
-    // Update Auth Metadata (Full name)
+    // Update Auth Metadata (Full name + Security Flag)
     const { error: updateAuthError } = await supabase.auth.admin.updateUserById(
       profile.id,
-      { user_metadata: { full_name: displayName } }
+      { 
+        user_metadata: { 
+            full_name: displayName,
+            must_change_password: true 
+        } 
+      }
     );
 
     if (updateAuthError) {

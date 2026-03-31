@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const COLORS = ["#1a2c4b", "#f59e0b", "#64748b", "#94a3b8", "#cbd5e1"];
 
-export default function TeacherAnalyticsDashboard() {
+export default function TeacherAnalyticsDashboard({ userId }: { userId?: string }) {
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
   const { toast } = useToast();
@@ -39,29 +39,44 @@ export default function TeacherAnalyticsDashboard() {
       setLoading(true);
       try {
         const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
-        const { data: profiles } = await supabase.from('profiles').select('profile_type');
         
-        const realTotalStudents = profiles?.filter(p => {
-          const type = (p.profile_type || '').toLowerCase();
-          return studentKeywords.some(key => type.includes(key)) || type === '';
-        }).length || 0;
+        // Profiles count
+        let realTotalStudents = 0;
+        if (userId) {
+          realTotalStudents = 1;
+        } else {
+          const { data: profiles } = await supabase.from('profiles').select('profile_type');
+          realTotalStudents = profiles?.filter(p => {
+            const type = (p.profile_type || '').toLowerCase();
+            return studentKeywords.some(key => type.includes(key)) || type === '';
+          }).length || 0;
+        }
 
-        const { data: scores } = await supabase.from('simulation_attempts').select('score, total_questions');
+        // Avg Score
+        let scoreQuery = supabase.from('simulation_attempts').select('score, total_questions');
+        if (userId) scoreQuery = scoreQuery.eq('user_id', userId);
+        const { data: scores } = await scoreQuery;
+        
         let realAvgScore = 0;
         if (scores && scores.length > 0) {
           const totalPoints = scores.reduce((acc, s) => acc + (s.score / s.total_questions), 0);
           realAvgScore = Math.round((totalPoints / scores.length) * 1000);
         }
 
-        const { data: progress } = await supabase.from('user_progress').select('percentage');
+        // Completion Rate
+        let progressQuery = supabase.from('user_progress').select('percentage');
+        if (userId) progressQuery = progressQuery.eq('user_id', userId);
+        const { data: progress } = await progressQuery;
+        
         let realAvgProg = 0;
         if (progress && progress.length > 0) {
           realAvgProg = Math.round(progress.reduce((acc, p) => acc + (p.percentage || 0), 0) / progress.length);
         }
 
-        const { data: subjectScores } = await supabase
-          .from('simulation_attempts')
-          .select('score, total_questions, subjects(name)');
+        // Performance by Subject
+        let subScoreQuery = supabase.from('simulation_attempts').select('score, total_questions, subjects(name)');
+        if (userId) subScoreQuery = subScoreQuery.eq('user_id', userId);
+        const { data: subjectScores } = await subScoreQuery;
         
         const subjectMap: Record<string, { total: number, count: number }> = {};
         subjectScores?.forEach((s: any) => {
@@ -78,9 +93,10 @@ export default function TeacherAnalyticsDashboard() {
           performance: Math.round(stats.total / stats.count)
         })).sort((a, b) => b.performance - a.performance);
 
-        const { data: logTrend } = await supabase
-          .from('activity_logs')
-          .select('created_at');
+        // Engagement Trend (Activity logs)
+        let logQuery = supabase.from('activity_logs').select('created_at');
+        if (userId) logQuery = logQuery.eq('user_id', userId);
+        const { data: logTrend } = await logQuery;
         
         const dayMap: Record<string, number> = { "Seg": 0, "Ter": 0, "Qua": 0, "Qui": 0, "Sex": 0, "Sáb": 0, "Dom": 0 };
         const daysShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -93,13 +109,13 @@ export default function TeacherAnalyticsDashboard() {
 
         const realEngagementTrend = Object.entries(dayMap).map(([day, acessos]) => ({
           day,
-          acessos: acessos + 10 
+          acessos: userId ? (acessos) : (acessos + 10) // Small offset for global demo visibility
         }));
 
         const hasNoData = realTotalStudents === 0 && realAvgScore === 0;
-        setIsDemo(hasNoData);
+        setIsDemo(hasNoData && !userId);
 
-        if (hasNoData) {
+        if (hasNoData && !userId) {
           setData({
             totalStudents: 158,
             avgScore: 782,
@@ -126,7 +142,7 @@ export default function TeacherAnalyticsDashboard() {
             totalStudents: realTotalStudents,
             avgScore: realAvgScore,
             completionRate: realAvgProg,
-            performanceBySubject: realPerformanceBySubject.length > 0 ? realPerformanceBySubject : [{ name: "Geral", performance: 50 }],
+            performanceBySubject: realPerformanceBySubject.length > 0 ? realPerformanceBySubject : [{ name: "Geral", performance: 0 }],
             engagementTrend: realEngagementTrend
           });
         }
@@ -137,7 +153,7 @@ export default function TeacherAnalyticsDashboard() {
       }
     }
     fetchAnalytics();
-  }, []);
+  }, [userId]);
 
   const handleDownloadReport = () => {
     toast({

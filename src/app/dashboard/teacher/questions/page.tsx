@@ -56,7 +56,7 @@ export default function QuestionBankPage() {
     
     
     // Manual States
-    const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '', target_audience: 'all' });
+    const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '', target_audience: 'all', explanation: '' });
     const [manualOptions, setManualOptions] = useState({ A: '', B: '', C: '', D: '', E: '' });
     
     const [bulkSubjectId, setBulkSubjectId] = useState<string>('');
@@ -101,7 +101,7 @@ export default function QuestionBankPage() {
                     messages: [
                         {
                             role: 'user',
-                            content: `Analise o texto abaixo e extraia TODAS as questões de múltipla escolha encontradas. Responda EXCLUSIVAMENTE com um JSON válido contendo a chave "questions" que mapeia para um array de objetos. Cada objeto deve ter: "question_text" (string com o enunciado completo), "options" (array de objetos com "key" e "text"), "correct_answer" (string com a letra), "year" (número). Se não conseguir identificar o gabarito, coloque "A" como padrão. Se não identificar o ano, use ${new Date().getFullYear()}.\n\nTEXTO DA PROVA:\n${rawText}`
+                            content: `Analise o texto abaixo e extraia TODAS as questões de múltipla escolha encontradas. Responda EXCLUSIVAMENTE com um JSON válido contendo a chave "questions" que mapeia para um array de objetos. Cada objeto deve ter: "question_text" (string com o enunciado completo), "options" (array de objetos com "key" e "text"), "correct_answer" (string com a letra), "year" (número), "explanation" (string curta explicando por que a resposta está certa). Se não conseguir identificar o gabarito, coloque "A" como padrão. Se não identificar o ano, use ${new Date().getFullYear()}.\n\nTEXTO DA PROVA:\n${rawText}`
                         }
                     ]
                 })
@@ -201,7 +201,7 @@ export default function QuestionBankPage() {
 
             if (error) throw error;
             toast({ title: "Questão Salva!" });
-            setManualQuestion(prev => ({ ...prev, question_text: '' }));
+            setManualQuestion(prev => ({ ...prev, question_text: '', explanation: '' }));
             setManualOptions({ A: '', B: '', C: '', D: '', E: '' });
         } catch (err: any) {
             toast({ title: "Falha ao salvar", description: err.message, variant: 'destructive' });
@@ -304,6 +304,15 @@ export default function QuestionBankPage() {
                                     <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Ano Referência</Label>
                                     <Input type="number" className="h-14 rounded-2xl bg-muted/30 border-none font-black text-center" value={manualQuestion.year} onChange={e => setManualQuestion(prev => ({...prev, year: parseInt(e.target.value, 10)}))} />
                                 </div>
+                            </div>
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Explicação Pedagógica (Opcional)</Label>
+                                <Textarea 
+                                    placeholder="Justifique a resposta correta para auxiliar o estudo do aluno..." 
+                                    className="rounded-[1.5rem] bg-muted/30 border-none min-h-[100px] p-6 font-medium italic" 
+                                    value={(manualQuestion as any).explanation || ''} 
+                                    onChange={e => setManualQuestion(prev => ({...prev, explanation: e.target.value} as any))} 
+                                />
                             </div>
                             <Button onClick={handleSaveSingle} disabled={isSaving || !manualQuestion.question_text} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl transition-all active:scale-95">
                                 {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Save className="h-6 w-6 mr-2" />}
