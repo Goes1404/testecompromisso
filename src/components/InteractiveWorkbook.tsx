@@ -227,23 +227,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     loadPdf();
   }, [currentPdfUrl, materialId]);
 
-  // FIX: Recalibração de Escala no Mobile (Giro de Tela)
-  useEffect(() => {
-    let timeoutId: any;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        renderPage(currentPage, zoom);
-      }, 300);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
-    };
-  }, [renderPage, currentPage, zoom]);
-
   const renderPage = useCallback(async (pageNum: number, currentZoom: number) => {
     if (!pdfDoc || !canvasRef.current || !containerRef.current) return;
     const fabric = getFabric();
@@ -344,6 +327,23 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
   useEffect(() => {
     if (pdfDoc) renderPage(currentPage, zoom);
   }, [currentPage, zoom, pdfDoc, renderPage]);
+
+  // FIX: Recalibração de Escala no Mobile (Giro de Tela)
+  useEffect(() => {
+    let timeoutId: any;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        renderPage(currentPage, zoom);
+      }, 300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
+  }, [renderPage, currentPage, zoom]);
 
   const updateTool = (tool: Tool) => {
     setActiveTool(tool);
