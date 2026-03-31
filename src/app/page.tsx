@@ -111,6 +111,7 @@ export default function LandingPage() {
                   fill
                   className="object-contain p-2"
                   unoptimized
+                  priority
                 />
               </div>
             </Link>
@@ -214,6 +215,7 @@ export default function LandingPage() {
                   fill
                   className="object-cover"
                   unoptimized
+                  priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
                 <div className="absolute inset-x-5 bottom-6 p-5 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10">

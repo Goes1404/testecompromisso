@@ -84,6 +84,7 @@ export function LoginForm() {
             alt="Logo Compromisso" 
             fill 
             unoptimized
+            priority
             className="object-contain p-3"
           />
         </div>

@@ -199,6 +199,7 @@ export default function RegisterPage() {
               alt="Logo Santana de Parnaíba" 
               fill 
               unoptimized
+              priority
               className="object-contain p-1"
             />
           </div>
