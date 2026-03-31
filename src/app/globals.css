@@ -24,8 +24,8 @@
     --muted: 25 100% 95%;
     --muted-foreground: 0 0% 35%;
     
-    --accent: 25 100% 95%;
-    --accent-foreground: 0 0% 8%;
+    --accent: 25 100% 50%;
+    --accent-foreground: 0 0% 100%;
     
     --destructive: 0 84% 60%;         /* feedback-error #EF4444 */
     --destructive-foreground: 0 0% 100%;

@@ -84,8 +84,61 @@ export default function QuestionBankPage() {
         fetchSubjects();
     }, [toast]);
 
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+
     const handleAnalyzeBulk = async () => {
-        toast({ title: "Funcionalidade Indisponível", description: "O motor de IA (Aurora) foi desativado.", variant: 'destructive' });
+        if (!rawText.trim()) {
+            toast({ title: "Texto vazio", description: "Cole o conteúdo da prova antes de analisar.", variant: "destructive" });
+            return;
+        }
+
+        setIsAnalyzing(true);
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [
+                        {
+                            role: 'user',
+                            content: `Analise o texto abaixo e extraia TODAS as questões de múltipla escolha encontradas. Responda EXCLUSIVAMENTE com um JSON válido contendo a chave "questions" que mapeia para um array de objetos. Cada objeto deve ter: "question_text" (string com o enunciado completo), "options" (array de objetos com "key" e "text"), "correct_answer" (string com a letra), "year" (número). Se não conseguir identificar o gabarito, coloque "A" como padrão. Se não identificar o ano, use ${new Date().getFullYear()}.\n\nTEXTO DA PROVA:\n${rawText}`
+                        }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Erro na análise da Aurora IA.");
+            }
+
+            const responseText = data.result?.response || '';
+            
+            // Tentar extrair JSON da resposta
+            let parsed: any;
+            const jsonMatch = responseText.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+            if (jsonMatch) {
+                parsed = JSON.parse(jsonMatch[0]);
+            } else {
+                // Tenta parsear a resposta inteira como JSON
+                parsed = JSON.parse(responseText);
+            }
+
+            const questions = parsed.questions || parsed;
+            
+            if (Array.isArray(questions) && questions.length > 0) {
+                setExtractedQuestions(questions);
+                toast({ title: `${questions.length} questões extraídas!`, description: "Revise e vincule a uma matéria antes de salvar." });
+            } else {
+                toast({ title: "Nenhuma questão encontrada", description: "A Aurora não conseguiu identificar questões no texto. Tente um formato mais claro.", variant: "destructive" });
+            }
+        } catch (e: any) {
+            console.error("Erro na análise em massa:", e);
+            toast({ title: "Falha na Extração", description: e.message || "Erro ao processar o texto com a Aurora.", variant: "destructive" });
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const handleSaveProcessed = async () => {
@@ -197,9 +250,8 @@ export default function QuestionBankPage() {
                                     onChange={(e) => setRawText(e.target.value)} 
                                 />
                             </div>
-                            <Button disabled className="w-full h-16 rounded-2xl bg-slate-100 text-slate-400 font-black text-lg shadow-none cursor-not-allowed">
-                                <ZapOff className="h-6 w-6 mr-2" />
-                                Extração IA Desabilitada
+                            <Button onClick={handleAnalyzeBulk} disabled={isAnalyzing || !rawText.trim()} className="w-full h-16 rounded-2xl bg-primary text-white font-black text-lg shadow-xl hover:scale-[1.02] transition-all active:scale-95">
+                                {isAnalyzing ? <><Loader2 className="h-6 w-6 animate-spin mr-2" /> Analisando com Aurora IA...</> : <><BrainCircuit className="h-6 w-6 mr-2" /> Extrair Questões com Aurora IA</>}
                             </Button>
                         </div>
                     )}

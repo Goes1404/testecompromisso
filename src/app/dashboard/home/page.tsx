@@ -268,7 +268,7 @@ export default function DashboardHome() {
             </p>
           </div>
           <Button asChild className="bg-primary text-white font-black rounded-xl shadow-lg border-none hover:scale-105 transition-transform shrink-0 h-10 px-5 text-xs">
-            <Link href="/dashboard/student/documents">Falar com Aurora</Link>
+            <Link href="/dashboard/support">Falar com Aurora</Link>
           </Button>
         </div>
       </div>

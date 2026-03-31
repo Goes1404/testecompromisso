@@ -4,7 +4,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/Duduzcx/educore.git"
+    "url": "https://github.com/Goes1404/testecompromisso.git"
   },
   "scripts": {
     "dev": "next dev",
