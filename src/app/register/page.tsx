@@ -177,7 +177,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-login-gradient p-4 sm:p-8 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-login-gradient p-4 sm:p-8 relative overflow-y-auto py-12 md:py-8">
       <div className="absolute top-4 left-4 md:top-8 md:left-8 z-50">
         <Button asChild className="bg-white/10 text-white hover:bg-white/20 font-bold uppercase text-[10px] tracking-[0.15em] gap-2 rounded-xl backdrop-blur-md transition-all active:scale-95 border border-white/10 h-10 px-4 md:px-6">
           <Link href="/">
@@ -193,7 +193,7 @@ export default function RegisterPage() {
       
       <div className="w-full max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative z-10">
         <div className="space-y-4 text-center">
-          <div className="relative h-20 w-20 mx-auto overflow-hidden rounded-2xl shadow-xl bg-white p-2">
+          <div className="relative h-16 w-16 md:h-20 md:w-20 mx-auto overflow-hidden rounded-2xl shadow-xl bg-white p-2">
             <Image 
               src={logoUrl} 
               alt="Logo Santana de Parnaíba" 
@@ -227,7 +227,7 @@ export default function RegisterPage() {
               {step === 3 && "Configurações Acadêmicas"}
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-8 min-h-[450px]">
+          <CardContent className="pt-6 md:pt-8 min-h-[auto] md:min-h-[400px]">
              {step === 1 && (
               <div key="step1" className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -373,22 +373,22 @@ export default function RegisterPage() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex justify-between border-t border-border/10 p-10 bg-muted/5">
+          <CardFooter className="flex flex-col sm:flex-row justify-between border-t border-border/10 p-6 md:p-10 bg-muted/5 gap-4">
             <Button 
               variant="ghost" 
               onClick={step === 1 ? () => router.push("/login") : prevStep} 
               disabled={loading}
-              className="px-8 font-black text-primary/60 hover:text-primary transition-all rounded-2xl h-12"
+              className="w-full sm:w-auto px-8 font-black text-primary/60 hover:text-primary transition-all rounded-2xl h-12 order-2 sm:order-1"
             >
               {step === 1 ? "Voltar ao Login" : "Voltar"}
             </Button>
             {step < 3 ? (
-              <Button onClick={nextStep} className="bg-primary text-primary-foreground px-12 h-12 font-black rounded-2xl group shadow-xl transition-all">
+              <Button onClick={nextStep} className="w-full sm:w-auto bg-primary text-primary-foreground px-12 h-12 font-black rounded-2xl group shadow-xl transition-all order-1 sm:order-2">
                 Continuar
                 <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-2 transition-transform" />
               </Button>
             ) : (
-              <Button onClick={handleFinish} disabled={loading} className="bg-accent text-accent-foreground px-12 h-14 font-black rounded-2xl shadow-xl shadow-accent/20 group transition-all text-lg">
+              <Button onClick={handleFinish} disabled={loading} className="w-full sm:w-auto bg-accent text-accent-foreground px-12 h-14 font-black rounded-2xl shadow-xl shadow-accent/20 group transition-all text-lg order-1 sm:order-2">
                 {loading ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <UserPlus className="mr-2 h-6 w-6" /> }
                 Finalizar Matrícula
               </Button>

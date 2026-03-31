@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden bg-login-gradient">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-y-auto bg-login-gradient py-20 md:py-8">
       {/* Partículas luminosas de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[10%] left-[15%] w-[300px] h-[300px] bg-[#FF6B00]/5 rounded-full blur-[120px] animate-pulse" />
