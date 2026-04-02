@@ -245,30 +245,57 @@ export default function LandingPage() {
         </section>
 
 
-        {/* MISSÃO E VALORES - Nova seção para mais profissionalismo */}
-        <section className="py-16 md:py-20 bg-gray-50 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <div className="space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white">
-                <Target className="h-6 w-6" />
+        {/* MISSÃO E VALORES - Evoluído para Cards Premium */}
+        <section className="py-20 bg-gray-50 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Nossa Missão",
+                icon: Target,
+                desc: "Democratizar o acesso ao ensino de elite em Santana de Parnaíba, transformando esforço em aprovação através da inovação e do acompanhamento próximo.",
+                theme: "orange"
+              },
+              {
+                title: "Tradição & IA",
+                icon: BookMarked,
+                desc: "Combinamos o melhor da pedagogia clássica com a agilidade da Inteligência Artificial Aurora para criar trilhas de aprendizagem únicas e infalíveis.",
+                theme: "white"
+              },
+              {
+                title: "Foco no Futuro",
+                icon: Lightbulb,
+                desc: "No Compromisso, você não apenas estuda para uma prova; você desenvolve a mentalidade de alta performance necessária para a vida universitária.",
+                theme: "black"
+              }
+            ].map((card, i) => (
+              <div 
+                key={i} 
+                className={`p-10 rounded-[2.5rem] border transition-all duration-500 group hover:-translate-y-2 hover:shadow-2xl flex flex-col gap-6 relative overflow-hidden ${
+                  card.theme === 'orange' ? 'bg-primary border-primary shadow-xl shadow-primary/20 text-white' :
+                  card.theme === 'black' ? 'bg-gray-950 border-gray-900 shadow-xl shadow-black/20 text-white' :
+                  'bg-white border-gray-100 shadow-lg text-gray-950'
+                }`}
+              >
+                {/* Micro-animação de fundo */}
+                <div className={`absolute -right-8 -top-8 w-32 h-32 rounded-full blur-3xl opacity-20 transition-all group-hover:scale-150 ${
+                   card.theme === 'white' ? 'bg-primary' : 'bg-white'
+                }`} />
+
+                <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-500 ${
+                  card.theme === 'orange' ? 'bg-white/20 text-white' :
+                  card.theme === 'black' ? 'bg-primary/20 text-primary' :
+                  'bg-primary/5 text-primary'
+                }`}>
+                  <card.icon className="h-7 w-7" />
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-black tracking-tighter uppercase italic">{card.title}</h3>
+                  <p className={`leading-relaxed font-medium text-sm ${
+                    card.theme === 'white' ? 'text-gray-500' : 'text-white/80 transition-colors group-hover:text-white'
+                  }`}>{card.desc}</p>
+                </div>
               </div>
-              <h3 className="text-2xl font-black tracking-tighter">Nossa Missão</h3>
-              <p className="text-gray-600 leading-relaxed font-medium">Democratizar o acesso ao ensino de elite em Santana de Parnaíba, transformando esforço em aprovação através da inovação e do acompanhamento próximo.</p>
-            </div>
-            <div className="space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-black shadow-lg shadow-black/10 flex items-center justify-center text-white">
-                <BookMarked className="h-6 w-6" />
-              </div>
-              <h3 className="text-2xl font-black tracking-tighter">Tradição & IA</h3>
-              <p className="text-gray-600 leading-relaxed font-medium">Combinamos o melhor da pedagogia clássica com a agilidade da Inteligência Artificial Aurora para criar trilhas de aprendizagem únicas e infalíveis.</p>
-            </div>
-            <div className="space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-primary/10 shadow-lg shadow-primary/5 flex items-center justify-center text-primary">
-                <Lightbulb className="h-6 w-6" />
-              </div>
-              <h3 className="text-2xl font-black tracking-tighter">Foco no Futuro</h3>
-              <p className="text-gray-600 leading-relaxed font-medium">No Compromisso, você não apenas estuda para uma prova; você desenvolve a mentalidade de alta performance necessária para a vida universitária.</p>
-            </div>
+            ))}
           </div>
         </section>
 
