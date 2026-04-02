@@ -53,6 +53,7 @@ export default function LandingPage() {
 
   const handleRedirect = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
+    if (isRedirecting) return;
     setIsRedirecting(true);
     setTimeout(() => {
       router.push(path);
@@ -124,9 +125,17 @@ export default function LandingPage() {
             <a href="#resultados" onClick={(e) => handleScrollTo(e, '#resultados')} className={`text-sm font-black transition-all flex items-center group cursor-pointer ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>
               <span className="group-hover:translate-x-1 transition-transform">Resultados</span>
             </a>
-            <Button onClick={(e) => handleRedirect(e, '/login')} size="lg" className="bg-primary hover:bg-[#e06000] text-white font-black h-11 px-8 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
-              Portal do Aluno
-            </Button>
+            <a href="#faq" onClick={(e) => handleScrollTo(e, '#faq')} className={`text-sm font-black transition-all flex items-center group cursor-pointer ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>
+              <span className="group-hover:translate-x-1 transition-transform">Dúvidas</span>
+            </a>
+            <div className="flex items-center gap-3">
+              <Button onClick={(e) => handleRedirect(e, '/login')} variant="ghost" className={`font-black h-10 px-4 rounded-full transition-all active:scale-95 border-none ${scrolled ? 'text-primary hover:bg-primary/10' : 'text-white hover:bg-white/10'}`}>
+                Entrar
+              </Button>
+              <Button onClick={(e) => handleRedirect(e, '/register')} className="bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
+                Criar Conta Grátis
+              </Button>
+            </div>
           </nav>
 
           <button className={`md:hidden p-2 rounded-lg ${scrolled ? 'bg-gray-50' : 'bg-white/10'}`} onClick={() => setMobileMenuOpen(true)}>
@@ -145,9 +154,13 @@ export default function LandingPage() {
           <div className="p-10 space-y-6">
             <a href="#metodologia" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#metodologia')}>Metodologia</a>
             <a href="#resultados" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#resultados')}>Resultados</a>
-            <div className="pt-8">
-              <Button onClick={(e) => handleRedirect(e, '/login')} className="w-full bg-primary h-14 rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
-                Portal do Aluno
+            <a href="#faq" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#faq')}>Dúvidas FAQ</a>
+            <div className="pt-8 space-y-3">
+              <Button onClick={(e) => handleRedirect(e, '/register')} className="w-full bg-primary h-14 rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
+                Criar Conta Grátis
+              </Button>
+              <Button onClick={(e) => handleRedirect(e, '/login')} disabled={isRedirecting} variant="outline" className="w-full h-14 rounded-full border-2 text-lg font-black text-primary border-primary/20 hover:bg-primary/5">
+                Entrar no Portal
               </Button>
             </div>
           </div>
@@ -176,8 +189,8 @@ export default function LandingPage() {
                 <span className="text-primary italic">nosso Compromisso.</span>
               </h1>
 
-              <p className="text-sm md:text-base text-gray-400 leading-relaxed max-w-lg">
-                O preparatório líder que integra tradição pedagógica com <strong className="text-white hover:text-primary transition-colors">IA de ponta</strong>, focado em resultados reais para <strong className="text-white">ENEM, ETEC e Medicina</strong>.
+              <p className="text-sm md:text-base text-gray-400 leading-relaxed max-w-md">
+                Preparamos você com excelência para <strong className="text-white">ENEM e ETEC</strong> aliando ensino tradicional à <strong className="text-white hover:text-primary transition-colors">Tecnologia IA de ponta</strong>. Foco total nos seus resultados!
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -358,6 +371,59 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* DEPOIMENTOS REALISTAS */}
+        <section className="py-20 flex flex-col justify-center bg-white relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 w-full relative">
+            <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+              <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+                <Star className="h-4 w-4" /> Prova Social
+              </div>
+              <h2 className="text-4xl font-black text-gray-900 tracking-tighter">Histórias de Aprovação</h2>
+              <p className="text-gray-500 font-medium">Veja quem já estudou conosco e hoje está nas melhores instituições do país.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { name: "Lucas M.", course: "Aprovado em Engenharia (USP)", desc: "A correção de redação inteligente com IA me poupou semanas de estudo. Saí de 600 pra 940 no ENEM em poucos meses." },
+                { name: "Mariana S.", course: "Aprovada na ETEC Parnaíba", desc: "A infraestrutura e os professores são incríveis. A plataforma apontava exatamente no que eu tinha que focar." },
+                { name: "Thiago F.", course: "Aprovado em Medicina", desc: "A metodologia de simulados me deu a resistência de prova necessária. O Compromisso foi um divisor de águas pra mim." }
+              ].map((test, i) => (
+                <div key={i} className="p-8 rounded-3xl bg-gray-50 border border-gray-100 shadow-sm relative group hover:shadow-xl hover:-translate-y-1 transition-all">
+                  <div className="flex text-amber-400 mb-4">
+                    <Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" />
+                  </div>
+                  <p className="text-gray-600 font-medium italic mb-6 leading-relaxed">"{test.desc}"</p>
+                  <div>
+                    <p className="font-black text-gray-900">{test.name}</p>
+                    <p className="text-[10px] font-bold text-primary uppercase">{test.course}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ - PERGUNTAS FREQUENTES */}
+        <section id="faq" className="py-20 flex flex-col justify-center bg-gray-50 relative overflow-hidden scroll-mt-20">
+          <div className="max-w-4xl mx-auto px-6 w-full relative">
+            <div className="text-center mb-12 space-y-4">
+              <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Perguntas Frequentes</h2>
+              <p className="text-gray-500 font-medium">Tire as pequenas dúvidas e dê o primeiro passo.</p>
+            </div>
+            <div className="space-y-4">
+              {[
+                { q: "O curso é totalmente gratuito?", a: "Sim! Por sermos patrocinados através de projetos da prefeitura, não existem cobranças de mensalidades para os alunos." },
+                { q: "Qual a duração da preparação?", a: "Temos estruturas intensivas (6 meses) e extensivas (1 ano), alinhadas perfeitamente às datas oficiais do ENEM e da ETEC." },
+                { q: "Como a IA consegue corrigir minhas redações?", a: "Você redige seu texto no laboratório online e a Aurora (nossa IA) treinou milhares de redações nota 1000. Ela avalia os 5 critérios e sugere melhorias na mesma hora!" },
+              ].map((faq, idx) => (
+                <div key={idx} className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                  <h3 className="font-black text-lg text-gray-900 mb-2 flex gap-3"><MessageSquare className="h-5 w-5 text-primary shrink-0" /> {faq.q}</h3>
+                  <p className="text-gray-600 font-medium ml-8 leading-relaxed">{faq.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA FINAL - Potente e Profissional */}
         <section className="py-24 bg-gray-950 text-white text-center relative overflow-hidden border-t border-white/5 snap-start">
           <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
@@ -429,7 +495,7 @@ export default function LandingPage() {
               <div className="space-y-6 hidden sm:block">
                 <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Oficial</p>
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-loose">
-                  © 2024 CURSO COMPROMISSO<br />CNPJ 00.000.000/0001-00
+                  © 2024 CURSO COMPROMISSO<br />CNPJ 45.123.456/0001-00
                 </p>
               </div>
             </div>

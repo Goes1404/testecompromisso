@@ -13,8 +13,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: 'Compromisso | Educação Inteligente',
-  description: 'Tecnologia a serviço da aprovação em Santana de Parnaíba.',
+  title: 'Compromisso | Curso Preparatório ENEM e ETEC em Santana de Parnaíba',
+  description: 'O cursinho preparatório de elite em Santana de Parnaíba. Metodologia focada, simulados, correção de redação com IA e mentoria para aprovação no ENEM, ETEC, FATEC e USP.',
+  keywords: 'curso preparatório, cursinho enem, pre vestibulinho etec, santana de parnaíba, aprovação, redação enem',
 };
 
 
