@@ -56,6 +56,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
   const [inputPage, setInputPage] = useState("1");
   const [loading, setLoading] = useState(true);
   const [zoom, setZoom] = useState(1.0);
+  const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 });
   
   // Ferramentas
   const [activeTool, setActiveTool] = useState<Tool>('pan');
@@ -239,14 +240,25 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
       
       const containerWidth = containerRef.current.clientWidth - 40;
       const unscaledViewport = page.getViewport({ scale: 1 });
-      const baseScale = containerWidth / unscaledViewport.width;
-      const finalScale = baseScale * currentZoom;
+      
+      // FIX: Aumentamos a fidelidade base (oversampling) para evitar borrão
+      // Usamos Device Pixel Ratio para telas Retina/4K ou no mínimo 2x
+      const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 2) : 2;
+      const baseScale = (containerWidth / unscaledViewport.width);
+      const finalScale = baseScale * currentZoom * dpr;
       const viewport = page.getViewport({ scale: finalScale }); 
 
       const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext('2d', { alpha: false });
+      
       canvas.height = viewport.height;
       canvas.width = viewport.width;
+      
+      // Armazenamos o tamanho CSS (visual) para o container
+      setDisplaySize({ 
+        width: viewport.width / dpr, 
+        height: viewport.height / dpr 
+      });
 
       if (renderTaskRef.current) renderTaskRef.current.cancel();
       const renderTask = page.render({ canvasContext: context!, viewport });
@@ -270,11 +282,15 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
       const { activeTool: currentTool, brushColor: currentBrush, highlightColor: currentHighlight } = toolsRef.current;
       
       const fCanvas = new fabric.Canvas('fabric-layer', {
-        height: viewport.height,
-        width: viewport.width,
+        height: viewport.height / dpr,
+        width: viewport.width / dpr,
         isDrawingMode: currentTool !== 'eraser' && currentTool !== 'pan',
         selection: currentTool === 'eraser'
       });
+      
+      // Zoom interno do Fabric para bater com o oversampling do PDF se necessário, 
+      // mas aqui controlaremos via CSS scale ou apenas dimensões iguais ao displaySize.
+      fCanvas.setZoom(1);
 
       const draftStr = localStorage.getItem(`workbook_draft_${materialId}`);
       const draft = draftStr ? JSON.parse(draftStr) : null;
@@ -494,15 +510,15 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
         onTouchMove={handleTouchMove}
         onTouchEnd={handleMouseUpOrLeave}
         style={{ touchAction: activeTool === 'pan' ? 'auto' : 'none' }}
-        className={`flex-1 overflow-auto p-4 md:p-10 flex justify-center items-start bg-slate-900 no-swipe transition-all duration-300 ${
-          activeTool === 'pan' ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
+        className={`flex-1 overflow-auto p-4 md:p-10 flex items-start bg-slate-900 no-swipe transition-all duration-300 ${
+          activeTool === 'pan' ? (isDragging ? 'cursor-grabbing' : 'cursor-grad') : 'cursor-default'
         }`}
       >
         <div 
           className="relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] rounded-sm bg-white overflow-hidden shrink-0 mx-auto"
           style={{ 
-            width: canvasRef.current?.width || 'auto',
-            height: canvasRef.current?.height || 'auto'
+            width: displaySize.width || 'auto',
+            height: displaySize.height || 'auto'
           }}
         >
           {loading && (
@@ -511,7 +527,14 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
               <p className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Sintonizando...</p>
             </div>
           )}
-          <canvas ref={canvasRef} className="block" />
+          <canvas 
+            ref={canvasRef} 
+            className="block origin-top-left"
+            style={{
+              width: '100%',
+              height: '100%'
+            }} 
+          />
           <div className={`absolute inset-0 z-10 ${activeTool === 'pan' ? 'pointer-events-none' : 'pointer-events-auto'}`}>
             <canvas id="fabric-layer" />
           </div>

@@ -15,7 +15,11 @@ import {
   AlertCircle, 
   ShieldAlert,
   Activity,
-  HandHeart
+  HandHeart,
+  Info,
+  Megaphone,
+  AlertOctagon,
+  MessageSquare
 } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
 import Link from "next/link";
@@ -42,6 +46,13 @@ export default function TeacherHomePage() {
 
   const [eligibleList, setEligibleList] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+
+  const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: string; bgColor: string; border: string; label: string }> = {
+    low: { icon: Info, color: 'text-blue-600', bgColor: 'bg-blue-50/50', border: 'border-blue-100', label: 'Informativo' },
+    medium: { icon: Megaphone, color: 'text-amber-600', bgColor: 'bg-amber-50/50', border: 'border-amber-100', label: 'Importante' },
+    high: { icon: AlertOctagon, color: 'text-red-600', bgColor: 'bg-red-50', border: 'border-red-200 shadow-[0_0_15px_rgba(239,68,68,0.1)] animate-pulse-subtle', label: 'Urgente' },
+  };
 
   // Guard de Papel
   useEffect(() => {
@@ -103,6 +114,13 @@ export default function TeacherHomePage() {
       setChartData([
         { name: "Ativos", value: students.length - atRisk, color: "hsl(var(--primary))" },
         { name: "Inativos", value: atRisk, color: "hsl(var(--accent))" },
+      ]);
+
+      // Mocks para avaliação do usuário no painel docente
+      setAnnouncements([
+        { id: '1', title: 'Reunião Pedagógica Extra', message: 'Alinhamento sobre os novos parâmetros do ENEM 2024 na próxima segunda.', priority: 'high' },
+        { id: '2', title: 'Atualização de Materiais', message: 'Novos bancos de questões de Exatas foram adicionados ao diretório.', priority: 'medium' },
+        { id: '3', title: 'Treinamento IA Aurora', message: 'Webinar disponível sobre como usar os diagnósticos preditivos com seus alunos.', priority: 'low' },
       ]);
 
     } catch (err) {
@@ -274,6 +292,42 @@ export default function TeacherHomePage() {
               <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Taxa de Sucesso</p>
               <p className="text-3xl font-black text-primary italic">{stats.avgScore}%</p>
             </div>
+          </Card>
+
+          {/* Seção de Avisos Destacados para Professores */}
+          <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden">
+            <CardHeader className="p-8 pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-black text-primary italic uppercase tracking-tighter">Comunicados</CardTitle>
+                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center">
+                  <Megaphone className="h-4 w-4 text-primary" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 pt-0 space-y-4">
+              {announcements.map((ann) => {
+                const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
+                const Icon = styles.icon;
+                return (
+                  <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-3 ${styles.bgColor} border ${styles.border} transition-all hover:shadow-md relative overflow-hidden group`}>
+                    {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
+                    <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
+                      <Icon className={`h-4 w-4 ${styles.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
+                      </div>
+                      <p className="text-xs font-black text-slate-900 truncate">{ann.title}</p>
+                      <p className="text-[10px] text-slate-500 font-medium line-clamp-1 italic">{ann.message}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors">
+                <Link href="/dashboard/teacher/communication">Histórico Completo</Link>
+              </Button>
+            </CardContent>
           </Card>
         </div>
       </div>

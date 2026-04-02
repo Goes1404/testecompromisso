@@ -60,10 +60,10 @@ interface Announcement {
   priority: 'low' | 'medium' | 'high';
 }
 
-const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: string; bgColor: string; border: string }> = {
-  low: { icon: Info, color: 'text-slate-500', bgColor: 'bg-slate-50', border: 'border-slate-200' },
-  medium: { icon: Megaphone, color: 'text-amber-600', bgColor: 'bg-amber-50', border: 'border-amber-200' },
-  high: { icon: AlertOctagon, color: 'text-red-600', bgColor: 'bg-red-50', border: 'border-red-200' },
+const priorityStyles: Record<'low' | 'medium' | 'high', { icon: any; color: string; bgColor: string; border: string; label: string }> = {
+  low: { icon: Info, color: 'text-blue-600', bgColor: 'bg-blue-50/50', border: 'border-blue-100', label: 'Informativo' },
+  medium: { icon: Megaphone, color: 'text-amber-600', bgColor: 'bg-amber-50/50', border: 'border-amber-100', label: 'Importante' },
+  high: { icon: AlertOctagon, color: 'text-red-600', bgColor: 'bg-red-50', border: 'border-red-200 shadow-[0_0_15px_rgba(239,68,68,0.1)] animate-pulse-subtle', label: 'Urgente' },
 };
 
 const greetingByHour = () => {
@@ -119,7 +119,16 @@ export default function DashboardHome() {
         if (examRes.data) examData = examRes.data;
       } catch (e) { console.warn("Tabela simulation_attempts indisponível."); }
 
-      if (annRes?.data) setAnnouncements(annRes.data);
+      if (annRes?.data && annRes.data.length > 0) {
+        setAnnouncements(annRes.data);
+      } else {
+        // Mocks para avaliação visual das 3 prioridades conforme pedido do usuário
+        setAnnouncements([
+          { id: '1', title: 'Simulado Geral ETEC/ENEM', message: 'O grande simulado presencial ocorrerá neste sábado às 08h. Não esqueça o documento original.', priority: 'high' },
+          { id: '2', title: 'Novas Apostilas de Biologia', message: 'Já estão disponíveis as novas apostilas de genética no acervo da biblioteca.', priority: 'medium' },
+          { id: '3', title: 'Manutenção do Chat', message: 'O chat com professores passará por uma leve manutenção hoje às 23h.', priority: 'low' },
+        ]);
+      }
       if (trailRes?.data) setRecommendedTrails(trailRes.data);
       if (progressRes?.data) setRecentProgress((progressRes.data as any[]).filter((p: any) => p.trail));
       if (libRes?.data) setLibraryResources(libRes.data);
@@ -376,13 +385,18 @@ export default function DashboardHome() {
                     const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                     const Icon = styles.icon;
                     return (
-                      <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} shadow-sm hover:shadow-md transition-shadow`}>
-                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 bg-white shadow-sm`}>
-                          <Icon className={`h-4 w-4 ${styles.color}`} />
+                      <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} shadow-sm hover:shadow-md transition-all group relative overflow-hidden`}>
+                        {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-white shadow-sm border border-gray-100`}>
+                          <Icon className={`h-5 w-5 ${styles.color}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`font-black text-sm ${styles.color} truncate`}>{ann.title}</p>
-                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed font-medium mt-0.5 italic">{ann.message}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
+                            <span className="text-[10px] font-bold text-slate-400">Público Geral</span>
+                          </div>
+                          <p className={`font-black text-sm text-slate-900 truncate`}>{ann.title}</p>
+                          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium mt-0.5 italic">{ann.message}</p>
                         </div>
                       </div>
                     );

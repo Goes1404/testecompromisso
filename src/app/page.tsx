@@ -98,9 +98,10 @@ export default function LandingPage() {
       {/* HEADER PREMIUM - Mais imponente e sempre visível */}
       <header
         className={`fixed top-0 w-full z-[60] transition-all duration-500 border-b ${scrolled
-          ? 'bg-white/95 backdrop-blur-xl py-2 shadow-lg border-gray-100'
+          ? 'bg-white/95 md:bg-white/95 backdrop-blur-xl py-2 shadow-lg border-gray-100'
           : 'bg-black/20 backdrop-blur-sm py-4 border-white/5'
           }`}
+        style={scrolled && typeof window !== 'undefined' && window.innerWidth < 768 ? { backgroundColor: 'rgba(255, 107, 0, 0.95)', borderBottom: 'none' } : {}}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
@@ -138,8 +139,8 @@ export default function LandingPage() {
             </div>
           </nav>
 
-          <button className={`md:hidden p-2 rounded-lg ${scrolled ? 'bg-gray-50' : 'bg-white/10'}`} onClick={() => setMobileMenuOpen(true)}>
-            <Menu className={`h-6 w-6 ${scrolled ? 'text-gray-900' : 'text-white'}`} />
+          <button className={`md:hidden p-2 rounded-lg ${scrolled ? 'bg-primary/20 text-white md:text-gray-950' : 'bg-white/10'}`} onClick={() => setMobileMenuOpen(true)}>
+            <Menu className={`h-6 w-6 ${scrolled ? 'text-white md:text-gray-900' : 'text-white'}`} />
           </button>
         </div>
       </header>
@@ -420,6 +421,53 @@ export default function LandingPage() {
                   <p className="text-gray-600 font-medium ml-8 leading-relaxed">{faq.a}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* LOCALIZAÇÃO - GOOGLE MAPS */}
+        <section id="localizacao" className="py-20 bg-white relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+                <MapPin className="h-4 w-4" /> Nossa Localização
+              </div>
+              <h2 className="text-4xl font-black text-gray-900 tracking-tighter leading-tight">Venha nos Conhecer</h2>
+              <p className="text-gray-600 font-medium leading-relaxed max-w-lg">
+                Estamos localizados no coração de Santana de Parnaíba, na histórica <strong className="text-primary italic">Escola Colácio</strong>. Um ambiente preparado para transformar seu futuro.
+              </p>
+              <div className="space-y-4 pt-4">
+                <div className="flex items-start gap-4 p-5 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">Endereço Unidade Central</p>
+                    <p className="text-sm text-gray-500 font-medium">R. Cel. Raimundo, 32 - Centro, Santana de Parnaíba - SP, 06501-010</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Button asChild variant="outline" className="h-12 rounded-xl text-primary font-bold border-primary/20 hover:bg-primary/5">
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer">Abir no Maps</a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative h-[450px] md:h-[500px] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white ring-1 ring-gray-100">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3659.8804686411995!2d-46.91896748443588!3d-23.446702784739504!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94cf0377c8e820c7%3A0xe4a287f347eb1998!2sEscola%20Municipal%20Professor%20Col%C3%A1cio!5e0!3m2!1spt-BR!2sbr!4v1712089201202!5m2!1spt-BR!2sbr" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen={true} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                className="grayscale-[0.5] hover:grayscale-0 transition-all duration-700"
+              />
+              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-100 shadow-md">
+                <span className="text-[10px] font-black uppercase text-primary italic">Unidade Colácio</span>
+              </div>
             </div>
           </div>
         </section>
