@@ -245,70 +245,105 @@ export default function LandingPage() {
         </section>
 
 
-        {/* MISSÃO E VALORES - Evoluído para Cards Premium */}
-        <section className="py-20 bg-gray-50 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* MISSÃO E VALORES - Mistura de Temas (Dark nas pontas, Light no centro) */}
+        <section className="py-24 bg-gray-50 relative overflow-hidden border-t border-gray-200/50">
+          {/* Blobs de luz flutuantes */}
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none animate-pulse-subtle delay-700" />
+          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none animate-pulse-subtle" />
+
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
             {[
               {
                 title: "Nossa Missão",
                 icon: Target,
                 desc: "Democratizar o acesso ao ensino de elite em Santana de Parnaíba, transformando esforço em aprovação através da inovação e do acompanhamento próximo.",
-                theme: "orange"
+                theme: "dark"
               },
               {
                 title: "Tradição & IA",
                 icon: BookMarked,
                 desc: "Combinamos o melhor da pedagogia clássica com a agilidade da Inteligência Artificial Aurora para criar trilhas de aprendizagem únicas e infalíveis.",
-                theme: "white"
+                theme: "light"
               },
               {
                 title: "Foco no Futuro",
                 icon: Lightbulb,
                 desc: "No Compromisso, você não apenas estuda para uma prova; você desenvolve a mentalidade de alta performance necessária para a vida universitária.",
-                theme: "black"
+                theme: "dark"
               }
             ].map((card, i) => (
               <div 
                 key={i} 
-                className={`p-10 rounded-[2.5rem] border transition-all duration-500 group hover:-translate-y-2 hover:shadow-2xl flex flex-col gap-6 relative overflow-hidden ${
-                  card.theme === 'orange' ? 'bg-primary border-primary shadow-xl shadow-primary/20 text-white' :
-                  card.theme === 'black' ? 'bg-gray-950 border-gray-900 shadow-xl shadow-black/20 text-white' :
-                  'bg-white border-gray-100 shadow-lg text-gray-950'
+                className={`p-10 rounded-[2.5rem] border transition-all duration-700 group hover:-translate-y-4 hover:scale-[1.02] flex flex-col gap-6 relative overflow-hidden ${
+                  card.theme === 'dark' 
+                    ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white' 
+                    : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
                 }`}
               >
-                {/* Micro-animação de fundo */}
-                <div className={`absolute -right-8 -top-8 w-32 h-32 rounded-full blur-3xl opacity-20 transition-all group-hover:scale-150 ${
-                   card.theme === 'white' ? 'bg-primary' : 'bg-white'
+                {/* Linha Guia Lateral - Efeitos Intensificados */}
+                <div className={`absolute left-0 top-1/4 bottom-1/4 w-[3px] transition-all duration-700 ease-out group-hover:h-full group-hover:top-0 group-hover:bottom-0 ${
+                  card.theme === 'dark'
+                    ? 'bg-primary/30 group-hover:bg-primary group-hover:shadow-[0_0_20px_rgba(255,107,0,0.8)]'
+                    : 'bg-primary/10 group-hover:bg-primary group-hover:shadow-[0_0_15px_rgba(255,107,0,0.5)]'
                 }`} />
 
-                <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-500 ${
-                  card.theme === 'orange' ? 'bg-white/20 text-white' :
-                  card.theme === 'black' ? 'bg-primary/20 text-primary' :
-                  'bg-primary/5 text-primary'
+                {/* GLOW DE FUNDO - Azul Dinâmico */}
+                <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-all duration-1000 group-hover:scale-150 ${
+                  card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
+                }`} />
+                
+                {/* ÍCONE COM MODO PULSO */}
+                <div className={`relative h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-inner group-hover:rotate-6 z-10 ${
+                  card.theme === 'dark' 
+                    ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]' 
+                    : 'bg-gray-50 text-gray-800 border border-gray-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/30'
                 }`}>
-                  <card.icon className="h-7 w-7" />
+                  <card.icon className="h-8 w-8 relative z-10" />
+                  {/* Círculo animado em volta do ícone no Dark Mode */}
+                  {card.theme === 'dark' && (
+                     <div className="absolute inset-0 rounded-2xl border-2 border-primary/0 group-hover:border-primary/50 group-hover:scale-125 transition-all duration-700 opacity-0 group-hover:opacity-100" />
+                  )}
                 </div>
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-black tracking-tighter uppercase italic">{card.title}</h3>
-                  <p className={`leading-relaxed font-medium text-sm ${
-                    card.theme === 'white' ? 'text-gray-500' : 'text-white/80 transition-colors group-hover:text-white'
-                  }`}>{card.desc}</p>
+                
+                <div className="space-y-4 relative z-10">
+                  <h3 className={`text-2xl font-black tracking-tighter uppercase italic transition-colors duration-500 ${
+                    card.theme === 'dark' ? 'text-white group-hover:text-primary' : 'text-gray-900 group-hover:text-primary'
+                  }`}>
+                    {card.title}
+                  </h3>
+                  <p className={`leading-relaxed font-medium text-sm transition-colors duration-500 ${
+                    card.theme === 'dark' ? 'text-gray-400 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-900'
+                  }`}>
+                    {card.desc}
+                  </p>
+                </div>
+
+                {/* Seta Decorativa */}
+                <div className="pt-4 flex justify-end opacity-0 group-hover:opacity-100 transition-all duration-700 translate-x-4 group-hover:translate-x-0">
+                   <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+                     card.theme === 'dark' 
+                       ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]' 
+                       : 'bg-blue-50 text-blue-600 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                   }`}>
+                      <ChevronRight className="h-5 w-5" />
+                   </div>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* METODOLOGIA - Mais densa e informativa (100vh) */}
-        <section id="metodologia" className="min-h-screen py-16 flex flex-col justify-center bg-white scroll-mt-20 overflow-hidden relative animate-in fade-in slide-in-from-right duration-1000">
-          <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+        {/* METODOLOGIA - Os Pilares do Seu Sucesso */}
+        <section id="metodologia" className="min-h-screen py-24 flex flex-col justify-center bg-white scroll-mt-20 overflow-hidden relative border-t border-gray-100">
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none animate-pulse-subtle delay-1000" />
+          <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none animate-pulse-subtle" />
 
-          <div className="max-w-7xl mx-auto px-6 w-full relative">
-            <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-              <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+          <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
+            <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
+              <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px] bg-primary/5 px-4 py-1.5 rounded-full border border-primary/20">
                 <Target className="h-4 w-4" /> Ecossistema Pedagógico
               </div>
-              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter leading-tight">Os Pilares do Seu Sucesso</h2>
+              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter leading-tight italic">Os Pilares do Seu Sucesso</h2>
               <p className="text-gray-500 font-medium leading-relaxed">Desenvolvemos uma estrutura 360º para garantir que nenhum aluno seja deixado para trás, unindo tecnologia humana e algoritmos de aprovação.</p>
             </div>
 
@@ -317,47 +352,87 @@ export default function LandingPage() {
                 {
                   title: "Jornada Personalizada",
                   icon: GraduationCap,
-                  bg: "bg-white",
                   highlight: "Estratégico",
                   desc: "Mapeamos suas dificuldades em tempo real e criamos listas de exercícios focadas no seu gap de conhecimento.",
-                  features: ["Suporte 24/7 Aurora IA", "Correção Redação Instantânea", "Mentoria Semanal individual"]
+                  features: ["Suporte 24/7 Aurora IA", "Correção Redação Instantânea", "Mentoria Semanal"],
+                  theme: "dark"
                 },
                 {
                   title: "Corpo Docente Elite",
                   icon: School,
-                  bg: "bg-gray-950",
-                  dark: true,
                   highlight: "Experiência",
                   desc: "Professores especialistas nas bancas mais difíceis do país, com didática simplificada e conteúdo de altíssimo nível.",
-                  features: ["Videoaulas Cinematográficas", "Material Didático Exclusivo", "Aulas Presenciais e Híbridas"]
+                  features: ["Videoaulas Cinematográficas", "Material Didático Exclusivo", "Aulas Presenciais"],
+                  theme: "light"
                 },
                 {
                   title: "Inteligência de Dados",
                   icon: BarChart3,
-                  bg: "bg-white",
                   highlight: "Resultados",
                   desc: "Dashboards precisos que mostram exatamente sua evolução e probabilidade de aprovação nos cursos desejados.",
-                  features: ["Simulados Padrão Vunesp/ENEM", "Auditoria de Erros Recorrentes", "Gestão de Progresso em Real Time"]
+                  features: ["Simulados Padrão Vunesp/ENEM", "Auditoria de Erros Recorrentes", "Gestão de Progresso"],
+                  theme: "dark"
                 }
               ].map((card, i) => (
-                <div key={card.title} className={`p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] border shadow-2xl shadow-black/5 hover:shadow-primary/10 transition-all duration-500 group relative overflow-hidden ${card.dark ? 'bg-gray-950 text-white border-white/5' : 'bg-white border-gray-100'}`}>
-                  {card.dark && <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary" />}
-                  <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-8 shadow-inner transition-transform group-hover:scale-110 duration-500 ${card.dark ? 'bg-white/10 text-primary' : 'bg-primary/5 text-primary'}`}>
-                    <card.icon className="h-7 w-7" />
-                  </div>
-                  <div className="space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary opacity-80">{card.highlight}</span>
-                    <h3 className="text-2xl font-black tracking-tight">{card.title}</h3>
-                    <p className={`text-sm leading-relaxed ${card.dark ? 'text-gray-400' : 'text-gray-500'}`}>{card.desc}</p>
+                <div 
+                  key={card.title} 
+                  className={`p-10 rounded-[2.5rem] border transition-all duration-700 group hover:-translate-y-4 hover:scale-[1.02] flex flex-col gap-6 relative overflow-hidden ${
+                    card.theme === 'dark' 
+                      ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white' 
+                      : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
+                  }`}
+                >
+                  {/* Linha Guia Lateral */}
+                  <div className={`absolute left-0 top-1/4 bottom-1/4 w-[3px] transition-all duration-700 ease-out group-hover:h-full group-hover:top-0 group-hover:bottom-0 ${
+                    card.theme === 'dark'
+                      ? 'bg-primary/30 group-hover:bg-primary group-hover:shadow-[0_0_20px_rgba(255,107,0,0.8)]'
+                      : 'bg-primary/10 group-hover:bg-primary group-hover:shadow-[0_0_15px_rgba(255,107,0,0.5)]'
+                  }`} />
 
-                    <div className="pt-6 space-y-3">
-                      {card.features.map((feat, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                          <span className={`text-[11px] font-bold uppercase tracking-tight ${card.dark ? 'text-gray-300' : 'text-gray-600'}`}>{feat}</span>
-                        </div>
-                      ))}
+                  {/* GLOW DE FUNDO */}
+                  <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-all duration-1000 group-hover:scale-150 ${
+                    card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
+                  }`} />
+                  
+                  {/* TAG HIGHLIGHT */}
+                  <div className="relative z-10 flex justify-between items-center w-full">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary opacity-80">{card.highlight}</span>
+                    <div className={`relative h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-inner group-hover:rotate-6 z-10 ${
+                      card.theme === 'dark' 
+                        ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]' 
+                        : 'bg-gray-50 text-gray-800 border border-gray-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/30'
+                    }`}>
+                      <card.icon className="h-6 w-6 relative z-10" />
+                      {card.theme === 'dark' && (
+                         <div className="absolute inset-0 rounded-2xl border-2 border-primary/0 group-hover:border-primary/50 group-hover:scale-125 transition-all duration-700 opacity-0 group-hover:opacity-100" />
+                      )}
                     </div>
+                  </div>
+
+                  <div className="space-y-4 relative z-10">
+                    <h3 className={`text-2xl font-black tracking-tighter transition-colors duration-500 ${
+                      card.theme === 'dark' ? 'text-white group-hover:text-primary' : 'text-gray-900 group-hover:text-primary'
+                    }`}>
+                      {card.title}
+                    </h3>
+                    <p className={`leading-relaxed font-medium text-sm transition-colors duration-500 ${
+                      card.theme === 'dark' ? 'text-gray-400 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-900'
+                    }`}>
+                      {card.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-6 space-y-3 relative z-10 mt-auto">
+                    {card.features.map((feat, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <CheckCircle2 className={`h-4 w-4 shrink-0 transition-colors duration-500 ${
+                          card.theme === 'dark' ? 'text-primary/70 group-hover:text-primary' : 'text-primary'
+                        }`} />
+                        <span className={`text-[11px] font-bold uppercase tracking-tight transition-colors duration-500 ${
+                          card.theme === 'dark' ? 'text-gray-400 group-hover:text-white' : 'text-gray-600 group-hover:text-gray-900'
+                        }`}>{feat}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
