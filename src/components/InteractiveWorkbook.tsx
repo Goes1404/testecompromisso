@@ -89,13 +89,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     }
   }, [activeTool, brushColor, highlightColor, zoom]);
 
-  // Estados para o Pan (Arraste)
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [startY, setStartY] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [scrollTop, setScrollTop] = useState(0);
-
   const { toast } = useToast();
 
   useEffect(() => {
@@ -397,46 +390,6 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (activeTool !== 'pan' || !containerRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - containerRef.current.offsetLeft);
-    setStartY(e.pageY - containerRef.current.offsetTop);
-    setScrollLeft(containerRef.current.scrollLeft);
-    setScrollTop(containerRef.current.scrollTop);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || activeTool !== 'pan' || !containerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - containerRef.current.offsetLeft;
-    const y = e.pageY - containerRef.current.offsetTop;
-    const walkX = (x - startX);
-    const walkY = (y - startY);
-    containerRef.current.scrollLeft = scrollLeft - walkX;
-    containerRef.current.scrollTop = scrollTop - walkY;
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (activeTool !== 'pan' || !containerRef.current) return;
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - containerRef.current.offsetLeft);
-    setStartY(e.touches[0].pageY - containerRef.current.offsetTop);
-    setScrollLeft(containerRef.current.scrollLeft);
-    setScrollTop(containerRef.current.scrollTop);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || activeTool !== 'pan' || !containerRef.current) return;
-    const x = e.touches[0].pageX - containerRef.current.offsetLeft;
-    const y = e.touches[0].pageY - containerRef.current.offsetTop;
-    const walkX = (x - startX);
-    const walkY = (y - startY);
-    containerRef.current.scrollLeft = scrollLeft - walkX;
-    containerRef.current.scrollTop = scrollTop - walkY;
-  };
-
-  const handleMouseUpOrLeave = () => setIsDragging(false);
 
   if (error) return (
     <div className="h-full flex flex-col items-center justify-center p-8 bg-slate-900 text-white gap-4">
@@ -519,16 +472,9 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
       {/* ÁREA DO DOCUMENTO */}
       <div 
         ref={containerRef} 
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUpOrLeave}
-        onMouseLeave={handleMouseUpOrLeave}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleMouseUpOrLeave}
         style={{ touchAction: activeTool === 'pan' ? 'auto' : 'none' }}
-        className={`flex-1 overflow-auto p-4 md:p-10 flex items-start bg-slate-900 no-swipe transition-all duration-300 ${
-          activeTool === 'pan' ? (isDragging ? 'cursor-grabbing' : 'cursor-grad') : 'cursor-default'
+        className={`flex-1 overflow-auto p-4 md:p-10 flex items-start bg-slate-900 no-swipe scroll-smooth ${
+          activeTool === 'pan' ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
         }`}
       >
         <div 

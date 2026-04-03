@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,40 +57,6 @@ const adminItems = [
   { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ];
 
-function SwipeHandler({ children }: { children: React.ReactNode }) {
-  const { setOpenMobile, isMobile } = useSidebar();
-  const touchStart = useRef({ x: 0, y: 0 });
-  const touchEnd = useRef({ x: 0, y: 0 });
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.no-swipe, input, textarea, select, [role="slider"], button, audio, video, #youtube-player, .scrollable-content')) return;
-    touchStart.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
-    touchEnd.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEnd.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
-  };
-
-  const handleTouchEnd = () => {
-    if (!isMobile) return;
-    const deltaX = touchEnd.current.x - touchStart.current.x;
-    const deltaY = touchEnd.current.y - touchStart.current.y;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    if (absX > absY * 1.5 && absX > 30) {
-      if (deltaX > 30) setOpenMobile(true);
-      else if (deltaX < -30) setOpenMobile(false);
-    }
-  };
-
-  return (
-    <div className="flex-1 flex flex-col min-h-0 touch-pan-y overflow-hidden" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {children}
-    </div>
-  );
-}
 
 const NavMenu = memo(({ items, pathname, unreadCount }: { items: any[], pathname: string, unreadCount: number }) => {
   const { setOpenMobile, isMobile } = useSidebar();
@@ -247,7 +213,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
         <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '12s', animationDelay: '2s' }} />
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
-          <SidebarTrigger className="h-9 w-9 rounded-full hover:bg-muted" />
+          <SidebarTrigger className="h-10 w-10 rounded-xl hover:bg-muted text-primary">
+            <Menu className="h-6 w-6" />
+          </SidebarTrigger>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
             <NotificationBell />
@@ -269,15 +237,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
         </header>
-        <SwipeHandler>
-          <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'}`}>
-            <div className={isFullBleedPage ? 'flex-1 flex flex-col min-h-0' : 'max-w-7xl mx-auto w-full'}>
-              <Suspense fallback={<div className="p-8 opacity-20 animate-pulse"><Sparkles className="h-10 w-10 text-accent" /></div>}>
-                {children}
-              </Suspense>
-            </div>
-          </main>
-        </SwipeHandler>
+        <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'}`}>
+          <div className={isFullBleedPage ? 'flex-1 flex flex-col min-h-0' : 'max-w-7xl mx-auto w-full'}>
+            <Suspense fallback={<div className="p-8 opacity-20 animate-pulse"><Sparkles className="h-10 w-10 text-accent" /></div>}>
+              {children}
+            </Suspense>
+          </div>
+        </main>
         <OnboardingTour />
       </SidebarInset>
     </SidebarProvider>

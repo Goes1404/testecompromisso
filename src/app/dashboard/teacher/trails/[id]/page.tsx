@@ -299,11 +299,19 @@ export default function TrailManagementPage() {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `public/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('learning-contents')
-        .upload(filePath, file);
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from('learning-contents')
+          .upload(filePath, file);
 
-      if (uploadError) {
+        if (uploadError) throw uploadError;
+
+        const { publicUrl } = supabase.storage
+          .from('learning-contents')
+          .getPublicUrl(filePath).data;
+
+        fileUrl = publicUrl;
+      } catch (uploadError: any) {
         toast({
           title: 'Erro no Upload',
           description: uploadError.message,
@@ -311,14 +319,9 @@ export default function TrailManagementPage() {
         });
         setUploading(false);
         return;
+      } finally {
+        setFile(null);
       }
-
-      const { publicUrl } = supabase.storage
-        .from('learning-contents')
-        .getPublicUrl(filePath).data;
-
-      fileUrl = publicUrl;
-      setFile(null);
     }
 
     const finalWorkbookId = contentForm.workbook_id === 'none' || !contentForm.workbook_id ? null : contentForm.workbook_id;
@@ -386,30 +389,35 @@ export default function TrailManagementPage() {
       order_index: currentModuleContents.length + idx,
     }));
 
-    const { data, error } = await supabase
-      .from('learning_contents')
-      .insert(itemsToInsert)
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('learning_contents')
+        .insert(itemsToInsert)
+        .select();
 
-    if (!error && data) {
-      setContents((prev) => ({
-        ...prev,
-        [moduleId]: [...(prev[moduleId] || []), ...data],
-      }));
-      toast({
-        title: 'Materiais Publicados!',
-        description: `${data.length} itens foram adicionados ao capítulo.`,
-      });
-      
-      setTimeout(() => {
-        setPendingItems([]);
-        setIsContentDialogOpen(false);
-        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
-      }, 50);
-    } else {
-      toast({ title: 'Erro ao salvar', description: error?.message || 'Ocorreu um erro desconhecido', variant: 'destructive' });
+      if (error) throw error;
+
+      if (data) {
+        setContents((prev) => ({
+          ...prev,
+          [moduleId]: [...(prev[moduleId] || []), ...data],
+        }));
+        toast({
+          title: 'Materiais Publicados!',
+          description: `${data.length} itens foram adicionados ao capítulo.`,
+        });
+        
+        setTimeout(() => {
+          setPendingItems([]);
+          setIsContentDialogOpen(false);
+          setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
+        }, 50);
+      }
+    } catch (e: any) {
+      toast({ title: 'Erro ao salvar', description: e?.message || 'Ocorreu um erro desconhecido', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const handleDeleteModule = async (id: string) => {
