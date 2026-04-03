@@ -154,13 +154,18 @@ export default function TeacherHomePage() {
     }
   };
 
-  if (isUserLoading || (userRole !== 'teacher' && userRole !== 'admin')) {
+  if (isUserLoading) {
     return (
       <div className="h-96 flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
         <p className="text-muted-foreground font-black uppercase text-[10px] tracking-widest animate-pulse">Sincronizando Gestão...</p>
       </div>
     );
+  }
+
+  // Se não é admin/teacher e não está carregando usuário, redireciona ou mostra erro suave
+  if (!isUserLoading && profile && userRole !== 'teacher' && userRole !== 'admin') {
+    return null; // Redirecionamento no useEffect tratará isso
   }
 
   return (

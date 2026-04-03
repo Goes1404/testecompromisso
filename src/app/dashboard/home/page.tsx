@@ -102,7 +102,13 @@ export default function DashboardHome() {
   }, [userRole, isUserLoading, router]);
 
   const fetchData = useCallback(async () => {
-    if (!user || !profile || dataFetchedRef.current) return;
+    if (!user || dataFetchedRef.current) return;
+    
+    // Se o perfil não foi carregado ainda, interrompemos o loading mas permitimos que o efeito re-execute depois
+    if (!profile) {
+      setLoadingData(false);
+      return;
+    }
     
     if (dashboardCache.data && Date.now() - dashboardCache.timestamp < CACHE_DURATION) {
       setAnnouncements(dashboardCache.data.announcements);

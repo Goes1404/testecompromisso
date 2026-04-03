@@ -41,9 +41,14 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
 
   const loadResources = useCallback(async () => {
-    if (!user || !profile) return;
+    if (!user) return;
     
     setLoading(true);
+
+    if (!profile) {
+      setLoading(false);
+      return;
+    }
 
     try {
       // Busca todos os recursos (query simples que nunca falha)
