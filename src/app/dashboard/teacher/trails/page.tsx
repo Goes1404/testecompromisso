@@ -152,48 +152,50 @@ export default function TeacherTrailsPage() {
                 <Plus className="h-5 w-5 md:h-6 md:w-6 mr-2" /> Nova Trilha Manual
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-2xl max-h-[95vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-xl md:text-2xl font-black italic text-primary">Configurar Trilha</DialogTitle>
+                <DialogTitle className="text-xl md:text-xl font-black italic text-primary">Configurar Trilha</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 md:gap-6 py-4 md:py-6">
-                <div className="space-y-2">
+              <div className="grid gap-3 py-2">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40">Título da Trilha</Label>
-                  <Input placeholder="Ex: Fundamentos de IA" className="h-12 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.title} onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })} disabled={isSubmitting} />
+                  <Input placeholder="Ex: Fundamentos de IA" className="h-10 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.title} onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })} disabled={isSubmitting} />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase opacity-40">Categoria</Label>
-                  <Select value={newTrail.category} onValueChange={(v) => setNewTrail({ ...newTrail, category: v })} disabled={isSubmitting}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
-                      <SelectValue placeholder="Matéria Principal" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl max-h-60">
-                      {EDUCATIONAL_CATEGORIES.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Categoria</Label>
+                    <Select value={newTrail.category} onValueChange={(v) => setNewTrail({ ...newTrail, category: v })} disabled={isSubmitting}>
+                      <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold">
+                        <SelectValue placeholder="Matéria Principal" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-none shadow-2xl max-h-60">
+                        {EDUCATIONAL_CATEGORIES.map(category => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Público-Alvo</Label>
+                    <Select value={newTrail.target_audience} onValueChange={(v) => setNewTrail({ ...newTrail, target_audience: v })} disabled={isSubmitting}>
+                      <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold">
+                        <SelectValue placeholder="Todos os Alunos" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        <SelectItem value="all">Todos os Alunos</SelectItem>
+                        <SelectItem value="etec">Apenas ETEC</SelectItem>
+                        <SelectItem value="enem">Apenas ENEM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase opacity-40">Público-Alvo</Label>
-                  <Select value={newTrail.target_audience} onValueChange={(v) => setNewTrail({ ...newTrail, target_audience: v })} disabled={isSubmitting}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
-                      <SelectValue placeholder="Todos os Alunos" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
-                      <SelectItem value="all">Todos os Alunos</SelectItem>
-                      <SelectItem value="etec">Apenas Turma ETEC</SelectItem>
-                      <SelectItem value="enem">Apenas Turma ENEM</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40">Descrição Geral</Label>
-                  <Textarea placeholder="O que o aluno aprenderá nesta jornada?" className="min-h-[100px] md:min-h-[120px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={newTrail.description} onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })} disabled={isSubmitting} />
+                  <Textarea placeholder="O que o aluno aprenderá nesta jornada?" className="min-h-[60px] md:min-h-[60px] rounded-xl bg-muted/30 border-none font-medium resize-none px-3 py-2" value={newTrail.description} onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })} disabled={isSubmitting} />
                 </div>
               </div>
-              <DialogFooter className="mt-2 md:mt-0">
-                <Button onClick={handleCreateTrail} disabled={isSubmitting || !newTrail.title} className="w-full h-14 md:h-16 bg-primary text-white font-black text-base md:text-lg rounded-2xl shadow-xl">
+              <DialogFooter className="mt-2 md:mt-2">
+                <Button onClick={handleCreateTrail} disabled={isSubmitting || !newTrail.title} className="w-full h-12 md:h-12 bg-primary text-white font-black text-base md:text-base rounded-2xl shadow-xl">
                   {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
                   {isSubmitting ? "Gravando..." : "Criar Trilha"}
                 </Button>

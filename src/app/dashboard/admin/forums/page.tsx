@@ -332,27 +332,27 @@ export default function AdminForumModerationPage() {
                                 <Settings2 className="h-4 w-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-10 max-w-2xl bg-white">
+                            <DialogContent className="rounded-[2rem] border-none shadow-2xl p-6 max-w-2xl bg-white">
                               <DialogHeader>
-                                <DialogTitle className="text-2xl font-black italic text-primary">Configurações de Debate</DialogTitle>
+                                <DialogTitle className="text-xl font-black italic text-primary">Configurações de Debate</DialogTitle>
                               </DialogHeader>
                               
                               {configForum && (
-                                <div className="space-y-8 py-6">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-6">
-                                      <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase opacity-40">Título do Fórum</Label>
+                                <div className="space-y-4 py-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                      <div className="space-y-1.5">
+                                        <Label className="text-[9px] font-black uppercase opacity-40">Título do Fórum</Label>
                                         <Input 
                                           value={configForum.name} 
                                           onChange={e => setConfigForum({...configForum, name: e.target.value})}
-                                          className="h-12 rounded-xl bg-muted/30 border-none font-bold"
+                                          className="h-10 rounded-xl bg-muted/30 border-none font-bold text-sm"
                                         />
                                       </div>
                                       
-                                      <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
+                                      <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-inner">
                                         <div className="space-y-0.5">
-                                          <Label className="font-black text-sm italic text-primary">Somente Professores</Label>
+                                          <Label className="font-black text-xs italic text-primary">Somente Professores</Label>
                                           <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Alunos apenas leem</p>
                                         </div>
                                         <Switch 
@@ -361,19 +361,19 @@ export default function AdminForumModerationPage() {
                                         />
                                       </div>
 
-                                      <Button onClick={updateForumSettings} disabled={isUpdating} className="w-full h-12 bg-primary text-white font-black rounded-xl shadow-lg">
+                                      <Button onClick={updateForumSettings} disabled={isUpdating} className="w-full h-10 bg-primary text-white font-black rounded-xl shadow-lg text-sm mt-2">
                                         {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gravar Preferências"}
                                       </Button>
                                     </div>
 
-                                    <div className="space-y-4">
-                                      <Label className="text-[10px] font-black uppercase opacity-40 flex items-center gap-2">
+                                    <div className="space-y-3">
+                                      <Label className="text-[9px] font-black uppercase opacity-40 flex items-center gap-2">
                                         <UserX className="h-3 w-3" /> Restringir Participantes
                                       </Label>
                                       <div className="relative">
                                         <Input 
                                           placeholder="Buscar aluno para banir..."
-                                          className="h-11 rounded-xl bg-muted/30 border-none pr-10 italic"
+                                          className="h-10 rounded-xl bg-muted/30 border-none pr-10 italic text-sm"
                                           value={userSearch}
                                           onChange={e => { setUserSearch(e.target.value); searchUserToBan(); }}
                                         />
@@ -381,12 +381,12 @@ export default function AdminForumModerationPage() {
                                       </div>
 
                                       {searchResults.length > 0 && (
-                                        <div className="bg-white border rounded-xl shadow-xl p-2 absolute z-50 w-[280px] -mt-2 animate-in fade-in zoom-in-95">
+                                        <div className="bg-white border rounded-xl shadow-xl p-2 absolute z-50 w-[240px] -mt-1 animate-in fade-in zoom-in-95">
                                           {searchResults.map(u => (
                                             <button 
                                               key={u.id}
                                               onClick={() => banUserFromForum(u)}
-                                              className="w-full text-left p-3 hover:bg-red-50 rounded-lg flex items-center justify-between group"
+                                              className="w-full text-left p-2 hover:bg-red-50 rounded-lg flex items-center justify-between group"
                                             >
                                               <span className="text-xs font-bold text-primary italic">{u.name}</span>
                                               <Badge className="bg-red-100 text-red-600 border-none text-[7px] font-black uppercase">Banir</Badge>
@@ -395,16 +395,16 @@ export default function AdminForumModerationPage() {
                                         </div>
                                       )}
 
-                                      <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                                      <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
                                         <p className="text-[8px] font-black uppercase text-primary/30 tracking-widest px-1">Banidos deste fórum</p>
                                         {bannedUsers.length === 0 ? (
-                                          <p className="text-[10px] italic text-muted-foreground p-4 text-center border-2 border-dashed rounded-xl opacity-40">Nenhum banimento específico.</p>
+                                          <p className="text-[10px] italic text-muted-foreground p-3 text-center border-2 border-dashed rounded-xl opacity-40">Nenhum banimento específico.</p>
                                         ) : (
                                           bannedUsers.map(b => (
-                                            <div key={b.id} className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100 group">
+                                            <div key={b.id} className="flex items-center justify-between p-2.5 bg-red-50 rounded-xl border border-red-100 group">
                                               <div>
                                                 <p className="text-xs font-black text-red-800 italic leading-none">{b.profiles?.name}</p>
-                                                <p className="text-[7px] font-bold text-red-600 uppercase mt-1">{b.profiles?.profile_type}</p>
+                                                <p className="text-[7px] font-bold text-red-600 uppercase mt-0.5">{b.profiles?.profile_type}</p>
                                               </div>
                                               <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-white rounded-lg" onClick={() => liftBan(b.id)}>
                                                 <Unlock className="h-3 w-3" />

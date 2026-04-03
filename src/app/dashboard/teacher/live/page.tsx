@@ -122,42 +122,42 @@ export default function ManageLivePage() {
               <PlusCircle className="h-5 w-5 md:h-6 md:w-6" /> Agendar Aula
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto border-none shadow-2xl">
+          <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl md:text-2xl font-black italic text-primary">Nova Sala Online</DialogTitle>
+              <DialogTitle className="text-xl md:text-xl font-black italic text-primary">Nova Sala Online</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 md:gap-6 py-4 md:py-6">
-              <div className="space-y-2">
+            <div className="grid gap-3 py-2">
+              <div className="space-y-1.5">
                 <Label className="text-[9px] font-black uppercase opacity-40">Título da Aula</Label>
-                <input placeholder="Ex: Mentoria - Carreira" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} disabled={isSubmitting} className="flex h-11 w-full rounded-xl bg-muted/30 border-none px-3 text-sm font-bold focus:ring-2 focus:ring-accent" />
+                <input placeholder="Ex: Mentoria - Carreira" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} disabled={isSubmitting} className="flex h-10 w-full rounded-xl bg-muted/30 border-none px-3 text-sm font-bold focus:ring-2 focus:ring-accent" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-40">Data</Label>
-                  <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} disabled={isSubmitting} className="flex h-11 w-full rounded-xl bg-muted/30 border-none px-3 text-sm font-bold" />
+                  <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} disabled={isSubmitting} className="flex h-10 w-full rounded-xl bg-muted/30 border-none px-3 text-sm font-bold" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase opacity-40">Horário</Label>
-                  <input type="time" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} disabled={isSubmitting} className="flex h-11 w-full rounded-xl bg-muted/30 border-none px-3 text-sm font-bold" />
+                  <input type="time" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} disabled={isSubmitting} className="flex h-10 w-full rounded-xl bg-muted/30 border-none px-3 text-sm font-bold" />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-[9px] font-black uppercase opacity-40">Link da Reunião (Google Meet / Zoom)</Label>
                 <div className="relative">
                   <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
-                  <input placeholder="https://meet.google.com/..." value={formData.meet_link} onChange={(e) => setFormData({...formData, meet_link: e.target.value})} disabled={isSubmitting} className="flex h-11 w-full rounded-xl bg-muted/30 border-none pl-10 pr-3 text-sm font-bold focus:ring-2 focus:ring-accent" />
+                  <input placeholder="https://meet.google.com/..." value={formData.meet_link} onChange={(e) => setFormData({...formData, meet_link: e.target.value})} disabled={isSubmitting} className="flex h-10 w-full rounded-xl bg-muted/30 border-none pl-10 pr-3 text-sm font-bold focus:ring-2 focus:ring-accent" />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-[9px] font-black uppercase opacity-40">Pauta da Aula</Label>
-                <textarea placeholder="O que será discutido..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} disabled={isSubmitting} className="flex min-h-[80px] w-full rounded-xl bg-muted/30 border-none px-3 py-2 text-sm font-medium resize-none" />
+                <textarea placeholder="O que será discutido..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} disabled={isSubmitting} className="flex min-h-[60px] w-full rounded-xl bg-muted/30 border-none px-3 py-2 text-sm font-medium resize-none" />
               </div>
             </div>
-            <DialogFooter className="flex-col gap-4">
-              <Button onClick={handleCreateLive} disabled={isSubmitting || !formData.title} className="w-full h-12 md:h-16 bg-primary text-white font-black text-base md:text-lg rounded-xl md:rounded-2xl shadow-xl">
+            <DialogFooter className="flex-col gap-2 mt-2">
+              <Button onClick={handleCreateLive} disabled={isSubmitting || !formData.title} className="w-full h-10 md:h-12 bg-primary text-white font-black text-sm md:text-base rounded-xl shadow-xl">
                 {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "Publicar na Agenda"}
               </Button>
-              <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-muted-foreground uppercase">
+              <div className="flex items-center justify-center gap-2 text-[8px] font-bold text-muted-foreground uppercase">
                 <AlertCircle className="h-3 w-3" /> Certifique-se de rodar o SQL no Supabase.
               </div>
             </DialogFooter>

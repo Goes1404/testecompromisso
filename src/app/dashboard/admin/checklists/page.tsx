@@ -272,23 +272,23 @@ export default function AdminChecklistAuditPage() {
                 Mensagem em Massa ({filtered.length})
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] p-10 bg-white border-none shadow-2xl max-w-lg">
+            <DialogContent className="rounded-[2.5rem] p-6 bg-white border-none shadow-2xl max-w-lg">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black italic text-primary">Intervenção Direta</DialogTitle>
-                <DialogDescription className="font-medium italic">Esta mensagem será enviada individualmente para o chat de {filtered.length} alunos filtrados.</DialogDescription>
+                <DialogTitle className="text-xl font-black italic text-primary">Intervenção Direta</DialogTitle>
+                <DialogDescription className="font-medium italic text-sm">Esta mensagem será enviada individualmente para o chat de {filtered.length} alunos filtrados.</DialogDescription>
               </DialogHeader>
-              <div className="py-6 space-y-4">
+              <div className="py-4 space-y-4">
                 <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Conteúdo da Mensagem</Label>
                 <Textarea 
                   placeholder="Olá! Notamos que sua documentação está pendente. Precisa de ajuda com algum item?" 
-                  className="min-h-[150px] rounded-2xl bg-muted/30 border-none font-medium italic p-6"
+                  className="min-h-[100px] rounded-2xl bg-muted/30 border-none font-medium italic p-4 text-sm"
                   value={bulkContent}
                   onChange={(e) => setBulkContent(e.target.value)}
                 />
               </div>
               <DialogFooter>
-                <Button onClick={handleBulkMessage} disabled={isProcessing || !bulkContent.trim()} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
-                  {isProcessing ? <Sparkles className="h-6 w-6 animate-pulse mr-2 text-accent" /> : <Send className="h-5 w-5 mr-2 text-accent" />}
+                <Button onClick={handleBulkMessage} disabled={isProcessing || !bulkContent.trim()} className="w-full h-12 bg-primary text-white font-black rounded-xl shadow-xl text-sm">
+                  {isProcessing ? <Sparkles className="h-5 w-5 animate-pulse mr-2 text-accent" /> : <Send className="h-5 w-5 mr-2 text-accent" />}
                   Disparar no Chat
                 </Button>
               </DialogFooter>
@@ -302,23 +302,23 @@ export default function AdminChecklistAuditPage() {
                 Publicar Aviso Segmentado
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] p-10 bg-white border-none shadow-2xl max-w-lg">
+            <DialogContent className="rounded-[2.5rem] p-6 bg-white border-none shadow-2xl max-w-lg">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black italic text-primary">Alerta Geral de Grupo</DialogTitle>
-                <DialogDescription className="font-medium italic">Isso criará um aviso no mural para toda a rede, mas focado no grupo {statusFilter}.</DialogDescription>
+                <DialogTitle className="text-xl font-black italic text-primary">Alerta Geral de Grupo</DialogTitle>
+                <DialogDescription className="font-medium italic text-sm">Isso criará um aviso no mural para toda a rede focada no grupo {statusFilter}.</DialogDescription>
               </DialogHeader>
-              <div className="py-6 space-y-4">
+              <div className="py-4 space-y-4">
                 <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Corpo do Comunicado</Label>
                 <Textarea 
                   placeholder="Atenção alunos em situação CRÍTICA: O prazo para envio de documentos do SiSU encerra em 48h!" 
-                  className="min-h-[150px] rounded-2xl bg-muted/30 border-none font-medium italic p-6"
+                  className="min-h-[100px] rounded-2xl bg-muted/30 border-none font-medium italic p-4 text-sm"
                   value={bulkContent}
                   onChange={(e) => setBulkContent(e.target.value)}
                 />
               </div>
               <DialogFooter>
-                <Button onClick={handleBulkAnnouncement} disabled={isProcessing || !bulkContent.trim()} className="w-full h-16 bg-accent text-accent-foreground font-black rounded-2xl shadow-xl">
-                  {isProcessing ? <Sparkles className="h-6 w-6 animate-pulse mr-2" /> : <Megaphone className="h-5 w-5 mr-2" />}
+                <Button onClick={handleBulkAnnouncement} disabled={isProcessing || !bulkContent.trim()} className="w-full h-12 bg-accent text-accent-foreground font-black rounded-xl shadow-xl text-sm">
+                  {isProcessing ? <Sparkles className="h-5 w-5 animate-pulse mr-2" /> : <Megaphone className="h-5 w-5 mr-2" />}
                   Fixar no Mural de Avisos
                 </Button>
               </DialogFooter>

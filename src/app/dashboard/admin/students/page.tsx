@@ -321,16 +321,16 @@ export default function AdminStudentsPage() {
                 <span>Mesclar Turmas</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
+            <DialogContent className="rounded-[2rem] p-6 bg-white max-w-lg border-none shadow-2xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black italic text-primary">Mesclar Cohorts</DialogTitle>
-                <DialogDescription className="italic">Isso moverá todos os alunos de uma turma para outra e apagará o registro de origem.</DialogDescription>
+                <DialogTitle className="text-xl font-black italic text-primary">Mesclar Cohorts</DialogTitle>
+                <DialogDescription className="italic text-xs">Isso moverá todos os alunos de uma turma para outra e apagará o registro de origem.</DialogDescription>
               </DialogHeader>
-              <div className="space-y-6 py-6">
-                <div className="space-y-2">
+              <div className="space-y-4 py-4">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Turma de Origem (Será removida)</Label>
                   <Select value={sourceCohortId} onValueChange={setSourceCohortId}>
-                    <SelectTrigger className="h-14 rounded-xl bg-muted/30 border-none font-bold italic">
+                    <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold italic text-sm">
                       <SelectValue placeholder="Selecione a origem..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -341,12 +341,12 @@ export default function AdminStudentsPage() {
                   </Select>
                 </div>
                 <div className="flex justify-center">
-                  <GitMerge className="h-6 w-6 text-accent animate-pulse" />
+                  <GitMerge className="h-5 w-5 text-accent animate-pulse" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Turma de Destino (Receberá os alunos)</Label>
                   <Select value={destCohortId} onValueChange={setDestCohortId}>
-                    <SelectTrigger className="h-14 rounded-xl bg-muted/30 border-none font-bold italic">
+                    <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold italic text-sm">
                       <SelectValue placeholder="Selecione o destino..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -361,9 +361,9 @@ export default function AdminStudentsPage() {
                 <Button 
                   onClick={handleMergeCohorts} 
                   disabled={isSubmitting || !sourceCohortId || !destCohortId} 
-                  className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl"
+                  className="w-full h-12 bg-primary text-white font-black rounded-xl shadow-xl text-base"
                 >
-                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Unificar e Sincronizar Alunos"}
+                  {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Unificar e Sincronizar Alunos"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -376,21 +376,21 @@ export default function AdminStudentsPage() {
                 <span>Criar Nova Turma</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] p-10 bg-white max-w-lg border-none shadow-2xl">
-              <DialogHeader><DialogTitle className="text-2xl font-black italic text-primary">Configurar Turma</DialogTitle></DialogHeader>
-              <div className="space-y-6 py-6">
-                <div className="space-y-2">
+            <DialogContent className="rounded-[2rem] p-6 bg-white max-w-lg border-none shadow-2xl">
+              <DialogHeader><DialogTitle className="text-xl font-black italic text-primary">Configurar Turma</DialogTitle></DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Identificação</Label>
-                  <Input value={newCohort.name} onChange={(e) => setNewCohort({...newCohort, name: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-bold italic" />
+                  <Input value={newCohort.name} onChange={(e) => setNewCohort({...newCohort, name: e.target.value})} className="h-10 rounded-xl bg-muted/30 border-none font-bold italic text-sm" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Meta Pedagógica</Label>
-                  <Input value={newCohort.description} onChange={(e) => setNewCohort({...newCohort, description: e.target.value})} className="h-14 rounded-xl bg-muted/30 border-none font-medium italic" />
+                  <Input value={newCohort.description} onChange={(e) => setNewCohort({...newCohort, description: e.target.value})} className="h-10 rounded-xl bg-muted/30 border-none font-medium italic text-sm" />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreateCohort} disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl">
-                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : "Registrar Turma"}
+                <Button onClick={handleCreateCohort} disabled={isSubmitting} className="w-full h-12 bg-primary text-white font-black rounded-xl shadow-xl text-base">
+                  {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Registrar Turma"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -525,25 +525,25 @@ export default function AdminStudentsPage() {
                             <Settings2 className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="rounded-[2.5rem] p-10 bg-white max-sm border-none shadow-2xl">
+                        <DialogContent className="rounded-[2rem] p-6 bg-white max-w-sm border-none shadow-2xl">
                           <DialogHeader>
-                            <DialogTitle className="text-xl font-black italic text-primary">Alterar Polo / Fórum</DialogTitle>
+                            <DialogTitle className="text-lg font-black italic text-primary">Alterar Polo / Fórum</DialogTitle>
                             <DialogDescription className="text-xs italic">Isso moverá o aluno para a nova comunidade do polo instantaneamente.</DialogDescription>
                           </DialogHeader>
-                          <div className="py-6 space-y-4">
-                            <div className="space-y-2">
+                          <div className="py-4 space-y-3">
+                            <div className="space-y-1.5">
                               <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Nova Instituição (Polo)</Label>
-                              <Input value={newInstitution} onChange={(e) => setNewInstitution(e.target.value)} placeholder="Ex: ETEC Jorge Street" className="h-14 rounded-xl bg-muted/30 border-none font-bold italic" />
+                              <Input value={newInstitution} onChange={(e) => setNewInstitution(e.target.value)} placeholder="Ex: ETEC Jorge Street" className="h-10 rounded-xl bg-muted/30 border-none font-bold italic text-sm" />
                             </div>
-                            <div className="bg-accent/5 p-4 rounded-xl border border-accent/10 flex items-start gap-3">
+                            <div className="bg-accent/5 p-3 rounded-xl border border-accent/10 flex items-start gap-2">
                               <Sparkles className="h-4 w-4 text-accent mt-0.5 shrink-0" />
                               <p className="text-[10px] font-medium italic text-primary/70 leading-relaxed">
-                                A Aurora criará o fórum do polo se ele ainda não existir.
+                                A Aurora criará o fórum do polo se não existir.
                               </p>
                             </div>
                           </div>
                           <DialogFooter>
-                            <Button onClick={handleUpdateStudentForum} disabled={isSubmitting} className="w-full h-14 bg-primary text-white font-black rounded-xl shadow-xl">
+                            <Button onClick={handleUpdateStudentForum} disabled={isSubmitting} className="w-full h-10 bg-primary text-white font-black rounded-xl shadow-xl text-xs">
                               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Transferir e Sincronizar"}
                             </Button>
                           </DialogFooter>

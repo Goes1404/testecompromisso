@@ -738,19 +738,19 @@ export default function TrailManagementPage() {
 
       {/* DIÁLOGO EDITAR TRILHA */}
       <Dialog open={isEditTrailDialogOpen} onOpenChange={setIsEditTrailDialogOpen}>
-        <DialogContent className='rounded-2xl md:rounded-3xl p-6 md:p-8 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-xl max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='rounded-2xl md:rounded-3xl p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-xl max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
-            <DialogTitle className='text-lg md:text-xl font-black italic text-primary'>Editar Rótulo da Trilha</DialogTitle>
+            <DialogTitle className='text-base md:text-xl font-black italic text-primary'>Editar Rótulo</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 md:gap-5 py-2 md:py-4">
-            <div className="space-y-2">
+          <div className="grid gap-3 py-2">
+            <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Título Principal</Label>
-              <Input placeholder="Ex: Fundamentos de Redação" className="h-11 rounded-xl bg-muted/30 border-none font-bold" value={editTrailForm.title} onChange={(e) => setEditTrailForm({ ...editTrailForm, title: e.target.value })} disabled={isSubmitting} />
+              <Input placeholder="Ex: Fundamentos de Redação" className="h-10 rounded-xl bg-muted/30 border-none font-bold" value={editTrailForm.title} onChange={(e) => setEditTrailForm({ ...editTrailForm, title: e.target.value })} disabled={isSubmitting} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Matéria Central</Label>
               <Select value={editTrailForm.category} onValueChange={(v) => setEditTrailForm({ ...editTrailForm, category: v })} disabled={isSubmitting}>
-                <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-none font-bold">
+                <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold">
                   <SelectValue placeholder="Selecione a disciplina" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-none shadow-xl max-h-60">
@@ -760,13 +760,13 @@ export default function TrailManagementPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Breve Descrição</Label>
-              <Textarea placeholder="Qual o propósito deste conjunto de módulos?" className="min-h-[80px] md:min-h-[100px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={editTrailForm.description} onChange={(e) => setEditTrailForm({ ...editTrailForm, description: e.target.value })} disabled={isSubmitting} />
+              <Textarea placeholder="Qual o propósito deste conjunto de módulos?" className="min-h-[60px] md:min-h-[60px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={editTrailForm.description} onChange={(e) => setEditTrailForm({ ...editTrailForm, description: e.target.value })} disabled={isSubmitting} />
             </div>
           </div>
-          <DialogFooter className="mt-2 md:mt-0">
-            <Button onClick={handleUpdateTrail} disabled={isSubmitting || !editTrailForm.title} className="w-full h-12 md:h-12 bg-primary text-white font-black text-sm md:text-base rounded-xl shadow-lg">
+          <DialogFooter className="mt-2 text-center items-center justify-center">
+            <Button onClick={handleUpdateTrail} disabled={isSubmitting || !editTrailForm.title} className="w-full h-10 md:h-12 bg-primary text-white font-black text-sm md:text-base rounded-xl shadow-lg">
               {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Salvar Alterações
             </Button>
@@ -776,13 +776,13 @@ export default function TrailManagementPage() {
 
       {/* DIÁLOGO MÓDULO */}
       <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
-        <DialogContent className='rounded-2xl md:rounded-3xl p-6 md:p-8 bg-white border-none shadow-xl w-[95vw] sm:w-full max-w-sm mx-auto'>
+        <DialogContent className='rounded-2xl md:rounded-3xl p-5 md:p-6 bg-white border-none shadow-xl w-[95vw] sm:w-full max-w-sm mx-auto'>
           <DialogHeader>
             <DialogTitle className='text-lg md:text-xl font-black italic text-primary'>
               Novo Capítulo
             </DialogTitle>
           </DialogHeader>
-          <div className='py-4 space-y-2'>
+          <div className='py-2 space-y-2'>
             <Label className='text-[10px] font-black uppercase tracking-widest opacity-40 ml-2'>
               Título da Unidade Didática
             </Label>
@@ -791,17 +791,17 @@ export default function TrailManagementPage() {
               value={moduleForm.title}
               onChange={(e) => setModuleForm({ title: e.target.value || '' })}
               disabled={isSubmitting}
-              className='h-11 rounded-xl bg-muted/30 border-none font-bold italic text-base focus:ring-accent'
+              className='h-10 rounded-xl bg-muted/30 border-none font-bold italic text-sm focus:ring-accent'
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-2">
             <Button
               onClick={handleAddModule}
               disabled={isSubmitting || !moduleForm.title}
-              className='w-full h-12 bg-primary text-white font-black rounded-xl shadow-lg'
+              className='w-full h-10 bg-primary text-white font-black rounded-xl shadow-lg text-sm'
             >
               {isSubmitting ? (
-                <Loader2 className='h-5 w-5 animate-spin mr-2' />
+                <Loader2 className='h-4 w-4 animate-spin mr-2' />
               ) : (
                 'Criar Unidade'
               )}
@@ -840,31 +840,54 @@ export default function TrailManagementPage() {
 
             <ScrollArea className="flex-1 overflow-auto">
               <div className={`grid grid-cols-1 ${editingContentId ? '' : 'lg:grid-cols-2'} gap-0 h-full`}>
-                {/* FORMULÁRIO DE ENTRADA */}
-                <div className={`p-6 md:p-8 space-y-5 ${editingContentId ? '' : 'border-r border-dashed border-muted/20'} bg-slate-50/50`}>
-                  <div className='space-y-4'>
-                    <div className='space-y-1.5'>
-                      <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
-                        Categoria do Item
-                      </Label>
-                      <Select
-                        value={contentForm.type}
-                        onValueChange={(v) =>
-                          setContentForm((prev) => ({ ...prev, type: v }))
-                        }
-                        disabled={isSubmitting || uploading}
-                      >
-                        <SelectTrigger className='h-11 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary'>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className='rounded-xl border-none shadow-xl p-2'>
-                          <SelectItem value='video' className='py-2 font-bold'>🎞️ Videoaula Youtube</SelectItem>
-                          <SelectItem value='quiz' className='py-2 font-bold'>🧠 Quiz Interativo</SelectItem>
-                          <SelectItem value='pdf' className='py-2 font-bold'>📄 Documento PDF</SelectItem>
-                          <SelectItem value='text' className='py-2 font-bold'>📝 Conteúdo em Texto</SelectItem>
-                          <SelectItem value='file' className='py-2 font-bold'>📎 Anexo Geral</SelectItem>
-                        </SelectContent>
-                      </Select>
+                <div className={`p-4 md:p-6 space-y-4 ${editingContentId ? '' : 'border-r border-dashed border-muted/20'} bg-slate-50/50`}>
+                  <div className='space-y-3'>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className='space-y-1.5'>
+                        <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
+                          Categoria
+                        </Label>
+                        <Select
+                          value={contentForm.type}
+                          onValueChange={(v) =>
+                            setContentForm((prev) => ({ ...prev, type: v }))
+                          }
+                          disabled={isSubmitting || uploading}
+                        >
+                          <SelectTrigger className='h-10 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary text-xs'>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className='rounded-xl border-none shadow-xl p-2'>
+                            <SelectItem value='video' className='py-2 font-bold'>🎞️ Videoaula</SelectItem>
+                            <SelectItem value='quiz' className='py-2 font-bold'>🧠 Quiz</SelectItem>
+                            <SelectItem value='pdf' className='py-2 font-bold'>📄 PDF</SelectItem>
+                            <SelectItem value='text' className='py-2 font-bold'>📝 Texto</SelectItem>
+                            <SelectItem value='file' className='py-2 font-bold'>📎 Anexo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className='space-y-1.5'>
+                        <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2 flex items-center gap-2'>
+                          Apostila
+                        </Label>
+                        <Select
+                          value={contentForm.workbook_id}
+                          onValueChange={(v) =>
+                            setContentForm((prev) => ({ ...prev, workbook_id: v }))
+                          }
+                          disabled={isSubmitting || uploading}
+                        >
+                          <SelectTrigger className='h-10 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary text-xs'>
+                            <SelectValue placeholder="Nenhuma" />
+                          </SelectTrigger>
+                          <SelectContent className='rounded-xl border-none shadow-xl p-2 max-h-40'>
+                            <SelectItem value="none" className='py-2 font-bold'>Sem Apostila</SelectItem>
+                            {libraryResources.map(res => (
+                              <SelectItem key={res.id} value={res.id} className='py-2 font-bold'>📚 {res.title}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <div className='space-y-1.5'>
@@ -878,37 +901,14 @@ export default function TrailManagementPage() {
                           setContentForm((prev) => ({ ...prev, title: e.target.value || '' }))
                         }
                         disabled={isSubmitting || uploading}
-                        className='h-11 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary'
+                        className='h-10 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary text-sm'
                       />
-                    </div>
-
-                    <div className='space-y-1.5'>
-                      <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2 flex items-center gap-2'>
-                        <BookOpen className='h-3 w-3 text-accent' /> Vincular Apostila Interativa
-                      </Label>
-                      <Select
-                        value={contentForm.workbook_id}
-                        onValueChange={(v) =>
-                          setContentForm((prev) => ({ ...prev, workbook_id: v }))
-                        }
-                        disabled={isSubmitting || uploading}
-                      >
-                        <SelectTrigger className='h-11 rounded-xl bg-white border-none shadow-sm font-bold italic text-primary'>
-                          <SelectValue placeholder="Nenhuma apostila selecionada" />
-                        </SelectTrigger>
-                        <SelectContent className='rounded-xl border-none shadow-xl p-2'>
-                          <SelectItem value="none" className='py-2 font-bold'>Sem Apostila</SelectItem>
-                          {libraryResources.map(res => (
-                            <SelectItem key={res.id} value={res.id} className='py-2 font-bold'>📚 {res.category}: {res.title}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
 
                     {contentForm.type === 'file' || contentForm.type === 'pdf' ? (
                       <div className='space-y-1.5'>
                         <Label className='text-[10px] font-black uppercase tracking-widest text-primary/40 px-2'>
-                          Upload de Arquivo {editingContentId && '(Deixe vazio p/ não alterar)'}
+                          Upload {editingContentId && '(Vazio = Manter)'}
                         </Label>
                         <div className="relative group">
                           <Input
@@ -917,7 +917,7 @@ export default function TrailManagementPage() {
                             accept={contentForm.type === 'pdf' ? '.pdf' : '*'}
                             onChange={(e) => setFile(e.target.files?.[0] || null)}
                             disabled={isSubmitting || uploading}
-                            className='h-11 rounded-xl bg-white border-2 border-dashed border-muted/30 p-1.5 cursor-pointer transition-all hover:border-accent file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white text-xs'
+                            className='h-10 rounded-xl bg-white border-2 border-dashed border-muted/30 p-1.5 cursor-pointer transition-all hover:border-accent file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white text-[10px]'
                           />
                           <FileUp className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-30 group-hover:opacity-100 transition-opacity" />
                         </div>
@@ -935,7 +935,7 @@ export default function TrailManagementPage() {
                               setContentForm((prev) => ({ ...prev, url: e.target.value || '' }))
                             }
                             disabled={isSubmitting || uploading}
-                            className='h-11 rounded-xl bg-white border-none shadow-sm font-medium italic text-primary pl-10'
+                            className='h-10 rounded-xl bg-white border-none shadow-sm font-medium italic text-primary pl-10 text-sm'
                           />
                           <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent opacity-40" />
                         </div>
@@ -956,7 +956,7 @@ export default function TrailManagementPage() {
                           }))
                         }
                         disabled={isSubmitting || uploading}
-                        className='h-20 rounded-xl bg-white border-none shadow-sm font-medium italic resize-none text-xs p-3'
+                        className='min-h-[50px] md:min-h-[50px] rounded-xl bg-white border-none shadow-sm font-medium italic resize-none text-xs p-3'
                       />
                     </div>
 
@@ -964,7 +964,7 @@ export default function TrailManagementPage() {
                       <Button
                         onClick={addToQueue}
                         disabled={isSubmitting || uploading || !contentForm.title || ((contentForm.type === 'file' || contentForm.type === 'pdf') && !file)}
-                        className='w-full h-12 rounded-xl bg-accent text-accent-foreground font-black uppercase text-[10px] tracking-widest gap-2 shadow-md hover:scale-105 active:scale-95 transition-all'
+                        className='w-full h-10 rounded-xl bg-accent text-accent-foreground font-black uppercase text-[10px] tracking-widest gap-2 shadow-md hover:scale-105 active:scale-95 transition-all mt-2'
                       >
                         {uploading ? (
                           <Loader2 className='h-4 w-4 animate-spin' />
@@ -977,20 +977,19 @@ export default function TrailManagementPage() {
                   </div>
                 </div>
 
-                {/* FILA DE REVISÃO (Só aparece se não estiver editando) */}
                 {!editingContentId && (
-                  <div className='p-6 md:p-8 space-y-6 bg-white'>
+                  <div className='p-4 md:p-6 space-y-4 bg-white'>
                     <div className="flex items-center justify-between">
                       <h3 className='text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 flex items-center gap-2'>
                         <Layers className='h-4 w-4 text-accent' /> 
-                        Fila de Publicação
+                        Fila
                       </h3>
                       <Badge className="bg-primary/5 text-primary border-none font-bold text-[10px] px-2">
-                        {pendingItems.length} ITENS
+                        {pendingItems.length}
                       </Badge>
                     </div>
 
-                    <div className='space-y-3 min-h-[200px]'>
+                    <div className='space-y-2 min-h-[150px]'>
                       {pendingItems.length === 0 ? (
                         <div className='h-full min-h-[200px] flex flex-col items-center justify-center text-center opacity-30 border-2 border-dashed rounded-3xl bg-muted/5 gap-3'>
                           <Layout className='h-12 w-12 text-primary' />

@@ -227,95 +227,95 @@ export default function QuestionBankPage() {
             <QuestionsDashboard />
 
             <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b border-dashed p-8 md:p-12">
+                <CardHeader className="bg-slate-50/50 border-b border-dashed p-6">
                     <div className="flex flex-wrap bg-white/80 backdrop-blur-sm p-1.5 rounded-2xl border w-fit mx-auto md:mx-0 shadow-sm">
-                        <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => {setEntryMode('bulk'); setExtractedQuestions([]);}} className={`rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6 ${entryMode === 'bulk' ? 'bg-primary text-white shadow-lg' : ''}`}>
+                        <Button variant={entryMode === 'bulk' ? 'default' : 'ghost'} onClick={() => {setEntryMode('bulk'); setExtractedQuestions([]);}} className={`rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-6 ${entryMode === 'bulk' ? 'bg-primary text-white shadow-lg' : ''}`}>
                             <ListChecks className="h-4 w-4 mr-2"/> Carga em Massa
                         </Button>
-                        <Button variant={entryMode === 'manual' ? 'default' : 'ghost'} onClick={() => setEntryMode('manual')} className={`rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6 ${entryMode === 'manual' ? 'bg-primary text-white shadow-lg' : ''}`}>
+                        <Button variant={entryMode === 'manual' ? 'default' : 'ghost'} onClick={() => setEntryMode('manual')} className={`rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-6 ${entryMode === 'manual' ? 'bg-primary text-white shadow-lg' : ''}`}>
                             <PlusCircle className="h-4 w-4 mr-2"/> Manual
                         </Button>
                     </div>
                 </CardHeader>
                 
-                <CardContent className="p-8 md:p-12">
+                <CardContent className="p-6">
                     {entryMode === 'bulk' && (
-                        <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                        <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Texto Bruto da Prova</Label>
                                 <Textarea 
                                     placeholder="Cole aqui o texto copiado de um PDF ou documento..." 
-                                    className="min-h-[300px] rounded-[2rem] bg-muted/30 border-none p-8 font-medium text-sm leading-relaxed italic" 
+                                    className="min-h-[150px] rounded-2xl bg-muted/30 border-none p-4 font-medium text-sm leading-relaxed italic" 
                                     value={rawText} 
                                     onChange={(e) => setRawText(e.target.value)} 
                                 />
                             </div>
-                            <Button onClick={handleAnalyzeBulk} disabled={isAnalyzing || !rawText.trim()} className="w-full h-16 rounded-2xl bg-primary text-white font-black text-lg shadow-xl hover:scale-[1.02] transition-all active:scale-95">
-                                {isAnalyzing ? <><Loader2 className="h-6 w-6 animate-spin mr-2" /> Analisando com Aurora IA...</> : <><BrainCircuit className="h-6 w-6 mr-2" /> Extrair Questões com Aurora IA</>}
+                            <Button onClick={handleAnalyzeBulk} disabled={isAnalyzing || !rawText.trim()} className="w-full h-12 rounded-2xl bg-primary text-white font-black text-base shadow-xl hover:scale-[1.02] transition-all active:scale-95 mt-2">
+                                {isAnalyzing ? <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Analisando com Aurora IA...</> : <><BrainCircuit className="h-5 w-5 mr-2" /> Extrair Questões com Aurora IA</>}
                             </Button>
                         </div>
                     )}
 
                     {entryMode === 'manual' && (
-                        <div className="space-y-8 animate-in slide-in-from-top-4 duration-500">
-                            <div className="space-y-4">
+                        <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                            <div className="space-y-1.5">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Enunciado da Questão</Label>
-                                <Textarea placeholder="Digite o texto da pergunta..." className="rounded-[1.5rem] bg-muted/30 border-none min-h-[150px] p-6 font-medium italic" value={manualQuestion.question_text} onChange={e => setManualQuestion(prev => ({...prev, question_text: e.target.value}))} />
+                                <Textarea placeholder="Digite o texto da pergunta..." className="rounded-2xl bg-muted/30 border-none min-h-[80px] p-4 font-medium italic text-sm" value={manualQuestion.question_text} onChange={e => setManualQuestion(prev => ({...prev, question_text: e.target.value}))} />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {['A', 'B', 'C', 'D', 'E'].map(key => (
-                                    <div key={key} className="space-y-2">
-                                        <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Opção {key}</Label>
-                                        <Input placeholder={`Texto da alternativa ${key}...`} className="h-14 rounded-2xl bg-muted/30 border-none font-medium pl-6" value={manualOptions[key as keyof typeof manualOptions]} onChange={e => setManualOptions(prev => ({...prev, [key]: e.target.value}))} />
+                                    <div key={key} className="space-y-1.5">
+                                        <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Opção {key}</Label>
+                                        <Input placeholder={`Texto da alternativa ${key}...`} className="h-10 rounded-xl bg-muted/30 border-none font-medium pl-4 text-sm" value={manualOptions[key as keyof typeof manualOptions]} onChange={e => setManualOptions(prev => ({...prev, [key]: e.target.value}))} />
                                     </div>
                                 ))}
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
-                                <div className="space-y-2">
-                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Gabarito</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Gabarito</Label>
                                     <Select value={manualQuestion.correct_answer} onValueChange={val => setManualQuestion(prev => ({...prev, correct_answer: val}))}>
-                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                                        <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-2xl">
                                             {['A', 'B', 'C', 'D', 'E'].map(key => <SelectItem key={key} value={key} className="font-bold">Alternativa {key}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Disciplina</Label>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Disciplina</Label>
                                     <Select value={manualQuestion.subject_id} onValueChange={val => setManualQuestion(prev => ({...prev, subject_id: val}))}>
-                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue placeholder="Matéria" /></SelectTrigger>
+                                        <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold text-sm"><SelectValue placeholder="Matéria" /></SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-2xl">
-                                            {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold">{s.name}</SelectItem>)}
+                                            {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-sm">{s.name}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Público Alvo</Label>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Público Alvo</Label>
                                     <Select value={manualQuestion.target_audience} onValueChange={val => setManualQuestion(prev => ({...prev, target_audience: val}))}>
-                                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue placeholder="Turma" /></SelectTrigger>
+                                        <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold text-sm"><SelectValue placeholder="Turma" /></SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-2xl">
-                                            <SelectItem value="all" className="font-bold">Todos (Geral)</SelectItem>
-                                            <SelectItem value="etec" className="font-bold border-l-4 border-l-blue-500">Foco ETEC / FATEC</SelectItem>
-                                            <SelectItem value="enem" className="font-bold border-l-4 border-l-amber-500">Foco ENEM</SelectItem>
+                                            <SelectItem value="all" className="font-bold text-sm">Todos (Geral)</SelectItem>
+                                            <SelectItem value="etec" className="font-bold text-sm border-l-4 border-l-blue-500">Foco ETEC / FATEC</SelectItem>
+                                            <SelectItem value="enem" className="font-bold text-sm border-l-4 border-l-amber-500">Foco ENEM</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-4">Ano Referência</Label>
-                                    <Input type="number" className="h-14 rounded-2xl bg-muted/30 border-none font-black text-center" value={manualQuestion.year} onChange={e => setManualQuestion(prev => ({...prev, year: parseInt(e.target.value, 10)}))} />
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Ano Referência</Label>
+                                    <Input type="number" className="h-10 rounded-xl bg-muted/30 border-none font-black text-center text-sm" value={manualQuestion.year} onChange={e => setManualQuestion(prev => ({...prev, year: parseInt(e.target.value, 10)}))} />
                                 </div>
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Explicação Pedagógica (Opcional)</Label>
                                 <Textarea 
                                     placeholder="Justifique a resposta correta para auxiliar o estudo do aluno..." 
-                                    className="rounded-[1.5rem] bg-muted/30 border-none min-h-[100px] p-6 font-medium italic" 
+                                    className="rounded-2xl bg-muted/30 border-none min-h-[60px] p-4 font-medium italic text-sm" 
                                     value={(manualQuestion as any).explanation || ''} 
                                     onChange={e => setManualQuestion(prev => ({...prev, explanation: e.target.value} as any))} 
                                 />
                             </div>
-                            <Button onClick={handleSaveSingle} disabled={isSaving || !manualQuestion.question_text} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl transition-all active:scale-95">
-                                {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Save className="h-6 w-6 mr-2" />}
+                            <Button onClick={handleSaveSingle} disabled={isSaving || !manualQuestion.question_text} className="w-full h-12 bg-primary text-white font-black text-base rounded-2xl shadow-xl transition-all active:scale-95 mt-2">
+                                {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />}
                                 Salvar no Repositório
                             </Button>
                         </div>

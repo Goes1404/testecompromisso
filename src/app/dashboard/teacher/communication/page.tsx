@@ -205,39 +205,39 @@ export default function CommunicationPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
-            <CardHeader className="bg-primary/5 p-8 border-b border-dashed">
+            <CardHeader className="bg-primary/5 p-6 border-b border-dashed">
               <CardTitle className="flex items-center gap-3 italic">
                 <PlusCircle className="h-6 w-6 text-accent" />
                 <span className="text-xl font-black text-primary uppercase tracking-tight">Nova Mensagem</span>
               </CardTitle>
               <CardDescription className="italic font-medium">Configure o alerta para a rede.</CardDescription>
             </CardHeader>
-            <CardContent className="p-8 space-y-5">
-              <div className="space-y-2">
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Assunto Principal</label>
                 <Input 
                   value={formData.title} 
                   onChange={(e) => setFormData({...formData, title: e.target.value})} 
                   placeholder="Título do aviso..." 
-                  className="h-12 bg-muted/30 border-none rounded-xl font-bold italic" 
+                  className="h-10 bg-muted/30 border-none rounded-xl font-bold italic text-sm" 
                 />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Corpo do Alerta</label>
                 <Textarea 
                   value={formData.message} 
                   onChange={(e) => setFormData({...formData, message: e.target.value})} 
                   placeholder="Escreva os detalhes aqui..." 
-                  className="rounded-2xl min-h-[120px] bg-muted/30 border-none font-medium text-sm italic" 
+                  className="rounded-2xl min-h-[80px] bg-muted/30 border-none font-medium text-sm italic py-2" 
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Prioridade</label>
                   <Select value={formData.priority} onValueChange={(v: any) => setFormData({...formData, priority: v})}>
-                    <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl font-bold italic">
+                    <SelectTrigger className="h-10 bg-muted/30 border-none rounded-xl font-bold italic text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -247,19 +247,19 @@ export default function CommunicationPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">Público Alvo</label>
                   <Select value={formData.target_group} onValueChange={(v) => setFormData({...formData, target_group: v})}>
-                    <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl font-bold italic">
+                    <SelectTrigger className="h-10 bg-muted/30 border-none rounded-xl font-bold italic text-sm">
                       <SelectValue placeholder="Selecione o alvo" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-none shadow-2xl max-h-80">
+                    <SelectContent className="rounded-xl border-none shadow-2xl max-h-60">
                       <SelectGroup>
                         <SelectLabel className="text-[9px] font-black uppercase opacity-40 px-2 pt-2">Geral</SelectLabel>
                         <SelectItem value="all" className="font-bold italic">Toda a Rede</SelectItem>
                         <SelectItem value="etec" className="font-bold italic">Alunos ETEC</SelectItem>
                         <SelectItem value="enem" className="font-bold italic">Alunos ENEM</SelectItem>
-                        <SelectItem value="teacher" className="font-bold italic">Apenas Staff</SelectItem>
+                        <SelectItem value="teacher" className="font-bold italic">Staff</SelectItem>
                       </SelectGroup>
                       
                       {cohorts.length > 0 && (
@@ -277,8 +277,8 @@ export default function CommunicationPage() {
                 </div>
               </div>
 
-              <Button onClick={() => handleCreateAnnouncement()} disabled={isCreating || !formData.title.trim()} className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 text-lg mt-4">
-                {isCreating ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Sparkles className="mr-2 h-6 w-6 text-accent" />} 
+              <Button onClick={() => handleCreateAnnouncement()} disabled={isCreating || !formData.title.trim()} className="w-full h-12 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 text-base mt-2">
+                {isCreating ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5 text-accent" />} 
                 {isCreating ? "Publicando..." : "Fixar Comunicado"}
               </Button>
             </CardContent>

@@ -178,78 +178,76 @@ export default function LibraryManagementPage() {
               <Plus className="h-6 w-6 mr-2" /> Nova Apostila
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 bg-white w-[95vw] sm:w-full max-w-lg max-h-[90vh] overflow-y-auto border-none shadow-2xl">
+          <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black italic text-primary">Configurar Apostila</DialogTitle>
+              <DialogTitle className="text-xl font-black italic text-primary">Configurar Apostila</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
+            <div className="grid gap-3 py-2">
+              <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase opacity-40">Título</Label>
-                <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Guia de Trigonometria" className="h-12 rounded-xl bg-muted/30 border-none font-bold" />
+                <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Guia de Trigonometria" className="h-10 rounded-xl bg-muted/30 border-none font-bold" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40">Categoria</Label>
                   <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v})}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
                     <SelectContent>{EDUCATIONAL_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black uppercase opacity-40">Tipo</Label>
+                  <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
+                    <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
+                    <SelectContent>{RESOURCE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Tipo</Label>
-                    <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
-                      <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent>{RESOURCE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Público-Alvo</Label>
-                    <Select value={formData.target_audience} onValueChange={v => setFormData({...formData, target_audience: v})}>
-                      <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
-                        <SelectValue placeholder="Todos os Alunos" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
-                        <SelectItem value="all">Todos os Alunos</SelectItem>
-                        <SelectItem value="etec">Apenas Turma ETEC</SelectItem>
-                        <SelectItem value="enem">Apenas Turma ENEM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              <div className="space-y-2">
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase opacity-40">Público-Alvo</Label>
+                <Select value={formData.target_audience} onValueChange={v => setFormData({...formData, target_audience: v})}>
+                  <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold">
+                    <SelectValue placeholder="Todos os Alunos" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectItem value="all">Todos os Alunos</SelectItem>
+                    <SelectItem value="etec">Apenas Turma ETEC</SelectItem>
+                    <SelectItem value="enem">Apenas Turma ENEM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase opacity-40">Arquivo a ser enviado (Ou Link Externo)</Label>
                 <div className="flex flex-col gap-2">
                   <Input 
                     type="file" 
                     accept={formData.type === 'PDF' ? '.pdf' : '*'} 
                     onChange={e => setFile(e.target.files?.[0] || null)} 
-                    className="h-14 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-accent p-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white"
+                    className="h-10 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-accent p-1.5 file:mr-4 file:py-1 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white"
                   />
                   {!file && (
                     <Input 
                       value={formData.url} 
                       onChange={e => setFormData({...formData, url: e.target.value})} 
                       placeholder="Ou cole a URL..." 
-                      className="h-12 rounded-xl bg-muted/30 border-none font-medium text-xs mt-2" 
+                      className="h-10 rounded-xl bg-muted/30 border-none font-medium text-xs mt-1" 
                     />
                   )}
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase opacity-40">Capa (Opcional - URL)</Label>
-                <Input value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." className="h-12 rounded-xl bg-muted/30 border-none font-medium" />
+                <Input value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." className="h-10 rounded-xl bg-muted/30 border-none font-medium" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase opacity-40">Resumo Pedagógico</Label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descrição breve para o aluno..." className="min-h-[80px] w-full rounded-xl bg-muted/30 border-none px-3 py-2 text-sm font-medium resize-none" />
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descrição breve para o aluno..." className="min-h-[50px] w-full rounded-xl bg-muted/30 border-none px-3 py-2 text-sm font-medium resize-none" />
               </div>
             </div>
-            <DialogFooter>
-              <Button onClick={handleSave} disabled={isSubmitting || uploading} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl">
-                {(isSubmitting || uploading) ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
-                {uploading ? "Enviando arquivo..." : (editingId ? "Atualizar Apostila" : "Publicar Apostila")}
+            <DialogFooter className="mt-2">
+              <Button onClick={handleSave} disabled={isSubmitting || uploading} className="w-full h-12 bg-primary text-white font-black text-base rounded-2xl shadow-xl">
+                {(isSubmitting || uploading) ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
+                {uploading ? "Enviando arquivo..." : (editingId ? "Atualizar" : "Publicar Apostila")}
               </Button>
             </DialogFooter>
           </DialogContent>
