@@ -139,8 +139,14 @@ export default function LandingPage() {
             </div>
           </nav>
 
-          <button className={`md:hidden p-2 rounded-lg ${scrolled ? 'bg-primary/20 text-white md:text-gray-950' : 'bg-white/10'}`} onClick={() => setMobileMenuOpen(true)}>
-            <Menu className={`h-6 w-6 ${scrolled ? 'text-white md:text-gray-900' : 'text-white'}`} />
+          <button 
+            className={`md:hidden flex items-center gap-2 py-2 px-4 rounded-full transition-all active:scale-95 shadow-lg ${
+              scrolled ? 'bg-primary text-white shadow-primary/30 border-none' : 'bg-white/10 text-white backdrop-blur-md border border-white/20'
+            }`} 
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <span className="text-[11px] font-black uppercase tracking-widest pt-0.5">Menu</span>
+            <Menu className="h-5 w-5" />
           </button>
         </div>
       </header>
@@ -148,9 +154,15 @@ export default function LandingPage() {
       {/* MOBILE MENU */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[110] bg-white animate-in slide-in-from-right duration-500 md:hidden">
-          <div className="p-8 flex justify-between items-center border-b">
-            <span className="text-2xl font-black text-primary">Compromisso</span>
-            <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-gray-50 rounded-full text-gray-400"><X className="h-6 w-6" /></button>
+          <div className="p-8 flex justify-between items-center border-b border-gray-100">
+            <span className="text-2xl font-black text-primary italic uppercase tracking-tighter">Compromisso</span>
+            <button 
+              onClick={() => setMobileMenuOpen(false)} 
+              className="flex items-center gap-2 py-2 px-4 bg-gray-50 text-gray-400 rounded-full active:scale-95 transition-all text-[11px] font-black uppercase tracking-widest border border-gray-100"
+            >
+              <span>Fechar</span>
+              <X className="h-5 w-5" />
+            </button>
           </div>
           <div className="p-10 space-y-6">
             <a href="#metodologia" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#metodologia')}>Metodologia</a>

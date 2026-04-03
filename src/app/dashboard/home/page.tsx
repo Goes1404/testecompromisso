@@ -247,37 +247,44 @@ export default function DashboardHome() {
       </section>
 
       {/* ── QUICK ACTIONS ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {quickActions.map((action) => (
           <Link key={action.label} href={action.href}>
-            <div className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-4 md:p-5 shadow-xl ${action.shadow} hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 cursor-pointer`}>
-              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl translate-x-4 -translate-y-4 group-hover:scale-150 transition-transform duration-500" />
-              <action.icon className="h-6 w-6 text-white mb-3 relative z-10" />
-              <p className="font-black text-white uppercase text-xs tracking-widest relative z-10">{action.label}</p>
-              <ChevronRight className="absolute bottom-3 right-3 h-4 w-4 text-white/40 group-hover:translate-x-1 transition-transform" />
+            <div className={`group relative overflow-hidden rounded-[2rem] bg-gradient-to-br ${action.color} p-5 md:p-6 shadow-xl ${action.shadow} hover:scale-[1.05] hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 cursor-pointer border border-white/10`}>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-2xl translate-x-6 -translate-y-6 group-hover:scale-150 transition-transform duration-700" />
+              <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 transition-transform group-hover:rotate-6 duration-500 border border-white/10">
+                <action.icon className="h-6 w-6 text-white" />
+              </div>
+              <p className="font-black text-white uppercase text-[11px] tracking-[0.2em] relative z-10">{action.label}</p>
+              <div className="absolute bottom-4 right-4 h-6 w-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
+                <ChevronRight className="h-3 w-3 text-white" />
+              </div>
             </div>
           </Link>
         ))}
-      </div>
 
       {/* ── AURORA INSIGHT ── */}
-      <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/50 to-white p-6 md:p-7 shadow-xl">
-        <div className="absolute right-[-20px] top-[-20px] w-40 h-40 bg-accent/10 rounded-full blur-3xl" />
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 relative z-10">
-          <div className="h-14 w-14 rounded-2xl bg-white shadow-xl flex items-center justify-center shrink-0 border border-accent/10">
-            <Bot className="h-7 w-7 text-accent animate-pulse" />
+      <div className="relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-7 md:p-8 shadow-2xl group">
+        <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-accent/5 rounded-full blur-[80px] group-hover:bg-accent/10 transition-colors duration-1000" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
+          <div className="relative h-16 w-16 shrink-0 group-hover:scale-110 transition-transform duration-500">
+            <div className="h-full w-full rounded-2xl bg-white shadow-xl flex items-center justify-center border border-accent/10">
+              <Bot className="h-8 w-8 text-accent animate-pulse-subtle" />
+            </div>
+            <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Sparkles className="h-3 w-3 text-accent" />
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary">Aurora IA · Insight do Dia</span>
+            <div className="flex items-center gap-2 mb-2 translate-y-1 opacity-0 animate-in fade-in fill-mode-forwards duration-700">
+              <Sparkles className="h-3.5 w-3.5 text-accent" />
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Aurora IA · Mentoria Estratégica</span>
             </div>
-            <p className="text-slate-600 font-medium italic text-sm leading-relaxed">
+            <p className="text-slate-700 font-semibold italic text-base leading-relaxed tracking-tight group-hover:text-black transition-colors">
               "A constância é a chave da aprovação! Revise os erros do último simulado antes de avançar. Estou disponível 24h para corrigir redações."
             </p>
           </div>
-          <Button asChild className="bg-primary text-white font-black rounded-xl shadow-lg border-none hover:scale-105 transition-transform shrink-0 h-10 px-5 text-xs">
-            <Link href="/dashboard/support">Falar com Aurora</Link>
+          <Button asChild className="bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 border-none hover:scale-105 hover:bg-primary-dark transition-all shrink-0 h-14 px-8 text-sm uppercase tracking-widest italic active:scale-95">
+            <Link href="/dashboard/support" className="flex items-center gap-2">
+              Falar com Aurora <ArrowRight className="h-4 w-4" />
+            </Link>
           </Button>
         </div>
       </div>
