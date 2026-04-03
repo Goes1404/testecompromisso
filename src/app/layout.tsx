@@ -16,6 +16,19 @@ export const metadata = {
   title: 'Compromisso | Curso Preparatório ENEM e ETEC em Santana de Parnaíba',
   description: 'O cursinho preparatório de elite em Santana de Parnaíba. Metodologia focada, simulados, correção de redação com IA e mentoria para aprovação no ENEM, ETEC, FATEC e USP.',
   keywords: 'curso preparatório, cursinho enem, pre vestibulinho etec, santana de parnaíba, aprovação, redação enem',
+  appleWebApp: {
+    capable: true,
+    title: "Compromisso",
+    statusBarStyle: "black-translucent"
+  }
+};
+
+export const viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 

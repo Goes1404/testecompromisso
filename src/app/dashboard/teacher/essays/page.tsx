@@ -140,10 +140,10 @@ export default function AssessmentsGraderPage() {
 
       <div className="flex-1 flex flex-col lg:flex-row gap-8 overflow-hidden min-h-0">
         {/* LISTA DE SUBMISSÕES */}
-        <Card className="w-full lg:w-96 shrink-0 border-none shadow-2xl flex flex-col overflow-hidden bg-white rounded-[2.5rem]">
-          <CardHeader className="bg-primary/5 p-6 border-b border-dashed">
-            <CardTitle className="text-sm font-black uppercase tracking-widest text-primary/40 flex items-center gap-2">
-              <ClipboardCheck className="h-4 w-4" /> Fila de Avaliação
+        <Card className="w-full lg:w-96 shrink-0 border border-white/20 shadow-2xl flex flex-col overflow-hidden bg-white/95 backdrop-blur-3xl rounded-[2.5rem]">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent p-6 border-b border-primary/10">
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4 text-accent" /> Fila de Avaliação
             </CardTitle>
           </CardHeader>
           <ScrollArea className="flex-1">
@@ -157,10 +157,11 @@ export default function AssessmentsGraderPage() {
                   <button
                     key={item.id}
                     onClick={() => handleSelectEssay(item)}
-                    className={`p-6 text-left border-b last:border-0 hover:bg-accent/5 transition-all group ${
-                      selectedEssay?.id === item.id ? 'bg-primary/5 border-l-8 border-l-primary' : ''
+                    className={`p-6 text-left border-b border-white/50 last:border-0 hover:bg-slate-50 transition-all group relative overflow-hidden ${
+                      selectedEssay?.id === item.id ? 'bg-primary/5' : ''
                     }`}
                   >
+                    {selectedEssay?.id === item.id && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-r-full" />}
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-black text-primary text-sm italic leading-none truncate max-w-[150px]">{item.profiles?.name}</p>
                       <Badge className={`${item.status === 'reviewed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} border-none font-black text-[7px] uppercase px-2`}>
@@ -182,7 +183,8 @@ export default function AssessmentsGraderPage() {
         </Card>
 
         {/* ÁREA DE VISUALIZAÇÃO E FEEDBACK */}
-        <Card className="flex-1 border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] bg-white flex flex-col overflow-hidden rounded-[3rem] ring-1 ring-black/5">
+        <Card className="flex-1 border border-white/20 shadow-2xl bg-white/95 backdrop-blur-3xl flex flex-col overflow-hidden rounded-[3rem] relative group">
+          <div className="absolute right-[-10%] top-[-10%] w-[300px] h-[300px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
           {selectedEssay ? (
             <div className="flex-1 flex flex-col overflow-hidden">
               <ScrollArea className="flex-1 p-8 md:p-12">
@@ -220,27 +222,27 @@ export default function AssessmentsGraderPage() {
                           <Sparkles className="h-5 w-5 text-accent animate-pulse" />
                         </div>
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Nota Aurora</p>
-                          <p className="text-6xl font-black italic">{selectedEssay.score}</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Nota Aurora</p>
+                          <p className="text-7xl font-black italic drop-shadow-xl">{selectedEssay.score}</p>
                         </div>
-                        <p className="text-xs font-medium italic opacity-80 leading-relaxed">"{selectedEssay.feedback}"</p>
+                        <p className="text-xs font-medium italic opacity-90 leading-relaxed bg-black/10 p-4 rounded-xl border border-white/10">"{selectedEssay.feedback}"</p>
                       </div>
                     </Card>
 
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 px-2 flex items-center gap-2">
-                        <MessageSquare className="h-3 w-3" /> Parecer do Mentor
+                        <MessageSquare className="h-3 w-3 text-accent" /> Parecer do Maestro
                       </Label>
                       <Textarea 
                         value={mentorFeedback}
                         onChange={(e) => setMentorFeedback(e.target.value)}
                         placeholder="Adicione suas notas pedagógicas ou orientações personalizadas para o aluno..."
-                        className="min-h-[180px] rounded-[2rem] bg-slate-50 border-none p-6 font-medium italic text-sm shadow-inner resize-none focus-visible:ring-accent"
+                        className="min-h-[180px] rounded-[2rem] bg-white border border-slate-100 p-6 font-medium italic text-sm shadow-inner resize-none focus-visible:ring-accent transition-all"
                       />
                       <Button 
                         onClick={handleSaveFeedback}
                         disabled={isSaving}
-                        className="w-full h-14 bg-accent text-accent-foreground font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase"
+                        className="w-full h-14 bg-gradient-to-r from-accent to-orange-500 text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest border-none"
                       >
                         {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="h-5 w-5 mr-2" />}
                         Validar Revisão Maestro
