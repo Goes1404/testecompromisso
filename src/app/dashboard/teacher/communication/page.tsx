@@ -108,17 +108,27 @@ export default function CommunicationPage() {
 
     setIsCreating(true);
     try {
-      const { data, error } = await supabase
+      const payload: any = {
+        title: dataToSubmit.title,
+        message: dataToSubmit.message,
+        priority: dataToSubmit.priority,
+        target_group: dataToSubmit.target_group,
+        author_id: user.id
+      };
+
+      let { data, error } = await supabase
         .from('announcements')
-        .insert([{
-          title: dataToSubmit.title,
-          message: dataToSubmit.message,
-          priority: dataToSubmit.priority,
-          target_group: dataToSubmit.target_group,
-          author_id: user.id
-        }])
+        .insert([payload])
         .select()
         .single();
+
+      if (error && (error.code === '42703' || error.message.includes('target_group'))) {
+        console.warn("Coluna target_group ausente. Retentando publicação simplificada.");
+        const { target_group, ...fallbackPayload } = payload;
+        const retry = await supabase.from('announcements').insert([fallbackPayload]).select().single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
 

@@ -18,7 +18,10 @@ export function useTimeTracker(userId: string | undefined) {
           p_user_id: userId,
           p_seconds: INTERVAL_SECONDS
         });
-        if (error) console.error("Erro ao incrementar tempo:", error);
+        
+        if (error && error.code !== 'PGRST202') {
+          console.error("Erro ao incrementar tempo:", error);
+        }
       }
     };
 

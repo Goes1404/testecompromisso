@@ -39,12 +39,24 @@ export function NotificationBell() {
       setLoading(true);
       try {
         // Buscar avisos relevantes (Gerais, por Perfil ou por Turma)
-        const { data, error } = await supabase
-          .from('announcements')
-          .select('*')
-          .or(`target_group.eq.all,target_group.eq.${profile?.profile_type},target_group.eq.${profile?.class_id}`)
-          .order('created_at', { ascending: false })
-          .limit(5);
+        let query = supabase.from('announcements').select('*');
+        
+        // Tentar segmentação se as variáveis de perfil estiverem disponíveis
+        if (profile) {
+          query = query.or(`target_group.eq.all,target_group.eq.${profile?.profile_type},target_group.eq.${profile?.class_id}`);
+        }
+        
+        let { data, error } = await query.order('created_at', { ascending: false }).limit(5);
+
+        if (error && (error.code === '42703' || error.message.includes('target_group'))) {
+          console.warn("Coluna target_group ausente no Mural. Sincronizando todos os avisos.");
+          const fallback = await supabase.from('announcements')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5);
+          data = fallback.data;
+          error = fallback.error;
+        }
 
         if (error) throw error;
         setAnnouncements(data || []);
