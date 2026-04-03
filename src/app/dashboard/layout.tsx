@@ -13,6 +13,7 @@ import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { LoadingShell } from "@/components/LoadingShell";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const studentItems = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
@@ -248,22 +249,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
           <SidebarTrigger className="h-9 w-9 rounded-full hover:bg-muted" />
           <div className="flex-1" />
-          <Link id="header-profile" href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">
-                {profile?.name 
-                  ? (profile.name.trim().split(' ').length > 1 
-                      ? `${profile.name.trim().split(' ')[0]} ${profile.name.trim().split(' ').pop()}` 
-                      : profile.name)
-                  : "Usuário"}
-              </span>
-              <span className="text-[8px] font-black text-accent uppercase tracking-widest">{userRole.toUpperCase()}</span>
-            </div>
-            <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">
-              <AvatarImage src={userAvatar} />
-              <AvatarFallback className="bg-primary text-white text-xs">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-          </Link>
+          <div className="flex items-center gap-3">
+            <NotificationBell />
+            <Link id="header-profile" href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all ml-2">
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">
+                  {profile?.name 
+                    ? (profile.name.trim().split(' ').length > 1 
+                        ? `${profile.name.trim().split(' ')[0]} ${profile.name.trim().split(' ').pop()}` 
+                        : profile.name)
+                    : "Usuário"}
+                </span>
+                <span className="text-[8px] font-black text-accent uppercase tracking-widest">{userRole.toUpperCase()}</span>
+              </div>
+              <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">
+                <AvatarImage src={userAvatar} />
+                <AvatarFallback className="bg-primary text-white text-xs">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
         </header>
         <SwipeHandler>
           <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'}`}>

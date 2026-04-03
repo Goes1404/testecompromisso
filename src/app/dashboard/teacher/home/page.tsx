@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Users, 
   PlayCircle, 
@@ -190,29 +191,31 @@ export default function TeacherHomePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Total Alunos", value: stats.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Apoio Social", value: stats.eligibleStudents, icon: HandHeart, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Minhas Trilhas", value: stats.myTrails, icon: PlayCircle, color: "text-orange-600", bg: "bg-orange-50" },
-          { label: "Alunos em Risco", value: stats.atRisk, icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
+          { label: "Total Alunos", value: stats.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50", href: "/dashboard/teacher/students" },
+          { label: "Apoio Social", value: stats.eligibleStudents, icon: HandHeart, color: "text-green-600", bg: "bg-green-50", href: "/dashboard/teacher/students" },
+          { label: "Minhas Trilhas", value: stats.myTrails, icon: PlayCircle, color: "text-orange-600", bg: "bg-orange-50", href: "/dashboard/teacher/trails" },
+          { label: "Alunos em Risco", value: stats.atRisk, icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", href: "/dashboard/teacher/analytics" },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-xl overflow-hidden group hover:shadow-2xl transition-all rounded-[2rem] bg-white">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between">
-                <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 shadow-inner`}>
-                  <stat.icon className="h-7 w-7" />
+          <Link key={i} href={stat.href} className="block">
+            <Card className="border-none shadow-xl overflow-hidden group hover:shadow-2xl transition-all rounded-[2rem] bg-white cursor-pointer active:scale-[0.98]">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between">
+                  <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 shadow-inner`}>
+                    <stat.icon className="h-7 w-7" />
+                  </div>
+                  <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-widest bg-muted/30 border-none px-2 py-1">Sincronizado</Badge>
                 </div>
-                <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-widest bg-muted/30 border-none px-2 py-1">Sincronizado</Badge>
-              </div>
-              <div className="mt-6">
-                {dataLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground opacity-20" />
-                ) : (
-                  <p className="text-4xl font-black text-primary leading-none italic">{stat.value}</p>
-                )}
-                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-3">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mt-6">
+                  {dataLoading ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground opacity-20" />
+                  ) : (
+                    <p className="text-4xl font-black text-primary leading-none italic">{stat.value}</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-3">{stat.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
@@ -309,19 +312,44 @@ export default function TeacherHomePage() {
                 const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                 const Icon = styles.icon;
                 return (
-                  <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-3 ${styles.bgColor} border ${styles.border} transition-all hover:shadow-md relative overflow-hidden group`}>
-                    {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
-                    <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
-                      <Icon className={`h-4 w-4 ${styles.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
+                  <Dialog key={ann.id}>
+                    <DialogTrigger asChild>
+                      <div className={`p-4 rounded-2xl flex items-start gap-3 ${styles.bgColor} border ${styles.border} transition-all hover:shadow-md relative overflow-hidden group cursor-pointer`}>
+                        {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
+                        <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
+                          <Icon className={`h-4 w-4 ${styles.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
+                          </div>
+                          <p className="text-xs font-black text-slate-900 truncate">{ann.title}</p>
+                          <p className="text-[10px] text-slate-500 font-medium line-clamp-1 italic">{ann.message}</p>
+                        </div>
                       </div>
-                      <p className="text-xs font-black text-slate-900 truncate">{ann.title}</p>
-                      <p className="text-[10px] text-slate-500 font-medium line-clamp-1 italic">{ann.message}</p>
-                    </div>
-                  </div>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md rounded-[2rem] border-white/20 shadow-2xl p-6">
+                      <DialogHeader className="mb-1 text-left">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${styles.bgColor} border ${styles.border}`}>
+                            <Icon className={`h-7 w-7 ${styles.color}`} />
+                          </div>
+                          <div>
+                            <DialogTitle className="text-xl font-black text-primary italic leading-tight">{ann.title}</DialogTitle>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>
+                                {styles.label}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400">Canal Docente</span>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogHeader>
+                      <DialogDescription className="text-sm text-slate-700 leading-relaxed font-medium bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        {ann.message}
+                      </DialogDescription>
+                    </DialogContent>
+                  </Dialog>
                 );
               })}
               <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors">

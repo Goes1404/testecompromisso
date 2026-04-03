@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
   Library,
@@ -298,20 +299,23 @@ export default function DashboardHome() {
       </section>
 
       {/* ── QUICK ACTIONS ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {quickActions.map((action) => (
           <Link key={action.label} href={action.href}>
-            <div className={`group relative overflow-hidden rounded-[2rem] bg-gradient-to-br ${action.color} p-5 md:p-6 shadow-xl ${action.shadow} hover:scale-[1.05] hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 cursor-pointer border border-white/10`}>
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-2xl translate-x-6 -translate-y-6 group-hover:scale-150 transition-transform duration-700" />
-              <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 transition-transform group-hover:rotate-6 duration-500 border border-white/10">
-                <action.icon className="h-6 w-6 text-white" />
-              </div>
-              <p className="font-black text-white uppercase text-[11px] tracking-[0.2em] relative z-10">{action.label}</p>
-              <div className="absolute bottom-4 right-4 h-6 w-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-                <ChevronRight className="h-3 w-3 text-white" />
+            <div className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-4 md:p-5 shadow-lg ${action.shadow} hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer`}>
+              <div className="flex flex-col h-[76px] justify-between">
+                <div>
+                  <action.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
+                </div>
+                <div className="flex items-center justify-between w-full">
+                  <p className="font-extrabold text-white uppercase text-[11px] tracking-wider">{action.label}</p>
+                  <ChevronRight className="h-4 w-4 text-white/60 group-hover:translate-x-0.5 group-hover:text-white transition-all" />
+                </div>
               </div>
             </div>
           </Link>
         ))}
+      </div>
 
       {/* ── AURORA INSIGHT ── */}
       <div className="relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-7 md:p-8 shadow-2xl group">
@@ -443,20 +447,45 @@ export default function DashboardHome() {
                     const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                     const Icon = styles.icon;
                     return (
-                      <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} shadow-sm hover:shadow-md transition-all group relative overflow-hidden`}>
-                        {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-white shadow-sm border border-gray-100`}>
-                          <Icon className={`h-5 w-5 ${styles.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
-                            <span className="text-[10px] font-bold text-slate-400">Público Geral</span>
+                      <Dialog key={ann.id}>
+                        <DialogTrigger asChild>
+                          <div className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} shadow-sm hover:shadow-md transition-all group relative overflow-hidden cursor-pointer`}>
+                            {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
+                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-white shadow-sm border border-gray-100`}>
+                              <Icon className={`h-5 w-5 ${styles.color}`} />
+                            </div>
+                            <div className="flex-1 min-w-0 text-left">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
+                                <span className="text-[10px] font-bold text-slate-400">Público Geral</span>
+                              </div>
+                              <p className={`font-black text-sm text-slate-900 truncate`}>{ann.title}</p>
+                              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium mt-0.5 italic">{ann.message}</p>
+                            </div>
                           </div>
-                          <p className={`font-black text-sm text-slate-900 truncate`}>{ann.title}</p>
-                          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium mt-0.5 italic">{ann.message}</p>
-                        </div>
-                      </div>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md rounded-[2rem] border-white/20 shadow-2xl p-6">
+                          <DialogHeader className="mb-1 text-left">
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${styles.bgColor} border ${styles.border}`}>
+                                <Icon className={`h-7 w-7 ${styles.color}`} />
+                              </div>
+                              <div>
+                                <DialogTitle className="text-xl font-black text-primary italic leading-tight">{ann.title}</DialogTitle>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>
+                                    {styles.label}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-400">Público Geral</span>
+                                </div>
+                              </div>
+                            </div>
+                          </DialogHeader>
+                          <DialogDescription className="text-sm text-slate-700 leading-relaxed font-medium bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            {ann.message}
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
                     );
                   })
                 )}

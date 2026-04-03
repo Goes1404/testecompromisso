@@ -53,6 +53,11 @@ const InteractiveWorkbook = dynamic(
     )
   }
 );
+
+const ClassroomChatIA = dynamic(
+  () => import("@/components/ClassroomChatIA").then(mod => mod.ClassroomChatIA),
+  { ssr: false }
+);
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ClassroomPage({ params }: { params: Promise<{ id: string }> }) {
@@ -408,6 +413,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                     {[
                       { id: "summary", label: "Roteiro", icon: BookOpen },
                       { id: "quiz", label: "Apoio", icon: BrainCircuit },
+                      { id: "aurora", label: "Dúvidas (IA)", icon: Sparkles },
                       { id: "attachments", label: "Anexos", icon: Paperclip }
                     ].map((tab) => (
                       <TabsTrigger key={tab.id} value={tab.id} className="data-[state=active]:bg-slate-50/80 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary h-full rounded-none font-bold text-[10px] uppercase tracking-widest gap-2 text-muted-foreground border-none transition-all">
@@ -474,6 +480,12 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                                 <p className="text-[10px] font-bold uppercase italic tracking-[0.2em]">Sem atividades vinculadas</p>
                               </div>
                             )}
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="aurora" className="mt-0 outline-none">
+                        <div className="max-w-3xl mx-auto py-10 space-y-6">
+                            <ClassroomChatIA contextTitle={activeContent?.title} />
                         </div>
                     </TabsContent>
 

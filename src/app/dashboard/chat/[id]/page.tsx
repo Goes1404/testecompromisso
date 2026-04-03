@@ -151,12 +151,42 @@ export default function DirectChatPage() {
     if (isAurora) {
       const newUserMessage = { id: `u-${Date.now()}`, sender_id: user.id, content: userText, created_at: new Date().toISOString() };
       setMessages(prev => [...prev, newUserMessage]);
-      
+      setIsAiThinking(true);
+
       try {
+        // Formata o histórico para o formato que a API espera
+        const history = messages
+          .filter(m => !m.isError && m.id !== 'initial')
+          .map(m => ({
+            role: m.sender_id === 'aurora-ai' ? 'assistant' : 'user',
+            content: m.content
+          }));
+        
+        history.push({ role: 'user', content: userText });
+
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: history })
+        });
+
+        const data = await response.json();
+        
+        if (data.success && data.result?.response) {
+          setMessages(prev => [...prev, {
+            id: `ai-${Date.now()}`,
+            sender_id: "aurora-ai",
+            content: data.result.response,
+            created_at: new Date().toISOString()
+          }]);
+        } else {
+          throw new Error(data.error || "Erro na resposta da Aurora.");
+        }
+      } catch (err: any) {
         setMessages(prev => [...prev, {
-          id: `ai-deactivated-${Date.now()}`,
+          id: `ai-err-${Date.now()}`,
           sender_id: "aurora-ai",
-          content: "A Aurora IA foi temporariamente desativada. Em breve traremos novas funcionalidades!",
+          content: "Ops! Tive um problema de sinal agora. Pode tentar reformular sua dúvida?",
           created_at: new Date().toISOString(),
           isError: true
         }]);
