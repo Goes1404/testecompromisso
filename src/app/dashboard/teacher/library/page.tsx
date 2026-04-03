@@ -64,9 +64,10 @@ export default function LibraryManagementPage() {
     }
 
     setIsSubmitting(true);
-    let finalUrl = formData.url;
 
     try {
+      let finalUrl = formData.url;
+
       if (file) {
         setUploading(true);
         const fileExt = file.name.split('.').pop();
@@ -79,52 +80,46 @@ export default function LibraryManagementPage() {
 
         if (uploadError) throw uploadError;
 
-        const { publicUrl } = supabase.storage
+        const { data: publicUrlData } = supabase.storage
           .from('learning-contents')
-          .getPublicUrl(filePath).data;
+          .getPublicUrl(filePath);
 
-        finalUrl = publicUrl;
+        finalUrl = publicUrlData.publicUrl;
+        setUploading(false); // Reset assim que o upload for concluído
       }
 
-      const payload = { ...formData, url: finalUrl };
+      // Forçamos o payload estrito com os campos que a tabela possui:
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        type: formData.type,
+        url: finalUrl,
+        image_url: formData.image_url
+      };
 
-      let { error } = await (editingId 
+      const { error } = await (editingId 
         ? supabase.from('library_resources').update(payload).eq('id', editingId)
-        : supabase.from('library_resources').insert([payload])
+        : supabase.from('library_resources').insert(payload)
       );
-
-      if (error && (error.message.includes('target_audience') || error.code === '42703')) {
-        console.warn("Coluna target_audience ausente na biblioteca. Retrying sem segmentação.");
-        const { target_audience, ...fallbackPayload } = payload;
-        const retry = await (editingId 
-          ? supabase.from('library_resources').update(fallbackPayload).eq('id', editingId)
-          : supabase.from('library_resources').insert([fallbackPayload])
-        );
-        error = retry.error;
-      }
 
       if (error) throw error;
       
-      if (editingId) {
-        toast({ title: "Apostila Atualizada!" });
-      } else {
-        toast({ title: "Apostila Cadastrada!" });
-      }
+      toast({ title: editingId ? "Apostila Atualizada!" : "Apostila Cadastrada!" });
       
       await fetchResources(); // Sempre re-sincronize do banco para garantir integridade.
       
-      setTimeout(() => {
-        setIsDialogOpen(false);
-        setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "", target_audience: "all" });
-        setFile(null);
-        setQuestionToEdit(null);
-        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500); // Fix Radix UI body lock bug
-      }, 50);
+      setIsDialogOpen(false);
+      setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "", target_audience: "all" });
+      setFile(null);
+      setQuestionToEdit(null);
+      setTimeout(() => { document.body.style.pointerEvents = ""; }, 500); // Fix Radix UI body lock bug
     } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+      console.error("Save Error:", e);
+      toast({ title: "Erro ao salvar", description: e?.message || "Ocorreu um erro ao processar os dados.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
-      setUploading(false);
+      setUploading(false); // Garantia final
     }
   };
 
