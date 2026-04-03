@@ -89,7 +89,7 @@ export default function ManageLivePage() {
     } catch (error: any) {
       toast({ 
         title: "Erro ao agendar", 
-        description: error.message.includes("status") ? "A coluna 'status' não existe no banco. Execute o script SQL." : error.message, 
+        description: error?.message?.includes("status") ? "A coluna 'status' não existe no banco. Execute o script SQL." : error?.message || "Ocorreu um erro desconhecido.", 
         variant: "destructive" 
       });
     } finally {

@@ -73,45 +73,35 @@ export default function TeacherTrailsPage() {
 
     setIsSubmitting(true);
     try {
-      const trailData: any = {
+      // Passando explicitamente apenas as colunas que constam no banco de dados e são úteis para criação inicial.
+      const trailData = {
         title: newTrail.title,
         category: newTrail.category,
         description: newTrail.description,
         teacher_id: user.id,
         teacher_name: profile?.name || user.user_metadata?.full_name || "Professor",
         status: "draft",
-        image_url: `https://picsum.photos/seed/trail-${Date.now()}/600/400`,
-        target_audience: newTrail.target_audience
+        image_url: `https://picsum.photos/seed/trail-${Date.now()}/600/400`
       };
 
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('trails')
-        .insert([trailData])
+        .insert(trailData)
         .select()
         .single();
-
-      if (error && (error.message.includes('target_audience') || error.code === '42703')) {
-        console.warn("Coluna target_audience ausente ao criar trilha. Retrying sem segmentação.");
-        const { target_audience, ...fallbackData } = trailData;
-        const retry = await supabase.from('trails').insert([fallbackData]).select().single();
-        data = retry.data;
-        error = retry.error;
-      }
 
       if (error) throw new Error(error.message);
 
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
       setTrails(prev => [data, ...prev]);
       
-      setTimeout(() => {
-        setIsCreateDialogOpen(false);
-        setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all" });
-        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
-      }, 50);
+      setIsCreateDialogOpen(false);
+      setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all" });
+      setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
 
     } catch (e: any) {
       console.error("Falha ao criar trilha:", e);
-      toast({ title: "Erro de Persistência", description: e.message, variant: "destructive" });
+      toast({ title: "Erro de Persistência", description: e?.message || "Ocorreu um erro ao salvar.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }

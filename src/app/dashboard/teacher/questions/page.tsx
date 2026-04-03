@@ -156,7 +156,7 @@ export default function QuestionBankPage() {
             }));
             let { error } = await supabase.from('questions').insert(itemsToInsert);
             
-            if (error && (error.message.includes('target_audience') || error.code === '42703')) {
+            if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
                 console.warn("Coluna target_audience ausente ao salvar lote de questões. Retrying sem segmentação.");
                 const fallbackItems = itemsToInsert.map(({ target_audience, ...rest }: any) => rest);
                 const retry = await supabase.from('questions').insert(fallbackItems);
@@ -188,7 +188,7 @@ export default function QuestionBankPage() {
                 teacher_id: user.id
             }]);
 
-            if (error && (error.message.includes('target_audience') || error.code === '42703')) {
+            if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
                 console.warn("Coluna target_audience ausente ao salvar questão manual. Retrying sem segmentação.");
                 const { target_audience, ...fallbackQuestion } = manualQuestion;
                 const retry = await supabase.from('questions').insert([{ 
