@@ -3,6 +3,7 @@ import { generateText } from 'ai';
 
 // Tempo máximo de processamento da Vercel (45 segundos)
 export const maxDuration = 45;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {

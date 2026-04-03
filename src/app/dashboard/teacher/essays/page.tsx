@@ -22,6 +22,7 @@ import {
   AlertCircle,
   FileText
 } from "lucide-react";
+import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
