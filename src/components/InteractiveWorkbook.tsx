@@ -114,7 +114,23 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
           .single();
         
         if (error) throw error;
-        if (data?.url) setCurrentPdfUrl(data.url);
+        if (data?.url) {
+          if (data.url.startsWith('http')) {
+             setCurrentPdfUrl(data.url);
+          } else {
+             // Proteger IP gerando URL assinada com validade de 60s
+             const { data: signedData, error: signError } = await supabase
+               .storage
+               .from('apostilas')
+               .createSignedUrl(data.url, 60);
+             
+             if (!signError && signedData?.signedUrl) {
+               setCurrentPdfUrl(signedData.signedUrl);
+             } else {
+               setCurrentPdfUrl(data.url); // Fallback
+             }
+          }
+        }
       } catch (err) {
         setError("Não foi possível localizar o arquivo da apostila.");
       }
@@ -242,8 +258,9 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
       const unscaledViewport = page.getViewport({ scale: 1 });
       
       // FIX: Aumentamos a fidelidade base (oversampling) para evitar borrão
-      // Usamos Device Pixel Ratio para telas Retina/4K ou no mínimo 2x
-      const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 2) : 2;
+      // Usamos Device Pixel Ratio para telas Retina/4K, mas limitamos a 2x para evitar crashes de memória.
+      const rawDpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+      const dpr = Math.min(Math.max(rawDpr, 1), 2); // Cap em 2x máximo para estabilidade
       const baseScale = (containerWidth / unscaledViewport.width);
       const finalScale = baseScale * currentZoom * dpr;
       const viewport = page.getViewport({ scale: finalScale }); 

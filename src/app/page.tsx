@@ -112,7 +112,6 @@ export default function LandingPage() {
                   alt="Logo Compromisso"
                   fill
                   className="object-contain p-2"
-                  unoptimized
                   priority
                 />
               </div>
@@ -240,7 +239,6 @@ export default function LandingPage() {
                   alt="Estudantes focados no sucesso"
                   fill
                   className="object-cover"
-                  unoptimized
                   priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
@@ -473,7 +471,6 @@ export default function LandingPage() {
                     alt={item.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 flex flex-col justify-end p-8">
                     <div className="w-10 h-1 bg-primary rounded-full mb-3 group-hover:w-16 transition-all" />

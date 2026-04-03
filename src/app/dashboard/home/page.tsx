@@ -73,6 +73,12 @@ const greetingByHour = () => {
   return "Boa noite";
 };
 
+const CACHE_DURATION = 5 * 60 * 1000;
+let dashboardCache: any = {
+  data: null,
+  timestamp: 0,
+};
+
 export default function DashboardHome() {
   const { user, profile, userRole, loading: isUserLoading } = useAuth();
   const router = useRouter();
@@ -95,6 +101,19 @@ export default function DashboardHome() {
 
   const fetchData = useCallback(async () => {
     if (!user || !profile || dataFetchedRef.current) return;
+    
+    if (dashboardCache.data && Date.now() - dashboardCache.timestamp < CACHE_DURATION) {
+      setAnnouncements(dashboardCache.data.announcements);
+      setRecommendedTrails(dashboardCache.data.recommendedTrails);
+      setRecentProgress(dashboardCache.data.recentProgress);
+      setLibraryResources(dashboardCache.data.libraryResources);
+      setEssayStats(dashboardCache.data.essayStats);
+      setExamStats(dashboardCache.data.examStats);
+      setLoadingData(false);
+      dataFetchedRef.current = true;
+      return;
+    }
+
     setLoadingData(true);
     dataFetchedRef.current = true;
 
@@ -119,28 +138,37 @@ export default function DashboardHome() {
         if (examRes.data) examData = examRes.data;
       } catch (e) { console.warn("Tabela simulation_attempts indisponível."); }
 
+      let newAnn = [];
       if (annRes?.data && annRes.data.length > 0) {
-        setAnnouncements(annRes.data);
+        newAnn = annRes.data;
       } else {
         // Mocks para avaliação visual das 3 prioridades conforme pedido do usuário
-        setAnnouncements([
+        newAnn = [
           { id: '1', title: 'Simulado Geral ETEC/ENEM', message: 'O grande simulado presencial ocorrerá neste sábado às 08h. Não esqueça o documento original.', priority: 'high' },
           { id: '2', title: 'Novas Apostilas de Biologia', message: 'Já estão disponíveis as novas apostilas de genética no acervo da biblioteca.', priority: 'medium' },
           { id: '3', title: 'Manutenção do Chat', message: 'O chat com professores passará por uma leve manutenção hoje às 23h.', priority: 'low' },
-        ]);
+        ];
       }
-      if (trailRes?.data) setRecommendedTrails(trailRes.data);
-      if (progressRes?.data) setRecentProgress((progressRes.data as any[]).filter((p: any) => p.trail));
-      if (libRes?.data) setLibraryResources(libRes.data);
+      setAnnouncements(newAnn as any);
+      
+      const newTrails = trailRes?.data || [];
+      setRecommendedTrails(newTrails);
+      
+      const newProgress = progressRes?.data ? (progressRes.data as any[]).filter((p: any) => p.trail) : [];
+      setRecentProgress(newProgress);
+      
+      const newLib = libRes?.data || [];
+      setLibraryResources(newLib);
 
+      let newEssayStats = { count: 0, average: 0, latest: null };
       if (essayData.length > 0) {
         const scoredEssays = essayData.filter((e: any) => e.score !== null && e.score > 0);
         const avg = scoredEssays.length > 0 ? scoredEssays.reduce((acc: number, curr: any) => acc + Number(curr.score), 0) / scoredEssays.length : 0;
-        setEssayStats({ count: essayData.length, average: Math.round(avg), latest: essayData[0] });
-      } else {
-        setEssayStats({ count: 0, average: 0, latest: null });
+        newEssayStats = { count: essayData.length, average: Math.round(avg), latest: essayData[0] };
       }
+      setEssayStats(newEssayStats);
 
+      let newExamStats = { totalAssessed: 0, averageScore: 0 };
       if (examData.length > 0) {
         let totalScore = 0;
         let totalMax = 0;
@@ -149,10 +177,22 @@ export default function DashboardHome() {
           totalMax += Number(ex.total_questions || 0);
         });
         const avg = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
-        setExamStats({ totalAssessed: examData.length, averageScore: Math.round(avg) });
-      } else {
-        setExamStats({ totalAssessed: 0, averageScore: 0 });
+        newExamStats = { totalAssessed: examData.length, averageScore: Math.round(avg) };
       }
+      setExamStats(newExamStats);
+
+      // Save to Cache
+      dashboardCache = {
+        data: {
+          announcements: newAnn,
+          recommendedTrails: newTrails,
+          recentProgress: newProgress,
+          libraryResources: newLib,
+          essayStats: newEssayStats,
+          examStats: newExamStats
+        },
+        timestamp: Date.now()
+      };
 
     } catch (e: any) {
       console.error("Dashboard data load error:", e);
