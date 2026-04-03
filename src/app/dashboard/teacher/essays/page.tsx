@@ -239,14 +239,26 @@ export default function AssessmentsGraderPage() {
                         placeholder="Adicione suas notas pedagógicas ou orientações personalizadas para o aluno..."
                         className="min-h-[180px] rounded-[2rem] bg-white border border-slate-100 p-6 font-medium italic text-sm shadow-inner resize-none focus-visible:ring-accent transition-all"
                       />
-                      <Button 
-                        onClick={handleSaveFeedback}
-                        disabled={isSaving}
-                        className="w-full h-14 bg-gradient-to-r from-accent to-orange-500 text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest border-none"
-                      >
-                        {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="h-5 w-5 mr-2" />}
-                        Validar Revisão Maestro
-                      </Button>
+                      <div className="flex gap-3">
+                        <Button 
+                          onClick={handleSaveFeedback}
+                          disabled={isSaving}
+                          className="flex-1 h-14 bg-gradient-to-r from-accent to-orange-500 text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest border-none"
+                        >
+                          {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="h-5 w-5 mr-2" />}
+                          Validar Revisão Maestro
+                        </Button>
+                        <Button
+                          variant="outline"
+                          asChild
+                          className="h-14 w-14 rounded-2xl border-2 border-primary/10 hover:border-accent hover:text-accent transition-all shrink-0"
+                          title="Conversar com Aluno"
+                        >
+                          <Link href={`/dashboard/chat/${selectedEssay.user_id}`}>
+                            <MessageSquare className="h-6 w-6" />
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

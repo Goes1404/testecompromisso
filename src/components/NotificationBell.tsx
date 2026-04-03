@@ -38,13 +38,11 @@ export function NotificationBell() {
     async function fetchAnnouncements() {
       setLoading(true);
       try {
-        // Buscar avisos relevantes (Gerais ou específicos do Polo)
-        const userInstitution = profile?.institution?.toLowerCase() || 'geral';
-        
+        // Buscar avisos relevantes (Gerais, por Perfil ou por Turma)
         const { data, error } = await supabase
           .from('announcements')
           .select('*')
-          .or(`target_polo.ilike.%${userInstitution}%,target_polo.eq.Todos,target_polo.is.null`)
+          .or(`target_group.eq.all,target_group.eq.${profile?.profile_type},target_group.eq.${profile?.class_id}`)
           .order('created_at', { ascending: false })
           .limit(5);
 

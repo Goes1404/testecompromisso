@@ -20,7 +20,8 @@ import {
   Sparkles,
   Wand2,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Trash2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -113,6 +114,27 @@ export default function TeacherTrailsPage() {
       toast({ title: "Erro de Persistência", description: e.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteTrail = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta trilha permanentemente? Todos os módulos e conteúdos vinculados serão removidos.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('trails')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTrails(prev => prev.filter(t => t.id !== id));
+      toast({ title: "Trilha excluída com sucesso!" });
+    } catch (e: any) {
+      console.error("Erro ao excluir trilha:", e);
+      toast({ title: "Falha na exclusão", description: e.message, variant: "destructive" });
     }
   };
 
@@ -227,6 +249,15 @@ export default function TeacherTrailsPage() {
                       <Link href={`/dashboard/classroom/${trail.id}`}>
                         <Eye className="h-5 w-5" />
                       </Link>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDeleteTrail(trail.id)}
+                      className="h-10 w-10 rounded-full text-red-500 hover:bg-red-50" 
+                      title="Excluir Trilha"
+                    >
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </div>
                   <Button variant="ghost" className="text-accent font-black text-[10px] uppercase group/btn" asChild>

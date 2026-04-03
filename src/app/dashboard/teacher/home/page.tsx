@@ -194,7 +194,7 @@ export default function TeacherHomePage() {
           { label: "Total Alunos", value: stats.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50", href: "/dashboard/teacher/students" },
           { label: "Apoio Social", value: stats.eligibleStudents, icon: HandHeart, color: "text-green-600", bg: "bg-green-50", href: "/dashboard/teacher/students" },
           { label: "Minhas Trilhas", value: stats.myTrails, icon: PlayCircle, color: "text-orange-600", bg: "bg-orange-50", href: "/dashboard/teacher/trails" },
-          { label: "Alunos em Risco", value: stats.atRisk, icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", href: "/dashboard/teacher/analytics" },
+          { label: "Rankings", value: "Top 10", icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", href: "/dashboard/teacher/rankings" },
         ].map((stat, i) => (
           <Link key={i} href={stat.href} className="block">
             <Card className="border-none shadow-xl overflow-hidden group hover:shadow-2xl transition-all rounded-[2rem] bg-white cursor-pointer active:scale-[0.98]">

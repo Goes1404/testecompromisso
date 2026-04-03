@@ -14,6 +14,7 @@ import Image from "next/image";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { LoadingShell } from "@/components/LoadingShell";
 import { NotificationBell } from "@/components/NotificationBell";
+import { useTimeTracker } from "@/hooks/useTimeTracker";
 
 const studentItems = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
@@ -100,6 +101,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   
   const logoUrl = "/images/logocompromisso.png";
   const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
+
+  useTimeTracker(user?.id);
 
   useEffect(() => { setHasHydrated(true); }, []);
 

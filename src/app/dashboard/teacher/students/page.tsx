@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Search, 
   AlertCircle, 
@@ -17,7 +18,8 @@ import {
   Loader2, 
   Mail,
   ArrowUpRight,
-  Filter
+  Filter,
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +33,8 @@ export default function TeacherStudentsPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "at_risk" | "financial_aid" | "etec" | "enem">("all");
+  const [filterInstitution, setFilterInstitution] = useState<string>("all");
+  const [filterCourse, setFilterCourse] = useState<string>("all");
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,22 +87,38 @@ export default function TeacherStudentsPage() {
       student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.institution?.toLowerCase().includes(searchTerm.toLowerCase());
     
+    const matchesInstitution = filterInstitution === "all" || student.institution === filterInstitution;
+    const matchesCourse = filterCourse === "all" || student.course === filterCourse;
+
+    const baseMatches = matchesSearch && matchesInstitution && matchesCourse;
+    
     if (activeFilter === "at_risk") {
       const sevenDaysAgo = subDays(new Date(), 7);
       const isInactive = !student.last_access || new Date(student.last_access) < sevenDaysAgo;
-      return matchesSearch && isInactive;
+      return baseMatches && isInactive;
     }
     if (activeFilter === "financial_aid") {
-      return matchesSearch && student.is_financial_aid_eligible === true;
+      return baseMatches && student.is_financial_aid_eligible === true;
     }
     if (activeFilter === "etec") {
-      return matchesSearch && student.profile_type === "etec";
+      return baseMatches && student.profile_type === "etec";
     }
     if (activeFilter === "enem") {
-      return matchesSearch && student.profile_type === "enem";
+      return baseMatches && student.profile_type === "enem";
     }
-    return matchesSearch;
+    return baseMatches;
   });
+
+  const institutions = Array.from(new Set(students.map(s => s.institution).filter(Boolean)));
+  const courses = Array.from(new Set(students.map(s => s.course).filter(Boolean)));
+
+  const formatTime = (seconds: number) => {
+    if (!seconds) return "0h";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
@@ -115,6 +135,37 @@ export default function TeacherStudentsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-primary/40 ml-2">Filtrar por Instituição/Escola</label>
+            <Select value={filterInstitution} onValueChange={setFilterInstitution}>
+                <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
+                    <SelectValue placeholder="Todas as Instituições" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectItem value="all">Todas as Instituições</SelectItem>
+                    {institutions.map(inst => (
+                        <SelectItem key={inst} value={inst}>{inst}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+        <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-primary/40 ml-2">Filtrar por Carreira/Curso</label>
+            <Select value={filterCourse} onValueChange={setFilterCourse}>
+                <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
+                    <SelectValue placeholder="Todas as Carreiras" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectItem value="all">Todas as Carreiras</SelectItem>
+                    {courses.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
         </div>
       </div>
 
@@ -151,6 +202,7 @@ export default function TeacherStudentsPage() {
                     <TableHead className="px-8 font-black uppercase text-[10px] tracking-widest text-primary/40">Estudante</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Instituição / Polo</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Último Acesso</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Tempo na Platforma</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Evolução</TableHead>
                     <TableHead className="text-right px-8 font-black uppercase text-[10px] tracking-widest text-primary/40">Ações de Apoio</TableHead>
                   </TableRow>
@@ -191,6 +243,14 @@ export default function TeacherStudentsPage() {
                               {student.last_access 
                                 ? formatDistanceToNow(new Date(student.last_access), { addSuffix: true, locale: ptBR })
                                 : 'Nunca acessou'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-accent opacity-40" />
+                            <span className="text-sm font-black text-primary italic">
+                              {formatTime(student.total_time_spent)}
                             </span>
                           </div>
                         </TableCell>

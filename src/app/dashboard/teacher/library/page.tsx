@@ -88,45 +88,43 @@ export default function LibraryManagementPage() {
 
       const payload = { ...formData, url: finalUrl };
 
-      let { data, error } = await (editingId 
-        ? supabase.from('library_resources').update(payload).eq('id', editingId).select().single()
-        : supabase.from('library_resources').insert([payload]).select().single()
+      let { error } = await (editingId 
+        ? supabase.from('library_resources').update(payload).eq('id', editingId)
+        : supabase.from('library_resources').insert([payload])
       );
 
       if (error && (error.message.includes('target_audience') || error.code === '42703')) {
         console.warn("Coluna target_audience ausente na biblioteca. Retrying sem segmentação.");
         const { target_audience, ...fallbackPayload } = payload;
         const retry = await (editingId 
-          ? supabase.from('library_resources').update(fallbackPayload).eq('id', editingId).select().single()
-          : supabase.from('library_resources').insert([fallbackPayload]).select().single()
+          ? supabase.from('library_resources').update(fallbackPayload).eq('id', editingId)
+          : supabase.from('library_resources').insert([fallbackPayload])
         );
-        data = retry.data;
         error = retry.error;
       }
 
       if (error) throw error;
       
       if (editingId) {
-        setResources(prev => prev.map(r => r.id === editingId ? data : r));
         toast({ title: "Apostila Atualizada!" });
       } else {
-        setResources(prev => [data, ...prev]);
         toast({ title: "Apostila Cadastrada!" });
       }
+      
+      await fetchResources(); // Sempre re-sincronize do banco para garantir integridade.
       
       setTimeout(() => {
         setIsDialogOpen(false);
         setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "", target_audience: "all" });
         setFile(null);
-        setUploading(false);
         setQuestionToEdit(null);
         setTimeout(() => { document.body.style.pointerEvents = ""; }, 500); // Fix Radix UI body lock bug
       }, 50);
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
-      setUploading(false);
     } finally {
       setIsSubmitting(false);
+      setUploading(false);
     }
   };
 
