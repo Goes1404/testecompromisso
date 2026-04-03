@@ -88,8 +88,8 @@ export default function LibraryManagementPage() {
         setUploading(false); // Reset assim que o upload for concluído
       }
 
-      // Forçamos o payload estrito com os campos que a tabela possui:
-      const payload = {
+      // O payload flexível que tentará incluir segmentação e outros campos, com fallback.
+      const payload: any = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
@@ -98,10 +98,24 @@ export default function LibraryManagementPage() {
         image_url: formData.image_url
       };
 
-      const { error } = await (editingId 
+      if (formData.target_audience !== "all") {
+         payload.target_audience = formData.target_audience;
+      }
+
+      let { error } = await (editingId 
         ? supabase.from('library_resources').update(payload).eq('id', editingId)
-        : supabase.from('library_resources').insert(payload)
+        : supabase.from('library_resources').insert([payload])
       );
+
+      if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
+          console.warn("Retrying without target_audience...");
+          const { target_audience, ...fallbackPayload } = payload;
+          const retry = await (editingId 
+            ? supabase.from('library_resources').update(fallbackPayload).eq('id', editingId)
+            : supabase.from('library_resources').insert([fallbackPayload])
+          );
+          error = retry.error;
+      }
 
       if (error) throw error;
       

@@ -145,15 +145,22 @@ export default function QuestionBankPage() {
         if (!user || extractedQuestions.length === 0 || !bulkSubjectId) return;
         setIsSaving(true);
         try {
-            const itemsToInsert = extractedQuestions.map(q => ({
-                question_text: q.question_text,
-                options: q.options,
-                correct_answer: q.correct_answer,
-                year: q.year,
-                subject_id: bulkSubjectId,
-                target_audience: bulkTargetAudience,
-                teacher_id: user.id
-            }));
+            const itemsToInsert = extractedQuestions.map(q => {
+                const item: any = {
+                    question_text: q.question_text,
+                    options: q.options,
+                    correct_answer: q.correct_answer,
+                    year: q.year,
+                    subject_id: bulkSubjectId,
+                    teacher_id: user.id
+                };
+                
+                // Only include optional/newer columns if they have values
+                if (q.explanation) item.explanation = q.explanation;
+                if (bulkTargetAudience !== 'all') item.target_audience = bulkTargetAudience;
+                
+                return item;
+            });
             let { error } = await supabase.from('questions').insert(itemsToInsert);
             
             if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
@@ -182,11 +189,20 @@ export default function QuestionBankPage() {
                 .filter(([_, text]) => text.trim() !== '')
                 .map(([key, text]) => ({ key, text }));
             
-            let { error } = await supabase.from('questions').insert([{ 
-                ...manualQuestion, 
+            const insertData: any = { 
+                question_text: manualQuestion.question_text,
+                year: manualQuestion.year,
+                subject_id: manualQuestion.subject_id,
+                correct_answer: manualQuestion.correct_answer,
                 options,
                 teacher_id: user.id
-            }]);
+            };
+
+            // Only include newer columns if filled
+            if (manualQuestion.explanation) insertData.explanation = manualQuestion.explanation;
+            if (manualQuestion.target_audience !== 'all') insertData.target_audience = manualQuestion.target_audience;
+
+            let { error } = await supabase.from('questions').insert([insertData]);
 
             if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
                 console.warn("Coluna target_audience ausente ao salvar questão manual. Retrying sem segmentação.");

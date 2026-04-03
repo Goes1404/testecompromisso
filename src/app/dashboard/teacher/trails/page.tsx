@@ -73,8 +73,7 @@ export default function TeacherTrailsPage() {
 
     setIsSubmitting(true);
     try {
-      // Passando explicitamente apenas as colunas que constam no banco de dados e são úteis para criação inicial.
-      const trailData = {
+      const trailData: any = {
         title: newTrail.title,
         category: newTrail.category,
         description: newTrail.description,
@@ -84,11 +83,27 @@ export default function TeacherTrailsPage() {
         image_url: `https://picsum.photos/seed/trail-${Date.now()}/600/400`
       };
 
-      const { data, error } = await supabase
+      if (newTrail.target_audience !== "all") {
+         trailData.target_audience = newTrail.target_audience;
+      }
+
+      let { data, error } = await supabase
         .from('trails')
-        .insert(trailData)
+        .insert([trailData])
         .select()
         .single();
+
+      if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
+          console.warn("Retrying without target_audience...");
+          const { target_audience, ...fallbackPayload } = trailData;
+          const retry = await supabase
+            .from('trails')
+            .insert([fallbackPayload])
+            .select()
+            .single();
+          data = retry.data;
+          error = retry.error;
+      }
 
       if (error) throw new Error(error.message);
 
