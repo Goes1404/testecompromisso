@@ -123,7 +123,7 @@ export default function RegisterPage() {
         institutionValue = formData.school || "ETEC";
         courseValue = formData.course;
       } else if (profileType === 'enem') {
-        institutionValue = formData.university || "ENEM";
+        institutionValue = formData.school || formData.university || "ENEM";
         courseValue = formData.major || "Vestibulando";
       }
 
@@ -357,8 +357,22 @@ export default function RegisterPage() {
                 {profileType === "enem" && (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="university" className="font-bold text-primary/60 ml-2">Instituição Alvo</Label>
-                      <Input id="university" placeholder="Ex: USP, FATEC, UNESP" value={formData.university} onChange={(e) => updateField("university", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+                      <Label htmlFor="school" className="font-bold text-primary/60 ml-2">Unidade Escolar / Polo Atual</Label>
+                      <Select value={formData.school} onValueChange={(v) => updateField("school", v)}>
+                        <SelectTrigger className="h-12 bg-white/50 rounded-xl border-muted/20">
+                          <SelectValue placeholder="Selecione sua escola atual..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-xl max-h-80">
+                          {SCHOOL_LIST.map(school => (
+                            <SelectItem key={school} value={school}>{school}</SelectItem>
+                          ))}
+                          <SelectItem value="Outra Rede">Outra Rede / Não Listada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                       <Label htmlFor="university" className="font-bold text-primary/60 ml-2">Instituição Alvo (Opcional)</Label>
+                       <Input id="university" placeholder="Ex: USP, FATEC, UNESP" value={formData.university} onChange={(e) => updateField("university", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="major" className="font-bold text-primary/60 ml-2">Carreira Desejada</Label>

@@ -93,9 +93,9 @@ export default function TeacherTrailsPage() {
         .select()
         .single();
 
-      if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
-          console.warn("Retrying without target_audience...");
-          const { target_audience, ...fallbackPayload } = trailData;
+      if (error && error?.code === '42703') {
+          console.warn("Retrying without new columns...");
+          const { target_audience, image_url, ...fallbackPayload } = trailData;
           const retry = await supabase
             .from('trails')
             .insert([fallbackPayload])

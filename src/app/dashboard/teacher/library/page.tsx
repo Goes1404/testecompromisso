@@ -107,9 +107,9 @@ export default function LibraryManagementPage() {
         : supabase.from('library_resources').insert([payload])
       );
 
-      if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
-          console.warn("Retrying without target_audience...");
-          const { target_audience, ...fallbackPayload } = payload;
+      if (error && error?.code === '42703') {
+          console.warn("Retrying with minimal payload due to missing columns...");
+          const { target_audience, image_url, ...fallbackPayload } = payload as any;
           const retry = await (editingId 
             ? supabase.from('library_resources').update(fallbackPayload).eq('id', editingId)
             : supabase.from('library_resources').insert([fallbackPayload])

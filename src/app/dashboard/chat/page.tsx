@@ -18,9 +18,8 @@ export default function ChatListPage() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const categories = [
     "Todos",
-    ...(profile?.profile_type === 'teacher' ? ["ETEC", "ENEM"] : ["Redação", "Matemática", "Linguagens", "Ciências da Natureza", "Ciências Humanas", "Apoio Pedagógico"])
+    ...(profile?.profile_type === 'teacher' ? ["ETEC", "ENEM", "1º Ano", "2º Ano", "3º Ano", "Apoio"] : ["Redação", "Matemática", "Linguagens", "Ciências da Natureza", "Ciências Humanas", "Apoio Pedagógico"])
   ];
 
   useEffect(() => {
@@ -79,10 +78,12 @@ export default function ChatListPage() {
   }, [user, profile]);
 
   const filteredContacts = contacts.filter((c) => {
+    const term = searchTerm.toLowerCase();
     const matchesSearch = 
-      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.institution?.toLowerCase().includes(searchTerm.toLowerCase());
+      (c.name || '').toLowerCase().includes(term) || 
+      (c.username || '').toLowerCase().includes(term) ||
+      (c.institution || '').toLowerCase().includes(term) ||
+      (c.course || '').toLowerCase().includes(term);
       
     if (activeCategory === "Todos") return matchesSearch;
 
@@ -121,7 +122,7 @@ export default function ChatListPage() {
       <div className="relative max-w-xl group w-full pt-4">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
         <Input 
-          placeholder="Buscar mentor por nome ou polo..." 
+          placeholder="Buscar aluno por nome, polo, escola ou curso..." 
           className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl text-lg font-medium italic focus-visible:ring-accent"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

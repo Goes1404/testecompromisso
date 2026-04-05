@@ -329,7 +329,7 @@ export default function TrailManagementPage() {
     if (editingContentId) {
       setIsSubmitting(true);
       try {
-        const { error } = await supabase
+        let { error } = await supabase
           .from('learning_contents')
           .update({
             title: contentForm.title,
@@ -339,6 +339,16 @@ export default function TrailManagementPage() {
             workbook_id: finalWorkbookId,
           })
           .eq('id', editingContentId);
+
+        if (error && error.code === '42703') {
+           const retry = await supabase.from('learning_contents').update({
+             title: contentForm.title,
+             type: contentForm.type,
+             url: fileUrl,
+             description: contentForm.description
+           }).eq('id', editingContentId);
+           error = retry.error;
+        }
 
         if (error) throw error;
 
@@ -390,10 +400,17 @@ export default function TrailManagementPage() {
     }));
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('learning_contents')
         .insert(itemsToInsert)
         .select();
+
+      if (error && error.code === '42703') {
+        const fallbackItems = itemsToInsert.map(({workbook_id, ...rest}) => rest);
+        const retry = await supabase.from('learning_contents').insert(fallbackItems).select();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
 
