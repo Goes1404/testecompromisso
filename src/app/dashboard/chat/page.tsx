@@ -17,7 +17,7 @@ export default function ChatListPage() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const categories = [
     "Todos",
     ...(profile?.profile_type === 'teacher' ? ["ETEC", "ENEM", "1º Ano", "2º Ano", "3º Ano", "Apoio"] : ["Redação", "Matemática", "Linguagens", "Ciências da Natureza", "Ciências Humanas", "Apoio Pedagógico"])
   ];
