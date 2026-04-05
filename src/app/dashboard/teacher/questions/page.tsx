@@ -164,8 +164,8 @@ export default function QuestionBankPage() {
             let { error } = await supabase.from('questions').insert(itemsToInsert);
             
             if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
-                console.warn("Coluna target_audience ausente ao salvar lote de questões. Retrying sem segmentação.");
-                const fallbackItems = itemsToInsert.map(({ target_audience, ...rest }: any) => rest);
+                console.warn("Colunas novas ausentes ao salvar lote de questões. Retrying com campos básicos.");
+                const fallbackItems = itemsToInsert.map(({ target_audience, explanation, ...rest }: any) => rest);
                 const retry = await supabase.from('questions').insert(fallbackItems);
                 error = retry.error;
             }
@@ -205,8 +205,8 @@ export default function QuestionBankPage() {
             let { error } = await supabase.from('questions').insert([insertData]);
 
             if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
-                console.warn("Coluna target_audience ausente ao salvar questão manual. Retrying sem segmentação.");
-                const { target_audience, ...fallbackQuestion } = manualQuestion;
+                console.warn("Colunas novas ausentes ao salvar questão manual. Retrying com campos básicos.");
+                const { target_audience, explanation, ...fallbackQuestion } = manualQuestion as any;
                 const retry = await supabase.from('questions').insert([{ 
                     ...fallbackQuestion, 
                     options,

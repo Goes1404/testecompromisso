@@ -184,10 +184,16 @@ export function QuestionsList() {
     const handleOptionChange = (key: string, text: string) => setEditForm(prev => ({...prev, options: { ...prev.options, [key]: text }}));
 
     const filteredQuestions = useMemo(() => {
-        return questions.filter(q => 
-            (subjectFilter === 'all' || q.subject_id === subjectFilter) &&
-            (!searchTerm || q.question_text.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
+        const lowerSearch = searchTerm.toLowerCase();
+        return questions.filter(q => {
+            const matchesSubject = subjectFilter === 'all' || q.subject_id === subjectFilter;
+            const matchesSearch = !searchTerm || 
+                q.question_text.toLowerCase().includes(lowerSearch) ||
+                (q.subject?.name?.toLowerCase() || '').includes(lowerSearch) ||
+                q.year.toString().includes(lowerSearch) ||
+                (Array.isArray(q.options) && q.options.some((opt: any) => opt.text.toLowerCase().includes(lowerSearch)));
+            return matchesSubject && matchesSearch;
+        });
     }, [questions, searchTerm, subjectFilter]);
 
     if (isLoading) return <ListSkeleton />;

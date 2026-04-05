@@ -54,8 +54,8 @@ export default function ChatListPage() {
         // LÓGICA DE SEGMENTAÇÃO POR POLO (INDUSTRIAL)
         // Alunos veem apenas mentores do seu polo ou mentores "Gerais"
         const filteredByPolo = data?.filter(mentor => {
-          // Admin vê todo mundo
-          if (userType === 'admin') return true;
+          // Admin e Professor veem todo mundo na listagem final de segmentação de polo
+          if (userType === 'admin' || userType === 'teacher') return true;
           
           const mentorInstitution = (mentor.institution || '').toLowerCase();
           
@@ -87,8 +87,8 @@ export default function ChatListPage() {
     if (activeCategory === "Todos") return matchesSearch;
 
     if (profile?.profile_type === 'teacher') {
-      // Filtro por perfil para o professor
-      return matchesSearch && (c.profile_type || '').toLowerCase().includes(activeCategory.toLowerCase());
+      // Filtros do professor: se for ETEC ou ENEM (procura no curso, polo, exam_target etc)
+      return matchesSearch && JSON.stringify(c).toLowerCase().includes(activeCategory.toLowerCase());
     }
 
     const mentorCourse = c.course || "Apoio Pedagógico";

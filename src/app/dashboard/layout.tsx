@@ -14,6 +14,7 @@ import Image from "next/image";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { LoadingShell } from "@/components/LoadingShell";
 import { NotificationBell } from "@/components/NotificationBell";
+import { UrgentNotice } from "@/components/UrgentNotice";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
 
 const studentItems = [
@@ -248,6 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </main>
         <OnboardingTour />
+        <UrgentNotice />
       </SidebarInset>
     </SidebarProvider>
   );
