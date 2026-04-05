@@ -238,7 +238,7 @@ export default function TeacherTrailsPage() {
             return (
               <Card key={trail.id} className="border-none shadow-xl overflow-hidden group bg-white rounded-[2rem] flex flex-col hover:shadow-2xl transition-all duration-500">
                 <div className="relative aspect-video bg-muted overflow-hidden">
-                  <Image src={trail.image_url || `https://picsum.photos/seed/trail-${trail.id}/600/400`} alt={trail.title || "Trilha"} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                  <img src={trail.image_url || `https://picsum.photos/seed/trail-${trail.id}/600/400`} alt={trail.title || "Trilha"} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                   <div className="absolute top-4 left-4">
                     <Badge className={`${isActive ? 'bg-green-600' : 'bg-orange-500'} text-white border-none px-4 py-1 font-black text-[10px] uppercase shadow-lg flex items-center gap-2`}>
                       {isActive ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}

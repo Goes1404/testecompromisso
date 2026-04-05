@@ -290,7 +290,7 @@ export default function LibraryManagementPage() {
           {filtered.map((item) => (
             <Card key={item.id} className="border-none shadow-xl overflow-hidden group bg-white rounded-[2.5rem] flex flex-col hover:shadow-2xl transition-all duration-500">
               <div className="relative aspect-video bg-muted overflow-hidden">
-                <Image src={item.image_url || `https://picsum.photos/seed/${item.id}/600/400`} alt={item.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                <img src={item.image_url || `https://picsum.photos/seed/${item.id}/600/400`} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-white/80 backdrop-blur-md text-primary border-none px-3 py-1 font-black text-[10px] uppercase shadow-lg flex items-center gap-2">
                     {item.type === 'Video' ? <Video className="h-3 w-3" /> : <FileText className="h-3 w-3" />}

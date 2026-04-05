@@ -317,44 +317,18 @@ export default function TeacherHomePage() {
                 const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                 const Icon = styles.icon;
                 return (
-                  <Dialog key={ann.id}>
-                    <DialogTrigger asChild>
-                      <div className={`p-4 rounded-2xl flex items-start gap-3 ${styles.bgColor} border ${styles.border} transition-all hover:shadow-md relative overflow-hidden group cursor-pointer`}>
-                        {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
-                        <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
-                          <Icon className={`h-4 w-4 ${styles.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
-                          </div>
-                          <p className="text-xs font-black text-slate-900 truncate">{ann.title}</p>
-                          <p className="text-[10px] text-slate-500 font-medium line-clamp-1 italic">{ann.message}</p>
-                        </div>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md rounded-[2rem] border-white/20 shadow-2xl p-6">
-                      <DialogHeader className="mb-1 text-left">
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${styles.bgColor} border ${styles.border}`}>
-                            <Icon className={`h-7 w-7 ${styles.color}`} />
-                          </div>
-                          <div>
-                            <DialogTitle className="text-xl font-black text-primary italic leading-tight">{ann.title}</DialogTitle>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>
-                                {styles.label}
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-400">Canal Docente</span>
-                            </div>
-                          </div>
-                        </div>
-                      </DialogHeader>
-                      <DialogDescription className="text-sm text-slate-700 leading-relaxed font-medium bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        {ann.message}
-                      </DialogDescription>
-                    </DialogContent>
-                  </Dialog>
+                  <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} transition-all hover:bg-white hover:shadow-md relative overflow-hidden group`}>
+                    <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
+                      <Icon className={`h-5 w-5 ${styles.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                       <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
+                       </div>
+                       <p className="font-bold text-sm text-slate-900 truncate">{ann.title}</p>
+                       <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed italic">{ann.message}</p>
+                    </div>
+                  </div>
                 );
               })}
               <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors">
