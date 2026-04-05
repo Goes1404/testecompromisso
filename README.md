@@ -1,10 +1,10 @@
-shs# Plataforma Compromisso 360
+# Plataforma Compromisso 360
 
 O ecossistema oficial de aprendizado e gestão educacional de Santana de Parnaíba.
 
-## 🚀 Migração de Propriedade: @Duduzcx
+## 🚀 Repositório Oficial: @Goes1404
 
-Este repositório foi transferido para a conta oficial de **@Duduzcx**. Todas as atualizações futuras devem ser realizadas no endereço: `https://github.com/Duduzcx/educore.git`.
+Este é o repositório principal e oficial da **Plataforma Compromisso**. Todas as atualizações, deploys e desenvolvimentos devem ser realizados exclusivamente neste endereço: `https://github.com/Goes1404/testecompromisso.git`.
 
 ### Tecnologias:
 - **Frontend**: Next.js 15
@@ -14,26 +14,24 @@ Este repositório foi transferido para a conta oficial de **@Duduzcx**. Todas as
 
 ---
 
-## 🛠️ Como sincronizar seu terminal com a nova conta
+## 🛠️ Como utilizar este repositório
 
-Se o seu terminal ainda estiver apontando para o endereço antigo, execute os comandos abaixo para sintonizar com o novo repositaaaaaório:
+Certifique-se de que o seu terminal está apontando para o endereço correto:
 
-1. **Atualize a URL de origem (Origin):**
-```bash
-git remote set-url origin https://github.com/Duduzcx/educore.git
-```
-
-2. **Verifique se a mudança foi aplicada:**
+1. **Verifique a URL de origem (Origin):**
 ```bash
 git remote -v
 ```
 
-3. **Envie seu código para a nova casa:**
+2. **Caso não seja este repositório, atualize:**
 ```bash
-git push -u origin main
+git remote set-url origin https://github.com/Goes1404/testecompromisso.git
 ```
 
-*Nota: Certifique-se de ter permissão de escrita no repositório Duduzcx/educore.*
+3. **Envie as atualizações:**
+```bash
+git push origin main
+```
 
 ---
-© 2024 Rede Educacional Santana de Parnaíba
+© 2024-2026 Rede Educacional Santana de Parnaíba
