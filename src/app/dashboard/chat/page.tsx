@@ -143,7 +143,7 @@ export default function ChatListPage() {
             className={`rounded-full px-6 h-10 font-black text-[10px] uppercase tracking-widest whitespace-nowrap shadow-sm border-2 snap-center transition-all flex-shrink-0 ${
               activeCategory === cat 
                 ? 'bg-accent border-accent text-accent-foreground shadow-accent/20' 
-                : 'bg-white border-muted/20 text-muted-foreground hover:border-accent hover:text-accent'
+                : 'bg-white border-muted/20 text-muted-foreground hover:border-primary/30 hover:text-primary hover:bg-primary/5'
             }`}
           >
             {cat}

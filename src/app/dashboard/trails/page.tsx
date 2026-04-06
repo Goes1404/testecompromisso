@@ -142,15 +142,16 @@ export default function LearningTrailsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1 md:px-4">
-      <section className="relative overflow-hidden bg-primary rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl text-center">
-        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-accent/20 rounded-full blur-[80px]" />
+      <section className="relative overflow-hidden bg-slate-950 rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl text-center border border-white/5">
+        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-primary/20 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-primary/10 rounded-full blur-[60px]" />
         <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
-          <Badge className="bg-accent text-accent-foreground border-none font-black text-[9px] px-4 py-1.5 uppercase tracking-wider shadow-xl">COMPROMISSO 360</Badge>
+          <Badge className="bg-primary/10 text-primary border border-primary/20 font-black text-[9px] px-4 py-1.5 uppercase tracking-wider shadow-xl">COMPROMISSO 360</Badge>
           <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase">
-            Sua Rota de <br/><span className="text-accent">Alta Performance</span>
+            Sua Rota de <br/><span className="text-primary italic underline decoration-primary/30 decoration-8 underline-offset-8">Alta Performance</span>
           </h1>
-          <p className="text-sm md:text-xl text-white/60 font-medium italic leading-relaxed max-w-xl mx-auto">
-            Escolha um dos eixos temáticos e inicie sua jornada guiada pelos melhores mentores da rede.
+          <p className="text-sm md:text-xl text-gray-400 font-medium italic leading-relaxed max-w-xl mx-auto">
+            Escolha um dos eixos temáticos e inicie sua jornada guiada rumo ao sucesso acadêmico.
           </p>
         </div>
       </section>
@@ -193,7 +194,7 @@ export default function LearningTrailsPage() {
             <button 
               key={cat} 
               onClick={() => setActiveCategory(cat)}
-              className={`rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-md border-none ${activeCategory === cat ? 'bg-primary text-white scale-105 shadow-primary/20' : 'bg-white text-primary hover:bg-accent hover:text-white'}`}
+              className={`rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-md border-none ${activeCategory === cat ? 'bg-primary text-white scale-105 shadow-primary/20' : 'bg-white text-primary hover:bg-primary/5 hover:scale-105'}`}
             >
               {cat}
             </button>
