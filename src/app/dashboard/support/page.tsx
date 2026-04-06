@@ -45,7 +45,7 @@ export default function AuroraSupportPage() {
   useEffect(() => {
     setMessages([{
       role: "assistant",
-      content: `Olá! Sou a Aurora, sua Engine de Apoio. Conectada agora ao polo: ${profile?.institution || 'Rede Geral'}. Como posso acelerar seus processos hoje?`
+      content: `Olá! Sou a Aurora, sua Engine de Apoio. Conectada agora a: ${profile?.institution || 'Rede Geral'}. Como posso acelerar seus processos hoje?`
     }]);
 
     // Simulação industrial de medição de latência real

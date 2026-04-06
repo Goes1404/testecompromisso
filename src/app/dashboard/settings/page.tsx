@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/app/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 
 const PRESET_AVATARS = [
   "https://picsum.photos/seed/user1/400/400",
@@ -33,6 +33,13 @@ const PRESET_AVATARS = [
   "https://picsum.photos/seed/user6/400/400",
 ];
 
+// Fallback local — garante que o Select nunca fique vazio mesmo sem banco
+const FALLBACK_SUBJECTS = [
+  "Matemática", "Física", "Química", "Biologia",
+  "História", "Geografia", "Linguagens", "Literatura",
+  "Filosofia", "Sociologia", "Atualidades",
+].map((name, i) => ({ id: String(i + 1), name }));
+
 export default function SettingsPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -40,8 +47,9 @@ export default function SettingsPage() {
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  // ✅ FIX 1: começa com fallback local — evita spinner infinito no primeiro render
+  const [subjects, setSubjects] = useState<any[]>(FALLBACK_SUBJECTS);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     avatar_url: "",
@@ -49,18 +57,32 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
+    // ✅ FIX 2: se Supabase não está configurado, usa fallback local imediatamente
+    if (!isSupabaseConfigured) {
+      setSubjects(FALLBACK_SUBJECTS);
+      return;
+    }
+
     async function fetchSubjects() {
       setLoadingSubjects(true);
       try {
-        const { data, error } = await supabase
+        // ✅ FIX 3: timeout de 5s — garante que o finally SEMPRE é atingido
+        const timeout = new Promise<{ data: null; error: Error }>((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 5000)
+        );
+        const query = supabase
           .from('subjects')
           .select('id, name')
           .order('name');
-        
+
+        const { data, error } = await Promise.race([query, timeout]) as any;
+
         if (error) throw error;
-        setSubjects(data || []);
+        // Se o banco retornou lista válida, usa; senão mantém o fallback local
+        setSubjects(data?.length > 0 ? data : FALLBACK_SUBJECTS);
       } catch (e) {
-        console.error("Erro ao carregar matérias:", e);
+        console.warn("Matérias: usando lista local como fallback.", e);
+        setSubjects(FALLBACK_SUBJECTS);
       } finally {
         setLoadingSubjects(false);
       }
@@ -272,9 +294,9 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <Button type="submit" disabled={isUpdating} className="w-full h-20 bg-primary text-white font-black text-xl rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-[1.02] active:scale-95 transition-all mt-6 border-none">
-                  {isUpdating ? <Loader2 className="h-8 w-8 animate-spin mr-3" /> : <CheckCircle2 className="h-8 w-8 mr-3 text-accent" />}
-                  SALVAR PREFERÊNCIAS
+                <Button type="submit" disabled={isUpdating} className="w-full h-14 bg-primary text-white font-black text-sm md:text-base rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-[1.02] active:scale-95 transition-all mt-6 border-none px-4">
+                  {isUpdating ? <Loader2 className="h-5 w-5 animate-spin mr-2 shrink-0" /> : <CheckCircle2 className="h-5 w-5 mr-2 shrink-0 text-accent" />}
+                  <span className="truncate">SALVAR PREFERÊNCIAS</span>
                 </Button>
               </form>
             </CardContent>

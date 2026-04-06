@@ -28,7 +28,7 @@ import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import Link from "next/link";
 
-const categories = ["Todos", "Matemática", "Física", "Tecnologia", "Linguagens", "História", "Saúde"];
+const categories = ["Todos", "Matemática", "Física", "Linguagens", "História", "Saúde", "Atualidades", "Literatura", "Química", "Filosofia", "Sociologia"];
 const types = ["Todos", "PDF", "Video", "E-book", "Artigo"];
 
 export default function LibraryPage() {

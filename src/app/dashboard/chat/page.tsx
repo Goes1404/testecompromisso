@@ -113,7 +113,7 @@ export default function ChatListPage() {
           <p className="text-muted-foreground font-medium text-sm md:text-xl italic">
             {profile?.profile_type === 'teacher' 
               ? "Atendimento direto aos estudantes da rede." 
-              : <>Conectado aos especialistas do polo: <span className="text-accent font-black uppercase">{profile?.institution || 'Rede Geral'}</span></>
+              : <>Conectado aos especialistas: <span className="text-accent font-black uppercase">{profile?.institution || 'Rede Geral'}</span></>
             }
           </p>
         </div>
@@ -147,31 +147,26 @@ export default function ChatListPage() {
         ))}
       </div>
 
-      {/* CARD DESTAQUE AURORA */}
-      <Card className="border-none shadow-[0_20px_50px_-15px_rgba(26,44,75,0.3)] rounded-[3rem] bg-primary text-white overflow-hidden group transition-all duration-500 hover:shadow-primary/20">
-        <CardContent className="p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-            <div className="h-20 w-20 md:h-24 md:w-24 rounded-[2.5rem] bg-accent text-accent-foreground flex items-center justify-center shadow-2xl rotate-3 group-hover:rotate-0 transition-transform">
-              <Bot className="h-12 w-12 md:h-14 md:w-14" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-center md:justify-start gap-3">
-                <CardTitle className="text-2xl md:text-4xl font-black italic">Aurora IA</CardTitle>
-                <Badge className="bg-white/10 text-white border-none text-[8px] font-black uppercase">Assistência 24/7</Badge>
+      {/* CANAIS DE CONTATO */}
+      {profile?.profile_type !== 'teacher' && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            { title: "Docente", desc: "Fale diretamente com seu professor de referência.", icon: GraduationCap, color: "bg-blue-50 border-blue-100 text-blue-700" },
+            { title: "Bolsas", desc: "Tire dúvidas sobre processos e requisitos de bolsas.", icon: ShieldCheck, color: "bg-amber-50 border-amber-100 text-amber-700" },
+            { title: "Apoio Psicopedagógico", desc: "Suporte emocional e pedagógico especializado.", icon: User, color: "bg-green-50 border-green-100 text-green-700" },
+          ].map((canal) => (
+            <div key={canal.title} className={`flex items-start gap-4 p-5 rounded-2xl border ${canal.color} shadow-sm`}>
+              <div className="h-10 w-10 rounded-xl bg-white/70 flex items-center justify-center shrink-0 shadow-sm">
+                <canal.icon className="h-5 w-5" />
               </div>
-              <p className="text-white/60 font-medium text-sm md:text-lg italic max-w-md">
-                {profile?.profile_type === 'teacher' 
-                  ? "Utilize a Aurora para gerar materiais de apoio ou tirar dúvidas técnicas."
-                  : "Engine de Apoio Pedagógico para dúvidas imediatas em qualquer polo."
-                }
-              </p>
+              <div>
+                <p className="font-black text-sm uppercase tracking-tight">{canal.title}</p>
+                <p className="text-xs font-medium opacity-70 mt-0.5 leading-relaxed">{canal.desc}</p>
+              </div>
             </div>
-          </div>
-          <Button className="bg-white text-primary hover:bg-white/90 font-black h-14 md:h-16 px-10 md:px-12 rounded-2xl shadow-xl transition-all border-none w-full md:w-auto text-lg" asChild>
-            <Link href="/dashboard/chat/aurora-ai">Conversar agora</Link>
-          </Button>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 pt-4">
         {loading ? (

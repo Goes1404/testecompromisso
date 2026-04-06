@@ -115,7 +115,7 @@ export function LoginForm() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[10px] font-black uppercase text-primary/40 px-2">E-mail Corporativo</Label>
+              <Label htmlFor="email" className="text-[10px] font-black uppercase text-primary/40 px-2">Email de acesso</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold" required disabled={loading} />
             </div>
             <div className="space-y-2">
@@ -151,7 +151,7 @@ export function LoginForm() {
               </div>
             </div>
             <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none">
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Entrar no Sistema <ChevronRight className="h-5 w-5 ml-1 text-accent" /></>}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Acesso ao portal <ChevronRight className="h-5 w-5 ml-1 text-accent" /></>}
             </Button>
           </form>
 

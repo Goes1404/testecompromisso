@@ -30,12 +30,13 @@ export const EDUCATIONAL_CATEGORIES = [
   "Sociologia",
   "Português",
   "Literatura",
+  "Linguagens",
+  "Atualidades",
   "Redação",
   "Inglês",
   "Espanhol",
   "Educação Física",
   "Artes",
-  "Tecnologia",
   "Saúde",
   "Outros"
 ];

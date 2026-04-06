@@ -30,11 +30,11 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
-const TRAIL_CATEGORIES = ["Todos", "Matemática", "Tecnologia", "Linguagens", "Física", "Biologia", "História", "Geografia"];
+const TRAIL_CATEGORIES = ["Todos", "Matemática", "Linguagens", "Física", "Biologia", "História", "Geografia", "Atualidades", "Literatura", "Química", "Filosofia", "Sociologia"];
 const AUDIENCE_FILTERS = [
   { id: "all", label: "Toda a Comunidade" },
   { id: "etec", label: "Perfil ETEC" },
-  { id: "uni", label: "Perfil Vestibular" }
+  { id: "uni", label: "Perfil Enem e Vestibulares" }
 ];
 
 export default function LearningTrailsPage() {

@@ -172,7 +172,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar side="left" collapsible="icon" className="bg-sidebar border-none">
         <SidebarHeader className="p-6">
            <div id="sidebar-logo" className="flex items-center gap-4">
-            <div className="relative h-10 w-40 overflow-hidden rounded-full">
+            <div className="relative h-10 w-40 overflow-hidden rounded-xl">
                 <Image 
                   src="/images/logocompromisso.png" 
                   alt="Logo Compromisso" 
@@ -183,7 +183,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="text-lg font-black text-white italic leading-none">Compromisso</span>
-              <span className="text-[8px] text-white/40 uppercase tracking-widest font-black">Ensino de Elite</span>
+              <span className="text-[8px] text-white/40 uppercase tracking-widest font-black">Sistema de Ensino</span>
             </div>
           </div>
         </SidebarHeader>

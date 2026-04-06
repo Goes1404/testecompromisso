@@ -115,6 +115,10 @@ export default function LandingPage() {
                   priority
                 />
               </div>
+              <div className="flex flex-col group-hover:translate-x-1 transition-transform ml-3 md:ml-4">
+                <span className={`text-xl md:text-2xl font-black italic tracking-tighter transition-colors leading-none ${scrolled ? 'text-primary' : 'text-white'}`}>Compromisso</span>
+                <span className={`text-[8px] font-black uppercase tracking-widest leading-tight ${scrolled ? 'text-gray-400' : 'text-white/40'}`}>Sistema de Ensino</span>
+              </div>
             </Link>
           </div>
 
@@ -543,9 +547,9 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                 <MapPin className="h-4 w-4" /> Nossa Localização
               </div>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tighter leading-tight">Venha nos Conhecer</h2>
+              <h2 className="text-4xl font-black text-gray-900 tracking-tighter leading-tight">Local do cursinho</h2>
               <p className="text-gray-600 font-medium leading-relaxed max-w-lg">
-                Estamos localizados no coração de Santana de Parnaíba, na histórica <strong className="text-primary italic">Escola Colácio</strong>. Um ambiente preparado para transformar seu futuro.
+                Estamos localizados no coração de Santana de Parnaíba, no <strong className="text-primary italic">Colégio Colaço</strong>. Um ambiente preparado para transformar seu futuro.
               </p>
               <div className="space-y-4 pt-4">
                 <div className="flex items-start gap-4 p-5 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm">
@@ -579,7 +583,7 @@ export default function LandingPage() {
               <div className="absolute top-6 left-6 bg-primary text-white px-6 py-3 rounded-2xl shadow-2xl border border-white/20 animate-in slide-in-from-top-4 duration-700">
                 <div className="flex items-center gap-3">
                   <School className="h-5 w-5" />
-                  <span className="text-xs font-black uppercase tracking-widest italic">Unidade Colácio - Compromisso</span>
+                  <span className="text-xs font-black uppercase tracking-widest italic">Unidade Colaço - Compromisso</span>
                 </div>
               </div>
               <div className="absolute bottom-6 right-6 p-4 rounded-2xl bg-white/90 backdrop-blur-md shadow-xl border border-gray-100 max-w-[200px] hidden md:block animate-in slide-in-from-right-4 duration-700">
