@@ -12,7 +12,7 @@ import { supabase } from "@/app/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 
 export default function ChatListPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [contacts, setContacts] = useState<any[]>([]);
@@ -24,7 +24,11 @@ export default function ChatListPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!user || !profile) return;
+      if (authLoading) return;
+      if (!user || !profile) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       
       try {
@@ -75,7 +79,7 @@ export default function ChatListPage() {
       }
     }
     fetchData();
-  }, [user, profile]);
+  }, [user, profile, authLoading]);
 
   const filteredContacts = contacts.filter((c) => {
     const term = searchTerm.toLowerCase();
@@ -113,7 +117,7 @@ export default function ChatListPage() {
           <p className="text-muted-foreground font-medium text-sm md:text-xl italic">
             {profile?.profile_type === 'teacher' 
               ? "Atendimento direto aos estudantes da rede." 
-              : <>Conectado aos especialistas: <span className="text-accent font-black uppercase">{profile?.institution || 'Rede Geral'}</span></>
+              : "Conecte-se aos professores e tire suas dúvidas."
             }
           </p>
         </div>

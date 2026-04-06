@@ -32,7 +32,7 @@ export default function DirectChatPage() {
   const params = useParams();
   const contactId = params.id as string;
   const isAurora = contactId === "aurora-ai";
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -61,7 +61,11 @@ export default function DirectChatPage() {
 
   useEffect(() => {
     async function loadChatData() {
-      if (!user || !contactId) return;
+      if (authLoading) return;
+      if (!user || !contactId) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
 
       try {
@@ -130,7 +134,7 @@ export default function DirectChatPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user, contactId, isAurora, toast]);
+  }, [user, contactId, isAurora, toast, authLoading]);
 
   useEffect(() => {
     if (scrollRef.current) {
