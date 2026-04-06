@@ -194,7 +194,7 @@ export default function LearningTrailsPage() {
             <button 
               key={cat} 
               onClick={() => setActiveCategory(cat)}
-              className={`rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-md border-none ${activeCategory === cat ? 'bg-primary text-white scale-105 shadow-primary/20' : 'bg-white text-primary hover:bg-primary/5 hover:scale-105'}`}
+              className={`rounded-full px-8 h-14 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-md border-none ${activeCategory === cat ? 'bg-primary text-white scale-105 shadow-primary/20' : 'bg-white text-primary hover:bg-primary/5 hover:scale-105'}`}
             >
               {cat}
             </button>
