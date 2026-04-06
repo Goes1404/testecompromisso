@@ -101,7 +101,7 @@ export default function SettingsPage() {
     }
   }, [profile]);
 
-  const isNameDisabled = (profile?.name_changes_count ?? 0) >= 1;
+  const isNameDisabled = profile?.profile_type === 'student' || (profile?.name_changes_count ?? 0) >= 1;
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,8 +155,12 @@ export default function SettingsPage() {
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      
+      // ✅ Atualiza imediatamente no banco para o aluno ver que funcionou
+      await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.id);
+      
       setFormData(prev => ({ ...prev, avatar_url: data.publicUrl }));
-      toast({ title: "Foto industrial carregada! 📸" });
+      toast({ title: "Foto industrial atualizada! 📸", description: "Sua nova imagem já está ativa em toda a rede." });
     } catch (err: any) {
       toast({ title: "Falha no Upload", description: err.message, variant: "destructive" });
     } finally {
@@ -206,8 +210,12 @@ export default function SettingsPage() {
             </div>
             
             <div className="space-y-2">
-              <h3 className="text-2xl font-black text-primary italic leading-none truncate max-w-[240px] uppercase tracking-tighter">{formData.name || "Usuário"}</h3>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em]">{profile?.profile_type?.replace('_', ' ')} • {profile?.institution || 'Rede Geral'}</p>
+              <h3 className="text-3xl font-black text-accent italic leading-none truncate max-w-[240px] uppercase tracking-tighter">{formData.name || "Aluno"}</h3>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center justify-center gap-1">
+                <span className="opacity-60">{profile?.exam_target || 'ENEM'}</span> 
+                <span className="opacity-30">•</span> 
+                <span className="opacity-60">{profile?.institution || 'Colégio Colaço'}</span>
+              </p>
             </div>
           </Card>
 

@@ -279,6 +279,9 @@ export default function DashboardHome() {
             <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tighter">
               {userName}! <span className="text-primary italic">Pronto para hoje?</span>
             </h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+              {profile?.exam_target || 'ENEM'} • {profile?.institution || 'Colégio Colaço'}
+            </p>
 
             <p className="text-sm text-white/50 font-medium max-w-md leading-relaxed">
               Sua IA Aurora está monitorando seu progresso em tempo real. Continue de onde parou.

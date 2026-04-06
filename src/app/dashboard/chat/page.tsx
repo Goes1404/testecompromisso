@@ -192,13 +192,15 @@ export default function ChatListPage() {
                 <div className="space-y-2 w-full">
                   <CardTitle className="text-xl md:text-2xl font-black text-primary italic truncate px-2">{contact.name}</CardTitle>
                   <div className="flex flex-col gap-2 items-center">
-                    <Badge variant="outline" className="bg-slate-50 border-none text-muted-foreground font-black text-[8px] px-3 h-6 uppercase tracking-tighter">
-                      <GraduationCap className="h-3 w-3 mr-1.5 text-accent" />
-                      {contact.course || 'Mentor Acadêmico'}
-                    </Badge>
-                    <div className="flex items-center justify-center gap-2 text-accent font-black text-[9px] uppercase tracking-widest mt-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{contact.institution || "Rede Geral"}</span>
+                    <div className="flex flex-col items-center justify-center gap-1.5 text-accent font-black text-[9px] uppercase tracking-widest mt-1">
+                      <div className="flex items-center gap-1 opacity-80">
+                        <MapPin className="h-3 w-3" />
+                        <span>{contact.institution || "Rede Geral"}</span>
+                      </div>
+                      <Badge variant="outline" className="bg-primary/5 border-none text-primary/40 font-black text-[8px] px-3 h-5 uppercase tracking-widest leading-none flex items-center justify-center">
+                        <GraduationCap className="h-2.5 w-2.5 mr-1 text-accent" />
+                        {contact.profile_type === 'teacher' ? (contact.course || 'DOCENTE') : (contact.exam_target || 'ENEM')}
+                      </Badge>
                     </div>
                   </div>
                 </div>

@@ -232,7 +232,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         : profile.name)
                     : "Usuário"}
                 </span>
-                <span className="text-[8px] font-black text-accent uppercase tracking-widest">{userRole.toUpperCase()}</span>
+                <span className="text-[8px] font-black text-accent uppercase tracking-widest">
+                  {profile?.profile_type === 'student' 
+                    ? `${profile?.exam_target || 'ENEM'} • ${profile?.institution || 'Colégio Colaço'}` 
+                    : userRole.toUpperCase()}
+                </span>
               </div>
               <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">
                 <AvatarImage src={userAvatar} />
