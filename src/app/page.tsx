@@ -563,7 +563,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <Button asChild variant="outline" className="h-12 rounded-xl text-primary font-bold border-primary/20 hover:bg-primary/5">
-                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer">Abir no Maps</a>
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer">Abrir no Maps</a>
                   </Button>
                 </div>
               </div>

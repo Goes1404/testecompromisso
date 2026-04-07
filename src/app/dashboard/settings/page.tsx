@@ -170,6 +170,13 @@ export default function SettingsPage() {
 
   if (!user) return null;
 
+  const isStudent = profile?.profile_type === 'student';
+
+  const nameParts = (formData.name || "").trim().split(" ");
+  const formattedDisplayName = nameParts.length > 1 
+    ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}` 
+    : nameParts[0] || "Usuário";
+
   return (
     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20 px-2 md:px-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -182,9 +189,9 @@ export default function SettingsPage() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Coluna Visual */}
-        <div className="lg:col-span-4 space-y-6">
+      <div className={`grid grid-cols-1 ${isStudent ? 'lg:grid-cols-1' : 'lg:grid-cols-12'} gap-8`}>
+        {/* Coluna Visual (Sempre Visível) */}
+        <div className={`${isStudent ? 'max-w-2xl mx-auto w-full' : 'lg:col-span-4'} space-y-6`}>
           <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden text-center p-10 flex flex-col items-center">
             <div className="relative group mb-8">
               <div className="h-48 w-48 rounded-[3rem] overflow-hidden border-[8px] border-slate-50 shadow-2xl relative transition-transform duration-500 group-hover:scale-105">
@@ -209,107 +216,129 @@ export default function SettingsPage() {
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
             </div>
             
-            <div className="space-y-2">
-              <h3 className="text-3xl font-black text-accent italic leading-none truncate max-w-[240px] uppercase tracking-tighter">{formData.name || "Aluno"}</h3>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center justify-center gap-1">
-                <span className="opacity-60">{profile?.exam_target || 'ENEM'}</span> 
-                <span className="opacity-30">•</span> 
-                <span className="opacity-60">{profile?.institution || 'Colégio Colaço'}</span>
-              </p>
-            </div>
-          </Card>
-
-          <Card className="border-none shadow-xl bg-primary text-white rounded-[2.5rem] p-10 relative overflow-hidden group">
-            <div className="relative z-10 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 shadow-xl">
-                  <Sparkles className="h-6 w-6 text-accent animate-pulse" />
-                </div>
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em]">Protocolo Visual</h4>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-3xl font-black text-accent italic leading-none truncate max-w-[340px] uppercase tracking-tighter">{formattedDisplayName}</h3>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center justify-center gap-1">
+                  <span className="opacity-60">{profile?.exam_target || 'ENEM'}</span> 
+                  <span className="opacity-30">•</span> 
+                  <span className="opacity-60">{profile?.institution || 'Colégio Colaço'}</span>
+                </p>
               </div>
-              <p className="text-sm md:text-lg font-medium italic opacity-80 leading-relaxed tracking-tight">
-                "Uma foto nítida e profissional aumenta a confiança mútua nas mentorias e debates em grupo."
-              </p>
-            </div>
-            <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-accent/20 rounded-full blur-3xl transition-transform duration-700 group-hover:scale-125" />
-          </Card>
-        </div>
 
-        {/* Coluna Formulário */}
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden">
-            <CardHeader className="bg-muted/10 p-10 border-b border-dashed border-muted/20">
-              <CardTitle className="text-2xl font-black text-primary italic uppercase tracking-tighter">Dados Cadastrais</CardTitle>
-              <CardDescription className="font-medium italic text-lg mt-2">Alterações de nome são restritas por segurança de rede.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-10">
-              <form onSubmit={handleUpdateProfile} className="space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
-                      <User className="h-4 w-4" /> Nome de Exibição
-                    </Label>
-                    <div className="relative">
-                      <Input 
-                        value={formData.name} 
-                        onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                        disabled={isNameDisabled} 
-                        className={`h-16 rounded-2xl border-none font-bold text-xl italic ${isNameDisabled ? 'bg-muted/30 opacity-60' : 'bg-muted/40 shadow-inner focus:ring-accent'}`} 
-                      />
-                      {isNameDisabled && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
-                      <Star className="h-4 w-4" /> Matéria de Foco
-                    </Label>
-                    <Select value={formData.favorite_subject} onValueChange={(v) => setFormData({...formData, favorite_subject: v})}>
-                      <SelectTrigger className="h-16 rounded-2xl bg-muted/40 border-none font-bold text-xl italic shadow-inner">
-                        {loadingSubjects ? (
-                          <div className="flex items-center gap-3"><RefreshCw className="h-4 w-4 animate-spin" /> Sincronizando...</div>
-                        ) : (
-                          <SelectValue placeholder="Selecione sua preferência" />
-                        )}
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl max-h-80 p-2">
-                        {subjects.map(s => <SelectItem key={s.id} value={s.name} className="font-bold py-4 rounded-xl italic">{s.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
-                    <Palette className="h-4 w-4" /> Galeria de Avatares Dinâmicos
+              {isStudent && (
+                 <div className="pt-4 space-y-6">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center justify-center gap-3">
+                    <Palette className="h-4 w-4" /> Sugestões de Avatar
                   </Label>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-6">
+                  <div className="flex flex-wrap items-center justify-center gap-4">
                     {PRESET_AVATARS.map((url, i) => (
                       <button 
                         key={i} 
                         type="button" 
                         onClick={() => setFormData({...formData, avatar_url: url})} 
-                        className={`relative rounded-[1.5rem] overflow-hidden aspect-square border-[6px] transition-all hover:scale-110 active:scale-90 shadow-xl ${formData.avatar_url === url ? 'border-accent scale-110 ring-8 ring-accent/5' : 'border-white opacity-60 hover:opacity-100'}`}
+                        className={`relative rounded-[1.2rem] overflow-hidden h-14 w-14 border-4 transition-all hover:scale-110 active:scale-95 shadow-xl ${formData.avatar_url === url ? 'border-accent scale-110 ring-4 ring-accent/5' : 'border-white opacity-60 hover:opacity-100'}`}
                       >
                         <Avatar className="w-full h-full rounded-none"><AvatarImage src={url} className="object-cover" /></Avatar>
                         {formData.avatar_url === url && (
-                          <div className="absolute inset-0 bg-accent/20 flex items-center justify-center animate-in zoom-in duration-500">
-                            <CheckCircle2 className="h-10 w-10 text-white drop-shadow-xl" />
+                          <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">
+                            <CheckCircle2 className="h-6 w-6 text-white drop-shadow-xl" />
                           </div>
                         )}
                       </button>
                     ))}
                   </div>
+                  <Button onClick={handleUpdateProfile} disabled={isUpdating} className="w-full bg-primary text-white font-black h-12 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all mt-4 border-none">
+                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-accent" />}
+                    CONFIRMAR ALTERAÇÕES
+                  </Button>
                 </div>
-
-                <Button type="submit" disabled={isUpdating} className="w-full h-14 bg-primary text-white font-black text-sm md:text-base rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-[1.02] active:scale-95 transition-all mt-6 border-none px-4">
-                  {isUpdating ? <Loader2 className="h-5 w-5 animate-spin mr-2 shrink-0" /> : <CheckCircle2 className="h-5 w-5 mr-2 shrink-0 text-accent" />}
-                  <span className="truncate">SALVAR PREFERÊNCIAS</span>
-                </Button>
-              </form>
-            </CardContent>
+              )}
+            </div>
           </Card>
         </div>
+
+        {/* Coluna Formulário (Oculta para Alunos) */}
+        {!isStudent && (
+          <div className="lg:col-span-8 space-y-8">
+            <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden">
+              <CardHeader className="bg-muted/10 p-10 border-b border-dashed border-muted/20">
+                <CardTitle className="text-2xl font-black text-primary italic uppercase tracking-tighter">Dados Cadastrais</CardTitle>
+                <CardDescription className="font-medium italic text-lg mt-2">Alterações de nome são restritas por segurança de rede.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-10">
+                <form onSubmit={handleUpdateProfile} className="space-y-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                        <User className="h-4 w-4" /> Nome de Exibição
+                      </Label>
+                      <div className="relative">
+                        <Input 
+                          value={formData.name} 
+                          onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                          disabled={isNameDisabled} 
+                          className={`h-16 rounded-2xl border-none font-bold text-xl italic ${isNameDisabled ? 'bg-muted/30 opacity-60' : 'bg-muted/40 shadow-inner focus:ring-accent'}`} 
+                        />
+                        {isNameDisabled && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                        <Star className="h-4 w-4" /> Matéria de Foco
+                      </Label>
+                      <Select value={formData.favorite_subject} onValueChange={(v) => setFormData({...formData, favorite_subject: v})}>
+                        <SelectTrigger className="h-16 rounded-2xl bg-muted/40 border-none font-bold text-xl italic shadow-inner">
+                          {loadingSubjects ? (
+                            <div className="flex items-center gap-3"><RefreshCw className="h-4 w-4 animate-spin" /> Sincronizando...</div>
+                          ) : (
+                            <SelectValue placeholder="Selecione sua preferência" />
+                          )}
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl max-h-80 p-2">
+                          {subjects.map(s => <SelectItem key={s.id} value={s.name} className="font-bold py-4 rounded-xl italic">{s.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                      <Palette className="h-4 w-4" /> Galeria de Avatares Dinâmicos
+                    </Label>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-6">
+                      {PRESET_AVATARS.map((url, i) => (
+                        <button 
+                          key={i} 
+                          type="button" 
+                          onClick={() => setFormData({...formData, avatar_url: url})} 
+                          className={`relative rounded-[1.5rem] overflow-hidden aspect-square border-[6px] transition-all hover:scale-110 active:scale-90 shadow-xl ${formData.avatar_url === url ? 'border-accent scale-110 ring-8 ring-accent/5' : 'border-white opacity-60 hover:opacity-100'}`}
+                        >
+                          <Avatar className="w-full h-full rounded-none"><AvatarImage src={url} className="object-cover" /></Avatar>
+                          {formData.avatar_url === url && (
+                            <div className="absolute inset-0 bg-accent/20 flex items-center justify-center animate-in zoom-in duration-500">
+                              <CheckCircle2 className="h-10 w-10 text-white drop-shadow-xl" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={isUpdating} className="w-full h-14 bg-primary text-white font-black text-sm md:text-base rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-[1.02] active:scale-95 transition-all mt-6 border-none px-4">
+                    {isUpdating ? <Loader2 className="h-5 w-5 animate-spin mr-2 shrink-0" /> : <CheckCircle2 className="h-5 w-5 mr-2 shrink-0 text-accent" />}
+                    <span className="truncate">SALVAR PREFERÊNCIAS</span>
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
       </div>
     </div>
   );
