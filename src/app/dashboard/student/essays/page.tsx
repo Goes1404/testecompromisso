@@ -44,6 +44,23 @@ const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: strin
   c5: { label: "C5: Intervenção", icon: ShieldCheck, color: "text-green-500" }
 };
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-4 rounded-2xl border-none shadow-2xl flex flex-col gap-1 max-w-[200px]">
+        <p className="font-bold text-primary mb-1 text-xs">{label}</p>
+        <p className="font-black text-accent text-xl">{payload[0].value} pts</p>
+        {payload[0].payload.theme && (
+          <p className="text-[9px] font-bold text-muted-foreground leading-tight italic line-clamp-3 mt-1">
+            "{payload[0].payload.theme}"
+          </p>
+        )}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function StudentEssayPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -66,7 +83,7 @@ export default function StudentEssayPage() {
     try {
       const { data, error } = await supabase
         .from('essay_submissions')
-        .select('created_at, score')
+        .select('created_at, score, theme')
         .eq('user_id', user.id)
         .not('score', 'is', null)
         .order('created_at', { ascending: true });
@@ -76,13 +93,14 @@ export default function StudentEssayPage() {
       if (data && data.length > 0) {
         if (data.length === 1) {
            setHistory([
-             { date: 'Início', score: 0 }, 
-             { date: format(new Date(data[0].created_at), 'dd/MM'), score: Number(data[0].score) }
+             { date: 'Início', score: 0, theme: '' }, 
+             { date: format(new Date(data[0].created_at), 'dd/MM'), score: Number(data[0].score), theme: data[0].theme }
            ]);
         } else {
            setHistory(data.map(d => ({
              date: format(new Date(d.created_at), 'dd/MM'),
-             score: Number(d.score)
+             score: Number(d.score),
+             theme: d.theme
            })));
         }
       }
@@ -158,29 +176,35 @@ export default function StudentEssayPage() {
         const aiOutput = data.result;
         setResult(aiOutput);
         
-        // Salvar no Supabase para o gráfico de evolução
+        // Salvar no Supabase via API para bypassar restrições RLS
         if (user) {
-          const { error: insertError } = await supabase.from('essay_submissions').insert({
-            user_id: user.id,
-            theme: theme,
-            content: text,
-            score: aiOutput.total_score,
-            feedback: aiOutput.general_feedback,
-            result_data: aiOutput
-          });
-          
-          if (insertError) {
+          try {
+            const saveRes = await fetch('/api/essay-save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id: user.id,
+                theme: theme,
+                content: text,
+                score: aiOutput.total_score,
+                feedback: aiOutput.general_feedback,
+                result_data: aiOutput
+              })
+            });
+            const saveData = await saveRes.json();
+            if (!saveRes.ok || !saveData.success) throw new Error(saveData.error || "Erro ao salvar");
+            
+            fetchHistory();
+          } catch (insertError) {
              console.error("Erro insert", insertError);
              toast({ title: "Erro na Evolução", description: "Avaliação finalizada, mas houve falha ao salvar no histórico permanente.", variant: "destructive" });
              
              // Fallback visual local
              setHistory(prev => {
-                const newScore = { date: format(new Date(), 'dd/MM'), score: aiOutput.total_score };
-                if (prev.length === 0) return [{ date: 'Início', score: 0 }, newScore];
+                const newScore = { date: format(new Date(), 'dd/MM'), score: aiOutput.total_score, theme: theme };
+                if (prev.length === 0) return [{ date: 'Início', score: 0, theme: '' }, newScore];
                 return [...prev, newScore];
              });
-          } else {
-             fetchHistory();
           }
         }
 
@@ -469,17 +493,7 @@ export default function StudentEssayPage() {
                       fontWeight="bold"
                       tick={{fill: 'hsl(var(--primary))', opacity: 0.5}}
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        borderRadius: '1.2rem', 
-                        border: 'none', 
-                        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', 
-                        padding: '0.75rem', 
-                        backgroundColor: 'white' 
-                      }} 
-                      itemStyle={{ fontWeight: '900', color: 'hsl(var(--accent))' }}
-                      labelStyle={{ fontWeight: 'bold', color: 'hsl(var(--primary))', marginBottom: '4px' }}
-                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ strokeOpacity: 0.1 }} />
                     <Area 
                       type="monotone" 
                       dataKey="score" 
