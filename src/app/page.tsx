@@ -105,19 +105,15 @@ export default function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
-            <Link href="/" className="relative transition-all active:scale-95 group">
-              <div className="relative h-10 w-20 md:h-12 md:w-20 overflow-hidden transition-all rounded-2xl bg-white shadow-sm border border-gray-100/50">
-                <Image
-                  src="/images/logocompromisso.png"
-                  alt="Logo Compromisso"
-                  fill
-                  className="object-contain p-2"
-                  priority
+            <Link href="/" onClick={(e) => handleScrollTo(e, '#home')} className="flex items-center group">
+              <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-xl shadow-lg bg-white p-1.5 transition-transform group-hover:rotate-6 duration-500">
+                <Image 
+                  src="/images/logocompromisso.png" 
+                  alt="Logo Compromisso" 
+                  fill 
+                  unoptimized
+                  className="object-contain p-1"
                 />
-              </div>
-              <div className="flex flex-col group-hover:translate-x-1 transition-transform ml-3 md:ml-4">
-                <span className={`text-xl md:text-2xl font-black italic tracking-tighter transition-colors leading-none ${scrolled ? 'text-primary' : 'text-white'}`}>Compromisso</span>
-                <span className={`text-[8px] font-black uppercase tracking-widest leading-tight ${scrolled ? 'text-gray-400' : 'text-white/40'}`}>Sistema de Ensino</span>
               </div>
             </Link>
           </div>

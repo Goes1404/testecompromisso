@@ -172,7 +172,7 @@ export default function SettingsPage() {
 
   const isStudent = profile?.profile_type === 'student';
 
-  const nameParts = (formData.name || "").trim().split(" ");
+  const nameParts = (profile?.name || "").trim().split(" ");
   const formattedDisplayName = nameParts.length > 1 
     ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}` 
     : nameParts[0] || "Usuário";
@@ -219,11 +219,10 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="space-y-1">
                 <h3 className="text-3xl font-black text-accent italic leading-none truncate max-w-[340px] uppercase tracking-tighter">{formattedDisplayName}</h3>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center justify-center gap-1">
-                  <span className="opacity-60">{profile?.exam_target || 'ENEM'}</span> 
-                  <span className="opacity-30">•</span> 
-                  <span className="opacity-60">{profile?.institution || 'Colégio Colaço'}</span>
-                </p>
+                <div className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] flex flex-col items-center justify-center gap-1">
+                  <p className="opacity-80 text-primary">Turma {profile?.exam_target || 'ENEM'}</p> 
+                  <p className="opacity-60">{profile?.institution || 'Colégio Colaço'}</p>
+                </div>
               </div>
 
               {isStudent && (
@@ -335,10 +334,6 @@ export default function SettingsPage() {
             </Card>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
       </div>
     </div>
   );
