@@ -68,16 +68,19 @@ export default function StudentEssayPage() {
         .from('essay_submissions')
         .select('created_at, score')
         .eq('user_id', user.id)
+        .not('score', 'is', null)
         .order('created_at', { ascending: true });
       
-      if (data) {
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
         setHistory(data.map(d => ({
           date: format(new Date(d.created_at), 'dd/MM'),
-          score: d.score
+          score: Number(d.score)
         })));
       }
     } catch (e) {
-      console.warn("Histórico ainda em sincronização.");
+      console.error("Erro ao buscar histórico de redações:", e);
     }
   }, [user]);
 
@@ -419,28 +422,65 @@ export default function StudentEssayPage() {
           </div>
           <Card className="border-none shadow-2xl rounded-[3rem] bg-white p-8 h-[300px]">
             {history.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={history}>
-                  <defs>
-                    <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="date" hide />
-                  <YAxis hide domain={[0, 1000]} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', padding: '1rem', backgroundColor: 'hsl(var(--primary))' }} 
-                    itemStyle={{ fontWeight: '900', color: 'hsl(var(--accent))' }}
-                  />
-                  <Area type="monotone" dataKey="score" stroke="hsl(var(--accent))" strokeWidth={4} fillOpacity={1} fill="url(#colorScore)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <div className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      fontSize={10} 
+                      fontWeight="bold" 
+                      tick={{fill: 'hsl(var(--primary))', opacity: 0.5}}
+                      dy={10}
+                    />
+                    <YAxis 
+                      domain={[0, 1000]} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      fontSize={10} 
+                      fontWeight="bold"
+                      tick={{fill: 'hsl(var(--primary))', opacity: 0.5}}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        borderRadius: '1.2rem', 
+                        border: 'none', 
+                        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', 
+                        padding: '0.75rem', 
+                        backgroundColor: 'white' 
+                      }} 
+                      itemStyle={{ fontWeight: '900', color: 'hsl(var(--accent))' }}
+                      labelStyle={{ fontWeight: 'bold', color: 'hsl(var(--primary))', marginBottom: '4px' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="score" 
+                      stroke="hsl(var(--accent))" 
+                      strokeWidth={4} 
+                      fillOpacity={1} 
+                      fill="url(#colorScore)" 
+                      animationDuration={1500}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-20 italic text-center">
-                <History className="h-10 w-10 mb-2" />
-                <p className="text-[10px] font-black uppercase">Aguardando primeira auditoria</p>
+              <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-center gap-2">
+                <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center shadow-inner">
+                   <History className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Radar de Evolução</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Aguardando seu primeiro envio</p>
+                </div>
               </div>
             )}
           </Card>
