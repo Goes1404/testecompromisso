@@ -47,7 +47,8 @@ export const RESOURCE_TYPES = [
   "E-book",
   "Artigo",
   "Quiz",
-  "Planilha"
+  "Planilha",
+  "Prova"
 ];
 
 export const CONTENT_FORMATS = [

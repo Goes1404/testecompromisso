@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { BookOpen, Plus, Search, Loader2, Trash2, FileText, Video, ExternalLink, Filter, Pencil } from "lucide-react";
+import { BookOpen, Plus, Search, Loader2, Trash2, FileText, Video, ExternalLink, Filter, Pencil, ClipboardCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -293,7 +293,7 @@ export default function LibraryManagementPage() {
                 <img src={item.image_url || `https://picsum.photos/seed/${item.id}/600/400`} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-white/80 backdrop-blur-md text-primary border-none px-3 py-1 font-black text-[10px] uppercase shadow-lg flex items-center gap-2">
-                    {item.type === 'Video' ? <Video className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                    {item.type === 'Video' ? <Video className="h-3 w-3" /> : item.type === 'Prova' ? <ClipboardCheck className="h-3 w-3 text-red-600" /> : <FileText className="h-3 w-3" />}
                     {item.type}
                   </Badge>
                 </div>
