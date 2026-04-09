@@ -26,6 +26,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
@@ -34,6 +35,7 @@ import { EDUCATIONAL_CATEGORIES } from "@/lib/constants";
 export default function TeacherTrailsPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
@@ -109,6 +111,7 @@ export default function TeacherTrailsPage() {
 
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
       setTrails(prev => [data, ...prev]);
+      router.refresh();
       
       setIsCreateDialogOpen(false);
       setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all" });
@@ -137,6 +140,7 @@ export default function TeacherTrailsPage() {
 
       setTrails(prev => prev.filter(t => t.id !== id));
       toast({ title: "Trilha excluída com sucesso!" });
+      router.refresh();
     } catch (e: any) {
       console.error("Erro ao excluir trilha:", e);
       toast({ title: "Falha na exclusão", description: e.message, variant: "destructive" });

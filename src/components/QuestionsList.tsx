@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/app/lib/supabase';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +79,7 @@ export function QuestionsList() {
     const [subjectFilter, setSubjectFilter] = useState('all');
 
     const { toast } = useToast();
+    const router = useRouter();
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -138,8 +140,10 @@ export function QuestionsList() {
         } else {
             setQuestions(prev => prev.filter(q => q.id !== questionToDelete));
             toast({ title: "Questão Excluída" });
+            router.refresh();
         }
         setQuestionToDelete(null);
+        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
         setIsProcessing(false);
     };
 
@@ -176,7 +180,9 @@ export function QuestionsList() {
             setQuestions(prev => prev.map(q => q.id === questionToEdit.id ? updatedQuestion as FullQuestion : q));
             toast({ title: "Questão Atualizada!" });
             setQuestionToEdit(null);
+            router.refresh();
         }
+        setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
         setIsProcessing(false);
     };
 
@@ -269,7 +275,12 @@ export function QuestionsList() {
                 </CardContent>
             </Card>
 
-            <AlertDialog open={!!questionToDelete} onOpenChange={() => setQuestionToDelete(null)}>
+            <AlertDialog open={!!questionToDelete} onOpenChange={(open) => {
+                if (!open) {
+                    setQuestionToDelete(null);
+                    setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
+                }
+            }}>
                 <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl p-10 max-w-sm">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-2xl font-black italic text-primary">Excluir Questão?</AlertDialogTitle>
@@ -284,7 +295,12 @@ export function QuestionsList() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <Dialog open={!!questionToEdit} onOpenChange={(open) => !open && setQuestionToEdit(null)}>
+            <Dialog open={!!questionToEdit} onOpenChange={(open) => {
+                if (!open) {
+                    setQuestionToEdit(null);
+                    setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
+                }
+            }}>
                 <DialogContent className="max-w-3xl rounded-[2.5rem] p-6 md:p-10 bg-white border-none shadow-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black italic text-primary">Ajuste Pedagógico</DialogTitle>

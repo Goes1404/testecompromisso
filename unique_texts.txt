@@ -1,0 +1,1969 @@
+Promise
+;
+  refreshProfile: () => Promise
+;
+}
+
+const AuthContext = createContext
+(null);
+  const [session, setSession] = useState
+(null);
+  const [profile, setProfile] = useState
+window.removeEventListener("vlibras-loaded", initVlibras);
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+Aviso Urgente
+Sintonizando Satélite Analítico...
+);
+
+  return (
+Inteligência Pedagógica (BI)
+Visão térmica de engajamento e performance acadêmica.
+MODO DEMONSTRAÇÃO
+DADOS EM TEMPO REAL
+Alunos na Rede
+Média de Acertos
+Conclusão Trilhas
+Performance por Matéria
+SIMULADOS
+Engajamento Semanal
+Monitoramento Ativo
+Insights Aurora
+50 ? 'alto' : 'moderado'} engajamento nos módulos publicados pelos mentores."`
+              )}
+Gerar Relatório Executivo
+([]);
+    const [subjects, setSubjects] = useState
+([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false);
+    
+    const [questionToDelete, setQuestionToDelete] = useState
+(null);
+    const [questionToEdit, setQuestionToEdit] = useState
+opt.text.toLowerCase().includes(lowerSearch)));
+            return matchesSubject && matchesSearch;
+        });
+    }, [questions, searchTerm, subjectFilter]);
+
+    if (isLoading) return
+;
+
+    return (
+Todas as Matérias
+setSearchTerm(e.target.value)}
+                                />
+setQuestionToEdit(question)} className="rounded-xl font-bold gap-3 py-3 cursor-pointer">
+Editar Questão
+setQuestionToDelete(question.id)}>
+Remover
+Nenhuma questão encontrada para este filtro.
+setQuestionToDelete(null)}>
+Excluir Questão?
+Esta ação é irreversível e removerá o item permanentemente do banco.
+Cancelar
+: "Sim, Excluir"}
+!open && setQuestionToEdit(null)}>
+Ajuste Pedagógico
+Enunciado
+handleFormChange('question_text', e.target.value)} 
+                                className="min-h-[120px] rounded-2xl bg-muted/30 border-none font-medium italic p-4"
+                            />
+handleOptionChange(key, e.target.value)} className="h-12 rounded-xl bg-muted/30 border-none font-medium" />
+Gabarito
+handleFormChange('correct_answer', val)}>
+Matéria
+handleFormChange('subject_id', val)}>
+Ano
+handleFormChange('year', parseInt(e.target.value, 10))} className="h-12 rounded-xl bg-muted/30 border-none font-black text-center" />
+Descartar
+: "Gravar Alterações"}
+Buscar enunciado...
+Banco de Dados em Branco
+Alimente o banco com questões manuais ou em massa para habilitar os gráficos de performance.
+);
+    }
+
+  return (
+Análise Industrial do Banco
+Volume Total
+ITENS NO REPOSITÓRIO
+Exploração de Rede
+TAXA DE COBERTURA
+Distribuição Geográfica de Matérias
+;
+      case 'medium': return
+;
+      default: return
+;
+    }
+  };
+
+  return (
+Central de Avisos
+Novidade
+Sincronizando...
+) : announcements.length === 0 ? (
+Nenhum comunicado recente.
+) : (
+            announcements.map((ann) => (
+Ver todo o histórico
+Compromisso
+(null);
+  const canvasRef = useRef
+(null);
+  const fabricCanvasRef = useRef
+(null);
+  const renderTaskRef = useRef
+(null);
+  
+  const [pdfDoc, setPdfDoc] = useState
+(null);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState
+('pan');
+  const [brushColor, setBrushColor] = useState("#FF0000");
+  const [highlightColor, setHighlightColor] = useState("rgba(255, 255, 0, 0.3)");
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState
+window.location.reload()} variant="outline" className="border-white/20 text-white">Tentar Novamente
+))
+            ) : activeTool === 'highlighter' ? (
+              ["rgba(255,255,0,0.3)", "rgba(0,255,0,0.2)", "rgba(255,0,255,0.2)", "rgba(0,255,255,0.2)"].map(c => (
+))
+            ) : null}
+setZoom(prev => Math.max(0.5, prev - 0.25))} className="text-white hover:bg-white/10">
+setZoom(prev => Math.min(3, prev + 0.25))} className="text-white hover:bg-white/10">
+setZoom(1.0)} className="text-white hover:bg-white/10" title="Reset Zoom">
+Sintonizando...
+numPages) p = numPages; if(p
+setInputPage(e.target.value)}
+            className="w-14 h-8 bg-transparent border-none text-center font-black text-white p-0 focus-visible:ring-0 text-xl italic"
+          />
+Mover Página
+Lápis
+Marca-Texto
+Borracha
+Reset Zoom
+Mentoria IA Aurora
+Sintonizada nesta Aula
+Pensando...
+setInput(e.target.value)}
+          placeholder="Dúvida sobre esta aula..."
+          className="flex-1 h-10 bg-muted/30 border-none rounded-xl text-xs font-bold italic focus-visible:ring-1 focus-visible:ring-accent"
+        />
+Dúvida sobre esta aula...
+);
+  
+  return (
+Aurora IA
+Gabinete de Apoio 360
+Abrir Aurora IA
+Pergunte sobre gestão ou conteúdo...
+Acessibilidade VLibras
+,
+  React.ComponentPropsWithoutRef
+&
+    VariantProps
+)
+})
+Toast.displayName = ToastPrimitives.Root.displayName
+
+const ToastAction = React.forwardRef
+))
+ToastAction.displayName = ToastPrimitives.Action.displayName
+
+const ToastClose = React.forwardRef
+))
+ToastClose.displayName = ToastPrimitives.Close.displayName
+
+const ToastTitle = React.forwardRef
+))
+ToastTitle.displayName = ToastPrimitives.Title.displayName
+
+const ToastDescription = React.forwardRef
+))
+ToastDescription.displayName = ToastPrimitives.Description.displayName
+
+type ToastProps = React.ComponentPropsWithoutRef
+type ToastActionElement = React.ReactElement
+))
+TabsList.displayName = TabsPrimitive.List.displayName
+
+const TabsTrigger = React.forwardRef
+))
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+
+const TabsContent = React.forwardRef
+))
+Table.displayName = "Table"
+
+const TableHeader = React.forwardRef
+))
+TableHeader.displayName = "TableHeader"
+
+const TableBody = React.forwardRef
+))
+TableBody.displayName = "TableBody"
+
+const TableFooter = React.forwardRef
+))
+TableFooter.displayName = "TableFooter"
+
+const TableRow = React.forwardRef
+))
+TableRow.displayName = "TableRow"
+
+const TableHead = React.forwardRef
+))
+TableHead.displayName = "TableHead"
+
+const TableCell = React.forwardRef
+))
+TableCell.displayName = "TableCell"
+
+const TableCaption = React.forwardRef
+void
+  openMobile: boolean
+  setOpenMobile: (open: boolean) => void
+  isMobile: boolean
+  toggleSidebar: () => void
+}
+
+const SidebarContext = React.createContext
+window.removeEventListener("keydown", handleKeyDown)
+    }, [toggleSidebar])
+
+    const state = open ? "expanded" : "collapsed"
+
+    const contextValue = React.useMemo
+)
+  }
+)
+SidebarProvider.displayName = "SidebarProvider"
+
+const Sidebar = React.forwardRef
+Menu de Navegação
+)
+    }
+
+    return (
+)
+  }
+)
+Sidebar.displayName = "Sidebar"
+
+const SidebarTrigger = React.forwardRef
+,
+  React.ComponentProps
+Toggle Sidebar
+)
+})
+SidebarTrigger.displayName = "SidebarTrigger"
+
+const SidebarRail = React.forwardRef
+)
+})
+SidebarRail.displayName = "SidebarRail"
+
+const SidebarInset = React.forwardRef
+)
+})
+SidebarInset.displayName = "SidebarInset"
+
+const SidebarInput = React.forwardRef
+)
+})
+SidebarInput.displayName = "SidebarInput"
+
+const SidebarHeader = React.forwardRef
+)
+})
+SidebarHeader.displayName = "SidebarHeader"
+
+const SidebarFooter = React.forwardRef
+)
+})
+SidebarFooter.displayName = "SidebarFooter"
+
+const SidebarSeparator = React.forwardRef
+)
+})
+SidebarSeparator.displayName = "SidebarSeparator"
+
+const SidebarContent = React.forwardRef
+)
+})
+SidebarContent.displayName = "SidebarContent"
+
+const SidebarGroup = React.forwardRef
+)
+})
+SidebarGroup.displayName = "SidebarGroup"
+
+const SidebarGroupLabel = React.forwardRef
+)
+})
+SidebarGroupLabel.displayName = "SidebarGroupLabel"
+
+const SidebarGroupAction = React.forwardRef
+)
+})
+SidebarGroupAction.displayName = "SidebarGroupAction"
+
+const SidebarGroupContent = React.forwardRef
+))
+SidebarGroupContent.displayName = "SidebarGroupContent"
+
+const SidebarMenu = React.forwardRef
+))
+SidebarMenu.displayName = "SidebarMenu"
+
+const SidebarMenuItem = React.forwardRef
+} & VariantProps
+)
+  }
+)
+SidebarMenuButton.displayName = "SidebarMenuButton"
+
+const SidebarMenuAction = React.forwardRef
+)
+})
+SidebarMenuAction.displayName = "SidebarMenuAction"
+
+const SidebarMenuBadge = React.forwardRef
+))
+SidebarMenuBadge.displayName = "SidebarMenuBadge"
+
+const SidebarMenuSkeleton = React.forwardRef
+)
+})
+SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
+
+const SidebarMenuSub = React.forwardRef
+))
+SidebarMenuSub.displayName = "SidebarMenuSub"
+
+const SidebarMenuSubItem = React.forwardRef
+)
+SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
+
+const SidebarMenuSubButton = React.forwardRef
+,
+    VariantProps
+Navegação Lateral do Sistema
+Fechar
+)
+SheetFooter.displayName = "SheetFooter"
+
+const SheetTitle = React.forwardRef
+))
+SheetTitle.displayName = SheetPrimitive.Title.displayName
+
+const SheetDescription = React.forwardRef
+))
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
+
+const SelectScrollUpButton = React.forwardRef
+))
+SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
+
+const SelectScrollDownButton = React.forwardRef
+))
+SelectScrollDownButton.displayName =
+  SelectPrimitive.ScrollDownButton.displayName
+
+const SelectContent = React.forwardRef
+))
+SelectContent.displayName = SelectPrimitive.Content.displayName
+
+const SelectLabel = React.forwardRef
+))
+SelectLabel.displayName = SelectPrimitive.Label.displayName
+
+const SelectItem = React.forwardRef
+))
+SelectItem.displayName = SelectPrimitive.Item.displayName
+
+const SelectSeparator = React.forwardRef
+))
+ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName
+
+const ScrollBar = React.forwardRef
+)
+})
+RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
+
+const RadioGroupItem = React.forwardRef
+}
+
+const Menubar = React.forwardRef
+))
+Menubar.displayName = MenubarPrimitive.Root.displayName
+
+const MenubarTrigger = React.forwardRef
+))
+MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName
+
+const MenubarSubTrigger = React.forwardRef
+))
+MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
+
+const MenubarSubContent = React.forwardRef
+))
+MenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName
+
+const MenubarContent = React.forwardRef
+)
+)
+MenubarContent.displayName = MenubarPrimitive.Content.displayName
+
+const MenubarItem = React.forwardRef
+))
+MenubarItem.displayName = MenubarPrimitive.Item.displayName
+
+const MenubarCheckboxItem = React.forwardRef
+))
+MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName
+
+const MenubarRadioItem = React.forwardRef
+))
+MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName
+
+const MenubarLabel = React.forwardRef
+))
+MenubarLabel.displayName = MenubarPrimitive.Label.displayName
+
+const MenubarSeparator = React.forwardRef
+= FieldPath
+)
+})
+FormItem.displayName = "FormItem"
+
+const FormLabel = React.forwardRef
+)
+})
+FormLabel.displayName = "FormLabel"
+
+const FormControl = React.forwardRef
+)
+})
+FormControl.displayName = "FormControl"
+
+const FormDescription = React.forwardRef
+)
+})
+FormDescription.displayName = "FormDescription"
+
+const FormMessage = React.forwardRef
+))
+DropdownMenuSubTrigger.displayName =
+  DropdownMenuPrimitive.SubTrigger.displayName
+
+const DropdownMenuSubContent = React.forwardRef
+))
+DropdownMenuSubContent.displayName =
+  DropdownMenuPrimitive.SubContent.displayName
+
+const DropdownMenuContent = React.forwardRef
+))
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
+
+const DropdownMenuItem = React.forwardRef
+))
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
+
+const DropdownMenuCheckboxItem = React.forwardRef
+))
+DropdownMenuCheckboxItem.displayName =
+  DropdownMenuPrimitive.CheckboxItem.displayName
+
+const DropdownMenuRadioItem = React.forwardRef
+))
+DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
+
+const DropdownMenuLabel = React.forwardRef
+))
+DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
+
+const DropdownMenuSeparator = React.forwardRef
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogContent = React.forwardRef
+Close
+)
+DialogFooter.displayName = "DialogFooter"
+
+const DialogTitle = React.forwardRef
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+const DialogDescription = React.forwardRef
+")
+  }
+
+  return context
+}
+
+const ChartContainer = React.forwardRef
+)
+}
+
+const ChartTooltip = RechartsPrimitive.Tooltip
+
+const ChartTooltipContent = React.forwardRef
+&
+    React.ComponentProps
+) : (
+                      !hideIndicator && (
+)
+  }
+)
+ChartTooltipContent.displayName = "ChartTooltip"
+
+const ChartLegend = RechartsPrimitive.Legend
+
+const ChartLegendContent = React.forwardRef
+&
+    Pick
+[0]
+  api: ReturnType
+[1]
+  scrollPrev: () => void
+  scrollNext: () => void
+  canScrollPrev: boolean
+  canScrollNext: boolean
+} & CarouselProps
+
+const CarouselContext = React.createContext
+")
+  }
+  return context
+}
+
+const Carousel = React.forwardRef
+)
+})
+Carousel.displayName = "Carousel"
+
+const CarouselContent = React.forwardRef
+)
+})
+CarouselContent.displayName = "CarouselContent"
+
+const CarouselItem = React.forwardRef
+)
+})
+CarouselItem.displayName = "CarouselItem"
+
+const CarouselPrevious = React.forwardRef
+Previous slide
+)
+})
+CarouselPrevious.displayName = "CarouselPrevious"
+
+const CarouselNext = React.forwardRef
+Next slide
+carousel
+slide
+))
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef
+))
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef
+))
+Avatar.displayName = AvatarPrimitive.Root.displayName
+
+const AvatarImage = React.forwardRef
+))
+AvatarImage.displayName = AvatarPrimitive.Image.displayName
+
+const AvatarFallback = React.forwardRef
+& VariantProps
+))
+Alert.displayName = "Alert"
+
+const AlertTitle = React.forwardRef
+))
+AlertTitle.displayName = "AlertTitle"
+
+const AlertDescription = React.forwardRef
+))
+AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
+
+const AlertDialogContent = React.forwardRef
+)
+AlertDialogFooter.displayName = "AlertDialogFooter"
+
+const AlertDialogTitle = React.forwardRef
+))
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
+
+const AlertDialogDescription = React.forwardRef
+))
+AlertDialogDescription.displayName =
+  AlertDialogPrimitive.Description.displayName
+
+const AlertDialogAction = React.forwardRef
+))
+AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName
+
+const AlertDialogCancel = React.forwardRef
+))
+AccordionItem.displayName = "AccordionItem"
+
+const AccordionTrigger = React.forwardRef
+))
+AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
+
+const AccordionContent = React.forwardRef
+Acessando o Portal...
+handleScrollTo(e, '#home')} className="flex items-center group">
+Metodologia
+Resultados
+Dúvidas
+Entrar
+handleRedirect(e, '/register')} className="bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
+                Criar Conta Grátis
+setMobileMenuOpen(true)}
+          >
+Menu
+setMobileMenuOpen(false)} 
+              className="flex items-center gap-2 py-2 px-4 bg-gray-50 text-gray-400 rounded-full active:scale-95 transition-all text-[11px] font-black uppercase tracking-widest border border-gray-100"
+            >
+handleScrollTo(e, '#metodologia')}>Metodologia
+handleScrollTo(e, '#resultados')}>Resultados
+handleScrollTo(e, '#faq')}>Dúvidas FAQ
+handleRedirect(e, '/register')} className="w-full bg-primary h-14 rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
+                Criar Conta Grátis
+Entrar no Portal
+Ensino de Alta Performance
+Sua Aprovação é o
+nosso Compromisso.
+Preparamos você com excelência para
+ENEM e ETEC
+aliando ensino tradicional à
+Tecnologia IA de ponta
+. Foco total nos seus resultados!
+handleRedirect(e, '/login')} className="h-11 px-8 bg-primary hover:bg-[#e06000] text-white font-black text-sm rounded-full shadow-lg shadow-primary/20 border-none transition-all active:scale-95 group">
+Acessar Plataforma
+handleRedirect(e, '/register')} variant="outline" className="h-11 px-8 border-2 border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-sm rounded-full transition-all backdrop-blur-sm">
+                  Criar Conta Grátis
+handleScrollTo(e, '#metodologia')} className="flex items-center gap-2">
+Conheça o Método
+Inteligência Aurora
+"Otimizamos cada minuto com diagnósticos preditivos e mentoria individualizada."
+Ecossistema Pedagógico
+Os Pilares do Seu Sucesso
+Desenvolvemos uma estrutura 360º para garantir que nenhum aluno seja deixado para trás, unindo tecnologia humana e algoritmos de aprovação.
+Infraestrutura
+Ambiente de Imersão Total
+Explorar Portal
+Unidade Santana de Parnaíba
+Prova Social
+Histórias de Aprovação
+Veja quem já estudou conosco e hoje está nas melhores instituições do país.
+Perguntas Frequentes
+Tire as pequenas dúvidas e dê o primeiro passo.
+Nossa Localização
+Local do cursinho
+Estamos localizados no coração de Santana de Parnaíba, no
+Colégio Colaço
+. Um ambiente preparado para transformar seu futuro.
+Endereço Unidade Central
+R. Cel. Raimundo, 32 - Centro, Santana de Parnaíba - SP, 06501-010
+Abrir no Maps
+Unidade Colaço - Compromisso
+Referência:
+Ao lado do Posto de Saúde Central e da Praça Monumento.
+Sua jornada para o
+sucesso começa aqui.
+Vagas limitadas para o próximo ciclo de aprovação. Garanta sua mentoria com os melhores do mercado.
+Garanta Sua Vaga
+Falar com Consultor
+"Referência em aprovação nas instituições mais concorridas de Santana de Parnaíba e região."
+Patrocinador Oficial
+Esta plataforma é integralmente patrocinada pela Prefeitura de Santana de Parnaíba, garantindo ensino de elite gratuito para a nossa comunidade.
+Plataforma
+Portal do Sucesso
+Metodologia 360º
+Matrícula Online
+contato@compromisso.edu.br
+Unidade Central Parnaíba
+Oficial
+© 2024 CURSO COMPROMISSO
+CNPJ 45.123.456/0001-00
+Educação Inteligente • Resultados Reais
+Acesso
+Restrito
+Olá,
+. Identificamos uma irregularidade ou manutenção pendente em seu cadastro.
+Status da Conta
+SUSPENSÃO TEMPORÁRIA ATIVA
+Contatar Suporte Aurora
+signOut()} className="w-full h-12 text-muted-foreground font-black uppercase text-[10px] tracking-widest gap-2 hover:bg-red-50 hover:text-red-600">
+Sair da Conta
+Compromisso Smart Education
+Validando Sessão Segura...
+);
+  }
+
+  return (
+Nova Senha
+Crie uma credencial forte para sua conta.
+setPassword(e.target.value)}
+                className="h-14 bg-slate-50 border-none rounded-2xl font-bold pr-12 focus-visible:ring-primary shadow-inner"
+                required
+              />
+setConfirmPassword(e.target.value)}
+              className="h-14 bg-slate-50 border-none rounded-2xl font-bold focus-visible:ring-primary shadow-inner"
+              required
+            />
+Padrão de Segurança
+: "Gravar Nova Senha"}
+Sua nova senha forte
+Confirme sua nova senha
+Carregando Formulário Seguro...
+(1);
+  const [profileType, setProfileType] = useState
+Voltar ao Início
+Início
+Cadastro
+Sua rota de aprovação começa agora.
+Nome
+updateField("firstName", e.target.value)} className="h-12 bg-white/50 rounded-2xl border-muted/20" />
+Nome do Meio
+updateField("middleName", e.target.value)} className="h-12 bg-white/50 rounded-2xl border-muted/20" />
+Sobrenome
+updateField("lastName", e.target.value)} className="h-12 bg-white/50 rounded-2xl border-muted/20" />
+CPF
+E-mail
+updateField("email", e.target.value)} className="pl-12 h-12 bg-white/50 rounded-2xl border-muted/20" />
+Senha de Segurança
+setProfileType(v as ProfileType)} 
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+Aluno ETEC
+Formação Técnica
+Aluno ENEM
+Foco Vestibular
+Unidade Escolar / Polo
+updateField("school", v)}>
+Outra Rede / Não Listada
+Curso Atual ou Série
+updateField("course", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+Unidade Escolar / Polo Atual
+Instituição Alvo (Opcional)
+updateField("university", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+Carreira Desejada
+updateField("major", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+O que você busca no Compromisso?
+updateField("interests", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
+Continuar
+}
+                Finalizar Matrícula
+Seu nome
+Opcional
+Seu sobrenome
+000.000.000-00
+nome@exemplo.com
+Senha
+Selecione sua escola...
+Ex: Informática ou 3º Ano Médio
+Selecione sua escola atual...
+Ex: USP, FATEC, UNESP
+Ex: Medicina, Engenharia...
+Ex: Mentoria em Redação, Simulados...
+Iniciando Sessão...
+);
+  }
+
+  return (
+Compro
+misso
+Ensino de Elite
+Acesso Restrito
+Insira suas credenciais para entrar.
+Email de acesso
+Esqueceu sua senha?
+Acesso ao portal
+Ainda não tem conta?
+Criar Cadastro Grátis
+Voltar ao Login
+(null);
+  const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState
+Sucesso!
+Verifique seu e-mail para seguir as instruções e acessar o sistema.
+Ir para o Login
+E-mail Cadastrado
+: "Verificar Conta"}
+Lembrei minha senha / Voltar
+Segurança da Senha
+Confirmar Nova Senha
+: "Redefinir e Entrar"}
+seuemail@exemplo.com
+isMobile && setOpenMobile(false)} className="flex items-center gap-3">
+0 && item.badge && (
+Sistema de Ensino
+Plataforma Patrocinada pela Prefeitura
+signOut()} className="text-red-400 hover:bg-red-500/10 h-11 rounded-lg">
+Sair
+([]);
+  const [allProgress, setAllProgress] = useState
+([]);
+  const [loading, setLoading] = useState(true);
+  const [pinningId, setPinningId] = useState
+Sintonizando Estúdio...
+COMPROMISSO 360
+Sua Rota de
+Alta Performance
+Escolha um dos eixos temáticos e inicie sua jornada guiada rumo ao sucesso acadêmico.
+setSearchTerm(e.target.value)}
+            />
+Filtrar Perfil
+Público-Alvo
+p.trail_id === trail.id);
+          const percentage = userProgress?.percentage || 0;
+          const isPinned = !!userProgress;
+
+          return (
+) : isPinned ? (
+Especialista
+Pesquisar trilha...
+t.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    t.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+Gestão de Trilhas
+Administre caminhos pedagógicos e publique para a rede.
+document.body.style.pointerEvents = "", 100);
+          }}>
+Nova Trilha Manual
+Configurar Trilha
+Título da Trilha
+Categoria
+Todos os Alunos
+Apenas ETEC
+Apenas ENEM
+Descrição Geral
+setSearchTerm(e.target.value)} />
+Sincronizando Banco de Dados...
+handleDeleteTrail(trail.id)}
+                      className="h-10 w-10 rounded-full text-red-500 hover:bg-red-50" 
+                      title="Excluir Trilha"
+                    >
+Gerenciar
+Nenhuma trilha encontrada
+Inicie uma nova trilha ou ajuste seus filtros.
+Ex: Fundamentos de IA
+Matéria Principal
+O que o aluno aprenderá nesta jornada?
+Pesquisar entre suas trilhas...
+Simular Visão do Aluno
+Excluir Trilha
+(null);
+  const [modules, setModules] = useState
+([]);
+  const [contents, setContents] = useState
+([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [deletingId, setDeletingId] = useState
+(null);
+
+  const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
+  const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
+  const [isEditTrailDialogOpen, setIsEditTrailDialogOpen] = useState(false);
+  
+  const [activeModuleId, setActiveModuleId] = useState
+(null);
+  const activeModuleRef = useRef
+(null);
+  const [editingContentId, setEditingContentId] = useState
+(null);
+  const [uploading, setUploading] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState
+router.back()}
+            className='rounded-full h-12 w-12 bg-muted/30 hover:bg-primary/5 transition-all'
+          >
+Painel de Autor
+Detalhes
+Prévia
+setIsModuleDialogOpen(true)}
+            className='bg-primary text-white font-black rounded-xl shadow-lg h-12 px-8 hover:scale-105 transition-all'
+          >
+Novo Capítulo
+Inicie sua Jornada
+setIsModuleDialogOpen(true)}
+                className='bg-accent text-accent-foreground font-black px-10 h-14 rounded-2xl shadow-xl'
+              >
+                Criar Primeiro Capítulo
+) : (
+            modules.map((mod, idx) => (
+Adicionar Aula
+) : content.type === 'quiz' ? (
+APOSTILA
+startEditContent(content)}
+                        >
+Este capítulo ainda está sem materiais didáticos.
+Status de Rede
+Mentoria Compromisso
+"Organize suas aulas em blocos de até 15 minutos para maximizar o foco dos estudantes de Santana de Parnaíba."
+Editar Rótulo
+Título Principal
+Matéria Central
+Breve Descrição
+}
+              Salvar Alterações
+Título da Unidade Didática
+) : (
+                'Criar Unidade'
+              )}
+🎞️ Videoaula
+🧠 Quiz
+📄 PDF
+📝 Texto
+📎 Anexo
+Apostila
+Sem Apostila
+Título do Conteúdo
+Link Externo (URL)
+Notas do Mentor (Opcional)
+Fila
+Estúdio Vazio
+Adicione materiais para ver a fila.
+) : (
+                        pendingItems.map((item) => (
+removeFromQueue(item.id)}
+                              className='h-8 w-8 rounded-full bg-white text-muted-foreground hover:text-red-600 hover:bg-red-50 shadow-sm transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 shrink-0'
+                            >
+⚠️ Você começou a preencher um item, mas não clicou em "Adicionar à Fila".
+Excluir Trilha Definitivamente
+Ex: Fundamentos de Redação
+Selecione a disciplina
+Qual o propósito deste conjunto de módulos?
+Ex: Introdução à Matéria
+Nenhuma
+Ex: Aula 01 - Conceitos Base
+https://...
+Oriente o aluno sobre como usar este material...
+("all");
+  const [filterInstitution, setFilterInstitution] = useState
+("all");
+  const [filterCourse, setFilterCourse] = useState
+("all");
+  const [students, setStudents] = useState
+Gestão de Rede
+Monitoramento estratégico do corpo discente em tempo real.
+setSearchTerm(e.target.value)}
+          />
+Filtrar por Instituição/Escola
+Todas as Instituições
+Filtrar por Carreira/Curso
+Todas as Carreiras
+Turma ETEC
+Turma ENEM
+Alunos em Risco
+Isenção Social
+Sincronizando Banco de Identidades...
+Estudante
+Instituição / Polo
+Último Acesso
+Tempo na Platforma
+Evolução
+Ações de Apoio
+Progresso
+Nenhum registro localizado
+Pesquisar por nome ou polo...
+Abrir Chat
+Ver Analíticos
+([]);
+  const [enemRank, setEnemRank] = useState
+Elite Performance
+Top 10 estudantes com as maiores pontuações em simulados.
+Aguardando dados de performance...
+) : (
+            data.map((student, index) => (
+Recorde
+PTS
+Voltar ao Painel
+Rankings de Elite
+AUDITORIA VIVA
+Classificação meritocrática baseada em performance técnica real.
+Atividade Global
+Calculando...
+Ranking ETEC
+Ranking ENEM
+Sincronizando Posições de Liderança...
+Master ETEC 2024
+Elite ENEM 2024
+('bulk');
+    const [isSaving, setIsSaving] = useState(false);
+    const [subjects, setSubjects] = useState
+([]);
+    
+    // Bulk States
+    const [rawText, setRawText] = useState('');
+    const [extractedQuestions, setExtractedQuestions] = useState
+('');
+    const [bulkTargetAudience, setBulkTargetAudience] = useState
+Banco de Questões
+Gestão estratégica de avaliações e simulados.
+Carga em Massa
+Manual
+Texto Bruto da Prova
+setRawText(e.target.value)} 
+                                />
+Analisando com Aurora IA...
+Extrair Questões com Aurora IA
+Enunciado da Questão
+Disciplina
+Público Alvo
+Todos (Geral)
+Foco ETEC / FATEC
+Foco ENEM
+Ano Referência
+Explicação Pedagógica (Opcional)
+}
+                                Salvar no Repositório
+Vincule as questões a uma matéria para finalizar a importação.
+Todos
+ETEC/FATEC
+ENEM
+}
+                                        Validar e Salvar Tudo
+setExtractedQuestions(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-4 right-4 h-8 w-8 rounded-full bg-slate-50 text-red-400 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm">
+Histórico do Repositório
+Cole aqui o texto copiado de um PDF ou documento...
+Digite o texto da pergunta...
+Selecione
+Turma
+Justifique a resposta correta para auxiliar o estudo do aluno...
+Vincular Matéria
+([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState
+Studio Virtual
+Gerencie o link de suas reuniões (Meet/YouTube).
+Agendar Aula
+Nova Sala Online
+Título da Aula
+Data
+Horário
+Link da Reunião (Google Meet / Zoom)
+Pauta da Aula
+: "Publicar na Agenda"}
+Certifique-se de rodar o SQL no Supabase.
+) : lives.length === 0 ? (
+Nenhuma aula agendada.
+) : (
+          lives.map((live) => (
+} // CORRIGIDO
+Studio
+Ex: Mentoria - Carreira
+https://meet.google.com/...
+O que será discutido...
+Sincronizando Studio Master...
+router.back()} className="text-white hover:bg-white/10 rounded-full h-12 w-12">
+CONSOLE DE TRANSMISSÃO
+ABRIR MEU GOOGLE MEET
+Sinal Monitorado
+Console de Gerenciamento
+O chat foi desabilitado. Utilize este console para monitorar o status da sua transmissão externa.
+Status da Rede
+Sincronizada
+([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setQuestionToEdit] = useState
+r.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+Gestão de Apostilas
+Curadoria industrial das apostilas e materiais didáticos.
+document.body.style.pointerEvents = "", 100);
+          }
+        }}>
+Nova Apostila
+Configurar Apostila
+Título
+Tipo
+Apenas Turma ETEC
+Apenas Turma ENEM
+Arquivo a ser enviado (Ou Link Externo)
+Capa (Opcional - URL)
+Resumo Pedagógico
+setSearchTerm(e.target.value)}
+        />
+) : filtered.length === 0 ? (
+Nenhuma apostila localizada
+startEdit(item)} className="h-10 w-10 rounded-full text-accent hover:bg-accent/10">
+handleDelete(item.id)} className="h-10 w-10 rounded-full text-muted-foreground hover:text-red-600 hover:bg-red-50">
+Ex: Guia de Trigonometria
+Ou cole a URL...
+Descrição breve para o aluno...
+Pesquisar entre as apostilas...
+([]);
+  const [chartData, setChartData] = useState
+([]);
+  const [announcements, setAnnouncements] = useState
+([]);
+
+  const priorityStyles: Record
+type.includes(key)) || type === '';
+      }) || [];
+
+      const atRisk = students.filter(s => 
+        !s.last_access || new Date(s.last_access)
+Sincronizando Gestão...
+Painel de Gestão Docente
+PROFESSOR
+Controle pedagógico e mentoria de alta performance.
+}
+            Diagnóstico
+Nova Trilha
+Sincronizado
+Engajamento de Rede
+Comparativo de atividade por janela de tempo.
+Renderizando Analíticos...
+Busca Ativa (Social)
+Sem alertas pendentes.
+) : (
+                eligibleList.map((aluno, i) => (
+Elegível Isenção
+Orientar
+Ver Base Completa
+Taxa de Sucesso
+Comunicados
+Histórico Completo
+Central de Ajuda
+Tutoriais interativos e perguntas frequentes
+setSearchQuery(e.target.value)}
+            className="pl-12 h-12 bg-white border-border rounded-xl text-sm font-medium"
+          />
+setSearchQuery("")}
+            className="rounded-full text-xs font-bold h-8"
+          >
+            Todas
+Tutoriais Interativos
+Clique em
+"Iniciar Tutorial Guiado"
+em qualquer pergunta para ver um passo a passo visual 
+              que destaca os botões exatos na interface. O sistema vai destacar cada elemento com setas indicando onde clicar.
+Nenhum resultado encontrado
+Tente buscar com outros termos.
+) : (
+          filteredFaqs.map((faq) => (
+Iniciar Tutorial Guiado
+Buscar por pergunta ou categoria...
+([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEssay, setSelectedEssay] = useState
+s.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.theme?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+Central de Auditoria
+Staff
+Auditoria técnica de redações e submissões da rede.
+Fila de Avaliação
+) : filteredSubmissions.length === 0 ? (
+Sem envios recentes.
+SUBMISSÃO ACADÊMICA
+Tema da Redação
+Transcrição do Estudante
+LAUDO IA
+Nota Aurora
+Parecer do Maestro
+setMentorFeedback(e.target.value)}
+                        placeholder="Adicione suas notas pedagógicas ou orientações personalizadas para o aluno..."
+                        className="min-h-[180px] rounded-[2rem] bg-white border border-slate-100 p-6 font-medium italic text-sm shadow-inner resize-none focus-visible:ring-accent transition-all"
+                      />
+}
+                          Validar Revisão Maestro
+Selecione uma Submissão
+Clique em um aluno na fila industrial para iniciar a auditoria técnica.
+Buscar estudante ou tema...
+Adicione suas notas pedagógicas ou orientações personalizadas para o aluno...
+Conversar com Aluno
+([]);
+  const [cohorts, setCohorts] = useState
+c.id === a.target_group)?.name || '';
+    const matchesTarget = targetName.toLowerCase().includes(search);
+
+    return matchesSearch || matchesTarget;
+  });
+
+  return (
+Mural de Avisos
+Gestão de comunicados oficiais e alertas de rede.
+Ativos
+Urgentes
+a.priority === 'high').length}
+Nova Mensagem
+Configure o alerta para a rede.
+Assunto Principal
+Corpo do Alerta
+Prioridade
+Informativo
+Importante
+Urgente
+Geral
+Toda a Rede
+Alunos ETEC
+Alunos ENEM
+Turmas (Cohorts)
+Atalhos Operacionais
+applyTemplate(tpl)}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white border border-transparent hover:border-accent/20 hover:shadow-lg transition-all group text-left"
+              >
+Carregar Texto Padrão
+Sincronizando Mural...
+Nenhum aviso localizado
+c.id === ann.target_group);
+                
+                return (
+handleDelete(ann.id)} className="h-10 w-10 rounded-full text-muted-foreground hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all">
+Título do aviso...
+Escreva os detalhes aqui...
+Selecione o alvo
+Pesquisar por termo ou turma no histórico...
+([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [latency, setLatency] = useState(0);
+  const scrollRef = useRef
+Engine de Comunicação
+SINAL ATIVO
+Reiniciar
+Categorias de Suporte
+handleSend(undefined, chip.label)}
+                className="w-full justify-start h-auto py-4 px-5 rounded-2xl bg-white hover:bg-accent hover:text-white transition-all border-none shadow-md font-bold text-xs gap-4 group"
+              >
+Status do Polo
+Latência de Rede
+Aurora processando solicitação...
+Descreva sua dúvida pedagógica ou administrativa...
+('loading_subjects');
+  const [subjects, setSubjects] = useState
+([]);
+  const [questions, setQuestions] = useState
+([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState
+(null);
+  const [answers, setAnswers] = useState
+([]);
+  const [activeSubjectId, setActiveSubjectId] = useState
+Analise com calma.
+Simulado Concluído!
+Sua pontuação foi registrada no banco de dados para acompanhamento pedagógico.
+Acertos Totais
+setGameState('idle')} className="w-full h-14 rounded-xl bg-primary font-black">
+Ocorreu um erro ao carregar os dados do simulado.
+fetchSubjects()} variant="outline">Tentar Novamente
+)
+  }
+
+  return (
+Simulados por Matéria
+fetchQuestions(subject.id)}
+                            className='w-full h-12 rounded-xl bg-primary font-black shadow-lg'
+                        >
+                            Começar Simulado
+Simulador de Isenção
+Descubra se você tem direito à isenção da taxa de inscrição nos principais vestibulares do país.
+Qual a renda mensal total da sua família?
+setFamilyIncome(e.target.value)}
+              className="rounded-lg"
+            />
+Você cursou todo o ensino médio em escola pública?
+Sim
+Não
+Sua família está inscrita no Cadastro Único (CadÚnico)?
+Analisando...
+Simular Agora
+*Este é um resultado preliminar. A confirmação final depende das regras específicas de cada edital de vestibular.
+Ex: 2100.50
+Selecione uma opção
+(null);
+  const [charCount, setCharCount] = useState(0);
+  const [history, setHistory] = useState
+Redação
+Master
+Refine sua escrita com o motor de auditoria Aurora IA.
+}
+            Gerar Tema com IA
+Sua Proposta de Tema
+setTheme(e.target.value)} 
+                placeholder="Ex: A inteligência artificial na educação brasileira..."
+                className="h-12 rounded-xl bg-white border-none shadow-inner font-bold italic text-lg md:text-xl text-primary placeholder:opacity-30"
+              />
+IA Sintonizada
+Contagem
+Sinais
+Segurança Pedagógica
+Análise baseada nos critérios INEP 2024
+Sincronizando Auditoria...
+Submeter para Aurora IA
+A Aurora IA é uma inteligência artificial e sua correção pode apresentar imprecisões.
+Diagnóstico de Performance
+SINAL FINAL
+Pontuação Maestro
+Nota
+Raio-X de Desvios
+0 ? (
+                  result.detailed_corrections.map((corr: any, i: number) => (
+Nenhum desvio gramatical detectado pela Aurora.
+Plano de Evolução
+Sincronizado no Meu Mural
+Base de Apoio ENEM
+Motivador
+Aguardando primeira auditoria
+Ex: A inteligência artificial na educação brasileira...
+Inicie seu texto aqui... Desenvolva sua tese com clareza industrial.
+([]);
+
+  const [loadingCalc, setLoadingCalc] = useState(false);
+  const [members, setFamilyMembers] = useState
+setTimeout(r, 1000));
+    const familySize = members.length;
+    const perCapita = totalFamilyIncome / familySize;
+    const eligible = perCapita
+acc + group.items.length, 0);
+  const progressPercent = Math.round((checkedItems.length / totalDocs) * 100);
+
+  if (loadingDocs) return (
+Sincronizando Central de Ingresso...
+Padrão SiSU/ProUni
+Central de
+Ingresso
+Gerencie seus dados e organize sua documentação oficial.
+Prontidão Documental
+Checklist de Documentos
+Cálculo de Renda
+toggleItem(item.id)}
+                      >
+toggleItem(item.id)} className="h-6 w-6 rounded-lg border-2" />
+Nuvem de Documentos
+Use o Google Drive para não perder nada.
+ABRIR MEU DRIVE
+Qualidade da Imagem
+"Evite fotos com sombras ou reflexos de luz. Se o texto não estiver legível, sua inscrição poderá ser indeferida pela universidade."
+Validade dos Papéis
+"Comprovantes de residência devem ter no máximo 90 dias. Certidões não podem ter rasuras ou remendos."
+Organização Maestro
+"Renomeie seus arquivos como 'RG_FRENTE.pdf' ou 'HISTORICO_MEDIO.pdf'. Isso agiliza a conferência do tutor e evita erros de envio."
+Dica de Segurança
+"Nunca envie documentos originais por chats informais. Mantenha seu rastro digital seguro em pastas oficiais."
+Critério Social
+O parâmetro de 1,5 salário mínimo per capita.
+Teto de Isenção
+Até
+por morador.
+Adicione cada integrante da sua residência.
+Soma Familiar
+Membro da Casa
+updateMember(member.id, 'label', e.target.value)} className="h-12 bg-white rounded-xl border-none font-bold italic" />
+Renda Bruta (R$)
+updateMember(member.id, 'income', e.target.value)} className="h-12 bg-white rounded-xl border-none font-black text-primary" />
+Adicionar Membro
+} Verificar Elegibilidade
+Sua Renda Per Capita
+Limite do Governo (1,5 SM)
+0.00
+(null);
+  
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  // ✅ FIX 1: começa com fallback local — evita spinner infinito no primeiro render
+  const [subjects, setSubjects] = useState
+Configurações de Identidade
+Gerencie sua presença digital e preferências acadêmicas.
+ACESSO VERIFICADO
+Sugestões de Avatar
+}
+                    CONFIRMAR ALTERAÇÕES
+Dados Cadastrais
+Alterações de nome são restritas por segurança de rede.
+Nome de Exibição
+Matéria de Foco
+Galeria de Avatares Dinâmicos
+SALVAR PREFERÊNCIAS
+Trocar Foto
+Selecione sua preferência
+Sintonizando Estúdio Master...
+);
+  }
+
+  const liveNow = lives.filter(l => l.status === 'live');
+  const upcoming = lives.filter(l => l.status === 'scheduled');
+
+  return (
+Centro de Transmissões
+REDE ATIVA
+Mentoria técnica e sessões de redação em tempo real.
+Transmissão em Curso
+SINAL AO VIVO
+AMBIENTE AUDITADO
+Mentor Responsável
+ENTRAR NO ESTÚDIO
+Próximas Sessões
+Silêncio no Estúdio
+Nenhuma mentoria externa agendada para as próximas horas.
+AGENDADA
+Transmissão Remota
+Sinal Habilitado
+GARANTIR ACESSO
+Sintonizando Satélite...
+);
+
+  const isLiveNow = live?.status === 'live';
+
+  return (
+router.back()} 
+            className="rounded-full h-11 w-11 shrink-0 bg-primary/5 hover:bg-primary/10 transition-all"
+          >
+TRANSMISSÃO ATIVA
+SALA AGENDADA
+Console de Mentoria
+ACESSAR SALA DO GOOGLE MEET
+Sessão Restrita à Rede
+Aguardando processamento do link pelo Mentor...
+Pauta da Mentoria
+O que vamos aprender hoje?
+Carregando Acervo Digital...
+Minhas Apostilas
+Acervo oficial de materiais e apostilas interativas da rede.
+Filtrar por Tipo
+Estudar Agora
+Ver Videoaula
+Acervo em Sincronização
+Nenhuma apostila encontrada para os filtros atuais.
+Buscar apostila...
+Carregando Material Interativo...
+Descriptografando Material Seguro...
+router.back()} className="text-white hover:bg-white/10 rounded-full shrink-0">
+Ambiente de Estudo Controlado
+ANTI-PIRATARIA ATIVO
+([]);
+  const [libraryResources, setLibraryResources] = useState
+([]);
+  const [recentProgress, setRecentProgress] = useState
+([]);
+  const [essayStats, setEssayStats] = useState
+(null);
+  const [examStats, setExamStats] = useState
+Carregando seu ambiente...
+Pronto para hoje?
+Sua IA Aurora está monitorando seu progresso em tempo real. Continue de onde parou.
+Aurora IA · Mentoria Estratégica
+"A constância é a chave da aprovação! Revise os erros do último simulado antes de avançar. Estou disponível 24h para corrigir redações."
+Falar com Aurora
+Por Onde Começar
+Ver todas
+) : recentProgress.length === 0 ? (
+Nenhuma trilha iniciada
+Explore o catálogo e comece sua jornada.
+Explorar Trilhas
+Público Geral
+Taxa de Acertos
+Lab. de Redação
+Enviadas
+Média pts
+Comece a escrever hoje!
+Acessar Laboratório
+Acervo & Apostilas
+Ver tudo
+)
+              ) : libraryResources.length === 0 ? (
+Apostilas em sincronização...
+) : (
+                libraryResources.map((res) => (
+Plataforma Educacional
+Patrocinada pela Prefeitura de Santana de Parnaíba
+Compromisso • 2024
+;
+      case "Física": return
+;
+      case "Química": return
+;
+      case "Polos": return
+Comunidade
+Onde o conhecimento se torna colaborativo.
+Nova Discussão
+Iniciar Tópico
+Compartilhe sua dúvida ou insight com a rede.
+Título do Debate
+c!=="Todos").map(c=>
+Contexto / Detalhes
+Sintonizando Rede...
+Nenhuma discussão encontrada
+Autor
+Participar
+Qual sua dúvida principal?
+Explique um pouco mais...
+Pesquisar debates...
+(null);
+
+  const [forum, setForum] = useState
+(null);
+  const [posts, setPosts] = useState
+([]);
+  const [loading, setLoading] = useState(true);
+  const [isRestricted, setIsRestricted] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
+
+  // Estados para Gestão de Membros
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [members, setMembers] = useState
+Sincronizando Debate...
+router.back()} className="rounded-full h-10 w-10 shrink-0 hover:bg-primary/5">
+Somente Mentoria
+Gerenciar Membros
+Membros do Fórum
+setMemberSearch(e.target.value)}
+                    />
+Sincronizando Rede...
+) : filteredMembers.length === 0 ? (
+Nenhum aluno localizado
+Debate Ativo
+Pauta Inicial do Debate
+Seja o primeiro a contribuir com este tópico
+Sua participação foi restrita neste debate pelo moderador.
+) : isRestricted ? (
+Este fórum está em modo 'Leitura'. Apenas mentores podem postar.
+Buscar aluno no polo...
+Sua contribuição...
+);
+
+  return (
+Configuração de Segurança
+Bem-vindo,
+Professor!
+Este é seu primeiro acesso com a senha temporária. Por favor, defina sua senha definitiva de segurança acadêmica.
+Sua Nova Senha
+Acesso Configurado!
+Você será redirecionado para a plataforma principal...
+setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="h-14 bg-muted/30 border-none rounded-2xl font-bold px-6 pr-14 text-lg focus-visible:ring-accent shadow-sm"
+                      />
+Confirmar Senha
+setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="h-14 bg-muted/30 border-none rounded-2xl font-bold px-6 pr-14 text-lg focus-visible:ring-accent shadow-sm"
+                      />
+Requisitos de Segurança
+: "Ativar Cadastro de Professor"}
+Esta senha será seu acesso único ao SIAC-COMPROMISSO
+Compromisso • Sistema Acadêmico Inteligente
+••••••••
+setTimeout(r, 1200));
+
+    const familySize = members.length;
+    // Se a renda estiver vazia, Number() retorna 0, o que é o comportamento desejado
+    const perCapita = totalFamilyIncome / familySize;
+    const eligible = perCapita
+VERSÃO 2024
+Não chute o valor. Use nossa calculadora assistida para somar a renda de cada familiar e descobrir sua elegibilidade no SiSU e ProUni.
+A Regra de 1,5 SM
+O critério oficial do Governo Federal.
+Teto Atualizado
+A soma de todas as rendas dividida pelo número de moradores deve ser de até
+Dica da Aurora
+"Muitos alunos perdem a isenção porque esquecem de incluir moradores sem renda no cálculo. Deixe o campo de renda vazio para esses integrantes!"
+Calculadora de Renda
+Adicione cada integrante que mora com você (campos opcionais).
+Soma Atual
+Integrante / Parentesco
+updateMember(member.id, 'label', e.target.value)}
+                          className="h-12 bg-white rounded-xl border-none font-bold italic"
+                        />
+updateMember(member.id, 'income', e.target.value)}
+                          className="h-12 bg-white rounded-xl border-none font-black text-primary"
+                        />
+Adicionar Integrante
+Valor por cada morador da casa
+Limite de 1,5 Salário Mínimo
+Referência MEC / Governo Federal
+Tirar Dúvidas com Aurora
+([]);
+  const [activeModuleId, setActiveModuleId] = useState
+(null);
+  const [activeContentId, setActiveContentId] = useState
+(null);
+  const [contents, setContents] = useState
+(null);
+  const progressInterval = useRef
+Sincronizando Estúdio...
+setIsApiReady(true);
+          if ((window as any).YT && typeof (window as any).YT.Player === 'function') setIsApiReady(true);
+        }}
+      />
+router.back()} className="rounded-full hover:bg-white/10 h-10 w-10 shrink-0 text-white">
+EVOLUÇÃO
+Estúdio em Preparação
+Este mentor ainda está organizando os materiais desta trilha.
+Console
+Math.min(prev + 50, 800)); }} className="h-6 w-6 rounded-md hover:bg-white/10 flex items-center justify-center text-white/60">
+Math.max(prev - 50, 150)); }} className="h-6 w-6 rounded-md hover:bg-white/10 flex items-center justify-center text-white/60">
+Unidade Atual
+Dica do Mentor
+"A revisão imediata fixa até 3x mais o conhecimento. Utilize as apostilas vinculadas."
+Pedagógico
+Apostila Interativa
+Estude simultaneamente com o vídeo usando o modo split-screen.
+setShowSimultaneousWorkbook(true)} className="bg-primary text-white h-12 rounded-xl font-bold text-[10px] uppercase shadow-md hover:scale-105 transition-all gap-2 px-6">
+ESTUDO SIMULTÂNEO
+Sem atividades vinculadas
+Nenhum anexo adicional
+Jornada Maestro
+Materiais
+CANAL SEGURO
+Sintonizando Rede de Mentores...
+) : filteredContacts.length > 0 ? (
+          filteredContacts.map((contact) => (
+Nenhum mentor deste polo online
+Você pode falar com a Aurora IA para suporte imediato.
+Buscar aluno por nome, polo, escola ou curso...
+([]);
+  const [contact, setContact] = useState
+(null);
+  const [loading, setLoading] = useState(true);
+  const scrollRef = useRef
+Sintonizando Canal de Mentoria...
+router.back()} className="rounded-full h-11 w-11 shrink-0 hover:bg-primary/5">
+SINAL SEGURO
+inline 
+                             ?
+Aurora sintonizando resposta...
+handleSend(undefined, "O que é a regra de 1,5 salário mínimo?")}
+                className="bg-accent/10 hover:bg-accent/20 text-accent font-black text-[9px] uppercase tracking-widest px-4 py-2 rounded-full border border-accent/20 transition-all flex items-center gap-2"
+              >
+Testar Resposta Aurora
+handleSend(undefined, "Quais documentos preciso para o ETEC?")}
+                className="bg-primary/5 hover:bg-primary/10 text-primary font-black text-[9px] uppercase tracking-widest px-4 py-2 rounded-full border border-primary/10 transition-all flex items-center gap-2"
+              >
+Testar Signal Pedagógico
+A Aurora IA é uma inteligência artificial e pode cometer erros. Verifique informações importantes.
+handleSend(e)} className="flex items-center gap-4 max-w-4xl mx-auto bg-slate-100 p-2 pl-8 rounded-[2.5rem] border border-slate-200 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
+([]);
+  const [processingId, setProcessingId] = useState
+pType.includes(key)) || pType === '';
+    const isStaff = !isStudent;
+
+    const matchesRole = roleFilter === 'all' || 
+                       (roleFilter === 'staff' && isStaff) || 
+                       (roleFilter === 'student' && isStudent);
+
+    const isSuspended = u.status === 'suspended';
+    const matchesStatus = statusFilter === 'all' ||
+                         (statusFilter === 'active' && !isSuspended) ||
+                         (statusFilter === 'suspended' && isSuspended);
+
+    const matchesType = typeFilter === 'all' || u.profile_type === typeFilter;
+
+    return matchesSearch && matchesRole && matchesStatus && matchesType;
+  });
+
+  return (
+Diretório de Usuários
+Gestão completa de identidades e acessos da rede.
+Papel na Rede
+Todos os Papéis
+Estudantes
+Staff / Mentoria
+Status de Acesso
+Todos os Status
+Apenas Ativos
+Apenas Suspensos
+Tipo de Ingresso
+Todas as Categorias
+ETEC
+CPOP Santana
+CPOP Osasco
+Mentoria
+Administração
+Identidade
+Classificação
+Gestão de Conta
+pType.includes(key)) || pType === '';
+                    const isStaff = !isStudent;
+                    const isSuspended = u.status === 'suspended';
+                    
+                    return (
+: (isSuspended ?
+Excluir Usuário?
+Esta ação removerá permanentemente o perfil de
+do banco de dados.
+handleDeleteUser(u.id, u.name)} 
+                                    className="rounded-xl font-black bg-red-600 hover:bg-red-700 text-white px-8"
+                                  >
+                                    Confirmar Exclusão
+Nenhum usuário localizado
+Tente ajustar os filtros acima.
+Buscar por nome ou @username...
+Filtrar Cargo
+Filtrar Status
+Filtrar Categoria
+Iniciar Chat
+Excluir Definitivamente
+([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [approvingId, setApprovingId] = useState
+t.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  if (loading) return (
+Carregando Controle de Qualidade...
+Controle de Qualidade
+Aprovação e Workflow de Conteúdo Pedagógico
+Filtros Avançados
+Trilha / Conteúdo
+Professor
+Status
+Ações
+Aguardando Revisão
+Publicada
+: "Aprovar"}
+Nenhuma trilha pendente
+Pesquisar por título ou matéria...
+(null);
+  
+  const [cohorts, setCohorts] = useState
+([]);
+  const [poloForums, setPoloForums] = useState
+([]);
+  const [students, setStudents] = useState
+("");
+  const [destCohortId, setDestCohortId] = useState
+("");
+
+  const [selectedCohortId, setSelectedCohortId] = useState
+(null);
+  const [selectedPoloName, setSelectedPoloName] = useState
+(null);
+
+  const [editingStudent, setEditingStudent] = useState
+Gestão de Turmas & Comunidades
+Administração centralizada de Cohorts acadêmicos e Polos regionais.
+Limpar Filtros
+Mesclar Turmas
+Mesclar Cohorts
+Isso moverá todos os alunos de uma turma para outra e apagará o registro de origem.
+Turma de Origem (Será removida)
+Turma de Destino (Receberá os alunos)
+: "Unificar e Sincronizar Alunos"}
+Criar Nova Turma
+Configurar Turma
+Identificação
+Meta Pedagógica
+: "Registrar Turma"}
+Agrupamentos Disponíveis
+COHORT ACADÊMICO
+COMUNIDADE REGIONAL
+Entrar no Fórum
+Visualização Filtrada
+Unidade / Fórum
+Engajamento
+Ações de Gestão
+!open && setEditingStudent(null)}>
+Alterar Polo / Fórum
+Isso moverá o aluno para a nova comunidade do polo instantaneamente.
+Nova Instituição (Polo)
+setNewInstitution(e.target.value)} placeholder="Ex: ETEC Jorge Street" className="h-10 rounded-xl bg-muted/30 border-none font-bold italic text-sm" />
+A Aurora criará o fórum do polo se não existir.
+: "Transferir e Sincronizar"}
+Excluir Registro?
+Esta ação removerá o perfil de
+da rede. Esta ação é irreversível.
+handleDeleteStudent(student.id, student.name)} 
+                              className="rounded-xl font-black bg-red-600 hover:bg-red-700 text-white px-8"
+                            >
+                              Confirmar Exclusão
+Selecione a origem...
+Selecione o destino...
+Pesquisar...
+Ex: ETEC Jorge Street
+([]);
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [riskAlerts, setRiskAlerts] = useState
+p.percentage
+Sincronizando Auditoria Global...
+Gabinete de Gestão
+Coordenação
+Visão estratégica e controle industrial de rede.
+Todo o Período
+Última Semana
+Último Mês
+Último Ano
+fetchDashboardData()} variant="ghost" size="icon" className="rounded-2xl h-12 w-12 bg-white shadow-xl">
+Segurança de Rede
+Gerencie o código de entrada para novos Mentores/Professores.
+CÓDIGO ATIVO PARA NOVOS MENTORES
+REDE
+Alunos na Base
+EQUIPE
+SUCESSO
+Trilhas Concluídas
+Engajados
+Média Geral
+SOCIAL
+Elegíveis Isenção
+Rastro Operacional
+Auditoria de atividades em tempo real.
+Nenhuma atividade recente registrada.
+) : (
+              logs.map((log) => (
+Status de Sinal
+Banco de Dados
+Alertas de Risco
+Rede em Conformidade Total
+Aplicar Intervenção
+Filtrar Período
+([]);
+  const [deletingId, setDeletingId] = useState
+(null);
+  
+  // Estados de Configuração
+  const [configForum, setConfigForum] = useState
+(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [bannedUsers, setBannedUsers] = useState
+([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [searchResults, setSearchResults] = useState
+Moderação de Comunidade
+Gestão de tópicos, permissões de fala e restrições de usuários.
+Filtrar por Matéria
+Nível de Visibilidade
+Todos os Tópicos
+Apenas Públicos
+Apenas Somente Staff
+Escaneando Redes de Debate...
+Tópico / Status
+Somente Staff
+handleOpenConfig(f)}>
+Configurações de Debate
+Título do Fórum
+Somente Professores
+Alunos apenas leem
+: "Gravar Preferências"}
+Restringir Participantes
+banUserFromForum(u)}
+                                              className="w-full text-left p-2 hover:bg-red-50 rounded-lg flex items-center justify-between group"
+                                            >
+Banir
+Banidos deste fórum
+Nenhum banimento específico.
+) : (
+                                          bannedUsers.map(b => (
+liftBan(b.id)}>
+Banir Tópico?
+Esta ação removerá o debate
+e todas as mensagens vinculadas.
+handleDeleteForum(f.id, f.name)} 
+                                  className="rounded-xl font-black bg-red-600 hover:bg-red-700 text-white px-8"
+                                >
+                                  Remover Agora
+Nenhuma discussão localizada
+Pesquisar tópico ou autor...
+Buscar aluno para banir...
+Auditoria de Documentos
+Supervisão da prontidão documental para vestibulares.
+80%)", count: students.filter(s => s.status === 'high').length, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+        ].map((stat, i) => (
+Filtrar por Nível de Risco
+Apenas Críticos
+progresso iniciado
+Prontos para Matrícula
+Filtrar por Categoria
+Todos os Perfis
+Intervenção Direta
+Conteúdo da Mensagem
+setBulkContent(e.target.value)}
+                />
+}
+                  Disparar no Chat
+Publicar Aviso Segmentado
+Alerta Geral de Grupo
+Corpo do Comunicado
+}
+                  Fixar no Mural de Avisos
+Auditando Registros de Rede...
+Estudante / Polo
+Status do Checklist
+Diagnóstico
+Cobrar Apoio
+Tente ajustar os filtros de risco ou polo.
+Buscar por nome...
+Olá! Notamos que sua documentação está pendente. Precisa de ajuda com algum item?
+Atenção alunos em situação CRÍTICA: O prazo para envio de documentos do SiSU encerra em 48h!
+Ver Perfil
+([]);
+  const [clearingId, setClearingId] = useState
+Auditoria de Chats
+Monitoramento ético e supervisão de interações na rede.
+Categoria de Interação
+Todas as Interações
+Aluno ↔ Aluno
+Aluno ↔ Mentoria
+Equipe Técnica (Staff)
+Janela de Recência
+Todo o Histórico
+Apenas Hoje
+Sincronizando Logs de Auditoria...
+Participantes
+Última Interação
+Arquivado
+Limpar Chat?
+Esta ação apagará
+todas
+as mensagens entre estes participantes. Esta operação não pode ser desfeita.
+handleClearChat(thread.u1_id, thread.u2_id)} 
+                                  className="rounded-xl font-black bg-red-600 hover:bg-red-700 text-white h-12 px-8"
+                                >
+                                  Limpar Agora
+Abrir Log
+Nenhuma conversa localizada
+Buscar por nome ou conteúdo...
+([]);
+  const [user1, setUser1] = useState
+(null);
+  const [user2, setUser2] = useState
+(null);
+  const scrollRef = useRef
+Descriptografando Log de Segurança...
+router.back()} className="rounded-full h-10 w-10 shrink-0">
+LOG DE AUDITORIA • PROTEGIDO
+MODO AUDITOR
+Início do Log Histórico
+Visualização restrita ao Gabinete de Gestão. As interações acima são propriedade da rede.

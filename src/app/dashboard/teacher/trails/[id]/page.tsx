@@ -188,6 +188,7 @@ export default function TrailManagementPage() {
             ? 'Os alunos já podem iniciar os estudos.'
             : 'A trilha foi ocultada dos alunos.',
       });
+      router.refresh();
     }
     setIsPublishing(false);
   };
@@ -222,6 +223,7 @@ export default function TrailManagementPage() {
       setTrail((prev: any) => ({ ...prev, ...editTrailForm }));
       toast({ title: 'Detalhes Atualizados!' });
       setIsEditTrailDialogOpen(false);
+      router.refresh();
     } catch (e: any) {
       toast({ title: 'Erro ao atualizar', description: e.message, variant: 'destructive' });
     } finally {
@@ -238,6 +240,7 @@ export default function TrailManagementPage() {
         setIsSubmitting(false);
       } else {
         toast({ title: 'Trilha Excluída', description: 'Todo o conteúdo foi apagado permanentemente.' });
+        router.refresh();
         router.push('/dashboard/teacher/trails');
       }
     }
@@ -261,6 +264,7 @@ export default function TrailManagementPage() {
       setModules((prev) => [...prev, data]);
       setContents((prev) => ({ ...prev, [data.id]: [] }));
       toast({ title: 'Módulo Criado!' });
+      router.refresh();
       
       setTimeout(() => {
         setModuleForm({ title: '' });
@@ -353,6 +357,7 @@ export default function TrailManagementPage() {
         if (error) throw error;
 
         toast({ title: 'Aula Atualizada!' });
+        router.refresh();
         
         setTimeout(() => {
           setIsContentDialogOpen(false);
@@ -423,6 +428,7 @@ export default function TrailManagementPage() {
           title: 'Materiais Publicados!',
           description: `${data.length} itens foram adicionados ao capítulo.`,
         });
+        router.refresh();
         
         setTimeout(() => {
           setPendingItems([]);
@@ -445,6 +451,7 @@ export default function TrailManagementPage() {
     if (!error) {
       setModules((prev) => prev.filter((m) => m.id !== id));
       toast({ title: 'Capítulo removido.' });
+      router.refresh();
     }
     setDeletingId(null);
   };
@@ -465,6 +472,7 @@ export default function TrailManagementPage() {
         return newContents;
       });
       toast({ title: 'Item removido.' });
+      router.refresh();
     }
     setDeletingId(null);
   };
