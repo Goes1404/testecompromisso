@@ -133,7 +133,7 @@ export default function LandingPage() {
                 Entrar
               </Button>
               <Button onClick={(e) => handleRedirect(e, '/register')} className="bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
-                Criar Conta Grátis
+                Criar Conta
               </Button>
             </div>
           </nav>
@@ -169,7 +169,7 @@ export default function LandingPage() {
             <a href="#faq" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#faq')}>Dúvidas FAQ</a>
             <div className="pt-8 space-y-3">
               <Button onClick={(e) => handleRedirect(e, '/register')} className="w-full bg-primary h-14 rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
-                Criar Conta Grátis
+                Criar Conta
               </Button>
               <Button onClick={(e) => handleRedirect(e, '/login')} disabled={isRedirecting} variant="outline" className="w-full h-14 rounded-full border-2 text-lg font-black text-primary border-primary/20 hover:bg-primary/5">
                 Entrar no Portal
@@ -212,7 +212,7 @@ export default function LandingPage() {
                   </div>
                 </Button>
                 <Button onClick={(e) => handleRedirect(e, '/register')} variant="outline" className="h-11 px-8 border-2 border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-sm rounded-full transition-all backdrop-blur-sm">
-                  Criar Conta Grátis
+                  Criar Conta
                 </Button>
                 <Button asChild variant="outline" className="h-11 px-8 bg-transparent text-white font-black text-sm rounded-full border border-white/20 hover:bg-white/5 transition-all">
                   <a href="#metodologia" onClick={(e) => handleScrollTo(e, '#metodologia')} className="flex items-center gap-2">
