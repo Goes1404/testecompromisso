@@ -108,8 +108,11 @@ export function AccessibilityWidget() {
             }`}
             title="Abrir Aurora IA"
           >
-            <MessageCircle className="h-7 w-7 transition-transform group-hover:rotate-12 text-accent" />
-            {!isOpen && <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-50 rounded-full border-2 border-white animate-bounce" />}
+            <div className="relative flex items-center justify-center">
+              <MessageCircle className="h-7 w-7 transition-all group-hover:scale-90 text-accent" />
+              <MessageCircle className="h-4 w-4 text-white absolute transition-all group-hover:scale-125" />
+            </div>
+            {!isOpen && <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-50 rounded-full border-2 border-white animate-bounce shadow-sm" />}
           </button>
         </SheetTrigger>
         <SheetContent side="right" className="w-[90vw] sm:max-w-[400px] p-0 border-none rounded-l-[2rem] overflow-hidden bg-white flex flex-col shadow-2xl z-50">
@@ -153,14 +156,6 @@ export function AccessibilityWidget() {
         </SheetContent>
       </Sheet>
 
-      <button 
-        className={`flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-2xl transition-all hover:scale-110 active:scale-95 border-4 border-white group animate-in zoom-in duration-1000 ${
-          isOpen ? 'rotate-[-360deg] opacity-80' : ''
-        }`} 
-        title="Acessibilidade VLibras"
-      >
-        <HandMetal className="h-6 w-6 transition-transform group-hover:rotate-12" />
-      </button>
     </div>
   );
 }
