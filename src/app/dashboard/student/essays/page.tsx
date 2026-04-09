@@ -74,10 +74,17 @@ export default function StudentEssayPage() {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setHistory(data.map(d => ({
-          date: format(new Date(d.created_at), 'dd/MM'),
-          score: Number(d.score)
-        })));
+        if (data.length === 1) {
+           setHistory([
+             { date: 'Início', score: 0 }, 
+             { date: format(new Date(data[0].created_at), 'dd/MM'), score: Number(data[0].score) }
+           ]);
+        } else {
+           setHistory(data.map(d => ({
+             date: format(new Date(d.created_at), 'dd/MM'),
+             score: Number(d.score)
+           })));
+        }
       }
     } catch (e) {
       console.error("Erro ao buscar histórico de redações:", e);
@@ -153,7 +160,7 @@ export default function StudentEssayPage() {
         
         // Salvar no Supabase para o gráfico de evolução
         if (user) {
-          await supabase.from('essay_submissions').insert({
+          const { error: insertError } = await supabase.from('essay_submissions').insert({
             user_id: user.id,
             theme: theme,
             content: text,
@@ -161,7 +168,20 @@ export default function StudentEssayPage() {
             feedback: aiOutput.general_feedback,
             result_data: aiOutput
           });
-          fetchHistory();
+          
+          if (insertError) {
+             console.error("Erro insert", insertError);
+             toast({ title: "Erro na Evolução", description: "Avaliação finalizada, mas houve falha ao salvar no histórico permanente.", variant: "destructive" });
+             
+             // Fallback visual local
+             setHistory(prev => {
+                const newScore = { date: format(new Date(), 'dd/MM'), score: aiOutput.total_score };
+                if (prev.length === 0) return [{ date: 'Início', score: 0 }, newScore];
+                return [...prev, newScore];
+             });
+          } else {
+             fetchHistory();
+          }
         }
 
         toast({ title: "Avaliação Concluída! ✅" });
