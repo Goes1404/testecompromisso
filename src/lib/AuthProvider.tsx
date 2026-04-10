@@ -52,20 +52,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
-    // ⚡ PRIORIDADE 1: Pegar do metadado do Auth (Instantâneo)
+    // ⚡ PRIORIDADE 1: Pegar do perfil carregado (Backup) - Mais confiável para mudanças em tempo real
+    if (profile) {
+      const rawType = (profile.profile_type || profile.role || '').toLowerCase().trim();
+      const course = (profile.course || '').toLowerCase().trim();
+      
+      if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao'].includes(rawType) || course.includes('coordena')) return 'admin';
+      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico', 'suporte'].includes(rawType) || course.includes('técnica') || course.includes('tecnica')) return 'staff';
+      if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
+    }
+
+    // ⚡ PRIORIDADE 2: Pegar do metadado do Auth (Instantâneo)
     if (user?.user_metadata?.role) {
       const metaRole = user.user_metadata.role.toLowerCase();
       if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao'].includes(metaRole)) return 'admin';
       if (['teacher', 'mentor', 'professor', 'docente'].includes(metaRole)) return 'teacher';
-      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico'].includes(metaRole)) return 'staff';
-    }
-
-    // ⚡ PRIORIDADE 2: Pegar do perfil carregado (Backup)
-    if (profile) {
-      const rawType = (profile.profile_type || profile.role || '').toLowerCase().trim();
-      if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao'].includes(rawType)) return 'admin';
-      if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
-      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico'].includes(rawType)) return 'staff';
+      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico', 'suporte'].includes(metaRole)) return 'staff';
     }
 
     // ⚡ PRIORIDADE 3: Tentar inferir pelo e-mail se nada acima funcionar
