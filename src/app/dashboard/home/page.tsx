@@ -227,7 +227,7 @@ export default function DashboardHome() {
     </div>
   );
 
-  const nameToUse = profile?.name || user.user_metadata?.full_name || '';
+  const nameToUse = profile?.name || user?.user_metadata?.full_name || '';
   const nameParts = nameToUse.trim().split(' ');
   const userName = nameParts.length > 1 
     ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}` 
