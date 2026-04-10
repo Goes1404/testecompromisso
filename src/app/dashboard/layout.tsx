@@ -141,7 +141,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user]);
 
   const navItems = useMemo(() => {
-    if (userRole === 'admin') return adminItems;
+    if (userRole === 'admin' || userRole === 'staff') return adminItems;
     if (userRole === 'teacher') return teacherItems;
     return studentItems;
   }, [userRole]);
