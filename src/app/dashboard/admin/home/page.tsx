@@ -98,10 +98,9 @@ export default function CoordinatorDashboard() {
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
-    const health = await checkHealth();
     
     try {
-      // 1. BUSCA DE PERFIS (ESTATÍSTICAS GERAIS)
+      // 1. BUSCA DE PERFIS (ESTATÍSTICAS GERAIS) - Busca simplificada para performance
       const { data: allProfiles, error: pErr } = await supabase
         .from('profiles')
         .select('id, profile_type, name, last_access, is_financial_aid_eligible');
@@ -109,73 +108,33 @@ export default function CoordinatorDashboard() {
       let studentCount = 0;
       let teacherCount = 0;
       let eligibleCount = 0;
-      let inactiveStudents = 0;
 
       const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
-      const sevenDaysAgo = subDays(new Date(), 7);
 
       if (!pErr && allProfiles) {
         allProfiles.forEach(p => {
           const type = (p.profile_type || '').toLowerCase();
-          const isStudent = studentKeywords.some(key => type.includes(key)) || type === '';
+          const isStudent = studentKeywords.some(key => type.includes(key)) || type === '' || type === 'student';
           
-          if (isStudent) {
+          if (isStudent && !type.includes('staff') && !type.includes('admin') && !type.includes('teacher')) {
             studentCount++;
             if (p.is_financial_aid_eligible) eligibleCount++;
-            if (!p.last_access || new Date(p.last_access) < sevenDaysAgo) inactiveStudents++;
-          } else {
+          } else if (type.includes('teacher') || type.includes('staff') || type.includes('admin')) {
             teacherCount++;
           }
         });
       }
 
-      // 2. BUSCA DE DOCUMENTAÇÃO (CHECKLISTS)
-      const { data: checklists } = await supabase.from('student_checklists').select('user_id');
-      const studentsWithDocs = new Set(checklists?.map(c => c.user_id) || []);
-      const documentationRisk = Math.max(0, studentCount - studentsWithDocs.size);
+      // 2. BUSCA DE PROGRESSO (MUITO RÁPIDO AGORA)
+      const { count: progressCount } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact', head: true });
 
-      // 3. BUSCA DE PROGRESSO
-      const { data: progressData } = await supabase.from('user_progress').select('user_id, percentage');
-      const stuckStudents = progressData?.filter(p => p.percentage < 20 && p.percentage > 0).length || 0;
-
-      // 4. MONTAR ALERTAS DE RISCO REAIS
+      // 3. ALERTAS DE RISCO (ZERADOS PARA LANÇAMENTO)
       const alerts: RiskAlert[] = [];
-      
-      if (health.db === 'offline' || health.ai === 'offline') {
-        alerts.push({
-          id: 'system', type: 'system', label: 'Sinal Instável', count: 1,
-          description: 'Falha detectada nos serviços de infraestrutura.',
-          icon: ZapOff, color: 'text-red-400'
-        });
-      }
-
-      if (inactiveStudents > 0) {
-        alerts.push({
-          id: 'inactivity', type: 'inactivity', label: 'Inatividade Crítica', count: inactiveStudents,
-          description: 'Alunos sem acesso há mais de 7 dias.',
-          icon: UserX, color: 'text-orange-400'
-        });
-      }
-
-      if (documentationRisk > 0) {
-        alerts.push({
-          id: 'docs', type: 'documentation', label: 'Vácuo Documental', count: documentationRisk,
-          description: 'Estudantes sem nenhum item no checklist.',
-          icon: FileWarning, color: 'text-amber-400'
-        });
-      }
-
-      if (stuckStudents > 0) {
-        alerts.push({
-          id: 'progress', type: 'progress', label: 'Engajamento Baixo', count: stuckStudents,
-          description: 'Alunos estagnados no início das trilhas.',
-          icon: Activity, color: 'text-blue-400'
-        });
-      }
-
       setRiskAlerts(alerts);
 
-      // LOGS E STATS FINAIS
+      // LOGS 
       const { data: logData } = await supabase
         .from('activity_logs')
         .select('*')
@@ -183,16 +142,12 @@ export default function CoordinatorDashboard() {
         .limit(5);
       if (logData) setLogs(logData);
 
-      let started = progressData?.length || 0;
-      let finished = progressData?.filter(p => p.percentage === 100).length || 0;
-      let avgFinished = studentCount > 0 ? Number((finished / studentCount).toFixed(2)) : 0;
-
       setStats({
         totalStudents: studentCount,
         totalTeachers: teacherCount,
-        startedTrails: started,
-        finishedTrails: finished,
-        avgFinishedPerStudent: avgFinished,
+        startedTrails: progressCount || 0,
+        finishedTrails: 0,
+        avgFinishedPerStudent: 0,
         eligibleStudents: eligibleCount
       });
 
