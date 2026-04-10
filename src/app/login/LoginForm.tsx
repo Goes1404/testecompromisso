@@ -123,12 +123,6 @@ export function LoginForm() {
           >
             Esqueceu a senha?
           </Link>
-          <Link 
-            href="#"
-            className="text-[#3182ce] hover:underline px-4 py-2 border border-gray-200 rounded transition-colors hover:bg-gray-50"
-          >
-            Como acessar
-          </Link>
         </div>
       </form>
     </div>
