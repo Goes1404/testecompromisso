@@ -116,9 +116,13 @@ export default function SettingsPage() {
       
       const updateData: any = {
         avatar_url: formData.avatar_url,
-        favorite_subject: formData.favorite_subject,
         updated_at: new Date().toISOString()
       };
+
+      // Só envia a matéria se ela não estiver vazia (evita erro de UUID vazio no banco)
+      if (formData.favorite_subject && formData.favorite_subject.trim() !== "") {
+        updateData.favorite_subject = formData.favorite_subject;
+      }
 
       if (isNameChanged && !isNameDisabled) {
         updateData.name = formData.name;
