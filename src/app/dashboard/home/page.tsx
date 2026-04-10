@@ -106,22 +106,29 @@ export default function DashboardHome() {
   const fetchData = useCallback(async () => {
     if (!user || dataFetchedRef.current) return;
     
-    // Se o perfil não foi carregado ainda, interrompemos o loading mas permitimos que o efeito re-execute depois
-    if (!profile) {
-      setLoadingData(false);
-      return;
-    }
+    // 1. Tentar carregar do Cache Local para velocidade instantânea
+    const cacheKey = `dash_cache_${user.id}`;
+    const cachedData = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null;
     
-    if (dashboardCache.data && Date.now() - dashboardCache.timestamp < CACHE_DURATION) {
-      setAnnouncements(dashboardCache.data.announcements);
-      setRecommendedTrails(dashboardCache.data.recommendedTrails);
-      setRecentProgress(dashboardCache.data.recentProgress);
-      setLibraryResources(dashboardCache.data.libraryResources);
-      setEssayStats(dashboardCache.data.essayStats);
-      setExamStats(dashboardCache.data.examStats);
-      setLoadingData(false);
-      dataFetchedRef.current = true;
-      return;
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        if (Date.now() - parsed.timestamp < CACHE_DURATION) {
+          setAnnouncements(parsed.data.announcements);
+          setRecommendedTrails(parsed.data.recommendedTrails);
+          setRecentProgress(parsed.data.recentProgress);
+          setLibraryResources(parsed.data.libraryResources);
+          setEssayStats(parsed.data.essayStats);
+          setExamStats(parsed.data.examStats);
+          setLoadingData(false);
+          
+          // Se o cache for muito recente (menos de 60s), não precisamos buscar de novo
+          if (Date.now() - parsed.timestamp < 60000) {
+            dataFetchedRef.current = true;
+            return;
+          }
+        }
+      } catch (e) { console.error("Cache corrupto"); }
     }
 
     setLoadingData(true);
@@ -179,10 +186,21 @@ export default function DashboardHome() {
       }
       setExamStats(newExamStats);
 
-      dashboardCache = {
-        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats },
+      const cacheData = {
+        data: { 
+          announcements: newAnn, 
+          recommendedTrails: trailRes?.data || [], 
+          recentProgress: progressRes?.data, 
+          libraryResources: libRes?.data, 
+          essayStats: newEssayStats, 
+          examStats: newExamStats 
+        },
         timestamp: Date.now()
       };
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`dash_cache_${user.id}`, JSON.stringify(cacheData));
+      }
 
     } catch (e: any) {
       console.error("Dashboard data load error:", e);
@@ -209,7 +227,8 @@ export default function DashboardHome() {
     </div>
   );
 
-  const nameParts = (profile?.name || '').trim().split(' ');
+  const nameToUse = profile?.name || user.user_metadata?.full_name || '';
+  const nameParts = nameToUse.trim().split(' ');
   const userName = nameParts.length > 1 
     ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}` 
     : nameParts[0] || 'Estudante';

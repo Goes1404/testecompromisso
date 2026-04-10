@@ -226,15 +226,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link id="header-profile" href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all ml-2">
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">
-                  {profile?.name 
-                    ? (profile.name.trim().split(' ').length > 1 
-                        ? `${profile.name.trim().split(' ')[0]} ${profile.name.trim().split(' ').pop()}` 
-                        : profile.name)
+                  {profile?.name || user.user_metadata?.full_name
+                    ? ( (profile?.name || user.user_metadata?.full_name).trim().split(' ').length > 1 
+                        ? `${(profile?.name || user.user_metadata?.full_name).trim().split(' ')[0]} ${(profile?.name || user.user_metadata?.full_name).trim().split(' ').pop()}` 
+                        : (profile?.name || user.user_metadata?.full_name))
                     : "Usuário"}
                 </span>
                 <span className="text-[8px] font-black text-accent uppercase tracking-widest">
-                  {profile?.profile_type === 'student' 
-                    ? `${profile?.exam_target || 'ENEM'} • ${profile?.institution || 'Colégio Colaço'}` 
+                  {profile?.profile_type === 'student' || user.user_metadata?.profile_type === 'student'
+                    ? `${profile?.exam_target || user.user_metadata?.exam_target || 'ENEM'} • ${profile?.institution || user.user_metadata?.institution || 'Colégio'}` 
                     : (userRole === 'admin' ? 'Coordenação' : 
                        userRole === 'teacher' ? 'Professor' : 
                        userRole === 'staff' ? 'Equipe Técnica' : 

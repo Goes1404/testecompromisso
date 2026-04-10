@@ -35,6 +35,7 @@ export default function TeacherStudentsPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "at_risk" | "financial_aid" | "etec" | "enem">("all");
   const [filterInstitution, setFilterInstitution] = useState<string>("all");
   const [filterCourse, setFilterCourse] = useState<string>("all");
+  const [displayCount, setDisplayCount] = useState(50);
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,18 +47,13 @@ export default function TeacherStudentsPage() {
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select('*')
+          .eq('profile_type', 'student')
           .order('name');
 
         if (error) throw error;
 
-        // Filtro Industrial: Identificar quem são alunos na rede
-        const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
-        const studentProfiles = profiles?.filter(p => {
-          const type = (p.profile_type || '').toLowerCase().trim();
-          return studentKeywords.some(key => type.includes(key)) || type === '';
-        }) || [];
+        const studentProfiles = profiles || [];
 
-        // Buscar progresso médio para cada aluno
         const { data: progressData } = await supabase
           .from('user_progress')
           .select('user_id, percentage');
@@ -82,10 +78,11 @@ export default function TeacherStudentsPage() {
   }, [user, toast]);
 
   const filteredStudents = students.filter(student => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch = 
-      student.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.institution?.toLowerCase().includes(searchTerm.toLowerCase());
+      (student.name || '').toLowerCase().includes(searchLower) || 
+      (student.email || '').toLowerCase().includes(searchLower) ||
+      (student.institution || '').toLowerCase().includes(searchLower);
     
     const matchesInstitution = filterInstitution === "all" || student.institution === filterInstitution;
     const matchesCourse = filterCourse === "all" || student.course === filterCourse;
@@ -101,10 +98,10 @@ export default function TeacherStudentsPage() {
       return baseMatches && student.is_financial_aid_eligible === true;
     }
     if (activeFilter === "etec") {
-      return baseMatches && student.profile_type === "etec";
+      return baseMatches && (student.exam_target || '').toLowerCase().includes('etec');
     }
     if (activeFilter === "enem") {
-      return baseMatches && student.profile_type === "enem";
+      return baseMatches && (student.exam_target || '').toLowerCase().includes('enem');
     }
     return baseMatches;
   });
@@ -148,7 +145,7 @@ export default function TeacherStudentsPage() {
                 <SelectContent className="rounded-2xl border-none shadow-2xl">
                     <SelectItem value="all">Todas as Instituições</SelectItem>
                     {institutions.map(inst => (
-                        <SelectItem key={inst} value={inst}>{inst}</SelectItem>
+                        <SelectItem key={inst as string} value={inst as string}>{inst as string}</SelectItem>
                     ))}
                 </SelectContent>
             </Select>
@@ -162,7 +159,7 @@ export default function TeacherStudentsPage() {
                 <SelectContent className="rounded-2xl border-none shadow-2xl">
                     <SelectItem value="all">Todas as Carreiras</SelectItem>
                     {courses.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                        <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
                     ))}
                 </SelectContent>
             </Select>
@@ -208,7 +205,7 @@ export default function TeacherStudentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStudents.map((student) => {
+                  {filteredStudents.slice(0, displayCount).map((student) => {
                     const isInactive = !student.last_access || new Date(student.last_access) < subDays(new Date(), 7);
                     
                     return (
@@ -216,7 +213,7 @@ export default function TeacherStudentsPage() {
                         <TableCell className="px-8">
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-black italic shadow-lg group-hover:scale-110 transition-transform">
-                              {student.name?.charAt(0)}
+                              {(student.name || 'A').charAt(0)}
                             </div>
                             <div className="flex flex-col">
                               <span className="font-black text-primary text-sm italic">{student.name}</span>
@@ -230,7 +227,7 @@ export default function TeacherStudentsPage() {
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-black text-primary/70">{student.institution || 'Não Informado'}</span>
                             <Badge className="w-fit bg-primary/5 text-primary border-none text-[7px] font-black uppercase px-2">
-                              {student.profile_type?.replace('_', ' ')}
+                              {student.exam_target || 'student'}
                             </Badge>
                           </div>
                         </TableCell>
@@ -278,6 +275,18 @@ export default function TeacherStudentsPage() {
                   })}
                 </TableBody>
               </Table>
+              
+              {displayCount < filteredStudents.length && (
+                <div className="p-12 flex justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setDisplayCount(prev => prev + 100)}
+                    className="rounded-[2rem] border-dashed border-primary/20 font-black italic px-16 hover:bg-primary/5 h-16 shadow-xl"
+                  >
+                    Carregar Mais Alunos (+100)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

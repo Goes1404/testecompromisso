@@ -1,0 +1,500 @@
+NOME: Arthur Ferreira da SIlva
+EMAIL: arthurfsilva@compromisso.com
+ESCOLA: Tancredo Neves
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur Guedes Gomes
+EMAIL: arthurg_gomes@compromisso.com
+ESCOLA: Celina
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur Henrique Alves dos Santos
+EMAIL: arthurh_santos@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur Henrique SIlva da Cruz
+EMAIL: arthurh_cruz@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur Pereira Martins
+EMAIL: arthurp_martins@compromisso.com
+ESCOLA: João José de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur R. Rocha
+EMAIL: arthurr_rocha@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur Teodoro de Souza
+EMAIL: arthurt_souza@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur de LIma Camargo
+EMAIL: arthurl_camargo@compromisso.com
+ESCOLA: S. Florêncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur de Oliveira Mendes
+EMAIL: arthuro_mendes@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur de Souza SIlva
+EMAIL: arthurs_silva@compromisso.com
+ESCOLA: Maria Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur l. de Souza
+EMAIL: arthurl_souza@compromisso.com
+ESCOLA: Sebastião Florêncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Arthur v silva
+EMAIL: arthurv_silva@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ETEC
+------------------------------
+NOME: Artur J. Sampaio
+EMAIL: arturj_sampaio@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ETEC
+------------------------------
+NOME: Artur M. de Souza
+EMAIL: arturm_souza@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Audrey Caroline Lacerda
+EMAIL: audreyl_lacerda@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Augusto Dias
+EMAIL: augusto_dias@compromisso.com
+ESCOLA: J.K
+OBJETIVO: ETEC
+------------------------------
+NOME: Beatriz Bueno
+EMAIL: beatriz_bueno@compromisso.com
+ESCOLA: Pedro G.
+OBJETIVO: ETEC
+------------------------------
+NOME: Beatriz de Oliveira Silva
+EMAIL: beatrizo_silva@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ETEC
+------------------------------
+NOME: Bianca Salles Santos
+EMAIL: biancas_santos@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Brenda Barbosa Martins
+EMAIL: brendab_martins@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Breno Ferreira de Arruda
+EMAIL: brenof_arruda@compromisso.com
+ESCOLA: Tancredo Neves
+OBJETIVO: ETEC
+------------------------------
+NOME: Bruna Leticia Oliveira Camargo
+EMAIL: brunal_camargo@compromisso.com
+ESCOLA: João José de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Bruna de Almeida da SIlva
+EMAIL: brunaa_silva@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Bruno Alves dos Santos
+EMAIL: brunoa_santos@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Bruno de LIma Vieira
+EMAIL: brunol_vieira@compromisso.com
+ESCOLA: André Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Bryan Araujo de Lima
+EMAIL: bryana_lima@compromisso.com
+ESCOLA: Sebastião Florêncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Caio G. do Amparo
+EMAIL: caiog_amparo@compromisso.com
+ESCOLA: João José de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Caio Henrique Mendes
+EMAIL: caioh_mendes@compromisso.com
+ESCOLA: Teotônio Vilela
+OBJETIVO: ETEC
+------------------------------
+NOME: Camila Alves Mariano
+EMAIL: camilaa_mariano@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Camilly Vitória N. Santos
+EMAIL: camillyv_santos@compromisso.com
+ESCOLA: Celina
+OBJETIVO: ETEC
+------------------------------
+NOME: Carlos Eduardo Soares
+EMAIL: carlose_soares@compromisso.com
+ESCOLA: Ullysses Guimarães
+OBJETIVO: ETEC
+------------------------------
+NOME: Caroline de Lima Silva
+EMAIL: carolinel_silva@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ETEC
+------------------------------
+NOME: Caua Rodrigues de Oliveira
+EMAIL: cauar_oliveira@compromisso.com
+ESCOLA: Celina
+OBJETIVO: ETEC
+------------------------------
+NOME: Cauan Alisson Silva
+EMAIL: cauana_silva@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Cauan Silva Rodrigues
+EMAIL: cauans_rodrigues@compromisso.com
+ESCOLA: João José de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Cauam J. de Castro
+EMAIL: cauamj_castro@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ETEC
+------------------------------
+NOME: Cauã Santos Xavier
+EMAIL: cauas_xavier@compromisso.com
+ESCOLA: Ullysses Guimarães
+OBJETIVO: ETEC
+------------------------------
+NOME: Cecilia Lima Gonçalves
+EMAIL: cecilial_goncalves@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Claudinei J. de Souza Junior
+EMAIL: claudineij_souza@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Claudio Henrique C. Oliveira
+EMAIL: claudioh_oliveira@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Cristopher Souza Lima
+EMAIL: cristophers_lima@compromisso.com
+ESCOLA: Maria Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Daiany Ferreira Neves
+EMAIL: daianyf_neves@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Daniel Henrique Almeida
+EMAIL: danielh_almeida@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ETEC
+------------------------------
+NOME: Daniel de Moraes
+EMAIL: daniel_moraes@compromisso.com
+ESCOLA: Pedro G.
+OBJETIVO: ETEC
+------------------------------
+NOME: Daniela G. de Almeida
+EMAIL: danielag_almeida@compromisso.com
+ESCOLA: Tancredo Neves
+OBJETIVO: ETEC
+------------------------------
+NOME: Danielle Martins de Oliveira
+EMAIL: daniellem_oliveira@compromisso.com
+ESCOLA: Sebastião Florêncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Danniela Luiza de Oliveira Marques
+EMAIL: dannielal_marques@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ETEC
+------------------------------
+NOME: Danyel dos Santos Sampaio de Oliveira
+EMAIL: danyels_oliveira@compromisso.com
+ESCOLA: Benedita Odette
+OBJETIVO: ETEC
+------------------------------
+NOME: Davi G. de Araujo
+EMAIL: davig_araujo@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Davi Junior Batista
+EMAIL: davij_batista@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Davi Lima Martins
+EMAIL: davil_martins@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Davi Lucas Alves de Oliveira
+EMAIL: davil_oliveira@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Davi Luis de SOuza Camargo
+EMAIL: davil_camargo@compromisso.com
+ESCOLA: Luiza Maria
+OBJETIVO: ETEC
+------------------------------
+NOME: Davi de Souza Martins
+EMAIL: davis_martins@compromisso.com
+ESCOLA: João José de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Dayane Rodrigues Mendes
+EMAIL: dayaner_mendes@compromisso.com
+ESCOLA: Sebastião Florêncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Demetrio F. Lima
+EMAIL: demetriof_lima@compromisso.com
+ESCOLA: André Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Diogo Alves Mariano
+EMAIL: diogoa_mariano@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Diogo Henrique de Oliveira
+EMAIL: diogoh_oliveira@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Edineia Cristina de Souza Santos
+EMAIL: edineiac_santos@compromisso.com
+ESCOLA: Luiza Maria
+OBJETIVO: ETEC
+------------------------------
+NOME: Eduarda Cristina de Oliveira Sampaio
+EMAIL: eduardac_sampaio@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ETEC
+------------------------------
+NOME: Eduarda Luiza Pereira
+EMAIL: eduardal_pereira@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Eduardo Almeida Cruz
+EMAIL: eduardoa_cruz@compromisso.com
+ESCOLA: João José de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Eduardo Henrique Alves de Siqueira
+EMAIL: eduardoh_siqueira@compromisso.com
+ESCOLA: Maria Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Eduardo de Lima Camargo
+EMAIL: eduardol_camargo@compromisso.com
+ESCOLA: J.K
+OBJETIVO: ETEC
+------------------------------
+NOME: Ellen Cristina
+EMAIL: ellen_cristina@compromisso.com
+ESCOLA: André Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Eloah Bueno dos Santos
+EMAIL: eloahb_santos@compromisso.com
+ESCOLA: Sebastiana
+OBJETIVO: ETEC
+------------------------------
+NOME: Eloisa V. Rosa
+EMAIL: eloisav_rosa@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Emanuelle Gomes de Oliveira
+EMAIL: emanuelleg_oliveira@compromisso.com
+ESCOLA: Daisy Moraes
+OBJETIVO: ETEC
+------------------------------
+NOME: Emilly Beatriz
+EMAIL: emilly_beatriz@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Emilly Gabrielle
+EMAIL: emilly_gabrielle@compromisso.com
+ESCOLA: Pedro G.
+OBJETIVO: ETEC
+------------------------------
+NOME: Emilly Ramos de Oliveira
+EMAIL: emillyr_oliveira@compromisso.com
+ESCOLA: Sebastião Florêncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Emilly Ribeiro Martins
+EMAIL: emillyr_martins@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Emilly Vitoria
+EMAIL: emilly_vitoria@compromisso.com
+ESCOLA: Celina
+OBJETIVO: ETEC
+------------------------------
+NOME: Enzo Henrique Rodrigues
+EMAIL: enzoh_rodrigues@compromisso.com
+ESCOLA: Sebastião Florêncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Enzo de LIma Vieira
+EMAIL: enzol_vieira@compromisso.com
+ESCOLA: Daisy Moraes
+OBJETIVO: ETEC
+------------------------------
+NOME: Erica Regina Camargo de Castro
+EMAIL: ericar_castro@compromisso.com
+ESCOLA: André Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Erickson Ferreira da SIlva
+EMAIL: ericksonf_silva@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Estefani Barbosa Oliveira
+EMAIL: estefanib_oliveira@compromisso.com
+ESCOLA: Maria Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Ester Caroline
+EMAIL: ester_caroline@compromisso.com
+ESCOLA: André Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Esther Ferreira da SIlva
+EMAIL: estherf_silva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Evelyn de Souza Camargo
+EMAIL: evelyns_camargo@compromisso.com
+ESCOLA: Luiza Maria
+OBJETIVO: ETEC
+------------------------------
+NOME: Ewelyn de SOuza Silva
+EMAIL: ewelyns_silva@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Felipe G. de Lima
+EMAIL: felipeg_lima@compromisso.com
+ESCOLA: J.K
+OBJETIVO: ETEC
+------------------------------
+NOME: Felipe Ramos Mendes
+EMAIL: feliper_mendes@compromisso.com
+ESCOLA: Ullysses Guimarães
+OBJETIVO: ETEC
+------------------------------
+NOME: Fernanda Almeida Cruz
+EMAIL: fernandaa_cruz@compromisso.com
+ESCOLA: Teotônio Vilela
+OBJETIVO: ETEC
+------------------------------
+NOME: Francielli S. Gomes
+EMAIL: franciellis_gomes@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabriel Henrique ALmeida Mendes
+EMAIL: gabrielh_mendes@compromisso.com
+ESCOLA: Teotônio Vilela
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabriel Henrique F. Santos
+EMAIL: gabrielh_santos@compromisso.com
+ESCOLA: André Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabriel Lima Camargo
+EMAIL: gabriell_camargo@compromisso.com
+ESCOLA: Maria Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabriel Mendes Camargo
+EMAIL: gabrielm_camargo@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabriel Oliveira
+EMAIL: gabriel_oliveira@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabriel de Oliveira Pires
+EMAIL: gabrielo_pires@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabriela de Oliveira
+EMAIL: gabriela_oliveira@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabrielle Luiza de Jesus Silva
+EMAIL: gabriellel_silva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabrielle de Almeida Cruz
+EMAIL: gabriellea_cruz@compromisso.com
+ESCOLA: Celina
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabrielly Cristina Silva
+EMAIL: gabriellyc_silva@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabrielly Ferreira de LIma
+EMAIL: gabriellyf_lima@compromisso.com
+ESCOLA: Benedita Odette
+OBJETIVO: ETEC
+------------------------------
+NOME: Gabrielly Vitoria Rosa Sampaio
+EMAIL: gabriellyv_sampaio@compromisso.com
+ESCOLA: Pedro G.
+OBJETIVO: ETEC
+------------------------------
+NOME: Geovana Beatriz Garcia Mendes
+EMAIL: geovanab_mendes@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Geovana Camargo dos Santos
+EMAIL: geovanac_santos@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------

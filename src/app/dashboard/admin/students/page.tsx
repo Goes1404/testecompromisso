@@ -60,6 +60,7 @@ export default function AdminStudentsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [displayCount, setDisplayCount] = useState(50); // Pagination
   
   const [students, setStudents] = useState<any[]>([]);
 
@@ -76,21 +77,15 @@ export default function AdminStudentsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: allProfiles, error: pError } = await supabase
+      const { data: studentProfiles, error: pError } = await supabase
         .from('profiles')
         .select('*')
+        .eq('profile_type', 'student')
         .order('name');
 
       if (pError) throw pError;
 
-      // Filtro Rigoroso: Apenas Alunos Reais
-      const studentProfiles = allProfiles?.filter(p => {
-        const type = (p.profile_type || '').toLowerCase().trim();
-        const isStaff = ['admin', 'staff', 'teacher', 'equipe técnica', 'coordenação'].some(k => type.includes(k));
-        return !isStaff && (type === 'student' || type === '' || type === 'aluno');
-      }) || [];
-
-      setStudents(studentProfiles);
+      setStudents(studentProfiles || []);
 
       const { data: classData } = await supabase.from('classes').select('*');
       if (classData) setCohorts(classData);
@@ -166,10 +161,16 @@ export default function AdminStudentsPage() {
   }, [students]);
 
   const filteredStudents = students.filter(s => {
-    const matchesSearch = s.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = 
+      (s.name || '').toLowerCase().includes(searchLower) || 
+      (s.email || '').toLowerCase().includes(searchLower);
     const matchesPolo = !selectedPoloName || (s.institution || '').toLowerCase().includes(selectedPoloName.toLowerCase());
     return matchesSearch && matchesPolo;
   });
+
+  const pagedStudents = filteredStudents.slice(0, displayCount);
+  const hasMore = displayCount < filteredStudents.length;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
@@ -282,8 +283,8 @@ export default function AdminStudentsPage() {
             <TableBody>
               {loading ? (
                 <TableRow><TableCell colSpan={4} className="h-40 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto opacity-20" /></TableCell></TableRow>
-              ) : filteredStudents.map((student) => (
-                <TableRow key={student.id} className="h-20 hover:bg-muted/10">
+              ) : pagedStudents.map((student) => (
+                <TableRow key={student.id} className="h-20 hover:bg-muted/10 transition-colors">
                   <TableCell className="px-8 font-black text-primary italic">{student.name}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="border-blue-200 text-blue-600 bg-blue-50 font-bold uppercase text-[9px]">{student.institution || 'Não definido'}</Badge>
@@ -301,6 +302,18 @@ export default function AdminStudentsPage() {
               ))}
             </TableBody>
           </Table>
+          
+          {hasMore && (
+            <div className="p-8 flex justify-center">
+              <Button 
+                variant="outline" 
+                onClick={() => setDisplayCount(prev => prev + 100)}
+                className="rounded-2xl border-dashed border-primary/20 font-black italic px-12 hover:bg-primary/5 h-14"
+              >
+                Carregar Mais Alunos (+100)
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
