@@ -227,8 +227,15 @@ export default function SettingsPage() {
               <div className="space-y-1">
                 <h3 className="text-3xl font-black text-accent italic leading-none truncate max-w-[340px] uppercase tracking-tighter">{formattedDisplayName}</h3>
                 <div className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em] flex flex-col items-center justify-center gap-1">
-                  <p className="opacity-80 text-primary">Turma {profile?.exam_target || 'ENEM'}</p> 
-                  <p className="opacity-60">{profile?.institution || 'Colégio Colaço'}</p>
+                  {isStudent && (
+                    <>
+                      <p className="opacity-80 text-primary">Turma {profile?.exam_target || 'ENEM'}</p> 
+                      <p className="opacity-60">{profile?.institution || 'Colégio Colaço'}</p>
+                    </>
+                  )}
+                  {!isStudent && (
+                    <p className="opacity-80 text-primary">{profile?.course || 'Docente'}</p>
+                  )}
                 </div>
               </div>
 
