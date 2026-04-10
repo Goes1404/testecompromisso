@@ -45,7 +45,6 @@ export default function LandingPage() {
   useEffect(() => {
     // Prefetch principais rotas para acelerar navegação
     router.prefetch('/login');
-    router.prefetch('/register');
     
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
