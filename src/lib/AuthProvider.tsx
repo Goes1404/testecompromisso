@@ -55,17 +55,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // ⚡ PRIORIDADE 1: Pegar do metadado do Auth (Instantâneo)
     if (user?.user_metadata?.role) {
       const metaRole = user.user_metadata.role.toLowerCase();
-      if (['admin', 'gestor', 'coordenador'].includes(metaRole)) return 'admin';
+      if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao'].includes(metaRole)) return 'admin';
       if (['teacher', 'mentor', 'professor', 'docente'].includes(metaRole)) return 'teacher';
-      if (['staff', 'técnico', 'equipe técnica', 'assistente'].includes(metaRole)) return 'staff';
+      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico'].includes(metaRole)) return 'staff';
     }
 
     // ⚡ PRIORIDADE 2: Pegar do perfil carregado (Backup)
     if (profile) {
       const rawType = (profile.profile_type || profile.role || '').toLowerCase().trim();
-      if (['admin', 'gestor', 'coordenador'].includes(rawType)) return 'admin';
+      if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao'].includes(rawType)) return 'admin';
       if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
-      if (['staff', 'técnico', 'equipe técnica', 'assistente'].includes(rawType)) return 'staff';
+      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico'].includes(rawType)) return 'staff';
     }
 
     // ⚡ PRIORIDADE 3: Tentar inferir pelo e-mail se nada acima funcionar
