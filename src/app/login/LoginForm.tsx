@@ -71,7 +71,7 @@ export function LoginForm() {
       </div>
 
       <div className="text-center mb-8">
-        <h1 className="text-2xl md:text-[22px] font-bold text-[#002f6c] mb-1 leading-tight">
+        <h1 className="text-2xl md:text-[22px] font-bold text-primary mb-1 leading-tight">
           Área restrita do Compromisso <span className="font-normal italic">(Colégio e Curso)</span>
         </h1>
         <p className="text-sm text-gray-500 font-medium">
@@ -112,14 +112,14 @@ export function LoginForm() {
           <p className="text-[#e53e3e] text-sm mt-2">{authError}</p>
         )}
 
-        <Button type="submit" disabled={loading} className="w-full bg-[#002f6c] hover:bg-[#001f4d] active:scale-95 text-white font-bold h-12 rounded transition-all mt-6">
+        <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/90 active:scale-95 text-white font-bold h-12 rounded transition-all mt-6">
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Entrar"}
         </Button>
 
         <div className="flex justify-center flex-wrap items-center gap-4 mt-8 text-xs font-medium">
           <Link 
             href="/forgot-password"
-            className="text-[#3182ce] hover:underline px-4 py-2 border border-gray-200 rounded transition-colors hover:bg-gray-50"
+            className="text-primary hover:underline px-4 py-2 border border-gray-200 rounded transition-colors hover:bg-gray-50"
           >
             Esqueceu a senha?
           </Link>

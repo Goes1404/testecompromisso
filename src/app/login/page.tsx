@@ -39,7 +39,7 @@ export default function LoginPage() {
       </div>
       
       {/* Footer */}
-      <footer className="bg-[#002f6c] text-white text-xs py-4 text-center">
+      <footer className="bg-primary text-white text-xs py-4 text-center">
         <p>Copyright © 1997-2026 Colégio Compromisso. Todos os direitos reservados.</p>
         <div className="flex items-center justify-center gap-2 mt-1">
           <Link href="#" className="hover:underline">Política de Privacidade</Link>
