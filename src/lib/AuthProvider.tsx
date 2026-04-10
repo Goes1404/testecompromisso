@@ -69,8 +69,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // ⚡ PRIORIDADE 3: Tentar inferir pelo e-mail se nada acima funcionar
-    const email = user?.email || profile?.email || '';
+    const email = (user?.email || profile?.email || '').toLowerCase();
     if (email.includes('admin') || email.includes('coordena')) return 'admin';
+    if (email.includes('staff') || email.includes('tecnico') || email.includes('suporte')) return 'staff';
     if (email.includes('teacher') || email.includes('prof')) return 'teacher';
     
     return 'student';

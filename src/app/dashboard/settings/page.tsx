@@ -333,23 +333,25 @@ export default function SettingsPage() {
                       </div>
                     )}
 
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
-                        <Star className="h-4 w-4" /> Matéria de Foco
-                      </Label>
-                      <Select value={formData.favorite_subject} onValueChange={(v) => setFormData({...formData, favorite_subject: v})}>
-                        <SelectTrigger className="h-16 rounded-2xl bg-muted/40 border-none font-bold text-xl italic shadow-inner">
-                          {loadingSubjects ? (
-                            <div className="flex items-center gap-3"><RefreshCw className="h-4 w-4 animate-spin" /> Sincronizando...</div>
-                          ) : (
-                            <SelectValue placeholder="Selecione sua preferência" />
-                          )}
-                        </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl max-h-80 p-2">
-                          {subjects.map(s => <SelectItem key={s.id} value={s.name} className="font-bold py-4 rounded-xl italic">{s.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {isStudent && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                          <Star className="h-4 w-4" /> Matéria de Foco
+                        </Label>
+                        <Select value={formData.favorite_subject} onValueChange={(v) => setFormData({...formData, favorite_subject: v})}>
+                          <SelectTrigger className="h-16 rounded-2xl bg-muted/40 border-none font-bold text-xl italic shadow-inner">
+                            {loadingSubjects ? (
+                              <div className="flex items-center gap-3"><RefreshCw className="h-4 w-4 animate-spin" /> Sincronizando...</div>
+                            ) : (
+                              <SelectValue placeholder="Selecione sua preferência" />
+                            )}
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-none shadow-2xl max-h-80 p-2">
+                            {subjects.map(s => <SelectItem key={s.id} value={s.name} className="font-bold py-4 rounded-xl italic">{s.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
 
                   {!isStudent && (
