@@ -111,10 +111,10 @@ export default function FirstAccessPage() {
           </div>
           
           <h1 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
-            Bem-vindo, <span className="text-primary">Professor!</span>
+            Bem-vindo ao <span className="text-primary">Compromisso!</span>
           </h1>
           <p className="text-white/50 text-sm font-medium italic max-w-md mx-auto">
-            Este é seu primeiro acesso com a senha temporária. Por favor, defina sua senha definitiva de segurança acadêmica.
+            Este é seu primeiro acesso. Por favor, defina sua senha definitiva de segurança.
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export default function FirstAccessPage() {
                     disabled={loading || !isMatch || !hasLength}
                     className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl hover:scale-[1.02] transition-all border-none"
                   >
-                    {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Ativar Cadastro de Professor"}
+                    {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Ativar Minha Conta"}
                   </Button>
                   
                   <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase italic">

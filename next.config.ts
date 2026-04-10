@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/**' },
     ],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      'date-fns',
+      '@radix-ui/react-icons',
+      'framer-motion'
+    ],
   },
   webpack: (config) => {
     config.resolve.alias = {

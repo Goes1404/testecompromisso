@@ -42,10 +42,28 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   // Proteger rotas /dashboard originando flash of content
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !session) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/login'
-    return NextResponse.redirect(redirectUrl)
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    if (!session) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/login'
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // REDIRECIONAMENTO PARA PRIMEIRO ACESSO (MUDANÇA DE SENHA FORÇADA)
+    const mustChangePassword = session.user.user_metadata?.must_change_password;
+    const isFirstAccessPage = request.nextUrl.pathname === '/dashboard/first-access';
+
+    if (mustChangePassword && !isFirstAccessPage) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/dashboard/first-access'
+      return NextResponse.redirect(redirectUrl)
+    }
+    
+    if (!mustChangePassword && isFirstAccessPage) {
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/dashboard/home'
+        return NextResponse.redirect(redirectUrl)
+    }
   }
 
   // Redirecionar usuários logados para fora do login

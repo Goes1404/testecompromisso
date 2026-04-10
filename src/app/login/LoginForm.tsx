@@ -157,7 +157,7 @@ export function LoginForm() {
 
           <div className="pt-6 text-center border-t border-dashed">
             <p className="text-xs font-medium text-muted-foreground italic">
-              Ainda não tem conta? <Link href="/register" className="text-primary font-black uppercase text-[10px] tracking-widest">Criar Cadastro Grátis</Link>
+              Ainda não tem conta? <Link href="/register" className="text-primary font-black uppercase text-[10px] tracking-widest">Criar Cadastro</Link>
             </p>
           </div>
         </CardContent>

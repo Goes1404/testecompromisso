@@ -43,21 +43,25 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Prefetch principais rotas para acelerar navegação
+    router.prefetch('/login');
+    router.prefetch('/register');
+    
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [router]);
 
   const handleRedirect = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
     if (isRedirecting) return;
     setIsRedirecting(true);
-    setTimeout(() => {
-      router.push(path);
-    }, 600);
+    
+    // Removendo o delay para transição instantânea
+    router.push(path);
   };
 
   const handleScrollTo = (e: React.MouseEvent, id: string) => {
@@ -111,8 +115,9 @@ export default function LandingPage() {
                   src="/images/logocompromisso.png" 
                   alt="Logo Compromisso" 
                   fill 
-                  unoptimized
                   className="object-contain p-1"
+                  sizes="(max-width: 768px) 40px, 48px"
+                  priority
                 />
               </div>
             </Link>
@@ -240,6 +245,8 @@ export default function LandingPage() {
                   fill
                   className="object-cover"
                   priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  quality={85}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
                 <div className="absolute inset-x-5 bottom-6 p-5 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10">
@@ -471,6 +478,9 @@ export default function LandingPage() {
                     alt={item.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    loading="lazy"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    quality={75}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 flex flex-col justify-end p-8">
                     <div className="w-10 h-1 bg-primary rounded-full mb-3 group-hover:w-16 transition-all" />

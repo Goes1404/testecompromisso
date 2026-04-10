@@ -18,7 +18,9 @@ import {
   Palette,
   Lock,
   Star,
-  RefreshCw
+  RefreshCw,
+  School,
+  GraduationCap
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -257,9 +259,8 @@ export default function SettingsPage() {
           </Card>
         </div>
 
-        {/* Coluna Formulário (Oculta para Alunos) */}
-        {!isStudent && (
-          <div className="lg:col-span-8 space-y-8">
+        {/* Coluna Formulário (Oculta para Alunos na versão original, agora mostramos campos lidos) */}
+        <div className="lg:col-span-8 space-y-8">
             <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden">
               <CardHeader className="bg-muted/10 p-10 border-b border-dashed border-muted/20">
                 <CardTitle className="text-2xl font-black text-primary italic uppercase tracking-tighter">Dados Cadastrais</CardTitle>
@@ -285,6 +286,34 @@ export default function SettingsPage() {
 
                     <div className="space-y-3">
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                        <School className="h-4 w-4" /> Colégio / Unidade
+                      </Label>
+                      <div className="relative">
+                        <Input 
+                          value={profile?.institution || "Não Informado"} 
+                          disabled 
+                          className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
+                        />
+                        <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                        <GraduationCap className="h-4 w-4" /> Objetivo Acadêmico
+                      </Label>
+                      <div className="relative">
+                        <Input 
+                          value={profile?.exam_target?.toUpperCase() || "ENEM"} 
+                          disabled 
+                          className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
+                        />
+                        <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
                         <Star className="h-4 w-4" /> Matéria de Foco
                       </Label>
                       <Select value={formData.favorite_subject} onValueChange={(v) => setFormData({...formData, favorite_subject: v})}>
@@ -302,39 +331,42 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
-                      <Palette className="h-4 w-4" /> Galeria de Avatares Dinâmicos
-                    </Label>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-6">
-                      {PRESET_AVATARS.map((url, i) => (
-                        <button 
-                          key={i} 
-                          type="button" 
-                          onClick={() => setFormData({...formData, avatar_url: url})} 
-                          className={`relative rounded-[1.5rem] overflow-hidden aspect-square border-[6px] transition-all hover:scale-110 active:scale-90 shadow-xl ${formData.avatar_url === url ? 'border-accent scale-110 ring-8 ring-accent/5' : 'border-white opacity-60 hover:opacity-100'}`}
-                        >
-                          <Avatar className="w-full h-full rounded-none"><AvatarImage src={url} className="object-cover" /></Avatar>
-                          {formData.avatar_url === url && (
-                            <div className="absolute inset-0 bg-accent/20 flex items-center justify-center animate-in zoom-in duration-500">
-                              <CheckCircle2 className="h-10 w-10 text-white drop-shadow-xl" />
-                            </div>
-                          )}
-                        </button>
-                      ))}
+                  {!isStudent && (
+                    <div className="space-y-6">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                        <Palette className="h-4 w-4" /> Galeria de Avatares Dinâmicos
+                      </Label>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-6">
+                        {PRESET_AVATARS.map((url, i) => (
+                          <button 
+                            key={i} 
+                            type="button" 
+                            onClick={() => setFormData({...formData, avatar_url: url})} 
+                            className={`relative rounded-[1.5rem] overflow-hidden aspect-square border-[6px] transition-all hover:scale-110 active:scale-90 shadow-xl ${formData.avatar_url === url ? 'border-accent scale-110 ring-8 ring-accent/5' : 'border-white opacity-60 hover:opacity-100'}`}
+                          >
+                            <Avatar className="w-full h-full rounded-none"><AvatarImage src={url} className="object-cover" /></Avatar>
+                            {formData.avatar_url === url && (
+                              <div className="absolute inset-0 bg-accent/20 flex items-center justify-center animate-in zoom-in duration-500">
+                                <CheckCircle2 className="h-10 w-10 text-white drop-shadow-xl" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <Button type="submit" disabled={isUpdating} className="w-full h-14 bg-primary text-white font-black text-sm md:text-base rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-[1.02] active:scale-95 transition-all mt-6 border-none px-4">
-                    {isUpdating ? <Loader2 className="h-5 w-5 animate-spin mr-2 shrink-0" /> : <CheckCircle2 className="h-5 w-5 mr-2 shrink-0 text-accent" />}
-                    <span className="truncate">SALVAR PREFERÊNCIAS</span>
-                  </Button>
+                  {!isStudent && (
+                    <Button type="submit" disabled={isUpdating} className="w-full h-14 bg-primary text-white font-black text-sm md:text-base rounded-3xl shadow-[0_20px_50px_-10px_rgba(26,44,75,0.4)] hover:scale-[1.02] active:scale-95 transition-all mt-6 border-none px-4">
+                      {isUpdating ? <Loader2 className="h-5 w-5 animate-spin mr-2 shrink-0" /> : <CheckCircle2 className="h-5 w-5 mr-2 shrink-0 text-accent" />}
+                      <span className="truncate">SALVAR PREFERÊNCIAS</span>
+                    </Button>
+                  )}
                 </form>
               </CardContent>
             </Card>
           </div>
-        )}
+        </div>
       </div>
-    </div>
   );
 }

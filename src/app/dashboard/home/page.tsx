@@ -32,10 +32,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
-import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts";
+
+import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 
 const logoUrl = "/images/logocompromisso.png";
 const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
@@ -126,49 +128,36 @@ export default function DashboardHome() {
     dataFetchedRef.current = true;
 
     try {
-      // Queries diretas (sem safeExecute que causa double-wrap)
-      const annRes = await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4);
-      const trailRes = await supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3);
-      const progressRes = await supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4);
-      const libRes = await supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3);
+      // Execução paralela de todas as queries principais para performance máxima
+      const [annRes, trailRes, progressRes, libRes] = await Promise.all([
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
+        supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
+        supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
+        supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)
+      ]);
       
-      // Essay e Exam com fallback para tabelas que podem não existir
-      let essayData: any[] = [];
-      let examData: any[] = [];
+      // Essay e Exam com tratamento individual de erro para não travar o restante
+      const [essayRes, examRes] = await Promise.all([
+        supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).then(r => r),
+        supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id).then(r => r)
+      ]).catch(e => [ {data: []}, {data: []} ]);
 
-      try {
-        const essayRes = await supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false });
-        if (essayRes.data) essayData = essayRes.data;
-      } catch (e) { console.warn("Tabela essay_submissions indisponível."); }
+      let essayData = essayRes?.data || [];
+      let examData = examRes?.data || [];
 
-      try {
-        const examRes = await supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id);
-        if (examRes.data) examData = examRes.data;
-      } catch (e) { console.warn("Tabela simulation_attempts indisponível."); }
-
-      let newAnn = [];
-      if (annRes?.data && annRes.data.length > 0) {
-        newAnn = annRes.data;
-      } else {
-        // Mocks para avaliação visual das 3 prioridades conforme pedido do usuário
-        newAnn = [
-          { id: '1', title: 'Simulado Geral ETEC/ENEM', message: 'O grande simulado presencial ocorrerá neste sábado às 08h. Não esqueça o documento original.', priority: 'high' },
-          { id: '2', title: 'Novas Apostilas de Biologia', message: 'Já estão disponíveis as novas apostilas de genética no acervo da biblioteca.', priority: 'medium' },
-          { id: '3', title: 'Manutenção do Chat', message: 'O chat com professores passará por uma leve manutenção hoje às 23h.', priority: 'low' },
-        ];
-      }
+      let newAnn = annRes?.data && annRes.data.length > 0 
+        ? annRes.data 
+        : [
+            { id: '1', title: 'Simulado Geral ETEC/ENEM', message: 'O grande simulado presencial ocorrerá neste sábado às 08h.', priority: 'high' },
+            { id: '2', title: 'Novas Apostilas de Biologia', message: 'Já estão disponíveis as novas apostilas de genética.', priority: 'medium' },
+          ];
+      
       setAnnouncements(newAnn as any);
-      
-      const newTrails = trailRes?.data || [];
-      setRecommendedTrails(newTrails);
-      
-      const newProgress = progressRes?.data ? (progressRes.data as any[]).filter((p: any) => p.trail) : [];
-      setRecentProgress(newProgress);
-      
-      const newLib = libRes?.data || [];
-      setLibraryResources(newLib);
+      setRecommendedTrails(trailRes?.data || []);
+      setRecentProgress(progressRes?.data ? (progressRes.data as any[]).filter((p: any) => p.trail) : []);
+      setLibraryResources(libRes?.data || []);
 
-      let newEssayStats = { count: 0, average: 0, latest: null };
+      let newEssayStats = { count: 0, average: 0, latest: null as any };
       if (essayData.length > 0) {
         const scoredEssays = essayData.filter((e: any) => e.score !== null && e.score > 0);
         const avg = scoredEssays.length > 0 ? scoredEssays.reduce((acc: number, curr: any) => acc + Number(curr.score), 0) / scoredEssays.length : 0;
@@ -176,39 +165,22 @@ export default function DashboardHome() {
       }
       setEssayStats(newEssayStats);
 
-      let newExamStats: { totalAssessed: number; averageScore: number; history?: any[] } = { totalAssessed: 0, averageScore: 0, history: [] };
+      let newExamStats = { totalAssessed: 0, averageScore: 0, history: [] as any[] };
       if (examData.length > 0) {
-        let totalScore = 0;
-        let totalMax = 0;
+        let totalScore = 0, totalMax = 0;
         const historyData = examData.map((ex: any, i: number) => {
           totalScore += Number(ex.score || 0);
           totalMax += Number(ex.total_questions || 0);
-          const percent = ex.total_questions ? (ex.score / ex.total_questions) * 100 : 0;
-          return { name: `S${i + 1}`, score: Math.round(percent) };
-        }).reverse(); // Do mais antigo pro mais novo
-
-        const avg = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
-        newExamStats = { totalAssessed: examData.length, averageScore: Math.round(avg), history: historyData };
+          return { name: `S${i + 1}`, score: Math.round(ex.total_questions ? (ex.score / ex.total_questions) * 100 : 0) };
+        }).reverse();
+        newExamStats = { totalAssessed: examData.length, averageScore: Math.round(totalMax > 0 ? (totalScore / totalMax) * 100 : 0), history: historyData };
       } else {
-        // Fallback progressivo lindo para usuários novos visualizar evolução gamificada
-        newExamStats = { 
-          totalAssessed: 0, 
-          averageScore: 0, 
-          history: [{ name: "Jan", score: 40 }, { name: "Fev", score: 55 }, { name: "Mar", score: 85 }] 
-        };
+        newExamStats = { totalAssessed: 0, averageScore: 0, history: [{ name: "Jan", score: 40 }, { name: "Fev", score: 55 }, { name: "Mar", score: 85 }] };
       }
       setExamStats(newExamStats);
 
-      // Save to Cache
       dashboardCache = {
-        data: {
-          announcements: newAnn,
-          recommendedTrails: newTrails,
-          recentProgress: newProgress,
-          libraryResources: newLib,
-          essayStats: newEssayStats,
-          examStats: newExamStats
-        },
+        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats },
         timestamp: Date.now()
       };
 
