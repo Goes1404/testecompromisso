@@ -48,7 +48,8 @@ export default function TeacherStudentsPage() {
           .from('profiles')
           .select('*')
           .eq('role', 'student')
-          .order('name');
+          .order('name')
+          .limit(5000);
 
         if (error) throw error;
 

@@ -233,12 +233,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     : "Usuário"}
                 </span>
                 <span className="text-[8px] font-black text-accent uppercase tracking-widest">
-                  {profile?.profile_type === 'student' || user.user_metadata?.profile_type === 'student'
+                  {profile?.profile_type === 'student' || user.user_metadata?.profile_type === 'student' || userRole === 'student'
                     ? `${profile?.exam_target || user.user_metadata?.exam_target || 'ENEM'} • ${profile?.institution || user.user_metadata?.institution || 'Colégio'}` 
-                    : (userRole === 'admin' ? 'Coordenação' : 
+                    : (profile?.profile_type || user.user_metadata?.profile_type || (
+                       userRole === 'admin' ? 'Coordenação' : 
                        userRole === 'teacher' ? 'Professor' : 
                        userRole === 'staff' ? 'Equipe Técnica' : 
-                       userRole.toUpperCase())}
+                       userRole.toUpperCase()))}
                 </span>
               </div>
               <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">

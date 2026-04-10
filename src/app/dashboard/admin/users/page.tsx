@@ -102,7 +102,7 @@ export default function AdminUserDirectoryPage() {
                          u.username?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const pType = (u.profile_type || '').toLowerCase();
-    const isStaff = ['admin', 'staff', 'teacher', 'tecnico', 'técnico', 'coord'].some(k => pType.includes(k));
+    const isStaff = u.role === 'admin' || u.role === 'teacher' || ['admin', 'staff', 'teacher', 'tecnico', 'técnico', 'coord', 'prof', 'psicóloga', 'apoio', 'assessor', 'secretaria', 'videomaker', 'administrador', 'agente'].some(k => pType.includes(k));
     
     const matchesRole = roleFilter === 'all' || 
                        (roleFilter === 'staff' && isStaff) || 
@@ -176,7 +176,7 @@ export default function AdminUserDirectoryPage() {
                 <TableBody>
                   {filtered.map((u) => {
                     const pType = (u.profile_type || '').toLowerCase();
-                    const isStaff = ['admin', 'staff', 'teacher', 'tecnico', 'técnico', 'coord'].some(k => pType.includes(k));
+                    const isStaff = u.role === 'admin' || u.role === 'teacher' || ['admin', 'staff', 'teacher', 'tecnico', 'técnico', 'coord', 'prof', 'psicóloga', 'apoio', 'assessor', 'secretaria', 'videomaker', 'administrador', 'agente'].some(k => pType.includes(k));
                     const isSuspended = u.status === 'suspended';
                     
                     return (
@@ -194,7 +194,7 @@ export default function AdminUserDirectoryPage() {
                           <Badge className={`border-none font-black text-[8px] uppercase px-3 h-6 ${
                             isStaff ? (pType.includes('admin') ? 'bg-indigo-100 text-indigo-700' : pType.includes('teacher') ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700') : 'bg-blue-100 text-blue-700'
                           }`}>
-                            {pType.includes('admin') ? 'Coordenação' : pType.includes('teacher') ? 'Professor' : isStaff ? 'Equipe Técnica' : 'Estudante'}
+                            {u.profile_type || (u.role === 'admin' ? 'Coordenação' : u.role === 'teacher' ? 'Professor' : 'Estudante')}
                           </Badge>
                         </TableCell>
                         <TableCell>
