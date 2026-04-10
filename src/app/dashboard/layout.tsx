@@ -239,7 +239,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                        userRole === 'admin' ? 'Coordenação' : 
                        userRole === 'teacher' ? 'Professor' : 
                        userRole === 'staff' ? 'Equipe Técnica' : 
-                       userRole.toUpperCase()))}
+                       'User'))}
                 </span>
               </div>
               <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">
