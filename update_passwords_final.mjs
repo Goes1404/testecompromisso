@@ -2157,80 +2157,109 @@ const studentsENEM = parseData(RawDataENEM);
 const studentsETEC = parseData(RawDataETEC);
 const allStudents = [...studentsENEM, ...studentsETEC];
 
-async function updatePassword(student, password, index) {
-  const nameParts = student.name.trim().split(' ').filter(p => p.length > 0);
-  const firstName = nameParts[0];
-  const lastName = nameParts[nameParts.length - 1];
-  
-  let secondNameInitial = '';
-  if (nameParts.length > 1) {
-    secondNameInitial = nameParts[1][0].toLowerCase();
-  }
-
-  const emailPart = (firstName + secondNameInitial + lastName)
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "");
-  
-  const email = `${emailPart}@compromisso.com`;
-
-  console.log(`[${index + 1}/702] 🔐 Atualizando: ${student.name} <${email}> -> Senha: ${password}`);
-
-  console.log(`[${index + 1}/702] 🔐 Atualizando: ${student.name} <${email}> -> Senha: ${password}`);
-
-  // 1. Try to find user ID by email (case-insensitive) OR by full name if email fails
-  let { data: profileData, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, email, name')
-    .ilike('email', email)
-    .single();
-
-  if (profileError || !profileData) {
-    console.warn(`⚠️ E-mail não match direto. Tentando pelo Nome: ${student.name}`);
-    const { data: nameData, error: nameError } = await supabase
-        .from('profiles')
-        .select('id, email, name')
-        .ilike('name', `%${student.name}%`)
-        .limit(1)
-        .single();
-    
-    if (nameError || !nameData) {
-        console.error(`❌ Erro: Aluno ${student.name} não encontrado no banco de forma alguma.`);
-        return;
-    }
-    profileData = nameData;
-  }
-
-  const userId = profileData.id;
-
-  // 2. Update password in Auth using the ID
-  const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-    password: password,
-    user_metadata: { must_change_password: false }
-  });
-
-  if (updateError) {
-    console.error(`❌ Erro Auth (${student.name}): ${updateError.message}`);
-  } else {
-    console.log(`✅ Senha ativada para ${profileData.name} (${profileData.email})`);
-  }
-}
-
 async function run() {
-  console.log(`Iniciando atualização de senhas para ${allStudents.length} alunos...`);
-  if (allStudents.length !== passwordsList.length) {
-    console.warn(`⚠️ Aviso: A lista de alunos (${allStudents.length}) e senhas (${passwordsList.length}) não têm o mesmo tamanho!`);
+  console.log(`Iniciando atualização real para ${allStudents.length} alunos...`);
+
+  // 1. Fetch ALL auth users
+  console.log("📥 Carregando todos os usuários do Supabase Auth para cache...");
+  let allAuthUsers = [];
+  let page = 1;
+  let keepFetching = true;
+
+  while (keepFetching) {
+    const { data: usersData, error } = await supabase.auth.admin.listUsers({
+      page: page,
+      perPage: 1000
+    });
+    if (error) {
+      console.error("Error fetching users:", error);
+      process.exit(1);
+    }
+    const { users } = usersData;
+    if (users.length === 0) {
+      keepFetching = false;
+    } else {
+      allAuthUsers = allAuthUsers.concat(users);
+      page++;
+    }
   }
+  console.log(`✅ Carregados ${allAuthUsers.length} usuários do Auth.`);
+
+  let successCount = 0;
+  let failCount = 0;
 
   for (let i = 0; i < allStudents.length; i++) {
     const student = allStudents[i];
-    const password = passwordsList[i];
-    if (student && password) {
-      await updatePassword(student, password, i);
-      await new Promise(r => setTimeout(r, 50)); // Avoid rate limit
+    
+    // Evaluate Email
+    const nameParts = student.name.trim().split(' ').filter(p => p.length > 0);
+    const firstName = nameParts[0];
+    const lastName = nameParts[nameParts.length - 1];
+    let secondNameInitial = '';
+    if (nameParts.length > 1) {
+      secondNameInitial = nameParts[1][0].toLowerCase();
+    }
+    const emailPart = (firstName + secondNameInitial + lastName)
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "");
+    
+    const email = `${emailPart}@compromisso.com`;
+    const institution = student.school;
+    const exam_target = (i < studentsENEM.length) ? 'ENEM' : 'ETEC';
+
+    try {
+      let userId;
+      const existing = allAuthUsers.find(u => u.email.toLowerCase() === email);
+
+      if (existing) {
+        userId = existing.id;
+        // Update
+        await supabase.auth.admin.updateUserById(userId, { 
+          password: 'compromisso2026',
+          user_metadata: { must_change_password: true, display_name: student.name }
+        });
+      } else {
+        // Create
+        const { data: userData, error: userError } = await supabase.auth.admin.createUser({
+          email: email,
+          password: 'compromisso2026',
+          email_confirm: true,
+          user_metadata: { must_change_password: true, display_name: student.name }
+        });
+
+        if (userError) throw userError;
+        userId = userData.user.id;
+        allAuthUsers.push(userData.user);
+      }
+
+      if (userId) {
+        // Upsert Profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: email,
+            name: student.name,
+            institution: institution,
+            exam_target: exam_target,
+            profile_type: 'student',
+            status: 'active',
+            updated_at: new Date()
+          });
+
+        if (profileError) throw profileError;
+        successCount++;
+        if (i % 50 === 0) process.stdout.write(`✅ ${i}.. `);
+      }
+    } catch (err) {
+      console.error(`❌ Erro em ${student.name}:`, err.message);
+      failCount++;
     }
   }
-  console.log('--- FIM DO PROCESSO DE SENHAS ---');
+
+  console.log(`\n🏁 Sincronização Concluída!`);
+  console.log(`✅ Sucessos: ${successCount} | ❌ Falhas: ${failCount}`);
 }
 
 run();

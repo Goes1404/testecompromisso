@@ -18,7 +18,13 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const data = fs.readFileSync('students_source_718.txt', 'utf8');
+  const data1 = fs.readFileSync('students_source_718.txt', 'utf8');
+  let data2 = '';
+  if (fs.existsSync('students_source_718_chunk_part2.txt')) {
+      data2 = fs.readFileSync('students_source_718_chunk_part2.txt', 'utf8');
+  }
+  const data = data1 + '\n------------------------------\n' + data2;
+  
   const sections = data.split('------------------------------');
   const students = [];
 
@@ -31,7 +37,10 @@ async function run() {
       if (line.startsWith('ESCOLA:')) student.institution = line.replace('ESCOLA:', '').trim();
       if (line.startsWith('OBJETIVO:')) student.exam_target = line.replace('OBJETIVO:', '').trim();
     });
-    if (student.name && student.email) students.push(student);
+    // Use an email deduplication logic just in case both files overlap
+    if (student.name && student.email && !students.find(s => s.email === student.email)) {
+       students.push(student);
+    }
   }
 
   console.log(`🚀 Iniciando sincronização definitiva para ${students.length} alunos...`);

@@ -47,7 +47,7 @@ export default function TeacherStudentsPage() {
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('profile_type', 'student')
+          .eq('role', 'student')
           .order('name');
 
         if (error) throw error;
