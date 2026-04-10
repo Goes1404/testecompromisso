@@ -52,13 +52,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
-    if (!profile) return 'student';
-    const rawType = (profile.profile_type || '').toLowerCase().trim();
-    if (['admin', 'gestor', 'coordenador'].includes(rawType)) return 'admin';
-    if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
-    if (['staff', 'técnico', 'equipe técnica', 'assistente'].includes(rawType)) return 'staff';
+    // ⚡ PRIORIDADE 1: Pegar do metadado do Auth (Instantâneo)
+    if (user?.user_metadata?.role) {
+      const metaRole = user.user_metadata.role.toLowerCase();
+      if (['admin', 'gestor', 'coordenador'].includes(metaRole)) return 'admin';
+      if (['teacher', 'mentor', 'professor', 'docente'].includes(metaRole)) return 'teacher';
+      if (['staff', 'técnico', 'equipe técnica', 'assistente'].includes(metaRole)) return 'staff';
+    }
+
+    // ⚡ PRIORIDADE 2: Pegar do perfil carregado (Backup)
+    if (profile) {
+      const rawType = (profile.profile_type || profile.role || '').toLowerCase().trim();
+      if (['admin', 'gestor', 'coordenador'].includes(rawType)) return 'admin';
+      if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
+      if (['staff', 'técnico', 'equipe técnica', 'assistente'].includes(rawType)) return 'staff';
+    }
+
+    // ⚡ PRIORIDADE 3: Tentar inferir pelo e-mail se nada acima funcionar
+    const email = user?.email || profile?.email || '';
+    if (email.includes('admin') || email.includes('coordena')) return 'admin';
+    if (email.includes('teacher') || email.includes('prof')) return 'teacher';
+    
     return 'student';
-  }, [profile]);
+  }, [profile, user]);
 
   const fetchProfile = useCallback(async (userId: string, retries = 1, delayMs = 500) => {
     if (!isSupabaseConfigured || !userId) return null;
@@ -108,6 +124,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signOut = useCallback(async () => {
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {}
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setLoading(false);
+    window.location.assign("/login");
+  }, []);
+
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
 
@@ -121,8 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
-          const p = await fetchProfile(initialSession.user.id);
-          setProfile(p);
+          // ⚡ NÃO esperamos o perfil para destravar o loading
+          fetchProfile(initialSession.user.id).then(p => setProfile(p));
         }
       } catch (e: any) {
         console.error("[AUTH] Erro ao inicializar sessão:", e?.message || e);
@@ -157,24 +185,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
+    // 🔒 Verificação de Sessão Única (Anti-Compartilhamento)
+    const checkSessionLock = () => {
+      if (profile?.bio) {
+        const localSessionId = localStorage.getItem('comp_session_id');
+        if (localSessionId && profile.bio !== localSessionId) {
+          console.warn("[SECURITY] Sessão invalidada por novo login em outro dispositivo.");
+          signOut();
+        }
+      }
+    };
+
+    // Checa a cada mudança de perfil
+    checkSessionLock();
+
     return () => {
       if (subscription) {
         subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, router]);
-
-  const signOut = async () => {
-    setLoading(true);
-    try {
-      await supabase.auth.signOut();
-    } catch (e) {}
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setLoading(false);
-    window.location.assign("/login");
-  };
+  }, [fetchProfile, router, profile, signOut]);
 
   const contextValue = useMemo(() => ({
     user,

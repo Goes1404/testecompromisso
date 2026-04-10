@@ -50,8 +50,13 @@ export function LoginForm() {
         return;
       }
 
-      if (data.user) {
-        // Redireciona se for o primeiro acesso (troca de senha obrigatória)
+        // Geração de Chave Única de Sessão (Anti-Compartilhamento)
+        const sessionId = crypto.randomUUID();
+        localStorage.setItem('comp_session_id', sessionId);
+        
+        // Atualiza a chave ativa no banco (usando o campo bio como trava temporária)
+        await supabase.from('profiles').update({ bio: sessionId }).eq('id', data.user.id);
+
         if (data.user.user_metadata?.must_change_password) {
           setIsRedirecting(true);
           window.location.assign("/dashboard/first-access");
@@ -60,7 +65,6 @@ export function LoginForm() {
 
         setIsRedirecting(true);
         window.location.assign("/dashboard");
-      }
     } catch (err: any) {
       setLoading(false);
       setAuthError("Falha crítica na autenticação.");

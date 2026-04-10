@@ -20,7 +20,8 @@ import {
   Star,
   RefreshCw,
   School,
-  GraduationCap
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -284,33 +285,53 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
-                        <School className="h-4 w-4" /> Colégio / Unidade
-                      </Label>
-                      <div className="relative">
-                        <Input 
-                          value={profile?.institution || "Não Informado"} 
-                          disabled 
-                          className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
-                        />
-                        <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />
+                    {isStudent && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                          <School className="h-4 w-4" /> Colégio / Unidade
+                        </Label>
+                        <div className="relative">
+                          <Input 
+                            value={profile?.institution || "Não Informado"} 
+                            disabled 
+                            className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
+                          />
+                          <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
-                        <GraduationCap className="h-4 w-4" /> Objetivo Acadêmico
-                      </Label>
-                      <div className="relative">
-                        <Input 
-                          value={profile?.exam_target?.toUpperCase() || "ENEM"} 
-                          disabled 
-                          className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
-                        />
-                        <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />
+                    {isStudent && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                          <GraduationCap className="h-4 w-4" /> Objetivo Acadêmico
+                        </Label>
+                        <div className="relative">
+                          <Input 
+                            value={profile?.exam_target?.toUpperCase() || "ENEM"} 
+                            disabled 
+                            className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
+                          />
+                          <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {!isStudent && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">
+                          <BookOpen className="h-4 w-4" /> Matéria / Função
+                        </Label>
+                        <div className="relative">
+                          <Input 
+                            value={profile?.course || "Docente"} 
+                            disabled 
+                            className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
+                          />
+                          <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20" />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-3">
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2 flex items-center gap-3">

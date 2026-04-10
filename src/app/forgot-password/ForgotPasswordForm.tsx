@@ -124,22 +124,39 @@ export function ForgotPasswordForm() {
   const strengthText = ["Muito Fraca", "Fraca", "Média", "Forte", "Excelente"][strength];
 
   if (success) {
+    const whatsappNumber = "5511977809959"; // Número extraído do histórico da Pri
+    const whatsappMessage = encodeURIComponent(`Olá Equipe Técnica! Sou o aluno ${email} e esqueci minha senha de acesso ao portal do Compromisso. Poderia me ajudar com o reset?`);
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+
     return (
       <Card className="w-full max-w-md border-none shadow-2xl bg-white/95 backdrop-blur-md rounded-[2rem] p-8 text-center space-y-6">
         <div className="flex justify-center">
-          <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
-            <CheckCircle2 className="h-10 w-10 text-green-600" />
+          <div className="h-20 w-20 rounded-full bg-accent/10 flex items-center justify-center">
+            <Mail className="h-10 w-10 text-accent animate-pulse" />
           </div>
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-primary italic uppercase">Sucesso!</h2>
-          <p className="text-sm text-primary/60 font-medium">
-            Verifique seu e-mail para seguir as instruções e acessar o sistema.
+          <h2 className="text-2xl font-black text-primary italic uppercase tracking-tighter">Solicitar Nova Senha</h2>
+          <p className="text-sm text-primary/60 font-medium leading-relaxed italic">
+            Como seu e-mail é de acesso interno corporativo, nossa **Equipe Técnica** fará o reset para você agora mesmo via WhatsApp.
           </p>
         </div>
-        <Button asChild className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 rounded-xl shadow-xl transition-all border-none">
-          <a href="/login">Ir para o Login</a>
-        </Button>
+        
+        <div className="pt-4 space-y-3">
+          <Button asChild className="w-full bg-green-500 hover:bg-green-600 text-white font-black h-16 rounded-2xl shadow-xl transition-all border-none text-base gap-3">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              Falar com Suporte Técnico 🚀
+            </a>
+          </Button>
+          
+          <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-primary/40 h-10 rounded-xl">
+            <a href="/login">Voltar ao Login</a>
+          </Button>
+        </div>
+
+        <p className="text-[9px] font-bold text-slate-300 uppercase italic tracking-widest pt-4">
+          O reset padrão é para a senha: <span className="text-accent">compromisso2026</span>
+        </p>
       </Card>
     );
   }
