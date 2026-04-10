@@ -25,6 +25,8 @@ export default function DashboardRoot() {
         router.replace("/dashboard/admin/home");
       } else if (userRole === 'teacher') {
         router.replace("/dashboard/teacher/home");
+      } else if (userRole === 'staff') {
+        router.replace("/dashboard/admin/home"); // Por enquanto equipe técnica vê o admin ou criamos uma própria
       } else {
         router.replace("/dashboard/home");
       }

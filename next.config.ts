@@ -20,27 +20,23 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  productionBrowserSourceMaps: false,
+  poweredByHeader: false,
+  reactStrictMode: false, // Performance boost
   experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      'recharts',
-      'date-fns',
-      '@radix-ui/react-icons',
-      'framer-motion'
-    ],
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons', 'clsx', 'tailwind-merge'],
   },
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      fs: false,
-      http: false,
-      https: false,
-      url: false,
-      path: false,
-      canvas: false,
-      'pdfjs-dist': false,
-      fabric: false,
-    };
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.optimization.splitChunks.cacheGroups = {
+        ...config.optimization.splitChunks.cacheGroups,
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      };
+    }
     return config;
   },
 };

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Loader2, Sparkles, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { ChevronRight, Loader2, Sparkles, AlertCircle, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,6 +37,8 @@ export function LoginForm() {
     setLoading(true);
 
     try {
+      // IMPORTANTE: Usamos getUser() em vez de getSession() para evitar loops de redirecionamento
+      // e garantir que os metadados (como must_change_password) estejam sempre atualizados.
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -115,8 +117,20 @@ export function LoginForm() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[10px] font-black uppercase text-primary/40 px-2">Email de acesso</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold" required disabled={loading} />
+              <Label htmlFor="email" className="text-[10px] font-black uppercase text-primary/40 px-2 tracking-widest">Email de acesso</Label>
+              <div className="relative group">
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="seu@compromisso.com"
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  className="h-14 bg-white border-2 border-slate-100 rounded-2xl font-bold pl-12 focus-visible:ring-primary/20 focus-visible:border-primary/30 transition-all shadow-sm group-hover:border-slate-200" 
+                  required 
+                  disabled={loading} 
+                />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20 group-hover:text-primary/40 transition-colors" />
+              </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center px-2">
@@ -126,16 +140,18 @@ export function LoginForm() {
                 <Input 
                   id="password" 
                   type={showPassword ? "text" : "password"} 
+                  placeholder="••••••••"
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
-                  className="h-12 bg-muted/30 border-none rounded-xl font-bold pr-12" 
+                  className="h-14 bg-white border-2 border-slate-100 rounded-2xl font-bold px-12 focus-visible:ring-primary/20 focus-visible:border-primary/30 transition-all shadow-sm group-hover:border-slate-200" 
                   required 
                   disabled={loading} 
                 />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/20 group-hover:text-primary/40 transition-colors" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/20 hover:text-primary transition-colors"
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}

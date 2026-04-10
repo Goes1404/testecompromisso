@@ -39,7 +39,10 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // IMPORTANTE: Usamos getUser() em vez de getSession() para garantir que metadados 
+  // (como must_change_password) estejam 100% atualizados e evitar loops.
+  const { data: { user } } = await supabase.auth.getUser()
+  const session = user ? { user } : null;
 
   // Proteger rotas /dashboard originando flash of content
   if (request.nextUrl.pathname.startsWith('/dashboard')) {

@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
  * Versão Estabilizada: Elimina travamentos de sincronização e melhora a resiliência do perfil.
  */
 
-type UserRole = 'admin' | 'teacher' | 'student';
+type UserRole = 'admin' | 'teacher' | 'student' | 'staff';
 
 type Profile = {
   id: string;
@@ -55,11 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!profile) return 'student';
     const rawType = (profile.profile_type || '').toLowerCase().trim();
     if (['admin', 'gestor', 'coordenador'].includes(rawType)) return 'admin';
-    if (['teacher', 'mentor', 'professor', 'docente', 'staff'].includes(rawType)) return 'teacher';
+    if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
+    if (['staff', 'técnico', 'equipe técnica', 'assistente'].includes(rawType)) return 'staff';
     return 'student';
   }, [profile]);
 
-  const fetchProfile = useCallback(async (userId: string, retries = 3, delayMs = 1000) => {
+  const fetchProfile = useCallback(async (userId: string, retries = 1, delayMs = 500) => {
     if (!isSupabaseConfigured || !userId) return null;
     
     for (let attempt = 0; attempt < retries; attempt++) {
