@@ -22,8 +22,14 @@ export default function LoginPage() {
         {/* Lado do Login */}
         <div className="w-full md:w-1/2 flex flex-col bg-white relative">
           <div className="flex justify-end p-4 md:p-8 w-full z-10">
-            <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">
-              Voltar para o site do Compromisso
+            <Link 
+              href="/" 
+              className="group flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors font-medium bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-full border border-gray-200"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left group-hover:-translate-x-1 transition-transform">
+                <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+              </svg>
+              Voltar para o site
             </Link>
           </div>
           <div className="flex-1 flex items-center justify-center p-8">
