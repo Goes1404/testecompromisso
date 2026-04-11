@@ -30,8 +30,8 @@
     --destructive: 0 84% 60%;         /* feedback-error #EF4444 */
     --destructive-foreground: 0 0% 100%;
     
-    --border: 220 13% 91%;            /* surface-border #E5E7EB */
-    --input: 220 13% 91%;
+    --border: 220 13% 85%;            /* surface-border #E5E7EB - darkened */
+    --input: 220 13% 75%;
     --ring: 25 100% 50%;
     
     --radius: 1rem;
@@ -78,17 +78,19 @@
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: hsl(var(--background));
+  border-left: 1px solid hsl(var(--border));
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.1);
+  background: hsl(var(--primary) / 0.6);
   border-radius: 10px;
+  border: 2px solid hsl(var(--background));
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.2);
+  background: hsl(var(--primary) / 0.8);
 }
 
 /* DRIVER.JS — Tour Guide Custom Styles */

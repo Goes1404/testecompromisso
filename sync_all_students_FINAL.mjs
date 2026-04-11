@@ -253,7 +253,10 @@ Sophya de Carvalho | sophyacarvalho@compromisso.com | Abelardo Marques | ENEM
 Yasmin de Souza | yasminnsouza@compromisso.com | Aldônio | ENEM
 Yasmine Oliveira | yasminneoliveira@compromisso.com | Colaço | ENEM
 Yhasmin Ribeiro | yhasminribeiro@compromisso.com | Colaço | ENEM
-Yuri Gabriel de Lima | yuriglima@compromisso.com | Aldônio | ENEM`;
+Yuri Gabriel de Lima | yuriglima@compromisso.com | Aldônio | ENEM
+Yuri Lima | yurislima@compromisso.com | Carlos Alberto | ENEM
+Yuri Silva | yurisilva@compromisso.com | Carlos Alberto | ENEM
+Yasmim P Celestino | yasmimpcelestino@compromisso.com | Aldônio | ENEM`;
 
 const batch2 = `Abner de J.J. da Silva | abnerjsilva@compromisso.com | Ricarda | ETEC
 Adrian Mateus S.N | adrianmsilva@compromisso.com | Ricarda | ETEC
@@ -297,7 +300,7 @@ Carlos Eduardo L S | carlossilva@compromisso.com | Paulo Botelho | ETEC
 Cauane Mendes | cauanemendes@compromisso.com | Abelardo Marques | ETEC
 Clara Bianca | clarabianca@compromisso.com | Carlos Alberto | ETEC
 Cristian Aparecido | cristianaparecido@compromisso.com | Leda Caira | ETEC
-Crysthian Henrique | crysthian @compromisso.com | Carlos Alberto | ETEC
+Crysthian Henrique | crysthian@compromisso.com | Carlos Alberto | ETEC
 Daniel Camilo | danielcamilo@compromisso.com | Ricarda | ETEC
 Daniela Vitoria | danielavitoria@compromisso.com | Ana Aparecida | ETEC
 Danilo Miranda | danilomiranda@compromisso.com | Mário Covas | ETEC
@@ -395,7 +398,7 @@ Larissa Marinho | larissamarinho@compromisso.com | Tom Jobim | ETEC
 Laura de Oliveira | lauraoliveira@compromisso.com | Ricarda | ETEC
 Laysla Vitoria | layslavitoria@compromisso.com | Manoel Jacob | ETEC
 Leandro de Jesus | leandrojesus@compromisso.com | Carlos Alberto | ETEC
-Leticia de Castro | leticiacastro@compromisso.com | Leda Caira | ETEC
+Letícia de Castro | leticiacastro@compromisso.com | Leda Caira | ETEC
 Lorena Gabrielle | lorenagabrielle@compromisso.com | Tom Jobim | ETEC
 Lucas Arcanjo | lucasarcanjo@compromisso.com | Ana Aparecida | ETEC
 Lucas Ferreira | lucasferreira@compromisso.com | Leda Caira | ETEC
@@ -507,7 +510,7 @@ async function main() {
                       profile_type: 'student',
                       school: school,
                       study_focus: profileType,
-                      must_change_password: false
+                      must_change_password: true // ENFORCE RESET
                   }
               });
               
@@ -529,7 +532,7 @@ async function main() {
                       profile_type: 'student',
                       school: school,
                       study_focus: profileType,
-                      must_change_password: false
+                      must_change_password: true // ENFORCE RESET
                   }
               });
               

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,6 +15,8 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const logoUrl = "/images/logocompromisso.png";
 
@@ -71,57 +73,69 @@ export function LoginForm() {
       </div>
 
       <div className="text-center mb-8">
-        <h1 className="text-2xl md:text-[22px] font-bold text-[#002f6c] mb-1 leading-tight">
-          Área restrita do Compromisso <span className="font-normal italic">(Colégio e Curso)</span>
+        <h1 className="text-2xl md:text-[22px] font-bold text-[#002f6c] mb-1 leading-tight uppercase italic tracking-tighter">
+          Portal do Aluno <span className="font-normal italic">(SIAC)</span>
         </h1>
-        <p className="text-sm text-gray-500 font-medium">
-          Estudante, responsável e educador.
+        <p className="text-sm text-gray-400 font-medium">
+          Acesse sua jornada de alto desempenho.
         </p>
       </div>
 
       <form onSubmit={handleLogin} className="w-full space-y-4">
         <div className="space-y-1">
-          <Label htmlFor="email" className="text-[11px] text-gray-500 font-normal uppercase tracking-wide">Identificação</Label>
+          <Label htmlFor="email" className="text-[11px] text-gray-500 font-bold uppercase tracking-widest ml-1">E-mail de Acesso</Label>
           <Input 
             id="email" 
             type="email" 
-            placeholder="seu@compromisso.com"
+            placeholder="seu.nome@compromisso.com"
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
-            className="w-full h-12 bg-[#edf2f7] border-0 rounded focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:bg-white transition-all text-sm font-medium" 
+            className="w-full h-12 bg-white border-2 border-slate-400 rounded-xl focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 transition-all text-sm font-bold shadow-sm" 
             required 
             disabled={loading} 
           />
         </div>
 
         <div className="space-y-1 mt-6">
-          <Label htmlFor="password" className="text-[11px] text-gray-500 font-normal uppercase tracking-wide">Senha</Label>
-          <Input 
-            id="password" 
-            type="password" 
-            placeholder="••••••••"
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            className="w-full h-12 bg-white border border-gray-300 rounded focus-visible:ring-2 focus-visible:ring-orange-500 transition-all text-sm font-medium" 
-            required 
-            disabled={loading} 
-          />
+          <Label htmlFor="password" className="text-[11px] text-gray-500 font-bold uppercase tracking-widest ml-1">Senha</Label>
+          <div className="relative">
+            <Input 
+              id="password" 
+              type={showPassword ? "text" : "password"} 
+              placeholder="••••••••"
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              className="w-full h-12 bg-white border-2 border-slate-400 rounded-xl focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 transition-all text-sm font-bold pr-12 shadow-sm" 
+              required 
+              disabled={loading} 
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-600 transition-colors"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {authError && (
-          <p className="text-[#e53e3e] text-sm mt-2">{authError}</p>
+          <div className="flex items-center gap-2 bg-red-50 p-3 rounded-lg border border-red-100 mt-4">
+             <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+             <p className="text-red-700 text-xs font-bold uppercase">{authError}</p>
+          </div>
         )}
 
-        <Button type="submit" disabled={loading} className="w-full bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-bold h-12 rounded transition-all mt-6">
-          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Entrar"}
+        <Button type="submit" disabled={loading} className="w-full bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-black h-14 rounded-xl shadow-lg shadow-orange-600/20 transition-all mt-8 text-lg uppercase italic tracking-wider">
+          {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Entrar no Portal"}
         </Button>
 
-        <div className="flex justify-center flex-wrap items-center gap-4 mt-8 text-xs font-medium">
+        <div className="flex justify-center flex-wrap items-center gap-4 mt-10 text-[10px] font-black uppercase tracking-widest">
           <Link 
             href="/forgot-password"
-            className="text-[#002f6c] hover:underline px-4 py-2 border border-gray-200 rounded transition-colors hover:bg-gray-50"
+            className="text-slate-400 hover:text-orange-600 transition-colors"
           >
-            Esqueceu a senha?
+            Esqueceu seus dados de acesso?
           </Link>
         </div>
       </form>
