@@ -184,10 +184,10 @@ export default function StudentAdmissionCentral() {
             <div className="space-y-2">
               <Badge className="bg-accent text-accent-foreground border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest mb-2">Padrão SiSU/ProUni</Badge>
               <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none">Central de <span className="text-white">Ingresso</span></h1>
-              <p className="text-sm md:text-lg text-white/60 font-medium italic">Gerencie seus dados e organize sua documentação oficial.</p>
+              <p className="text-sm md:text-lg text-white/90 font-medium italic">Gerencie seus dados e organize sua documentação oficial.</p>
             </div>
             <div className="flex flex-col items-end gap-3 bg-white/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
-              <div className="flex justify-between w-40 text-[9px] font-black uppercase text-white/80 tracking-widest">
+              <div className="flex justify-between w-40 text-[9px] font-black uppercase text-white tracking-widest">
                 <span>Prontidão Documental</span>
                 <span className="text-white">{progressPercent}%</span>
               </div>
