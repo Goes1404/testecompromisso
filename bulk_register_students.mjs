@@ -2174,13 +2174,6 @@ async function registerStudent(student) {
   let secondNameInitial = '';
   if (nameParts.length > 2) {
     secondNameInitial = nameParts[1][0].toLowerCase();
-  } else if (nameParts.length === 2) {
-      // Se tiver só 2 nomes, não tem "segundo nome" que não seja o último?
-      // O usuário disse: "primeiro nome, a primeira letra no segundo nome e o ultimo nome"
-      // Se for "Alan Henrique", o segundo nome é Henrique. A primeira letra é 'h'.
-      // Mas o ultimo nome também é Henrique.
-      // Vou seguir a regra: se houver pelo menos 2 nomes, pegamos a inicial do segundo.
-      secondNameInitial = nameParts[1][0].toLowerCase();
   }
 
   const emailPart = (firstName + secondNameInitial + lastName)
@@ -2243,7 +2236,7 @@ async function run() {
   for (const student of allStudents) {
     await registerStudent(student);
     // Pequeno delay para evitar rate limiting agressivo (mesmo com service role)
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 1000));
   }
   console.log('--- FIM DO PROCESSO ---');
 }

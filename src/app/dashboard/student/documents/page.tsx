@@ -171,7 +171,7 @@ export default function StudentAdmissionCentral() {
   if (loadingDocs) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
       <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Central de Ingresso...</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">Sincronizando Central de Ingresso...</p>
     </div>
   );
 
@@ -183,13 +183,13 @@ export default function StudentAdmissionCentral() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <Badge className="bg-accent text-accent-foreground border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest mb-2">Padrão SiSU/ProUni</Badge>
-              <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none">Central de <span className="text-accent">Ingresso</span></h1>
+              <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none">Central de <span className="text-white">Ingresso</span></h1>
               <p className="text-sm md:text-lg text-white/60 font-medium italic">Gerencie seus dados e organize sua documentação oficial.</p>
             </div>
             <div className="flex flex-col items-end gap-3 bg-white/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
-              <div className="flex justify-between w-40 text-[9px] font-black uppercase text-white/40 tracking-widest">
+              <div className="flex justify-between w-40 text-[9px] font-black uppercase text-white/80 tracking-widest">
                 <span>Prontidão Documental</span>
-                <span className="text-accent">{progressPercent}%</span>
+                <span className="text-white">{progressPercent}%</span>
               </div>
               <div className="h-1.5 w-40 bg-white/10 rounded-full overflow-hidden border border-white/5">
                 <div className="h-full bg-accent transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${progressPercent}%` }} />
@@ -247,9 +247,9 @@ export default function StudentAdmissionCentral() {
               <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative group">
                 <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
                 <CardHeader className="p-8 relative z-10">
-                  <div className="h-14 w-14 rounded-3xl bg-white/10 flex items-center justify-center mb-6 shadow-xl"><Cloud className="h-8 w-8 text-accent" /></div>
+                  <div className="h-14 w-14 rounded-3xl bg-white/10 flex items-center justify-center mb-6 shadow-xl"><Cloud className="h-8 w-8 text-white" /></div>
                   <CardTitle className="text-2xl font-black italic">Nuvem de Documentos</CardTitle>
-                  <CardDescription className="text-white/60 font-medium">Use o Google Drive para não perder nada.</CardDescription>
+                  <CardDescription className="text-white/90 font-medium font-bold italic">Use o Google Drive para não perder nada.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 pt-0 space-y-6 relative z-10">
                   <div className="space-y-4">
@@ -259,7 +259,7 @@ export default function StudentAdmissionCentral() {
                       { icon: Smartphone, text: 'Escaneie com a câmera do celular' }
                     ].map((step, i) => (
                       <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
-                        <step.icon className="h-4 w-4 text-accent shrink-0" />
+                        <step.icon className="h-4 w-4 text-white shrink-0" />
                         <span className="text-xs font-bold italic opacity-90">{step.text}</span>
                       </div>
                     ))}

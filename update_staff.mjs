@@ -76,7 +76,7 @@ async function update() {
           email: email,
           password: 'compromisso2026',
           email_confirm: true,
-          user_metadata: { role: role, name: name }
+          user_metadata: { role: role, full_name: name, must_change_password: true }
        });
        if (createErr) {
           console.log('Error creating', email, createErr);
@@ -85,7 +85,7 @@ async function update() {
        }
     } else {
        await supabase.auth.admin.updateUserById(user.id, {
-          user_metadata: { role: role, name: name },
+          user_metadata: { role: role, full_name: name, must_change_password: true },
           password: 'compromisso2026'
        });
     }
@@ -97,9 +97,10 @@ async function update() {
        const { error: pErr } = await supabase.from('profiles').upsert({
            id: user.id,
            email: email,
-           name: user.user_metadata?.name || name,
+           name: user.user_metadata?.full_name || name,
            role: role,
            profile_type: func,
+           course: func,
            status: 'active'
        });
        

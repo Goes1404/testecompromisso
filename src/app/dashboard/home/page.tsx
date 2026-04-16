@@ -98,7 +98,7 @@ export default function DashboardHome() {
 
   useEffect(() => {
     if (!isUserLoading && userRole !== 'student') {
-      if (userRole === 'admin') router.replace("/dashboard/admin/home");
+      if (userRole === 'admin' || userRole === 'staff') router.replace("/dashboard/admin/home");
       else if (userRole === 'teacher') router.replace("/dashboard/teacher/home");
     }
   }, [userRole, isUserLoading, router]);
@@ -215,7 +215,7 @@ export default function DashboardHome() {
     }
   }, [user, profile, userRole, fetchData]);
 
-  if (isUserLoading || (loadingData && !dataFetchedRef.current)) return (
+  if (isUserLoading || (userRole === 'student' && loadingData && !dataFetchedRef.current)) return (
     <div className="flex flex-col h-[70vh] items-center justify-center gap-5">
       <div className="relative">
         <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">

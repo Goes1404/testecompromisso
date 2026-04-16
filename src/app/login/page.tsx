@@ -9,14 +9,16 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col min-h-screen overflow-hidden bg-white">
       <div className="flex flex-1 flex-col md:flex-row">
-        <div className="hidden md:flex md:w-1/2 relative bg-orange-600 border-b-2 md:border-b-0 border-orange-600">
+        <div className="hidden md:flex md:w-1/2 relative bg-orange-600 border-b-2 md:border-b-0 border-orange-600 overflow-hidden">
           <Image 
-            src="/images/hero_study.png"
+            src="/images/login_hero.jpg"
             alt="Estudantes"
             fill
-            className="object-cover"
+            className="object-cover brightness-[0.85] contrast-[1.1] saturate-[1.1] transition-transform duration-700 hover:scale-105"
             priority
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-orange-600/40 to-transparent mix-blend-overlay pointer-events-none" />
+          <div className="absolute inset-0 bg-orange-900/10 pointer-events-none" />
         </div>
         
         {/* Lado do Login */}

@@ -216,7 +216,7 @@ export default function FirstAccessPage() {
                   
                   <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase italic">
                     <Info className="h-3 w-3 text-primary/30" />
-                    Esta senha será seu acesso único ao SIAC-COMPROMISSO
+                    Esta senha será seu acesso único ao COMPROMISSO
                   </div>
                 </div>
               </form>

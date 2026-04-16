@@ -57,7 +57,7 @@ export default function TeacherHomePage() {
 
   // Guard de Papel
   useEffect(() => {
-    if (!isUserLoading && userRole !== 'teacher' && userRole !== 'admin') {
+    if (!isUserLoading && userRole !== 'teacher' && userRole !== 'admin' && userRole !== 'staff') {
       router.replace("/dashboard/home");
     }
   }, [userRole, isUserLoading, router]);
@@ -164,7 +164,7 @@ export default function TeacherHomePage() {
   }
 
   // Se não é admin/teacher e não está carregando usuário, redireciona ou mostra erro suave
-  if (!isUserLoading && profile && userRole !== 'teacher' && userRole !== 'admin') {
+  if (!isUserLoading && profile && userRole !== 'teacher' && userRole !== 'admin' && userRole !== 'staff') {
     return null; // Redirecionamento no useEffect tratará isso
   }
 

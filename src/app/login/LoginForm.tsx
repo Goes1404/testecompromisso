@@ -74,7 +74,7 @@ export function LoginForm() {
 
       <div className="text-center mb-8">
         <h1 className="text-2xl md:text-[22px] font-bold text-[#002f6c] mb-1 leading-tight uppercase italic tracking-tighter">
-          Portal do Aluno <span className="font-normal italic">(SIAC)</span>
+          Portal do Aluno
         </h1>
         <p className="text-sm text-gray-400 font-medium">
           Acesse sua jornada de alto desempenho.

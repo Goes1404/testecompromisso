@@ -74,7 +74,7 @@ export default function CoordinatorDashboard() {
   const TEACHER_CODE = "COMPROMISSO2024";
 
   useEffect(() => {
-    if (!isUserLoading && userRole !== 'admin') {
+    if (!isUserLoading && userRole !== 'admin' && userRole !== 'staff') {
       router.replace(userRole === 'teacher' ? "/dashboard/teacher/home" : "/dashboard/home");
     }
   }, [userRole, isUserLoading, router]);
@@ -155,10 +155,10 @@ export default function CoordinatorDashboard() {
   }, []);
 
   useEffect(() => {
-    if (userRole === 'admin') fetchDashboardData();
+    if (userRole === 'admin' || userRole === 'staff') fetchDashboardData();
   }, [fetchDashboardData, userRole]);
 
-  if (isUserLoading || loading || userRole !== 'admin') return (
+  if (isUserLoading || loading || (userRole !== 'admin' && userRole !== 'staff')) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-accent" />
       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Auditoria Global...</p>
