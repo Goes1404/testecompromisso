@@ -93,24 +93,37 @@ export default function LearningTrailsPage() {
     if (!user || pinningId) return;
     setPinningId(trailId);
     
+    // Check if currently pinned (exists in progress)
+    const isPinned = allProgress?.find(p => p.trail_id === trailId);
+
     try {
-      const { error } = await supabase.from('user_progress').upsert({
-          user_id: user.id,
-          trail_id: trailId,
-          last_accessed: new Date().toISOString()
-        }, { onConflict: 'user_id,trail_id' });
+      if (isPinned) {
+        // Unpin: Delete the record
+        // Note: For simplicity, this removes progress too. 
+        // In a complex app we'd use a 'pinned' column, but here progress is treated as 'active trails'.
+        const { error } = await supabase.from('user_progress').delete().eq('user_id', user.id).eq('trail_id', trailId);
+        if (error) throw error;
+        toast({ title: "Trilha Removida da Home 📌", description: "O item saiu da sua lista de acesso rápido." });
+      } else {
+        // Pin: Upsert the record
+        const { error } = await supabase.from('user_progress').upsert({
+            user_id: user.id,
+            trail_id: trailId,
+            last_accessed: new Date().toISOString()
+          }, { onConflict: 'user_id,trail_id' });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Trilha Fixada! 📌",
-        description: "Acesse rapidamente pela Página Inicial."
-      });
+        toast({
+          title: "Trilha Fixada! 📌",
+          description: "Acesse rapidamente pela Página Inicial."
+        });
+      }
       
       const { data: progressRes } = await supabase.from('user_progress').select('*').eq('user_id', user.id);
       if (progressRes) setAllProgress(progressRes);
     } catch (e: any) {
-      toast({ title: "Falha ao fixar", variant: "destructive" });
+      toast({ title: "Falha na operação", variant: "destructive" });
     } finally {
       setPinningId(null);
     }

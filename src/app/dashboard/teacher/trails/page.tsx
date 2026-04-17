@@ -43,7 +43,7 @@ export default function TeacherTrailsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [newTrail, setNewTrail] = useState({ title: "", category: "Matemática", description: "", target_audience: "all" });
+  const [newTrail, setNewTrail] = useState({ title: "", category: "Matemática", description: "", target_audience: "all", image_url: "" });
 
   const fetchTrails = async () => {
     if (!user) return;
@@ -82,7 +82,7 @@ export default function TeacherTrailsPage() {
         teacher_id: user.id,
         teacher_name: profile?.name || user.user_metadata?.full_name || "Professor",
         status: "draft",
-        image_url: `https://picsum.photos/seed/trail-${Date.now()}/600/400`
+        image_url: newTrail.image_url || `https://picsum.photos/seed/trail-${Date.now()}/600/400`
       };
 
       if (newTrail.target_audience !== "all") {
@@ -114,7 +114,7 @@ export default function TeacherTrailsPage() {
       router.refresh();
       
       setIsCreateDialogOpen(false);
-      setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all" });
+      setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all", image_url: "" });
       setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
 
     } catch (e: any) {
@@ -207,6 +207,10 @@ export default function TeacherTrailsPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black uppercase opacity-40">URL da Imagem de Capa (Opcional)</Label>
+                  <Input placeholder="https://exemplo.com/imagem.jpg" className="h-10 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.image_url} onChange={(e) => setNewTrail({ ...newTrail, image_url: e.target.value })} disabled={isSubmitting} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40">Descrição Geral</Label>
