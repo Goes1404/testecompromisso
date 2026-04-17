@@ -159,7 +159,9 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
       });
 
       setContents(contentMap);
-      if (contentMap[modulesData[0].id]?.length > 0) {
+      
+      // Auto-select first lesson if none selected
+      if (!activeContentId && modulesData[0].id && contentMap[modulesData[0].id]?.length > 0) {
         setActiveContentId(contentMap[modulesData[0].id][0].id);
       }
     } catch (e: any) {
@@ -232,17 +234,25 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
       } catch (e) {
         console.error("Erro init player", e);
       }
-    } else if (activeContent && activeContent.type !== 'video') {
-      setVideoProgress(100);
+    } else {
+      // Clear progress interval if not a video
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      if (activeContent && activeContent.type !== 'video') {
+         setVideoProgress(100);
+      }
     }
   }, [activeContentId, activeModuleId, contents, isApiReady, onPlayerStateChange]);
 
+  // Effect to ensure player init happens AFTER DOM updates
   useEffect(() => {
-    initPlayer();
+    const t = setTimeout(() => {
+      initPlayer();
+    }, 50);
     return () => {
+      clearTimeout(t);
       if (progressInterval.current) clearInterval(progressInterval.current);
     };
-  }, [initPlayer]);
+  }, [activeContentId, initPlayer]);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDragging(true);
@@ -393,7 +403,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
 
                 <div className={`w-full h-full ${showSimultaneousWorkbook ? 'mt-10' : ''}`} style={showSimultaneousWorkbook ? { height: 'calc(100% - 40px)' } : {}}>
                   {activeContent?.type === 'video' ? (
-                    <div key={activeContentId} id="youtube-player" className="w-full h-full bg-slate-950" />
+                    <div id="youtube-player" className="w-full h-full bg-slate-950" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center gap-4">
                       <Layout className="h-8 w-8 text-accent opacity-20" />
