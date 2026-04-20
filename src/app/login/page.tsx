@@ -1,5 +1,3 @@
-"use client";
-
 import { LoginForm } from "@/app/login/LoginForm";
 import Link from "next/link";
 import Image from "next/image";
