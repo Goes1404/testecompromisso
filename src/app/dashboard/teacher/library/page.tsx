@@ -119,7 +119,7 @@ export default function LibraryManagementPage() {
 
       if (error) throw error;
       
-      toast({ title: editingId ? "Apostila Atualizada!" : "Apostila Cadastrada!" });
+      toast({ title: editingId ? "Livro Atualizado!" : "Livro Cadastrado!" });
       
       await fetchResources(); // Sempre re-sincronize do banco para garantir integridade.
       
@@ -138,7 +138,7 @@ export default function LibraryManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja remover esta apostila?")) return;
+    if (!confirm("Tem certeza que deseja remover este livro?")) return;
     
     try {
       const { error } = await supabase.from('library_resources').delete().eq('id', id);
@@ -174,8 +174,8 @@ export default function LibraryManagementPage() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary italic leading-none">Gestão de Apostilas</h1>
-          <p className="text-muted-foreground font-medium italic">Curadoria industrial das apostilas e materiais didáticos.</p>
+          <h1 className="text-3xl font-black text-primary italic leading-none">Gestão de Livros</h1>
+          <p className="text-muted-foreground font-medium italic">Curadoria industrial dos livros e materiais didáticos.</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -189,12 +189,12 @@ export default function LibraryManagementPage() {
         }}>
           <DialogTrigger asChild>
             <Button className="rounded-2xl h-14 bg-accent text-accent-foreground font-black px-8 shadow-xl hover:scale-105 transition-all">
-              <Plus className="h-6 w-6 mr-2" /> Nova Apostila
+              <Plus className="h-6 w-6 mr-2" /> Novo Livro
             </Button>
           </DialogTrigger>
           <DialogContent className="rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-black italic text-primary">Configurar Apostila</DialogTitle>
+              <DialogTitle className="text-xl font-black italic text-primary">Configurar Livro</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3 py-2">
               <div className="space-y-1.5">
@@ -261,7 +261,7 @@ export default function LibraryManagementPage() {
             <DialogFooter className="mt-2">
               <Button onClick={handleSave} disabled={isSubmitting || uploading} className="w-full h-12 bg-primary text-white font-black text-base rounded-2xl shadow-xl">
                 {(isSubmitting || uploading) ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
-                {uploading ? "Enviando arquivo..." : (editingId ? "Atualizar" : "Publicar Apostila")}
+                {uploading ? "Enviando arquivo..." : (editingId ? "Atualizar" : "Publicar Livro")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -271,7 +271,7 @@ export default function LibraryManagementPage() {
       <div className="relative max-w-xl group">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
         <Input 
-          placeholder="Pesquisar entre as apostilas..." 
+          placeholder="Pesquisar entre os livros..." 
           className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] italic focus-visible:ring-accent"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
@@ -283,7 +283,7 @@ export default function LibraryManagementPage() {
       ) : filtered.length === 0 ? (
         <div className="py-20 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-muted/5">
           <BookOpen className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-          <p className="font-black text-primary italic text-xl">Nenhuma apostila localizada</p>
+          <p className="font-black text-primary italic text-xl">Nenhum livro localizado</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -99,13 +99,13 @@ export default function LibraryPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-primary italic leading-none">Minhas Apostilas</h1>
-          <p className="text-muted-foreground text-lg font-medium">Acervo oficial de materiais e apostilas interativas da rede.</p>
+          <h1 className="text-3xl font-black tracking-tight text-primary italic leading-none">Meus Livros</h1>
+          <p className="text-muted-foreground text-lg font-medium">Acervo oficial de materiais e livros interativos da rede.</p>
         </div>
         <div className="relative w-full md:w-80 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
           <Input 
-            placeholder="Buscar apostila..." 
+            placeholder="Buscar livro..." 
             className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] text-lg font-medium italic focus-visible:ring-accent transition-all duration-300"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -205,7 +205,7 @@ export default function LibraryPage() {
           <div className="py-24 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-white/50 animate-in zoom-in-95 duration-500">
             <FileText className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
             <p className="font-black italic text-xl text-primary/40">Acervo em Sincronização</p>
-            <p className="text-sm text-muted-foreground mt-2">Nenhuma apostila encontrada para os filtros atuais.</p>
+            <p className="text-sm text-muted-foreground mt-2">Nenhum livro encontrado para os filtros atuais.</p>
           </div>
         )}
       </Tabs>

@@ -20,7 +20,7 @@ import { useTimeTracker } from "@/hooks/useTimeTracker";
 const studentItems = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
   { icon: Compass, label: "Assistir Aulas", href: "/dashboard/trails", id: "nav-trails" },
-  { icon: BookOpen, label: "Biblioteca", href: "/dashboard/library", id: "nav-library" },
+  { icon: BookOpen, label: "Livros", href: "/dashboard/library", id: "nav-library" },
   { icon: FilePenLine, label: "Treinar Redação", href: "/dashboard/student/essays", id: "nav-essays" },
   { icon: FileText, label: "Fazer Simulados", href: "/dashboard/student/simulados", id: "nav-simulados" },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live", id: "nav-live" },
@@ -32,7 +32,7 @@ const studentItems = [
 
 const teacherItems = [
   { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home", id: "nav-teacher-home" },
-  { icon: BookOpen, label: "Gestão de Apostilas", href: "/dashboard/teacher/library", id: "nav-teacher-library" },
+  { icon: BookOpen, label: "Gestão de Livros", href: "/dashboard/teacher/library", id: "nav-teacher-library" },
   { icon: ClipboardList, label: "Minhas Trilhas", href: "/dashboard/teacher/trails", id: "nav-teacher-trails" },
   { icon: Database, label: "Banco de Questões", href: "/dashboard/teacher/questions", id: "nav-teacher-questions" },
   { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays", id: "nav-teacher-essays" },

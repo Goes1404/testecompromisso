@@ -42,9 +42,8 @@ export default function ChatListPage() {
           .neq('id', user.id);
 
         if (userType === 'teacher') {
-          // Professor vê alunos
-          const studentKeywords = ['etec', 'uni', 'enem', 'student'];
-          query = query.or(studentKeywords.map(k => `profile_type.ilike.%${k}%`).join(','));
+          // Professor vê alunos e outros professores se necessário, mas principalmente alunos
+          query = query.or('role.eq.student,profile_type.eq.student');
         } else {
           // Aluno vê mentores
           query = query.eq('profile_type', 'teacher');
@@ -83,17 +82,14 @@ export default function ChatListPage() {
 
   const filteredContacts = contacts.filter((c) => {
     const term = searchTerm.toLowerCase();
-    const matchesSearch = 
-      (c.name || '').toLowerCase().includes(term) || 
-      (c.username || '').toLowerCase().includes(term) ||
-      (c.institution || '').toLowerCase().includes(term) ||
-      (c.course || '').toLowerCase().includes(term);
+    const searchString = `${c.name || ''} ${c.username || ''} ${c.institution || ''} ${c.course || ''} ${c.sala || ''} ${c.exam_target || ''}`.toLowerCase();
+    const matchesSearch = searchString.includes(term);
       
     if (activeCategory === "Todos") return matchesSearch;
 
     if (profile?.profile_type === 'teacher') {
       // Filtros do professor: se for ETEC ou ENEM (procura no curso, polo, exam_target etc)
-      return matchesSearch && JSON.stringify(c).toLowerCase().includes(activeCategory.toLowerCase());
+      return matchesSearch && searchString.includes(activeCategory.toLowerCase());
     }
 
     const mentorCourse = c.course || "Apoio Pedagógico";
@@ -190,7 +186,7 @@ export default function ChatListPage() {
                   <div className="absolute bottom-1 right-1 h-6 w-6 bg-emerald-500 rounded-full border-4 border-white shadow-xl ring-1 ring-black/5 animate-pulse" />
                 </div>
                 <div className="space-y-2 w-full">
-                  <CardTitle className="text-xl md:text-2xl font-black text-primary italic truncate px-2">{contact.name}</CardTitle>
+                  <CardTitle className="text-xl md:text-2xl font-black text-foreground italic truncate px-2">{contact.name}</CardTitle>
                   <div className="flex flex-col gap-2 items-center">
                     <div className="flex flex-col items-center justify-center gap-1.5 text-accent font-black text-[9px] uppercase tracking-widest mt-1">
                       <div className="flex items-center gap-1 opacity-80">
