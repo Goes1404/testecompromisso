@@ -6,6 +6,7 @@ import { ClientWrapper } from '@/components/ClientWrapper';
 import { Suspense } from 'react';
 import { LoadingShell } from '@/components/LoadingShell';
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({
   subsets: ['latin'],
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </Suspense>
           <Toaster />
           <SpeedInsights />
+          <Analytics />
         </AuthProvider>
       </body>
     </html>
