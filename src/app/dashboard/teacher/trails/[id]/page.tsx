@@ -145,7 +145,6 @@ export default function TrailManagementPage() {
         setContents(contentMap);
       }
 
-      // 3. Library Resources (for workbook linking)
       const { data: resources } = await supabase
         .from('library_resources')
         .select('id, title, category')
@@ -907,9 +906,14 @@ export default function TrailManagementPage() {
                           </SelectTrigger>
                           <SelectContent className='rounded-xl border-none shadow-xl p-2 max-h-40'>
                             <SelectItem value="none" className='py-2 font-bold'>Sem Apostila</SelectItem>
-                            {libraryResources.map(res => (
-                              <SelectItem key={res.id} value={res.id} className='py-2 font-bold'>📚 {res.title}</SelectItem>
-                            ))}
+                            {libraryResources.map(res => {
+                              const isBook = res.category?.startsWith('LIVRO|');
+                              return (
+                                <SelectItem key={res.id} value={res.id} className='py-2 font-bold'>
+                                  {isBook ? '📖 [LIVRO] ' : '📚 '} {res.title}
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>

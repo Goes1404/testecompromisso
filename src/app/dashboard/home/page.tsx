@@ -140,7 +140,7 @@ export default function DashboardHome() {
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
         supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
-        supabase.from('library_resources').select('*').order('created_at', { ascending: false }).limit(3)
+        supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3)
       ]);
       
       // Essay e Exam com tratamento individual de erro para não travar o restante
@@ -567,7 +567,7 @@ export default function DashboardHome() {
                 <div className="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center">
                   <Library className="h-4 w-4 text-emerald-600" />
                 </div>
-                <h3 className="font-black text-sm text-primary italic">Acervo & Apostilas</h3>
+                <h3 className="font-black text-sm text-primary italic">Biblioteca</h3>
               </div>
               <Link href="/dashboard/library" className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors">Ver tudo</Link>
             </div>
@@ -576,7 +576,7 @@ export default function DashboardHome() {
               {loadingData ? (
                 Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-muted/20 animate-pulse rounded-2xl" />)
               ) : libraryResources.length === 0 ? (
-                <div className="py-8 text-center opacity-30 italic text-xs">Apostilas em sincronização...</div>
+                <div className="py-8 text-center opacity-30 italic text-xs">Materiais em sincronização...</div>
               ) : (
                 libraryResources.map((res) => (
                   <Link key={res.id} href="/dashboard/library">

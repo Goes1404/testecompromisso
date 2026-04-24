@@ -84,7 +84,9 @@ export default function BookViewerPage({ params }: { params: Promise<{ id: strin
           </Button>
           <div className="min-w-0">
             <h1 className="text-sm md:text-lg font-black text-white italic truncate leading-none">{material?.title}</h1>
-            <p className="text-[8px] md:text-[9px] font-black text-accent uppercase tracking-widest mt-1">Ambiente de Estudo Controlado</p>
+            <p className="text-[8px] md:text-[9px] font-black text-accent uppercase tracking-widest mt-1">
+              Ambiente de Estudo Controlado • {material?.category?.replace('LIVRO|', '')}
+            </p>
           </div>
         </div>
         

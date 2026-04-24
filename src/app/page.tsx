@@ -454,6 +454,7 @@ export default function LandingPage() {
         </section>
 
         <DynamicBottomSections />
+      </main>
     </div>
   );
 }

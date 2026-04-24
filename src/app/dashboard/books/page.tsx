@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,12 +28,11 @@ import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import Link from "next/link";
 
-const categories = ["Todos", "Matemática", "Física", "Linguagens", "História", "Saúde", "Atualidades", "Literatura", "Química", "Filosofia", "Sociologia"];
-const types = ["Todos", "PDF", "Video", "E-book", "Artigo"];
+const categories = ["Todos", "Didáticos", "Literatura", "Técnicos", "Guias"];
+const types = ["Todos", "PDF", "E-book", "Interativo"];
 
-export default function LibraryPage() {
+export default function BooksPage() {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [activeType, setActiveType] = useState("Todos");
@@ -41,33 +40,20 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
 
   const loadResources = useCallback(async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     setLoading(true);
-
-    if (!profile) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Busca todos os recursos (query simples que nunca falha)
+      // Busca apenas recursos que começam com LIVRO| na categoria
       const { data, error } = await supabase.from('library_resources')
         .select('*')
+        .ilike('category', 'LIVRO|%')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Filtra por segmentação no front-end (se a coluna existir nos dados)
-      const userAudience = profile?.profile_type === 'enem' ? 'enem' : 'etec';
-      const filtered = (data || []).filter(r => {
-        if (!r.target_audience) return true; // sem segmentação = mostra para todos
-        return r.target_audience === 'all' || r.target_audience === userAudience;
-      });
-
-      setResources(filtered);
+      setResources(data || []);
     } catch (err: any) {
-      console.error("Erro ao carregar acervo:", err);
+      console.error("Erro ao carregar livros:", err);
     } finally {
       setLoading(false);
     }
@@ -78,20 +64,21 @@ export default function LibraryPage() {
   }, [user, profile, loadResources]);
 
   const filteredResources = resources.filter(resource => {
+    // Remove o prefixo LIVRO| para exibição e comparação de filtros
+    const displayCategory = resource.category?.replace('LIVRO|', '') || '';
     const title = (resource.title || '').toLowerCase();
     const search = searchTerm.toLowerCase();
     const matchesSearch = title.includes(search);
-    const matchesCategory = activeCategory === "Todos" || resource.category === activeCategory;
+    const matchesCategory = activeCategory === "Todos" || displayCategory === activeCategory;
     const matchesType = activeType === "Todos" || resource.type === activeType;
-    const isBook = resource.category?.startsWith('LIVRO|');
-    return matchesSearch && matchesCategory && matchesType && !isBook;
+    return matchesSearch && matchesCategory && matchesType;
   });
 
   if (loading) {
     return (
       <div className="py-20 flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="font-black text-muted-foreground uppercase text-xs tracking-widest animate-pulse">Carregando Acervo Digital...</p>
+        <p className="font-black text-muted-foreground uppercase text-xs tracking-widest animate-pulse">Abrindo Biblioteca de Livros...</p>
       </div>
     );
   }
@@ -100,13 +87,13 @@ export default function LibraryPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-primary italic leading-none">Biblioteca</h1>
-          <p className="text-muted-foreground text-lg font-medium">Acervo oficial de materiais e conteúdos da rede.</p>
+          <h1 className="text-3xl font-black tracking-tight text-primary italic leading-none">Meus Livros</h1>
+          <p className="text-muted-foreground text-lg font-medium">Acervo de livros digitais e obras literárias recomendadas.</p>
         </div>
         <div className="relative w-full md:w-80 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
           <Input 
-            placeholder="Buscar material..." 
+            placeholder="Buscar obra..." 
             className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] text-lg font-medium italic focus-visible:ring-accent transition-all duration-300"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -136,7 +123,7 @@ export default function LibraryPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-none shadow-2xl">
-              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-3 py-3">Filtrar por Tipo</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-3 py-3">Filtrar por Formato</DropdownMenuLabel>
               {types.map(type => (
                 <DropdownMenuItem 
                   key={type} 
@@ -157,14 +144,14 @@ export default function LibraryPage() {
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <Image 
                     src={item.image_url || `https://picsum.photos/seed/${item.id}/400/250`} 
-                    alt={item.title || "Material"} 
+                    alt={item.title || "Obra"} 
                     fill 
                     className="object-cover transition-transform duration-1000 group-hover:scale-110"
                     unoptimized
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
                     <Badge className="bg-white/80 backdrop-blur-md text-primary border-none shadow-lg flex items-center gap-2 px-4 py-1.5 rounded-xl">
-                      {item.type === "Video" ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                      <BookOpen className="h-4 w-4" />
                       <span className="text-[10px] font-black uppercase tracking-wider">{item.type}</span>
                     </Badge>
                   </div>
@@ -172,31 +159,23 @@ export default function LibraryPage() {
                 
                 <CardHeader className="p-8 space-y-4 flex-1">
                   <Badge variant="outline" className="w-fit text-[9px] border-accent/20 text-accent font-black uppercase px-2 py-0.5 bg-accent/5">
-                    {item.category}
+                    {item.category?.replace('LIVRO|', '')}
                   </Badge>
                   <CardTitle className="text-xl font-black text-primary italic leading-tight line-clamp-2">
                     {item.title}
                   </CardTitle>
                   <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-3 italic opacity-80">
-                    {item.description || "Material de apoio técnico pedagógico para aceleração do seu aprendizado."}
+                    {item.description || "Obra literária selecionada para compor sua base de conhecimento e repertório."}
                   </p>
                 </CardHeader>
                 
                 <CardFooter className="p-8 pt-0 mt-auto">
                   <div className="flex gap-3 w-full pt-6 border-t border-muted/10">
-                    {item.type !== "Video" ? (
-                      <Button asChild className="flex-1 bg-primary text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
-                        <Link href={`/dashboard/library/book/${item.id}`}>
-                          <PenLine className="h-4 w-4 mr-2 text-accent" /> Estudar Agora
-                        </Link>
-                      </Button>
-                    ) : (
-                      <Button asChild className="flex-1 bg-slate-900 text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
-                        <a href={item.url} target="_blank" rel="noopener noreferrer">
-                          <Video className="h-4 w-4 mr-2 text-accent" /> Ver Videoaula
-                        </a>
-                      </Button>
-                    )}
+                    <Button asChild className="flex-1 bg-primary text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
+                      <Link href={`/dashboard/library/book/${item.id}`}>
+                        <PenLine className="h-4 w-4 mr-2 text-accent" /> Iniciar Leitura
+                      </Link>
+                    </Button>
                   </div>
                 </CardFooter>
               </Card>
@@ -204,9 +183,9 @@ export default function LibraryPage() {
           </div>
         ) : (
           <div className="py-24 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-white/50 animate-in zoom-in-95 duration-500">
-            <FileText className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-            <p className="font-black italic text-xl text-primary/40">Biblioteca em Sincronização</p>
-            <p className="text-sm text-muted-foreground mt-2">Nenhum material encontrado para os filtros atuais.</p>
+            <BookOpen className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
+            <p className="font-black italic text-xl text-primary/40">Biblioteca em Construção</p>
+            <p className="text-sm text-muted-foreground mt-2">Nenhum livro disponível neste filtro no momento.</p>
           </div>
         )}
       </Tabs>
