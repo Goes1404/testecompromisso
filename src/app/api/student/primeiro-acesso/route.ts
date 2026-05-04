@@ -149,7 +149,7 @@ export async function POST(request: Request) {
         status: 'active',
         exam_target: examTarget || 'ENEM',
         institution: institution || null,
-        classroom: classroom || null,
+        course: classroom || null, // 'classroom' do form mapeia para a coluna 'course'
       });
 
       if (profileError) {
