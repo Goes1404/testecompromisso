@@ -7,14 +7,16 @@ function generateEmail(fullName: string): string {
     s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
 
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const domain = '@aluno.compromisso.com';
+  
   if (parts.length === 0) return '';
-  if (parts.length === 1) return `${normalize(parts[0])}@compromisso.com`;
-  if (parts.length === 2) return `${normalize(parts[0])}${normalize(parts[1])}@compromisso.com`;
+  if (parts.length === 1) return `${normalize(parts[0])}${domain}`;
+  if (parts.length === 2) return `${normalize(parts[0])}${normalize(parts[1])}${domain}`;
 
   const first = normalize(parts[0]);
   const middleInitial = normalize(parts[1]).charAt(0);
   const last = normalize(parts[parts.length - 1]);
-  return `${first}${middleInitial}${last}@compromisso.com`;
+  return `${first}${middleInitial}${last}${domain}`;
 }
 
 export async function POST(request: Request) {
@@ -123,21 +125,27 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Este perfil já existe. Tente recuperar pelo seu nome.' }, { status: 409 });
       }
 
+      console.log(`[PRIMEIRO_ACESSO] Criando Auth User para ${email} com metadata STUDENT`);
       const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: {
           full_name: fullName,
-          profile_type: 'student',
-          role: 'student',
+          profile_type: 'student', // Garantindo que seja student
+          role: 'student',        // Garantindo que seja student
           exam_target: examTarget || 'ENEM',
           institution: institution || '',
-          classroom: classroom || '',
+          course: classroom || '',
         },
       });
 
-      if (createError) throw createError;
+      if (createError) {
+        console.error('[PRIMEIRO_ACESSO] Erro ao criar Auth User:', createError);
+        throw createError;
+      }
+
+      console.log(`[PRIMEIRO_ACESSO] Auth User criado: ${authData.user.id}. Agora criando Profile...`);
 
       const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
         id: authData.user.id,
@@ -149,13 +157,17 @@ export async function POST(request: Request) {
         status: 'active',
         exam_target: examTarget || 'ENEM',
         institution: institution || null,
-        course: classroom || null, // 'classroom' do form mapeia para a coluna 'course'
+        course: classroom || null,
       });
 
       if (profileError) {
+        console.error('[PRIMEIRO_ACESSO] Erro ao criar Profile:', profileError);
+        // Tenta limpar o auth user se o profile falhar
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
         throw profileError;
       }
+
+      console.log(`[PRIMEIRO_ACESSO] Cadastro concluído com sucesso para ${email}`);
 
       return NextResponse.json({ success: true, email });
     }

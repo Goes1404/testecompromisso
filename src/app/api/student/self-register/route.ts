@@ -4,17 +4,19 @@ import { verifyRegistrationToken } from '@/lib/registration-token';
 
 function generateEmail(fullName: string): string {
   const normalize = (s: string) =>
-    s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
 
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const domain = '@aluno.compromisso.com';
+  
   if (parts.length === 0) return '';
-  if (parts.length === 1) return `${normalize(parts[0])}@compromisso.com`;
-  if (parts.length === 2) return `${normalize(parts[0])}${normalize(parts[1])}@compromisso.com`;
+  if (parts.length === 1) return `${normalize(parts[0])}${domain}`;
+  if (parts.length === 2) return `${normalize(parts[0])}${normalize(parts[1])}${domain}`;
 
   const first = normalize(parts[0]);
   const middleInitial = normalize(parts[1]).charAt(0);
   const last = normalize(parts[parts.length - 1]);
-  return `${first}${middleInitial}${last}@compromisso.com`;
+  return `${first}${middleInitial}${last}${domain}`;
 }
 
 export async function POST(request: Request) {
