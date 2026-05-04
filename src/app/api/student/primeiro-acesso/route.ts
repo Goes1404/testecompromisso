@@ -41,10 +41,13 @@ export async function POST(request: Request) {
 
       console.log(`[PRIMEIRO_ACESSO] Buscando por: ${fullName.trim()}`);
 
+      const generatedEmail = generateEmail(fullName.trim());
+      
       const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
         .select('id, email, name')
-        .ilike('name', fullName.trim());
+        .or(`email.eq.${generatedEmail},name.ilike.%${fullName.trim()}%`)
+        .limit(1);
 
       if (error) {
         console.error('[PRIMEIRO_ACESSO] Erro na query:', error);
