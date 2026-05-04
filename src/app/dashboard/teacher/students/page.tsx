@@ -128,7 +128,7 @@ export default function TeacherStudentsPage() {
         <div className="relative w-full md:w-80 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
           <Input 
-            placeholder="Pesquisar por nome ou polo..." 
+            placeholder="Pesquisar por nome, email ou polo..." 
             className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl italic font-medium focus-visible:ring-accent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
