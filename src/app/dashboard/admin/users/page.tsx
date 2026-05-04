@@ -53,6 +53,132 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 // ────────────────────────────────────────────────
+// Modal de Gerar Link de Convite (Cadastro em Massa)
+// ────────────────────────────────────────────────
+
+function InviteLinkModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const [link, setLink] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [expiryDays, setExpiryDays] = useState(7);
+
+  const generateInvite = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/generate-registration-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          masterPassword: 'compromisso2026',
+          expiryDays: expiryDays,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setLink(data.link);
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    toast({ title: 'Link de convite copiado!' });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
+        <DialogHeader className="p-8 pb-4 bg-orange-50 border-b border-orange-100">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="h-12 w-12 rounded-2xl bg-orange-500/10 flex items-center justify-center">
+              <Link2 className="h-6 w-6 text-orange-600" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-black text-orange-700 leading-none italic uppercase tracking-tighter">
+                Link de Convite
+              </DialogTitle>
+              <DialogDescription className="text-xs mt-1 font-medium text-orange-600/60">
+                Cadastro em massa para novos alunos
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="p-8 space-y-6">
+          {!link ? (
+            <div className="space-y-6">
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                Este link permite que novos alunos se cadastrem sozinhos na plataforma. 
+                Eles serão registrados automaticamente como <strong className="text-primary italic uppercase">Estudantes</strong>.
+              </p>
+              
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Validade do Link (Dias)</Label>
+                <div className="flex gap-2">
+                  {[1, 3, 7, 15, 30].map(d => (
+                    <Button
+                      key={d}
+                      type="button"
+                      variant={expiryDays === d ? 'default' : 'outline'}
+                      onClick={() => setExpiryDays(d)}
+                      className={`flex-1 h-11 rounded-xl font-black text-xs transition-all ${expiryDays === d ? 'bg-orange-600 shadow-lg shadow-orange-200 border-none' : 'bg-white border-slate-100 text-slate-400'}`}
+                    >
+                      {d}d
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                onClick={generateInvite}
+                disabled={loading}
+                className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white font-black rounded-2xl shadow-xl shadow-orange-200 uppercase tracking-widest text-xs transition-all active:scale-95"
+              >
+                {loading ? <Loader2 className="animate-spin mr-2" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Gerar Link de Cadastro
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6 animate-in zoom-in-95 duration-500">
+              <div className="bg-slate-50 border border-slate-100 rounded-[1.5rem] p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                   <Badge className="bg-emerald-500 text-white border-none font-black text-[9px] uppercase px-3">Link Ativo</Badge>
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expira em {expiryDays} dias</span>
+                </div>
+                <p className="text-xs font-mono text-slate-400 break-all bg-white p-3 rounded-xl border border-slate-50">
+                  {link}
+                </p>
+                <Button
+                  onClick={handleCopy}
+                  className="w-full h-12 bg-primary text-white font-black rounded-xl shadow-lg shadow-primary/20 gap-2"
+                >
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                  {copied ? 'Copiado para o Clip!' : 'Copiar Link agora'}
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100 text-blue-700">
+                <AlertCircle size={20} className="shrink-0" />
+                <p className="text-[10px] font-bold leading-tight uppercase tracking-tight">
+                  Envie este link para os grupos de WhatsApp. O aluno preencherá o próprio nome e curso.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ────────────────────────────────────────────────
 // Modal de Reset de Senha
 // ────────────────────────────────────────────────
 
@@ -243,9 +369,10 @@ export default function AdminUserDirectoryPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Estado do modal de reset
+  // Estado do modal de reset e convite
   const [resetTarget, setResetTarget] = useState<{ id: string; name: string; email: string } | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -330,15 +457,24 @@ export default function AdminUserDirectoryPage() {
             Gestão completa de identidades e acessos da rede.
           </p>
         </div>
-        <Button
-          asChild
-          className="bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 gap-2 hover:scale-[1.02] active:scale-95 transition-all border-none shrink-0"
-        >
-          <Link href="/dashboard/admin/users/new">
-            <UserPlus className="h-4 w-4" />
-            Novo Usuário
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3 shrink-0">
+          <Button
+            onClick={() => setInviteOpen(true)}
+            className="bg-white text-orange-600 border border-orange-100 font-black rounded-2xl shadow-md h-12 px-6 gap-2 hover:bg-orange-50 transition-all"
+          >
+            <Link2 className="h-4 w-4" />
+            Link de Convite
+          </Button>
+          <Button
+            asChild
+            className="bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 gap-2 hover:scale-[1.02] active:scale-95 transition-all border-none"
+          >
+            <Link href="/dashboard/admin/users/new">
+              <UserPlus className="h-4 w-4" />
+              Novo Usuário
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* ── Filtros ── */}
@@ -543,6 +679,12 @@ export default function AdminUserDirectoryPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Modal de Convite ── */}
+      <InviteLinkModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+      />
 
       {/* ── Modal de Reset ── */}
       <ResetPasswordModal
