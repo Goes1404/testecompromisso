@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { verifyRegistrationToken } from '@/lib/registration-token';
 
 function generateEmail(fullName: string): string {
   const normalize = (s: string) =>
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
         user_metadata: { 
           full_name: userData.user.user_metadata?.full_name,
           must_change_password: false,
-          security_check_date: birthDate // Apenas armazenando para registro
+          security_check_date: birthDate
         }
       });
 
@@ -95,8 +96,21 @@ export async function POST(request: Request) {
 
     // 3. AÇÃO: CADASTRAR NOVO
     if (action === 'register') {
-      const { fullName, examTarget, password, institution, classroom } = body;
+      const { fullName, examTarget, password, institution, classroom, inviteToken } = body;
       
+      // Validação do Token de Convite
+      if (!inviteToken) {
+        return NextResponse.json({ error: 'O cadastro requer um link de convite válido.' }, { status: 401 });
+      }
+
+      const tokenStatus = verifyRegistrationToken(inviteToken);
+      if (tokenStatus === 'expired') {
+        return NextResponse.json({ error: 'Este link de convite expirou. Peça um novo ao coordenador.' }, { status: 403 });
+      }
+      if (tokenStatus === 'invalid') {
+        return NextResponse.json({ error: 'Link de convite inválido ou adulterado.' }, { status: 403 });
+      }
+
       if (!fullName?.trim() || !password || password.length < 8) {
         return NextResponse.json({ error: 'Preencha todos os campos corretamente.' }, { status: 400 });
       }
@@ -106,7 +120,7 @@ export async function POST(request: Request) {
 
       const { data: existing } = await supabaseAdmin.from('profiles').select('id').eq('email', email).maybeSingle();
       if (existing) {
-        return NextResponse.json({ error: 'Este perfil já existe.' }, { status: 409 });
+        return NextResponse.json({ error: 'Este perfil já existe. Tente recuperar pelo seu nome.' }, { status: 409 });
       }
 
       const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({

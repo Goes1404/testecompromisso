@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       'http://localhost:3000';
 
     const token = generateRegistrationToken(days);
-    const link = `${origin}/cadastro?invite=${token}`;
+    const link = `${origin}/primeiro-acesso?invite=${token}`;
 
     return NextResponse.json({
       success: true,
