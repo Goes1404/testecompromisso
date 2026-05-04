@@ -219,6 +219,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Animated Background Effects */}
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
         <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '12s', animationDelay: '2s' }} />
+        
+        {/* DEBUG BANNER TEMPORÁRIO */}
+        <div className="bg-red-600 text-white p-2 text-xs text-center font-bold font-mono">
+          [DIAGNÓSTICO] Email: {user.email} | userRole: {userRole} | profile.role: {profile?.role} | profile.type: {profile?.profile_type}
+        </div>
+
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
           <SidebarTrigger className="h-10 w-10 rounded-xl hover:bg-muted text-primary">
             <Menu className="h-6 w-6" />
