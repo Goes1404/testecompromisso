@@ -28,6 +28,7 @@ import {
   RefreshCw,
   AlertCircle,
   Link2,
+  Sparkles,
 } from "lucide-react";
 import {
   Select,
