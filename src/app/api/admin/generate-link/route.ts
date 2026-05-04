@@ -35,13 +35,17 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_APP_URL ||
       'http://localhost:3000';
 
-    // O redirectTo deve apontar para o auth/callback com o destino como `next`
-    // O callback irá trocar o code por sessão e redirecionar para a página correta
-    const destination = type === 'recovery'
-      ? '/reset-password'
-      : '/dashboard/first-access';
-
-    const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(destination)}`;
+    // Recovery → redireciona DIRETAMENTE para /reset-password (mesmo fluxo do
+    // forgot-password nativo do Supabase). O token fica no hash da URL e o
+    // client Supabase processa automaticamente via onAuthStateChange.
+    // Isso evita passar pelo /auth/callback compartilhado e contaminar a
+    // sessão do admin que gerou o link.
+    //
+    // Invite → ainda usa /auth/callback porque o token de convite precisa
+    // do exchangeCodeForSession (fluxo PKCE) para criar a sessão corretamente.
+    const redirectTo = type === 'recovery'
+      ? `${origin}/reset-password`
+      : `${origin}/auth/callback?next=${encodeURIComponent('/dashboard/first-access')}`;
 
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: type as 'invite' | 'recovery',

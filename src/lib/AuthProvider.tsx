@@ -52,30 +52,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
-    // ⚡ PRIORIDADE 1: Pegar do perfil carregado (Backup) - Mais confiável para mudanças em tempo real
-    if (profile) {
-      const rawType = (profile.profile_type || profile.role || '').toLowerCase().trim();
-      const course = (profile.course || '').toLowerCase().trim();
-      
-      if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao'].includes(rawType) || course.includes('coordena')) return 'admin';
-      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico', 'suporte'].includes(rawType) || course.includes('técnica') || course.includes('tecnica')) return 'staff';
-      if (['teacher', 'mentor', 'professor', 'docente'].includes(rawType)) return 'teacher';
+    // PRIORIDADE 1: campo `role` explícito no perfil — fonte mais confiável
+    if (profile?.role) {
+      const r = profile.role.toLowerCase().trim();
+      if (r === 'admin' || r === 'staff' || r === 'teacher' || r === 'student') return r as UserRole;
+      if (['gestor', 'coordenador', 'coordenação', 'coordenacao', 'administrador'].includes(r)) return 'admin';
+      if (['tecnico', 'técnico', 'assistente', 'suporte', 'secretaria'].includes(r)) return 'staff';
+      if (['mentor', 'professor', 'docente'].includes(r)) return 'teacher';
     }
 
-    // ⚡ PRIORIDADE 2: Pegar do metadado do Auth (Instantâneo)
+    // PRIORIDADE 2: campo `profile_type` — mapeamento explícito, sem inferência
+    if (profile?.profile_type) {
+      const pt = profile.profile_type.toLowerCase().trim();
+      if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao', 'administrador'].includes(pt)) return 'admin';
+      if (['staff', 'tecnico', 'técnico', 'equipe técnica', 'assistente', 'suporte'].includes(pt)) return 'staff';
+      if (['teacher', 'mentor', 'professor', 'docente'].includes(pt)) return 'teacher';
+    }
+
+    // PRIORIDADE 3: user_metadata.role — apenas valores explícitos, sem inferência por e-mail
     if (user?.user_metadata?.role) {
-      const metaRole = user.user_metadata.role.toLowerCase();
-      if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao'].includes(metaRole)) return 'admin';
-      if (['teacher', 'mentor', 'professor', 'docente'].includes(metaRole)) return 'teacher';
-      if (['staff', 'técnico', 'equipe técnica', 'assistente', 'tecnico', 'suporte'].includes(metaRole)) return 'staff';
+      const r = (user.user_metadata.role as string).toLowerCase().trim();
+      if (r === 'admin' || r === 'staff' || r === 'teacher' || r === 'student') return r as UserRole;
     }
 
-    // ⚡ PRIORIDADE 3: Tentar inferir pelo e-mail se nada acima funcionar
-    const email = (user?.email || profile?.email || '').toLowerCase();
-    if (email.includes('admin') || email.includes('coordena')) return 'admin';
-    if (email.includes('staff') || email.includes('tecnico') || email.includes('suporte')) return 'staff';
-    if (email.includes('teacher') || email.includes('prof')) return 'teacher';
-    
+    // Padrão seguro: menor privilégio
     return 'student';
   }, [profile, user]);
 
