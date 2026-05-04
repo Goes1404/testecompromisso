@@ -88,7 +88,8 @@ export default function TrailManagementPage() {
   const activeModuleRef = useRef<string | null>(null);
   const [editingContentId, setEditingContentId] = useState<string | null>(null);
 
-  const [editTrailForm, setEditTrailForm] = useState({ title: '', category: '', description: '' });
+  const [editTrailForm, setEditTrailForm] = useState({ title: '', category: '', description: '', image_url: '' });
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
   const [moduleForm, setModuleForm] = useState({ title: '' });
   const [pendingItems, setPendingItems] = useState<any[]>([]);
   const [contentForm, setContentForm] = useState({
@@ -197,8 +198,10 @@ export default function TrailManagementPage() {
       setEditTrailForm({
         title: trail.title || '',
         category: trail.category || 'Multidisciplinar e Geral',
-        description: trail.description || ''
+        description: trail.description || '',
+        image_url: trail.image_url || ''
       });
+      setEditCoverFile(null);
       setIsEditTrailDialogOpen(true);
     }
   };
@@ -208,18 +211,40 @@ export default function TrailManagementPage() {
     setIsSubmitting(true);
     
     try {
+      let finalImageUrl = editTrailForm.image_url;
+
+      if (editCoverFile) {
+        setUploading(true);
+        const fileExt = editCoverFile.name.split('.').pop();
+        const fileName = `cover-${Date.now()}.${fileExt}`;
+        const filePath = `trails/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('learning-contents')
+          .upload(filePath, editCoverFile);
+
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage
+            .from('learning-contents')
+            .getPublicUrl(filePath);
+          finalImageUrl = publicUrlData.publicUrl;
+        }
+        setUploading(false);
+      }
+
       const { error } = await supabase
         .from('trails')
         .update({
           title: editTrailForm.title,
           category: editTrailForm.category,
-          description: editTrailForm.description
+          description: editTrailForm.description,
+          image_url: finalImageUrl
         })
         .eq('id', trailId);
 
       if (error) throw error;
       
-      setTrail((prev: any) => ({ ...prev, ...editTrailForm }));
+      setTrail((prev: any) => ({ ...prev, ...editTrailForm, image_url: finalImageUrl }));
       toast({ title: 'Detalhes Atualizados!' });
       setIsEditTrailDialogOpen(false);
       router.refresh();
@@ -785,8 +810,23 @@ export default function TrailManagementPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Capa da Trilha (Arquivo ou URL)</Label>
+              <div className="flex flex-col gap-2">
+                <Input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={e => setEditCoverFile(e.target.files?.[0] || null)} 
+                  className="h-10 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-accent p-1.5 file:mr-4 file:py-1 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white"
+                  disabled={isSubmitting || uploading}
+                />
+                {!editCoverFile && (
+                  <Input placeholder="Ou URL da imagem..." className="h-10 rounded-xl bg-muted/30 border-none font-bold" value={editTrailForm.image_url} onChange={(e) => setEditTrailForm({ ...editTrailForm, image_url: e.target.value })} disabled={isSubmitting || uploading} />
+                )}
+              </div>
+            </div>
+            <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Breve Descrição</Label>
-              <Textarea placeholder="Qual o propósito deste conjunto de módulos?" className="min-h-[60px] md:min-h-[60px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={editTrailForm.description} onChange={(e) => setEditTrailForm({ ...editTrailForm, description: e.target.value })} disabled={isSubmitting} />
+              <Textarea placeholder="Qual o propósito deste conjunto de módulos?" className="min-h-[60px] md:min-h-[60px] rounded-xl bg-muted/30 border-none font-medium resize-none" value={editTrailForm.description} onChange={(e) => setEditTrailForm({ ...editTrailForm, description: e.target.value })} disabled={isSubmitting || uploading} />
             </div>
           </div>
           <DialogFooter className="mt-2 text-center items-center justify-center">

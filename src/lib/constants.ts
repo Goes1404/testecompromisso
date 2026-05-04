@@ -38,6 +38,7 @@ export const EDUCATIONAL_CATEGORIES = [
   "Educação Física",
   "Artes",
   "Saúde",
+  "Orientação de Bolsas",
   "Outros"
 ];
 

@@ -44,6 +44,7 @@ export default function TeacherTrailsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newTrail, setNewTrail] = useState({ title: "", category: "Matemática", description: "", target_audience: "all", image_url: "" });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
   const fetchTrails = async () => {
     if (!user) return;
@@ -82,8 +83,29 @@ export default function TeacherTrailsPage() {
         teacher_id: user.id,
         teacher_name: profile?.name || user.user_metadata?.full_name || "Professor",
         status: "draft",
-        image_url: newTrail.image_url || `https://picsum.photos/seed/trail-${Date.now()}/600/400`
+        image_url: newTrail.image_url
       };
+
+      if (coverFile) {
+        const fileExt = coverFile.name.split('.').pop();
+        const fileName = `cover-${Date.now()}.${fileExt}`;
+        const filePath = `trails/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('learning-contents')
+          .upload(filePath, coverFile);
+
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage
+            .from('learning-contents')
+            .getPublicUrl(filePath);
+          trailData.image_url = publicUrlData.publicUrl;
+        }
+      }
+
+      if (!trailData.image_url) {
+        trailData.image_url = `https://picsum.photos/seed/trail-${Date.now()}/600/400`;
+      }
 
       if (newTrail.target_audience !== "all") {
          trailData.target_audience = newTrail.target_audience;
@@ -115,6 +137,7 @@ export default function TeacherTrailsPage() {
       
       setIsCreateDialogOpen(false);
       setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all", image_url: "" });
+      setCoverFile(null);
       setTimeout(() => { document.body.style.pointerEvents = ""; }, 500);
 
     } catch (e: any) {
@@ -209,8 +232,19 @@ export default function TeacherTrailsPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase opacity-40">URL da Imagem de Capa (Opcional)</Label>
-                  <Input placeholder="https://exemplo.com/imagem.jpg" className="h-10 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.image_url} onChange={(e) => setNewTrail({ ...newTrail, image_url: e.target.value })} disabled={isSubmitting} />
+                  <Label className="text-[10px] font-black uppercase opacity-40">Capa da Trilha (Arquivo ou URL)</Label>
+                  <div className="flex flex-col gap-2">
+                    <Input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={e => setCoverFile(e.target.files?.[0] || null)} 
+                      className="h-10 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-accent p-1.5 file:mr-4 file:py-1 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white"
+                      disabled={isSubmitting}
+                    />
+                    {!coverFile && (
+                      <Input placeholder="Ou URL da imagem: https://exemplo.com/imagem.jpg" className="h-10 rounded-xl bg-muted/30 border-none font-bold text-xs" value={newTrail.image_url} onChange={(e) => setNewTrail({ ...newTrail, image_url: e.target.value })} disabled={isSubmitting} />
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase opacity-40">Descrição Geral</Label>

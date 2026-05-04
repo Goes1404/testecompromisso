@@ -33,6 +33,7 @@ export default function LibraryManagementPage() {
     target_audience: "all"
   });
   const [file, setFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   async function fetchResources() {
@@ -88,6 +89,27 @@ export default function LibraryManagementPage() {
         setUploading(false); // Reset assim que o upload for concluído
       }
 
+      let finalImageUrl = formData.image_url;
+
+      if (coverFile) {
+        setUploading(true);
+        const fileExt = coverFile.name.split('.').pop();
+        const fileName = `cover-${Date.now()}.${fileExt}`;
+        const filePath = `library/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('learning-contents')
+          .upload(filePath, coverFile);
+
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage
+            .from('learning-contents')
+            .getPublicUrl(filePath);
+          finalImageUrl = publicUrlData.publicUrl;
+        }
+        setUploading(false);
+      }
+
       // O payload flexível que tentará incluir segmentação e outros campos, com fallback.
       const payload: any = {
         title: formData.title,
@@ -95,7 +117,7 @@ export default function LibraryManagementPage() {
         category: formData.category,
         type: formData.type,
         url: finalUrl,
-        image_url: formData.image_url
+        image_url: finalImageUrl
       };
 
       if (formData.target_audience !== "all") {
@@ -126,6 +148,7 @@ export default function LibraryManagementPage() {
       setIsDialogOpen(false);
       setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "", target_audience: "all" });
       setFile(null);
+      setCoverFile(null);
       setQuestionToEdit(null);
       setTimeout(() => { document.body.style.pointerEvents = ""; }, 500); // Fix Radix UI body lock bug
     } catch (e: any) {
@@ -153,6 +176,7 @@ export default function LibraryManagementPage() {
   const startEdit = (resource: any) => {
     setQuestionToEdit(resource.id);
     setFile(null);
+    setCoverFile(null);
     setFormData({
       title: resource.title,
       description: resource.description || "",
@@ -185,6 +209,7 @@ export default function LibraryManagementPage() {
           if(!open) {
             setQuestionToEdit(null);
             setFile(null);
+            setCoverFile(null);
             setFormData({ title: "", description: "", category: "Matemática", type: "PDF", url: "", image_url: "", target_audience: "all" });
             setTimeout(() => document.body.style.pointerEvents = "", 100);
           }
@@ -252,8 +277,19 @@ export default function LibraryManagementPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase opacity-40">Capa (Opcional - URL)</Label>
-                <Input value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." className="h-10 rounded-xl bg-muted/30 border-none font-medium" />
+                <Label className="text-[10px] font-black uppercase opacity-40">Capa (Opcional - Arquivo ou URL)</Label>
+                <div className="flex flex-col gap-2">
+                  <Input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={e => setCoverFile(e.target.files?.[0] || null)} 
+                    className="h-10 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-accent p-1.5 file:mr-4 file:py-1 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white"
+                    disabled={isSubmitting || uploading}
+                  />
+                  {!coverFile && (
+                    <Input value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} placeholder="Ou cole a URL da imagem..." className="h-10 rounded-xl bg-muted/30 border-none font-medium text-xs mt-1" disabled={isSubmitting || uploading} />
+                  )}
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase opacity-40">Resumo Pedagógico</Label>
