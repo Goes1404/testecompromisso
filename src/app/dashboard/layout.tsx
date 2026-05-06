@@ -59,18 +59,18 @@ const teacherItems = [
   { icon: Settings, label: "Configurações", href: "/dashboard/settings", id: "nav-teacher-settings" },
 ];
 
-const adminItems = [
-  { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home" },
-  { icon: Users, label: "Diretório de Usuários", href: "/dashboard/admin/users" },
-  { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics" },
-  { icon: Gavel, label: "Moderação de Fórum", href: "/dashboard/admin/forums" },
-  { icon: FileCheck, label: "Status de Documentos", href: "/dashboard/admin/checklists" },
-  { icon: Eye, label: "Auditoria de Chats", href: "/dashboard/admin/chats" },
-  { icon: Database, label: "Gestão de Turmas", href: "/dashboard/admin/students" },
-  { icon: AlertCircle, label: "Alunos em Risco/Gestão", href: "/dashboard/teacher/students" },
-  { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails" },
-  { icon: Bell, label: "Comunicados Globais", href: "/dashboard/teacher/communication" },
-  { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
+const adminItems: NavItem[] = [
+  { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home", id: "nav-admin-home" },
+  { icon: Users, label: "Diretório de Usuários", href: "/dashboard/admin/users", id: "nav-admin-users" },
+  { icon: BarChart3, label: "BI & Analytics", href: "/dashboard/teacher/analytics", id: "nav-admin-analytics" },
+  { icon: Gavel, label: "Moderação de Fórum", href: "/dashboard/admin/forums", id: "nav-admin-forums" },
+  { icon: FileCheck, label: "Status de Documentos", href: "/dashboard/admin/checklists", id: "nav-admin-checklists" },
+  { icon: Eye, label: "Auditoria de Chats", href: "/dashboard/admin/chats", id: "nav-admin-chats" },
+  { icon: Database, label: "Gestão de Turmas", href: "/dashboard/admin/students", id: "nav-admin-students" },
+  { icon: AlertCircle, label: "Alunos em Risco/Gestão", href: "/dashboard/teacher/students", id: "nav-admin-risk" },
+  { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails", id: "nav-admin-trails" },
+  { icon: Bell, label: "Comunicados Globais", href: "/dashboard/teacher/communication", id: "nav-admin-communication" },
+  { icon: Settings, label: "Configurações", href: "/dashboard/settings", id: "nav-admin-settings" },
 ];
 
 
