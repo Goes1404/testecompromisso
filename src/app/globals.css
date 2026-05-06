@@ -194,6 +194,16 @@
     height: 300px !important;
   }
 }
+/* Respeita preferência do usuário por menos movimento (acessibilidade + performance mobile) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* CUSTOM ANIMATIONS AND UTILS */
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; transform: scale(1); }

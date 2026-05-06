@@ -100,7 +100,7 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[], path
                   <SidebarMenuButton
                     tooltip={item.label}
                     isActive={groupActive}
-                    className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-all duration-200"
+                    className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-colors duration-150"
                   >
                     <item.icon className="h-5 w-5" />
                     <span className="font-bold text-sm">{item.label}</span>
@@ -127,7 +127,7 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[], path
         }
         return (
           <SidebarMenuItem key={item.label}>
-            <SidebarMenuButton asChild isActive={isItemActive(item.href!)} tooltip={item.label} className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-all duration-200">
+            <SidebarMenuButton asChild isActive={isItemActive(item.href!)} tooltip={item.label} className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-colors duration-150">
               <Link id={item.id} href={item.href!} onClick={() => isMobile && setOpenMobile(false)} className="flex items-center gap-3">
                 <item.icon className="h-5 w-5" />
                 <span className="font-bold text-sm">{item.label}</span>
@@ -224,12 +224,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SidebarHeader className="p-6">
            <div id="sidebar-logo" className="flex items-center gap-4">
             <div className="relative h-10 w-40 overflow-hidden rounded-xl">
-                <Image 
-                  src="/images/logocompromisso.png" 
-                  alt="Logo Compromisso" 
-                  fill 
-                  className="object-contain" 
-                  unoptimized 
+                <Image
+                  src="/images/logocompromisso.png"
+                  alt="Logo Compromisso"
+                  fill
+                  className="object-contain"
+                  sizes="160px"
+                  priority
                 />
               </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
@@ -247,7 +248,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
            <div className="flex flex-col gap-3 px-2 py-3 bg-white/5 rounded-xl border border-white/5">
               <div className="flex items-center gap-2">
                 <div className="relative h-6 w-6 shrink-0 bg-white rounded-md p-0.5">
-                  <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" unoptimized />
+                  <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" sizes="24px" />
                 </div>
                 <span className="text-[7px] font-black text-white/60 uppercase tracking-widest leading-tight">Plataforma Patrocinada pela Prefeitura</span>
               </div>
@@ -264,9 +265,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background flex flex-col h-screen overflow-hidden relative">
-        {/* Animated Background Effects */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDuration: '12s', animationDelay: '2s' }} />
+        {/* Subtle static background — blurs removidos (causavam INP >200ms em mobile) */}
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/[0.02] via-transparent to-accent/[0.02] pointer-events-none" />
         
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
           <SidebarTrigger className="h-10 w-10 rounded-xl hover:bg-muted text-primary">
@@ -294,7 +294,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                        'User'))}
                 </span>
               </div>
-              <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-all">
+              <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-primary/5 shadow-xl group-hover:border-accent transition-[border-color]">
                 <AvatarImage src={userAvatar} />
                 <AvatarFallback className="bg-primary text-white text-xs">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>

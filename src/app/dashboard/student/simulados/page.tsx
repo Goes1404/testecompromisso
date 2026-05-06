@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle, Target, Shuffle, ClipboardList, CheckCircle2, XCircle, BookOpen } from 'lucide-react';
+import { Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle, Target, Shuffle, ClipboardList, CheckCircle2, XCircle, BookOpen, Timer } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -60,6 +60,11 @@ export default function SimuladoPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [activeSubjectId, setActiveSubjectId] = useState<string | null>(null);
+  
+  // New simulation settings
+  const [simSize, setSimSize] = useState<number>(10);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const fetchSubjects = useCallback(async () => {
     setGameState('loading_subjects');
@@ -131,7 +136,7 @@ export default function SimuladoPage() {
         items = raw ?? [];
       }
 
-      const shuffled = items.sort(() => 0.5 - Math.random()).slice(0, SIMULATION_SIZE);
+      const shuffled = items.sort(() => 0.5 - Math.random()).slice(0, simSize);
 
       if (shuffled.length === 0) {
         toast({ title: 'Sem questões', description: 'Não há questões para este filtro.', variant: 'destructive' });
@@ -149,13 +154,39 @@ export default function SimuladoPage() {
       setCurrentIndex(0);
       setAnswers([]);
       setSelectedAnswer(null);
+      setTimeLeft(formatted.length * 3.5 * 60); // 3.5 min per question
+      setIsPaused(false);
       setGameState('active');
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       setGameState('error');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, selectedSubjectId, selectedMicroTopicId, profile, toast]);
+  }, [mode, selectedSubjectId, selectedMicroTopicId, profile, toast, simSize]);
+
+  // Timer effect
+  useEffect(() => {
+    if (gameState !== 'active' || timeLeft === null || isPaused) return;
+    
+    if (timeLeft <= 0) {
+      toast({ title: "Tempo esgotado!", description: "Seu simulado será finalizado.", variant: "destructive" });
+      setGameState('finished');
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameState, timeLeft, isPaused, toast]);
+
+  const formatTimeLeft = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const handleNext = async () => {
     if (!selectedAnswer || !questions[currentIndex]) return;
@@ -258,11 +289,19 @@ export default function SimuladoPage() {
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
         <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-b-4 border-accent">
           <div className="flex justify-between items-center mb-4 gap-2">
-            <div className="flex items-center gap-2">
-              <BrainCircuit className="h-4 w-4 text-accent" />
-              <p className="font-black text-primary text-xs md:text-sm uppercase tracking-widest">
-                QUESTÃO {currentIndex + 1} / {questions.length}
-              </p>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="h-4 w-4 text-accent" />
+                <p className="font-black text-primary text-xs md:text-sm uppercase tracking-widest">
+                  QUESTÃO {currentIndex + 1} / {questions.length}
+                </p>
+              </div>
+              {timeLeft !== null && (
+                <div className={`flex items-center gap-1.5 text-xs font-black italic ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-primary/40'}`}>
+                  <Timer className="h-3 w-3" />
+                  {formatTimeLeft(timeLeft)}
+                </div>
+              )}
             </div>
             <Badge variant="outline" className="font-black text-[10px] uppercase bg-primary text-white border-none h-7 px-4">
               {currentQuestion.subjects?.name || 'Geral'} • {currentQuestion.year}
@@ -498,10 +537,41 @@ export default function SimuladoPage() {
       )}
 
       {mode === 'completo' && (
-        <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-[2rem] p-6 border border-primary/10 text-center">
-          <Shuffle className="h-10 w-10 text-primary mx-auto mb-3" />
-          <p className="font-black text-primary italic">Simulado completo com {SIMULATION_SIZE} questões aleatórias de todas as matérias.</p>
-          <p className="text-xs text-muted-foreground font-medium mt-1">Igual ao formato do ENEM e vestibulares.</p>
+        <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-[2rem] p-8 border border-primary/10 text-center space-y-6">
+          <div>
+            <Shuffle className="h-10 w-10 text-primary mx-auto mb-3" />
+            <p className="font-black text-xl text-primary italic">Simulado Completo Personalizado</p>
+            <p className="text-xs text-muted-foreground font-medium mt-1">Questões aleatórias de todas as disciplinas cadastradas.</p>
+          </div>
+          
+          <div className="max-w-xs mx-auto space-y-3">
+             <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Quantidade de Questões</Label>
+             <div className="grid grid-cols-3 gap-2">
+                {[10, 20, 45, 90].map(n => (
+                   <Button 
+                    key={n} 
+                    variant={simSize === n ? 'default' : 'outline'} 
+                    onClick={() => setSimSize(n)}
+                    className={`rounded-xl font-black ${simSize === n ? 'bg-primary shadow-lg' : 'border-2'}`}
+                   >
+                    {n}
+                   </Button>
+                )).slice(0, 3)}
+                {/* 90 questions is only for full trial */}
+                <Button 
+                  variant={simSize === 90 ? 'default' : 'outline'} 
+                  onClick={() => setSimSize(90)}
+                  className={`col-span-3 rounded-xl font-black ${simSize === 90 ? 'bg-primary shadow-lg' : 'border-2'}`}
+                >
+                  Modo ENEM Real (90 Questões)
+                </Button>
+             </div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 p-4 bg-white/50 rounded-2xl border border-dashed border-primary/20">
+             <Timer className="h-4 w-4 text-accent" />
+             <p className="text-[10px] font-bold text-primary/60 uppercase tracking-tight">Tempo estimado: {Math.round(simSize * 3.5)} minutos</p>
+          </div>
         </div>
       )}
 

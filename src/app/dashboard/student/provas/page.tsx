@@ -12,6 +12,7 @@ import { Loader2, Scroll, Award, RotateCw, AlertCircle, CheckCircle2, XCircle, B
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Timer, Flag, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 
 type Exam = {
   id: string;
@@ -55,6 +56,11 @@ export default function ProvasCompletasPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  // Timer states
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
 
   const fetchExams = useCallback(async () => {
     setPageState('loading');
@@ -111,11 +117,41 @@ export default function ProvasCompletasPage() {
       setCurrentIndex(0);
       setSelectedAnswer(null);
       setAnswers([]);
+      setMarkedForReview(new Set());
+      
+      // Set time based on question count (3.5 minutes per question, similar to ENEM)
+      setTimeLeft(qs.length * 3.5 * 60); 
+      setIsPaused(false);
+      
       setPageState('active');
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       setPageState('list');
     }
+  };
+
+  // Timer effect
+  useEffect(() => {
+    if (pageState !== 'active' || timeLeft === null || isPaused) return;
+    
+    if (timeLeft <= 0) {
+      toast({ title: "Tempo esgotado!", description: "Sua prova será finalizada automaticamente.", variant: "destructive" });
+      finishExam(answers);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [pageState, timeLeft, isPaused, answers]);
+
+  const toggleReview = (id: string) => {
+    const newSet = new Set(markedForReview);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setMarkedForReview(newSet);
   };
 
   const handleAnswer = () => {
@@ -232,52 +268,168 @@ export default function ProvasCompletasPage() {
   }
 
   if (pageState === 'active' && currentQuestion) {
+    const formatTimeLeft = (seconds: number) => {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
     return (
-      <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-500 pb-24">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{activeExam?.title}</p>
-            <p className="text-sm font-bold text-primary">Questão {currentIndex + 1} de {questions.length}</p>
+      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-24 px-4">
+        {/* Exam Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl shadow-lg border-b-4 border-primary">
+          <div className="space-y-1">
+            <h2 className="text-xl font-black text-primary italic leading-none">{activeExam?.title}</h2>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase">
+                {currentIndex + 1} de {questions.length} Questões
+              </Badge>
+              {markedForReview.has(currentQuestion.id) && (
+                <Badge className="bg-amber-100 text-amber-600 border-none font-black text-[10px] uppercase flex items-center gap-1">
+                  <Flag className="h-3 w-3" /> Revisar
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="text-right">
-            {currentQuestion.subjects?.name && (
-              <Badge className="bg-accent/10 text-accent border-none font-black text-[10px] uppercase">{currentQuestion.subjects.name}</Badge>
-            )}
+          
+          <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-xl shadow-inner ${timeLeft && timeLeft < 300 ? 'bg-red-50 text-red-500 animate-pulse' : 'bg-slate-50 text-primary'}`}>
+              <Timer className={`h-6 w-6 ${timeLeft && timeLeft < 300 ? 'text-red-500' : 'text-accent'}`} />
+              {timeLeft !== null ? formatTimeLeft(timeLeft) : '--:--'}
+            </div>
+            <Button variant="outline" size="icon" onClick={() => setIsPaused(!isPaused)} className="h-12 w-12 rounded-xl border-2">
+               {isPaused ? <RotateCw className="h-5 w-5" /> : <Loader2 className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
 
-        <Progress value={progress} className="h-2 rounded-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Question List Sidebar (Desktop) */}
+          <div className="hidden lg:block space-y-4">
+            <Card className="border-none shadow-xl rounded-[2rem] bg-white p-6">
+              <h3 className="text-xs font-black uppercase tracking-widest text-primary/40 mb-4 px-1">Navegação</h3>
+              <div className="grid grid-cols-5 gap-2">
+                {questions.map((q, idx) => {
+                  const isAnswered = answers.find(a => a.questionId === q.id) || (idx === currentIndex && selectedAnswer);
+                  const isCurrent = idx === currentIndex;
+                  const isMarked = markedForReview.has(q.id);
+                  
+                  return (
+                    <button
+                      key={q.id}
+                      onClick={() => {
+                        if (selectedAnswer && currentIndex !== idx) {
+                           // Save current answer before jumping
+                           const record: Answer = {
+                            questionId: currentQuestion.id,
+                            selected: selectedAnswer,
+                            correct: currentQuestion.correct_answer,
+                            explanation: currentQuestion.explanation,
+                            question_text: currentQuestion.question_text,
+                            options: currentQuestion.options,
+                            subject: currentQuestion.subjects?.name ?? null,
+                          };
+                          setAnswers(prev => {
+                            const filtered = prev.filter(a => a.questionId !== currentQuestion.id);
+                            return [...filtered, record];
+                          });
+                        }
+                        setCurrentIndex(idx);
+                        const existing = answers.find(a => a.questionId === q.id);
+                        setSelectedAnswer(existing?.selected ?? null);
+                      }}
+                      className={`h-10 w-10 rounded-xl font-black text-xs transition-all flex items-center justify-center border-2
+                        ${isCurrent ? 'bg-primary text-white border-primary shadow-lg scale-110 z-10' : 
+                          isMarked ? 'bg-amber-50 border-amber-300 text-amber-600' :
+                          isAnswered ? 'bg-green-50 border-green-200 text-green-600' : 'bg-slate-50 border-transparent text-primary/40'}`}
+                    >
+                      {idx + 1}
+                    </button>
+                  );
+                })}
+              </div>
+              <Button onClick={() => finishExam(answers)} className="w-full mt-8 bg-red-50 text-red-500 hover:bg-red-100 border-none font-black text-xs rounded-xl h-10 shadow-sm">
+                Finalizar Prova
+              </Button>
+            </Card>
+          </div>
 
-        <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white">
-          <CardContent className="p-8 space-y-6">
-            <p className="text-base font-bold text-primary italic leading-relaxed">{currentQuestion.question_text}</p>
+          {/* Main Question Area */}
+          <div className="lg:col-span-3 space-y-6">
+            <Progress value={progress} className="h-2 rounded-full bg-slate-100" />
 
-            <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer} className="space-y-3">
-              {currentQuestion.options.map(opt => (
-                <Label
-                  key={opt.key}
-                  htmlFor={`opt-${opt.key}`}
-                  className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all font-medium text-sm
-                    ${selectedAnswer === opt.key
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-transparent bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
-                >
-                  <RadioGroupItem id={`opt-${opt.key}`} value={opt.key} className="shrink-0" />
-                  <span className="font-black text-xs mr-1 italic">{opt.key})</span>
-                  <span>{opt.text}</span>
-                </Label>
-              ))}
-            </RadioGroup>
+            <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
+              <CardContent className="p-8 md:p-12 space-y-8">
+                <div className="flex justify-between items-start gap-4">
+                   <div className="space-y-1">
+                      {currentQuestion.subjects?.name && (
+                        <Badge className="bg-accent/10 text-accent border-none font-black text-[10px] uppercase px-4 h-6 mb-2">
+                          {currentQuestion.subjects.name}
+                        </Badge>
+                      )}
+                      <p className="text-lg md:text-xl font-bold text-primary italic leading-relaxed">
+                        {currentQuestion.question_text}
+                      </p>
+                   </div>
+                   <Button variant="ghost" size="icon" onClick={() => toggleReview(currentQuestion.id)} className={`shrink-0 h-12 w-12 rounded-2xl transition-all ${markedForReview.has(currentQuestion.id) ? 'bg-amber-100 text-amber-600' : 'bg-slate-50 text-slate-300'}`}>
+                      <Flag className="h-6 w-6" />
+                   </Button>
+                </div>
 
-            <Button
-              onClick={handleAnswer}
-              disabled={!selectedAnswer}
-              className="w-full h-12 rounded-2xl bg-primary text-white font-black text-base shadow-xl hover:scale-[1.02] transition-all active:scale-95"
-            >
-              {currentIndex + 1 < questions.length ? 'Próxima Questão' : 'Ver Resultado'}
-            </Button>
-          </CardContent>
-        </Card>
+                <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer} className="space-y-4">
+                  {currentQuestion.options.map(opt => (
+                    <Label
+                      key={opt.key}
+                      htmlFor={`opt-${opt.key}`}
+                      className={`flex items-start gap-5 p-5 md:p-6 rounded-[2rem] border-2 cursor-pointer transition-all
+                        ${selectedAnswer === opt.key
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-slate-100 bg-slate-50/50 hover:bg-slate-100/80 text-slate-600'}`}
+                    >
+                      <RadioGroupItem id={`opt-${opt.key}`} value={opt.key} className="mt-1 shrink-0" />
+                      <div className="flex gap-4">
+                        <span className={`font-black italic text-lg shrink-0 ${selectedAnswer === opt.key ? 'text-primary' : 'text-slate-300'}`}>
+                          {opt.key})
+                        </span>
+                        <span className="font-medium text-sm md:text-base leading-relaxed">{opt.text}</span>
+                      </div>
+                    </Label>
+                  ))}
+                </RadioGroup>
+
+                <div className="flex flex-col md:flex-row gap-4 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (currentIndex > 0) {
+                        setCurrentIndex(currentIndex - 1);
+                        const prevAns = answers.find(a => a.questionId === questions[currentIndex - 1].id);
+                        setSelectedAnswer(prevAns?.selected ?? null);
+                      }
+                    }}
+                    disabled={currentIndex === 0}
+                    className="flex-1 h-14 rounded-2xl border-2 font-black text-primary"
+                  >
+                    <ChevronLeft className="h-5 w-5 mr-2" /> Anterior
+                  </Button>
+                  
+                  <Button
+                    onClick={handleAnswer}
+                    disabled={!selectedAnswer && currentIndex + 1 >= questions.length}
+                    className="flex-[2] h-14 rounded-2xl bg-primary text-white font-black text-lg shadow-xl hover:scale-[1.02] transition-all"
+                  >
+                    {currentIndex + 1 < questions.length ? (
+                      <>Próxima Questão <ChevronRight className="h-5 w-5 ml-2" /></>
+                    ) : (
+                      <>Finalizar Prova <Save className="h-5 w-5 ml-2 text-accent" /></>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }

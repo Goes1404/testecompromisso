@@ -22,7 +22,10 @@ import {
     ArrowRight,
     Scroll,
     Upload,
-    FileText
+    FileText,
+    BookOpen,
+    CheckCircle2,
+    Sparkles,
 } from 'lucide-react';
 import { useRef } from 'react';
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
@@ -50,6 +53,15 @@ type ParsedQuestion = {
     subject_name?: string;
     subject_id?: string;
     micro_topic_id?: string;
+    supporting_text?: string;
+};
+
+type ExtractionProgress = {
+    currentChunk: number;
+    totalChunks: number;
+    phase: 'idle' | 'analyzing' | 'done' | 'error';
+    questionsFound: number;
+    elapsedSeconds: number;
 };
 
 export default function QuestionBankPage() {
@@ -135,6 +147,10 @@ export default function QuestionBankPage() {
 
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isReadingFile, setIsReadingFile] = useState(false);
+    const [progress, setProgress] = useState<ExtractionProgress>({
+        currentChunk: 0, totalChunks: 0, phase: 'idle', questionsFound: 0, elapsedSeconds: 0,
+    });
+    const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -219,26 +235,28 @@ export default function QuestionBankPage() {
         }
 
         setIsAnalyzing(true);
-        setExtractedQuestions([]); // Limpa as questões extraídas anteriormente
+        setExtractedQuestions([]);
+
+        // Inicia timer de segundos decorridos
+        let elapsed = 0;
+        elapsedRef.current = setInterval(() => {
+            elapsed++;
+            setProgress(p => ({ ...p, elapsedSeconds: elapsed }));
+        }, 1000);
 
         try {
-            // Divide o texto em blocos de ~12.000 caracteres para evitar o timeout de 15s da Vercel (Hobby)
-            const CHUNK_SIZE = 6000; // Reduzido de 12000 para evitar 504 Gateway Timeout
+            const CHUNK_SIZE = 15000;
             const chunks: string[] = [];
             for (let i = 0; i < rawText.length; i += CHUNK_SIZE) {
                 chunks.push(rawText.substring(i, i + CHUNK_SIZE));
             }
 
-            if (chunks.length > 1) {
-                toast({ title: "Arquivo grande detectado", description: `Dividindo em ${chunks.length} partes para evitar erro de timeout.` });
-            }
+            setProgress({ currentChunk: 0, totalChunks: chunks.length, phase: 'analyzing', questionsFound: 0, elapsedSeconds: 0 });
 
             const allExtracted: any[] = [];
 
             for (let i = 0; i < chunks.length; i++) {
-                if (chunks.length > 1) {
-                    toast({ description: `Analisando parte ${i + 1} de ${chunks.length}...` });
-                }
+                setProgress(p => ({ ...p, currentChunk: i + 1 }));
 
                 const response = await fetch('/api/chat', {
                     method: 'POST',
@@ -247,47 +265,73 @@ export default function QuestionBankPage() {
                         messages: [
                             {
                                 role: 'user',
-                                content: `Analise este fragmento de texto (${i + 1}/${chunks.length}) e extraia as questões de múltipla escolha. 
-                                Responda EXCLUSIVAMENTE com um JSON válido: {"questions": [{"question_text": "...", "options": [{"key": "A", "text": "..."}], "correct_answer": "A", "year": 2024, "explanation": "...", "subject_name": "Matemática"}]}
-                                
-                                TEXTO:\n${chunks[i]}`
+                                content: `Você é um extrator especializado em provas do ENEM, ETEC e vestibulares brasileiros.
+Extraia TODAS as questões de múltipla escolha do texto abaixo com rigor absoluto.
+
+REGRAS OBRIGATÓRIAS:
+1. Mantenha o enunciado fiel ao original, sem resumir.
+2. Identifique exatamente as 5 alternativas (A, B, C, D, E).
+3. Identifique o gabarito correto.
+4. Identifique a disciplina (Ex: Matemática, Biologia, História, Língua Portuguesa).
+5. TEXTO DE APOIO: muitas questões do ENEM são precedidas por um texto, poema, trecho literário, charge, tabela ou descrição de imagem que serve de base para a pergunta. Se a questão fizer referência a esse material, copie-o integralmente no campo "supporting_text". Questões consecutivas que compartilham o mesmo texto de apoio devem ter o mesmo conteúdo em "supporting_text". Se não houver texto de apoio, omita o campo ou deixe como string vazia.
+
+Responda APENAS com JSON válido nesta estrutura exata (sem texto fora do bloco):
+{
+  "questions": [
+    {
+      "question_text": "enunciado completo da pergunta",
+      "supporting_text": "texto/poema/trecho que a questão referencia (se houver)",
+      "options": [{"key": "A", "text": "texto da alternativa A"}, {"key": "B", "text": "..."}, {"key": "C", "text": "..."}, {"key": "D", "text": "..."}, {"key": "E", "text": "..."}],
+      "correct_answer": "B",
+      "year": 2023,
+      "subject_name": "Disciplina"
+    }
+  ]
+}
+
+TEXTO PARA EXTRAÇÃO (Parte ${i + 1}/${chunks.length}):\n${chunks[i]}`
                             }
                         ]
                     })
                 });
 
                 if (!response.ok) {
-                    // Se falhar por timeout (504), tenta avisar o usuário
-                    if (response.status === 504) throw new Error(`A parte ${i+1} demorou demais para processar. Tente enviar um texto menor.`);
-                    throw new Error(`Erro no servidor (Status ${response.status}) na parte ${i+1}.`);
+                    if (response.status === 504) throw new Error(`Tempo esgotado na parte ${i + 1}. Tente um texto menor.`);
+                    throw new Error(`Erro no servidor na parte ${i + 1}.`);
                 }
 
                 let data;
                 try {
                     const textResponse = await response.text();
                     data = JSON.parse(textResponse);
-                } catch (parseError) {
-                    console.error("Erro ao parsear JSON da resposta:", parseError);
-                    if (response.status === 504) {
-                        throw new Error(`A parte ${i+1} demorou demais para processar (Timeout). Tente enviar um texto menor.`);
-                    }
-                    throw new Error(`A Aurora retornou um formato inválido na parte ${i+1}. Verifique sua conexão.`);
+                } catch {
+                    throw new Error(`A Aurora retornou formato inválido na parte ${i + 1}. Verifique sua conexão.`);
                 }
 
                 if (!data.success) throw new Error(data.error || "Erro na análise da Aurora.");
 
                 const responseText = data.result?.response || '';
-                let parsed: any;
-                const jsonMatch = responseText.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+                const cleanText = responseText.trim()
+                    .replace(/^```json\s*/m, '')
+                    .replace(/```\s*$/m, '')
+                    .trim();
+
+                const jsonMatch = cleanText.match(/\{[\s\S]*"questions"[\s\S]*\}/);
                 try {
-                    parsed = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+                    const jsonToParse = jsonMatch ? jsonMatch[0] : cleanText;
+                    const parsed = JSON.parse(jsonToParse);
                     const chunkQuestions = parsed.questions || (Array.isArray(parsed) ? parsed : []);
                     allExtracted.push(...chunkQuestions);
+                    setProgress(p => ({ ...p, questionsFound: p.questionsFound + chunkQuestions.length }));
                 } catch (e) {
                     console.error("Erro ao parsear JSON da parte", i, responseText);
-                    // Continua para as outras partes mesmo se uma falhar
+                    if (cleanText.includes('"questions"')) {
+                        toast({ description: `Aviso: Parte ${i + 1} pode estar incompleta.`, variant: 'destructive' });
+                    }
                 }
             }
+
+            setProgress(p => ({ ...p, phase: 'done' }));
 
             if (allExtracted.length > 0) {
                 const withIds = allExtracted.map((q: any) => ({
@@ -295,14 +339,16 @@ export default function QuestionBankPage() {
                     subject_id: resolveSubjectId(q.subject_name, subjects) || bulkSubjectId,
                 }));
                 setExtractedQuestions(withIds);
-                toast({ title: `${allExtracted.length} questões extraídas com sucesso!`, description: "Revise os dados abaixo antes de salvar no banco." });
+                toast({ title: `${allExtracted.length} questões extraídas!`, description: "Revise os dados abaixo antes de salvar no banco." });
             } else {
-                toast({ title: "Nenhuma questão encontrada", description: "A Aurora não conseguiu identificar questões no texto.", variant: "destructive" });
+                toast({ title: "Nenhuma questão encontrada", description: "A Aurora não identificou questões no texto.", variant: "destructive" });
             }
         } catch (e: any) {
             console.error("Erro na análise em massa:", e);
+            setProgress(p => ({ ...p, phase: 'error' }));
             toast({ title: "Falha na Extração", description: e.message || "Erro ao processar o texto com a Aurora.", variant: "destructive" });
         } finally {
+            if (elapsedRef.current) clearInterval(elapsedRef.current);
             setIsAnalyzing(false);
         }
     };
@@ -321,14 +367,16 @@ export default function QuestionBankPage() {
                     teacher_id: user.id
                 };
                 if (q.explanation) item.explanation = q.explanation;
+                if (q.supporting_text) item.supporting_text = q.supporting_text;
                 if (bulkTargetAudience !== 'all') item.target_audience = bulkTargetAudience;
                 return item;
             });
 
             let { data: insertedQuestions, error } = await supabase.from('questions').insert(itemsToInsert).select('id');
 
-            if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
-                const fallbackItems = itemsToInsert.map(({ target_audience, explanation, ...rest }: any) => rest);
+            if (error && (error?.message?.includes('target_audience') || error?.message?.includes('supporting_text') || error?.code === '42703')) {
+                // Fallback: remove colunas que podem não existir no banco ainda
+                const fallbackItems = itemsToInsert.map(({ target_audience, explanation, supporting_text, ...rest }: any) => rest);
                 const retry = await supabase.from('questions').insert(fallbackItems).select('id');
                 error = retry.error;
                 insertedQuestions = retry.data;
@@ -490,6 +538,59 @@ export default function QuestionBankPage() {
                             <Button onClick={handleAnalyzeBulk} disabled={isAnalyzing || !rawText.trim()} className="w-full h-12 rounded-2xl bg-primary text-white font-black text-base shadow-xl hover:scale-[1.02] transition-all active:scale-95 mt-2">
                                 {isAnalyzing ? <><Loader2 className="h-5 w-5 animate-spin mr-2" />Analisando com Aurora IA...</> : <><BrainCircuit className="h-5 w-5 mr-2" />Extrair Questões com Aurora IA</>}
                             </Button>
+
+                            {/* Overlay de progresso */}
+                            {isAnalyzing && (
+                                <div className="mt-4 p-6 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 space-y-5 animate-in fade-in duration-500">
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative">
+                                            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                                <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-primary italic text-base leading-tight">Aurora está analisando a prova...</p>
+                                            <p className="text-xs text-muted-foreground font-medium">Isso pode levar de 30 segundos a alguns minutos. Não feche esta página.</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Barra de progresso */}
+                                    {progress.totalChunks > 0 && (
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center text-[11px] font-black text-muted-foreground uppercase tracking-widest">
+                                                <span>Parte {progress.currentChunk} de {progress.totalChunks}</span>
+                                                <span>{Math.round((progress.currentChunk / progress.totalChunks) * 100)}%</span>
+                                            </div>
+                                            <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-700"
+                                                    style={{ width: `${Math.max(5, (progress.currentChunk / progress.totalChunks) * 100)}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Métricas em tempo real */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-white rounded-2xl p-3 text-center shadow-sm">
+                                            <p className="text-2xl font-black text-primary">{progress.questionsFound}</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Questões encontradas</p>
+                                        </div>
+                                        <div className="bg-white rounded-2xl p-3 text-center shadow-sm">
+                                            <p className="text-2xl font-black text-accent">{progress.totalChunks > 0 ? progress.totalChunks : '—'}</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Partes do texto</p>
+                                        </div>
+                                        <div className="bg-white rounded-2xl p-3 text-center shadow-sm">
+                                            <p className="text-2xl font-black text-slate-600">{progress.elapsedSeconds}s</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Tempo decorrido</p>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-[10px] text-center text-muted-foreground font-medium italic">
+                                        A Aurora também está identificando textos de apoio e imagens referenciadas pelas questões.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -654,6 +755,15 @@ export default function QuestionBankPage() {
                                                 <Badge className="bg-green-50 text-green-600 border-none font-black text-[8px] uppercase px-3">IA: {q.subject_name}</Badge>
                                             )}
                                         </div>
+                                        {q.supporting_text && (
+                                            <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-2xl">
+                                                <div className="flex items-center gap-1.5 mb-1.5">
+                                                    <BookOpen className="h-3.5 w-3.5 text-amber-600" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">Texto de Apoio</span>
+                                                </div>
+                                                <p className="text-[11px] text-amber-800 font-medium leading-relaxed italic line-clamp-4">{q.supporting_text}</p>
+                                            </div>
+                                        )}
                                         <p className="text-sm font-bold text-primary italic leading-relaxed mb-4 line-clamp-4">"{q.question_text}"</p>
                                         <div className="mb-4">
                                             <Select

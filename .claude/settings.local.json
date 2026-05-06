@@ -14,7 +14,11 @@
       "Bash(Format-Table FullName)",
       "Bash(xargs grep -l \"xp\\\\|XP\\\\|experience\")",
       "Bash(xargs grep -l \"student_answers\\\\|performance\\\\|analytics\")",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "Bash(npm run *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Projetos\\\\testecompromisso\\\\supabase\\\\migrations\" -Filter \"*.sql\")",
+      "Bash(Sort-Object Name)",
+      "Bash(xargs grep *)"
     ]
   }
 }

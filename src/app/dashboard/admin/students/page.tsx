@@ -81,7 +81,8 @@ export default function AdminStudentsPage() {
         .from('profiles')
         .select('*')
         .eq('profile_type', 'student')
-        .order('name');
+        .order('name')
+        .limit(500);
 
       if (pError) throw pError;
 
