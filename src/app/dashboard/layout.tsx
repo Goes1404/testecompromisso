@@ -1,12 +1,13 @@
 
 "use client";
 
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle, Menu } from "lucide-react";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useEffect, useState, useMemo, memo, useRef, Suspense } from "react";
 import { useAuth } from "@/lib/AuthProvider"; 
 import { supabase } from "@/app/lib/supabase";
@@ -17,13 +18,22 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { UrgentNotice } from "@/components/UrgentNotice";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
 
-const studentItems = [
+type NavChild = { icon: any; label: string; href: string; id: string };
+type NavItem = { icon: any; label: string; href?: string; id: string; badge?: boolean; children?: NavChild[] };
+
+const studentItems: NavItem[] = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
   { icon: Compass, label: "Assistir Aulas", href: "/dashboard/trails", id: "nav-trails" },
   { icon: BookOpen, label: "Livros", href: "/dashboard/books", id: "nav-books" },
   { icon: Library, label: "Biblioteca", href: "/dashboard/library", id: "nav-library" },
   { icon: FilePenLine, label: "Treinar Redação", href: "/dashboard/student/essays", id: "nav-essays" },
-  { icon: FileText, label: "Fazer Simulados", href: "/dashboard/student/simulados", id: "nav-simulados" },
+  {
+    icon: BrainCircuit, label: "Questões & Provas", id: "nav-questoes",
+    children: [
+      { icon: FileText, label: "Simulados por Matéria", href: "/dashboard/student/simulados", id: "nav-simulados" },
+      { icon: Scroll, label: "Provas Completas", href: "/dashboard/student/provas", id: "nav-provas" },
+    ],
+  },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live", id: "nav-live" },
   { icon: MessagesSquare, label: "Comunidade", href: "/dashboard/forum", id: "nav-forum" },
   { icon: MessageSquare, label: "Tirar Dúvidas", href: "/dashboard/chat", badge: true, id: "nav-chat" },
@@ -62,35 +72,71 @@ const adminItems = [
 ];
 
 
-const NavMenu = memo(({ items, pathname, unreadCount }: { items: any[], pathname: string, unreadCount: number }) => {
+const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[], pathname: string, unreadCount: number }) => {
   const { setOpenMobile, isMobile } = useSidebar();
 
   const isItemActive = (itemHref: string) => {
     if (pathname === itemHref) return true;
     if (pathname.startsWith(itemHref + '/')) return true;
-    
     if (itemHref === '/dashboard/trails' && pathname.startsWith('/dashboard/classroom/')) return true;
     if (itemHref === '/dashboard/library' && pathname.startsWith('/dashboard/library/book/')) return true;
     if (itemHref === '/dashboard/books' && pathname.startsWith('/dashboard/books/read/')) return true;
-    
     return false;
   };
 
+  const isGroupActive = (children: NavChild[]) => children.some(c => isItemActive(c.href));
+
   return (
     <SidebarMenu className="gap-1">
-      {items.map((item) => (
-        <SidebarMenuItem key={item.label}>
-          <SidebarMenuButton asChild isActive={isItemActive(item.href)} tooltip={item.label} className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-all duration-200">
-            <Link id={item.id} href={item.href} onClick={() => isMobile && setOpenMobile(false)} className="flex items-center gap-3">
-              <item.icon className="h-5 w-5" />
-              <span className="font-bold text-sm">{item.label}</span>
-              {unreadCount > 0 && item.badge && (
-                <Badge className="ml-auto bg-accent text-accent-foreground text-[10px] font-black h-5 min-w-5 rounded-full animate-in zoom-in">{unreadCount}</Badge>
-              )}
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {items.map((item) => {
+        if (item.children) {
+          const groupActive = isGroupActive(item.children);
+          return (
+            <Collapsible key={item.id} defaultOpen={groupActive} className="group/collapsible">
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip={item.label}
+                    isActive={groupActive}
+                    className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-all duration-200"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="font-bold text-sm">{item.label}</span>
+                    <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.children.map((child) => (
+                      <SidebarMenuSubItem key={child.id}>
+                        <SidebarMenuSubButton asChild isActive={isItemActive(child.href)}>
+                          <Link id={child.id} href={child.href} onClick={() => isMobile && setOpenMobile(false)} className="flex items-center gap-2">
+                            <child.icon className="h-4 w-4" />
+                            <span className="font-bold text-xs">{child.label}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          );
+        }
+        return (
+          <SidebarMenuItem key={item.label}>
+            <SidebarMenuButton asChild isActive={isItemActive(item.href!)} tooltip={item.label} className="h-11 rounded-lg data-[active=true]:bg-accent data-[active=true]:text-accent-foreground transition-all duration-200">
+              <Link id={item.id} href={item.href!} onClick={() => isMobile && setOpenMobile(false)} className="flex items-center gap-3">
+                <item.icon className="h-5 w-5" />
+                <span className="font-bold text-sm">{item.label}</span>
+                {unreadCount > 0 && item.badge && (
+                  <Badge className="ml-auto bg-accent text-accent-foreground text-[10px] font-black h-5 min-w-5 rounded-full animate-in zoom-in">{unreadCount}</Badge>
+                )}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
     </SidebarMenu>
   );
 });

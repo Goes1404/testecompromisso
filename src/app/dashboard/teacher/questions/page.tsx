@@ -7,18 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { 
-    Loader2, 
-    FilePlus, 
-    ListChecks, 
-    PlusCircle, 
-    Trash2, 
-    Database, 
+import {
+    Loader2,
+    FilePlus,
+    ListChecks,
+    PlusCircle,
+    Trash2,
+    Database,
     BrainCircuit,
     ZapOff,
     Save,
-    ArrowRight
+    ArrowRight,
+    Scroll
 } from 'lucide-react';
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
 import { QuestionsList } from '@/components/QuestionsList';
@@ -41,6 +43,8 @@ type ParsedQuestion = {
     correct_answer: string;
     year: number;
     explanation?: string;
+    subject_name?: string;
+    subject_id?: string;
 };
 
 export default function QuestionBankPage() {
@@ -61,6 +65,12 @@ export default function QuestionBankPage() {
     
     const [bulkSubjectId, setBulkSubjectId] = useState<string>('');
     const [bulkTargetAudience, setBulkTargetAudience] = useState<string>('all');
+
+    // Exam creation states
+    const [createExam, setCreateExam] = useState(false);
+    const [examTitle, setExamTitle] = useState('');
+    const [examType, setExamType] = useState('enem');
+    const [examYear, setExamYear] = useState(new Date().getFullYear());
 
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -84,6 +94,15 @@ export default function QuestionBankPage() {
         fetchSubjects();
     }, [toast]);
 
+    const resolveSubjectId = (name: string | undefined, subjectList: Subject[]): string | undefined => {
+        if (!name || subjectList.length === 0) return undefined;
+        const normalized = name.toLowerCase().trim();
+        const exact = subjectList.find(s => s.name.toLowerCase() === normalized);
+        if (exact) return exact.id;
+        const partial = subjectList.find(s => s.name.toLowerCase().includes(normalized) || normalized.includes(s.name.toLowerCase()));
+        return partial?.id;
+    };
+
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     const handleAnalyzeBulk = async () => {
@@ -101,7 +120,7 @@ export default function QuestionBankPage() {
                     messages: [
                         {
                             role: 'user',
-                            content: `Analise o texto abaixo e extraia TODAS as questões de múltipla escolha encontradas. Responda EXCLUSIVAMENTE com um JSON válido contendo a chave "questions" que mapeia para um array de objetos. Cada objeto deve ter: "question_text" (string com o enunciado completo), "options" (array de objetos com "key" e "text"), "correct_answer" (string com a letra), "year" (número), "explanation" (string curta explicando por que a resposta está certa). Se não conseguir identificar o gabarito, coloque "A" como padrão. Se não identificar o ano, use ${new Date().getFullYear()}.\n\nTEXTO DA PROVA:\n${rawText}`
+                            content: `Analise o texto abaixo e extraia TODAS as questões de múltipla escolha encontradas. Responda EXCLUSIVAMENTE com um JSON válido contendo a chave "questions" que mapeia para um array de objetos. Cada objeto deve ter: "question_text" (string com o enunciado completo), "options" (array de objetos com "key" e "text"), "correct_answer" (string com a letra), "year" (número), "explanation" (string curta explicando por que a resposta está certa), "subject_name" (string com a disciplina principal da questão, escolha UMA de: Matemática, Português, Física, Química, Biologia, História, Geografia, Inglês, Espanhol, Artes, Educação Física, Filosofia, Sociologia, Redação, Atualidades, Não Categorizado). Se não conseguir identificar o gabarito, coloque "A" como padrão. Se não identificar o ano, use ${new Date().getFullYear()}.\n\nTEXTO DA PROVA:\n${rawText}`
                         }
                     ]
                 })
@@ -128,8 +147,13 @@ export default function QuestionBankPage() {
             const questions = parsed.questions || parsed;
             
             if (Array.isArray(questions) && questions.length > 0) {
-                setExtractedQuestions(questions);
-                toast({ title: `${questions.length} questões extraídas!`, description: "Revise e vincule a uma matéria antes de salvar." });
+                const withIds = questions.map((q: ParsedQuestion) => ({
+                    ...q,
+                    subject_id: resolveSubjectId(q.subject_name, subjects) || bulkSubjectId,
+                }));
+                setExtractedQuestions(withIds);
+                const autoTagged = withIds.filter(q => q.subject_id && q.subject_id !== bulkSubjectId).length;
+                toast({ title: `${questions.length} questões extraídas!`, description: autoTagged > 0 ? `${autoTagged} categorizadas automaticamente pela Aurora IA.` : "Revise e vincule a uma matéria antes de salvar." });
             } else {
                 toast({ title: "Nenhuma questão encontrada", description: "A Aurora não conseguiu identificar questões no texto. Tente um formato mais claro.", variant: "destructive" });
             }
@@ -142,7 +166,7 @@ export default function QuestionBankPage() {
     };
 
     const handleSaveProcessed = async () => {
-        if (!user || extractedQuestions.length === 0 || !bulkSubjectId) return;
+        if (!user || extractedQuestions.length === 0) return;
         setIsSaving(true);
         try {
             const itemsToInsert = extractedQuestions.map(q => {
@@ -151,29 +175,49 @@ export default function QuestionBankPage() {
                     options: q.options,
                     correct_answer: q.correct_answer,
                     year: q.year,
-                    subject_id: bulkSubjectId,
+                    subject_id: q.subject_id || bulkSubjectId,
                     teacher_id: user.id
                 };
-                
-                // Only include optional/newer columns if they have values
                 if (q.explanation) item.explanation = q.explanation;
                 if (bulkTargetAudience !== 'all') item.target_audience = bulkTargetAudience;
-                
                 return item;
             });
-            let { error } = await supabase.from('questions').insert(itemsToInsert);
-            
+
+            let { data: insertedQuestions, error } = await supabase.from('questions').insert(itemsToInsert).select('id');
+
             if (error && (error?.message?.includes('target_audience') || error?.code === '42703')) {
-                console.warn("Colunas novas ausentes ao salvar lote de questões. Retrying com campos básicos.");
                 const fallbackItems = itemsToInsert.map(({ target_audience, explanation, ...rest }: any) => rest);
-                const retry = await supabase.from('questions').insert(fallbackItems);
+                const retry = await supabase.from('questions').insert(fallbackItems).select('id');
                 error = retry.error;
+                insertedQuestions = retry.data;
             }
 
             if (error) throw error;
-            toast({ title: "Banco Atualizado!", description: "Questões gravadas com sucesso." });
+
+            if (createExam && examTitle.trim() && insertedQuestions && insertedQuestions.length > 0) {
+                const { data: examData, error: examErr } = await supabase
+                    .from('exams')
+                    .insert({ title: examTitle.trim(), year: examYear, exam_type: examType, teacher_id: user.id })
+                    .select('id')
+                    .single();
+                if (examErr) throw examErr;
+
+                const examQs = insertedQuestions.map((q: any, idx: number) => ({
+                    exam_id: examData.id,
+                    question_id: q.id,
+                    order_index: idx,
+                }));
+                const { error: eqErr } = await supabase.from('exam_questions').insert(examQs);
+                if (eqErr) throw eqErr;
+                toast({ title: "Prova Completa criada!", description: `"${examTitle}" com ${insertedQuestions.length} questões.` });
+            } else {
+                toast({ title: "Banco Atualizado!", description: "Questões gravadas com sucesso." });
+            }
+
             setExtractedQuestions([]);
             setRawText('');
+            setCreateExam(false);
+            setExamTitle('');
         } catch (e: any) {
             toast({ title: "Erro ao gravar", description: e.message, variant: "destructive" });
         } finally {
@@ -339,31 +383,69 @@ export default function QuestionBankPage() {
 
                     {extractedQuestions.length > 0 && (
                         <div className="mt-12 pt-12 border-t border-dashed space-y-8 animate-in slide-in-from-bottom-8">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50 p-6 rounded-3xl border border-muted/20">
-                                <div>
-                                    <h3 className="text-xl font-black text-primary italic">Área de Curadoria ({extractedQuestions.length})</h3>
-                                    <p className="text-xs text-muted-foreground font-medium">Vincule as questões a uma matéria para finalizar a importação.</p>
+                            <div className="bg-slate-50 p-6 rounded-3xl border border-muted/20 space-y-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-xl font-black text-primary italic">Área de Curadoria ({extractedQuestions.length})</h3>
+                                        <p className="text-xs text-muted-foreground font-medium">Matérias detectadas pela IA por questão. Ajuste se necessário.</p>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <Select value={bulkTargetAudience} onValueChange={setBulkTargetAudience}>
+                                            <SelectTrigger className="w-full md:w-40 h-10 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue placeholder="Público Alvo" /></SelectTrigger>
+                                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                <SelectItem value="all" className="font-bold text-xs">Todos</SelectItem>
+                                                <SelectItem value="etec" className="font-bold text-xs">ETEC/FATEC</SelectItem>
+                                                <SelectItem value="enem" className="font-bold text-xs">ENEM</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="text-xs text-muted-foreground font-medium">Fallback matéria:</div>
+                                        <Select value={bulkSubjectId} onValueChange={setBulkSubjectId}>
+                                            <SelectTrigger className="w-full md:w-44 h-10 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue placeholder="Matéria padrão" /></SelectTrigger>
+                                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-xs">{s.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
-                                    <Select value={bulkTargetAudience} onValueChange={setBulkTargetAudience}>
-                                        <SelectTrigger className="w-full md:w-40 h-12 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue placeholder="Público Alvo" /></SelectTrigger>
-                                        <SelectContent className="rounded-xl border-none shadow-2xl">
-                                            <SelectItem value="all" className="font-bold text-xs">Todos</SelectItem>
-                                            <SelectItem value="etec" className="font-bold text-xs border-l-4 border-l-blue-500">ETEC/FATEC</SelectItem>
-                                            <SelectItem value="enem" className="font-bold text-xs border-l-4 border-l-amber-500">ENEM</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <Select value={bulkSubjectId} onValueChange={setBulkSubjectId}>
-                                        <SelectTrigger className="w-full md:w-56 h-12 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue placeholder="Vincular Matéria" /></SelectTrigger>
-                                        <SelectContent className="rounded-xl border-none shadow-2xl">
-                                            {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-xs">{s.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <Button onClick={handleSaveProcessed} disabled={isSaving || !bulkSubjectId} className="w-full md:w-auto h-12 px-8 rounded-xl bg-primary text-white font-black shadow-lg">
-                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2 text-accent" />}
-                                        Validar e Salvar Tudo
-                                    </Button>
+
+                                <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-dashed">
+                                    <Switch id="create-exam" checked={createExam} onCheckedChange={setCreateExam} />
+                                    <Label htmlFor="create-exam" className="font-black text-sm text-primary cursor-pointer flex items-center gap-2">
+                                        <Scroll className="h-4 w-4 text-accent" />
+                                        Criar também como Prova Completa
+                                    </Label>
                                 </div>
+
+                                {createExam && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in slide-in-from-top-2 duration-300">
+                                        <div className="md:col-span-1 space-y-1">
+                                            <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Título da Prova</Label>
+                                            <Input placeholder="Ex: ENEM 2023 — 1ª Aplicação" className="h-10 rounded-xl bg-white border-none shadow-md font-bold text-xs" value={examTitle} onChange={e => setExamTitle(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Tipo</Label>
+                                            <Select value={examType} onValueChange={setExamType}>
+                                                <SelectTrigger className="h-10 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue /></SelectTrigger>
+                                                <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                    <SelectItem value="enem" className="font-bold text-xs">ENEM</SelectItem>
+                                                    <SelectItem value="etec" className="font-bold text-xs">ETEC/FATEC</SelectItem>
+                                                    <SelectItem value="fuvest" className="font-bold text-xs">FUVEST</SelectItem>
+                                                    <SelectItem value="unicamp" className="font-bold text-xs">UNICAMP</SelectItem>
+                                                    <SelectItem value="outro" className="font-bold text-xs">Outro</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Ano</Label>
+                                            <Input type="number" className="h-10 rounded-xl bg-white border-none shadow-md font-black text-center text-xs" value={examYear} onChange={e => setExamYear(parseInt(e.target.value, 10))} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <Button onClick={handleSaveProcessed} disabled={isSaving || (!bulkSubjectId) || (createExam && !examTitle.trim())} className="w-full h-12 rounded-xl bg-primary text-white font-black shadow-lg">
+                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2 text-accent" />}
+                                    Validar e Salvar Tudo
+                                </Button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -372,11 +454,27 @@ export default function QuestionBankPage() {
                                         <button onClick={() => setExtractedQuestions(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-4 right-4 h-8 w-8 rounded-full bg-slate-50 text-red-400 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm">
                                             <Trash2 className="h-4 w-4" />
                                         </button>
-                                        <div className="flex items-center gap-2 mb-4">
+                                        <div className="flex items-center gap-2 mb-4 flex-wrap">
                                             <Badge className="bg-primary/5 text-primary border-none font-black text-[8px] uppercase px-3">QUESTÃO {i+1}</Badge>
                                             <Badge className="bg-accent/10 text-accent border-none font-black text-[8px] uppercase px-3">{q.year}</Badge>
+                                            {q.subject_name && (
+                                                <Badge className="bg-green-50 text-green-600 border-none font-black text-[8px] uppercase px-3">IA: {q.subject_name}</Badge>
+                                            )}
                                         </div>
-                                        <p className="text-sm font-bold text-primary italic leading-relaxed mb-6 line-clamp-4">"{q.question_text}"</p>
+                                        <p className="text-sm font-bold text-primary italic leading-relaxed mb-4 line-clamp-4">"{q.question_text}"</p>
+                                        <div className="mb-4">
+                                            <Select
+                                                value={q.subject_id || ''}
+                                                onValueChange={val => setExtractedQuestions(prev => prev.map((item, idx) => idx === i ? { ...item, subject_id: val } : item))}
+                                            >
+                                                <SelectTrigger className="h-9 rounded-xl bg-slate-50 border-none font-bold text-xs w-full">
+                                                    <SelectValue placeholder="Selecionar matéria..." />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                    {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-xs">{s.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                         <div className="space-y-2">
                                             {q.options.map(opt => (
                                                 <div key={opt.key} className={`flex items-center gap-3 p-3 rounded-xl border text-[10px] font-medium ${q.correct_answer === opt.key ? 'bg-green-50 border-green-100 text-green-700' : 'bg-slate-50 border-transparent text-muted-foreground'}`}>
