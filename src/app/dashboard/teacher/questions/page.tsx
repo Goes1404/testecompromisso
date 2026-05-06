@@ -20,8 +20,11 @@ import {
     ZapOff,
     Save,
     ArrowRight,
-    Scroll
+    Scroll,
+    Upload,
+    FileText
 } from 'lucide-react';
+import { useRef } from 'react';
 import { QuestionsDashboard } from '@/components/QuestionsDashboard';
 import { QuestionsList } from '@/components/QuestionsList';
 import { supabase } from '@/app/lib/supabase';
@@ -53,6 +56,7 @@ export default function QuestionBankPage() {
     const { toast } = useToast();
     const { user } = useAuth();
     const [entryMode, setEntryMode] = useState<'bulk' | 'manual'>('bulk');
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [subjects, setSubjects] = useState<Subject[]>([]);
     
@@ -130,6 +134,61 @@ export default function QuestionBankPage() {
     };
 
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isReadingFile, setIsReadingFile] = useState(false);
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsReadingFile(true);
+
+        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const text = ev.target?.result as string;
+                setRawText(text || '');
+                toast({ title: 'Arquivo carregado!', description: `${file.name} — ${text.length} caracteres. Clique em "Extrair Questões" para analisar.` });
+                setIsReadingFile(false);
+            };
+            reader.onerror = () => {
+                toast({ title: 'Erro ao ler arquivo', variant: 'destructive' });
+                setIsReadingFile(false);
+            };
+            reader.readAsText(file, 'UTF-8');
+        } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            // For PDFs, use FileReader to read as text (works for text-based PDFs)
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                // Extract readable text from raw PDF bytes (basic approach)
+                const raw = ev.target?.result as string;
+                // Filter printable ASCII text blocks (heuristic extraction)
+                const extracted = raw
+                    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (extracted.length > 100) {
+                    setRawText(extracted);
+                    toast({ title: 'PDF carregado (texto extraído)', description: `${file.name} — Revise o texto extraído antes de analisar.` });
+                } else {
+                    toast({
+                        title: 'PDF com imagens detectado',
+                        description: 'Este PDF não possui texto selecionável. Abra-o, selecione todo o texto (Ctrl+A) e cole no campo de texto.',
+                        variant: 'destructive'
+                    });
+                }
+                setIsReadingFile(false);
+            };
+            reader.onerror = () => {
+                toast({ title: 'Erro ao ler PDF', variant: 'destructive' });
+                setIsReadingFile(false);
+            };
+            reader.readAsBinaryString(file);
+        } else {
+            toast({ title: 'Formato não suportado', description: 'Use arquivos .txt ou .pdf com texto selecionável.', variant: 'destructive' });
+            setIsReadingFile(false);
+        }
+        // Reset input so same file can be re-uploaded
+        e.target.value = '';
+    };
 
     const handleAnalyzeBulk = async () => {
         if (!rawText.trim()) {
@@ -330,17 +389,49 @@ export default function QuestionBankPage() {
                 <CardContent className="p-6">
                     {entryMode === 'bulk' && (
                         <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                            {/* Upload hint */}
+                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-2xl border border-blue-100">
+                                <FileText className="h-5 w-5 text-blue-500 shrink-0" />
+                                <p className="text-xs font-bold text-blue-700">
+                                    Cole o texto da prova abaixo <span className="font-black">ou</span> faça upload de um arquivo <span className="font-black">.txt / .pdf</span> com texto selecionável.
+                                </p>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".txt,.pdf,text/plain,application/pdf"
+                                    className="hidden"
+                                    onChange={handleFileUpload}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isReadingFile}
+                                    className="shrink-0 h-9 rounded-xl border-blue-200 text-blue-600 font-black text-xs hover:bg-blue-100"
+                                >
+                                    {isReadingFile
+                                        ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Lendo...</>
+                                        : <><Upload className="h-4 w-4 mr-1" />Upload</>}
+                                </Button>
+                            </div>
+
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Texto Bruto da Prova</Label>
-                                <Textarea 
-                                    placeholder="Cole aqui o texto copiado de um PDF ou documento..." 
-                                    className="min-h-[150px] rounded-2xl bg-muted/30 border-none p-4 font-medium text-sm leading-relaxed italic" 
-                                    value={rawText} 
-                                    onChange={(e) => setRawText(e.target.value)} 
+                                <Textarea
+                                    placeholder="Cole aqui o texto copiado de um PDF ou documento..."
+                                    className="min-h-[200px] rounded-2xl bg-muted/30 border-none p-4 font-medium text-sm leading-relaxed italic"
+                                    value={rawText}
+                                    onChange={(e) => setRawText(e.target.value)}
                                 />
+                                {rawText && (
+                                    <p className="text-[10px] text-muted-foreground font-medium ml-2">
+                                        {rawText.length.toLocaleString('pt-BR')} caracteres · {rawText.split('\n').length} linhas
+                                    </p>
+                                )}
                             </div>
                             <Button onClick={handleAnalyzeBulk} disabled={isAnalyzing || !rawText.trim()} className="w-full h-12 rounded-2xl bg-primary text-white font-black text-base shadow-xl hover:scale-[1.02] transition-all active:scale-95 mt-2">
-                                {isAnalyzing ? <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Analisando com Aurora IA...</> : <><BrainCircuit className="h-5 w-5 mr-2" /> Extrair Questões com Aurora IA</>}
+                                {isAnalyzing ? <><Loader2 className="h-5 w-5 animate-spin mr-2" />Analisando com Aurora IA...</> : <><BrainCircuit className="h-5 w-5 mr-2" />Extrair Questões com Aurora IA</>}
                             </Button>
                         </div>
                     )}
@@ -381,10 +472,14 @@ export default function QuestionBankPage() {
                                 {manualMicroTopics.length > 0 && (
                                     <div className="space-y-1.5">
                                         <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Micro-tópico</Label>
-                                        <Select value={manualQuestion.micro_topic_id} onValueChange={val => setManualQuestion(prev => ({...prev, micro_topic_id: val}))}>
+                                        <Select
+                                            value={manualQuestion.micro_topic_id || '_none'}
+                                            onValueChange={val => setManualQuestion(prev => ({...prev, micro_topic_id: val === '_none' ? '' : val}))}
+                                        >
                                             <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold text-sm"><SelectValue placeholder="Selecionar tópico (opcional)" /></SelectTrigger>
                                             <SelectContent className="rounded-xl border-none shadow-2xl">
-                                                <SelectItem value="" className="font-bold text-sm">Nenhum (Geral)</SelectItem>
+                                                {/* Use '_none' sentinel — Radix UI forbids empty string values */}
+                                                <SelectItem value="_none" className="font-bold text-sm">Nenhum (Geral)</SelectItem>
                                                 {manualMicroTopics.map(mt => <SelectItem key={mt.id} value={mt.id} className="font-bold text-sm">{mt.name}</SelectItem>)}
                                             </SelectContent>
                                         </Select>

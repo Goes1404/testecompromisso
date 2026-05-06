@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle, Target, Shuffle, ClipboardList } from 'lucide-react';
+import { Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle, Target, Shuffle, ClipboardList, CheckCircle2, XCircle, BookOpen } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { awardXP, checkAndAwardBadges, getTotalAnswered, XP_PER_CORRECT_QUESTION, XP_PER_SIMULADO_COMPLETE, BADGE_META } from '@/lib/gamification';
 
 const SIMULATION_SIZE = 10;
+const ALL_TOPICS = '_all';
 
 type Mode = 'especifico' | 'materia' | 'completo';
 
@@ -30,7 +31,15 @@ type Question = {
   year: number;
   explanation?: string;
 };
-type Answer = { questionId: string; selected: string; correct: string };
+type Answer = {
+  questionId: string;
+  selected: string;
+  correct: string;
+  explanation?: string;
+  question_text: string;
+  options: { key?: string; letter?: string; text: string }[];
+  subject: string | null;
+};
 
 type GameState = 'loading_subjects' | 'idle' | 'loading_questions' | 'active' | 'finished' | 'error';
 
@@ -43,7 +52,8 @@ export default function SimuladoPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [microTopics, setMicroTopics] = useState<MicroTopic[]>([]);
-  const [selectedMicroTopicId, setSelectedMicroTopicId] = useState<string>('');
+  // Use '_all' as sentinel to avoid empty string in SelectItem
+  const [selectedMicroTopicId, setSelectedMicroTopicId] = useState<string>(ALL_TOPICS);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -81,16 +91,21 @@ export default function SimuladoPage() {
 
   const buildQuery = () => {
     let q = supabase.from('questions').select('*, subjects(name)');
-    if (mode === 'materia' || mode === 'especifico') {
-      if (selectedSubjectId) q = q.eq('subject_id', selectedSubjectId) as any;
+
+    // Only apply subject filter if a subject is actually selected
+    if ((mode === 'materia' || mode === 'especifico') && selectedSubjectId) {
+      q = q.eq('subject_id', selectedSubjectId) as any;
     }
-    if (mode === 'especifico' && selectedMicroTopicId) {
+
+    // Only apply micro-topic filter if one is selected (not the sentinel value)
+    if (mode === 'especifico' && selectedMicroTopicId && selectedMicroTopicId !== ALL_TOPICS) {
       q = q.eq('micro_topic_id', selectedMicroTopicId) as any;
     }
+
     if (profile?.profile_type) {
       q = q.or(`target_audience.eq.all,target_audience.eq.${profile.profile_type},target_audience.is.null`) as any;
     } else {
-      q = q.or('target_audience.eq.all,target_audience.is.null') as any;
+      q = q.or('target_audience.eq.all,target_audience.eq.student,target_audience.is.null') as any;
     }
     return q.limit(200);
   };
@@ -104,11 +119,12 @@ export default function SimuladoPage() {
       let items: any[] = [];
 
       if (error) {
-        // Fallback without target_audience filter
-        const { data: fb, error: fbErr } = await supabase
-          .from('questions').select('*, subjects(name)')
-          .eq('subject_id', selectedSubjectId)
-          .limit(200);
+        // Fallback without target_audience filter — only filter by subject if one is selected
+        let fbQuery = supabase.from('questions').select('*, subjects(name)');
+        if (selectedSubjectId) {
+          fbQuery = fbQuery.eq('subject_id', selectedSubjectId) as any;
+        }
+        const { data: fb, error: fbErr } = await fbQuery.limit(200);
         if (fbErr) throw fbErr;
         items = fb ?? [];
       } else {
@@ -138,12 +154,21 @@ export default function SimuladoPage() {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       setGameState('error');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, selectedSubjectId, selectedMicroTopicId, profile, toast]);
 
   const handleNext = async () => {
     if (!selectedAnswer || !questions[currentIndex]) return;
     const q = questions[currentIndex];
-    const newAnswer: Answer = { questionId: q.id, selected: selectedAnswer, correct: q.correct_answer };
+    const newAnswer: Answer = {
+      questionId: q.id,
+      selected: selectedAnswer,
+      correct: q.correct_answer,
+      explanation: q.explanation,
+      question_text: q.question_text,
+      options: q.options,
+      subject: q.subjects?.name ?? null,
+    };
     const newAnswers = [...answers, newAnswer];
     setAnswers(newAnswers);
     setSelectedAnswer(null);
@@ -289,25 +314,100 @@ export default function SimuladoPage() {
   // ── FINISHED ──
   if (gameState === 'finished') {
     return (
-      <div className="h-full w-full flex items-center justify-center p-4">
-        <Card className="w-full max-w-xl text-center p-8 md:p-16 shadow-2xl rounded-[2rem] md:rounded-[3rem] bg-white border-none">
-          <CardHeader>
-            <div className={`h-20 w-20 rounded-2xl flex items-center justify-center mx-auto mb-6 ${pct >= 60 ? 'bg-green-100' : 'bg-amber-100'}`}>
+      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24 px-4">
+        {/* Score Card */}
+        <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className={`h-20 w-20 rounded-2xl flex items-center justify-center mx-auto ${pct >= 60 ? 'bg-green-100' : 'bg-amber-100'}`}>
               <Award className={`h-10 w-10 ${pct >= 60 ? 'text-green-600' : 'text-amber-600'}`} />
             </div>
-            <CardTitle className="text-3xl font-black text-primary italic">Simulado Concluído!</CardTitle>
-            <div className="mt-4 p-6 bg-slate-50 rounded-2xl space-y-2">
-              <p className="text-5xl font-black text-primary italic">{score} / {questions.length}</p>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{pct}% de Aproveitamento</p>
-              <Progress value={pct} className="h-2 rounded-full mt-2" />
+            <h2 className="text-3xl font-black text-primary italic">Simulado Concluído!</h2>
+            <div className="flex justify-center gap-8 py-2">
+              <div className="text-center">
+                <p className="text-4xl font-black text-green-500">{score}</p>
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Acertos</p>
+              </div>
+              <div className="text-center">
+                <p className="text-4xl font-black text-red-400">{answers.length - score}</p>
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Erros</p>
+              </div>
+              <div className="text-center">
+                <p className="text-4xl font-black text-primary">{pct}%</p>
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Aproveitamento</p>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button onClick={() => { setGameState('idle'); setAnswers([]); }} className="w-full h-14 rounded-xl bg-primary font-black">
+            <Progress value={pct} className="h-3 rounded-full" />
+            <Button
+              onClick={() => { setGameState('idle'); setAnswers([]); }}
+              className="w-full h-12 rounded-2xl bg-primary text-white font-black shadow-xl mt-2"
+            >
               <RotateCw className="h-5 w-5 mr-2" /> Novo Simulado
             </Button>
           </CardContent>
         </Card>
+
+        {/* Gabarito Comentado */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-black text-primary italic px-2">Gabarito Comentado</h3>
+          {answers.map((ans, i) => {
+            const isCorrect = ans.selected === ans.correct;
+            const getOptKey = (o: any) => o.key || o.letter || '';
+            return (
+              <Card key={ans.questionId} className="border-none shadow-lg bg-white rounded-[2rem]">
+                <CardContent className="p-6 space-y-3">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {isCorrect
+                      ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                      : <XCircle className="h-5 w-5 text-red-400 shrink-0" />
+                    }
+                    <Badge className={`border-none font-black text-[9px] uppercase ${isCorrect ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-500'}`}>
+                      Questão {i + 1} — {isCorrect ? 'Acerto' : 'Erro'}
+                    </Badge>
+                    {ans.subject && (
+                      <Badge className="bg-accent/10 text-accent border-none font-black text-[9px] uppercase">{ans.subject}</Badge>
+                    )}
+                  </div>
+
+                  {/* Question text */}
+                  <p className="text-sm font-bold text-primary italic leading-relaxed line-clamp-3">{ans.question_text}</p>
+
+                  {/* Options with color feedback */}
+                  <div className="space-y-1.5">
+                    {(ans.options || []).map((opt: any) => {
+                      const key = getOptKey(opt);
+                      const isCorrectOpt = key === ans.correct;
+                      const isSelectedOpt = key === ans.selected;
+                      return (
+                        <div
+                          key={key}
+                          className={`flex items-center gap-3 p-2.5 rounded-xl text-xs font-medium transition-all
+                            ${isCorrectOpt ? 'bg-green-50 border border-green-200 text-green-700' : ''}
+                            ${isSelectedOpt && !isCorrect ? 'bg-red-50 border border-red-200 text-red-500 line-through' : ''}
+                            ${!isCorrectOpt && !isSelectedOpt ? 'text-muted-foreground bg-slate-50' : ''}
+                          `}
+                        >
+                          <span className="font-black italic w-5 shrink-0">{key.toUpperCase()})</span>
+                          <span className="flex-1">{opt.text}</span>
+                          {isCorrectOpt && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 ml-auto shrink-0" />}
+                          {isSelectedOpt && !isCorrect && <XCircle className="h-3.5 w-3.5 text-red-400 ml-auto shrink-0" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Explanation */}
+                  {ans.explanation && (
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mt-1 flex gap-2">
+                      <BookOpen className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-xs font-bold text-amber-700 italic leading-relaxed">{ans.explanation}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     );
   }
@@ -340,7 +440,7 @@ export default function SimuladoPage() {
         {MODES.map(m => (
           <button
             key={m.id}
-            onClick={() => { setMode(m.id); setSelectedSubjectId(''); setSelectedMicroTopicId(''); }}
+            onClick={() => { setMode(m.id); setSelectedSubjectId(''); setSelectedMicroTopicId(ALL_TOPICS); }}
             className={`p-5 rounded-[2rem] border-2 text-left transition-all hover:shadow-lg ${
               mode === m.id ? 'border-primary bg-primary/5 shadow-xl' : 'border-muted/20 bg-white'
             }`}
@@ -380,7 +480,8 @@ export default function SimuladoPage() {
                     <SelectValue placeholder={microTopics.length === 0 ? 'Sem micro-tópicos cadastrados' : 'Todos os tópicos'} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    <SelectItem value="" className="font-bold">Todos os tópicos</SelectItem>
+                    {/* Using '_all' sentinel instead of empty string — Radix UI forbids empty string values */}
+                    <SelectItem value={ALL_TOPICS} className="font-bold">Todos os tópicos</SelectItem>
                     {microTopics.map(mt => (
                       <SelectItem key={mt.id} value={mt.id} className="font-bold">{mt.name}</SelectItem>
                     ))}
