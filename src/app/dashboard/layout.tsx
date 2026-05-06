@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,6 +37,7 @@ const studentItems: NavItem[] = [
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live", id: "nav-live" },
   { icon: MessagesSquare, label: "Comunidade", href: "/dashboard/forum", id: "nav-forum" },
   { icon: MessageSquare, label: "Tirar Dúvidas", href: "/dashboard/chat", badge: true, id: "nav-chat" },
+  { icon: CalendarDays, label: "Calendário", href: "/dashboard/student/calendar", id: "nav-calendar" },
   { icon: FileCheck, label: "Meus Documentos", href: "/dashboard/student/documents", id: "nav-documents" },
   { icon: Settings, label: "Meu Perfil", href: "/dashboard/settings", id: "nav-settings" },
 ];
@@ -52,6 +53,7 @@ const teacherItems = [
   { icon: MonitorPlay, label: "Gerenciar Lives", href: "/dashboard/teacher/live", id: "nav-teacher-live" },
   { icon: MessagesSquare, label: "Fórum Pedagógico", href: "/dashboard/forum", id: "nav-teacher-forum" },
   { icon: MessageSquare, label: "Chats com Alunos", href: "/dashboard/chat", badge: true, id: "nav-teacher-chat" },
+  { icon: CalendarDays, label: "Calendário", href: "/dashboard/teacher/calendar", id: "nav-teacher-calendar" },
   { icon: Bell, label: "Mural de Avisos", href: "/dashboard/teacher/communication", id: "nav-teacher-communication" },
   { icon: HelpCircle, label: "Central de Ajuda", href: "/dashboard/teacher/help", id: "nav-teacher-help" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings", id: "nav-teacher-settings" },

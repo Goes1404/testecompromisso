@@ -36,6 +36,9 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
+import { GamificationWidget } from "@/components/GamificationWidget";
+import { UpcomingEventsWidget } from "@/components/UpcomingEventsWidget";
+import { StudySuggestionWidget } from "@/components/StudySuggestionWidget";
 
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 
@@ -344,6 +347,9 @@ export default function DashboardHome() {
         </div>
       </div>
 
+      {/* ── SUGESTÃO DE ESTUDO ── */}
+      {user && <StudySuggestionWidget userId={user.id} />}
+
       {/* ── MAIN CONTENT GRID ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -594,6 +600,12 @@ export default function DashboardHome() {
               )}
             </div>
           </div>
+
+          {/* Gamificação */}
+          {user && <GamificationWidget userId={user.id} />}
+
+          {/* Próximos Eventos */}
+          <UpcomingEventsWidget />
         </div>
       </div>
 

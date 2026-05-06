@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select"
 
 type Subject = { id: string; name: string };
+type MicroTopic = { id: string; name: string };
 type QuestionOption = { key: string; text: string };
 type ParsedQuestion = {
     question_text: string;
@@ -45,6 +46,7 @@ type ParsedQuestion = {
     explanation?: string;
     subject_name?: string;
     subject_id?: string;
+    micro_topic_id?: string;
 };
 
 export default function QuestionBankPage() {
@@ -60,11 +62,13 @@ export default function QuestionBankPage() {
     
     
     // Manual States
-    const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '', target_audience: 'all', explanation: '' });
+    const [manualQuestion, setManualQuestion] = useState({ question_text: '', year: new Date().getFullYear(), subject_id: '', correct_answer: '', target_audience: 'all', explanation: '', micro_topic_id: '' });
     const [manualOptions, setManualOptions] = useState({ A: '', B: '', C: '', D: '', E: '' });
     
     const [bulkSubjectId, setBulkSubjectId] = useState<string>('');
     const [bulkTargetAudience, setBulkTargetAudience] = useState<string>('all');
+    const [microTopics, setMicroTopics] = useState<MicroTopic[]>([]);
+    const [manualMicroTopics, setManualMicroTopics] = useState<MicroTopic[]>([]);
 
     // Exam creation states
     const [createExam, setCreateExam] = useState(false);
@@ -93,6 +97,28 @@ export default function QuestionBankPage() {
         };
         fetchSubjects();
     }, [toast]);
+
+    // Fetch micro-topics when manual subject changes
+    useEffect(() => {
+        if (!manualQuestion.subject_id) { setManualMicroTopics([]); return; }
+        supabase
+            .from('micro_topics')
+            .select('id, name')
+            .eq('subject_id', manualQuestion.subject_id)
+            .order('name')
+            .then(({ data }) => setManualMicroTopics(data ?? []));
+    }, [manualQuestion.subject_id]);
+
+    // Fetch micro-topics when bulk subject changes
+    useEffect(() => {
+        if (!bulkSubjectId) { setMicroTopics([]); return; }
+        supabase
+            .from('micro_topics')
+            .select('id, name')
+            .eq('subject_id', bulkSubjectId)
+            .order('name')
+            .then(({ data }) => setMicroTopics(data ?? []));
+    }, [bulkSubjectId]);
 
     const resolveSubjectId = (name: string | undefined, subjectList: Subject[]): string | undefined => {
         if (!name || subjectList.length === 0) return undefined;
@@ -242,6 +268,9 @@ export default function QuestionBankPage() {
                 teacher_id: user.id
             };
 
+            // Include micro_topic_id if selected
+            if (manualQuestion.micro_topic_id) insertData.micro_topic_id = manualQuestion.micro_topic_id;
+
             // Only include newer columns if filled
             if (manualQuestion.explanation) insertData.explanation = manualQuestion.explanation;
             if (manualQuestion.target_audience !== 'all') insertData.target_audience = manualQuestion.target_audience;
@@ -261,7 +290,7 @@ export default function QuestionBankPage() {
 
             if (error) throw error;
             toast({ title: "Questão Salva!" });
-            setManualQuestion(prev => ({ ...prev, question_text: '', explanation: '' }));
+            setManualQuestion(prev => ({ ...prev, question_text: '', explanation: '', micro_topic_id: '' }));
             setManualOptions({ A: '', B: '', C: '', D: '', E: '' });
         } catch (err: any) {
             toast({ title: "Falha ao salvar", description: err.message, variant: 'destructive' });
@@ -349,6 +378,18 @@ export default function QuestionBankPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                {manualMicroTopics.length > 0 && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Micro-tópico</Label>
+                                        <Select value={manualQuestion.micro_topic_id} onValueChange={val => setManualQuestion(prev => ({...prev, micro_topic_id: val}))}>
+                                            <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold text-sm"><SelectValue placeholder="Selecionar tópico (opcional)" /></SelectTrigger>
+                                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                <SelectItem value="" className="font-bold text-sm">Nenhum (Geral)</SelectItem>
+                                                {manualMicroTopics.map(mt => <SelectItem key={mt.id} value={mt.id} className="font-bold text-sm">{mt.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
                                 <div className="space-y-1.5">
                                     <Label className="text-[9px] font-black uppercase opacity-40 ml-2">Público Alvo</Label>
                                     <Select value={manualQuestion.target_audience} onValueChange={val => setManualQuestion(prev => ({...prev, target_audience: val}))}>
