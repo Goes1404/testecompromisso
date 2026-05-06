@@ -179,7 +179,7 @@ export default function SimuladoPage() {
         student_id: user.id,
         question_id: q.id,
         selected_option: selectedAnswer,
-        is_correct: selectedAnswer === q.correct_answer,
+        is_correct: norm(selectedAnswer) === norm(q.correct_answer),
       }).then(() => {});
     }
 
@@ -187,7 +187,7 @@ export default function SimuladoPage() {
       setCurrentIndex(i => i + 1);
     } else {
       // Finish
-      const score = newAnswers.filter(a => a.selected === a.correct).length;
+      const score = newAnswers.filter(a => norm(a.selected) === norm(a.correct)).length;
       const total = newAnswers.length;
 
       // Save simulation attempt
@@ -221,7 +221,9 @@ export default function SimuladoPage() {
     }
   };
 
-  const score = answers.filter(a => a.selected === a.correct).length;
+  // Normalize answer key for comparison (DB might store 'A', options might have 'a')
+  const norm = (v: string | undefined | null) => (v ?? '').trim().toUpperCase();
+  const score = answers.filter(a => norm(a.selected) === norm(a.correct)).length;
   const pct = answers.length > 0 ? Math.round((score / answers.length) * 100) : 0;
   const currentQuestion = questions[currentIndex];
   const progress = questions.length > 0 ? (currentIndex / questions.length) * 100 : 0;
@@ -350,7 +352,7 @@ export default function SimuladoPage() {
         <div className="space-y-4">
           <h3 className="text-xl font-black text-primary italic px-2">Gabarito Comentado</h3>
           {answers.map((ans, i) => {
-            const isCorrect = ans.selected === ans.correct;
+            const isCorrect = norm(ans.selected) === norm(ans.correct);
             const getOptKey = (o: any) => o.key || o.letter || '';
             return (
               <Card key={ans.questionId} className="border-none shadow-lg bg-white rounded-[2rem]">
@@ -376,21 +378,23 @@ export default function SimuladoPage() {
                   <div className="space-y-1.5">
                     {(ans.options || []).map((opt: any) => {
                       const key = getOptKey(opt);
-                      const isCorrectOpt = key === ans.correct;
-                      const isSelectedOpt = key === ans.selected;
+                      // Normalise to uppercase to handle DB storing 'A' vs option key 'a'
+                      const isCorrectOpt = norm(key) === norm(ans.correct);
+                      const isSelectedOpt = norm(key) === norm(ans.selected);
+                      const wasWrong = isSelectedOpt && norm(ans.selected) !== norm(ans.correct);
                       return (
-                        <div
-                          key={key}
-                          className={`flex items-center gap-3 p-2.5 rounded-xl text-xs font-medium transition-all
-                            ${isCorrectOpt ? 'bg-green-50 border border-green-200 text-green-700' : ''}
-                            ${isSelectedOpt && !isCorrect ? 'bg-red-50 border border-red-200 text-red-500 line-through' : ''}
-                            ${!isCorrectOpt && !isSelectedOpt ? 'text-muted-foreground bg-slate-50' : ''}
+                          <div
+                          key={key || opt.text}
+                          className={`flex items-center gap-3 p-2.5 rounded-xl text-xs font-medium transition-all border
+                            ${isCorrectOpt ? 'bg-green-50 border-green-200 text-green-700 font-bold' : ''}
+                            ${wasWrong ? 'bg-red-50 border-red-200 text-red-500 line-through' : ''}
+                            ${!isCorrectOpt && !wasWrong ? 'text-muted-foreground bg-slate-50 border-transparent' : ''}
                           `}
                         >
-                          <span className="font-black italic w-5 shrink-0">{key.toUpperCase()})</span>
+                          <span className="font-black italic w-5 shrink-0">{(key || '?').toUpperCase()})</span>
                           <span className="flex-1">{opt.text}</span>
                           {isCorrectOpt && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 ml-auto shrink-0" />}
-                          {isSelectedOpt && !isCorrect && <XCircle className="h-3.5 w-3.5 text-red-400 ml-auto shrink-0" />}
+                          {wasWrong && <XCircle className="h-3.5 w-3.5 text-red-400 ml-auto shrink-0" />}
                         </div>
                       );
                     })}

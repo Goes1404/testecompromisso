@@ -155,33 +155,54 @@ export default function QuestionBankPage() {
             };
             reader.readAsText(file, 'UTF-8');
         } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-            // For PDFs, use FileReader to read as text (works for text-based PDFs)
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                // Extract readable text from raw PDF bytes (basic approach)
-                const raw = ev.target?.result as string;
-                // Filter printable ASCII text blocks (heuristic extraction)
-                const extracted = raw
-                    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-                if (extracted.length > 100) {
-                    setRawText(extracted);
-                    toast({ title: 'PDF carregado (texto extraído)', description: `${file.name} — Revise o texto extraído antes de analisar.` });
-                } else {
+            reader.onload = async (ev) => {
+                const typedarray = new Uint8Array(ev.target?.result as ArrayBuffer);
+                
+                try {
+                    // Load pdfjs-dist dynamically from CDN if not already loaded
+                    if (!(window as any).pdfjsLib) {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                        document.head.appendChild(script);
+                        await new Promise((resolve) => { script.onload = resolve; });
+                    }
+                    
+                    const pdfjsLib = (window as any).pdfjsLib;
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = '';
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                        fullText += pageText + '\n';
+                    }
+                    
+                    if (fullText.trim().length > 50) {
+                        setRawText(fullText.trim());
+                        toast({ title: 'PDF carregado com sucesso!', description: `${file.name} — ${fullText.length} caracteres extraídos.` });
+                    } else {
+                        throw new Error('Texto insuficiente extraído');
+                    }
+                } catch (err) {
+                    console.error('PDF Error:', err);
                     toast({
-                        title: 'PDF com imagens detectado',
-                        description: 'Este PDF não possui texto selecionável. Abra-o, selecione todo o texto (Ctrl+A) e cole no campo de texto.',
+                        title: 'Erro ao extrair PDF',
+                        description: 'Este PDF pode ser uma imagem ou estar protegido. Tente copiar e colar o texto manualmente.',
                         variant: 'destructive'
                     });
+                } finally {
+                    setIsReadingFile(false);
                 }
-                setIsReadingFile(false);
             };
             reader.onerror = () => {
-                toast({ title: 'Erro ao ler PDF', variant: 'destructive' });
+                toast({ title: 'Erro ao ler arquivo', variant: 'destructive' });
                 setIsReadingFile(false);
             };
-            reader.readAsBinaryString(file);
+            reader.readAsArrayBuffer(file);
         } else {
             toast({ title: 'Formato não suportado', description: 'Use arquivos .txt ou .pdf com texto selecionável.', variant: 'destructive' });
             setIsReadingFile(false);
