@@ -163,13 +163,14 @@ export default function QuestionBankPage() {
                     // Load pdfjs-dist dynamically from CDN if not already loaded
                     if (!(window as any).pdfjsLib) {
                         const script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
+                        script.type = 'module';
                         document.head.appendChild(script);
                         await new Promise((resolve) => { script.onload = resolve; });
                     }
                     
                     const pdfjsLib = (window as any).pdfjsLib;
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
                     
                     const pdf = await pdfjsLib.getDocument(typedarray).promise;
                     let fullText = '';
@@ -218,50 +219,85 @@ export default function QuestionBankPage() {
         }
 
         setIsAnalyzing(true);
+        setExtractedQuestions([]); // Limpa as questões extraídas anteriormente
+
         try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [
-                        {
-                            role: 'user',
-                            content: `Analise o texto abaixo e extraia TODAS as questões de múltipla escolha encontradas. Responda EXCLUSIVAMENTE com um JSON válido contendo a chave "questions" que mapeia para um array de objetos. Cada objeto deve ter: "question_text" (string com o enunciado completo), "options" (array de objetos com "key" e "text"), "correct_answer" (string com a letra), "year" (número), "explanation" (string curta explicando por que a resposta está certa), "subject_name" (string com a disciplina principal da questão, escolha UMA de: Matemática, Português, Física, Química, Biologia, História, Geografia, Inglês, Espanhol, Artes, Educação Física, Filosofia, Sociologia, Redação, Atualidades, Não Categorizado). Se não conseguir identificar o gabarito, coloque "A" como padrão. Se não identificar o ano, use ${new Date().getFullYear()}.\n\nTEXTO DA PROVA:\n${rawText}`
-                        }
-                    ]
-                })
-            });
-
-            const data = await response.json();
-            
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || "Erro na análise da Aurora IA.");
+            // Divide o texto em blocos de ~12.000 caracteres para evitar o timeout de 15s da Vercel (Hobby)
+            const CHUNK_SIZE = 6000; // Reduzido de 12000 para evitar 504 Gateway Timeout
+            const chunks: string[] = [];
+            for (let i = 0; i < rawText.length; i += CHUNK_SIZE) {
+                chunks.push(rawText.substring(i, i + CHUNK_SIZE));
             }
 
-            const responseText = data.result?.response || '';
-            
-            // Tentar extrair JSON da resposta
-            let parsed: any;
-            const jsonMatch = responseText.match(/\{[\s\S]*"questions"[\s\S]*\}/);
-            if (jsonMatch) {
-                parsed = JSON.parse(jsonMatch[0]);
-            } else {
-                // Tenta parsear a resposta inteira como JSON
-                parsed = JSON.parse(responseText);
+            if (chunks.length > 1) {
+                toast({ title: "Arquivo grande detectado", description: `Dividindo em ${chunks.length} partes para evitar erro de timeout.` });
             }
 
-            const questions = parsed.questions || parsed;
-            
-            if (Array.isArray(questions) && questions.length > 0) {
-                const withIds = questions.map((q: ParsedQuestion) => ({
+            const allExtracted: any[] = [];
+
+            for (let i = 0; i < chunks.length; i++) {
+                if (chunks.length > 1) {
+                    toast({ description: `Analisando parte ${i + 1} de ${chunks.length}...` });
+                }
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [
+                            {
+                                role: 'user',
+                                content: `Analise este fragmento de texto (${i + 1}/${chunks.length}) e extraia as questões de múltipla escolha. 
+                                Responda EXCLUSIVAMENTE com um JSON válido: {"questions": [{"question_text": "...", "options": [{"key": "A", "text": "..."}], "correct_answer": "A", "year": 2024, "explanation": "...", "subject_name": "Matemática"}]}
+                                
+                                TEXTO:\n${chunks[i]}`
+                            }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    // Se falhar por timeout (504), tenta avisar o usuário
+                    if (response.status === 504) throw new Error(`A parte ${i+1} demorou demais para processar. Tente enviar um texto menor.`);
+                    throw new Error(`Erro no servidor (Status ${response.status}) na parte ${i+1}.`);
+                }
+
+                let data;
+                try {
+                    const textResponse = await response.text();
+                    data = JSON.parse(textResponse);
+                } catch (parseError) {
+                    console.error("Erro ao parsear JSON da resposta:", parseError);
+                    if (response.status === 504) {
+                        throw new Error(`A parte ${i+1} demorou demais para processar (Timeout). Tente enviar um texto menor.`);
+                    }
+                    throw new Error(`A Aurora retornou um formato inválido na parte ${i+1}. Verifique sua conexão.`);
+                }
+
+                if (!data.success) throw new Error(data.error || "Erro na análise da Aurora.");
+
+                const responseText = data.result?.response || '';
+                let parsed: any;
+                const jsonMatch = responseText.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+                try {
+                    parsed = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+                    const chunkQuestions = parsed.questions || (Array.isArray(parsed) ? parsed : []);
+                    allExtracted.push(...chunkQuestions);
+                } catch (e) {
+                    console.error("Erro ao parsear JSON da parte", i, responseText);
+                    // Continua para as outras partes mesmo se uma falhar
+                }
+            }
+
+            if (allExtracted.length > 0) {
+                const withIds = allExtracted.map((q: any) => ({
                     ...q,
                     subject_id: resolveSubjectId(q.subject_name, subjects) || bulkSubjectId,
                 }));
                 setExtractedQuestions(withIds);
-                const autoTagged = withIds.filter(q => q.subject_id && q.subject_id !== bulkSubjectId).length;
-                toast({ title: `${questions.length} questões extraídas!`, description: autoTagged > 0 ? `${autoTagged} categorizadas automaticamente pela Aurora IA.` : "Revise e vincule a uma matéria antes de salvar." });
+                toast({ title: `${allExtracted.length} questões extraídas com sucesso!`, description: "Revise os dados abaixo antes de salvar no banco." });
             } else {
-                toast({ title: "Nenhuma questão encontrada", description: "A Aurora não conseguiu identificar questões no texto. Tente um formato mais claro.", variant: "destructive" });
+                toast({ title: "Nenhuma questão encontrada", description: "A Aurora não conseguiu identificar questões no texto.", variant: "destructive" });
             }
         } catch (e: any) {
             console.error("Erro na análise em massa:", e);

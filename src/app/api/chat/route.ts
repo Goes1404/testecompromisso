@@ -28,8 +28,11 @@ DIRETRIZES FUNDAMENTAIS DE COMUNICAÇÃO:
 3. MÉTODO DE ENSINO: Ao finalizar qualquer feedback ou explicação, entregue uma "Dica de Ouro" prática e aplicável imediatamente para o ENEM ou ETEC.
 4. ENCORAJAMENTO DIDÁTICO: Mantenha uma postura acolhedora, garantindo que o aluno se sinta motivado e confiante a continuar aprendendo, mesmo após uma correção dura.
 
-Lembre-se: Verifique, cruze e valide toda informação internamente antes de gerar a resposta. Se houver dúvida, diga que não sabe.`,
+Lembre-se: Verifique, cruze e valide toda informação internamente antes de gerar a resposta. Se houver dúvida, diga que não sabe.
+Caso o usuário peça para extrair dados em JSON, seja extremamente rigoroso com o formato e não inclua nenhum texto explicativo fora do JSON.`,
       messages,
+      // Limitamos o número de tokens para evitar respostas excessivamente longas e timeouts.
+      maxTokens: 2000,
     });
 
     // Retorna a resposta empacotada em JSON fechado para o frontend antigo
