@@ -110,7 +110,7 @@ export function NotificationBell() {
   return (
     <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full hover:bg-primary/5 transition-all">
+        <Button variant="ghost" size="icon" className={`relative h-10 w-10 rounded-full hover:bg-primary/5 transition-[transform,box-shadow] ${unreadCount > 0 ? 'glow-orange' : ''}`}>
           <Bell className="h-5 w-5 text-primary/60 group-hover:text-primary" />
           {unreadCount > 0 && (
             <Badge className="absolute -top-1 -right-1 h-4 min-w-4 p-0 flex items-center justify-center bg-accent text-accent-foreground border-2 border-white text-[8px] font-black animate-bounce">
@@ -119,7 +119,7 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[320px] md:w-[380px] rounded-[2rem] border-none shadow-2xl p-4 bg-white animate-in zoom-in-95 duration-200">
+      <DropdownMenuContent align="end" className="gradient-border w-[min(320px,calc(100vw-1rem))] md:w-[380px] rounded-[2rem] border-none shadow-2xl p-4 bg-white animate-in zoom-in-95 duration-200">
         <DropdownMenuLabel className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

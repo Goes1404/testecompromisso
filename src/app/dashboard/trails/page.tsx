@@ -155,13 +155,14 @@ export default function LearningTrailsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1 md:px-4">
-      <section className="relative overflow-hidden bg-slate-950 rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl text-center border border-white/5">
-        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-primary/20 rounded-full blur-[80px] animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-primary/10 rounded-full blur-[60px]" />
+      <section className="aurora-dark relative overflow-hidden rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl text-center border border-white/5">
+        <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
+        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-primary/20 rounded-full blur-[80px] hidden md:block" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-primary/10 rounded-full blur-[60px] hidden md:block" />
         <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
           <Badge className="bg-primary/10 text-primary border border-primary/20 font-black text-[9px] px-4 py-1.5 uppercase tracking-wider shadow-xl">COMPROMISSO 360</Badge>
           <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase">
-            Sua Rota de <br/><span className="text-primary italic underline decoration-primary/30 decoration-8 underline-offset-8">Alta Performance</span>
+            Sua Rota de <br/><span className="text-gradient-brand italic">Alta Performance</span>
           </h1>
           <p className="text-sm md:text-xl text-gray-400 font-medium italic leading-relaxed max-w-xl mx-auto">
             Escolha um dos eixos temáticos e inicie sua jornada guiada rumo ao sucesso acadêmico.
@@ -222,13 +223,14 @@ export default function LearningTrailsPage() {
           const isPinned = !!userProgress;
 
           return (
-            <Card key={trail.id} className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 bg-white rounded-[2.5rem] flex flex-col h-full animate-in fade-in slide-in-from-bottom-4">
+            <Card key={trail.id} className="gradient-border group overflow-hidden border-none shadow-xl hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 bg-white rounded-[2.5rem] flex flex-col h-full">
               <div className="relative aspect-video overflow-hidden shrink-0">
-                <Image 
-                  src={trail.image_url || `https://picsum.photos/seed/trail-${trail.id}/800/450`} 
-                  alt={trail.title} 
-                  fill 
-                  className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                <Image
+                  src={trail.image_url || `https://picsum.photos/seed/trail-${trail.id}/800/450`}
+                  alt={trail.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-60" />
                 <div className="absolute top-5 left-5">
@@ -299,7 +301,7 @@ export default function LearningTrailsPage() {
                       <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Especialista</span>
                     </div>
                   </div>
-                  <Button asChild className="w-full sm:w-auto bg-primary text-white font-black text-[10px] uppercase h-12 px-6 sm:px-8 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all group/btn border-none shrink-0">
+                  <Button asChild className="btn-shimmer w-full sm:w-auto bg-primary text-white font-black text-[10px] uppercase h-12 px-6 sm:px-8 rounded-2xl shadow-xl active:scale-95 transition-[transform,box-shadow] [touch-action:manipulation] group/btn border-none shrink-0">
                     <Link href={`/dashboard/classroom/${trail.id}`}>
                       Entrar <ChevronRight className="h-4 w-4 ml-2 text-accent group-hover/btn:translate-x-1 transition-transform" />
                     </Link>

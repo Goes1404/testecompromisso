@@ -26,9 +26,15 @@ import {
     BookOpen,
     CheckCircle2,
     Sparkles,
+    ImageIcon,
+    X,
 } from 'lucide-react';
 import { useRef } from 'react';
-import { QuestionsDashboard } from '@/components/QuestionsDashboard';
+import dynamic from 'next/dynamic';
+const QuestionsDashboard = dynamic(
+  () => import('@/components/QuestionsDashboard').then(m => ({ default: m.QuestionsDashboard })),
+  { ssr: false }
+);
 import { QuestionsList } from '@/components/QuestionsList';
 import { supabase } from '@/app/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
@@ -54,6 +60,8 @@ type ParsedQuestion = {
     subject_id?: string;
     micro_topic_id?: string;
     supporting_text?: string;
+    image_url?: string;
+    _uploadingImage?: boolean;
 };
 
 type ExtractionProgress = {
@@ -369,6 +377,7 @@ TEXTO PARA EXTRAÇÃO (Parte ${i + 1}/${chunks.length}):\n${chunks[i]}`
                 };
                 if (q.explanation) item.explanation = q.explanation;
                 if (q.supporting_text) item.supporting_text = q.supporting_text;
+                if (q.image_url) item.image_url = q.image_url;
                 if (bulkTargetAudience !== 'all') item.target_audience = bulkTargetAudience;
                 return item;
             });
@@ -413,6 +422,29 @@ TEXTO PARA EXTRAÇÃO (Parte ${i + 1}/${chunks.length}):\n${chunks[i]}`
             toast({ title: "Erro ao gravar", description: e.message, variant: "destructive" });
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleImageUpload = async (index: number, file: File) => {
+        if (!file.type.startsWith('image/')) {
+            toast({ title: "Arquivo inválido", description: "Selecione uma imagem (PNG, JPG, WEBP).", variant: "destructive" });
+            return;
+        }
+        setExtractedQuestions(prev => prev.map((q, i) => i === index ? { ...q, _uploadingImage: true } : q));
+        try {
+            const ext = file.name.split('.').pop();
+            const path = `questions/${Date.now()}_${index}.${ext}`;
+            const { error: upErr } = await supabase.storage.from('question-images').upload(path, file, { upsert: true });
+            if (upErr) throw upErr;
+            const { data: urlData } = supabase.storage.from('question-images').getPublicUrl(path);
+            const publicUrl = urlData.publicUrl;
+            setExtractedQuestions(prev => prev.map((q, i) =>
+                i === index ? { ...q, image_url: publicUrl, _uploadingImage: false } : q
+            ));
+            toast({ title: "Imagem vinculada!", description: "A imagem foi associada à questão." });
+        } catch (e: any) {
+            toast({ title: "Erro no upload", description: e.message || "Verifique se o bucket 'question-images' existe no Supabase.", variant: "destructive" });
+            setExtractedQuestions(prev => prev.map((q, i) => i === index ? { ...q, _uploadingImage: false } : q));
         }
     };
 
@@ -756,6 +788,49 @@ TEXTO PARA EXTRAÇÃO (Parte ${i + 1}/${chunks.length}):\n${chunks[i]}`
                                                 <Badge className="bg-green-50 text-green-600 border-none font-black text-[8px] uppercase px-3">IA: {q.subject_name}</Badge>
                                             )}
                                         </div>
+
+                                        {/* Detecção de Imagem Pendente e Upload */}
+                                        {/* Detecção de Imagem Pendente e Upload */}
+                                        {(q.question_text.includes('[IMAGEM_PENDENTE]') || q.supporting_text?.includes('[IMAGEM_PENDENTE]') || (q as any).image_url) && (
+                                            <div className={`mb-4 p-4 rounded-2xl border-2 border-dashed transition-all ${(q as any).image_url ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}`}>
+                                                {(q as any).image_url ? (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[10px] font-black text-green-600 uppercase">Imagem Vinculada ✅</span>
+                                                            <Button variant="ghost" size="sm" onClick={() => setExtractedQuestions(prev => prev.map((item, idx) => idx === i ? { ...item, image_url: undefined } : item))} className="h-6 text-[8px] font-black text-red-400 hover:text-red-600">Remover</Button>
+                                                        </div>
+                                                        <div className="relative aspect-video rounded-xl overflow-hidden border border-green-100">
+                                                            <Image src={(q as any).image_url} alt="Questão" fill className="object-cover" />
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center space-y-3">
+                                                        <div className="flex items-center justify-center gap-2 text-amber-600">
+                                                            <Sparkles className="h-4 w-4 animate-pulse" />
+                                                            <span className="text-[10px] font-black uppercase">Imagem Necessária</span>
+                                                        </div>
+                                                        <p className="text-[10px] text-amber-700 font-medium italic">Esta questão faz referência a um gráfico ou imagem do PDF.</p>
+                                                        <label className="flex items-center justify-center w-full h-10 px-4 bg-white border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors">
+                                                            <Upload className="h-4 w-4 text-amber-600 mr-2" />
+                                                            <span className="text-[10px] font-black text-amber-600 uppercase">
+                                                                {q._uploadingImage ? 'Enviando...' : 'Selecionar Imagem'}
+                                                            </span>
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                disabled={q._uploadingImage}
+                                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                                                    const f = e.target.files?.[0];
+                                                                    if (f) handleImageUpload(i, f);
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         {q.supporting_text && (
                                             <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-2xl">
                                                 <div className="flex items-center gap-1.5 mb-1.5">

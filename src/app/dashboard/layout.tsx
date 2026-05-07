@@ -32,6 +32,7 @@ const studentItems: NavItem[] = [
     children: [
       { icon: FileText, label: "Simulados por Matéria", href: "/dashboard/student/simulados", id: "nav-simulados" },
       { icon: Scroll, label: "Provas Completas", href: "/dashboard/student/provas", id: "nav-provas" },
+      { icon: BarChart3, label: "Meu Desempenho", href: "/dashboard/student/performance", id: "nav-performance" },
     ],
   },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live", id: "nav-live" },
@@ -268,14 +269,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Subtle static background — blurs removidos (causavam INP >200ms em mobile) */}
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/[0.02] via-transparent to-accent/[0.02] pointer-events-none" />
         
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-xl px-4 md:px-6 shrink-0 print:hidden">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6 shrink-0 print:hidden">
           <SidebarTrigger className="h-10 w-10 rounded-xl hover:bg-muted text-primary">
             <Menu className="h-6 w-6" />
           </SidebarTrigger>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
             <NotificationBell />
-            <Link id="header-profile" href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-all ml-2">
+            <Link id="header-profile" href="/dashboard/settings" className="flex items-center gap-3 md:gap-4 group hover:opacity-80 transition-opacity ml-2">
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-sm font-black text-primary italic leading-none group-hover:text-accent transition-colors">
                   {profile?.name || user.user_metadata?.full_name

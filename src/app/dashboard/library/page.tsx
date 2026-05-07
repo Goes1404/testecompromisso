@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -77,7 +77,7 @@ export default function LibraryPage() {
     if (user && profile) loadResources();
   }, [user, profile, loadResources]);
 
-  const filteredResources = resources.filter(resource => {
+  const filteredResources = useMemo(() => resources.filter(resource => {
     const title = (resource.title || '').toLowerCase();
     const search = searchTerm.toLowerCase();
     const matchesSearch = title.includes(search);
@@ -85,7 +85,7 @@ export default function LibraryPage() {
     const matchesType = activeType === "Todos" || resource.type === activeType;
     const isBook = resource.category?.startsWith('LIVRO|');
     return matchesSearch && matchesCategory && matchesType && !isBook;
-  });
+  }), [resources, searchTerm, activeCategory, activeType]);
 
   if (loading) {
     return (
@@ -105,9 +105,9 @@ export default function LibraryPage() {
         </div>
         <div className="relative w-full md:w-80 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
-          <Input 
-            placeholder="Buscar material..." 
-            className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] text-lg font-medium italic focus-visible:ring-accent transition-all duration-300"
+          <Input
+            placeholder="Buscar material..."
+            className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] text-lg font-medium italic focus-visible:ring-accent focus-visible:ring-2 transition-[box-shadow] duration-300 focus-visible:shadow-[0_0_0_3px_rgba(255,107,0,0.15),0_4px_24px_rgba(255,107,0,0.10)]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -116,7 +116,7 @@ export default function LibraryPage() {
 
       <Tabs defaultValue="Todos" className="w-full">
         <div className="flex items-center justify-between mb-6 overflow-x-auto pb-4 scrollbar-hide gap-4">
-          <TabsList className="bg-white/50 backdrop-blur-md p-1.5 h-14 rounded-2xl border-none shadow-sm shrink-0">
+          <TabsList className="bg-white/80 p-1.5 h-14 rounded-2xl border-none shadow-sm shrink-0">
             {categories.map(cat => (
               <TabsTrigger 
                 key={cat} 
@@ -153,14 +153,15 @@ export default function LibraryPage() {
         {filteredResources.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredResources.map((item, index) => (
-              <Card key={item.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group bg-white rounded-[2.5rem] flex flex-col animate-in fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+              <Card key={item.id} className="gradient-border overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-1 hover:glow-orange transition-[transform,box-shadow] duration-300 group bg-white rounded-[2.5rem] flex flex-col">
                 <div className="relative aspect-[16/10] overflow-hidden">
-                  <Image 
-                    src={item.image_url || `https://picsum.photos/seed/${item.id}/400/250`} 
-                    alt={item.title || "Material"} 
-                    fill 
-                    className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                    unoptimized
+                  <Image
+                    src={item.image_url || `https://picsum.photos/seed/${item.id}/400/250`}
+                    alt={item.title || "Material"}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    priority={index === 0}
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
                     <Badge className="bg-white/80 backdrop-blur-md text-primary border-none shadow-lg flex items-center gap-2 px-4 py-1.5 rounded-xl">

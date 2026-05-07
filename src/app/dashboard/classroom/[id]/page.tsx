@@ -326,7 +326,8 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         strategy="afterInteractive"
       />
       
-      <header className="sticky top-0 bg-primary text-white px-4 h-16 flex items-center justify-between shrink-0 z-[60] shadow-xl border-b border-white/5">
+      <header className="sticky top-0 bg-primary text-white px-4 h-16 flex items-center justify-between shrink-0 z-[60] shadow-xl border-b border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 dot-grid opacity-10 pointer-events-none" />
         <div className="flex items-center gap-4 overflow-hidden">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full hover:bg-white/10 h-10 w-10 shrink-0 text-white">
             <ChevronLeft className="h-6 w-6" />

@@ -1,7 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import TeacherAnalyticsDashboard from "@/components/TeacherAnalyticsDashboard";
+import dynamic from "next/dynamic";
+const TeacherAnalyticsDashboard = dynamic(
+  () => import("@/components/TeacherAnalyticsDashboard"),
+  { ssr: false }
+);
 
 export default function AnalyticsPage() {
   const searchParams = useSearchParams();

@@ -31,10 +31,42 @@ import {
   MessageSquareQuote
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
+
+const EssayChart = dynamic(
+  () => import('recharts').then(({ AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }) => {
+    function Chart({ data }: { data: { date: string; score: number; theme?: string }[] }) {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorScoreEssay" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(25 100% 50%)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(25 100% 50%)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <XAxis dataKey="date" stroke="#888" fontSize={11} tickLine={false} axisLine={false} dy={6} />
+            <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} domain={[0, 1000]} />
+            <Tooltip content={({ active, payload, label }: any) => active && payload?.length ? (
+              <div className="bg-white p-4 rounded-2xl border-none shadow-2xl flex flex-col gap-1 max-w-[200px]">
+                <p className="font-bold text-primary mb-1 text-xs">{label}</p>
+                <p className="font-black text-accent text-xl">{payload[0].value} pts</p>
+                {payload[0].payload.theme && <p className="text-[9px] font-bold text-muted-foreground leading-tight italic line-clamp-3 mt-1">"{payload[0].payload.theme}"</p>}
+              </div>
+            ) : null} />
+            <Area type="monotone" dataKey="score" stroke="hsl(25 100% 50%)" strokeWidth={3} fillOpacity={1} fill="url(#colorScoreEssay)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      );
+    }
+    return { default: Chart };
+  }),
+  { ssr: false, loading: () => <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl" /> }
+);
 
 const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: string }> = {
   c1: { label: "C1: Norma Culta", icon: PenTool, color: "text-blue-500" },
@@ -44,22 +76,6 @@ const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: strin
   c5: { label: "C5: Intervenção", icon: ShieldCheck, color: "text-green-500" }
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-4 rounded-2xl border-none shadow-2xl flex flex-col gap-1 max-w-[200px]">
-        <p className="font-bold text-primary mb-1 text-xs">{label}</p>
-        <p className="font-black text-accent text-xl">{payload[0].value} pts</p>
-        {payload[0].payload.theme && (
-          <p className="text-[9px] font-bold text-muted-foreground leading-tight italic line-clamp-3 mt-1">
-            "{payload[0].payload.theme}"
-          </p>
-        )}
-      </div>
-    );
-  }
-  return null;
-};
 
 export default function StudentEssayPage() {
   const { user, profile } = useAuth();
@@ -244,10 +260,10 @@ export default function StudentEssayPage() {
           >
             {customTheme ? "Sair do Manual" : "Tema Personalizado"}
           </Button>
-          <Button 
-            onClick={handleGenerateTopic} 
+          <Button
+            onClick={handleGenerateTopic}
             disabled={loadingTopic || loadingGrading}
-            className="rounded-xl h-12 bg-accent text-accent-foreground font-black px-8 shadow-xl shadow-accent/20 hover:scale-105 active:scale-95 transition-all text-[10px] uppercase border-none"
+            className="btn-shimmer rounded-xl h-12 bg-accent text-accent-foreground font-black px-8 shadow-xl shadow-accent/20 active:scale-95 transition-[transform,box-shadow] [touch-action:manipulation] text-[10px] uppercase border-none"
           >
             {loadingTopic ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
             Gerar Tema com IA
@@ -255,7 +271,7 @@ export default function StudentEssayPage() {
         </div>
       </div>
 
-      <Card className="border-none shadow-xl rounded-3xl bg-white overflow-hidden ring-1 ring-black/5">
+      <Card className="gradient-border glow-orange border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden ring-1 ring-black/5 relative group">
         <CardHeader className="bg-primary/5 p-6 md:p-8 border-b border-dashed border-primary/10">
           {customTheme ? (
             <div className="space-y-3">
@@ -298,7 +314,7 @@ export default function StudentEssayPage() {
             className="min-h-[300px] md:min-h-[450px] border-none p-6 md:p-10 font-medium text-base md:text-lg leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary/90 scrollbar-hide"
           />
           
-          <div className="p-6 md:p-8 bg-slate-50/80 backdrop-blur-sm border-t border-muted/10 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="p-6 md:p-8 bg-slate-50 border-t border-muted/10 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-white shadow-xl flex items-center justify-center">
                 <ShieldCheck className="h-6 w-6 text-accent" />
@@ -308,10 +324,10 @@ export default function StudentEssayPage() {
                 <p className="text-sm font-bold italic text-primary/60">Análise baseada nos critérios INEP 2024</p>
               </div>
             </div>
-            <Button 
-              onClick={handleSubmitEssay} 
+            <Button
+              onClick={handleSubmitEssay}
               disabled={loadingGrading || !text || !theme}
-              className="bg-primary text-white font-extrabold h-14 px-8 rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all text-sm md:text-base uppercase border-none group w-full md:w-auto"
+              className="btn-shimmer bg-primary text-white font-extrabold h-14 px-8 rounded-2xl shadow-lg glow-orange-strong active:scale-95 transition-[transform,box-shadow] [touch-action:manipulation] text-sm md:text-base uppercase border-none group w-full md:w-auto"
             >
               {loadingGrading ? (
                 <div className="flex items-center gap-4">
@@ -326,7 +342,7 @@ export default function StudentEssayPage() {
               )}
             </Button>
           </div>
-          <div className="px-6 pb-6 bg-slate-50/80 backdrop-blur-sm text-center flex items-center justify-center gap-2">
+          <div className="px-6 pb-6 bg-slate-50 text-center flex items-center justify-center gap-2">
             <AlertCircle className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
             <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest italic font-bold">
               A Aurora IA é uma inteligência artificial e sua correção pode apresentar imprecisões.
@@ -343,7 +359,7 @@ export default function StudentEssayPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <Card className="lg:col-span-4 border-none shadow-2xl bg-primary text-white rounded-[2rem] overflow-hidden relative group">
+            <Card className="lg:col-span-4 aurora-dark border-none shadow-2xl text-white rounded-[2rem] overflow-hidden relative group gradient-border dot-grid">
               <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-[60px] group-hover:scale-150 transition-transform duration-1000" />
               <div className="p-8 relative z-10 space-y-6">
                 <div className="flex justify-between items-center">
@@ -369,7 +385,7 @@ export default function StudentEssayPage() {
                 if (!info) return null;
                 const Icon = info.icon;
                 return (
-                  <Card key={key} className="border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:shadow-2xl transition-all border-b-8 border-transparent hover:border-accent group">
+                  <Card key={key} className="gradient-border border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 border-b-8 border-transparent hover:border-accent group">
                     <div className="flex justify-between items-start mb-6">
                       <div className={`p-4 rounded-2xl bg-slate-50 transition-all group-hover:scale-110 shadow-inner ${info.color}`}>
                         <Icon className="h-6 w-6" />
@@ -417,7 +433,7 @@ export default function StudentEssayPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-2xl rounded-[3rem] bg-primary text-white overflow-hidden">
+            <Card className="aurora-dark border-none shadow-2xl rounded-[3rem] text-white overflow-hidden gradient-border">
               <CardHeader className="bg-white/5 p-8 border-b border-white/10">
                 <CardTitle className="text-xl font-black italic uppercase flex items-center gap-3">
                   <Zap className="h-6 w-6 text-accent" /> Plano de Evolução
@@ -448,7 +464,7 @@ export default function StudentEssayPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {supportingTexts.map((st) => (
-              <Card key={st.id} className="border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:-translate-y-1 transition-all group border-l-4 border-accent">
+              <Card key={st.id} className="gradient-border border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:-translate-y-1 transition-all group border-l-4 border-accent hover:shadow-2xl">
                 <p className="text-sm font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
                 <div className="flex justify-between items-center mt-6 pt-4 border-t border-muted/10">
                   <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Fonte: {st.source}</span>
@@ -464,47 +480,10 @@ export default function StudentEssayPage() {
             <TrendingUp className="h-6 w-6 text-accent" />
             <h2 className="text-xl font-black text-primary italic uppercase tracking-widest">Evolução</h2>
           </div>
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-white p-8 h-[300px]">
+          <Card className="gradient-border border-none shadow-2xl rounded-[3rem] bg-white p-8 h-[300px]">
             {history.length > 0 ? (
               <div className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="date" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      fontSize={10} 
-                      fontWeight="bold" 
-                      tick={{fill: 'hsl(var(--primary))', opacity: 0.5}}
-                      dy={10}
-                    />
-                    <YAxis 
-                      domain={[0, 1000]} 
-                      axisLine={false} 
-                      tickLine={false} 
-                      fontSize={10} 
-                      fontWeight="bold"
-                      tick={{fill: 'hsl(var(--primary))', opacity: 0.5}}
-                    />
-                    <Tooltip content={<CustomTooltip />} cursor={{ strokeOpacity: 0.1 }} />
-                    <Area 
-                      type="monotone" 
-                      dataKey="score" 
-                      stroke="hsl(var(--accent))" 
-                      strokeWidth={4} 
-                      fillOpacity={1} 
-                      fill="url(#colorScore)" 
-                      animationDuration={1500}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <EssayChart data={history} />
               </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-center gap-2">

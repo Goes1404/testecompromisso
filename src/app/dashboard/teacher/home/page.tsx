@@ -22,13 +22,36 @@ import {
   AlertOctagon,
   MessageSquare
 } from "lucide-react";
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import { subDays } from "date-fns";
+
+const TeacherEngagementChart = dynamic(
+  () => import('recharts').then(({ BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell }) => {
+    function Chart({ data }: { data: { name: string; value: number; color: string }[] }) {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }} />
+            <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={80}>
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    }
+    return { default: Chart };
+  }),
+  { ssr: false, loading: () => <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center"><p className="text-[10px] font-black uppercase tracking-widest text-primary/20">Carregando...</p></div> }
+);
 
 export default function TeacherHomePage() {
   const { user, profile, userRole, loading: isUserLoading } = useAuth();
@@ -170,27 +193,44 @@ export default function TeacherHomePage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-black tracking-tight text-primary italic leading-none uppercase">Painel de Gestão Docente</h1>
-            <Badge className="bg-primary text-white border-none font-black text-[10px] uppercase tracking-widest px-3 py-1.5 shadow-lg">PROFESSOR</Badge>
+      {/* Banner Principal Estilizado */}
+      <div className="aurora-dark dot-grid rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-[100px] animate-pulse" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-3">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
+                <Users className="h-6 w-6 text-accent" />
+              </div>
+              <Badge className="bg-accent text-accent-foreground border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-xl">
+                Espaço do Professor
+              </Badge>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white italic leading-none uppercase">
+              Painel de Gestão <span className="text-accent">Docente</span>
+            </h1>
+            <p className="text-white/60 font-medium italic text-lg max-w-xl">
+              Bem-vindo, {profile?.full_name?.split(' ')[0] || 'Professor'}. Pronto para elevar o nível da sua turma hoje?
+            </p>
           </div>
-          <p className="text-muted-foreground font-medium italic">Controle pedagógico e mentoria de alta performance.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            onClick={runDiagnostic} 
-            disabled={diagLoading}
-            className="rounded-xl h-12 border-dashed border-accent/40 bg-white hover:bg-accent/5 text-accent font-bold"
-          >
-            {diagLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ShieldAlert className="h-4 w-4 mr-2" />}
-            Diagnóstico
-          </Button>
-          <Button className="rounded-xl h-12 bg-accent text-accent-foreground font-black hover:bg-accent/90 shadow-xl border-none px-8" asChild>
-            <Link href="/dashboard/teacher/trails">Nova Trilha</Link>
-          </Button>
+          
+          <div className="flex flex-wrap items-center gap-4">
+            <Button 
+              variant="outline" 
+              onClick={runDiagnostic} 
+              disabled={diagLoading}
+              className="btn-shimmer rounded-2xl h-14 border-none bg-white/5 hover:bg-white/10 text-white font-black shadow-2xl glow-orange-strong px-6 backdrop-blur-md transition-all active:scale-95"
+            >
+              {diagLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Activity className="h-5 w-5 mr-2 text-accent" />}
+              Diagnóstico de Rede
+            </Button>
+            <Button className="btn-shimmer rounded-2xl h-14 bg-accent text-accent-foreground font-black hover:bg-accent/90 shadow-2xl glow-orange-strong border-none px-10 [touch-action:manipulation] active:scale-95 transition-all" asChild>
+              <Link href="/dashboard/teacher/trails">
+                <PlayCircle className="h-5 w-5 mr-2" />
+                Nova Trilha
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -202,7 +242,7 @@ export default function TeacherHomePage() {
           { label: "Rankings", value: "Top 10", icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", href: "/dashboard/teacher/rankings" },
         ].map((stat, i) => (
           <Link key={i} href={stat.href} className="block">
-            <Card className="border-none shadow-xl overflow-hidden group hover:shadow-2xl transition-all rounded-[2rem] bg-white cursor-pointer active:scale-[0.98]">
+            <Card className="gradient-border border-none shadow-xl overflow-hidden group hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 rounded-[2rem] bg-white cursor-pointer active:scale-[0.98] [touch-action:manipulation]">
               <CardContent className="p-8">
                 <div className="flex items-center justify-between">
                   <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 shadow-inner`}>
@@ -242,25 +282,14 @@ export default function TeacherHomePage() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary/20">Renderizando Analíticos...</p>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }} />
-                    <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={80}>
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <TeacherEngagementChart data={chartData} />
               )}
             </div>
           </CardContent>
         </Card>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl bg-primary text-primary-foreground rounded-[3rem] overflow-hidden relative group">
+          <Card className="aurora-dark border-none shadow-2xl text-primary-foreground rounded-[3rem] overflow-hidden relative group gradient-border dot-grid">
             <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150" />
             <CardHeader className="pb-2 p-10 relative z-10">
               <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 text-accent">
@@ -292,7 +321,7 @@ export default function TeacherHomePage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl bg-white rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center space-y-4">
+          <Card className="gradient-border border-none shadow-xl bg-white rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center space-y-4 glow-orange">
             <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-primary shadow-inner">
               <TrendingUp className="h-7 w-7" />
             </div>

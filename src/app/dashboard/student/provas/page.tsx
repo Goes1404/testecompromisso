@@ -27,6 +27,8 @@ type Question = {
   id: string;
   question_text: string;
   options: { key: string; text: string }[];
+  supporting_text: string | null;
+  image_url: string | null;
   correct_answer: string;
   explanation: string | null;
   subjects: { name: string } | null;
@@ -96,7 +98,7 @@ export default function ProvasCompletasPage() {
     try {
       const { data, error } = await supabase
         .from('exam_questions')
-        .select('order_index, questions(id, question_text, options, correct_answer, explanation, subjects(name))')
+        .select('order_index, questions(id, question_text, supporting_text, image_url, options, correct_answer, explanation, subjects(name))')
         .eq('exam_id', exam.id)
         .order('order_index');
 
@@ -361,15 +363,45 @@ export default function ProvasCompletasPage() {
 
             <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
               <CardContent className="p-8 md:p-12 space-y-8">
-                <div className="flex justify-between items-start gap-4">
-                   <div className="space-y-1">
-                      {currentQuestion.subjects?.name && (
-                        <Badge className="bg-accent/10 text-accent border-none font-black text-[10px] uppercase px-4 h-6 mb-2">
-                          {currentQuestion.subjects.name}
+                 <div className="flex justify-between items-start gap-4">
+                   <div className="space-y-4 w-full">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        {currentQuestion.subjects?.name && (
+                          <Badge className="bg-accent/10 text-accent border-none font-black text-[10px] uppercase px-4 h-6">
+                            {currentQuestion.subjects.name}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[10px] font-black uppercase border-primary/20 text-primary/40">
+                          ID: {currentQuestion.id.substring(0,8)}
                         </Badge>
+                      </div>
+
+                      {/* Texto de Apoio (Contexto) */}
+                      {currentQuestion.supporting_text && (
+                        <div className="p-6 bg-amber-50 border border-amber-100 rounded-[2rem] relative overflow-hidden group">
+                          <div className="flex items-center gap-2 mb-3">
+                            <BookOpen className="h-4 w-4 text-amber-600" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Texto de Apoio</span>
+                          </div>
+                          <p className="text-sm md:text-base text-amber-900 font-medium leading-relaxed italic">
+                            {currentQuestion.supporting_text}
+                          </p>
+                        </div>
                       )}
-                      <p className="text-lg md:text-xl font-bold text-primary italic leading-relaxed">
-                        {currentQuestion.question_text}
+
+                      {/* Imagem da Questão */}
+                      {currentQuestion.image_url && (
+                        <div className="relative w-full aspect-video md:aspect-[21/9] rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
+                           <img 
+                            src={currentQuestion.image_url} 
+                            alt="Contexto visual da questão" 
+                            className="w-full h-full object-contain p-4" 
+                           />
+                        </div>
+                      )}
+
+                      <p className="text-lg md:text-2xl font-bold text-primary italic leading-tight mt-4">
+                        {currentQuestion.question_text.replace('[IMAGEM_PENDENTE]', '')}
                       </p>
                    </div>
                    <Button variant="ghost" size="icon" onClick={() => toggleReview(currentQuestion.id)} className={`shrink-0 h-12 w-12 rounded-2xl transition-all ${markedForReview.has(currentQuestion.id) ? 'bg-amber-100 text-amber-600' : 'bg-slate-50 text-slate-300'}`}>

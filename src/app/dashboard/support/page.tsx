@@ -136,7 +136,7 @@ export default function AuroraSupportPage() {
             ))}
           </div>
           
-          <Card className="mt-auto p-6 bg-primary text-primary-foreground border-none rounded-[2rem] shadow-2xl relative overflow-hidden group">
+          <Card className="mt-auto p-6 aurora-dark text-primary-foreground border-none rounded-[2rem] shadow-2xl relative overflow-hidden group gradient-border">
             <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
             <div className="relative z-10 space-y-4">
               <h3 className="font-black text-xs flex items-center gap-2 italic">
@@ -159,7 +159,7 @@ export default function AuroraSupportPage() {
           </Card>
         </div>
 
-        <Card className="flex-1 flex flex-col shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white relative min-h-0 ring-1 ring-black/5">
+        <Card className="gradient-border flex-1 flex flex-col shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white relative min-h-0 ring-1 ring-black/5">
           <ScrollArea className="flex-1" ref={scrollRef}>
             <div className="flex flex-col gap-8 py-8 px-6 md:px-10">
               {messages.map((msg, i) => (
@@ -204,10 +204,10 @@ export default function AuroraSupportPage() {
                   className="h-14 md:h-16 bg-white border-none rounded-3xl pl-14 pr-8 shadow-xl focus-visible:ring-accent text-sm md:text-base font-bold italic"
                 />
               </div>
-              <button 
-                type="submit" 
-                disabled={loading || !input.trim()} 
-                className="h-14 w-14 md:h-16 md:w-16 bg-primary hover:bg-primary/95 text-white rounded-3xl shadow-2xl shrink-0 transition-all active:scale-90 flex items-center justify-center border-none"
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="btn-shimmer h-14 w-14 md:h-16 md:w-16 bg-primary hover:bg-primary/95 text-white rounded-3xl shadow-2xl glow-orange-strong shrink-0 transition-[transform,box-shadow] active:scale-90 [touch-action:manipulation] flex items-center justify-center border-none"
               >
                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
               </button>

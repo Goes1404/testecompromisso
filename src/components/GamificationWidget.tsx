@@ -30,35 +30,39 @@ export function GamificationWidget({ userId }: Props) {
   const allBadges = Object.keys(BADGE_META) as BadgeType[];
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-xl p-6 space-y-5">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-          <Zap className="h-5 w-5 text-accent" />
+    <div className="gradient-border bg-white rounded-[2.5rem] shadow-xl overflow-hidden glow-orange group">
+      <div className="aurora-dark dot-grid p-6 space-y-5 text-white">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+            <Zap className="h-5 w-5 text-accent" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Seu Nível Atual</p>
+            <p className="text-xl font-black italic leading-none text-white">
+              Nível {current.level} · <span className="text-accent">{current.label}</span>
+            </p>
+          </div>
+          <div className="ml-auto text-right">
+            <p className="text-2xl font-black text-white leading-none">{xp}</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/40">XP Total</p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Seu Progresso</p>
-          <p className="text-lg font-black text-primary italic leading-none">
-            Nível {current.level} · <span className="text-accent">{current.label}</span>
-          </p>
-        </div>
-        <div className="ml-auto text-right">
-          <p className="text-2xl font-black text-primary">{xp}</p>
-          <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">XP Total</p>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/40">
+            <span>{current.minXP} XP</span>
+            {next && <span>Próximo: {next.minXP} XP</span>}
+          </div>
+          <Progress value={progressPct} className="h-2.5 rounded-full bg-white/10" />
+          {next && (
+            <p className="text-[9px] text-accent font-black uppercase tracking-wider text-right">
+              Faltam {next.minXP - xp} XP para {next.label}
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="space-y-1">
-        <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
-          <span>{current.minXP} XP</span>
-          {next && <span>{next.minXP} XP · {next.label}</span>}
-        </div>
-        <Progress value={progressPct} className="h-2.5 rounded-full" />
-        {next && (
-          <p className="text-[10px] text-muted-foreground font-medium text-right">
-            Faltam {next.minXP - xp} XP para o próximo nível
-          </p>
-        )}
-      </div>
+      <div className="p-6 pt-2">
 
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Conquistas</p>
@@ -70,8 +74,8 @@ export function GamificationWidget({ userId }: Props) {
               <div
                 key={badge}
                 title={meta.description}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all
-                  ${earned ? 'bg-accent/5 border-accent/20' : 'bg-muted/20 border-transparent opacity-40 grayscale'}`}
+                className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-[transform,box-shadow] duration-300
+                  ${earned ? 'bg-accent/5 border-accent/20 glow-orange' : 'bg-muted/20 border-transparent opacity-40 grayscale'}`}
               >
                 <span className="text-xl">{meta.icon}</span>
                 <span className="text-[8px] font-black text-center leading-tight text-primary">{meta.label}</span>
@@ -80,6 +84,7 @@ export function GamificationWidget({ userId }: Props) {
           })}
         </div>
       </div>
+    </div>
     </div>
   );
 }
