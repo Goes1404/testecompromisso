@@ -227,7 +227,7 @@ export default function StudentPerformancePage() {
                 <div className={`h-12 w-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110 shadow-inner`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
-                <Badge variant="ghost" className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Live</Badge>
+                <Badge variant="outline" className="text-[8px] font-black text-muted-foreground uppercase tracking-widest border-none">Live</Badge>
               </div>
               <p className="text-4xl font-black text-primary italic">{stat.value}</p>
               <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-2">{stat.label}</p>
