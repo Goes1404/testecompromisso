@@ -36,11 +36,40 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
-import { GamificationWidget } from "@/components/GamificationWidget";
-import { UpcomingEventsWidget } from "@/components/UpcomingEventsWidget";
-import { StudySuggestionWidget } from "@/components/StudySuggestionWidget";
-
-import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
+const GamificationWidget = dynamic(
+  () => import('@/components/GamificationWidget').then(m => ({ default: m.GamificationWidget })),
+  { ssr: false, loading: () => <div className="h-40 rounded-[2rem] bg-muted/20 animate-pulse" /> }
+);
+const UpcomingEventsWidget = dynamic(
+  () => import('@/components/UpcomingEventsWidget').then(m => ({ default: m.UpcomingEventsWidget })),
+  { ssr: false, loading: () => <div className="h-32 rounded-[2rem] bg-muted/20 animate-pulse" /> }
+);
+const StudySuggestionWidget = dynamic(
+  () => import('@/components/StudySuggestionWidget').then(m => ({ default: m.StudySuggestionWidget })),
+  { ssr: false, loading: () => <div className="h-24 rounded-[2rem] bg-muted/20 animate-pulse" /> }
+);
+const DashboardChart = dynamic(
+  () => import('recharts').then(({ AreaChart, Area, ResponsiveContainer, Tooltip }) => {
+    function Chart({ data }: { data: { name: string; score: number }[] }) {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <Tooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+            <Area type="monotone" dataKey="score" stroke="#7c3aed" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      );
+    }
+    return { default: Chart };
+  }),
+  { ssr: false, loading: () => <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl" /> }
+);
 
 const logoUrl = "/images/logocompromisso.png";
 const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
@@ -138,19 +167,15 @@ export default function DashboardHome() {
     dataFetchedRef.current = true;
 
     try {
-      // Execução paralela de todas as queries principais para performance máxima
-      const [annRes, trailRes, progressRes, libRes] = await Promise.all([
+      // Todas as 6 queries em paralelo — elimina o waterfall da 2ª batch
+      const [annRes, trailRes, progressRes, libRes, essayRes, examRes] = await Promise.all([
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
         supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
-        supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3)
+        supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3),
+        supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id),
       ]);
-      
-      // Essay e Exam com tratamento individual de erro para não travar o restante
-      const [essayRes, examRes] = await Promise.all([
-        supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).then(r => r),
-        supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id).then(r => r)
-      ]).catch(e => [ {data: []}, {data: []} ]);
 
       let essayData = essayRes?.data || [];
       let examData = examRes?.data || [];
@@ -253,14 +278,14 @@ export default function DashboardHome() {
 
       {/* ── HERO BANNER ── */}
       <section className="relative rounded-3xl overflow-hidden bg-slate-900 min-h-[160px] md:min-h-[200px] flex items-end p-5 md:p-6 shadow-2xl">
-        {/* Background glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-30%] right-[-10%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] bg-primary/25 rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-30%] left-[-5%] w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-accent/15 rounded-full blur-[80px]" />
+        {/* Background glow — oculto no mobile para evitar GPU compositing */}
+        <div className="absolute inset-0 pointer-events-none hidden md:block">
+          <div className="absolute top-[-30%] right-[-10%] w-[400px] h-[400px] bg-primary/25 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-30%] left-[-5%] w-[300px] h-[300px] bg-accent/15 rounded-full blur-[80px]" />
         </div>
 
-        {/* Decorative grid */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        {/* Dot-grid overlay */}
+        <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 w-full">
           <div className="space-y-2 md:space-y-3">
@@ -289,7 +314,7 @@ export default function DashboardHome() {
               { label: "Redação", value: essayStats?.count ? `${essayStats.average}pts` : '–', icon: FilePenLine, color: "text-green-400" },
               { label: "Trilhas", value: `${recentProgress.length}`, icon: PlayCircle, color: "text-yellow-400" },
             ].map(stat => (
-              <div key={stat.label} className="flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 min-w-[110px]">
+              <div key={stat.label} className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 min-w-[110px]">
                 <stat.icon className={`h-5 w-5 ${stat.color} shrink-0`} />
                 <div>
                   <p className="font-black text-white text-base leading-none">{stat.value}</p>
@@ -305,7 +330,7 @@ export default function DashboardHome() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {quickActions.map((action) => (
           <Link key={action.label} href={action.href}>
-            <div className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-4 md:p-5 shadow-lg ${action.shadow} hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer`}>
+            <div className={`btn-shimmer group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-4 md:p-5 shadow-lg ${action.shadow} hover:-translate-y-1 hover:shadow-xl active:scale-[0.97] transition-[transform,box-shadow] duration-300 cursor-pointer [touch-action:manipulation]`}>
               <div className="flex flex-col h-[76px] justify-between">
                 <div>
                   <action.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
@@ -321,7 +346,8 @@ export default function DashboardHome() {
       </div>
 
       {/* ── AURORA INSIGHT ── */}
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-7 md:p-8 shadow-2xl group">
+      <div className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-7 md:p-8 shadow-2xl glow-orange group">
+        <div className="absolute inset-0 dot-grid-dark opacity-40 pointer-events-none rounded-[2.5rem]" />
         <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-accent/5 rounded-full blur-[80px] group-hover:bg-accent/10 transition-colors duration-1000" />
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
           <div className="relative h-16 w-16 shrink-0 group-hover:scale-110 transition-transform duration-500">
@@ -479,7 +505,7 @@ export default function DashboardHome() {
         <div className="space-y-5">
 
           {/* Taxa de Acertos — Data Viz */}
-          <div className="bg-white rounded-[2rem] shadow-xl border border-muted/20 p-5 md:p-6 space-y-4 relative overflow-hidden group">
+          <div className="gradient-border bg-white rounded-[2rem] shadow-xl border border-muted/20 p-5 md:p-6 space-y-4 relative overflow-hidden group hover:glow-orange transition-shadow duration-300">
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-xl bg-violet-100 flex items-center justify-center shadow-inner">
@@ -494,18 +520,7 @@ export default function DashboardHome() {
               {loadingData ? (
                 <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl" />
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={examStats?.history || []} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--violet-500, 262 83% 58%))" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="hsl(var(--violet-500, 262 83% 58%))" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                    <Area type="monotone" dataKey="score" stroke="hsl(var(--violet-500, 262 83% 58%))" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <DashboardChart data={examStats?.history || []} />
               )}
             </div>
             
@@ -614,7 +629,7 @@ export default function DashboardHome() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-60 hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-4">
             <div className="relative h-10 w-10 shrink-0 bg-white rounded-xl shadow-md p-1.5 border border-slate-100 overflow-hidden">
-              <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" unoptimized />
+              <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" sizes="40px" />
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-primary">Plataforma Educacional</p>

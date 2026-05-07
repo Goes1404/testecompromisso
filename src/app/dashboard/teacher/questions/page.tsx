@@ -273,7 +273,8 @@ REGRAS OBRIGATÓRIAS:
 2. Identifique exatamente as 5 alternativas (A, B, C, D, E).
 3. Identifique o gabarito correto.
 4. Identifique a disciplina (Ex: Matemática, Biologia, História, Língua Portuguesa).
-5. TEXTO DE APOIO: muitas questões do ENEM são precedidas por um texto, poema, trecho literário, charge, tabela ou descrição de imagem que serve de base para a pergunta. Se a questão fizer referência a esse material, copie-o integralmente no campo "supporting_text". Questões consecutivas que compartilham o mesmo texto de apoio devem ter o mesmo conteúdo em "supporting_text". Se não houver texto de apoio, omita o campo ou deixe como string vazia.
+5. TEXTO DE APOIO (CRÍTICO): Identifique blocos introdutórios como "Texto para as questões X a Y", "Leia o texto a seguir", "Com base no trecho abaixo", poemas, trechos literários ou tabelas textuais. Copie esse bloco INTEGRALMENTE no campo "supporting_text" de CADA questão do grupo — nunca deixe uma questão sem seu contexto. Se 3 questões compartilham o mesmo texto, as 3 devem ter o MESMO "supporting_text". Se não houver texto de apoio, omita o campo.
+6. IMAGENS E MÍDIAS (CRÍTICO): Se o enunciado mencionar imagem, gráfico, charge, figura ou tabela visual que NÃO pode ser transcrita como texto, insira o marcador [IMAGEM_PENDENTE] no campo "question_text" logo após a referência à mídia (ex: "Observe o gráfico abaixo. [IMAGEM_PENDENTE] Com base nessa informação..."). Nunca suprima esse aviso.
 
 Responda APENAS com JSON válido nesta estrutura exata (sem texto fora do bloco):
 {

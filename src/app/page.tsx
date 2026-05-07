@@ -38,8 +38,8 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const DynamicBottomSections = dynamic(() => import("@/components/home/BottomSections").then(mod => mod.BottomSections), {
-  ssr: true, // Ainda envia o HTML pre-renderizado, mas quebra o JS chunk
-  loading: () => <div className="min-h-screen py-32 flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" /></div>
+  ssr: false,
+  loading: () => <div className="min-h-[40vh] py-32 flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" /></div>
 });
 
 export default function LandingPage() {
@@ -55,7 +55,7 @@ export default function LandingPage() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, [router]);
@@ -187,11 +187,14 @@ export default function LandingPage() {
         {/* HERO SECTION - REINVENTADA E COMPACTA (100vh) */}
         <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-gray-950 pt-20 md:pt-0">
           <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-black pointer-events-none" />
+          {/* 21st.dev dot-grid + noise */}
+          <div className="absolute inset-0 dot-grid opacity-70 pointer-events-none" />
+          <div className="absolute inset-0 noise pointer-events-none" />
 
           {/* Efeitos de Luz Premium */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 hidden md:block">
+            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px]" />
+            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[80px]" />
           </div>
 
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center relative z-10 w-full pt-6 md:pt-10">
@@ -202,7 +205,7 @@ export default function LandingPage() {
 
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tighter">
                 Sua Aprovação é o<br />
-                <span className="text-primary italic">nosso Compromisso.</span>
+                <span className="text-gradient-brand italic">nosso Compromisso.</span>
               </h1>
 
               <p className="text-sm md:text-base text-gray-400 leading-relaxed max-w-md">
@@ -210,7 +213,7 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button onClick={(e) => handleRedirect(e, '/login')} className="h-11 px-8 bg-primary hover:bg-[#e06000] text-white font-black text-sm rounded-full shadow-lg shadow-primary/20 border-none transition-all active:scale-95 group">
+                <Button onClick={(e) => handleRedirect(e, '/login')} className="btn-shimmer h-11 px-8 bg-primary hover:bg-[#e06000] text-white font-black text-sm rounded-full glow-orange-strong border-none transition-[transform,box-shadow] active:scale-95 group">
                   <div className="flex items-center gap-2">
                     Entrar na Plataforma <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -234,23 +237,27 @@ export default function LandingPage() {
             </div>
 
             <div className="relative hidden lg:block h-[65vh] animate-in fade-in zoom-in duration-1000 max-h-[500px]">
-              <div className="relative h-full aspect-[4/5] rounded-[2rem] overflow-hidden shadow-[0_0_40px_-10px_rgba(255,107,0,0.3)] border border-white/10 mx-auto">
-                <Image
-                  src="/images/hero_study.png"
-                  alt="Estudantes focados no sucesso"
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  quality={85}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
-                <div className="absolute inset-x-5 bottom-6 p-5 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-primary">Inteligência Aurora</span>
+              {/* Gradient border wrapper — stitch style */}
+              <div className="gradient-border relative h-full aspect-[4/5] rounded-[2rem] mx-auto">
+                <div className="relative h-full w-full rounded-[2rem] overflow-hidden shadow-[0_0_60px_-10px_rgba(255,107,0,0.4)]">
+                  <Image
+                    src="/images/hero_study.png"
+                    alt="Estudantes focados no sucesso"
+                    fill
+                    className="object-cover"
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    quality={85}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  {/* Aurora insight card flutuante */}
+                  <div className="absolute inset-x-5 bottom-6 p-5 bg-white/8 backdrop-blur-xl rounded-2xl border border-white/15 animate-float noise">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-gradient-brand">Inteligência Aurora</span>
+                    </div>
+                    <p className="text-xs font-bold text-white/90 leading-relaxed">"Otimizamos cada minuto com diagnósticos preditivos e mentoria individualizada."</p>
                   </div>
-                  <p className="text-xs font-bold text-white leading-relaxed">"Otimizamos cada minuto com diagnósticos preditivos e mentoria individualizada."</p>
                 </div>
               </div>
             </div>
@@ -261,8 +268,8 @@ export default function LandingPage() {
         {/* MISSÃO E VALORES - Mistura de Temas (Dark nas pontas, Light no centro) */}
         <section className="py-24 bg-gray-50 relative overflow-hidden border-t border-gray-200/50">
           {/* Blobs de luz flutuantes */}
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none animate-pulse-subtle delay-700" />
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none animate-pulse-subtle" />
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none hidden md:block" />
+          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[80px] pointer-events-none hidden md:block" />
 
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
             {[
@@ -287,7 +294,7 @@ export default function LandingPage() {
             ].map((card, i) => (
               <div 
                 key={i} 
-                className={`p-10 rounded-[2.5rem] border transition-all duration-700 group hover:-translate-y-4 hover:scale-[1.02] flex flex-col gap-6 relative overflow-hidden ${
+                className={`p-10 rounded-[2.5rem] border transition-[transform,box-shadow,border-color] duration-300 group hover:-translate-y-2 flex flex-col gap-6 relative overflow-hidden ${
                   card.theme === 'dark' 
                     ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white' 
                     : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
@@ -301,7 +308,7 @@ export default function LandingPage() {
                 }`} />
 
                 {/* GLOW DE FUNDO - Azul Dinâmico */}
-                <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-all duration-1000 group-hover:scale-150 ${
+                <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-transform duration-500 group-hover:scale-150 hidden md:block ${
                   card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
                 }`} />
                 
@@ -348,8 +355,8 @@ export default function LandingPage() {
 
         {/* METODOLOGIA - Os Pilares do Seu Sucesso */}
         <section id="metodologia" className="min-h-screen py-24 flex flex-col justify-center bg-white scroll-mt-20 overflow-hidden relative border-t border-gray-100">
-          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none animate-pulse-subtle delay-1000" />
-          <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none animate-pulse-subtle" />
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-primary/5 blur-[100px] rounded-full pointer-events-none hidden md:block" />
+          <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[80px] rounded-full pointer-events-none hidden md:block" />
 
           <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
             <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
@@ -389,7 +396,7 @@ export default function LandingPage() {
               ].map((card, i) => (
                 <div 
                   key={card.title} 
-                  className={`p-10 rounded-[2.5rem] border transition-all duration-700 group hover:-translate-y-4 hover:scale-[1.02] flex flex-col gap-6 relative overflow-hidden ${
+                  className={`p-10 rounded-[2.5rem] border transition-[transform,box-shadow,border-color] duration-300 group hover:-translate-y-2 flex flex-col gap-6 relative overflow-hidden ${
                     card.theme === 'dark' 
                       ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white' 
                       : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
@@ -403,7 +410,7 @@ export default function LandingPage() {
                   }`} />
 
                   {/* GLOW DE FUNDO */}
-                  <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-all duration-1000 group-hover:scale-150 ${
+                  <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-transform duration-500 group-hover:scale-150 hidden md:block ${
                     card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
                   }`} />
                   

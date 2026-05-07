@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -18,6 +19,15 @@ import { awardXP, checkAndAwardBadges, getTotalAnswered, XP_PER_CORRECT_QUESTION
 const SIMULATION_SIZE = 10;
 const ALL_TOPICS = '_all';
 
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.04 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] } },
+};
+
 type Mode = 'especifico' | 'materia' | 'completo';
 
 type Subject = { id: string; name: string; question_count: number };
@@ -30,6 +40,8 @@ type Question = {
   subjects: { name: string } | null;
   year: number;
   explanation?: string;
+  supporting_text?: string;
+  image_url?: string;
 };
 type Answer = {
   questionId: string;
@@ -287,7 +299,7 @@ export default function SimuladoPage() {
     const opt = (o: any) => o.key || o.letter || '';
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-        <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-b-4 border-accent">
+        <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-b-4 border-accent glow-orange">
           <div className="flex justify-between items-center mb-4 gap-2">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
@@ -310,35 +322,82 @@ export default function SimuladoPage() {
           <Progress value={progress} className="h-1.5 bg-muted rounded-full" />
         </div>
 
-        <Card className="border-none shadow-xl rounded-3xl bg-white overflow-hidden">
-          <CardHeader className="p-6 md:p-8 bg-muted/5">
-            <CardDescription className="text-sm md:text-lg font-medium text-slate-800 leading-[1.8] italic whitespace-pre-wrap break-words">
-              {currentQuestion.question_text}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6 md:p-8 pt-4">
-            <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer} className="space-y-3">
-              {(currentQuestion.options || []).map((o: any) => (
-                <Label
-                  key={opt(o)}
-                  className={`flex items-start gap-4 text-xs md:text-base p-4 md:p-6 rounded-xl md:rounded-[1.5rem] border-2 transition-all cursor-pointer ${
-                    selectedAnswer === opt(o) ? 'border-accent bg-accent/5' : 'border-muted/20 hover:border-accent/40'
-                  }`}
-                >
-                  <RadioGroupItem value={opt(o)} id={opt(o)} className="mt-1" />
-                  <div className="flex gap-2 md:gap-4">
-                    <span className={`font-black italic shrink-0 ${selectedAnswer === opt(o) ? 'text-accent' : 'text-primary/30'}`}>
-                      {opt(o).toUpperCase()}.
-                    </span>
-                    <span className="font-medium text-slate-700 whitespace-pre-wrap break-words">{o.text}</span>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.25, 0.1, 0.25, 1] }}
+            style={{ willChange: 'transform' }}
+          >
+            <Card className="border-none shadow-xl rounded-3xl bg-white overflow-hidden">
+              <CardHeader className="p-6 md:p-8 bg-muted/5 space-y-4">
+                {currentQuestion.image_url && (
+                  <img
+                    src={currentQuestion.image_url}
+                    alt="Imagem da questão"
+                    className="w-full rounded-2xl object-contain max-h-72 border border-muted/20"
+                  />
+                )}
+                {currentQuestion.supporting_text && (
+                  <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="h-4 w-4 text-amber-600 shrink-0" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Texto de Apoio</span>
+                    </div>
+                    <p className="text-sm text-amber-900 font-medium leading-relaxed italic whitespace-pre-wrap">{currentQuestion.supporting_text}</p>
                   </div>
-                </Label>
-              ))}
-            </RadioGroup>
-          </CardContent>
-        </Card>
+                )}
+                <CardDescription className="text-sm md:text-lg font-medium text-slate-800 leading-[1.8] italic whitespace-pre-wrap break-words">
+                  {currentQuestion.question_text}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8 pt-4">
+                <motion.div
+                  key={currentIndex}
+                  variants={stagger}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-3"
+                >
+                  <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer}>
+                    {(currentQuestion.options || []).map((o: any) => {
+                      const key = opt(o);
+                      const isSelected = selectedAnswer === key;
+                      return (
+                        <motion.div
+                          key={key}
+                          variants={fadeUp}
+                          whileTap={{ scale: 0.98 }}
+                          style={{ willChange: 'transform' }}
+                        >
+                          <Label
+                            className={`flex items-start gap-4 text-xs md:text-base p-4 md:p-6 rounded-xl md:rounded-[1.5rem] border-2 transition-[border-color,background-color,box-shadow] cursor-pointer select-none ${
+                              isSelected
+                                ? 'border-accent bg-accent/5 shadow-[0_0_0_3px_rgba(255,107,0,0.12)]'
+                                : 'border-muted/20 active:border-accent/60 active:bg-accent/[0.03]'
+                            }`}
+                          >
+                            <RadioGroupItem value={key} id={key} className="mt-1" />
+                            <div className="flex gap-2 md:gap-4">
+                              <span className={`font-black italic shrink-0 ${isSelected ? 'text-accent' : 'text-primary/30'}`}>
+                                {key.toUpperCase()}.
+                              </span>
+                              <span className="font-medium text-slate-700 whitespace-pre-wrap break-words">{o.text}</span>
+                            </div>
+                          </Label>
+                        </motion.div>
+                      );
+                    })}
+                  </RadioGroup>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </AnimatePresence>
 
-        <div className="flex justify-between items-center bg-white/50 backdrop-blur-md p-3 rounded-2xl border border-white shadow-xl">
+        <div className="flex justify-between items-center bg-white/50 p-3 rounded-2xl border border-white shadow-xl">
           <p className="hidden md:block text-[10px] font-black uppercase text-primary/40 px-4 italic">Analise com calma.</p>
           <Button
             onClick={handleNext}
@@ -479,21 +538,31 @@ export default function SimuladoPage() {
       </div>
 
       {/* Mode Selector */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+      >
         {MODES.map(m => (
-          <button
+          <motion.button
             key={m.id}
+            variants={fadeUp}
+            whileTap={{ scale: 0.97 }}
+            style={{ willChange: 'transform' }}
             onClick={() => { setMode(m.id); setSelectedSubjectId(''); setSelectedMicroTopicId(ALL_TOPICS); }}
-            className={`p-5 rounded-[2rem] border-2 text-left transition-all hover:shadow-lg ${
-              mode === m.id ? 'border-primary bg-primary/5 shadow-xl' : 'border-muted/20 bg-white'
+            className={`p-5 rounded-[2rem] border-2 text-left transition-[border-color,background-color,box-shadow] ${
+              mode === m.id
+                ? 'gradient-border border-primary bg-primary/5 shadow-xl glow-orange'
+                : 'border-muted/20 bg-white'
             }`}
           >
             <m.icon className={`h-6 w-6 mb-3 ${mode === m.id ? 'text-primary' : 'text-muted-foreground'}`} />
             <p className={`font-black text-sm ${mode === m.id ? 'text-primary' : 'text-primary/60'}`}>{m.label}</p>
             <p className="text-xs text-muted-foreground font-medium mt-1">{m.desc}</p>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Filters */}
       {(mode === 'materia' || mode === 'especifico') && (
@@ -578,7 +647,7 @@ export default function SimuladoPage() {
       <Button
         onClick={startSimulado}
         disabled={!canStart}
-        className="w-full h-14 rounded-2xl bg-primary text-white font-black text-lg shadow-2xl hover:scale-[1.02] transition-all active:scale-95"
+        className="btn-shimmer w-full h-14 rounded-2xl bg-primary text-white font-black text-lg shadow-2xl glow-orange-strong hover:scale-[1.02] transition-[transform,box-shadow] active:scale-95 [touch-action:manipulation]"
       >
         <BrainCircuit className="h-6 w-6 mr-2" />
         Iniciar Simulado

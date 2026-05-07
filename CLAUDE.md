@@ -12,7 +12,7 @@ Plataforma de gestão educacional e aprendizado adaptativo para alunos do cursin
 
 ## 🗂 Estrutura do Banco de Dados (Principais Tabelas)
 - `profiles`: id, full_name, email, role (`admin`, `teacher`, `student`), profile_type, institution.
-- `questions`: question_text, options (JSONB), correct_answer, subject_id, micro_topic_id, explanation, target_audience.
+- `questions`: question_text, options (JSONB), correct_answer, subject_id, micro_topic_id, explanation, target_audience, supporting_text (texto compartilhado), image_url (link da imagem).
 - `subjects`: id, name.
 - `exams`: id, title, year, exam_type.
 - `exam_questions`: exam_id, question_id, order_index.
@@ -32,8 +32,13 @@ Plataforma de gestão educacional e aprendizado adaptativo para alunos do cursin
 - **Componentes**: Prefira Server Components por padrão. Use `"use client"` apenas quando houver interatividade.
 - **Database**: Sempre verifique as colunas nas migrations (`/supabase/migrations`) antes de realizar queries.
 - **Segurança**: Respeite as RLS (Row Level Security) do Supabase; filtre dados por `user.id` ou `role`.
-- **IA Extraction**: A lógica de extração de questões em massa está em `src/app/api/chat/route.ts`. Use `maxTokens: 4000` para JSONs grandes.
-- **Simulados**: Devem seguir o padrão ENEM (3.5 min/questão, navegação por grade, opção de revisão).
+- **IA Extraction (Motor de Provas)**: 
+  - **Contexto**: Se o texto original diz "utilize o texto para responder as questões X a Y", a IA DEVE repetir o `supporting_text` integralmente em cada objeto de questão do JSON gerado. Nunca deixe uma questão sem seu texto de apoio.
+  - **Mídia**: Se houver referência a imagens/gráficos, insira o placeholder `[IMAGEM_PENDENTE]` no enunciado para sinalizar a necessidade de upload manual.
+- **Simulados & UX**: 
+  - Renderize o `supporting_text` em um card destacado ANTES do enunciado.
+  - Se a questão possuir `image_url`, ela deve ser a prioridade visual no topo do card da questão.
+  - Siga o padrão ENEM (3.5 min/questão, navegação por grade, opção de revisão).
 
 ## 📌 Links e Pastas Importantes
 - `/src/app/dashboard`: Rotas principais separadas por cargo (student/teacher/admin).

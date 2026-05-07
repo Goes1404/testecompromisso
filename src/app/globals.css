@@ -253,3 +253,126 @@
 .glass-card {
   @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
 }
+
+/* ── 21st.dev / Stitch Design System ───────────────────────── */
+
+/* Dot-grid overlay — hero sections e dark cards */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dot-grid-dark {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Gradient border — técnica de CSS mask para borda com gradiente */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 0, 0.35) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 107, 0, 0.12) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Shimmer — brilho deslizante em botões e cards */
+@keyframes shimmer-slide {
+  0%   { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(250%)  skewX(-12deg); }
+}
+
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 100%
+  );
+  animation: shimmer-slide 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Aurora shift — gradiente animado para seções escuras */
+@keyframes aurora-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+.aurora-dark {
+  background: linear-gradient(
+    -45deg,
+    #0d0d0d 0%,
+    #1a0500 25%,
+    #0d0d0d 50%,
+    #0a0020 75%,
+    #050510 100%
+  );
+  background-size: 400% 400%;
+  animation: aurora-shift 10s ease infinite;
+}
+
+/* Glow ring — resplandor laranja ao redor de elementos */
+.glow-orange {
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 0, 0.15),
+    0 4px 24px rgba(255, 107, 0, 0.12),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.glow-orange-strong {
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 0, 0.25),
+    0 0 20px rgba(255, 107, 0, 0.18),
+    0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Float suave — elementos decorativos no hero */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float-y 4s ease-in-out infinite;
+}
+
+/* Gradient text — títulos com gradiente laranja→âmbar */
+.text-gradient-brand {
+  background: linear-gradient(135deg, hsl(25 100% 50%) 0%, hsl(38 100% 55%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Noise overlay — textura sutil em cards dark */
+.noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  border-radius: inherit;
+  pointer-events: none;
+}
