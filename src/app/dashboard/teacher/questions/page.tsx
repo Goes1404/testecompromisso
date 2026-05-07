@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useRef } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 const QuestionsDashboard = dynamic(
   () => import('@/components/QuestionsDashboard').then(m => ({ default: m.QuestionsDashboard })),
   { ssr: false }
