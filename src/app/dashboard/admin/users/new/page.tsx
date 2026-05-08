@@ -72,6 +72,7 @@ type ExamTarget = 'ENEM' | 'ETEC';
 interface FormData {
   fullName: string;
   cpf: string;
+  birthDate: string;
   role: Role;
   profileType: string;
   examTarget: ExamTarget;
@@ -185,6 +186,7 @@ export default function AdminNewUserPage() {
   const [form, setForm] = useState<FormData>({
     fullName: '',
     cpf: '',
+    birthDate: '',
     role: 'student',
     profileType: 'Estudante ENEM',
     examTarget: 'ENEM',
@@ -238,6 +240,7 @@ export default function AdminNewUserPage() {
           masterPassword: 'compromisso2026',
           fullName: form.fullName.trim(),
           cpf: form.cpf,
+          birthDate: form.birthDate || undefined,
           role: form.role,
           profileType: form.profileType,
           institution: form.institution,
@@ -357,7 +360,7 @@ export default function AdminNewUserPage() {
               setCreatedUser(null);
               setInviteLink(null);
               setForm({
-                fullName: '', cpf: '', role: 'student', profileType: 'Estudante ENEM',
+                fullName: '', cpf: '', birthDate: '', role: 'student', profileType: 'Estudante ENEM',
                 examTarget: 'ENEM', institution: '', course: '', emailOverride: '',
               });
               setGeneratedEmail('');
@@ -422,15 +425,29 @@ export default function AdminNewUserPage() {
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase text-primary/60 tracking-widest">CPF</Label>
-            <Input
-              value={form.cpf}
-              onChange={e => setField('cpf', cpfMask(e.target.value))}
-              placeholder="000.000.000-00"
-              maxLength={14}
-              className="h-12 rounded-xl bg-slate-50 border-none font-medium shadow-sm focus-visible:ring-accent"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-primary/60 tracking-widest">CPF</Label>
+              <Input
+                value={form.cpf}
+                onChange={e => setField('cpf', cpfMask(e.target.value))}
+                placeholder="000.000.000-00"
+                maxLength={14}
+                className="h-12 rounded-xl bg-slate-50 border-none font-medium shadow-sm focus-visible:ring-accent"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-primary/60 tracking-widest">
+                Data de Nascimento
+              </Label>
+              <Input
+                type="date"
+                value={form.birthDate}
+                onChange={e => setField('birthDate', e.target.value)}
+                className="h-12 rounded-xl bg-slate-50 border-none font-medium shadow-sm focus-visible:ring-accent"
+              />
+            </div>
           </div>
         </fieldset>
 

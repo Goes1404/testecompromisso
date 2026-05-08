@@ -384,9 +384,9 @@ export default function QuestionBankPage() {
         }, 1000);
 
         try {
-            // CHUNK_SIZE reduzido para evitar Timeout na Vercel (504 Gateway Timeout)
-            const CHUNK_SIZE = 7000; 
-            const OVERLAP = 1000;
+            // Chunks menores = menos risco de timeout (504) na Vercel
+            const CHUNK_SIZE = 4500;
+            const OVERLAP = 800;
             const chunks: string[] = [];
 
             for (let i = 0; i < rawText.length; i += (CHUNK_SIZE - OVERLAP)) {
@@ -405,7 +405,7 @@ export default function QuestionBankPage() {
 
                 setProgress(p => ({ ...p, currentChunk: i + 1 }));
 
-                // Retry automático em caso de 429 (rate limit esgotado)
+                // Retry automático em caso de 429 ou 504
                 let response: Response | null = null;
                 for (let attempt = 0; attempt < 3; attempt++) {
                     response = await fetch('/api/chat', {
@@ -443,9 +443,8 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`
                             ]
                         })
                     });
-                    if (response.status !== 429) break;
-                    // Espera antes de retry (backoff exponencial)
-                    await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+                    if (response.status !== 429 && response.status !== 504) break;
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
                 }
 
                 if (!response || !response.ok) {
@@ -453,19 +452,27 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`
                         toast({ description: `Limite de requisições atingido. Parte ${i + 1} ignorada.`, variant: 'destructive' });
                         continue;
                     }
-                    if (response?.status === 504) throw new Error(`Tempo esgotado na parte ${i + 1}. Tente um texto menor.`);
+                    if (response?.status === 504) {
+                        // Não para tudo — avisa e segue para o próximo chunk
+                        toast({ description: `Parte ${i + 1} demorou demais (504). Pulando para a próxima.`, variant: 'destructive' });
+                        continue;
+                    }
                     throw new Error(`Erro no servidor na parte ${i + 1}.`);
                 }
 
-                let data;
+                let data: any;
                 try {
                     const textResponse = await response.text();
                     data = JSON.parse(textResponse);
                 } catch {
-                    throw new Error(`A Aurora retornou formato inválido na parte ${i + 1}. Verifique sua conexão.`);
+                    toast({ description: `Formato inválido na parte ${i + 1}. Pulando.`, variant: 'destructive' });
+                    continue;
                 }
 
-                if (!data.success) throw new Error(data.error || "Erro na análise da Aurora.");
+                if (!data.success) {
+                    toast({ description: `Erro da Aurora na parte ${i + 1}. Pulando.`, variant: 'destructive' });
+                    continue;
+                }
 
                 const responseText = data.result?.response || '';
                 const cleanText = responseText.trim()
@@ -532,7 +539,7 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`
             }
 
             setProgress(p => ({ ...p, phase: 'done' }));
-            
+
             toast({ title: `Processo concluído!`, description: `A extração de todas as partes foi finalizada.` });
         } catch (e: any) {
             console.error("Erro na análise em massa:", e);

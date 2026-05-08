@@ -419,9 +419,12 @@ export default function AdminUserDirectoryPage() {
   };
 
   const filtered = users.filter(u => {
+    const norm = (s: string) =>
+      (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const terms = norm(searchTerm).trim().split(/\s+/).filter(Boolean);
     const matchesSearch =
-      u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.username?.toLowerCase().includes(searchTerm.toLowerCase());
+      terms.length === 0 ||
+      terms.every(t => norm(u.name).includes(t) || norm(u.username).includes(t));
 
     const pType = (u.profile_type || '').toLowerCase();
     const isStaff = u.role === 'admin' || u.role === 'teacher' ||

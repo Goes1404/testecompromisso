@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       course,
       examTarget,
       emailOverride,
+      birthDate,
     } = await request.json();
 
     if (masterPassword !== process.env.ADMIN_MASTER_PASSWORD && masterPassword !== 'compromisso2026') {
@@ -107,6 +108,7 @@ export async function POST(request: Request) {
       institution: institution || null,
       course: course || null,
       exam_target: examTarget || null,
+      birth_date: birthDate || null,
     });
 
     if (profileError) {

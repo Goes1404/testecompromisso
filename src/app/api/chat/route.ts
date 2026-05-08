@@ -1,8 +1,8 @@
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 
-// Tempo máximo de processamento da Vercel (300s no Pro, 60s no Hobby)
-export const maxDuration = 60;
+// 300s no Pro / 60s no Hobby — a Vercel usa o máximo permitido pelo plano
+export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
