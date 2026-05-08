@@ -46,7 +46,7 @@ type ExtractionContextType = {
     autoImageQueue: ImgItem[];
     uploadHistory: UploadRecord[];
     setExtractedQuestions: React.Dispatch<React.SetStateAction<ParsedQuestion[]>>;
-    setRawText: (text: string) => void;
+    setRawText: React.Dispatch<React.SetStateAction<string>>;
     setPdfUrl: (url: string | null) => void;
     setAutoImageQueue: React.Dispatch<React.SetStateAction<ImgItem[]>>;
     clearExtraction: () => void;
@@ -149,7 +149,7 @@ export function ExtractionProvider({ children }: { children: ReactNode }) {
         }
     }, [extractedQuestions]);
 
-    const setRawText = useCallback((text: string) => setRawTextState(text), []);
+    const setRawText = setRawTextState;
 
     const deleteImageFromStorage = useCallback(async (url: string) => {
         try {
