@@ -480,22 +480,24 @@ export default function StudentEssayPage() {
             <TrendingUp className="h-6 w-6 text-accent" />
             <h2 className="text-xl font-black text-primary italic uppercase tracking-widest">Evolução</h2>
           </div>
-          <Card className="gradient-border border-none shadow-2xl rounded-[3rem] bg-white p-8 h-[300px]">
-            {history.length > 0 ? (
-              <div className="h-full w-full">
-                <EssayChart data={history} />
-              </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-center gap-2">
-                <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center shadow-inner">
-                   <History className="h-6 w-6 text-primary" />
+          <Card className="gradient-border border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
+            <CardContent className="p-8">
+              {history.length > 0 ? (
+                <div className="h-[250px] w-full">
+                  <EssayChart data={history} />
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Radar de Evolução</p>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Aguardando seu primeiro envio</p>
+              ) : (
+                <div className="h-[250px] flex flex-col items-center justify-center opacity-30 italic text-center gap-2">
+                  <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center shadow-inner">
+                     <History className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary">Radar de Evolução</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Aguardando seu primeiro envio</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>
