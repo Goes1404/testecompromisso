@@ -48,6 +48,7 @@ export default function QuestionBankPage() {
     // Page-local state
     const [entryMode, setEntryMode] = useState<'bulk' | 'manual'>('bulk');
     const [isSaving, setIsSaving] = useState(false);
+    const [saveProgress, setSaveProgress] = useState<{ current: number, total: number } | null>(null);
     const [isReadingFile, setIsReadingFile] = useState(false);
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [filterMode, setFilterMode] = useState<'all' | 'needs_image' | 'no_subject' | 'dubious_answer'>('all');
@@ -288,10 +289,12 @@ export default function QuestionBankPage() {
 
             const inserted: { id: string }[] = [];
             const failed: { index: number; error: string }[] = [];
+            setSaveProgress({ current: 0, total: itemsToInsert.length });
             for (let idx = 0; idx < itemsToInsert.length; idx++) {
                 const { data, error: insertErr } = await supabase.from('questions').insert([itemsToInsert[idx]]).select('id').single();
                 if (insertErr) failed.push({ index: idx, error: insertErr.message });
                 else if (data) inserted.push(data);
+                setSaveProgress({ current: idx + 1, total: itemsToInsert.length });
             }
 
             if (failed.length > 0 && inserted.length === 0)
@@ -320,7 +323,7 @@ export default function QuestionBankPage() {
             setExamTitle('');
         } catch (e: any) {
             toast({ title: 'Erro ao gravar', description: e.message, variant: 'destructive' });
-        } finally { setIsSaving(false); }
+        } finally { setIsSaving(false); setSaveProgress(null); }
     };
 
     // ---------- Save single (manual) ----------
@@ -759,9 +762,17 @@ export default function QuestionBankPage() {
                                 )}
 
                                 <Button onClick={handlePreSave} disabled={isSaving || !bulkSubjectId || (createExam && !examTitle.trim())}
-                                    className="w-full h-12 rounded-xl bg-primary text-white font-black shadow-lg">
-                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2 text-accent" />}
-                                    Validar e Salvar Tudo ({extractedQuestions.length} questões)
+                                    className="w-full h-12 rounded-xl bg-primary text-white font-black shadow-lg relative overflow-hidden">
+                                    {saveProgress && (
+                                        <div 
+                                            className="absolute top-0 left-0 h-full bg-accent transition-all duration-300 z-0" 
+                                            style={{ width: `${(saveProgress.current / saveProgress.total) * 100}%`, opacity: 0.2 }}
+                                        />
+                                    )}
+                                    <div className="relative z-10 flex items-center justify-center">
+                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2 text-accent" />}
+                                        {saveProgress ? `Salvando... (${saveProgress.current}/${saveProgress.total})` : isSaving ? 'Verificando...' : `Validar e Salvar Tudo (${extractedQuestions.length} questões)`}
+                                    </div>
                                 </Button>
                             </div>
 
