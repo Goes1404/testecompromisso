@@ -72,7 +72,7 @@ export default function SimuladoPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [activeSubjectId, setActiveSubjectId] = useState<string | null>(null);
-  
+
   // New simulation settings
   const [simSize, setSimSize] = useState<number>(10);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -173,13 +173,13 @@ export default function SimuladoPage() {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       setGameState('error');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, selectedSubjectId, selectedMicroTopicId, profile, toast, simSize]);
 
   // Timer effect
   useEffect(() => {
     if (gameState !== 'active' || timeLeft === null || isPaused) return;
-    
+
     if (timeLeft <= 0) {
       toast({ title: "Tempo esgotado!", description: "Seu simulado será finalizado.", variant: "destructive" });
       setGameState('finished');
@@ -223,7 +223,7 @@ export default function SimuladoPage() {
         question_id: q.id,
         selected_option: selectedAnswer,
         is_correct: norm(selectedAnswer) === norm(q.correct_answer),
-      }).then(() => {});
+      }).then(() => { });
     }
 
     if (currentIndex < questions.length - 1) {
@@ -237,13 +237,13 @@ export default function SimuladoPage() {
       if (user && activeSubjectId) {
         supabase.from('simulation_attempts').insert({
           user_id: user.id, subject_id: activeSubjectId, score, total_questions: total,
-        }).then(() => {});
+        }).then(() => { });
       }
 
       // Award XP
       if (user) {
         const xpGained = score * XP_PER_CORRECT_QUESTION + XP_PER_SIMULADO_COMPLETE;
-        awardXP(user.id, xpGained).then(() => {});
+        awardXP(user.id, xpGained).then(() => { });
 
         const totalAnswered = await getTotalAnswered(user.id);
         const newBadges = await checkAndAwardBadges(user.id, {
@@ -325,10 +325,10 @@ export default function SimuladoPage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: [0.25, 0.1, 0.25, 1] }}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
             style={{ willChange: 'transform' }}
           >
             <Card className="border-none shadow-xl rounded-3xl bg-white overflow-hidden">
@@ -373,11 +373,10 @@ export default function SimuladoPage() {
                           style={{ willChange: 'transform' }}
                         >
                           <Label
-                            className={`flex items-start gap-4 text-xs md:text-base p-4 md:p-6 rounded-xl md:rounded-[1.5rem] border-2 transition-[border-color,background-color,box-shadow] cursor-pointer select-none ${
-                              isSelected
+                            className={`flex items-start gap-4 text-xs md:text-base p-4 md:p-6 rounded-xl md:rounded-[1.5rem] border-2 transition-[border-color,background-color,box-shadow] cursor-pointer select-none ${isSelected
                                 ? 'border-accent bg-accent/5 shadow-[0_0_0_3px_rgba(255,107,0,0.12)]'
                                 : 'border-muted/20 active:border-accent/60 active:bg-accent/[0.03]'
-                            }`}
+                              }`}
                           >
                             <RadioGroupItem value={key} id={key} className="mt-1" />
                             <div className="flex gap-2 md:gap-4">
@@ -481,7 +480,7 @@ export default function SimuladoPage() {
                       const isSelectedOpt = norm(key) === norm(ans.selected);
                       const wasWrong = isSelectedOpt && norm(ans.selected) !== norm(ans.correct);
                       return (
-                          <div
+                        <div
                           key={key || opt.text}
                           className={`flex items-center gap-3 p-2.5 rounded-xl text-xs font-medium transition-all border
                             ${isCorrectOpt ? 'bg-green-50 border-green-200 text-green-700 font-bold' : ''}
@@ -551,11 +550,10 @@ export default function SimuladoPage() {
             whileTap={{ scale: 0.97 }}
             style={{ willChange: 'transform' }}
             onClick={() => { setMode(m.id); setSelectedSubjectId(''); setSelectedMicroTopicId(ALL_TOPICS); }}
-            className={`p-5 rounded-[2rem] border-2 text-left transition-[border-color,background-color,box-shadow] ${
-              mode === m.id
+            className={`p-5 rounded-[2rem] border-2 text-left transition-[border-color,background-color,box-shadow] ${mode === m.id
                 ? 'gradient-border border-primary bg-primary/5 shadow-xl glow-orange'
                 : 'border-muted/20 bg-white'
-            }`}
+              }`}
           >
             <m.icon className={`h-6 w-6 mb-3 ${mode === m.id ? 'text-primary' : 'text-muted-foreground'}`} />
             <p className={`font-black text-sm ${mode === m.id ? 'text-primary' : 'text-primary/60'}`}>{m.label}</p>
@@ -612,34 +610,34 @@ export default function SimuladoPage() {
             <p className="font-black text-xl text-primary italic">Simulado Completo Personalizado</p>
             <p className="text-xs text-muted-foreground font-medium mt-1">Questões aleatórias de todas as disciplinas cadastradas.</p>
           </div>
-          
+
           <div className="max-w-xs mx-auto space-y-3">
-             <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Quantidade de Questões</Label>
-             <div className="grid grid-cols-3 gap-2">
-                {[10, 20, 45, 90].map(n => (
-                   <Button 
-                    key={n} 
-                    variant={simSize === n ? 'default' : 'outline'} 
-                    onClick={() => setSimSize(n)}
-                    className={`rounded-xl font-black ${simSize === n ? 'bg-primary shadow-lg' : 'border-2'}`}
-                   >
-                    {n}
-                   </Button>
-                )).slice(0, 3)}
-                {/* 90 questions is only for full trial */}
-                <Button 
-                  variant={simSize === 90 ? 'default' : 'outline'} 
-                  onClick={() => setSimSize(90)}
-                  className={`col-span-3 rounded-xl font-black ${simSize === 90 ? 'bg-primary shadow-lg' : 'border-2'}`}
+            <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Quantidade de Questões</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {[10, 20, 45, 90].map(n => (
+                <Button
+                  key={n}
+                  variant={simSize === n ? 'default' : 'outline'}
+                  onClick={() => setSimSize(n)}
+                  className={`rounded-xl font-black ${simSize === n ? 'bg-primary shadow-lg' : 'border-2'}`}
                 >
-                  Modo ENEM Real (90 Questões)
+                  {n}
                 </Button>
-             </div>
+              )).slice(0, 3)}
+              {/* 90 questions is only for full trial */}
+              <Button
+                variant={simSize === 90 ? 'default' : 'outline'}
+                onClick={() => setSimSize(90)}
+                className={`col-span-3 rounded-xl font-black ${simSize === 90 ? 'bg-primary shadow-lg' : 'border-2'}`}
+              >
+                Modo ENEM Real (90 Questões)
+              </Button>
+            </div>
           </div>
-          
+
           <div className="flex items-center justify-center gap-2 p-4 bg-white/50 rounded-2xl border border-dashed border-primary/20">
-             <Timer className="h-4 w-4 text-accent" />
-             <p className="text-[10px] font-bold text-primary/60 uppercase tracking-tight">Tempo estimado: {Math.round(simSize * 3.5)} minutos</p>
+            <Timer className="h-4 w-4 text-accent" />
+            <p className="text-[10px] font-bold text-primary/60 uppercase tracking-tight">Tempo estimado: {Math.round(simSize * 3.5)} minutos</p>
           </div>
         </div>
       )}

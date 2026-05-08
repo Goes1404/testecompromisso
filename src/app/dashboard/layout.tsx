@@ -17,6 +17,8 @@ import { LoadingShell } from "@/components/LoadingShell";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UrgentNotice } from "@/components/UrgentNotice";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
+import { ExtractionProvider } from "@/lib/ExtractionContext";
+import { FloatingExtractionBubble } from "@/components/FloatingExtractionBubble";
 
 type NavChild = { icon: any; label: string; href: string; id: string };
 type NavItem = { icon: any; label: string; href?: string; id: string; badge?: boolean; children?: NavChild[] };
@@ -220,6 +222,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const userAvatar = profile?.avatar_url || `https://picsum.photos/seed/${user.id}/100/100`;
 
   return (
+    <ExtractionProvider>
     <SidebarProvider>
       <Sidebar side="left" collapsible="icon" className="bg-sidebar border-none">
         <SidebarHeader className="p-6">
@@ -311,7 +314,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
         <OnboardingTour />
         <UrgentNotice />
+        <FloatingExtractionBubble />
       </SidebarInset>
     </SidebarProvider>
+    </ExtractionProvider>
   );
 }
