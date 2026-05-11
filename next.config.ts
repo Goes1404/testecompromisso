@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/**' },
       { protocol: 'https', hostname: 'db.vnjqytppjccekjfiixxu.supabase.co', pathname: '/**' },
       { protocol: 'https', hostname: 'qjdcexrirortchemezij.supabase.co', pathname: '/**' },
+      { protocol: 'https', hostname: 'm.media-amazon.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'images-na.ssl-images-amazon.com', pathname: '/**' },
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
