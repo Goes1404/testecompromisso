@@ -25,7 +25,7 @@ CREATE POLICY "Teachers can view all essays" ON public.essay_submissions
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role IN ('teacher', 'admin', 'staff')
+            WHERE id = auth.uid() AND role IN ('teacher', 'admin')
         )
     );
 
@@ -33,6 +33,6 @@ CREATE POLICY "Teachers can update essays" ON public.essay_submissions
     FOR UPDATE USING (
         EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role IN ('teacher', 'admin', 'staff')
+            WHERE id = auth.uid() AND role IN ('teacher', 'admin')
         )
     );

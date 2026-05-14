@@ -1,4 +1,3 @@
-d
 -- Habilita a extensão pgvector, caso ainda não esteja ativa.
 CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 

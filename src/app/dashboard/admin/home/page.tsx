@@ -121,30 +121,43 @@ export default function CoordinatorDashboard() {
         });
       }
 
-      // 2. BUSCA DE PROGRESSO (MUITO RÁPIDO AGORA)
-      const { count: progressCount } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true });
+      // 2. PROGRESSO: engajados (qualquer %) e concluídos (percentage >= 100)
+      const [{ count: engagedCount }, { count: finishedCount }] = await Promise.all([
+        supabase.from('user_progress').select('*', { count: 'exact', head: true }),
+        supabase.from('user_progress').select('*', { count: 'exact', head: true }).gte('percentage', 100),
+      ]);
 
-      // 3. ALERTAS DE RISCO (ZERADOS PARA LANÇAMENTO)
+      // 3. ALERTAS DE RISCO
       const alerts: RiskAlert[] = [];
       setRiskAlerts(alerts);
 
-      // LOGS 
+      // 4. LOGS — usa student_question_answers pois activity_logs pode não existir
       const { data: logData } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .from('student_question_answers')
+        .select('id, student_id, question_id, is_correct, answered_at')
+        .order('answered_at', { ascending: false })
         .limit(5);
-      if (logData) setLogs(logData);
 
+      if (logData) {
+        setLogs(logData.map(r => ({
+          id: r.id,
+          user_name: r.student_id?.slice(0, 8),
+          action: r.is_correct ? 'Questão respondida corretamente' : 'Questão respondida incorretamente',
+          entity_type: 'simulado',
+          created_at: r.answered_at,
+        })));
+      }
+
+      const finished = finishedCount ?? 0;
       setStats({
         totalStudents: studentCount,
         totalTeachers: teacherCount,
-        startedTrails: progressCount || 0,
-        finishedTrails: 0,
-        avgFinishedPerStudent: 0,
-        eligibleStudents: eligibleCount
+        startedTrails: engagedCount ?? 0,
+        finishedTrails: finished,
+        avgFinishedPerStudent: studentCount > 0
+          ? Math.round((finished / studentCount) * 100) / 100
+          : 0,
+        eligibleStudents: eligibleCount,
       });
 
     } catch (err) {

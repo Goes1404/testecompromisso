@@ -221,9 +221,9 @@ export default function QuestionBankPage() {
         }
 
         if (combinedText.trim().length > 50) {
-            setRawText(prev => prev ? prev + '\n' + combinedText.trim() : combinedText.trim());
+            setRawText((prev: string) => prev ? prev + '\n' + combinedText.trim() : combinedText.trim());
             setTimeout(() => {
-                setAutoImageQueue(prev => [...prev, ...tempImages]);
+                setAutoImageQueue((prev: ImgItem[]) => [...prev, ...tempImages]);
                 const imgMsg = tempImages.length > 0 ? ` ${tempImages.length} imagens detectadas.` : '';
                 toast({ title: 'Upload concluído!', description: `${files.length} arquivo(s) lido(s).${imgMsg}` });
             }, 1000);

@@ -235,7 +235,7 @@ export default function StudentNotesPage() {
     blockId: string; query: string; y: number; x: number;
   } | null>(null);
 
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const titleRef = useRef<HTMLTextAreaElement>(null);
 

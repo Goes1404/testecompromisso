@@ -48,8 +48,8 @@ type ExtractionContextType = {
     uploadHistory: UploadRecord[];
     setExtractedQuestions: React.Dispatch<React.SetStateAction<ParsedQuestion[]>>;
     setRawText: React.Dispatch<React.SetStateAction<string>>;
-    setPdfUrl: Dispatch<SetStateAction<string | null>>;
-    setPdfFile: Dispatch<SetStateAction<File | null>>;
+    setPdfUrl: React.Dispatch<React.SetStateAction<string | null>>;
+    setPdfFile: React.Dispatch<React.SetStateAction<File | null>>;
     setAutoImageQueue: React.Dispatch<React.SetStateAction<ImgItem[]>>;
     clearExtraction: () => void;
     startExtraction: (params: {

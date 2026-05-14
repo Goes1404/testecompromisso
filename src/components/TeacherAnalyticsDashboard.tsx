@@ -94,81 +94,82 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
     async function fetchAnalytics() {
       setLoading(true);
       try {
-        const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
-        
-        // Profiles count
+        // 1. Total de alunos via profiles.profile_type = 'student'
         let realTotalStudents = 0;
         if (userId) {
           realTotalStudents = 1;
         } else {
-          const { data: profiles } = await supabase.from('profiles').select('profile_type');
-          realTotalStudents = profiles?.filter(p => {
-            const type = (p.profile_type || '').toLowerCase();
-            return studentKeywords.some(key => type.includes(key)) || type === '';
-          }).length || 0;
+          const { count } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('profile_type', 'student');
+          realTotalStudents = count || 0;
         }
 
-        // Avg Score
-        let scoreQuery = supabase.from('simulation_attempts').select('score, total_questions');
-        if (userId) scoreQuery = scoreQuery.eq('user_id', userId);
-        const { data: scores } = await scoreQuery;
-        
+        // 2. Taxa de acerto — usa student_question_answers (simulation_attempts não existe nas migrations)
+        let answerQuery = supabase.from('student_question_answers').select('is_correct');
+        if (userId) answerQuery = answerQuery.eq('student_id', userId);
+        const { data: answers } = await answerQuery;
+
         let realAvgScore = 0;
-        if (scores && scores.length > 0) {
-          const totalPoints = scores.reduce((acc, s) => acc + (s.score / s.total_questions), 0);
-          realAvgScore = Math.round((totalPoints / scores.length) * 1000);
+        if (answers && answers.length > 0) {
+          const correct = answers.filter(a => a.is_correct).length;
+          // Escala ENEM: 0–1000
+          realAvgScore = Math.round((correct / answers.length) * 1000);
         }
 
-        // Completion Rate
+        // 3. Taxa de conclusão de trilhas — user_progress.percentage
         let progressQuery = supabase.from('user_progress').select('percentage');
         if (userId) progressQuery = progressQuery.eq('user_id', userId);
         const { data: progress } = await progressQuery;
-        
+
         let realAvgProg = 0;
         if (progress && progress.length > 0) {
-          realAvgProg = Math.round(progress.reduce((acc, p) => acc + (p.percentage || 0), 0) / progress.length);
+          const total = progress.reduce((acc, p) => acc + (Number(p.percentage) || 0), 0);
+          realAvgProg = Math.round(total / progress.length);
         }
 
-        // Performance by Subject
-        let subScoreQuery = supabase.from('simulation_attempts').select('score, total_questions, subjects(name)');
-        if (userId) subScoreQuery = subScoreQuery.eq('user_id', userId);
-        const { data: subjectScores } = await subScoreQuery;
-        
-        const subjectMap: Record<string, { total: number, count: number }> = {};
-        subjectScores?.forEach((s: any) => {
-          const subjectData = Array.isArray(s.subjects) ? s.subjects[0] : s.subjects;
-          const name = subjectData?.name || 'Geral';
-          
-          if (!subjectMap[name]) subjectMap[name] = { total: 0, count: 0 };
-          subjectMap[name].total += (s.score / s.total_questions) * 100;
-          subjectMap[name].count += 1;
+        // 4. Performance por matéria — student_question_answers → questions → subjects
+        let subQuery = supabase
+          .from('student_question_answers')
+          .select('is_correct, question:questions!question_id(subject:subjects!subject_id(name))');
+        if (userId) subQuery = subQuery.eq('student_id', userId);
+        const { data: subAnswers } = await subQuery;
+
+        const subjectMap: Record<string, { correct: number; total: number }> = {};
+        (subAnswers as any[] ?? []).forEach((a) => {
+          const name = a.question?.subject?.name || 'Geral';
+          if (!subjectMap[name]) subjectMap[name] = { correct: 0, total: 0 };
+          subjectMap[name].total += 1;
+          if (a.is_correct) subjectMap[name].correct += 1;
         });
 
-        const realPerformanceBySubject = Object.entries(subjectMap).map(([name, stats]) => ({
-          name,
-          performance: Math.round(stats.total / stats.count)
-        })).sort((a, b) => b.performance - a.performance);
+        const realPerformanceBySubject = Object.entries(subjectMap)
+          .map(([name, s]) => ({
+            name,
+            performance: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
+          }))
+          .sort((a, b) => b.performance - a.performance)
+          .slice(0, 5);
 
-        // Engagement Trend (Activity logs)
-        let logQuery = supabase.from('activity_logs').select('created_at');
-        if (userId) logQuery = logQuery.eq('user_id', userId);
-        const { data: logTrend } = await logQuery;
-        
-        const dayMap: Record<string, number> = { "Seg": 0, "Ter": 0, "Qua": 0, "Qui": 0, "Sex": 0, "Sáb": 0, "Dom": 0 };
+        // 5. Engajamento semanal — answered_at dos últimos 7 dias
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        let trendQuery = supabase
+          .from('student_question_answers')
+          .select('answered_at')
+          .gte('answered_at', weekAgo);
+        if (userId) trendQuery = trendQuery.eq('student_id', userId);
+        const { data: trendData } = await trendQuery;
+
         const daysShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-        
-        logTrend?.forEach(log => {
-          const date = new Date(log.created_at);
-          const dayName = daysShort[date.getDay()];
-          if (dayMap[dayName] !== undefined) dayMap[dayName]++;
+        const dayMap: Record<string, number> = { "Seg": 0, "Ter": 0, "Qua": 0, "Qui": 0, "Sex": 0, "Sáb": 0, "Dom": 0 };
+        (trendData ?? []).forEach((row: any) => {
+          const d = daysShort[new Date(row.answered_at).getDay()];
+          if (d in dayMap) dayMap[d]++;
         });
+        const realEngagementTrend = Object.entries(dayMap).map(([day, acessos]) => ({ day, acessos }));
 
-        const realEngagementTrend = Object.entries(dayMap).map(([day, acessos]) => ({
-          day,
-          acessos: userId ? (acessos) : (acessos + 10) // Small offset for global demo visibility
-        }));
-
-        const hasNoData = realTotalStudents === 0 && realAvgScore === 0;
+        const hasNoData = realTotalStudents === 0 && (answers?.length ?? 0) === 0;
         setIsDemo(hasNoData && !userId);
 
         if (hasNoData && !userId) {
@@ -184,12 +185,9 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
               { name: "Física", performance: 61 }
             ],
             engagementTrend: [
-              { day: "Seg", acessos: 110 },
-              { day: "Ter", acessos: 145 },
-              { day: "Qua", acessos: 168 },
-              { day: "Qui", acessos: 152 },
-              { day: "Sex", acessos: 130 },
-              { day: "Sáb", acessos: 95 },
+              { day: "Seg", acessos: 110 }, { day: "Ter", acessos: 145 },
+              { day: "Qua", acessos: 168 }, { day: "Qui", acessos: 152 },
+              { day: "Sex", acessos: 130 }, { day: "Sáb", acessos: 95 },
               { day: "Dom", acessos: 70 },
             ]
           });
@@ -198,8 +196,10 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
             totalStudents: realTotalStudents,
             avgScore: realAvgScore,
             completionRate: realAvgProg,
-            performanceBySubject: realPerformanceBySubject.length > 0 ? realPerformanceBySubject : [{ name: "Geral", performance: 0 }],
-            engagementTrend: realEngagementTrend
+            performanceBySubject: realPerformanceBySubject.length > 0
+              ? realPerformanceBySubject
+              : [{ name: "Geral", performance: 0 }],
+            engagementTrend: realEngagementTrend,
           });
         }
       } catch (e) {
