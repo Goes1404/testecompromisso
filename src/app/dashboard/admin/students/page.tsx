@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Search, 
-  Send, 
-  Loader2, 
+import {
+  Search,
+  Send,
+  Loader2,
   Users,
   GraduationCap,
   ArrowUpRight,
@@ -26,7 +26,9 @@ import {
   Layers,
   ExternalLink,
   GitMerge,
-  ZapOff
+  ZapOff,
+  Eye,
+  Pencil,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -304,9 +306,38 @@ export default function AdminStudentsPage() {
                       {student.exam_target || 'ENEM'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right px-8 space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditingStudent(student); setNewEmail(student.email || ""); setNewInstitution(student.institution || ""); setNewCourse(student.course || ""); setNewExamTarget(student.exam_target || "ENEM"); }}><Settings2 className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-red-400" onClick={() => handleDeleteStudent(student.id)}>{deletingId === student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</Button>
+                  <TableCell className="text-right px-8">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Ver desempenho"
+                        asChild
+                        className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                      >
+                        <Link href={`/dashboard/admin/students/${student.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Editar dados"
+                        onClick={() => { setEditingStudent(student); setNewEmail(student.email || ""); setNewInstitution(student.institution || ""); setNewCourse(student.course || ""); setNewExamTarget(student.exam_target || "ENEM"); }}
+                        className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Remover aluno"
+                        onClick={() => handleDeleteStudent(student.id)}
+                        className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
+                      >
+                        {deletingId === student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
