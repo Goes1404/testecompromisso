@@ -39,7 +39,7 @@ export default function QuestionBankPage() {
     const { user } = useAuth();
     const {
         isAnalyzing, progress, extractedQuestions, setExtractedQuestions,
-        rawText, setRawText, pdfUrl, setPdfUrl, autoImageQueue, setAutoImageQueue,
+        rawText, setRawText, pdfUrl, setPdfUrl, pdfFile, setPdfFile, autoImageQueue, setAutoImageQueue,
         uploadHistory, clearExtraction, startExtraction, handleImageUpload,
     } = useExtraction();
 
@@ -150,7 +150,10 @@ export default function QuestionBankPage() {
                 });
                 combinedText += `\n\n--- ARQUIVO: ${file.name} ---\n\n` + text;
             } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-                if (files.length === 1) setPdfUrl(URL.createObjectURL(file));
+                if (files.length === 1) {
+                    setPdfUrl(URL.createObjectURL(file));
+                    setPdfFile(file);
+                }
 
                 try {
                     const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
@@ -270,6 +273,37 @@ export default function QuestionBankPage() {
                 const m = (raw || '').trim().match(/^([A-Ea-e])/);
                 return m ? m[1].toUpperCase() : 'A';
             };
+
+            let finalExamId = null;
+            let uploadedPdfUrl = null;
+
+            if (createExam) {
+                // Upload PDF if exists
+                if (pdfFile) {
+                    setSaveProgress({ current: 0, total: itemsToProcess.length });
+                    const fileExt = pdfFile.name.split('.').pop();
+                    const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('exam_pdfs')
+                        .upload(fileName, pdfFile);
+                        
+                    if (!uploadError && uploadData) {
+                        const { data: publicUrlData } = supabase.storage.from('exam_pdfs').getPublicUrl(fileName);
+                        uploadedPdfUrl = publicUrlData.publicUrl;
+                    }
+                }
+
+                const { data: examData, error: examError } = await supabase.from('exams').insert({
+                    title: examTitle || 'Prova sem título',
+                    year: Number(examYear) || new Date().getFullYear(),
+                    exam_type: examType || 'enem',
+                    teacher_id: user?.id,
+                    pdf_url: uploadedPdfUrl
+                }).select('id').single();
+                
+                if (examError) throw examError;
+                finalExamId = examData.id;
+            }
 
             const itemsToInsert = itemsToProcess.map(q => {
                 const item: any = {

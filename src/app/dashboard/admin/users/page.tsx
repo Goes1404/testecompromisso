@@ -29,6 +29,7 @@ import {
   AlertCircle,
   Link2,
   Sparkles,
+  Pencil,
 } from "lucide-react";
 import {
   Select,
@@ -375,6 +376,16 @@ export default function AdminUserDirectoryPage() {
   const [resetOpen, setResetOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
 
+  // Estado do modal de edição
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editInstitution, setEditInstitution] = useState("");
+  const [editCourse, setEditCourse] = useState("");
+  const [editExamTarget, setEditExamTarget] = useState("");
+  const [editProfileType, setEditProfileType] = useState("");
+  const [editIsSubmitting, setEditIsSubmitting] = useState(false);
+
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -416,6 +427,40 @@ export default function AdminUserDirectoryPage() {
     }
     setResetTarget({ id: u.id, name: u.name, email: u.email });
     setResetOpen(true);
+  };
+
+  const openEditModal = (u: any) => {
+    setEditingUser(u);
+    setEditName(u.name || "");
+    setEditEmail(u.email || "");
+    setEditInstitution(u.institution || "");
+    setEditCourse(u.course || "");
+    setEditExamTarget(u.exam_target || "");
+    setEditProfileType(u.profile_type || "");
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser) return;
+    setEditIsSubmitting(true);
+    try {
+      const updates: Record<string, string> = {};
+      if (editName.trim()) updates.name = editName.trim();
+      if (editEmail.trim()) updates.email = editEmail.trim();
+      updates.institution = editInstitution.trim();
+      updates.course = editCourse.trim();
+      updates.exam_target = editExamTarget;
+      if (editProfileType.trim()) updates.profile_type = editProfileType.trim();
+
+      const { error } = await supabase.from('profiles').update(updates).eq('id', editingUser.id);
+      if (error) throw error;
+      setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...updates } : u));
+      toast({ title: "Dados atualizados com sucesso!" });
+      setEditingUser(null);
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    } finally {
+      setEditIsSubmitting(false);
+    }
   };
 
   const filtered = users.filter(u => {
@@ -607,6 +652,17 @@ export default function AdminUserDirectoryPage() {
                         {/* Ações */}
                         <TableCell className="text-right px-6">
                           <div className="flex items-center justify-end gap-1">
+                            {/* Editar dados */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Editar dados do usuário"
+                              onClick={() => openEditModal(u)}
+                              className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+
                             {/* Reset de Senha */}
                             <Button
                               variant="ghost"
@@ -696,6 +752,115 @@ export default function AdminUserDirectoryPage() {
         open={resetOpen}
         onClose={() => { setResetOpen(false); setResetTarget(null); }}
       />
+
+      {/* ── Modal de Edição ── */}
+      <Dialog open={!!editingUser} onOpenChange={v => { if (!v) setEditingUser(null); }}>
+        <DialogContent className="rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
+          <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center font-black text-white text-lg shadow shrink-0">
+                {editingUser?.name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black italic text-primary leading-none uppercase tracking-tight">
+                  Editar Usuário
+                </DialogTitle>
+                <DialogDescription className="text-xs mt-0.5 font-medium text-muted-foreground">
+                  {editingUser?.name}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-8 space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Nome Completo</Label>
+              <Input
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                placeholder="Nome do usuário"
+                className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">E-mail</Label>
+              <Input
+                value={editEmail}
+                onChange={e => setEditEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+                className="h-12 bg-muted/30 border-none rounded-xl font-mono text-sm"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Escola / Polo</Label>
+                <Input
+                  value={editInstitution}
+                  onChange={e => setEditInstitution(e.target.value)}
+                  placeholder="Nome da escola"
+                  className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Sala / Turma</Label>
+                <Input
+                  value={editCourse}
+                  onChange={e => setEditCourse(e.target.value)}
+                  placeholder="Ex: 3ª Série A"
+                  className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Tipo de Perfil</Label>
+              <Input
+                value={editProfileType}
+                onChange={e => setEditProfileType(e.target.value)}
+                placeholder="Ex: student, teacher, staff..."
+                className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Segmento</Label>
+              <div className="flex gap-3">
+                {['', 'ENEM', 'ETEC'].map(opt => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setEditExamTarget(opt)}
+                    className={`flex-1 h-11 rounded-xl font-black text-xs transition-all border-2 ${
+                      editExamTarget === opt
+                        ? opt === 'ETEC'
+                          ? 'bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-200'
+                          : opt === 'ENEM'
+                            ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-200'
+                            : 'bg-slate-200 text-slate-600 border-slate-200'
+                        : 'bg-white border-muted text-muted-foreground hover:border-primary/30'
+                    }`}
+                  >
+                    {opt === '' ? 'N/A' : opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="px-8 pb-8">
+            <Button
+              onClick={handleUpdateUser}
+              disabled={editIsSubmitting}
+              className="w-full h-14 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 uppercase tracking-widest text-xs transition-all active:scale-95"
+            >
+              {editIsSubmitting && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+              Salvar Alterações
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

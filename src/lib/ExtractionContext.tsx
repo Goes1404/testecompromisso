@@ -43,11 +43,13 @@ type ExtractionContextType = {
     extractedQuestions: ParsedQuestion[];
     rawText: string;
     pdfUrl: string | null;
+    pdfFile: File | null;
     autoImageQueue: ImgItem[];
     uploadHistory: UploadRecord[];
     setExtractedQuestions: React.Dispatch<React.SetStateAction<ParsedQuestion[]>>;
     setRawText: React.Dispatch<React.SetStateAction<string>>;
-    setPdfUrl: (url: string | null) => void;
+    setPdfUrl: Dispatch<SetStateAction<string | null>>;
+    setPdfFile: Dispatch<SetStateAction<File | null>>;
     setAutoImageQueue: React.Dispatch<React.SetStateAction<ImgItem[]>>;
     clearExtraction: () => void;
     startExtraction: (params: {
@@ -114,6 +116,7 @@ export function ExtractionProvider({ children }: { children: ReactNode }) {
     const [extractedQuestions, setExtractedQuestions] = useState<ParsedQuestion[]>([]);
     const [rawText, setRawTextState] = useState('');
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+    const [pdfFile, setPdfFile] = useState<File | null>(null);
     const [autoImageQueue, setAutoImageQueue] = useState<ImgItem[]>([]);
     const [uploadHistory, setUploadHistory] = useState<UploadRecord[]>([]);
 
@@ -196,8 +199,9 @@ export function ExtractionProvider({ children }: { children: ReactNode }) {
         extractedRef.current.forEach(q => { if (q.image_url) deleteImageFromStorage(q.image_url); });
         setExtractedQuestions([]);
         setRawTextState('');
-        setAutoImageQueue([]);
         setPdfUrl(null);
+        setPdfFile(null);
+        setAutoImageQueue([]);
         uploadedTempIds.current.clear();
         localStorage.removeItem('draft_raw_text');
         localStorage.removeItem('draft_extracted_questions');
@@ -361,8 +365,8 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`,
 
     return (
         <ExtractionContext.Provider value={{
-            isAnalyzing, progress, extractedQuestions, rawText, pdfUrl, autoImageQueue, uploadHistory,
-            setExtractedQuestions, setRawText, setPdfUrl, setAutoImageQueue,
+            isAnalyzing, progress, extractedQuestions, rawText, pdfUrl, pdfFile, autoImageQueue, uploadHistory,
+            setExtractedQuestions, setRawText, setPdfUrl, setPdfFile, setAutoImageQueue,
             clearExtraction, startExtraction, handleImageUpload,
         }}>
             {children}

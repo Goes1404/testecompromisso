@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, Calculator, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, ShieldAlert, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,6 +29,13 @@ const studentItems: NavItem[] = [
   { icon: BookOpen, label: "Livros", href: "/dashboard/books", id: "nav-books" },
   { icon: Library, label: "Biblioteca", href: "/dashboard/library", id: "nav-library" },
   { icon: FilePenLine, label: "Treinar Redação", href: "/dashboard/student/essays", id: "nav-essays" },
+  {
+    icon: NotebookPen, label: "Meu Caderno", id: "nav-notes",
+    children: [
+      { icon: StickyNote, label: "Minhas Notas",  href: "/dashboard/student/notes",       id: "nav-notes-list"  },
+      { icon: Network,    label: "Grafo",          href: "/dashboard/student/notes/graph", id: "nav-notes-graph" },
+    ],
+  },
   {
     icon: BrainCircuit, label: "Questões & Provas", id: "nav-questoes",
     children: [
