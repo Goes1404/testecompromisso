@@ -528,11 +528,11 @@ export default function AdminUserDirectoryPage() {
 
       {/* ── Filtros ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-1 relative">
+        <div className="md:col-span-1 relative w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome..."
-            className="pl-11 h-12 bg-white border-none shadow-md rounded-2xl font-medium"
+            className="pl-11 h-12 bg-white border-none shadow-md rounded-2xl font-medium w-full"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -582,12 +582,12 @@ export default function AdminUserDirectoryPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-slate-50">
-                  <TableRow className="h-14">
-                    <TableHead className="px-6 font-black uppercase text-[10px] tracking-widest">Identidade</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest">E-mail</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest">Cargo</TableHead>
+                  <TableRow className="h-12 md:h-14">
+                    <TableHead className="px-4 md:px-6 font-black uppercase text-[10px] tracking-widest min-w-[150px]">Identidade</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest hidden md:table-cell">E-mail</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest hidden sm:table-cell">Cargo</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest">Status</TableHead>
-                    <TableHead className="text-right px-6 font-black uppercase text-[10px] tracking-widest">Ações</TableHead>
+                    <TableHead className="text-right px-4 md:px-6 font-black uppercase text-[10px] tracking-widest">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -606,16 +606,19 @@ export default function AdminUserDirectoryPage() {
                         className="h-16 hover:bg-muted/10 border-b last:border-0 transition-colors"
                       >
                         {/* Identidade */}
-                        <TableCell className="px-6">
+                        <TableCell className="px-4 md:px-6">
                           <div className="flex items-center gap-3">
-                            <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm shadow-sm ${isStaff ? 'bg-accent text-white' : 'bg-primary text-white'}`}>
+                            <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm shadow-sm shrink-0 ${isStaff ? 'bg-accent text-white' : 'bg-primary text-white'}`}>
                               {u.name?.charAt(0)?.toUpperCase() || '?'}
                             </div>
-                            <div>
-                              <p className={`font-bold text-sm ${isSuspended ? 'line-through opacity-40 text-slate-400' : 'text-primary italic'}`}>
+                            <div className="min-w-0">
+                              <p className={`font-bold text-sm truncate ${isSuspended ? 'line-through opacity-40 text-slate-400' : 'text-primary italic'}`}>
                                 {u.name || '—'}
                               </p>
-                              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 md:hidden truncate">
+                                {u.email || '@' + (u.username || 'user')}
+                              </p>
+                              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 hidden md:block">
                                 @{u.username || 'user'}
                               </p>
                             </div>
@@ -623,14 +626,14 @@ export default function AdminUserDirectoryPage() {
                         </TableCell>
 
                         {/* E-mail */}
-                        <TableCell>
-                          <span className="text-xs font-mono text-muted-foreground truncate max-w-[180px] block">
+                        <TableCell className="hidden md:table-cell">
+                          <span className="text-xs font-mono text-muted-foreground truncate max-w-[160px] block">
                             {u.email || '—'}
                           </span>
                         </TableCell>
 
                         {/* Cargo */}
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Badge className={`border-none font-bold text-[9px] uppercase px-2.5 h-5 ${
                             isStaff
                               ? pType.includes('admin') ? 'bg-indigo-100 text-indigo-700'
@@ -650,7 +653,7 @@ export default function AdminUserDirectoryPage() {
                         </TableCell>
 
                         {/* Ações */}
-                        <TableCell className="text-right px-6">
+                        <TableCell className="text-right px-4 md:px-6">
                           <div className="flex items-center justify-end gap-1">
                             {/* Editar dados */}
                             <Button
@@ -658,7 +661,7 @@ export default function AdminUserDirectoryPage() {
                               size="icon"
                               title="Editar dados do usuário"
                               onClick={() => openEditModal(u)}
-                              className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                              className="h-10 w-10 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -669,7 +672,7 @@ export default function AdminUserDirectoryPage() {
                               size="icon"
                               title="Gerar link de reset de senha"
                               onClick={() => openResetModal(u)}
-                              className="h-8 w-8 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                              className="h-10 w-10 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors"
                             >
                               <KeyRound className="h-4 w-4" />
                             </Button>
@@ -682,7 +685,7 @@ export default function AdminUserDirectoryPage() {
                                   size="icon"
                                   disabled={isProcessing || u.id === currentUser?.id}
                                   title={isSuspended ? 'Reativar acesso' : 'Suspender acesso'}
-                                  className={`h-8 w-8 rounded-lg transition-colors ${isSuspended ? 'hover:bg-emerald-50 hover:text-emerald-600' : 'hover:bg-amber-50 hover:text-amber-600'}`}
+                                  className={`h-10 w-10 rounded-lg transition-colors ${isSuspended ? 'hover:bg-emerald-50 hover:text-emerald-600' : 'hover:bg-amber-50 hover:text-amber-600'}`}
                                 >
                                   {isProcessing
                                     ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -722,7 +725,7 @@ export default function AdminUserDirectoryPage() {
                               size="icon"
                               title="Enviar mensagem"
                               asChild
-                              className="h-8 w-8 rounded-lg hover:bg-accent/10 hover:text-accent transition-colors"
+                              className="h-10 w-10 rounded-lg hover:bg-accent/10 hover:text-accent transition-colors"
                             >
                               <Link href={`/dashboard/chat/${u.id}`}>
                                 <Send className="h-4 w-4" />

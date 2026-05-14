@@ -239,8 +239,8 @@ export default function AdminStudentsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-primary text-white overflow-hidden p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-primary text-white overflow-hidden p-6 md:p-8">
             <div className="flex items-center justify-between">
               <Users className="h-8 w-8 opacity-40" />
               <Badge className="bg-accent text-accent-foreground font-black">TOTAL</Badge>
@@ -251,7 +251,7 @@ export default function AdminStudentsPage() {
             </div>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden p-8 border-l-[12px] border-orange-500">
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden p-6 md:p-8 border-l-[12px] border-orange-500">
             <div className="flex items-center justify-between font-black">
               <GraduationCap className="h-8 w-8 text-orange-500" />
               <Badge className="bg-orange-100 text-orange-700">ETEC</Badge>
@@ -262,7 +262,7 @@ export default function AdminStudentsPage() {
             </div>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden p-8 border-l-[12px] border-blue-500">
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden p-6 md:p-8 border-l-[12px] border-blue-500">
             <div className="flex items-center justify-between font-black">
               <ZapOff className="h-8 w-8 text-blue-500" />
               <Badge className="bg-blue-100 text-blue-700">ENEM</Badge>
@@ -275,30 +275,31 @@ export default function AdminStudentsPage() {
       </div>
 
       <Card className="border-none shadow-2xl rounded-3xl bg-white overflow-hidden">
-        <CardHeader className="p-8 border-b border-muted/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <CardHeader className="p-4 md:p-8 border-b border-muted/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <CardTitle className="text-xl font-black text-primary italic">Lista Mestra de Alunos ({filteredStudents.length})</CardTitle>
-          <div className="relative w-64">
+          <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Pesquisar por nome ou email..." className="pl-10 h-11 bg-muted/30 border-none rounded-xl font-medium italic" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-slate-50">
-              <TableRow className="h-16">
-                <TableHead className="px-8 font-black uppercase text-[10px]">Estudante</TableHead>
-                <TableHead className="font-black uppercase text-[10px]">Instituição / Escola</TableHead>
-                <TableHead className="font-black uppercase text-[10px]">Segmento</TableHead>
-                <TableHead className="text-right px-8 font-black uppercase text-[10px]">Ações</TableHead>
+              <TableRow className="h-12 md:h-16">
+                <TableHead className="px-4 md:px-8 font-black uppercase text-[10px] min-w-[140px]">Estudante</TableHead>
+                <TableHead className="font-black uppercase text-[10px] min-w-[120px] hidden sm:table-cell">Instituição / Escola</TableHead>
+                <TableHead className="font-black uppercase text-[10px] min-w-[80px]">Segmento</TableHead>
+                <TableHead className="text-right px-4 md:px-8 font-black uppercase text-[10px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow><TableCell colSpan={4} className="h-40 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto opacity-20" /></TableCell></TableRow>
               ) : pagedStudents.map((student) => (
-                <TableRow key={student.id} className="h-20 hover:bg-muted/10 transition-colors">
-                  <TableCell className="px-8 font-black text-primary italic">{student.name}</TableCell>
-                  <TableCell>
+                <TableRow key={student.id} className="h-16 hover:bg-muted/10 transition-colors">
+                  <TableCell className="px-4 md:px-8 font-black text-primary italic">{student.name}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Badge variant="outline" className="border-blue-200 text-blue-600 bg-blue-50 font-bold uppercase text-[9px]">{student.institution || 'Não definido'}</Badge>
                   </TableCell>
                   <TableCell>
@@ -306,14 +307,14 @@ export default function AdminStudentsPage() {
                       {student.exam_target || 'ENEM'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right px-8">
+                  <TableCell className="text-right px-4 md:px-8">
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
                         title="Ver desempenho"
                         asChild
-                        className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                        className="h-10 w-10 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
                       >
                         <Link href={`/dashboard/admin/students/${student.id}`}>
                           <Eye className="h-4 w-4" />
@@ -324,7 +325,7 @@ export default function AdminStudentsPage() {
                         size="icon"
                         title="Editar dados"
                         onClick={() => { setEditingStudent(student); setNewEmail(student.email || ""); setNewInstitution(student.institution || ""); setNewCourse(student.course || ""); setNewExamTarget(student.exam_target || "ENEM"); }}
-                        className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="h-10 w-10 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -333,7 +334,7 @@ export default function AdminStudentsPage() {
                         size="icon"
                         title="Remover aluno"
                         onClick={() => handleDeleteStudent(student.id)}
-                        className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
+                        className="h-10 w-10 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
                       >
                         {deletingId === student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
@@ -343,7 +344,8 @@ export default function AdminStudentsPage() {
               ))}
             </TableBody>
           </Table>
-          
+          </div>
+
           {hasMore && (
             <div className="p-8 flex justify-center">
               <Button 

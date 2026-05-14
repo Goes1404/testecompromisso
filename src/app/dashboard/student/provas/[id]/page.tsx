@@ -157,26 +157,32 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     );
   }
 
+  const answeredCount = Object.keys(answers).length;
+
   return (
-    <div className="h-screen flex flex-col md:flex-row bg-slate-900 overflow-hidden select-none">
+    <div className="h-[100dvh] flex flex-col md:flex-row bg-slate-900 overflow-hidden select-none">
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" strategy="afterInteractive" />
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" strategy="afterInteractive" />
-      
+
       {/* Esquerda: PDF (InteractiveWorkbook) */}
-      <div className="flex-1 flex flex-col h-[60vh] md:h-screen border-b md:border-b-0 md:border-r border-white/10">
-        <header className="h-14 bg-slate-950 flex items-center px-4 shrink-0 z-50">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-white hover:bg-white/10 rounded-full mr-3">
+      <div className="flex-1 flex flex-col overflow-hidden border-b md:border-b-0 md:border-r border-white/10" style={{ minHeight: 0 }}>
+        <header className="h-12 md:h-14 bg-slate-950 flex items-center px-3 md:px-4 shrink-0 z-50 gap-2">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-white hover:bg-white/10 rounded-full shrink-0 h-9 w-9">
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-black text-white italic truncate">{exam?.title}</h1>
-            <p className="text-[8px] text-accent uppercase tracking-widest mt-0.5">PDF Interativo</p>
+            <h1 className="text-xs md:text-sm font-black text-white italic truncate">{exam?.title}</h1>
+            <p className="text-[8px] text-accent uppercase tracking-widest">PDF Interativo</p>
           </div>
+          {/* Contagem de respostas visível no mobile */}
+          <span className="text-[10px] font-black text-white/50 shrink-0 md:hidden">
+            {answeredCount}/{questions.length}
+          </span>
         </header>
         <main className="flex-1 overflow-hidden relative">
-          <InteractiveWorkbook 
-            materialId={exam?.id || ''} 
-            pdfUrl={exam?.pdf_url} 
+          <InteractiveWorkbook
+            materialId={exam?.id || ''}
+            pdfUrl={exam?.pdf_url}
             userName={profile?.name || user?.email || "Estudante"}
             userCpf={profile?.id?.substring(0, 8) || "ID"}
           />
@@ -184,25 +190,25 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
       </div>
 
       {/* Direita: Gabarito Lateral */}
-      <div className="w-full md:w-80 h-[40vh] md:h-screen bg-white flex flex-col shadow-2xl z-40">
-        <div className="p-4 bg-slate-50 border-b flex justify-between items-center shrink-0">
+      <div className="w-full md:w-80 flex flex-col bg-white shadow-2xl z-40 h-[42vh] md:h-auto shrink-0">
+        <div className="px-4 py-3 bg-slate-50 border-b flex justify-between items-center shrink-0">
           <div>
-            <h2 className="font-black text-primary italic leading-none">Gabarito</h2>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Marque suas respostas</p>
+            <h2 className="font-black text-primary italic leading-none text-sm md:text-base">Gabarito</h2>
+            <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5 hidden md:block">Marque suas respostas</p>
           </div>
           <Badge variant="outline" className="text-[10px] font-black uppercase bg-white">{questions.length} Questões</Badge>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-4">
           {result ? (
-            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-              <div className="text-center p-6 bg-green-50 rounded-2xl border border-green-100">
-                <Award className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                <p className="text-3xl font-black text-green-600">{result.score} / {result.total}</p>
+            <div className="space-y-4 md:space-y-6 animate-in fade-in zoom-in-95 duration-500">
+              <div className="text-center p-4 md:p-6 bg-green-50 rounded-2xl border border-green-100">
+                <Award className="h-10 w-10 md:h-12 md:w-12 text-green-500 mx-auto mb-2" />
+                <p className="text-2xl md:text-3xl font-black text-green-600">{result.score} / {result.total}</p>
                 <p className="text-[10px] font-black uppercase tracking-widest text-green-700/60 mt-1">Acertos</p>
                 <p className="text-sm font-bold text-green-800 mt-2">Aproveitamento: {Math.round((result.score / result.total) * 100)}%</p>
               </div>
-              
+
               {exam?.exam_type.toLowerCase() === 'enem' && (
                 <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary/50 text-center mb-1">Simulação TRI INEP</p>
@@ -210,16 +216,16 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                 </div>
               )}
 
-              <div className="space-y-2 pt-4">
+              <div className="space-y-2 pt-2 md:pt-4">
                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Revisão</p>
                 {questions.map((q, idx) => {
                   const selected = answers[q.question.id];
                   const correct = q.question.correct_answer;
                   const isRight = selected === correct;
                   return (
-                    <div key={q.id} className={`flex items-center justify-between p-3 rounded-xl border ${isRight ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-                      <div className="flex items-center gap-3">
-                        <span className="font-black text-xs w-6">{idx + 1}.</span>
+                    <div key={q.id} className={`flex items-center justify-between p-2.5 md:p-3 rounded-xl border ${isRight ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <span className="font-black text-xs w-5">{idx + 1}.</span>
                         {isRight ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
                         <span className={`font-bold text-sm ${isRight ? 'text-green-700' : 'text-red-600'}`}>{selected || '-'}</span>
                       </div>
@@ -230,18 +236,18 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
               </div>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1 md:space-y-2">
               {questions.map((q, idx) => (
-                <div key={q.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
-                  <span className="font-black text-slate-400 text-xs w-6">{idx + 1}.</span>
-                  <div className="flex gap-1.5 flex-1 justify-between">
+                <div key={q.id} className="flex items-center gap-2 md:gap-3 px-1 py-1.5 md:p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                  <span className="font-black text-slate-400 text-xs w-5 shrink-0">{idx + 1}.</span>
+                  <div className="flex gap-1 md:gap-1.5 flex-1 justify-between">
                     {['A', 'B', 'C', 'D', 'E'].map(letter => {
                       const isSelected = answers[q.question.id] === letter;
                       return (
                         <button
                           key={letter}
                           onClick={() => handleSelectAnswer(q.question.id, letter)}
-                          className={`h-8 w-8 rounded-full font-black text-xs transition-all ${isSelected ? 'bg-primary text-white shadow-md scale-110' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                          className={`h-9 w-9 md:h-8 md:w-8 rounded-full font-black text-xs transition-all flex-1 max-w-[2.5rem] ${isSelected ? 'bg-primary text-white shadow-md scale-110' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 active:scale-95'}`}
                         >
                           {letter}
                         </button>
@@ -255,11 +261,11 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         </div>
 
         {!result && (
-          <div className="p-4 bg-white border-t shrink-0">
-            <Button 
-              onClick={handleSubmit} 
+          <div className="p-3 md:p-4 bg-white border-t shrink-0">
+            <Button
+              onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full h-12 rounded-xl bg-accent text-white font-black text-sm uppercase tracking-wider hover:bg-accent/90"
+              className="w-full h-12 rounded-xl bg-accent text-white font-black text-sm uppercase tracking-wider hover:bg-accent/90 active:scale-95 transition-all"
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
               Entregar Prova

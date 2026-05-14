@@ -259,12 +259,12 @@ export default function AdminStudentProfilePage() {
       </Button>
 
       {/* ── Hero do aluno ── */}
-      <div className="relative rounded-[2.5rem] overflow-hidden bg-primary p-8 md:p-10 shadow-2xl">
+      <div className="relative rounded-[2.5rem] overflow-hidden bg-primary p-6 md:p-10 shadow-2xl">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
 
           {/* Avatar */}
-          <div className="h-24 w-24 rounded-[1.5rem] bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl shrink-0">
+          <div className="h-20 w-20 md:h-24 md:w-24 rounded-[1.5rem] bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl shrink-0">
             <span className="text-4xl font-black text-white">
               {student.name?.charAt(0)?.toUpperCase() ?? "?"}
             </span>
@@ -314,7 +314,7 @@ export default function AdminStudentProfilePage() {
           </div>
 
           {/* XP bubble */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-[2rem] px-8 py-6 text-center shadow-xl shrink-0">
+          <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-[2rem] px-6 py-4 md:px-8 md:py-6 text-center shadow-xl shrink-0 self-start md:self-auto">
             <Zap className="h-6 w-6 text-yellow-300 mx-auto mb-1" />
             <p className="text-4xl font-black text-white italic">{student.xp_points ?? 0}</p>
             <p className="text-[9px] font-black uppercase tracking-widest text-white/50 mt-1">XP Total</p>
@@ -323,7 +323,7 @@ export default function AdminStudentProfilePage() {
       </div>
 
       {/* ── Métricas rápidas ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
           {
             label: "Questões Respondidas",
@@ -355,12 +355,12 @@ export default function AdminStudentProfilePage() {
           },
         ].map((m, i) => (
           <Card key={i} className="border-none shadow-xl rounded-[2rem] bg-white">
-            <CardContent className="p-6">
-              <div className={`h-11 w-11 rounded-2xl ${m.bg} ${m.color} flex items-center justify-center mb-4 shadow-inner`}>
-                <m.icon className="h-5 w-5" />
+            <CardContent className="p-4 md:p-6">
+              <div className={`h-9 w-9 md:h-11 md:w-11 rounded-2xl ${m.bg} ${m.color} flex items-center justify-center mb-3 md:mb-4 shadow-inner`}>
+                <m.icon className="h-4 w-4 md:h-5 md:w-5" />
               </div>
-              <p className="text-3xl font-black text-primary italic">{m.value}</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1.5">
+              <p className="text-2xl md:text-3xl font-black text-primary italic leading-none">{m.value}</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1.5 leading-tight">
                 {m.label}
               </p>
             </CardContent>
@@ -377,7 +377,7 @@ export default function AdminStudentProfilePage() {
             <CardTitle className="text-xl font-black text-primary italic">Mapa de Competências</CardTitle>
             <CardDescription className="italic text-xs">Acerto por área do conhecimento.</CardDescription>
           </CardHeader>
-          <CardContent className="p-8 pt-4 h-[350px]">
+          <CardContent className="p-4 md:p-8 pt-4 h-[260px] md:h-[350px]">
             {radarData.length > 0 ? (
               <RadarChartComponent data={radarData} />
             ) : (
@@ -394,7 +394,7 @@ export default function AdminStudentProfilePage() {
             <CardTitle className="text-xl font-black text-primary italic">Atividade Diária</CardTitle>
             <CardDescription className="italic text-xs">Questões acertadas nos últimos 15 dias.</CardDescription>
           </CardHeader>
-          <CardContent className="p-8 pt-4 h-[350px]">
+          <CardContent className="p-4 md:p-8 pt-4 h-[260px] md:h-[350px]">
             <AreaChartComponent data={historyData} />
           </CardContent>
         </Card>
@@ -415,23 +415,23 @@ export default function AdminStudentProfilePage() {
           <CardContent className="p-0">
             <div className="divide-y divide-muted/10">
               {subjectData.map((s, i) => (
-                <div key={i} className="flex items-center gap-6 px-8 py-5 hover:bg-muted/5 transition-colors">
+                <div key={i} className="flex items-center gap-3 md:gap-6 px-4 md:px-8 py-4 md:py-5 hover:bg-muted/5 transition-colors">
                   <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${subjectColor(s.subject)}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-black text-primary italic text-sm truncate">{s.subject}</p>
-                      <span className="text-xs font-black text-muted-foreground ml-4 shrink-0">{s.score}%</span>
+                      <span className="text-xs font-black text-muted-foreground ml-2 shrink-0">{s.score}%</span>
                     </div>
                     <Progress value={s.score} className="h-1.5 rounded-full" />
                   </div>
-                  <div className="flex items-center gap-4 shrink-0 text-xs font-bold">
+                  <div className="flex items-center gap-2 md:gap-4 shrink-0 text-xs font-bold">
                     <span className="flex items-center gap-1 text-emerald-600">
                       <CheckCircle2 className="h-3.5 w-3.5" /> {s.correct}
                     </span>
                     <span className="flex items-center gap-1 text-red-400">
                       <XCircle className="h-3.5 w-3.5" /> {s.total - s.correct}
                     </span>
-                    <Badge variant="outline" className="font-black text-[9px] uppercase border-muted/30">
+                    <Badge variant="outline" className="font-black text-[9px] uppercase border-muted/30 hidden sm:inline-flex">
                       {s.total} questões
                     </Badge>
                   </div>

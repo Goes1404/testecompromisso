@@ -201,7 +201,7 @@ export default function NotesGraphPage() {
     return notes.find(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()))?.id ?? null;
   }, [searchQuery, notes]);
 
-  // Pan/Zoom
+  // Pan/Zoom — mouse
   const onWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     setTransform(t => ({ ...t, scale: Math.max(0.25, Math.min(4, t.scale * (e.deltaY > 0 ? 0.9 : 1.1))) }));
@@ -217,6 +217,41 @@ export default function NotesGraphPage() {
   }, [dragging, dragOrigin]);
   const onMouseUp = useCallback(() => setDragging(false), []);
 
+  // Pan/Zoom — touch
+  const lastTouchRef = useRef<{ x: number; y: number; dist: number | null }>({ x: 0, y: 0, dist: null });
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      lastTouchRef.current = { x: t.clientX - transform.x, y: t.clientY - transform.y, dist: null };
+      setDragging(true);
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchRef.current = { ...lastTouchRef.current, dist: Math.hypot(dx, dy) };
+      setDragging(false);
+    }
+  }, [transform]);
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 1 && dragging) {
+      const t = e.touches[0];
+      setTransform(prev => ({ ...prev, x: t.clientX - lastTouchRef.current.x, y: t.clientY - lastTouchRef.current.y }));
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      if (lastTouchRef.current.dist !== null) {
+        const ratio = dist / lastTouchRef.current.dist;
+        setTransform(prev => ({ ...prev, scale: Math.max(0.25, Math.min(4, prev.scale * ratio)) }));
+      }
+      lastTouchRef.current.dist = dist;
+    }
+  }, [dragging]);
+  const onTouchEnd = useCallback(() => {
+    setDragging(false);
+    lastTouchRef.current.dist = null;
+  }, []);
+
   const resetView = () => setTransform({ x: 0, y: 0, scale: 1 });
   const zoomIn    = () => setTransform(t => ({ ...t, scale: Math.min(4, t.scale * 1.25) }));
   const zoomOut   = () => setTransform(t => ({ ...t, scale: Math.max(0.25, t.scale / 1.25) }));
@@ -229,7 +264,7 @@ export default function NotesGraphPage() {
   const usedSubjects = subjects.filter(s => notes.some(n => n.subject_id === s.id));
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] bg-slate-950 gap-5">
+    <div className="flex flex-col items-center justify-center h-[calc(100dvh-4rem)] bg-slate-950 gap-5">
       <div className="relative">
         <div className="h-16 w-16 rounded-[1.5rem] bg-primary/20 flex items-center justify-center">
           <Network className="h-8 w-8 text-primary" />
@@ -243,22 +278,23 @@ export default function NotesGraphPage() {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] -mx-4 md:-mx-8 overflow-hidden bg-slate-950">
+    <div className="flex flex-col h-[calc(100dvh-4rem)] -mx-4 md:-mx-8 overflow-hidden bg-slate-950">
 
       {/* ── Top bar ── */}
-      <header className="flex items-center gap-3 px-5 py-2.5 bg-slate-900/90 border-b border-slate-800/60 backdrop-blur-sm shrink-0 z-20">
+      <header className="flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-2.5 bg-slate-900/90 border-b border-slate-800/60 backdrop-blur-sm shrink-0 z-20">
         <Button asChild variant="ghost" size="sm"
-          className="text-slate-400 hover:text-white hover:bg-slate-800/70 rounded-xl gap-1.5 font-bold h-8 px-3">
+          className="text-slate-400 hover:text-white hover:bg-slate-800/70 rounded-xl gap-1.5 font-bold h-9 px-2 md:px-3 shrink-0">
           <Link href="/dashboard/student/notes">
-            <ArrowLeft className="h-3.5 w-3.5" /> Caderno
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Caderno</span>
           </Link>
         </Button>
 
-        <div className="h-4 w-px bg-slate-700" />
+        <div className="h-4 w-px bg-slate-700 hidden sm:block" />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Network className="h-4 w-4 text-primary" />
-          <h1 className="text-sm font-black italic text-white uppercase tracking-tight hidden sm:block">
+          <h1 className="text-xs md:text-sm font-black italic text-white uppercase tracking-tight hidden sm:block">
             Grafo do Conhecimento
           </h1>
         </div>
@@ -277,15 +313,15 @@ export default function NotesGraphPage() {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="ml-auto relative w-44">
+        {/* Search — full-width on mobile */}
+        <div className="ml-auto relative flex-1 md:flex-none md:w-44 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
           <input
             type="text"
             placeholder="Buscar nota..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 h-8 bg-slate-800 border border-slate-700 rounded-xl text-[13px] text-white placeholder-slate-600 outline-none focus:border-primary transition-colors font-medium"
+            className="w-full pl-9 pr-8 h-9 bg-slate-800 border border-slate-700 rounded-xl text-[13px] text-white placeholder-slate-600 outline-none focus:border-primary transition-colors font-medium"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
@@ -294,16 +330,16 @@ export default function NotesGraphPage() {
           )}
         </div>
 
-        {/* Zoom */}
-        <div className="flex items-center gap-0.5 bg-slate-800/60 border border-slate-700/50 rounded-xl p-0.5">
-          <button onClick={zoomOut} className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+        {/* Zoom — bigger tap targets on mobile */}
+        <div className="flex items-center gap-0.5 bg-slate-800/60 border border-slate-700/50 rounded-xl p-0.5 shrink-0">
+          <button onClick={zoomOut} className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 active:scale-95 transition-colors">
             <ZoomOut className="h-3.5 w-3.5" />
           </button>
-          <span className="text-[10px] font-black text-slate-500 w-9 text-center">{Math.round(transform.scale * 100)}%</span>
-          <button onClick={zoomIn} className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+          <span className="text-[10px] font-black text-slate-500 w-9 text-center hidden sm:block">{Math.round(transform.scale * 100)}%</span>
+          <button onClick={zoomIn} className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 active:scale-95 transition-colors">
             <ZoomIn className="h-3.5 w-3.5" />
           </button>
-          <button onClick={resetView} className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+          <button onClick={resetView} className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 active:scale-95 transition-colors">
             <Maximize2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -318,6 +354,9 @@ export default function NotesGraphPage() {
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
         {/* Dot-grid background */}
         <div

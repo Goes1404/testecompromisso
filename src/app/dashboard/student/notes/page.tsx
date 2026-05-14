@@ -542,7 +542,7 @@ export default function StudentNotesPage() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] -mx-4 md:-mx-8 overflow-hidden rounded-none bg-white">
+    <div className="flex h-[calc(100dvh-4rem)] -mx-4 md:-mx-8 overflow-hidden rounded-none bg-white">
 
       {/* ── SIDEBAR ──────────────────────────────────────────────────────────── */}
       <aside className={`
@@ -552,7 +552,7 @@ export default function StudentNotesPage() {
       `}>
 
         {/* Sidebar header */}
-        <div className="p-5 pb-3 border-b border-slate-100 space-y-3">
+        <div className="p-4 md:p-5 pb-3 border-b border-slate-100 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center shadow">
@@ -562,7 +562,7 @@ export default function StudentNotesPage() {
             </div>
             <div className="flex items-center gap-1">
               <Button asChild variant="ghost" size="icon"
-                className="h-8 w-8 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                className="h-10 w-10 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Grafo do conhecimento">
                 <Link href="/dashboard/student/notes/graph">
                   <Network className="h-4 w-4" />
@@ -571,7 +571,7 @@ export default function StudentNotesPage() {
               <Button
                 onClick={createNote}
                 size="icon"
-                className="h-8 w-8 rounded-xl bg-primary text-white shadow hover:scale-105 active:scale-95 transition-all border-none"
+                className="h-10 w-10 rounded-xl bg-primary text-white shadow hover:scale-105 active:scale-95 transition-all border-none"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -676,7 +676,7 @@ export default function StudentNotesPage() {
         ) : (
           <>
             {/* Editor toolbar */}
-            <div className="flex items-center justify-between px-6 md:px-10 py-3 border-b border-slate-100 shrink-0">
+            <div className="flex items-center justify-between px-4 md:px-10 py-2 md:py-3 border-b border-slate-100 shrink-0 gap-2">
               <button
                 className="md:hidden flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-primary transition-colors"
                 onClick={() => setMobileView("list")}
@@ -706,9 +706,9 @@ export default function StudentNotesPage() {
               </div>
 
               {/* Right actions */}
-              <div className="flex items-center gap-1 ml-auto">
+              <div className="flex items-center gap-1 ml-auto shrink-0">
                 {saving && (
-                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 mr-2">
+                  <span className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-slate-400 mr-1">
                     <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
                   </span>
                 )}
@@ -717,13 +717,13 @@ export default function StudentNotesPage() {
                   size="icon"
                   title={noteIsPinned ? "Desafixar" : "Fixar nota"}
                   onClick={togglePin}
-                  className={`h-8 w-8 rounded-xl transition-colors ${noteIsPinned ? "text-amber-500 bg-amber-50" : "text-slate-400 hover:text-amber-500 hover:bg-amber-50"}`}
+                  className={`h-10 w-10 rounded-xl transition-colors ${noteIsPinned ? "text-amber-500 bg-amber-50" : "text-slate-400 hover:text-amber-500 hover:bg-amber-50"}`}
                 >
                   {noteIsPinned ? <Pin className="h-4 w-4 fill-current" /> : <PinOff className="h-4 w-4" />}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -745,7 +745,7 @@ export default function StudentNotesPage() {
 
             {/* Scrollable editor content */}
             <div className="flex-1 overflow-y-auto">
-              <div className="max-w-2xl mx-auto px-6 md:px-10 py-8 space-y-1">
+              <div className="max-w-2xl mx-auto px-4 md:px-10 py-6 md:py-8 space-y-1">
 
                 {/* Subject badge */}
                 {activeSubject && (
@@ -774,8 +774,8 @@ export default function StudentNotesPage() {
                     e.target.style.height = e.target.scrollHeight + "px";
                   }}
                   onKeyDown={handleTitleKeyDown}
-                  className="w-full bg-transparent resize-none outline-none text-4xl font-black italic text-primary placeholder-slate-200 leading-tight mb-2"
-                  style={{ minHeight: "52px", overflow: "hidden" }}
+                  className="w-full bg-transparent resize-none outline-none text-2xl md:text-4xl font-black italic text-primary placeholder-slate-200 leading-tight mb-2"
+                  style={{ minHeight: "44px", overflow: "hidden" }}
                 />
 
                 {/* Timestamp */}
@@ -864,8 +864,8 @@ export default function StudentNotesPage() {
       {/* ── SLASH MENU (fixed overlay) ────────────────────────────────────────── */}
       {slash.open && slashFiltered.length > 0 && (
         <div
-          className="fixed z-50 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-100"
-          style={{ top: slash.y, left: slash.x }}
+          className="fixed z-50 w-[min(16rem,90vw)] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-100"
+          style={{ top: Math.min(slash.y, window.innerHeight - 320), left: Math.min(slash.x, window.innerWidth - 260) }}
         >
           <p className="px-3 pt-1 pb-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
             Tipos de bloco {slash.filter && `· "${slash.filter}"`}
@@ -893,8 +893,8 @@ export default function StudentNotesPage() {
       {/* ── WIKILINK MENU (fixed overlay) ─────────────────────────────────────── */}
       {wikiMenu && wikiSuggestions.length > 0 && (
         <div
-          className="fixed z-50 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-100"
-          style={{ top: wikiMenu.y, left: wikiMenu.x }}
+          className="fixed z-50 w-[min(16rem,90vw)] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-100"
+          style={{ top: Math.min(wikiMenu.y, window.innerHeight - 260), left: Math.min(wikiMenu.x, window.innerWidth - 260) }}
         >
           <p className="px-3 pt-1 pb-2 text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
             <Link2 className="h-3 w-3" /> Linkar nota
