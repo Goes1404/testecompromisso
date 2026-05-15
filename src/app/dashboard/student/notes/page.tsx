@@ -491,9 +491,6 @@ export default function StudentNotesPage() {
 
   const slashFiltered = SLASH_ITEMS.filter(i => !slash.filter || i.label.toLowerCase().includes(slash.filter.toLowerCase()));
 
-  const W = typeof window !== "undefined" ? window.innerWidth  : 1200;
-  const H = typeof window !== "undefined" ? window.innerHeight : 800;
-
   // ── Render ────────────────────────────────────────────────────────────────────
 
   if (loading) return (
@@ -733,7 +730,7 @@ export default function StudentNotesPage() {
       {/* ── SLASH MENU ──────────────────────────────────────────────────────── */}
       {slash.open && slashFiltered.length > 0 && (
         <div className="fixed z-50 w-64 bg-white rounded-xl shadow-2xl border border-zinc-100 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100"
-          style={{ top: Math.min(slash.y, H - 320), left: Math.min(slash.x, W - 270) }}>
+          style={{ top: Math.min(slash.y, window.innerHeight - 320), left: Math.min(slash.x, window.innerWidth - 270) }}>
           <p className="px-3 pt-2 pb-1 text-[9px] font-bold uppercase tracking-widest text-zinc-400">
             Tipos de bloco {slash.filter && `· "${slash.filter}"`}
           </p>
@@ -755,7 +752,7 @@ export default function StudentNotesPage() {
       {/* ── WIKILINK MENU ───────────────────────────────────────────────────── */}
       {wikiMenu && wikiSuggestions.length > 0 && (
         <div className="fixed z-50 w-64 bg-white rounded-xl shadow-2xl border border-zinc-100 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100"
-          style={{ top: Math.min(wikiMenu.y, H - 280), left: Math.min(wikiMenu.x, W - 270) }}>
+          style={{ top: Math.min(wikiMenu.y, window.innerHeight - 280), left: Math.min(wikiMenu.x, window.innerWidth - 270) }}>
           <p className="px-3 pt-2 pb-1 text-[9px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
             <Link2 className="h-3 w-3" /> Linkar nota
             {wikiMenu.query && <span className="text-violet-500">· "{wikiMenu.query}"</span>}

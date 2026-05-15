@@ -190,7 +190,7 @@ export default function CoordinatorDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <Select value={timeFilter} onValueChange={setTimeFilter}>
-            <SelectTrigger className="w-[180px] h-12 rounded-2xl bg-white border-none shadow-xl font-bold italic text-primary">
+            <SelectTrigger className="w-full md:w-[180px] h-12 rounded-2xl bg-white border-none shadow-xl font-bold italic text-primary">
               <Filter className="h-4 w-4 mr-2 text-accent" />
               <SelectValue placeholder="Filtrar Período" />
             </SelectTrigger>
@@ -208,7 +208,7 @@ export default function CoordinatorDashboard() {
       </div>
 
       {/* CARD DE CÓDIGO DOCENTE */}
-      <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-l-[12px] border-accent animate-in zoom-in-95 duration-700">
+      <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden p-5 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 border-l-[12px] border-accent animate-in zoom-in-95 duration-700">
         <div className="flex items-center gap-6">
           <div className="h-16 w-16 rounded-[2rem] bg-accent/10 flex items-center justify-center text-accent shadow-inner">
             <ShieldAlert className="h-8 w-8" />
@@ -245,7 +245,7 @@ export default function CoordinatorDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Alunos Ativos */}
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-8">
+          <CardContent className="p-5 md:p-8">
             <div className="flex items-center justify-between">
               <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <Users className="h-7 w-7" />
@@ -261,7 +261,7 @@ export default function CoordinatorDashboard() {
 
         {/* Corpo Docente */}
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-8">
+          <CardContent className="p-5 md:p-8">
             <div className="flex items-center justify-between">
               <div className="p-4 rounded-2xl bg-purple-50 text-purple-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <BookOpen className="h-7 w-7" />
@@ -277,7 +277,7 @@ export default function CoordinatorDashboard() {
 
         {/* Trilhas Concluídas */}
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-8">
+          <CardContent className="p-5 md:p-8">
             <div className="flex items-center justify-between">
               <div className="p-4 rounded-2xl bg-green-50 text-green-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <CheckCircle2 className="h-7 w-7" />
@@ -305,7 +305,7 @@ export default function CoordinatorDashboard() {
 
         {/* Impacto Social */}
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-8">
+          <CardContent className="p-5 md:p-8">
             <div className="flex items-center justify-between">
               <div className="p-4 rounded-2xl bg-orange-50 text-orange-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 <HandHeart className="h-7 w-7" />
@@ -320,19 +320,19 @@ export default function CoordinatorDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-8">
         <Card className="lg:col-span-2 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-          <CardHeader className="p-10 pb-0">
+          <CardHeader className="p-5 md:p-10 pb-0">
             <CardTitle className="text-2xl font-black text-primary italic">Rastro Operacional</CardTitle>
             <CardDescription className="font-medium text-lg">Auditoria de atividades em tempo real.</CardDescription>
           </CardHeader>
-          <CardContent className="p-10 space-y-4">
+          <CardContent className="p-5 md:p-10 space-y-3 md:space-y-4">
             {logs.length === 0 ? (
               <div className="py-16 text-center opacity-30 italic font-medium border-2 border-dashed rounded-[2rem]">Nenhuma atividade recente registrada.</div>
             ) : (
               logs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between p-6 rounded-[2rem] bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-lg transition-all group">
-                  <div className="flex items-center gap-5">
+                <div key={log.id} className="flex items-center justify-between p-4 md:p-6 rounded-[2rem] bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-lg transition-all group">
+                  <div className="flex items-center gap-3 md:gap-5">
                     <div className="h-12 w-12 rounded-2xl bg-white shadow-inner flex items-center justify-center font-black text-primary text-sm italic group-hover:bg-primary group-hover:text-white transition-all">{log.user_name?.charAt(0)}</div>
                     <div>
                       <p className="text-base font-bold text-primary italic leading-none group-hover:text-accent transition-colors">{log.action}</p>
@@ -352,7 +352,7 @@ export default function CoordinatorDashboard() {
         </Card>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-xl bg-white rounded-[3rem] p-10 overflow-hidden group">
+          <Card className="border-none shadow-xl bg-white rounded-[3rem] p-6 md:p-10 overflow-hidden group">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em]">Status de Sinal</h3>
               <Activity className={`h-5 w-5 ${networkStatus.db === 'online' ? 'text-green-500 animate-pulse' : 'text-red-500'}`} />
@@ -370,13 +370,13 @@ export default function CoordinatorDashboard() {
 
           <Card className="border-none shadow-2xl bg-primary text-white rounded-[3rem] overflow-hidden relative">
             <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
-            <CardHeader className="pb-2 p-10 relative z-10">
+            <CardHeader className="pb-2 p-6 md:p-10 relative z-10">
               <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 text-accent">
                 <AlertCircle className="h-5 w-5" />
                 Alertas de Risco
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-10 pb-10 space-y-5 relative z-10">
+            <CardContent className="px-6 md:px-10 pb-6 md:pb-10 space-y-5 relative z-10">
               {riskAlerts.length === 0 ? (
                 <div className="py-12 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
                   <p className="text-[10px] font-bold italic tracking-widest uppercase">Rede em Conformidade Total</p>

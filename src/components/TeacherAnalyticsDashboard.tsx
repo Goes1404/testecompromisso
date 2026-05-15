@@ -30,7 +30,7 @@ const PerformanceChart = dynamic(
           <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
             <XAxis type="number" domain={[0, 100]} hide />
-            <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} width={100} tickLine={false} axisLine={false} />
+            <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={11} width={80} tickLine={false} axisLine={false} />
             <Tooltip
               cursor={{ fill: '#f8fafc' }}
               contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
@@ -251,11 +251,11 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 print:grid-cols-3">
-        <Card className="border-none shadow-xl bg-primary text-white overflow-hidden rounded-[2.5rem] p-8 relative group print:rounded-2xl print:p-6 print:shadow-none print:border">
+        <Card className="border-none shadow-xl bg-primary text-white overflow-hidden rounded-[2.5rem] p-5 md:p-8 relative group print:rounded-2xl print:p-6 print:shadow-none print:border">
           <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 print:hidden" />
-          <div className="flex items-center gap-6 relative z-10">
-            <div className="h-16 w-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-lg print:h-12 print:w-12">
-              <Users className="h-8 w-8 text-accent print:h-6 print:w-6" />
+          <div className="flex items-center gap-4 md:gap-6 relative z-10">
+            <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-lg print:h-12 print:w-12">
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-accent print:h-6 print:w-6" />
             </div>
             <div>
               <p className="text-3xl font-black italic print:text-xl">{data.totalStudents}</p>
@@ -264,10 +264,10 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
           </div>
         </Card>
 
-        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-8 group hover:shadow-2xl transition-all duration-500 print:rounded-2xl print:p-6 print:shadow-none print:border">
-          <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-2xl bg-accent/10 flex items-center justify-center shadow-inner group-hover:bg-accent group-hover:text-white transition-all print:h-12 print:w-12">
-              <ClipboardCheck className="h-8 w-8 text-accent group-hover:text-white print:h-6 print:w-6" />
+        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-5 md:p-8 group hover:shadow-2xl transition-all duration-500 print:rounded-2xl print:p-6 print:shadow-none print:border">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-accent/10 flex items-center justify-center shadow-inner group-hover:bg-accent group-hover:text-white transition-all print:h-12 print:w-12">
+              <ClipboardCheck className="h-6 w-6 md:h-8 md:w-8 text-accent group-hover:text-white print:h-6 print:w-6" />
             </div>
             <div>
               <p className="text-3xl font-black text-primary italic print:text-xl">{data.avgScore}</p>
@@ -276,10 +276,10 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
           </div>
         </Card>
 
-        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-8 print:rounded-2xl print:p-6 print:shadow-none print:border">
-          <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-2xl bg-green-50 flex items-center justify-center print:h-12 print:w-12">
-              <Activity className="h-8 w-8 text-green-600 print:h-6 print:w-6" />
+        <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem] p-5 md:p-8 print:rounded-2xl print:p-6 print:shadow-none print:border">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-green-50 flex items-center justify-center print:h-12 print:w-12">
+              <Activity className="h-6 w-6 md:h-8 md:w-8 text-green-600 print:h-6 print:w-6" />
             </div>
             <div>
               <p className="text-3xl font-black text-primary italic print:text-xl">{data.completionRate}%</p>
@@ -291,7 +291,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
         <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden print:rounded-2xl print:shadow-none print:border">
-          <CardHeader className="p-10 pb-0 print:p-6">
+          <CardHeader className="p-5 md:p-10 pb-0 print:p-6">
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl font-black text-primary italic flex items-center gap-3 print:text-lg">
                 <TrendingUp className="h-5 w-5 text-accent" />
@@ -300,15 +300,15 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
               <Badge className="bg-muted text-primary font-black text-[8px] px-3 print:hidden">SIMULADOS</Badge>
             </div>
           </CardHeader>
-          <CardContent className="p-10 print:p-6">
-            <div className="h-[350px] w-full print:h-[250px]">
+          <CardContent className="p-5 md:p-10 print:p-6">
+            <div className="h-[220px] md:h-[350px] w-full print:h-[250px]">
               <PerformanceChart data={data.performanceBySubject} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden print:rounded-2xl print:shadow-none print:border">
-          <CardHeader className="p-10 pb-0 print:p-6">
+          <CardHeader className="p-5 md:p-10 pb-0 print:p-6">
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl font-black text-primary italic flex items-center gap-3 print:text-lg">
                 <Activity className="h-5 w-5 text-accent" />
@@ -317,8 +317,8 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
               <span className="text-[10px] font-black text-green-600 uppercase print:hidden">Monitoramento Ativo</span>
             </div>
           </CardHeader>
-          <CardContent className="p-10 print:p-6">
-            <div className="h-[350px] w-full print:h-[250px]">
+          <CardContent className="p-5 md:p-10 print:p-6">
+            <div className="h-[220px] md:h-[350px] w-full print:h-[250px]">
               <EngagementChart data={data.engagementTrend} />
             </div>
           </CardContent>
