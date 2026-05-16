@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Scroll, Award, RotateCw, AlertCircle, CheckCircle2, XCircle, BookOpen } from 'lucide-react';
+import { Loader2, Scroll, Award, RotateCw, AlertCircle, CheckCircle2, XCircle, BookOpen, FileText, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ type Exam = {
   description: string | null;
   year: number | null;
   exam_type: string;
+  pdf_url: string | null;
   question_count: number;
 };
 
@@ -69,7 +70,7 @@ export default function ProvasCompletasPage() {
     try {
       const { data, error } = await supabase
         .from('exams')
-        .select('id, title, description, year, exam_type, exam_questions(count)')
+        .select('id, title, description, year, exam_type, pdf_url, exam_questions(count)')
         .order('year', { ascending: false });
 
       if (error) throw error;
@@ -80,6 +81,7 @@ export default function ProvasCompletasPage() {
         description: e.description,
         year: e.year,
         exam_type: e.exam_type,
+        pdf_url: e.pdf_url,
         question_count: e.exam_questions?.[0]?.count ?? 0,
       }));
 
@@ -244,8 +246,8 @@ export default function ProvasCompletasPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {exams.map(exam => (
-              <Card key={exam.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden hover:shadow-2xl transition-all group cursor-pointer" onClick={() => startExam(exam)}>
-                <CardContent className="p-6 space-y-4">
+              <Card key={exam.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden hover:shadow-2xl transition-all group">
+                <CardContent className="p-6 flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <h3 className="text-lg font-black text-primary italic leading-tight">{exam.title}</h3>
@@ -253,13 +255,41 @@ export default function ProvasCompletasPage() {
                     </div>
                     {exam.year && <Badge className="bg-accent/10 text-accent border-none font-black text-xs shrink-0">{exam.year}</Badge>}
                   </div>
-                  <div className="flex items-center gap-3">
+
+                  <div className="flex items-center gap-3 flex-wrap">
                     <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase">{exam.exam_type}</Badge>
-                    <span className="text-xs text-muted-foreground font-medium">{exam.question_count} questões</span>
+                    {exam.question_count > 0 && (
+                      <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                        <BookOpen className="h-3.5 w-3.5" /> {exam.question_count} questões
+                      </span>
+                    )}
+                    {exam.pdf_url && (
+                      <span className="text-xs text-green-600 font-black flex items-center gap-1">
+                        <FileText className="h-3.5 w-3.5" /> PDF disponível
+                      </span>
+                    )}
                   </div>
-                  <Button className="w-full h-12 rounded-2xl bg-primary text-white font-black text-sm shadow-lg group-hover:scale-[1.02] transition-all">
-                    Iniciar Prova
-                  </Button>
+
+                  <div className="flex flex-col gap-2">
+                    {exam.pdf_url && (
+                      <a href={exam.pdf_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" className="w-full h-11 rounded-2xl font-black text-sm border-green-200 text-green-700 hover:bg-green-50 transition-all">
+                          <ExternalLink className="h-4 w-4 mr-2" /> Abrir PDF
+                        </Button>
+                      </a>
+                    )}
+                    {exam.question_count > 0 && (
+                      <Button
+                        onClick={() => startExam(exam)}
+                        className="w-full h-11 rounded-2xl bg-primary text-white font-black text-sm shadow-lg hover:scale-[1.02] transition-all"
+                      >
+                        <Scroll className="h-4 w-4 mr-2" /> Fazer com Questões
+                      </Button>
+                    )}
+                    {!exam.pdf_url && exam.question_count === 0 && (
+                      <p className="text-center text-xs text-muted-foreground font-medium py-2">Prova em preparação...</p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
