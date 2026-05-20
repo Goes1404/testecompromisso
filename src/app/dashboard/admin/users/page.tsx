@@ -192,24 +192,41 @@ interface ResetModalProps {
 
 function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
   const { toast } = useToast();
+
+  // Aba ativa: 'link' = gerar link de recuperação | 'direct' = definir senha diretamente
+  const [tab, setTab] = useState<'link' | 'direct'>('link');
+
+  // Estado da aba "Gerar Link"
   const [link, setLink] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  // Estado da aba "Definir Senha"
+  const [newPassword, setNewPassword] = useState('compromisso2026');
+  const [directLoading, setDirectLoading] = useState(false);
+  const [directError, setDirectError] = useState<string | null>(null);
+  const [directSuccess, setDirectSuccess] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
 
   // Limpa estado ao abrir um novo usuário
   useEffect(() => {
     if (open) {
+      setTab('link');
       setLink(null);
-      setError(null);
+      setLinkError(null);
       setCopied(false);
+      setNewPassword('compromisso2026');
+      setDirectError(null);
+      setDirectSuccess(false);
     }
   }, [open, user?.id]);
 
+  /* ── Aba: Gerar Link ── */
   const generateLink = async () => {
     if (!user) return;
-    setLoading(true);
-    setError(null);
+    setLinkLoading(true);
+    setLinkError(null);
     try {
       const res = await fetch('/api/admin/generate-link', {
         method: 'POST',
@@ -224,9 +241,9 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
       if (!res.ok) throw new Error(data.error);
       setLink(data.link);
     } catch (err: any) {
-      setError(err.message || 'Falha ao gerar link. Tente novamente.');
+      setLinkError(err.message || 'Falha ao gerar link. Tente novamente.');
     } finally {
-      setLoading(false);
+      setLinkLoading(false);
     }
   };
 
@@ -236,6 +253,36 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
     setCopied(true);
     toast({ title: 'Link copiado para a área de transferência!' });
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  /* ── Aba: Definir Senha Diretamente ── */
+  const handleDirectReset = async () => {
+    if (!user || !newPassword.trim()) return;
+    if (newPassword.length < 8) {
+      setDirectError('A senha deve ter no mínimo 8 caracteres.');
+      return;
+    }
+    setDirectLoading(true);
+    setDirectError(null);
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          masterPassword: 'compromisso2026',
+          email: user.email,
+          newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setDirectSuccess(true);
+      toast({ title: 'Senha redefinida!', description: `${user.name} precisará usar a nova senha no próximo login.` });
+    } catch (err: any) {
+      setDirectError(err.message || 'Falha ao redefinir senha. Tente novamente.');
+    } finally {
+      setDirectLoading(false);
+    }
   };
 
   return (
@@ -264,91 +311,174 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
             <span className="text-xs font-mono font-bold text-primary truncate">{user?.email}</span>
           </div>
 
-          {/* Estado: sem link ainda */}
-          {!link && !loading && !error && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Clique em <strong>Gerar Link</strong> para criar um link temporário de reset de senha.
-                O link expira em <strong>1 hora</strong> e funciona uma única vez.
-              </p>
-              <Button
-                onClick={generateLink}
-                className="w-full h-11 bg-primary text-white font-bold rounded-2xl border-none shadow-md"
-              >
-                <KeyRound size={16} className="mr-2" />
-                Gerar Link de Reset
-              </Button>
-            </div>
-          )}
+          {/* Seletor de abas */}
+          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-2xl">
+            <button
+              onClick={() => setTab('link')}
+              className={`h-9 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                tab === 'link'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Enviar Link
+            </button>
+            <button
+              onClick={() => setTab('direct')}
+              className={`h-9 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                tab === 'direct'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Definir Senha
+            </button>
+          </div>
 
-          {/* Estado: carregando */}
-          {loading && (
-            <div className="py-6 flex items-center justify-center gap-3 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-sm font-medium">Gerando link seguro...</span>
-            </div>
-          )}
-
-          {/* Estado: erro */}
-          {error && !loading && (
-            <div className="space-y-3">
-              <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                {error}
-              </div>
-              <Button
-                variant="outline"
-                onClick={generateLink}
-                className="w-full h-10 rounded-xl font-bold border-muted/30 gap-2"
-              >
-                <RefreshCw size={14} />
-                Tentar novamente
-              </Button>
-            </div>
-          )}
-
-          {/* Estado: link gerado */}
-          {link && !loading && (
+          {/* ── Conteúdo: Gerar Link ── */}
+          {tab === 'link' && (
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">
-                  <Clock size={11} />
-                  Expira em 1 hora
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold">
-                  <CheckCircle2 size={11} />
-                  Link gerado
-                </span>
-              </div>
-
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-3">
-                <p className="text-[10px] font-mono text-slate-500 break-all leading-relaxed line-clamp-3">
-                  {link}
-                </p>
-                <div className="flex gap-2">
+              {!link && !linkLoading && !linkError && (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Gere um link seguro e envie ao aluno. Ele expira em <strong>1 hora</strong> e funciona uma única vez.
+                  </p>
                   <Button
-                    onClick={handleCopy}
-                    className="flex-1 h-10 rounded-xl font-bold text-xs gap-2 bg-primary text-white border-none"
-                  >
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
-                    {copied ? 'Copiado!' : 'Copiar Link'}
-                  </Button>
-                  <Button
-                    variant="outline"
                     onClick={generateLink}
-                    disabled={loading}
-                    title="Gerar novo link"
-                    className="h-10 px-3 rounded-xl border-muted/30"
+                    className="w-full h-11 bg-primary text-white font-bold rounded-2xl border-none shadow-md"
                   >
-                    <RefreshCw size={14} />
+                    <KeyRound size={16} className="mr-2" />
+                    Gerar Link de Reset
                   </Button>
                 </div>
-              </div>
+              )}
 
-              <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                Envie este link ao usuário via WhatsApp ou outro canal seguro. Ele será redirecionado
-                para criar uma nova senha.
-              </p>
+              {linkLoading && (
+                <div className="py-6 flex items-center justify-center gap-3 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-sm font-medium">Gerando link seguro...</span>
+                </div>
+              )}
+
+              {linkError && !linkLoading && (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
+                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                    {linkError}
+                  </div>
+                  <Button variant="outline" onClick={generateLink} className="w-full h-10 rounded-xl font-bold border-muted/30 gap-2">
+                    <RefreshCw size={14} />
+                    Tentar novamente
+                  </Button>
+                </div>
+              )}
+
+              {link && !linkLoading && (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                      <Clock size={11} />
+                      Expira em 1 hora
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                      <CheckCircle2 size={11} />
+                      Link gerado
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-3">
+                    <p className="text-[10px] font-mono text-slate-500 break-all leading-relaxed line-clamp-3">
+                      {link}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button onClick={handleCopy} className="flex-1 h-10 rounded-xl font-bold text-xs gap-2 bg-primary text-white border-none">
+                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                        {copied ? 'Copiado!' : 'Copiar Link'}
+                      </Button>
+                      <Button variant="outline" onClick={generateLink} disabled={linkLoading} title="Gerar novo link" className="h-10 px-3 rounded-xl border-muted/30">
+                        <RefreshCw size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                    Envie este link ao aluno via WhatsApp. Ele será redirecionado para criar uma nova senha.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Conteúdo: Definir Senha Diretamente ── */}
+          {tab === 'direct' && (
+            <div className="space-y-4">
+              {directSuccess ? (
+                <div className="py-4 space-y-3 text-center">
+                  <div className="h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                  </div>
+                  <p className="font-black text-primary text-sm uppercase tracking-wide">Senha Redefinida!</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    O aluno precisará trocar a senha no próximo login.
+                  </p>
+                  <Button variant="outline" onClick={onClose} className="w-full h-10 rounded-xl font-bold text-xs border-muted/30">
+                    Fechar
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Define uma senha temporária para o aluno. Ele será obrigado a alterá-la no próximo login.
+                  </p>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                      Nova Senha Temporária
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showPwd ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={e => { setNewPassword(e.target.value); setDirectError(null); }}
+                        className="h-12 bg-slate-50 border-slate-200 rounded-xl font-mono font-bold pr-12"
+                        placeholder="Mínimo 8 caracteres"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPwd(!showPwd)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showPwd ? <CheckCircle2 size={16} /> : <KeyRound size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {directError && (
+                    <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
+                      <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                      {directError}
+                    </div>
+                  )}
+
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                      O aluno será redirecionado para trocar a senha obrigatoriamente no próximo acesso.
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleDirectReset}
+                    disabled={directLoading || !newPassword.trim()}
+                    className="w-full h-11 bg-primary text-white font-bold rounded-2xl border-none shadow-md disabled:opacity-40"
+                  >
+                    {directLoading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <>
+                        <KeyRound size={16} className="mr-2" />
+                        Redefinir Senha Agora
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>

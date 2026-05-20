@@ -58,7 +58,10 @@ export async function POST(request: Request) {
     // 4. Resetar senha via Admin API (Sem deletar/reproducir o usuário)
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       profile.id,
-      { password: newPassword }
+      {
+        password: newPassword,
+        user_metadata: { must_change_password: true },
+      }
     );
 
     if (updateError) {

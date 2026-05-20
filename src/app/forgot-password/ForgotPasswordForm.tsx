@@ -69,7 +69,7 @@ export function ForgotPasswordForm() {
 
       // PADRÃO DE MERCADO: Envio do e-mail oficial de Reset para todos
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${window.location.origin}/forgot-password?type=recovery`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });
       
       if (resetError) throw resetError;
