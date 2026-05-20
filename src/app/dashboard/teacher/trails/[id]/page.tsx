@@ -63,6 +63,7 @@ import {
 import Link from 'next/link';
 import { supabase } from '@/app/lib/supabase';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import YouTubeUploadModal from '@/components/teacher/YouTubeUploadModal';
 
 export default function TrailManagementPage() {
   const params = useParams();
@@ -102,6 +103,7 @@ export default function TrailManagementPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [fileInputKey, setFileInputKey] = useState<number>(Date.now());
+  const [ytModalOpen, setYtModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!trailId) return;
@@ -167,6 +169,20 @@ export default function TrailManagementPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Detecta retorno do OAuth do YouTube
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const yt = params.get('youtube');
+    if (yt === 'connected') {
+      toast({ title: 'YouTube conectado!', description: 'Seu canal foi vinculado. Agora você pode publicar vídeos diretamente.' });
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (yt === 'error') {
+      toast({ title: 'Erro ao conectar YouTube', description: 'Verifique as credenciais e tente novamente.', variant: 'destructive' });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast]);
 
   const handlePublish = async () => {
     if (isPublishing || !trail) return;
@@ -785,6 +801,15 @@ export default function TrailManagementPage() {
         </div>
       </div>
 
+      {/* MODAL DE UPLOAD PARA O YOUTUBE */}
+      <YouTubeUploadModal
+        open={ytModalOpen}
+        onClose={() => setYtModalOpen(false)}
+        trailId={trailId}
+        onSuccess={(url) => setContentForm((prev) => ({ ...prev, url }))}
+        defaultTitle={contentForm.title}
+      />
+
       {/* DIÁLOGO EDITAR TRILHA */}
       <Dialog open={isEditTrailDialogOpen} onOpenChange={setIsEditTrailDialogOpen}>
         <DialogContent className='rounded-2xl md:rounded-3xl p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-xl max-h-[90vh] overflow-y-auto'>
@@ -1008,6 +1033,16 @@ export default function TrailManagementPage() {
                           />
                           <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent opacity-40" />
                         </div>
+                        {contentForm.type === 'video' && (
+                          <button
+                            type="button"
+                            onClick={() => setYtModalOpen(true)}
+                            className="flex items-center gap-1.5 text-[10px] font-black text-red-500 hover:text-red-600 uppercase tracking-wider mt-1 ml-1 transition-colors"
+                          >
+                            <Youtube className="h-3.5 w-3.5" />
+                            Ou publicar diretamente no YouTube
+                          </button>
+                        )}
                       </div>
                     )}
 
