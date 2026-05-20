@@ -51,7 +51,7 @@ export default function QuestionBankPage() {
     const [saveProgress, setSaveProgress] = useState<{ current: number, total: number } | null>(null);
     const [isReadingFile, setIsReadingFile] = useState(false);
     const [subjects, setSubjects] = useState<Subject[]>([]);
-    const [filterMode, setFilterMode] = useState<'all' | 'needs_image' | 'no_subject' | 'dubious_answer'>('all');
+    const [filterMode, setFilterMode] = useState<'all' | 'needs_image' | 'no_subject' | 'dubious_answer' | 'needs_gabarito'>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [showHistory, setShowHistory] = useState(false);
     const [currentFilename, setCurrentFilename] = useState('Prova');
@@ -269,9 +269,18 @@ export default function QuestionBankPage() {
         if (!user || itemsToProcess.length === 0) return;
         setIsSaving(true);
         try {
-            const normalizeAnswer = (raw: string) => {
-                const m = (raw || '').trim().match(/^([A-Ea-e])/);
-                return m ? m[1].toUpperCase() : 'A';
+            const questionsWithoutAnswer = itemsToProcess.filter(q => !q.correct_answer);
+            if (questionsWithoutAnswer.length > 0) {
+                toast({
+                    title: `${questionsWithoutAnswer.length} questão(ões) sem gabarito`,
+                    description: 'Serão salvas sem resposta correta. Você pode editá-las depois.',
+                });
+            }
+
+            const normalizeAnswer = (raw: string | null) => {
+                if (!raw) return null;
+                const m = raw.trim().match(/^([A-Ea-e])/);
+                return m ? m[1].toUpperCase() : null;
             };
 
             let finalExamId = null;
@@ -393,12 +402,14 @@ export default function QuestionBankPage() {
         needs_image: extractedQuestions.filter(q => q.question_text.includes('[IMAGEM_PENDENTE]') || q.supporting_text?.includes('[IMAGEM_PENDENTE]')).length,
         no_subject: extractedQuestions.filter(q => !q.subject_id).length,
         dubious_answer: extractedQuestions.filter(q => !q.correct_answer || q.correct_answer.toUpperCase() === 'A').length,
+        needs_gabarito: extractedQuestions.filter(q => !q.correct_answer).length,
     };
 
     const filteredQuestions = extractedQuestions.filter((q: ParsedQuestion) => {
         if (filterMode === 'needs_image') return q.question_text.includes('[IMAGEM_PENDENTE]') || q.supporting_text?.includes('[IMAGEM_PENDENTE]');
         if (filterMode === 'no_subject') return !q.subject_id;
         if (filterMode === 'dubious_answer') return !q.correct_answer || q.correct_answer.toUpperCase() === 'A';
+        if (filterMode === 'needs_gabarito') return !q.correct_answer;
         return true;
     });
 
@@ -817,6 +828,7 @@ export default function QuestionBankPage() {
                                     { key: 'needs_image' as const, label: 'Precisam de Imagem', count: filterCounts.needs_image, color: 'bg-amber-500' },
                                     { key: 'no_subject' as const, label: 'Sem Matéria', count: filterCounts.no_subject, color: 'bg-red-500' },
                                     { key: 'dubious_answer' as const, label: 'Gabarito Duvidoso', count: filterCounts.dubious_answer, color: 'bg-purple-500' },
+                                    { key: 'needs_gabarito' as const, label: 'Gabarito Pendente', count: filterCounts.needs_gabarito, color: 'bg-rose-600' },
                                 ] as const).map(f => (
                                     <button key={f.key} onClick={() => setFilterMode(f.key)}
                                         className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${filterMode === f.key ? `${f.color} text-white border-transparent shadow-md` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
@@ -881,6 +893,9 @@ export default function QuestionBankPage() {
                                             </Badge>
                                             {q.options.length < 2 && (
                                                 <Badge className="bg-red-50 text-red-600 border-red-200 font-black text-[8px] uppercase px-3">⚠️ Opções Incompletas</Badge>
+                                            )}
+                                            {!q.correct_answer && (
+                                                <Badge className="bg-rose-100 text-rose-700 border-rose-200 font-black text-[8px] uppercase px-3 animate-pulse">Gabarito Pendente</Badge>
                                             )}
                                             <Badge className="bg-accent/10 text-accent border-none font-black text-[8px] uppercase px-3">{q.year}</Badge>
                                             {q.subject_name && (
@@ -1071,7 +1086,7 @@ export default function QuestionBankPage() {
                             <div className="space-y-3 py-4">
                                 <div className="flex items-center justify-between p-4 bg-green-50 text-green-700 rounded-2xl border border-green-100">
                                     <span className="font-bold text-sm">Questões Prontas ✓</span>
-                                    <span className="font-black text-xl">{extractedQuestions.length - filterCounts.no_subject - filterCounts.needs_image}</span>
+                                    <span className="font-black text-xl">{extractedQuestions.length - filterCounts.no_subject - filterCounts.needs_image - filterCounts.needs_gabarito}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100">
                                     <span className="font-bold text-sm">Sem Matéria ⚠</span>
@@ -1088,6 +1103,15 @@ export default function QuestionBankPage() {
                                         <span className="font-black text-xl">{filterCounts.needs_image}</span>
                                         {filterCounts.needs_image > 0 && (
                                             <Button size="sm" variant="outline" className="h-8 rounded-xl text-[10px] uppercase font-black border-amber-200 hover:bg-amber-100 text-amber-700" onClick={() => { setShowSaveModal(false); setFilterMode('needs_image'); }}>Filtrar</Button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between p-4 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100">
+                                    <span className="font-bold text-sm">Gabarito Pendente ⚠</span>
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-black text-xl">{filterCounts.needs_gabarito}</span>
+                                        {filterCounts.needs_gabarito > 0 && (
+                                            <Button size="sm" variant="outline" className="h-8 rounded-xl text-[10px] uppercase font-black border-rose-200 hover:bg-rose-100 text-rose-700" onClick={() => { setShowSaveModal(false); setFilterMode('needs_gabarito'); }}>Filtrar</Button>
                                         )}
                                     </div>
                                 </div>

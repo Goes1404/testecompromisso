@@ -10,7 +10,7 @@ export type ParsedQuestion = {
     _tempId?: string;
     question_text: string;
     options: QuestionOption[];
-    correct_answer: string;
+    correct_answer: string | null;
     year: number;
     explanation?: string;
     subject_name?: string;
@@ -225,15 +225,46 @@ export function ExtractionProvider({ children }: { children: ReactNode }) {
             setProgress(p => ({ ...p, elapsedSeconds: elapsed }));
         }, 1000);
 
-        const CHUNK_SIZE = 4500;
-        const OVERLAP = 800;
+        const CHUNK_SIZE = 5500;
+        const OVERLAP = 1200;
+
+        const findBoundary = (src: string, end: number): number => {
+            const win = src.substring(Math.max(0, end - 600), end);
+            const re = /\n\s*(?:questão\s+\d+|\d{1,3}[\.\)])/gi;
+            let last = -1, m: RegExpExecArray | null;
+            while ((m = re.exec(win)) !== null) last = m.index;
+            if (last === -1) return end;
+            return Math.max(0, end - 600) + last;
+        };
+
         const chunks: string[] = [];
-        for (let i = 0; i < text.length; i += (CHUNK_SIZE - OVERLAP)) {
-            chunks.push(text.substring(i, i + CHUNK_SIZE));
-            if (i + CHUNK_SIZE >= text.length) break;
+        let pos = 0;
+        while (pos < text.length) {
+            const rawEnd = Math.min(pos + CHUNK_SIZE, text.length);
+            const end = rawEnd < text.length ? findBoundary(text, rawEnd) : rawEnd;
+            const safeEnd = end > pos ? end : rawEnd;
+            chunks.push(text.substring(pos, safeEnd));
+            if (safeEnd >= text.length) break;
+            pos = Math.max(pos + 1, safeEnd - OVERLAP);
         }
 
         setProgress({ currentChunk: 0, totalChunks: chunks.length, phase: 'analyzing', questionsFound: 0, elapsedSeconds: 0 });
+
+        const propagateSupportingText = (qs: any[]): any[] => {
+            let carrier = '';
+            return qs.map(q => {
+                const st: string | undefined = q.supporting_text;
+                if (typeof st === 'string' && st.trim().length > 5) {
+                    carrier = st.trim();
+                    return q;
+                }
+                if (typeof st === 'string' && st.trim() === '' && carrier.length > 0) {
+                    return { ...q, supporting_text: carrier };
+                }
+                carrier = '';
+                return q;
+            });
+        };
 
         const seenTexts = new Set<string>();
         let imageIndex = 0;
@@ -272,9 +303,10 @@ Sua missão é extrair questões de múltipla escolha mantendo a INTEGRIDADE do 
 
 REGRAS DE OURO PARA CONTEXTO COMPARTILHADO:
 1. IDENTIFIQUE GRUPOS: Fique atento a frases como "As questões X a Y referem-se ao texto...", "Considere a imagem para responder às questões...".
-2. PERSISTÊNCIA: Se um "Texto de Apoio" ou "Imagem" for base para múltiplas questões, você DEVE replicar esse conteúdo INTEGRALMENTE no campo "supporting_text" de CADA UMA dessas questões. Nunca deixe uma questão sem o seu texto de base se ele existir no trecho.
-3. MARCADORES DE IMAGEM: Sempre que houver menção a "Figura", "Gráfico", "Charge", "Mapa" ou "Tabela Visual" que não possa ser transcrita, insira [IMAGEM_PENDENTE] no "supporting_text" ou no início do "question_text".
+2. PERSISTÊNCIA: Se um "Texto de Apoio" ou "Imagem" for base para múltiplas questões, você DEVE replicar esse conteúdo INTEGRALMENTE no campo "supporting_text" de CADA UMA dessas questões. Nunca deixe uma questão sem o seu texto de base se ele existir no trecho. Para questões de um grupo onde você NÃO replicou o texto de base, use "" (string vazia) em "supporting_text" — NUNCA omita o campo.
+3. MARCADORES DE IMAGEM: Sempre que houver menção a "Figura", "Imagem", "Fotografia", "Gráfico", "Charge", "Mapa", "Tabela Visual", "Quadro", "Esquema", "Tirinha" ou "Ilustração" que não possa ser transcrita em texto, insira [IMAGEM_PENDENTE] no campo "supporting_text" (ou no início de "question_text" se não houver supporting_text).
 4. NÃO RESUMA: Mantenha o enunciado e o texto de apoio exatamente como estão no original.
+5. GABARITO AUSENTE: Se o gabarito não estiver explícito neste trecho, defina "correct_answer" como null. NUNCA invente ou adivinhe a resposta correta.
 
 ESTRUTURA JSON EXIGIDA:
 {
@@ -283,7 +315,7 @@ ESTRUTURA JSON EXIGIDA:
       "question_text": "Enunciado completo.",
       "supporting_text": "Texto de base (se houver).",
       "options": [{"key": "A", "text": "..."}, {"key": "B", "text": "..."}, {"key": "C", "text": "..."}, {"key": "D", "text": "..."}, {"key": "E", "text": "..."}],
-      "correct_answer": "LETRA_DA_CORRETA",
+      "correct_answer": "LETRA_DA_CORRETA ou null se o gabarito NÃO estiver visível neste trecho",
       "year": 2024,
       "subject_name": "Matéria"
     }
@@ -314,7 +346,8 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`,
                 try {
                     const jsonMatch = clean.match(/\{[\s\S]*"questions"[\s\S]*\}/);
                     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : clean);
-                    const chunkQs = parsed.questions || (Array.isArray(parsed) ? parsed : []);
+                    const rawQs = parsed.questions || (Array.isArray(parsed) ? parsed : []);
+                    const chunkQs = propagateSupportingText(rawQs);
 
                     const unique: any[] = [];
                     chunkQs.forEach((q: any) => {
@@ -324,8 +357,23 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`,
                         if (!seenTexts.has(norm) && norm.length > 10) { seenTexts.add(norm); unique.push(q); }
                     });
 
-                    const mapped = unique.map((q: any) => {
-                        const needsImage = (q.question_text + ' ' + (q.supporting_text || '')).toUpperCase().includes('[IMAGEM_PENDENTE]');
+                    const IMAGE_TRIGGERS = ['[IMAGEM_PENDENTE]', 'FIGURA ', 'IMAGEM ', 'FOTOGRAFIA ',
+                        'GRÁFICO ', 'GRAFICO ', 'CHARGE ', 'TIRINHA ', 'ESQUEMA ', 'QUADRO ',
+                        'ILUSTRAÇÃO ', 'ILUSTRACAO '];
+
+                    const mapped = unique.map((rawQ: any) => {
+                        let q = rawQ;
+                        const combinedText = (q.question_text + ' ' + (q.supporting_text || '')).toUpperCase();
+                        const needsImage = IMAGE_TRIGGERS.some(t => combinedText.includes(t));
+
+                        if (needsImage && !combinedText.includes('[IMAGEM_PENDENTE]')) {
+                            if (q.supporting_text && q.supporting_text.trim().length > 0) {
+                                q = { ...q, supporting_text: '[IMAGEM_PENDENTE]\n' + q.supporting_text };
+                            } else {
+                                q = { ...q, question_text: '[IMAGEM_PENDENTE] ' + q.question_text };
+                            }
+                        }
+
                         const base = {
                             ...q,
                             _tempId: Math.random().toString(36).substring(2, 9),
