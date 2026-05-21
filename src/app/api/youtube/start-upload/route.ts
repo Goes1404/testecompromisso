@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 
 async function refreshToken(refreshToken: string): Promise<{ access_token: string; expires_in: number }> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
@@ -34,13 +33,7 @@ export async function POST(request: Request) {
 
     const { title, description, privacyStatus = 'unlisted', contentType, fileSize } = await request.json();
 
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
-    const { data: tokenRecord, error: tokenErr } = await supabaseAdmin
+    const { data: tokenRecord, error: tokenErr } = await supabase
       .from('teacher_youtube_tokens')
       .select('*')
       .eq('user_id', user.id)
@@ -60,7 +53,7 @@ export async function POST(request: Request) {
       const refreshed = await refreshToken(tokenRecord.refresh_token);
       accessToken = refreshed.access_token;
       const newExpiry = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
-      await supabaseAdmin
+      await supabase
         .from('teacher_youtube_tokens')
         .update({ access_token: accessToken, token_expiry: newExpiry, updated_at: new Date().toISOString() })
         .eq('user_id', user.id);

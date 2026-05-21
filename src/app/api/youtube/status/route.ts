@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
   try {
@@ -17,13 +16,7 @@ export async function GET() {
       return NextResponse.json({ connected: false });
     }
 
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
-    const { data: token } = await supabaseAdmin
+    const { data: token } = await supabase
       .from('teacher_youtube_tokens')
       .select('channel_id, channel_title, token_expiry')
       .eq('user_id', user.id)
