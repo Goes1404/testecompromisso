@@ -101,55 +101,73 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     setErrorMsg(null);
 
     try {
-      // Step 1: Server initiates the YouTube resumable upload session
-      const initRes = await fetch('/api/youtube/start-upload', {
+      // Step 1: Get a valid access token from our server (refreshes if needed)
+      const tokenRes = await fetch('/api/youtube/start-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          description,
-          privacyStatus: privacy,
-          contentType: file.type,
-          fileSize: file.size,
-        }),
+        body: JSON.stringify({}),
       });
 
-      if (!initRes.ok) {
-        const err = await initRes.json();
-        throw new Error(err.error || 'Erro ao iniciar upload');
+      if (!tokenRes.ok) {
+        const err = await tokenRes.json();
+        throw new Error(err.error || 'Erro ao obter credenciais do YouTube');
       }
 
-      const { uploadUrl } = await initRes.json();
+      const { accessToken } = await tokenRes.json();
 
-      // Step 2: Client uploads directly to YouTube resumable upload URL
+      // Step 2: Browser initiates the resumable upload session directly with YouTube
+      // Must be browser-initiated so Google sets up CORS for the subsequent PUT
+      const ytInitRes = await fetch(
+        'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'X-Upload-Content-Type': file.type || 'video/*',
+            'X-Upload-Content-Length': String(file.size),
+          },
+          body: JSON.stringify({
+            snippet: { title, description: description || '', categoryId: '27' },
+            status: { privacyStatus: privacy, selfDeclaredMadeForKids: false },
+          }),
+        }
+      );
+
+      if (!ytInitRes.ok) {
+        const errText = await ytInitRes.text();
+        throw new Error(`Erro ao iniciar upload no YouTube (${ytInitRes.status}): ${errText}`);
+      }
+
+      const uploadUrl = ytInitRes.headers.get('location');
+      if (!uploadUrl) throw new Error('YouTube não retornou URL de upload');
+
+      // Step 3: Upload bytes directly — progress tracking via XHR
       const videoId = await new Promise<string>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
 
         xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setProgress(Math.round((e.loaded / e.total) * 100));
-          }
+          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
         };
 
         xhr.onload = () => {
           if (xhr.status === 200 || xhr.status === 201) {
             try {
-              const res = JSON.parse(xhr.responseText);
-              resolve(res.id);
+              resolve(JSON.parse(xhr.responseText).id);
             } catch {
               reject(new Error('Resposta inválida do YouTube'));
             }
           } else {
-            reject(new Error(`Upload falhou: ${xhr.status} — verifique as credenciais e quotas da API`));
+            reject(new Error(`Upload falhou (${xhr.status}) — verifique quotas e permissões da API`));
           }
         };
 
-        xhr.onerror = () => reject(new Error('Erro de rede durante o upload'));
+        xhr.onerror = () => reject(new Error('Erro de rede — verifique sua conexão e tente novamente'));
         xhr.onabort = () => reject(new Error('Upload cancelado'));
 
         xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type);
+        xhr.setRequestHeader('Content-Type', file.type || 'video/*');
         xhr.send(file);
       });
 
