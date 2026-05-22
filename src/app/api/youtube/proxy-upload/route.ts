@@ -5,14 +5,15 @@ import { createServerClient } from '@supabase/ssr';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
-// Receives one chunk from the browser and forwards it to YouTube's resumable
-// upload URL using the correct Content-Range header. Each chunk is ≤5 MB so
-// it stays well under Vercel's request body limit for any plan.
+// Receives one chunk via FormData and forwards it to YouTube's resumable
+// upload URL. Using FormData avoids binary MIME-type rejection at the
+// Vercel edge that occurs when sending raw video/* bodies.
 //
-// Request headers expected:
-//   x-upload-url   — YouTube resumable upload URL (from start-upload)
-//   x-content-range — e.g. "bytes 0-5242879/104857600"
-//   content-type   — video MIME type
+// FormData fields expected:
+//   chunk            — the binary slice (Blob/File)
+//   uploadUrl        — YouTube resumable upload URL (from start-upload)
+//   contentRange     — e.g. "bytes 0-2097151/104857600"
+//   videoContentType — MIME type of the original video file
 //
 // Response:
 //   { done: false, nextByte: N }   — chunk accepted, more to go (YouTube 308)
@@ -28,22 +29,25 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-    const uploadUrl   = request.headers.get('x-upload-url');
-    const contentRange = request.headers.get('x-content-range');
-    const contentType  = request.headers.get('content-type') || 'video/mp4';
+    const form = await request.formData();
+    const chunkFile = form.get('chunk') as File | null;
+    const uploadUrl = form.get('uploadUrl') as string | null;
+    const contentRange = form.get('contentRange') as string | null;
+    const videoContentType = (form.get('videoContentType') as string | null) || 'video/mp4';
 
-    if (!uploadUrl || !contentRange) {
-      return NextResponse.json({ error: 'Headers x-upload-url e x-content-range são obrigatórios' }, { status: 400 });
+    if (!chunkFile || !uploadUrl || !contentRange) {
+      return NextResponse.json(
+        { error: 'Campos obrigatórios ausentes: chunk, uploadUrl, contentRange' },
+        { status: 400 }
+      );
     }
 
-    // Buffer the chunk fully before forwarding — avoids duplex streaming
-    // corruption that causes black-screen video on YouTube.
-    const buffer = await request.arrayBuffer();
+    const buffer = await chunkFile.arrayBuffer();
 
     const ytRes = await fetch(uploadUrl, {
       method: 'PUT',
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': videoContentType,
         'Content-Range': contentRange,
         'Content-Length': String(buffer.byteLength),
       },
@@ -52,7 +56,7 @@ export async function POST(request: Request) {
 
     // 308 Resume Incomplete — chunk accepted, YouTube wants more
     if (ytRes.status === 308) {
-      const range = ytRes.headers.get('range'); // "bytes=0-5242879"
+      const range = ytRes.headers.get('range'); // "bytes=0-2097151"
       const nextByte = range ? parseInt(range.split('-')[1]) + 1 : 0;
       return NextResponse.json({ done: false, nextByte });
     }

@@ -91,7 +91,8 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     }
   };
 
-  const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MB — under Vercel 4.5 MB body limit; multiple of 256 KB (YouTube requirement)
+  // 2 MB: safe under Vercel body limit; multiple of 256 KB (YouTube requirement)
+  const CHUNK_SIZE = 2 * 1024 * 1024;
 
   const handleUpload = async () => {
     if (!file || !title.trim()) {
@@ -122,7 +123,8 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
       }
       const { uploadUrl } = await startRes.json();
 
-      // Step 2: Send file in 5 MB chunks through server proxy
+      // Step 2: Send file in chunks via FormData — avoids binary MIME-type
+      // rejection at the Vercel edge for raw video/* bodies.
       let offset = 0;
       while (offset < file.size) {
         if (abortedRef.current) throw new Error('Upload cancelado');
@@ -131,19 +133,20 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
         const chunk = file.slice(offset, end);
         const contentRange = `bytes ${offset}-${end - 1}/${file.size}`;
 
+        const form = new FormData();
+        form.append('chunk', chunk, 'chunk.bin');
+        form.append('uploadUrl', uploadUrl);
+        form.append('contentRange', contentRange);
+        form.append('videoContentType', file.type || 'video/mp4');
+
         let proxyRes: Response;
         try {
           proxyRes = await fetch('/api/youtube/proxy-upload', {
             method: 'POST',
-            headers: {
-              'content-type': file.type || 'video/mp4',
-              'x-upload-url': uploadUrl,
-              'x-content-range': contentRange,
-            },
-            body: chunk,
+            body: form,
           });
         } catch (netErr: any) {
-          throw new Error(`Falha de rede ao enviar chunk ${Math.round(offset / 1024 / 1024)}–${Math.round(end / 1024 / 1024)} MB: ${netErr.message}`);
+          throw new Error(`Falha de rede no chunk ${Math.round(offset / 1024 / 1024)}–${Math.round(end / 1024 / 1024)} MB: ${netErr.message}`);
         }
 
         if (!proxyRes.ok) {
@@ -161,7 +164,6 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
           return;
         }
 
-        // YouTube confirmed this chunk; advance to nextByte
         offset = result.nextByte ?? end;
         setProgress(Math.round((offset / file.size) * 100));
       }
