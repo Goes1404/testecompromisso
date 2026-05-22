@@ -50,7 +50,7 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
   const [progress, setProgress] = useState(0);
   const [videoUrl, setVideoUrl] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const xhrRef = useRef<XMLHttpRequest | null>(null);
+  const abortedRef = useRef(false);
 
   useEffect(() => {
     if (open) {
@@ -91,6 +91,8 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     }
   };
 
+  const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB — stays under Vercel body limits
+
   const handleUpload = async () => {
     if (!file || !title.trim()) {
       toast({ title: 'Selecione um arquivo e informe o título', variant: 'destructive' });
@@ -99,78 +101,69 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     setStatus('uploading');
     setProgress(0);
     setErrorMsg(null);
+    abortedRef.current = false;
 
     try {
-      // Step 1: Get a valid access token from server (refresh_token stays server-side)
-      const tokenRes = await fetch('/api/youtube/start-upload', {
+      // Step 1: Server initiates YouTube resumable session (avoids CORS preflight)
+      const startRes = await fetch('/api/youtube/start-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          title,
+          description: description || '',
+          privacyStatus: privacy,
+          contentType: file.type || 'video/mp4',
+          fileSize: file.size,
+        }),
       });
-      if (!tokenRes.ok) {
-        const err = await tokenRes.json();
-        throw new Error(err.error || 'Erro ao obter credenciais');
+      if (!startRes.ok) {
+        const err = await startRes.json();
+        throw new Error(err.error || 'Erro ao iniciar upload');
       }
-      const { accessToken } = await tokenRes.json();
+      const { uploadUrl } = await startRes.json();
 
-      // Step 2: Browser initiates resumable upload session directly with YouTube
-      const ytInitRes = await fetch(
-        'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
-        {
+      // Step 2: Send file in 5 MB chunks through server proxy
+      let offset = 0;
+      while (offset < file.size) {
+        if (abortedRef.current) throw new Error('Upload cancelado');
+
+        const end = Math.min(offset + CHUNK_SIZE, file.size);
+        const chunk = file.slice(offset, end);
+        const contentRange = `bytes ${offset}-${end - 1}/${file.size}`;
+
+        const proxyRes = await fetch('/api/youtube/proxy-upload', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'X-Upload-Content-Type': file.type || 'video/mp4',
-            'X-Upload-Content-Length': String(file.size),
+            'content-type': file.type || 'video/mp4',
+            'x-upload-url': uploadUrl,
+            'x-content-range': contentRange,
           },
-          body: JSON.stringify({
-            snippet: { title, description: description || '', categoryId: '27' },
-            status: { privacyStatus: privacy, selfDeclaredMadeForKids: false },
-          }),
+          body: chunk,
+        });
+
+        if (!proxyRes.ok) {
+          const err = await proxyRes.json().catch(() => ({ error: `HTTP ${proxyRes.status}` }));
+          throw new Error(err.error || `Erro no chunk (${proxyRes.status})`);
         }
-      );
-      if (!ytInitRes.ok) {
-        const errText = await ytInitRes.text();
-        throw new Error(`Erro ao iniciar upload no YouTube (${ytInitRes.status}): ${errText}`);
+
+        const result = await proxyRes.json();
+
+        if (result.done) {
+          setProgress(100);
+          const url = `https://www.youtube.com/watch?v=${result.videoId}`;
+          setVideoUrl(url);
+          setStatus('success');
+          return;
+        }
+
+        // YouTube confirmed this chunk; advance to nextByte
+        offset = result.nextByte ?? end;
+        setProgress(Math.round((offset / file.size) * 100));
       }
-      const uploadUrl = ytInitRes.headers.get('location');
-      if (!uploadUrl) throw new Error('YouTube não retornou URL de upload');
 
-      // Step 3: Upload file bytes directly — Content-Range required for resumable PUT
-      const videoId = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhrRef.current = xhr;
-
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
-        };
-
-        xhr.onload = () => {
-          if (xhr.status === 200 || xhr.status === 201) {
-            try {
-              resolve(JSON.parse(xhr.responseText).id);
-            } catch {
-              reject(new Error('Resposta inválida do YouTube'));
-            }
-          } else {
-            reject(new Error(`Upload falhou (${xhr.status}) — verifique quotas e permissões`));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error('Erro de rede — verifique sua conexão'));
-        xhr.onabort = () => reject(new Error('Upload cancelado'));
-
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
-        xhr.setRequestHeader('Content-Range', `bytes 0-${file.size - 1}/${file.size}`);
-        xhr.send(file);
-      });
-
-      const url = `https://www.youtube.com/watch?v=${videoId}`;
-      setVideoUrl(url);
-      setStatus('success');
+      throw new Error('Upload incompleto — tente novamente');
     } catch (err: any) {
+      if (abortedRef.current) return; // user cancelled — stay closed
       setErrorMsg(err.message || 'Erro ao fazer upload');
       setStatus('error');
     }
@@ -182,9 +175,7 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
   };
 
   const handleClose = () => {
-    if (xhrRef.current && status === 'uploading') {
-      xhrRef.current.abort();
-    }
+    if (status === 'uploading') abortedRef.current = true;
     onClose();
   };
 

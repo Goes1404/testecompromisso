@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
+export const maxDuration = 60;
+
 async function doRefreshToken(rt: string): Promise<{ access_token: string; expires_in: number }> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -17,8 +19,8 @@ async function doRefreshToken(rt: string): Promise<{ access_token: string; expir
   return res.json();
 }
 
-// Returns a valid access token so the browser can upload directly to YouTube.
-// The access token is short-lived (1h) and the refresh token stays server-side.
+// Initiates a YouTube resumable upload session (server-to-server, no CORS).
+// Returns the upload URL so the browser can send chunks via /api/youtube/proxy-upload.
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
@@ -30,6 +32,9 @@ export async function POST(request: Request) {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+
+    const { title, description, privacyStatus = 'unlisted', contentType, fileSize } =
+      await request.json();
 
     const { data: tokenRecord, error: tokenErr } = await supabase
       .from('teacher_youtube_tokens')
@@ -44,7 +49,7 @@ export async function POST(request: Request) {
       );
     }
 
-    let accessToken: string = tokenRecord.access_token;
+    let accessToken = tokenRecord.access_token;
 
     if (tokenRecord.token_expiry && new Date(tokenRecord.token_expiry) < new Date(Date.now() + 120_000)) {
       const refreshed = await doRefreshToken(tokenRecord.refresh_token);
@@ -59,9 +64,34 @@ export async function POST(request: Request) {
         .eq('user_id', user.id);
     }
 
-    return NextResponse.json({ accessToken });
+    const initRes = await fetch(
+      'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Upload-Content-Type': contentType || 'video/*',
+          ...(fileSize ? { 'X-Upload-Content-Length': String(fileSize) } : {}),
+        },
+        body: JSON.stringify({
+          snippet: { title, description: description || '', categoryId: '27' },
+          status: { privacyStatus, selfDeclaredMadeForKids: false },
+        }),
+      }
+    );
+
+    if (!initRes.ok) {
+      const errText = await initRes.text();
+      throw new Error(`YouTube API error (${initRes.status}): ${errText}`);
+    }
+
+    const uploadUrl = initRes.headers.get('location');
+    if (!uploadUrl) throw new Error('YouTube não retornou URL de upload');
+
+    return NextResponse.json({ uploadUrl });
   } catch (err: any) {
-    console.error('[YOUTUBE_GET_TOKEN]', err);
+    console.error('[YOUTUBE_START_UPLOAD]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
