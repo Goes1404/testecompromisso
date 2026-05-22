@@ -101,48 +101,28 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     setErrorMsg(null);
 
     try {
-      // Step 1: Get a valid access token from our server (refreshes if needed)
-      const tokenRes = await fetch('/api/youtube/start-upload', {
+      // Step 1: Server initiates YouTube resumable session (server-to-server, no CORS)
+      const initRes = await fetch('/api/youtube/start-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          title,
+          description,
+          privacyStatus: privacy,
+          contentType: file.type,
+          fileSize: file.size,
+        }),
       });
 
-      if (!tokenRes.ok) {
-        const err = await tokenRes.json();
-        throw new Error(err.error || 'Erro ao obter credenciais do YouTube');
+      if (!initRes.ok) {
+        const err = await initRes.json();
+        throw new Error(err.error || 'Erro ao iniciar sessão de upload');
       }
 
-      const { accessToken } = await tokenRes.json();
+      const { uploadUrl } = await initRes.json();
 
-      // Step 2: Browser initiates the resumable upload session directly with YouTube
-      // Must be browser-initiated so Google sets up CORS for the subsequent PUT
-      const ytInitRes = await fetch(
-        'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'X-Upload-Content-Type': file.type || 'video/*',
-            'X-Upload-Content-Length': String(file.size),
-          },
-          body: JSON.stringify({
-            snippet: { title, description: description || '', categoryId: '27' },
-            status: { privacyStatus: privacy, selfDeclaredMadeForKids: false },
-          }),
-        }
-      );
-
-      if (!ytInitRes.ok) {
-        const errText = await ytInitRes.text();
-        throw new Error(`Erro ao iniciar upload no YouTube (${ytInitRes.status}): ${errText}`);
-      }
-
-      const uploadUrl = ytInitRes.headers.get('location');
-      if (!uploadUrl) throw new Error('YouTube não retornou URL de upload');
-
-      // Step 3: Upload bytes directly — progress tracking via XHR
+      // Step 2: Upload via our proxy (same-origin → no CORS).
+      // The proxy streams the bytes to YouTube server-side.
       const videoId = await new Promise<string>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
@@ -154,20 +134,28 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
         xhr.onload = () => {
           if (xhr.status === 200 || xhr.status === 201) {
             try {
-              resolve(JSON.parse(xhr.responseText).id);
+              const res = JSON.parse(xhr.responseText);
+              if (res.videoId) return resolve(res.videoId);
+              reject(new Error(res.error || 'Resposta inválida do servidor'));
             } catch {
-              reject(new Error('Resposta inválida do YouTube'));
+              reject(new Error('Resposta inválida do servidor'));
             }
           } else {
-            reject(new Error(`Upload falhou (${xhr.status}) — verifique quotas e permissões da API`));
+            try {
+              const res = JSON.parse(xhr.responseText);
+              reject(new Error(res.error || `Erro no upload (${xhr.status})`));
+            } catch {
+              reject(new Error(`Erro no upload (${xhr.status})`));
+            }
           }
         };
 
-        xhr.onerror = () => reject(new Error('Erro de rede — verifique sua conexão e tente novamente'));
+        xhr.onerror = () => reject(new Error('Erro de rede — verifique sua conexão'));
         xhr.onabort = () => reject(new Error('Upload cancelado'));
 
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type || 'video/*');
+        xhr.open('POST', '/api/youtube/proxy-upload');
+        xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+        xhr.setRequestHeader('X-Upload-Url', uploadUrl);
         xhr.send(file);
       });
 
