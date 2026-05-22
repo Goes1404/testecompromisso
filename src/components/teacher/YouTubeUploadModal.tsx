@@ -91,7 +91,7 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     }
   };
 
-  const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB — stays under Vercel body limits
+  const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MB — under Vercel 4.5 MB body limit; multiple of 256 KB (YouTube requirement)
 
   const handleUpload = async () => {
     if (!file || !title.trim()) {
@@ -131,15 +131,20 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
         const chunk = file.slice(offset, end);
         const contentRange = `bytes ${offset}-${end - 1}/${file.size}`;
 
-        const proxyRes = await fetch('/api/youtube/proxy-upload', {
-          method: 'POST',
-          headers: {
-            'content-type': file.type || 'video/mp4',
-            'x-upload-url': uploadUrl,
-            'x-content-range': contentRange,
-          },
-          body: chunk,
-        });
+        let proxyRes: Response;
+        try {
+          proxyRes = await fetch('/api/youtube/proxy-upload', {
+            method: 'POST',
+            headers: {
+              'content-type': file.type || 'video/mp4',
+              'x-upload-url': uploadUrl,
+              'x-content-range': contentRange,
+            },
+            body: chunk,
+          });
+        } catch (netErr: any) {
+          throw new Error(`Falha de rede ao enviar chunk ${Math.round(offset / 1024 / 1024)}–${Math.round(end / 1024 / 1024)} MB: ${netErr.message}`);
+        }
 
         if (!proxyRes.ok) {
           const err = await proxyRes.json().catch(() => ({ error: `HTTP ${proxyRes.status}` }));
