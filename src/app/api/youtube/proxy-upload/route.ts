@@ -36,15 +36,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Headers x-upload-url e x-content-range são obrigatórios' }, { status: 400 });
     }
 
+    // Buffer the chunk fully before forwarding — avoids duplex streaming
+    // corruption that causes black-screen video on YouTube.
+    const buffer = await request.arrayBuffer();
+
     const ytRes = await fetch(uploadUrl, {
       method: 'PUT',
       headers: {
         'Content-Type': contentType,
         'Content-Range': contentRange,
+        'Content-Length': String(buffer.byteLength),
       },
-      body: request.body,
-      // @ts-ignore — enables streaming without buffering in Node 18+
-      duplex: 'half',
+      body: buffer,
     });
 
     // 308 Resume Incomplete — chunk accepted, YouTube wants more
