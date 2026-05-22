@@ -8,5 +8,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Empty fetch handler to satisfy PWA requirements
+  // Always respond with network — ensures POST bodies are forwarded correctly.
+  // An empty handler without respondWith() can silently drop large POST bodies
+  // in some browsers when the service worker is active.
+  event.respondWith(fetch(event.request));
 });

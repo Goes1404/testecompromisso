@@ -5,14 +5,13 @@ import { createServerClient } from '@supabase/ssr';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
-// Receives one chunk via FormData and forwards it to YouTube's resumable
-// upload URL. Using FormData avoids binary MIME-type rejection at the
-// Vercel edge that occurs when sending raw video/* bodies.
+// Receives one chunk as base64-encoded JSON and forwards it to YouTube's
+// resumable upload URL.
 //
-// FormData fields expected:
-//   chunk            — the binary slice (Blob/File)
+// JSON body fields:
+//   chunkBase64      — base64-encoded video bytes for this chunk
 //   uploadUrl        — YouTube resumable upload URL (from start-upload)
-//   contentRange     — e.g. "bytes 0-2097151/104857600"
+//   contentRange     — e.g. "bytes 0-1048575/104857600"
 //   videoContentType — MIME type of the original video file
 //
 // Response:
@@ -29,25 +28,27 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-    const form = await request.formData();
-    const chunkFile = form.get('chunk') as File | null;
-    const uploadUrl = form.get('uploadUrl') as string | null;
-    const contentRange = form.get('contentRange') as string | null;
-    const videoContentType = (form.get('videoContentType') as string | null) || 'video/mp4';
+    const body = await request.json();
+    const { chunkBase64, uploadUrl, contentRange, videoContentType } = body as {
+      chunkBase64: string;
+      uploadUrl: string;
+      contentRange: string;
+      videoContentType: string;
+    };
 
-    if (!chunkFile || !uploadUrl || !contentRange) {
+    if (!chunkBase64 || !uploadUrl || !contentRange) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios ausentes: chunk, uploadUrl, contentRange' },
+        { error: 'Campos obrigatórios ausentes: chunkBase64, uploadUrl, contentRange' },
         { status: 400 }
       );
     }
 
-    const buffer = await chunkFile.arrayBuffer();
+    const buffer = Buffer.from(chunkBase64, 'base64');
 
     const ytRes = await fetch(uploadUrl, {
       method: 'PUT',
       headers: {
-        'Content-Type': videoContentType,
+        'Content-Type': videoContentType || 'video/mp4',
         'Content-Range': contentRange,
         'Content-Length': String(buffer.byteLength),
       },
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
 
     // 308 Resume Incomplete — chunk accepted, YouTube wants more
     if (ytRes.status === 308) {
-      const range = ytRes.headers.get('range'); // "bytes=0-2097151"
+      const range = ytRes.headers.get('range'); // "bytes=0-1048575"
       const nextByte = range ? parseInt(range.split('-')[1]) + 1 : 0;
       return NextResponse.json({ done: false, nextByte });
     }

@@ -91,8 +91,21 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     }
   };
 
-  // 2 MB: safe under Vercel body limit; multiple of 256 KB (YouTube requirement)
-  const CHUNK_SIZE = 2 * 1024 * 1024;
+  // 1 MB chunks base64-encoded → ~1.3 MB JSON body, safely under Vercel limits.
+  // Multiple of 256 KB as required by YouTube resumable upload protocol.
+  const CHUNK_SIZE = 1024 * 1024;
+
+  const toBase64 = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        // strip "data:...;base64," prefix
+        resolve(dataUrl.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
 
   const handleUpload = async () => {
     if (!file || !title.trim()) {
@@ -123,8 +136,8 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
       }
       const { uploadUrl } = await startRes.json();
 
-      // Step 2: Send file in chunks via FormData — avoids binary MIME-type
-      // rejection at the Vercel edge for raw video/* bodies.
+      // Step 2: Send chunks as base64 JSON — application/json bodies are
+      // always forwarded by the Vercel edge and service workers without issues.
       let offset = 0;
       while (offset < file.size) {
         if (abortedRef.current) throw new Error('Upload cancelado');
@@ -132,18 +145,19 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
         const end = Math.min(offset + CHUNK_SIZE, file.size);
         const chunk = file.slice(offset, end);
         const contentRange = `bytes ${offset}-${end - 1}/${file.size}`;
-
-        const form = new FormData();
-        form.append('chunk', chunk, 'chunk.bin');
-        form.append('uploadUrl', uploadUrl);
-        form.append('contentRange', contentRange);
-        form.append('videoContentType', file.type || 'video/mp4');
+        const chunkBase64 = await toBase64(chunk);
 
         let proxyRes: Response;
         try {
           proxyRes = await fetch('/api/youtube/proxy-upload', {
             method: 'POST',
-            body: form,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chunkBase64,
+              uploadUrl,
+              contentRange,
+              videoContentType: file.type || 'video/mp4',
+            }),
           });
         } catch (netErr: any) {
           throw new Error(`Falha de rede no chunk ${Math.round(offset / 1024 / 1024)}–${Math.round(end / 1024 / 1024)} MB: ${netErr.message}`);
