@@ -17,10 +17,8 @@ async function doRefreshToken(rt: string): Promise<{ access_token: string; expir
   return res.json();
 }
 
-export const maxDuration = 300;
-
-// Step 1: authenticate + initiate YouTube resumable upload session (server-to-server,
-// no CORS issues). Returns { uploadUrl } for the proxy route to use.
+// Returns a valid access token so the browser can upload directly to YouTube.
+// The access token is short-lived (1h) and the refresh token stays server-side.
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
@@ -32,9 +30,6 @@ export async function POST(request: Request) {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-
-    const { title, description, privacyStatus = 'unlisted', contentType, fileSize } =
-      await request.json();
 
     const { data: tokenRecord, error: tokenErr } = await supabase
       .from('teacher_youtube_tokens')
@@ -64,34 +59,9 @@ export async function POST(request: Request) {
         .eq('user_id', user.id);
     }
 
-    const initRes = await fetch(
-      'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'X-Upload-Content-Type': contentType || 'video/*',
-          ...(fileSize ? { 'X-Upload-Content-Length': String(fileSize) } : {}),
-        },
-        body: JSON.stringify({
-          snippet: { title, description: description || '', categoryId: '27' },
-          status: { privacyStatus, selfDeclaredMadeForKids: false },
-        }),
-      }
-    );
-
-    if (!initRes.ok) {
-      const errText = await initRes.text();
-      throw new Error(`YouTube API error (${initRes.status}): ${errText}`);
-    }
-
-    const uploadUrl = initRes.headers.get('location');
-    if (!uploadUrl) throw new Error('YouTube não retornou URL de upload');
-
-    return NextResponse.json({ uploadUrl });
+    return NextResponse.json({ accessToken });
   } catch (err: any) {
-    console.error('[YOUTUBE_START_UPLOAD]', err);
+    console.error('[YOUTUBE_GET_TOKEN]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

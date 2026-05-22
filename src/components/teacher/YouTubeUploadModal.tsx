@@ -101,28 +101,43 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
     setErrorMsg(null);
 
     try {
-      // Step 1: Server initiates YouTube resumable session (server-to-server, no CORS)
-      const initRes = await fetch('/api/youtube/start-upload', {
+      // Step 1: Get a valid access token from server (refresh_token stays server-side)
+      const tokenRes = await fetch('/api/youtube/start-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          description,
-          privacyStatus: privacy,
-          contentType: file.type,
-          fileSize: file.size,
-        }),
+        body: JSON.stringify({}),
       });
-
-      if (!initRes.ok) {
-        const err = await initRes.json();
-        throw new Error(err.error || 'Erro ao iniciar sessão de upload');
+      if (!tokenRes.ok) {
+        const err = await tokenRes.json();
+        throw new Error(err.error || 'Erro ao obter credenciais');
       }
+      const { accessToken } = await tokenRes.json();
 
-      const { uploadUrl } = await initRes.json();
+      // Step 2: Browser initiates resumable upload session directly with YouTube
+      const ytInitRes = await fetch(
+        'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'X-Upload-Content-Type': file.type || 'video/mp4',
+            'X-Upload-Content-Length': String(file.size),
+          },
+          body: JSON.stringify({
+            snippet: { title, description: description || '', categoryId: '27' },
+            status: { privacyStatus: privacy, selfDeclaredMadeForKids: false },
+          }),
+        }
+      );
+      if (!ytInitRes.ok) {
+        const errText = await ytInitRes.text();
+        throw new Error(`Erro ao iniciar upload no YouTube (${ytInitRes.status}): ${errText}`);
+      }
+      const uploadUrl = ytInitRes.headers.get('location');
+      if (!uploadUrl) throw new Error('YouTube não retornou URL de upload');
 
-      // Step 2: Upload via our proxy (same-origin → no CORS).
-      // The proxy streams the bytes to YouTube server-side.
+      // Step 3: Upload file bytes directly — Content-Range required for resumable PUT
       const videoId = await new Promise<string>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
@@ -134,28 +149,21 @@ export default function YouTubeUploadModal({ open, onClose, trailId, onSuccess, 
         xhr.onload = () => {
           if (xhr.status === 200 || xhr.status === 201) {
             try {
-              const res = JSON.parse(xhr.responseText);
-              if (res.videoId) return resolve(res.videoId);
-              reject(new Error(res.error || 'Resposta inválida do servidor'));
+              resolve(JSON.parse(xhr.responseText).id);
             } catch {
-              reject(new Error('Resposta inválida do servidor'));
+              reject(new Error('Resposta inválida do YouTube'));
             }
           } else {
-            try {
-              const res = JSON.parse(xhr.responseText);
-              reject(new Error(res.error || `Erro no upload (${xhr.status})`));
-            } catch {
-              reject(new Error(`Erro no upload (${xhr.status})`));
-            }
+            reject(new Error(`Upload falhou (${xhr.status}) — verifique quotas e permissões`));
           }
         };
 
         xhr.onerror = () => reject(new Error('Erro de rede — verifique sua conexão'));
         xhr.onabort = () => reject(new Error('Upload cancelado'));
 
-        xhr.open('POST', '/api/youtube/proxy-upload');
+        xhr.open('PUT', uploadUrl);
         xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
-        xhr.setRequestHeader('X-Upload-Url', uploadUrl);
+        xhr.setRequestHeader('Content-Range', `bytes 0-${file.size - 1}/${file.size}`);
         xhr.send(file);
       });
 
