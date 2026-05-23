@@ -296,7 +296,7 @@ export default function LearningTrailsPage() {
               
               <CardContent className="p-8 flex-1 flex flex-col">
                 <div className="space-y-3 flex-1">
-                  <h3 className="text-2xl font-black text-primary italic leading-tight group-hover:text-accent transition-colors line-clamp-2">
+                  <h3 className="text-2xl font-black text-primary italic leading-tight group-hover:text-accent transition-colors">
                     {trail.title}
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium italic line-clamp-3 opacity-80 leading-relaxed">
