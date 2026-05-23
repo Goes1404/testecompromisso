@@ -121,10 +121,10 @@ export default function SimuladoPage() {
     }
 
     const audience = (
-      profile?.exam_target || 
-      user?.user_metadata?.exam_target || 
-      profile?.profile_type || 
-      user?.user_metadata?.profile_type || 
+      profile?.exam_target ||
+      user?.user_metadata?.exam_target ||
+      profile?.profile_type ||
+      user?.user_metadata?.profile_type ||
       'enem'
     ).toLowerCase().trim();
     const userAudience = audience.includes('etec') ? 'etec' : 'enem';
@@ -366,8 +366,8 @@ export default function SimuladoPage() {
                         >
                           <Label
                             className={`flex items-start gap-4 text-xs md:text-base p-4 md:p-6 rounded-xl md:rounded-[1.5rem] border-2 transition-[border-color,background-color,box-shadow] cursor-pointer select-none ${isSelected
-                                ? 'border-accent bg-accent/5 shadow-[0_0_0_3px_rgba(255,107,0,0.12)]'
-                                : 'border-muted/20 active:border-accent/60 active:bg-accent/[0.03]'
+                              ? 'border-accent bg-accent/5 shadow-[0_0_0_3px_rgba(255,107,0,0.12)]'
+                              : 'border-muted/20 active:border-accent/60 active:bg-accent/[0.03]'
                               }`}
                           >
                             <RadioGroupItem value={key} id={key} className="mt-1" />
@@ -543,8 +543,8 @@ export default function SimuladoPage() {
             style={{ willChange: 'transform' }}
             onClick={() => { setMode(m.id); setSelectedSubjectId(''); setSelectedMicroTopicId(ALL_TOPICS); }}
             className={`p-5 rounded-[2rem] border-2 text-left transition-[border-color,background-color,box-shadow] ${mode === m.id
-                ? 'gradient-border border-primary bg-primary/5 shadow-xl glow-orange'
-                : 'border-muted/20 bg-white'
+              ? 'gradient-border border-primary bg-primary/5 shadow-xl glow-orange'
+              : 'border-muted/20 bg-white'
               }`}
           >
             <m.icon className={`h-6 w-6 mb-3 ${mode === m.id ? 'text-primary' : 'text-muted-foreground'}`} />

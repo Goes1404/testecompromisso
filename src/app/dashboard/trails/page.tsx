@@ -5,12 +5,12 @@ import { Card, CardFooter, CardHeader, CardTitle, CardContent } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
   Search,
@@ -47,7 +47,7 @@ export default function LearningTrailsPage() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [activeAudience, setActiveAudience] = useState("all");
   const [typeFilter, setTypeFilter] = useState<'all' | 'standalone' | 'serie'>('all');
-  
+
   const [dbTrails, setDbTrails] = useState<any[]>([]);
   const [allProgress, setAllProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,20 +56,20 @@ export default function LearningTrailsPage() {
   const fetchData = useCallback(async () => {
     // Proteção Industrial: Só busca dados se o perfil estiver carregado
     if (!user || !profile || dataFetchedRef.current) return;
-    
+
     setLoading(true);
     dataFetchedRef.current = true;
 
     try {
       const audience = (
-        profile?.exam_target || 
-        user?.user_metadata?.exam_target || 
-        profile?.profile_type || 
-        user?.user_metadata?.profile_type || 
+        profile?.exam_target ||
+        user?.user_metadata?.exam_target ||
+        profile?.profile_type ||
+        user?.user_metadata?.profile_type ||
         'enem'
       ).toLowerCase().trim();
       const userAudience = audience.includes('etec') ? 'etec' : 'enem';
-      
+
       // Busca simples (sem filtro de coluna que pode não existir)
       let trailsResult = await supabase.from('trails')
         .select('*')
@@ -102,7 +102,7 @@ export default function LearningTrailsPage() {
   const handlePinTrail = async (trailId: string) => {
     if (!user || pinningId) return;
     setPinningId(trailId);
-    
+
     // Check if currently pinned (exists in progress)
     const isPinned = allProgress?.find(p => p.trail_id === trailId);
 
@@ -117,10 +117,10 @@ export default function LearningTrailsPage() {
       } else {
         // Pin: Upsert the record
         const { error } = await supabase.from('user_progress').upsert({
-            user_id: user.id,
-            trail_id: trailId,
-            last_accessed: new Date().toISOString()
-          }, { onConflict: 'user_id,trail_id' });
+          user_id: user.id,
+          trail_id: trailId,
+          last_accessed: new Date().toISOString()
+        }, { onConflict: 'user_id,trail_id' });
 
         if (error) throw error;
 
@@ -129,7 +129,7 @@ export default function LearningTrailsPage() {
           description: "Acesse rapidamente pela Página Inicial."
         });
       }
-      
+
       const { data: progressRes } = await supabase.from('user_progress').select('*').eq('user_id', user.id);
       if (progressRes) setAllProgress(progressRes);
     } catch (e: any) {
@@ -173,7 +173,7 @@ export default function LearningTrailsPage() {
         <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
           <Badge className="bg-primary/10 text-primary border border-primary/20 font-black text-[9px] px-4 py-1.5 uppercase tracking-wider shadow-xl">COMPROMISSO 360</Badge>
           <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase">
-            Sua Rota de <br/><span className="text-gradient-brand italic">Alta Performance</span>
+            Sua Rota de <br /><span className="text-gradient-brand italic">Alta Performance</span>
           </h1>
           <p className="text-sm md:text-xl text-gray-400 font-medium italic leading-relaxed max-w-xl mx-auto">
             Escolha um dos eixos temáticos e inicie sua jornada guiada rumo ao sucesso acadêmico.
@@ -206,8 +206,8 @@ export default function LearningTrailsPage() {
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
-            <Input 
-              placeholder="Pesquisar trilha..." 
+            <Input
+              placeholder="Pesquisar trilha..."
               className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl text-base font-medium italic focus-visible:ring-accent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -223,8 +223,8 @@ export default function LearningTrailsPage() {
             <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 border-none shadow-2xl">
               <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest opacity-40 px-3 py-3">Público-Alvo</DropdownMenuLabel>
               {AUDIENCE_FILTERS.map(filter => (
-                <DropdownMenuItem 
-                  key={filter.id} 
+                <DropdownMenuItem
+                  key={filter.id}
                   onClick={() => setActiveAudience(filter.id)}
                   className={`rounded-xl px-3 py-3 font-bold text-xs cursor-pointer mb-1 ${activeAudience === filter.id ? 'bg-primary text-white' : ''}`}
                 >
@@ -237,8 +237,8 @@ export default function LearningTrailsPage() {
 
         <div className="flex items-center gap-2 overflow-x-auto w-full lg:w-auto pb-4 scrollbar-hide">
           {TRAIL_CATEGORIES.map(cat => (
-            <button 
-              key={cat} 
+            <button
+              key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`rounded-full px-8 h-14 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-md border-none ${activeCategory === cat ? 'bg-primary text-white scale-105 shadow-primary/20' : 'bg-white text-primary hover:bg-primary/5 hover:scale-105'}`}
             >
@@ -280,15 +280,14 @@ export default function LearningTrailsPage() {
                     </Badge>
                   )}
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => handlePinTrail(trail.id)}
                   disabled={pinningId === trail.id}
-                  className={`absolute top-5 right-5 h-10 w-10 rounded-full flex items-center justify-center transition-all shadow-xl active:scale-90 ${
-                    isPinned 
-                      ? 'bg-accent text-accent-foreground' 
+                  className={`absolute top-5 right-5 h-10 w-10 rounded-full flex items-center justify-center transition-all shadow-xl active:scale-90 ${isPinned
+                      ? 'bg-accent text-accent-foreground'
                       : 'bg-white/20 backdrop-blur-md text-white hover:bg-white hover:text-primary'
-                  }`}
+                    }`}
                   title={isPinned ? "Fixada na Home" : "Fixar na Home"}
                 >
                   {pinningId === trail.id ? (
@@ -300,7 +299,7 @@ export default function LearningTrailsPage() {
                   )}
                 </button>
               </div>
-              
+
               <CardContent className="p-8 flex-1 flex flex-col">
                 <div className="space-y-3 flex-1">
                   <h3 className="text-2xl font-black text-primary italic leading-tight group-hover:text-accent transition-colors">
@@ -320,20 +319,20 @@ export default function LearningTrailsPage() {
                     <span>{percentage === 100 ? 'Finalizada' : 'Em andamento'}</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-100 overflow-hidden shadow-inner border border-black/5">
-                     <div className="h-full bg-accent transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${percentage}%` }} />
+                    <div className="h-full bg-accent transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${percentage}%` }} />
                   </div>
                 </div>
               </CardContent>
-              
+
               <CardFooter className="px-8 pb-8 pt-0 mt-auto">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full pt-6 border-t border-muted/10 gap-4 sm:gap-0">
                   <div className="flex items-center gap-3 w-full sm:w-auto">
                     <div className="h-10 w-10 rounded-2xl bg-primary/5 flex items-center justify-center border border-muted/10 overflow-hidden shrink-0 shadow-sm">
-                      <Image 
-                        src={`https://picsum.photos/seed/prof-${trail.id}/100/100`} 
-                        alt="Mentor" 
-                        width={40} 
-                        height={40} 
+                      <Image
+                        src={`https://picsum.photos/seed/prof-${trail.id}/100/100`}
+                        alt="Mentor"
+                        width={40}
+                        height={40}
                         className="object-cover"
                       />
                     </div>
