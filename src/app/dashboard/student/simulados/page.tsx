@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { SupportingTextBlock } from '@/components/SupportingTextBlock';
 import { awardXP, checkAndAwardBadges, getTotalAnswered, XP_PER_CORRECT_QUESTION, XP_PER_SIMULADO_COMPLETE, BADGE_META } from '@/lib/gamification';
 
 const SIMULATION_SIZE = 10;
@@ -233,13 +234,6 @@ export default function SimuladoPage() {
       const score = newAnswers.filter(a => norm(a.selected) === norm(a.correct)).length;
       const total = newAnswers.length;
 
-      // Save simulation attempt
-      if (user && activeSubjectId) {
-        supabase.from('simulation_attempts').insert({
-          user_id: user.id, subject_id: activeSubjectId, score, total_questions: total,
-        }).then(() => { });
-      }
-
       // Award XP
       if (user) {
         const xpGained = score * XP_PER_CORRECT_QUESTION + XP_PER_SIMULADO_COMPLETE;
@@ -341,13 +335,7 @@ export default function SimuladoPage() {
                   />
                 )}
                 {currentQuestion.supporting_text && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-4 w-4 text-amber-600 shrink-0" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Texto de Apoio</span>
-                    </div>
-                    <p className="text-sm text-amber-900 font-medium leading-relaxed italic whitespace-pre-wrap">{currentQuestion.supporting_text}</p>
-                  </div>
+                  <SupportingTextBlock text={currentQuestion.supporting_text} />
                 )}
                 <CardDescription className="text-sm md:text-lg font-medium text-slate-800 leading-[1.8] italic whitespace-pre-wrap break-words">
                   {currentQuestion.question_text}

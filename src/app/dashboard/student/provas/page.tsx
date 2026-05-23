@@ -12,6 +12,7 @@ import { Loader2, Scroll, Award, RotateCw, AlertCircle, CheckCircle2, XCircle, B
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { SupportingTextBlock } from '@/components/SupportingTextBlock';
 import { Timer, Flag, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 
 type Exam = {
@@ -408,15 +409,7 @@ export default function ProvasCompletasPage() {
 
                       {/* Texto de Apoio (Contexto) */}
                       {currentQuestion.supporting_text && (
-                        <div className="p-6 bg-amber-50 border border-amber-100 rounded-[2rem] relative overflow-hidden group">
-                          <div className="flex items-center gap-2 mb-3">
-                            <BookOpen className="h-4 w-4 text-amber-600" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Texto de Apoio</span>
-                          </div>
-                          <p className="text-sm md:text-base text-amber-900 font-medium leading-relaxed italic">
-                            {currentQuestion.supporting_text}
-                          </p>
-                        </div>
+                        <SupportingTextBlock text={currentQuestion.supporting_text} />
                       )}
 
                       {/* Imagem da Questão */}

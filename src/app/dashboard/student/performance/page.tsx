@@ -113,7 +113,7 @@ export default function StudentPerformancePage() {
               subjects (name)
             )
           `)
-          .eq('user_id', user.id);
+          .eq('student_id', user.id);
 
         if (error) throw error;
 
@@ -143,7 +143,7 @@ export default function StudentPerformancePage() {
           }).reverse();
 
           const history = last15Days.map(dateStr => {
-            const dayAnswers = answers.filter(a => format(new Date(a.created_at), 'yyyy-MM-dd') === dateStr);
+            const dayAnswers = answers.filter(a => format(new Date(a.answered_at), 'yyyy-MM-dd') === dateStr);
             return {
               date: format(new Date(dateStr), 'dd/MM'),
               acertos: dayAnswers.filter(a => a.is_correct).length,

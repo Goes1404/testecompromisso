@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   Search,
   Filter,
   Loader2,
@@ -21,7 +21,9 @@ import {
   TrendingUp,
   BookOpen,
   Pin,
-  CheckCircle2
+  CheckCircle2,
+  Film,
+  ListVideo,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -44,6 +46,7 @@ export default function LearningTrailsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [activeAudience, setActiveAudience] = useState("all");
+  const [typeFilter, setTypeFilter] = useState<'all' | 'standalone' | 'serie'>('all');
   
   const [dbTrails, setDbTrails] = useState<any[]>([]);
   const [allProgress, setAllProgress] = useState<any[]>([]);
@@ -135,14 +138,15 @@ export default function LearningTrailsPage() {
       const trailTitle = (trail?.title || '').toLowerCase();
       const trailCategory = (trail?.category || '').toLowerCase();
       const query = searchTerm.toLowerCase();
-      
+
       const matchesSearch = trailTitle.includes(query) || trailCategory.includes(query);
       const matchesCategory = activeCategory === "Todos" || trail?.category === activeCategory;
       const matchesAudience = activeAudience === "all" || trail?.target_audience === activeAudience || trail?.target_audience === "both" || !trail?.target_audience;
-      
-      return matchesSearch && matchesCategory && matchesAudience;
+      const matchesType = typeFilter === 'all' || (trail?.trail_type ?? 'standalone') === typeFilter;
+
+      return matchesSearch && matchesCategory && matchesAudience && matchesType;
     });
-  }, [dbTrails, searchTerm, activeCategory, activeAudience]);
+  }, [dbTrails, searchTerm, activeCategory, activeAudience, typeFilter]);
 
   if (loading && !dataFetchedRef.current) {
     return (
@@ -169,6 +173,27 @@ export default function LearningTrailsPage() {
           </p>
         </div>
       </section>
+
+      {/* Filtro de Tipo */}
+      <div className="flex items-center gap-2">
+        {([
+          { id: 'all', label: 'Todos', icon: null },
+          { id: 'standalone', label: 'Aulas', icon: Film },
+          { id: 'serie', label: 'Séries', icon: ListVideo },
+        ] as const).map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTypeFilter(id)}
+            className={`h-10 px-5 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2 border-2
+              ${typeFilter === id
+                ? 'bg-primary text-white border-primary shadow-lg'
+                : 'bg-white text-slate-500 border-transparent hover:border-primary/20 hover:bg-slate-50'}`}
+          >
+            {Icon && <Icon className="h-3.5 w-3.5" />}
+            {label}
+          </button>
+        ))}
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
@@ -233,11 +258,20 @@ export default function LearningTrailsPage() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-60" />
-                <div className="absolute top-5 left-5">
+                <div className="absolute top-5 left-5 flex gap-2">
                   <Badge className="bg-white/95 backdrop-blur-md text-primary border-none shadow-lg px-4 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-2">
                     <Zap className="h-3.5 w-3.5 text-accent fill-accent" />
                     {trail.category}
                   </Badge>
+                  {trail.trail_type === 'serie' ? (
+                    <Badge className="bg-purple-600/90 backdrop-blur-md text-white border-none shadow-lg px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5">
+                      <ListVideo className="h-3 w-3" /> SÉRIE
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-blue-500/90 backdrop-blur-md text-white border-none shadow-lg px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5">
+                      <Film className="h-3 w-3" /> AULA
+                    </Badge>
+                  )}
                 </div>
                 
                 <button 
