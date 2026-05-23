@@ -120,11 +120,15 @@ export default function SimuladoPage() {
       q = q.eq('micro_topic_id', selectedMicroTopicId) as any;
     }
 
-    if (profile?.profile_type) {
-      q = q.or(`target_audience.eq.all,target_audience.eq.${profile.profile_type},target_audience.is.null`) as any;
-    } else {
-      q = q.or('target_audience.eq.all,target_audience.eq.student,target_audience.is.null') as any;
-    }
+    const audience = (
+      profile?.exam_target || 
+      user?.user_metadata?.exam_target || 
+      profile?.profile_type || 
+      user?.user_metadata?.profile_type || 
+      'enem'
+    ).toLowerCase().trim();
+    const userAudience = audience.includes('etec') ? 'etec' : 'enem';
+    q = q.or(`target_audience.eq.all,target_audience.eq.${userAudience},target_audience.is.null`) as any;
     return q.limit(200);
   };
 

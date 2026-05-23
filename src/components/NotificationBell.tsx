@@ -43,7 +43,8 @@ export function NotificationBell() {
         
         // Tentar segmentação se as variáveis de perfil estiverem disponíveis
         if (profile) {
-          query = query.or(`target_group.eq.all,target_group.eq.${profile?.profile_type},target_group.eq.${profile?.class_id}`);
+          const audience = (profile.exam_target || '').toLowerCase().trim();
+          query = query.or(`target_group.eq.all,target_group.eq.${profile.profile_type},target_group.eq.${audience},target_group.eq.${profile.class_id}`);
         }
         
         let { data, error } = await query.order('created_at', { ascending: false }).limit(5);

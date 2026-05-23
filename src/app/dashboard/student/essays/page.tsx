@@ -162,10 +162,18 @@ export default function StudentEssayPage() {
         { theme: "Caminhos para combater a insegurança alimentar no Brasil contemporâneo", texts: [{ id: 1, content: "O desperdício na cadeia logística de alimentos agrava as crises sociais.", source: "ONU Brasil" }] }
       ];
 
-      const pool = profile?.profile_type === 'etec' ? etecThemes : enemThemes;
+       const audience = (
+        profile?.exam_target || 
+        user?.user_metadata?.exam_target || 
+        profile?.profile_type || 
+        user?.user_metadata?.profile_type || 
+        'enem'
+      ).toLowerCase().trim();
+      const isEtec = audience.includes('etec');
+      const pool = isEtec ? etecThemes : enemThemes;
       const pick = pool[Math.floor(Math.random() * pool.length)];
 
-      toast({ title: "Banco de Apoio", description: `Gerado tema formatado para padrão ${profile?.profile_type === 'etec' ? 'ETEC (Dissertação)' : 'ENEM'}.` });
+      toast({ title: "Banco de Apoio", description: `Gerado tema formatado para padrão ${isEtec ? 'ETEC (Dissertação)' : 'ENEM'}.` });
       setTheme(pick.theme);
       setSupportingTexts(pick.texts);
     } finally {

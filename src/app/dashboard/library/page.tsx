@@ -59,7 +59,14 @@ export default function LibraryPage() {
       if (error) throw error;
 
       // Filtra por segmentação no front-end (se a coluna existir nos dados)
-      const userAudience = profile?.profile_type === 'enem' ? 'enem' : 'etec';
+      const audience = (
+        profile?.exam_target || 
+        user?.user_metadata?.exam_target || 
+        profile?.profile_type || 
+        user?.user_metadata?.profile_type || 
+        'enem'
+      ).toLowerCase().trim();
+      const userAudience = audience.includes('etec') ? 'etec' : 'enem';
       const filtered = (data || []).filter(r => {
         if (!r.target_audience) return true; // sem segmentação = mostra para todos
         return r.target_audience === 'all' || r.target_audience === userAudience;

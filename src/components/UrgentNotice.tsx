@@ -21,7 +21,8 @@ export function UrgentNotice() {
           .limit(1);
         
         if (profile) {
-          query = query.or(`target_group.eq.all,target_group.eq.${profile?.profile_type},target_group.eq.${profile?.class_id}`);
+          const audience = (profile.exam_target || '').toLowerCase().trim();
+          query = query.or(`target_group.eq.all,target_group.eq.${profile.profile_type},target_group.eq.${audience},target_group.eq.${profile.class_id}`);
         }
 
         const { data, error } = await query;

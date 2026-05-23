@@ -61,7 +61,14 @@ export default function LearningTrailsPage() {
     dataFetchedRef.current = true;
 
     try {
-      const userAudience = profile?.profile_type === 'enem' ? 'enem' : 'etec';
+      const audience = (
+        profile?.exam_target || 
+        user?.user_metadata?.exam_target || 
+        profile?.profile_type || 
+        user?.user_metadata?.profile_type || 
+        'enem'
+      ).toLowerCase().trim();
+      const userAudience = audience.includes('etec') ? 'etec' : 'enem';
       
       // Busca simples (sem filtro de coluna que pode não existir)
       let trailsResult = await supabase.from('trails')
