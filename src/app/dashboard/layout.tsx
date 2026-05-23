@@ -81,6 +81,7 @@ const adminItems: NavItem[] = [
   { icon: Database, label: "Gestão de Turmas", href: "/dashboard/admin/students", id: "nav-admin-students" },
   { icon: AlertCircle, label: "Alunos em Risco/Gestão", href: "/dashboard/teacher/students", id: "nav-admin-risk" },
   { icon: BookMarked, label: "Gerenciar Provas PDF", href: "/dashboard/admin/exams", id: "nav-admin-exams" },
+  { icon: CalendarDays, label: "Calendário", href: "/dashboard/admin/calendar", id: "nav-admin-calendar" },
   { icon: ClipboardCheck, label: "Frequência", href: "/dashboard/admin/attendance", id: "nav-admin-attendance" },
   { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails", id: "nav-admin-trails" },
   { icon: Bell, label: "Comunicados Globais", href: "/dashboard/teacher/communication", id: "nav-admin-communication" },

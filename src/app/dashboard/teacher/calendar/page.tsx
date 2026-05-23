@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarDays, PlusCircle, Trash2, Loader2, Pencil } from 'lucide-react';
+import { CalendarDays, PlusCircle, Trash2, Loader2, Pencil, ShieldCheck, Lock } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
 
@@ -22,15 +22,21 @@ type AcademicEvent = {
   event_type: string;
   target_group: string;
   created_by: string | null;
+  is_official: boolean;
 };
 
 const EVENT_TYPES = [
-  { value: 'simulado',        label: 'Simulado',          color: 'bg-blue-100 text-blue-700' },
-  { value: 'inscricao',       label: 'Inscrição',         color: 'bg-amber-100 text-amber-700' },
-  { value: 'aulao',           label: 'Aulão de Revisão',  color: 'bg-purple-100 text-purple-700' },
-  { value: 'entrega_redacao', label: 'Entrega Redação',   color: 'bg-pink-100 text-pink-700' },
-  { value: 'feriado',         label: 'Feriado',           color: 'bg-green-100 text-green-700' },
-  { value: 'outro',           label: 'Outro',             color: 'bg-slate-100 text-slate-600' },
+  { value: 'simulado',             label: 'Simulado',               color: 'bg-blue-100 text-blue-700' },
+  { value: 'aulao',                label: 'Aulão de Revisão',        color: 'bg-purple-100 text-purple-700' },
+  { value: 'entrega_redacao',      label: 'Entrega Redação',         color: 'bg-pink-100 text-pink-700' },
+  { value: 'inscricao',            label: 'Inscrição (Cursinho)',     color: 'bg-amber-100 text-amber-700' },
+  { value: 'feriado',              label: 'Feriado',                 color: 'bg-green-100 text-green-700' },
+  { value: 'vestibular',           label: 'Prova de Vestibular',     color: 'bg-red-100 text-red-700' },
+  { value: 'abertura_inscricao',   label: 'Abertura de Inscrições',  color: 'bg-emerald-100 text-emerald-700' },
+  { value: 'fechamento_inscricao', label: 'Fechamento de Inscrições', color: 'bg-orange-100 text-orange-700' },
+  { value: 'resultado',            label: 'Resultado / Gabarito',    color: 'bg-indigo-100 text-indigo-700' },
+  { value: 'matricula',            label: 'Matrícula',               color: 'bg-cyan-100 text-cyan-700' },
+  { value: 'outro',                label: 'Outro',                   color: 'bg-slate-100 text-slate-600' },
 ];
 
 const TARGET_GROUPS = [
@@ -102,9 +108,15 @@ export default function TeacherCalendarPage() {
 
   const getTypeMeta = (type: string) => EVENT_TYPES.find(t => t.value === type) ?? EVENT_TYPES[EVENT_TYPES.length - 1];
 
+  // Professor pode editar apenas eventos próprios (não oficiais)
+  const canEdit = (ev: AcademicEvent) => !ev.is_official && ev.created_by === user?.id;
+
+  const upcoming = events.filter(e => new Date(e.event_date + 'T00:00:00') >= new Date(new Date().toDateString()));
+  const past     = events.filter(e => new Date(e.event_date + 'T00:00:00') < new Date(new Date().toDateString()));
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24">
-      <header className="flex items-center justify-between gap-4">
+      <header className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4">
           <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl rotate-3">
             <CalendarDays className="h-7 w-7" />
@@ -114,10 +126,20 @@ export default function TeacherCalendarPage() {
             <p className="text-muted-foreground font-medium italic">Gerencie eventos, prazos e datas importantes.</p>
           </div>
         </div>
-        <Button onClick={() => { setShowForm(true); setEditId(null); setForm(blankForm); }} className="h-12 px-6 rounded-2xl bg-primary text-white font-black shadow-xl">
+        <Button
+          onClick={() => { setShowForm(true); setEditId(null); setForm(blankForm); }}
+          className="h-12 px-6 rounded-2xl bg-primary text-white font-black shadow-xl"
+        >
           <PlusCircle className="h-5 w-5 mr-2" /> Novo Evento
         </Button>
       </header>
+
+      {/* Legenda */}
+      <div className="flex flex-wrap gap-2">
+        {EVENT_TYPES.map(t => (
+          <Badge key={t.value} className={`text-[9px] font-black border-none ${t.color}`}>{t.label}</Badge>
+        ))}
+      </div>
 
       {showForm && (
         <Card className="border-none shadow-2xl rounded-[2.5rem] animate-in slide-in-from-top-4 duration-300">
@@ -126,7 +148,7 @@ export default function TeacherCalendarPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Título</Label>
-                <Input placeholder="Ex: ENEM 2025 — Prazo de inscrição" className="h-11 rounded-2xl bg-muted/30 border-none font-bold" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                <Input placeholder="Ex: Aulão de Revisão — Matemática" className="h-11 rounded-2xl bg-muted/30 border-none font-bold" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Data</Label>
@@ -171,33 +193,86 @@ export default function TeacherCalendarPage() {
       ) : events.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground font-medium">Nenhum evento cadastrado ainda.</div>
       ) : (
-        <div className="space-y-3">
-          {events.map(ev => {
-            const meta = getTypeMeta(ev.event_type);
-            const isPast = new Date(ev.event_date) < new Date();
-            return (
-              <div key={ev.id} className={`flex items-center gap-4 bg-white rounded-2xl shadow-md p-4 group transition-all hover:shadow-lg ${isPast ? 'opacity-50' : ''}`}>
-                <div className="text-center w-14 shrink-0">
-                  <p className="text-xs font-black text-primary">{new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-black text-primary text-sm truncate">{ev.title}</p>
-                  {ev.description && <p className="text-xs text-muted-foreground font-medium truncate">{ev.description}</p>}
-                </div>
-                <Badge className={`text-[9px] font-black border-none shrink-0 ${meta.color}`}>{meta.label}</Badge>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                  <button onClick={() => startEdit(ev)} className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-50 text-blue-500 transition-all">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                  <button onClick={() => handleDelete(ev.id)} className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-red-50 text-red-400 transition-all">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+        <div className="space-y-8">
+          {/* Próximos eventos */}
+          {upcoming.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-sm font-black text-primary italic uppercase tracking-wide">Próximos Eventos</h2>
+              {upcoming.map(ev => <EventRow key={ev.id} ev={ev} canEdit={canEdit(ev)} onEdit={startEdit} onDelete={handleDelete} />)}
+            </div>
+          )}
+          {/* Eventos passados */}
+          {past.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-sm font-black text-muted-foreground italic uppercase tracking-wide">Eventos Passados</h2>
+              {past.map(ev => <EventRow key={ev.id} ev={ev} canEdit={canEdit(ev)} onEdit={startEdit} onDelete={handleDelete} past />)}
+            </div>
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+function EventRow({
+  ev,
+  canEdit,
+  onEdit,
+  onDelete,
+  past = false,
+}: {
+  ev: AcademicEvent;
+  canEdit: boolean;
+  onEdit: (ev: AcademicEvent) => void;
+  onDelete: (id: string) => void;
+  past?: boolean;
+}) {
+  const meta = EVENT_TYPES.find(t => t.value === ev.event_type) ?? EVENT_TYPES[EVENT_TYPES.length - 1];
+  return (
+    <div className={`flex items-center gap-4 bg-white rounded-2xl shadow-md p-4 group transition-all hover:shadow-lg ${past ? 'opacity-50' : ''}`}>
+      <div className="text-center w-14 shrink-0">
+        <p className="text-xs font-black text-primary">
+          {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          {new Date(ev.event_date + 'T00:00:00').getFullYear()}
+        </p>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-black text-primary text-sm truncate">{ev.title}</p>
+          {ev.is_official && (
+            <Badge className="text-[9px] font-black border-none bg-yellow-100 text-yellow-700 gap-1 shrink-0">
+              <ShieldCheck className="h-2.5 w-2.5" />
+              Oficial
+            </Badge>
+          )}
+        </div>
+        {ev.description && <p className="text-xs text-muted-foreground font-medium truncate">{ev.description}</p>}
+      </div>
+      <Badge className={`text-[9px] font-black border-none shrink-0 ${meta.color}`}>{meta.label}</Badge>
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        {canEdit ? (
+          <>
+            <button
+              onClick={() => onEdit(ev)}
+              className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-50 text-blue-500 transition-all"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => onDelete(ev.id)}
+              className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-red-50 text-red-400 transition-all"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </>
+        ) : (
+          <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center text-muted-foreground/40" title="Evento oficial — edite pelo painel do Coordenador">
+            <Lock className="h-3 w-3" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
