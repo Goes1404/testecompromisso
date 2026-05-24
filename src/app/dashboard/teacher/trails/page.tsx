@@ -401,9 +401,12 @@ export default function TeacherTrailsPage() {
               >
                 <div className="relative aspect-video bg-muted overflow-hidden">
                   <img
-                    src={trail.image_url || `https://picsum.photos/seed/trail-${trail.id}/600/400`}
+                    src={trail.image_url || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop`}
                     alt={trail.title}
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop';
+                    }}
                   />
                   {/* Overlay seleção */}
                   {mergeMode && (

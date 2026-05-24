@@ -7,7 +7,9 @@
     "url": "https://github.com/Goes1404/testecompromisso.git"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
+    "dev:limit": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev --turbo",
+    "clean": "powershell -Command \"if (Test-Path .next) { Remove-Item -Recurse -Force .next }\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

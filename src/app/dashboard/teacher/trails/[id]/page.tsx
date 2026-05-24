@@ -86,6 +86,9 @@ export default function TrailManagementPage() {
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
   const [isEditTrailDialogOpen, setIsEditTrailDialogOpen] = useState(false);
+  const [isEditModuleDialogOpen, setIsEditModuleDialogOpen] = useState(false);
+  const [editingModule, setEditingModule] = useState<any>(null);
+  const [editModuleTitle, setEditModuleTitle] = useState('');
   
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const activeModuleRef = useRef<string | null>(null);
@@ -504,11 +507,16 @@ export default function TrailManagementPage() {
 
     setDetachingId(mod.id);
     try {
+      // Get the title of the video if it exists in the module
+      const moduleContents = contents[mod.id] || [];
+      const videoContent = moduleContents.find((c: any) => c.type === 'video');
+      const newTrailTitle = videoContent?.title || mod.title;
+
       // 1. Cria nova trilha standalone com os dados da série atual
       const { data: newTrail, error: trailErr } = await supabase
         .from('trails')
         .insert({
-          title: mod.title,
+          title: newTrailTitle,
           category: trail.category,
           description: trail.description,
           teacher_id: trail.teacher_id,
@@ -549,6 +557,34 @@ export default function TrailManagementPage() {
       toast({ title: 'Erro ao desvincular', description: err.message, variant: 'destructive' });
     } finally {
       setDetachingId(null);
+    }
+  };
+
+  const startEditModule = (mod: any) => {
+    setEditingModule(mod);
+    setEditModuleTitle(mod.title || '');
+    setIsEditModuleDialogOpen(true);
+  };
+
+  const handleUpdateModule = async () => {
+    if (!editModuleTitle.trim() || !editingModule || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('modules')
+        .update({ title: editModuleTitle.trim() })
+        .eq('id', editingModule.id);
+
+      if (error) throw error;
+
+      setModules(prev => prev.map(m => m.id === editingModule.id ? { ...m, title: editModuleTitle.trim() } : m));
+      toast({ title: 'Capítulo Atualizado!' });
+      setIsEditModuleDialogOpen(false);
+      setEditingModule(null);
+    } catch (e: any) {
+      toast({ title: 'Erro ao atualizar capítulo', description: e.message, variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -679,9 +715,20 @@ export default function TrailManagementPage() {
                       {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
                     </div>
                     <div>
-                      <CardTitle className='text-lg font-black text-primary italic leading-none'>
-                        {mod.title}
-                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className='text-lg font-black text-primary italic leading-none'>
+                          {mod.title}
+                        </CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => startEditModule(mod)}
+                          className="h-6 w-6 rounded-full hover:bg-primary/10 text-primary/50 hover:text-primary transition-colors shrink-0"
+                          title="Editar título do capítulo"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      </div>
                       <p className='text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-1.5'>
                         {contents[mod.id]?.length || 0} Materiais vinculados
                       </p>
@@ -930,6 +977,41 @@ export default function TrailManagementPage() {
             <Button onClick={handleUpdateTrail} disabled={isSubmitting || !editTrailForm.title} className="w-full h-10 md:h-12 bg-primary text-white font-black text-sm md:text-base rounded-xl shadow-lg">
               {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIÁLOGO EDITAR CAPÍTULO */}
+      <Dialog open={isEditModuleDialogOpen} onOpenChange={setIsEditModuleDialogOpen}>
+        <DialogContent className='rounded-2xl md:rounded-3xl p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-xl'>
+          <DialogHeader>
+            <DialogTitle className='text-base md:text-xl font-black italic text-primary'>Editar Título do Capítulo</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Título do Capítulo</Label>
+              <Input
+                placeholder="Ex: Introdução às Funções"
+                className="h-10 rounded-xl bg-muted/30 border-none font-bold"
+                value={editModuleTitle}
+                onChange={(e) => setEditModuleTitle(e.target.value)}
+                disabled={isSubmitting}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateModule(); }}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsEditModuleDialogOpen(false)} className="flex-1 h-11 rounded-xl font-black">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleUpdateModule}
+              disabled={isSubmitting || !editModuleTitle.trim()}
+              className="flex-1 h-11 rounded-xl bg-primary text-white font-black shadow-xl"
+            >
+              {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              Salvar
             </Button>
           </DialogFooter>
         </DialogContent>

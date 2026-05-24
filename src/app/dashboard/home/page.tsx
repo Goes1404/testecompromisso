@@ -94,7 +94,7 @@ const localImagesFallback = [
 ];
 
 function getSafeImageUrl(url: string | null | undefined, index: number) {
-  if (!url || url.includes("picsum.photos")) {
+  if (!url || url.includes("picsum.photos") || url.includes("pixabay.com")) {
     return localImagesFallback[index % localImagesFallback.length];
   }
   return url;
