@@ -174,6 +174,7 @@ const adminItems: NavItem[] = [
 /* ─── SECRETARIA ────────────────────────────────────────────── */
 const secretaryItems: NavItem[] = [
   { icon: ShieldCheck, label: "Painel Secretaria", href: "/dashboard/secretary/home", id: "nav-secretary-home" },
+  { icon: BarChart3,   label: "Painel de KPIs",   href: "/dashboard/secretary/kpi",  id: "nav-secretary-kpi" },
   {
     icon: Users, label: "Matrículas", id: "nav-secretary-matriculas",
     children: [
