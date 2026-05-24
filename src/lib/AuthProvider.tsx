@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (profile?.profile_type) {
       const pt = profile.profile_type.toLowerCase().trim();
       if (['admin', 'gestor', 'coordenador', 'coordenação', 'coordenacao', 'administrador'].includes(pt)) return 'admin';
-      if (['staff', 'tecnico', 'técnico', 'equipe técnica', 'assistente', 'suporte'].includes(pt)) return 'staff';
+      if (['staff', 'tecnico', 'técnico', 'equipe técnica', 'assistente', 'suporte', 'secretaria', 'agente de organização'].includes(pt)) return 'staff';
       if (['teacher', 'mentor', 'professor', 'docente'].includes(pt)) return 'teacher';
     }
 
