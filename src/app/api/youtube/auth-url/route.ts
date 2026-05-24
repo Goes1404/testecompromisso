@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { log } from '@/lib/logger';
 
 export async function GET(request: Request) {
   try {
@@ -42,8 +43,10 @@ export async function GET(request: Request) {
       state,
     });
 
+    log.info('youtube.auth_url.generated', { userId: user.id, trailId });
     return NextResponse.json({ url: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
   } catch (err: any) {
+    log.error('youtube.auth_url.unhandled', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

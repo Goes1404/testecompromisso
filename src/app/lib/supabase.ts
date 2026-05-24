@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { log } from '@/lib/logger'
 
 /**
  * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - COMPROMISSO 360
@@ -28,7 +29,7 @@ export async function safeExecute<T = any>(fn: () => Promise<any>): Promise<{ da
     const result = await fn();
     return result;
   } catch (error: any) {
-    console.error('[SUPABASE ERROR]', error);
+    log.error('supabase.safe_execute.failed', error);
     return { data: null, error };
   }
 }

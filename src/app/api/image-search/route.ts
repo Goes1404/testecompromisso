@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 
 const PIXABAY_KEY = process.env.PIXABAY_API_KEY;
 
@@ -50,11 +51,15 @@ export async function GET(request: Request) {
     const data = await res.json();
     const hits: any[] = data.hits ?? [];
 
-    if (hits.length === 0) return NextResponse.json({ url: null });
+    if (hits.length === 0) {
+      log.debug('image_search.no_results', { query, title, category });
+      return NextResponse.json({ url: null });
+    }
 
     const pick = hits[Math.floor(Math.random() * hits.length)];
     return NextResponse.json({ url: pick.largeImageURL as string, query });
   } catch (err: any) {
+    log.error('image_search.fetch_failed', err, { query, title, category });
     return NextResponse.json({ error: err.message }, { status: 502 });
   }
 }

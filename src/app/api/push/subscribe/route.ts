@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { log } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,9 +41,14 @@ export async function POST(req: NextRequest) {
         { onConflict: "endpoint" }
       );
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      log.error('push.subscribe.db_error', error, { userId: user.id });
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    log.info('push.subscribe.ok', { userId: user.id });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
+    log.error('push.subscribe.unhandled', err);
     return NextResponse.json({ error: err.message || "Erro interno." }, { status: 500 });
   }
 }

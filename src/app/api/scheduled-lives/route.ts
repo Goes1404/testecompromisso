@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 
 /**
  * API de Controle de Transmissões Master.
@@ -10,10 +11,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Retorna lista vazia em produção até que o mentor cadastre via Dashboard
     const data: any[] = [];
     return NextResponse.json(data);
   } catch (error: any) {
+    log.error('scheduled_lives.get.unhandled', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
     try {
       body = JSON.parse(text);
     } catch (e) {
+      log.warn('scheduled_lives.post.invalid_json');
       return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
     }
 
@@ -39,10 +41,11 @@ export async function POST(request: Request) {
       }
     }
 
-    // Retorna o objeto criado (Mock de sucesso para a interface)
     const data = { id: Math.random().toString(36).substr(2, 9), ...body };
+    log.info('scheduled_lives.post.created', { liveId: data.id });
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
+    log.error('scheduled_lives.post.unhandled', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -2,11 +2,20 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Propagate or generate a correlation ID so every log entry for the same
+  // request can be joined in any log aggregator (Datadog, Axiom, etc.)
+  const requestId =
+    request.headers.get('x-request-id') ?? crypto.randomUUID();
+
   let response = NextResponse.next({
     request: {
-      headers: request.headers,
+      headers: new Headers({
+        ...Object.fromEntries(request.headers),
+        'x-request-id': requestId,
+      }),
     },
   })
+  response.headers.set('x-request-id', requestId);
 
   // Evita carregar o supabase client em recursos estáticos para performance
   if (request.nextUrl.pathname.startsWith('/_next') || request.nextUrl.pathname.includes('.')) {

@@ -51,7 +51,9 @@ export function usePushNotifications() {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
         setSubscribed(!!sub);
-      } catch {}
+      } catch (err) {
+        console.error('[push] getSubscription check failed:', err);
+      }
     })();
   }, [permission]);
 

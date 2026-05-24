@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { log } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,9 +24,14 @@ export async function POST(req: NextRequest) {
       .eq("endpoint", endpoint)
       .eq("user_id", user.id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      log.error('push.unsubscribe.db_error', error, { userId: user.id });
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    log.info('push.unsubscribe.ok', { userId: user.id });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
+    log.error('push.unsubscribe.unhandled', err);
     return NextResponse.json({ error: err.message || "Erro interno." }, { status: 500 });
   }
 }

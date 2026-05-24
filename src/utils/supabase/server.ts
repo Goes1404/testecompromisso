@@ -1,6 +1,7 @@
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { log } from '@/lib/logger'
 
 /**
  * 🔒 CLIENTE SUPABASE SERVER - COMPROMISSO 360
@@ -24,14 +25,18 @@ export async function createClient() {
           try {
             cookieStore.set({ name, value, ...options })
           } catch (error) {
-            // Silenciar erros de set em Server Components
+            // Expected in React Server Components: cookies() is read-only there.
+            // Supabase SSR docs explicitly recommend catching and ignoring this.
+            // Log at debug so it appears only when LOG_LEVEL=debug.
+            log.debug('supabase.cookie.set_skipped', { cookieName: name });
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.delete({ name, ...options })
           } catch (error) {
-            // Silenciar erros de delete em Server Components
+            // Same reason as above — RSC cannot mutate cookies.
+            log.debug('supabase.cookie.remove_skipped', { cookieName: name });
           }
         },
       },
