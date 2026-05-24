@@ -52,8 +52,8 @@ export default function ChatListPage() {
           // Equipe de gestão/docente vê todo mundo (alunos, professores, secretaria)
           query = query.or('role.eq.student,profile_type.eq.student,role.eq.teacher,profile_type.eq.teacher,role.eq.staff,profile_type.eq.staff,role.eq.admin,profile_type.eq.admin');
         } else {
-          // Aluno vê mentores
-          query = query.eq('profile_type', 'teacher');
+          // Aluno vê mentores e secretaria
+          query = query.or('profile_type.eq.teacher,profile_type.eq.staff');
         }
 
         const { data, error } = await query.order('name', { ascending: true });
