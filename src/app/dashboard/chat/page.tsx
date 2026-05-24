@@ -17,9 +17,10 @@ export default function ChatListPage() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isStaffUser = ['teacher', 'staff', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
   const categories = [
     "Todos",
-    ...(profile?.profile_type === 'teacher' ? ["ETEC", "ENEM", "1º Ano", "2º Ano", "3º Ano", "Apoio"] : ["Redação", "Matemática", "Linguagens", "Ciências da Natureza", "Ciências Humanas", "Apoio Pedagógico"])
+    ...(isStaffUser ? ["ETEC", "ENEM", "1º Ano", "2º Ano", "3º Ano", "Apoio"] : ["Redação", "Matemática", "Linguagens", "Ciências da Natureza", "Ciências Humanas", "Apoio Pedagógico"])
   ];
 
   useEffect(() => {
@@ -41,9 +42,9 @@ export default function ChatListPage() {
           .select('*')
           .neq('id', user.id);
 
-        if (userType === 'teacher') {
-          // Professor vê alunos e outros professores se necessário, mas principalmente alunos
-          query = query.or('role.eq.student,profile_type.eq.student');
+        if (['teacher', 'staff', 'admin'].includes(userType)) {
+          // Equipe de gestão/docente vê todo mundo (alunos, professores, secretaria)
+          query = query.or('role.eq.student,profile_type.eq.student,role.eq.teacher,profile_type.eq.teacher,role.eq.staff,profile_type.eq.staff,role.eq.admin,profile_type.eq.admin');
         } else {
           // Aluno vê mentores
           query = query.eq('profile_type', 'teacher');
@@ -56,8 +57,8 @@ export default function ChatListPage() {
         // LÓGICA DE SEGMENTAÇÃO POR POLO (INDUSTRIAL)
         // Alunos veem apenas mentores do seu polo ou mentores "Gerais"
         const filteredByPolo = data?.filter(mentor => {
-          // Admin e Professor veem todo mundo na listagem final de segmentação de polo
-          if (userType === 'admin' || userType === 'teacher') return true;
+          // Equipe de gestão/docente vê todo mundo na listagem final de segmentação de polo
+          if (['admin', 'teacher', 'staff'].includes(userType)) return true;
           
           const mentorInstitution = (mentor.institution || '').toLowerCase();
           
@@ -87,8 +88,8 @@ export default function ChatListPage() {
       
     if (activeCategory === "Todos") return matchesSearch;
 
-    if (profile?.profile_type === 'teacher') {
-      // Filtros do professor: se for ETEC ou ENEM (procura no curso, polo, exam_target etc)
+    if (isStaffUser) {
+      // Filtros da equipe de gestão/docente: se for ETEC ou ENEM (procura no curso, polo, exam_target etc)
       return matchesSearch && searchString.includes(activeCategory.toLowerCase());
     }
 
@@ -104,14 +105,14 @@ export default function ChatListPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl md:text-4xl font-black text-primary italic leading-none">
-              {profile?.profile_type === 'teacher' ? "Gestão de Conversas" : "Mentoria Especializada"}
+              {isStaffUser ? "Gestão de Conversas" : "Mentoria Especializada"}
             </h1>
             <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest flex items-center gap-2">
               <ShieldCheck className="h-3 w-3 text-accent" /> CANAL SEGURO
             </Badge>
           </div>
           <p className="text-muted-foreground font-medium text-sm md:text-xl italic">
-            {profile?.profile_type === 'teacher' 
+            {isStaffUser 
               ? "Atendimento direto aos estudantes da rede." 
               : "Conecte-se aos professores e tire suas dúvidas."
             }
@@ -122,7 +123,7 @@ export default function ChatListPage() {
       <div className="relative max-w-xl group w-full pt-4">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
         <Input 
-          placeholder="Buscar aluno por nome, polo, escola ou curso..." 
+          placeholder={isStaffUser ? "Buscar aluno por nome, polo, escola ou curso..." : "Buscar mentor por nome ou matéria..."} 
           className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl text-lg font-medium italic focus-visible:ring-accent"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -148,7 +149,7 @@ export default function ChatListPage() {
       </div>
 
       {/* CANAIS DE CONTATO */}
-      {profile?.profile_type !== 'teacher' && (
+      {!isStaffUser && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { title: "Docente", desc: "Fale diretamente com seu professor de referência.", icon: GraduationCap, color: "bg-blue-50 border-blue-100 text-blue-700" },
@@ -202,7 +203,7 @@ export default function ChatListPage() {
                 </div>
                 <Button className="w-full bg-primary text-white hover:bg-primary/95 font-black h-14 rounded-2xl shadow-xl transition-all active:scale-95 border-none" asChild>
                   <Link href={`/dashboard/chat/${contact.id}`}>
-                    {profile?.profile_type === 'teacher' ? "Enviar Mensagem" : "Abrir Mentoria"}
+                    {isStaffUser ? "Enviar Mensagem" : "Abrir Mentoria"}
                   </Link>
                 </Button>
               </CardContent>

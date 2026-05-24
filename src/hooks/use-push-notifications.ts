@@ -1,0 +1,130 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/lib/AuthProvider";
+
+type PushPermissionState = "default" | "granted" | "denied" | "unsupported";
+
+function urlBase64ToUint8Array(base64: string) {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(b64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+/**
+ * Registra o Service Worker, gerencia a permissão do navegador e inscreve
+ * o usuário no canal de Web Push. Persiste a inscrição no servidor.
+ */
+export function usePushNotifications() {
+  const { user } = useAuth();
+  const [permission, setPermission] = useState<PushPermissionState>("default");
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Detecta suporte e estado da permissão
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      setPermission("unsupported");
+      return;
+    }
+    setPermission(Notification.permission as PushPermissionState);
+  }, []);
+
+  // Registra o SW assim que possível
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.register("/sw.js").catch(err => {
+      console.error("[push] SW register failed:", err);
+    });
+  }, []);
+
+  // Verifica se já está inscrito
+  useEffect(() => {
+    if (permission !== "granted" || typeof window === "undefined") return;
+    (async () => {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        setSubscribed(!!sub);
+      } catch {}
+    })();
+  }, [permission]);
+
+  const subscribe = useCallback(async () => {
+    if (!user || typeof window === "undefined") return;
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidKey) {
+      console.error("[push] VAPID public key não configurada");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Pede permissão se ainda não foi decidida
+      let perm = Notification.permission;
+      if (perm === "default") {
+        perm = await Notification.requestPermission();
+        setPermission(perm as PushPermissionState);
+      }
+      if (perm !== "granted") {
+        setLoading(false);
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        });
+      }
+
+      const json = sub.toJSON();
+      const res = await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint: json.endpoint,
+          keys: json.keys,
+          userAgent: navigator.userAgent,
+        }),
+      });
+      if (res.ok) setSubscribed(true);
+    } catch (err) {
+      console.error("[push] subscribe error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const unsubscribe = useCallback(async () => {
+    if (typeof window === "undefined") return;
+    setLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
+        await fetch("/api/push/unsubscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint }),
+        });
+      }
+      setSubscribed(false);
+    } catch (err) {
+      console.error("[push] unsubscribe error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { permission, subscribed, loading, subscribe, unsubscribe };
+}

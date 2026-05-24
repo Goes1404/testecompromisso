@@ -33,6 +33,7 @@ export default function DirectChatPage() {
   const contactId = params.id as string;
   const isAurora = contactId === "aurora-ai";
   const { user, profile, loading: authLoading } = useAuth();
+  const isStaffUser = ['teacher', 'staff', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
   const router = useRouter();
   const { toast } = useToast();
   
@@ -208,11 +209,18 @@ export default function DirectChatPage() {
         }).select().single();
 
         if (error) throw error;
-        
+
         setMessages(prev => {
           if (prev.some(m => m.id === data.id)) return prev;
           return [...prev, data as ChatMessage];
         });
+
+        // Push notification para o destinatário (fire-and-forget)
+        fetch("/api/push/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "chat", receiverId: contactId, content: userText }),
+        }).catch(() => {});
       } catch (err: any) {
         toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" });
       } finally {
@@ -353,7 +361,7 @@ export default function DirectChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isAiThinking || isSending}
-              placeholder={isAurora ? "Tire uma dúvida pedagógica..." : "Digite sua mensagem para o mentor..."}
+              placeholder={isAurora ? "Tire uma dúvida pedagógica..." : (isStaffUser ? "Digite sua mensagem..." : "Digite sua mensagem para o mentor...")}
               className="flex-1 h-12 md:h-14 bg-transparent border-none text-primary font-bold italic focus-visible:ring-0 px-0 text-base"
             />
             <button type="submit" disabled={!input.trim() || isAiThinking || isSending} className="h-12 w-12 md:h-14 md:w-14 bg-primary hover:bg-primary/95 text-white rounded-full shadow-2xl shrink-0 border-none transition-all active:scale-90 flex items-center justify-center">

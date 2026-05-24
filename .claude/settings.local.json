@@ -39,7 +39,17 @@
       "mcp__claude_ai_Supabase__execute_sql",
       "Bash(npx supabase *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\testecompromisso\" -Force)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\testecompromisso\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(awk '{print $NF}')",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\testecompromisso\\\\supabase\\\\migrations\" -Name)",
+      "Bash(Sort-Object)",
+      "Bash(Get-Content \"c:\\\\Users\\\\User\\\\testecompromisso\\\\supabase\\\\migrations\\\\*\")",
+      "Bash(Select-String \"learning-contents|CREATE TABLE|INSERT INTO storage.buckets\")",
+      "mcp__claude_ai_Supabase__get_project_url",
+      "mcp__claude_ai_Supabase__get_publishable_keys",
+      "Bash(xargs head -200)"
     ]
   }
 }

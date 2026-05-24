@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +37,7 @@ interface FamilyMember {
 }
 
 export default function FinancialAidPage() {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [members, setFamilyMembers] = useState<FamilyMember[]>([
@@ -56,6 +56,24 @@ export default function FinancialAidPage() {
   const MIN_WAGE = 1621; // Referência de base para cálculo
   const THRESHOLD_MULTIPLIER = 1.5;
   const THRESHOLD = MIN_WAGE * THRESHOLD_MULTIPLIER;
+
+  useEffect(() => {
+    if (profile) {
+      if (profile.family_members && Array.isArray(profile.family_members) && profile.family_members.length > 0) {
+        setFamilyMembers(profile.family_members);
+      }
+      if (profile.family_income !== undefined && profile.family_income !== null && profile.family_size) {
+        setResult({
+          eligible: !!profile.is_financial_aid_eligible,
+          perCapita: Number(profile.income_per_capita) || 0,
+          totalFamilyIncome: Number(profile.family_income) || 0,
+          familySize: Number(profile.family_size) || 1,
+          threshold: THRESHOLD,
+          minWage: MIN_WAGE
+        });
+      }
+    }
+  }, [profile]);
 
   const totalFamilyIncome = useMemo(() => {
     return members.reduce((acc, m) => acc + (Number(m.income) || 0), 0);
@@ -101,8 +119,18 @@ export default function FinancialAidPage() {
       try {
         await supabase
           .from('profiles')
-          .update({ is_financial_aid_eligible: eligible })
+          .update({ 
+            is_financial_aid_eligible: eligible,
+            family_members: members,
+            family_income: totalFamilyIncome,
+            family_size: familySize,
+            income_per_capita: perCapita
+          })
           .eq('id', user.id);
+        
+        if (refreshProfile) {
+          await refreshProfile();
+        }
       } catch (e) {
         console.error("Erro ao salvar elegibilidade:", e);
       }

@@ -99,7 +99,7 @@ export default function ForumPage() {
     const title = (f.name || '').toLowerCase();
     const desc = (f.description || '').toLowerCase();
     const search = searchTerm.toLowerCase();
-    const isStaff = ['teacher', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
+    const isStaff = ['teacher', 'admin', 'staff'].includes(profile?.profile_type?.toLowerCase() || '');
     
     // Filtro de Segurança por Polo: 
     // Alunos só veem fóruns da categoria "Polos" se o nome do fórum contiver a instituição deles

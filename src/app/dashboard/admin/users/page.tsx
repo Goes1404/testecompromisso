@@ -30,6 +30,7 @@ import {
   Link2,
   Sparkles,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   Select,
@@ -550,6 +551,33 @@ export default function AdminUserDirectoryPage() {
     }
   };
 
+  const handleDeleteUser = async (id: string, name: string) => {
+    if (id === currentUser?.id) {
+      toast({ title: "Ação Negada", description: "Você não pode excluir sua própria conta.", variant: "destructive" });
+      return;
+    }
+    setProcessingId(id);
+    try {
+      const res = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          masterPassword: 'compromisso2026',
+          userId: id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setUsers(prev => prev.filter(u => u.id !== id));
+      toast({ title: 'Usuário excluído', description: `${name} foi removido da plataforma.` });
+    } catch (err: any) {
+      toast({ title: 'Erro ao excluir', description: err.message, variant: 'destructive' });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const openResetModal = (u: any) => {
     if (!u.email) {
       toast({ title: "Sem e-mail cadastrado", description: "Este usuário não possui e-mail vinculado.", variant: "destructive" });
@@ -861,6 +889,44 @@ export default function AdminUserDirectoryPage() {
                                 <Send className="h-4 w-4" />
                               </Link>
                             </Button>
+
+                            {/* Excluir Usuário */}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  disabled={isProcessing || u.id === currentUser?.id}
+                                  title="Excluir usuário permanentemente"
+                                  className="h-10 w-10 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
+                                >
+                                  {isProcessing && processingId === u.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-3xl border-none shadow-2xl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="font-black text-red-600">
+                                    Excluir Usuário Permanentemente?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação é <strong>irreversível</strong>. O usuário <strong>{u.name}</strong> será excluído definitivamente da autenticação e de todos os registros de perfil no sistema.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteUser(u.id, u.name)}
+                                    className="rounded-xl font-bold border-none bg-red-600 hover:bg-red-700 text-white"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>

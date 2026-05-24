@@ -7,7 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ClipboardCheck, Loader2, CheckCircle2, XCircle, AlertCircle, BarChart3, KeyRound } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ClipboardCheck, Loader2, CheckCircle2, XCircle, AlertCircle, BarChart3, KeyRound, ShieldAlert, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
@@ -22,6 +29,10 @@ export default function StudentAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [checkinCode, setCheckinCode] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
+
+  // Modal de impacto (anti-fraude)
+  const [impactOpen, setImpactOpen] = useState(false);
+  const [confirmoInput, setConfirmoInput] = useState("");
 
   async function fetchData() {
     if (!user) return;
@@ -55,10 +66,22 @@ export default function StudentAttendancePage() {
     fetchData();
   }, [user]);
 
-  async function handleCheckin() {
+  // Passo 1: valida o tamanho do token e abre o Modal de Impacto (barreira anti-fraude).
+  function handleOpenImpact() {
     const code = checkinCode.trim().toUpperCase();
-    if (code.length !== 6) {
-      toast({ title: "Código inválido", description: "O código deve ter 6 caracteres.", variant: "destructive" });
+    if (code.length < 4 || code.length > 6) {
+      toast({ title: "Código inválido", description: "O token tem 4 caracteres (ex: A7X9).", variant: "destructive" });
+      return;
+    }
+    setConfirmoInput("");
+    setImpactOpen(true);
+  }
+
+  // Passo 2: chamada à API só ocorre após CONFIRMO ter sido digitado e validado.
+  async function handleConfirmedCheckin() {
+    const code = checkinCode.trim().toUpperCase();
+    if (confirmoInput.trim().toUpperCase() !== "CONFIRMO") {
+      toast({ title: "Digite CONFIRMO para prosseguir", variant: "destructive" });
       return;
     }
     setCheckingIn(true);
@@ -66,7 +89,7 @@ export default function StudentAttendancePage() {
       const res = await fetch("/api/attendance/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, confirmed: true }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -74,6 +97,8 @@ export default function StudentAttendancePage() {
       } else {
         toast({ title: "Presença registrada!", description: `Aula: ${data.session_title}` });
         setCheckinCode("");
+        setImpactOpen(false);
+        setConfirmoInput("");
         fetchData();
       }
     } catch {
@@ -154,33 +179,108 @@ export default function StudentAttendancePage() {
         <CardHeader>
           <CardTitle className="font-black italic flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-orange-500" />
-            Auto Check-in
+            Check-in da Aula
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Seu professor exibirá um código de 6 caracteres durante a aula. Insira-o abaixo para confirmar presença.
+            O professor exibirá um token curto (ex: <span className="font-mono font-black">A7X9</span>) na lousa.
+            Digite-o aqui até <strong>às 17h00</strong> do dia da aula.
           </p>
           <div className="flex gap-3 items-end">
             <div className="space-y-1">
-              <Label htmlFor="checkin-code">Código da aula</Label>
+              <Label htmlFor="checkin-code">Token da aula</Label>
               <Input
                 id="checkin-code"
-                className="text-center text-xl font-black tracking-[0.3em] w-44 uppercase"
+                className="text-center text-2xl font-black tracking-[0.4em] w-44 uppercase font-mono"
                 maxLength={6}
-                placeholder="XXXXXX"
+                placeholder="A7X9"
                 value={checkinCode}
                 onChange={(e) => setCheckinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
-                onKeyDown={(e) => e.key === "Enter" && handleCheckin()}
+                onKeyDown={(e) => e.key === "Enter" && handleOpenImpact()}
               />
             </div>
-            <Button onClick={handleCheckin} disabled={checkingIn || checkinCode.length !== 6} className="gap-2">
-              {checkingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            <Button onClick={handleOpenImpact} disabled={checkingIn || checkinCode.length < 4} className="gap-2">
+              <CheckCircle2 className="h-4 w-4" />
               Confirmar Presença
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Impacto — Barreira Anti-Fraude */}
+      <Dialog open={impactOpen} onOpenChange={(v) => { if (!v) { setImpactOpen(false); setConfirmoInput(""); } }}>
+        <DialogContent className="sm:max-w-lg rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-8 pb-4 bg-red-50 border-b-2 border-red-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-14 w-14 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-300">
+                <ShieldAlert className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-red-700 leading-none italic uppercase tracking-tighter">
+                  Aviso de Fraude
+                </DialogTitle>
+                <DialogDescription className="text-xs mt-1 font-bold text-red-600">
+                  Leia com atenção antes de confirmar
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-8 space-y-5">
+            <div className="space-y-4 text-sm leading-relaxed">
+              <div className="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
+                <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                <p className="text-red-700 font-bold">
+                  Você está prestes a registrar sua <strong>presença em uma aula presencial</strong>. O token só pode ser digitado por <strong>você, dentro da sala</strong>.
+                </p>
+              </div>
+
+              <ul className="space-y-2 text-slate-700 font-medium text-[13px]">
+                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Compartilhar o token com colegas que faltaram caracteriza <strong>fraude documental</strong>.</li>
+                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Alunos detectados em fraude perdem a vaga no cursinho <strong>imediatamente</strong>.</li>
+                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> A lista de papel da sala é cruzada com os check-ins do app pela secretaria.</li>
+                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Divergências entre lista física e app geram <strong>auditoria</strong>.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <Label htmlFor="confirmo" className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-1">
+                Para prosseguir, digite a palavra <span className="text-red-600 font-black">CONFIRMO</span>
+              </Label>
+              <Input
+                id="confirmo"
+                placeholder="CONFIRMO"
+                value={confirmoInput}
+                onChange={(e) => setConfirmoInput(e.target.value.toUpperCase())}
+                className="h-14 text-center text-xl font-black tracking-[0.3em] rounded-2xl border-2 border-red-200 focus:border-red-500 bg-white"
+                autoComplete="off"
+              />
+              <p className="text-[10px] text-muted-foreground font-medium text-center">
+                Esta ação é registrada e seu nome ficará vinculado a este check-in.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => { setImpactOpen(false); setConfirmoInput(""); }}
+                className="flex-1 h-12 rounded-2xl font-black text-xs border-slate-200"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmedCheckin}
+                disabled={checkingIn || confirmoInput.trim().toUpperCase() !== "CONFIRMO"}
+                className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-lg shadow-red-200 border-none text-xs disabled:opacity-40"
+              >
+                {checkingIn ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                Registrar Presença ({checkinCode})
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Card className="rounded-[2.5rem] shadow-2xl border-none">
         <CardHeader>

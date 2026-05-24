@@ -28,8 +28,11 @@ import {
   BookOpen,
   Target,
   Clock,
-  Star
+  Star,
+  Phone,
+  Check
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -116,9 +119,13 @@ let dashboardCache: any = {
 };
 
 export default function DashboardHome() {
-  const { user, profile, userRole, loading: isUserLoading } = useAuth();
+  const { user, profile, userRole, loading: isUserLoading, refreshProfile } = useAuth();
   const router = useRouter();
   const dataFetchedRef = useRef(false);
+  const { toast } = useToast();
+
+  const [phoneValue, setPhoneValue] = useState("");
+  const [submittingPhone, setSubmittingPhone] = useState(false);
 
   const [recommendedTrails, setRecommendedTrails] = useState<any[]>([]);
   const [libraryResources, setLibraryResources] = useState<any[]>([]);
@@ -127,6 +134,67 @@ export default function DashboardHome() {
   const [essayStats, setEssayStats] = useState<{ count: number; average: number; latest: any } | null>(null);
   const [examStats, setExamStats] = useState<{ totalAssessed: number; averageScore: number; history?: any[] } | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const digits = value.replace(/\D/g, "");
+    const limited = digits.slice(0, 11);
+    
+    let formatted = limited;
+    if (limited.length > 2) {
+      if (limited.length <= 6) {
+        formatted = `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+      } else if (limited.length <= 10) {
+        formatted = `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
+      } else {
+        formatted = `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
+      }
+    }
+    setPhoneValue(formatted);
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const digits = phoneValue.replace(/\D/g, "");
+    if (digits.length < 10) {
+      toast({
+        title: "Telefone Inválido ⚠️",
+        description: "Por favor, insira um número de telefone com DDD válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingPhone(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ phone: phoneValue })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Telefone Salvo! 🎉",
+        description: "Seu número foi registrado com sucesso em nosso banco de dados.",
+      });
+
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+    } catch (err: any) {
+      console.error("Erro ao salvar telefone:", err);
+      toast({
+        title: "Erro ao Salvar ❌",
+        description: err.message || "Ocorreu um erro ao salvar seu número.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmittingPhone(false);
+    }
+  };
 
   useEffect(() => {
     if (!isUserLoading && userRole !== 'student') {
@@ -275,6 +343,53 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-6 pb-10 animate-in fade-in duration-700 px-3 md:px-0.5">
+
+      {/* ── CARD DE TELEFONE PENDENTE ── */}
+      {profile && !profile.phone && (
+        <div className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-orange-200 bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 p-6 md:p-8 shadow-2xl glow-orange text-white flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
+          <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-5 relative z-10 w-full md:w-auto">
+            <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-xl animate-float">
+              <Phone className="h-7 w-7 text-white" />
+            </div>
+            <div className="text-center sm:text-left space-y-1">
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/80">Cadastro Obrigatório</span>
+              <h2 className="text-xl md:text-2xl font-black italic tracking-tighter leading-none">Cadastre seu Telefone</h2>
+              <p className="text-white/80 font-semibold text-xs leading-relaxed max-w-lg italic">
+                Insira seu número de celular para que a secretaria possa entrar em contato com você sobre convocações, isenções de taxa e avisos cruciais.
+              </p>
+            </div>
+          </div>
+          
+          <form onSubmit={handlePhoneSubmit} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto relative z-10 shrink-0">
+            <div className="relative">
+              <input
+                type="text"
+                value={phoneValue}
+                onChange={handlePhoneChange}
+                placeholder="(00) 00000-0000"
+                className="h-12 w-full sm:w-56 bg-white/10 backdrop-blur-md text-white placeholder:text-white/50 border border-white/20 hover:border-white/40 focus:border-white rounded-xl font-bold font-mono text-center text-sm shadow-inner focus-visible:outline-none px-3"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={submittingPhone}
+              className="bg-white text-orange-600 hover:bg-orange-50 font-black rounded-xl shadow-lg border-none shrink-0 h-12 px-6 text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 justify-center"
+            >
+              {submittingPhone ? (
+                <Loader2 className="h-4 w-4 animate-spin text-orange-600" />
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Salvar
+                </>
+              )}
+            </Button>
+          </form>
+        </div>
+      )}
 
       {/* ── HERO BANNER ── */}
       <section className="relative rounded-3xl overflow-hidden bg-slate-900 min-h-[160px] md:min-h-[200px] flex items-end p-5 md:p-6 shadow-2xl">

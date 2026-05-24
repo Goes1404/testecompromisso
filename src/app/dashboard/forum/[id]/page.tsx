@@ -60,7 +60,7 @@ export default function ForumDetailPage() {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
 
-  const isStaff = ['teacher', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
+  const isStaff = ['teacher', 'admin', 'staff'].includes(profile?.profile_type?.toLowerCase() || '');
 
   useEffect(() => {
     async function loadData() {

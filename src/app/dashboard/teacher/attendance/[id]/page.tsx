@@ -23,10 +23,17 @@ const CHECKIN_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function generateCode() {
   let code = "";
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     code += CHECKIN_CHARSET[Math.floor(Math.random() * CHECKIN_CHARSET.length)];
   }
   return code;
+}
+
+// Token expira às 17h00 do dia da sessão (deadline da chamada via app).
+function expiryFor(sessionDateISO: string): string {
+  const base = new Date(sessionDateISO + "T00:00:00");
+  base.setHours(17, 0, 0, 0);
+  return base.toISOString();
 }
 
 type AttendanceStatus = "presente" | "ausente" | "justificado";
@@ -121,7 +128,17 @@ export default function AttendanceSessionPage() {
     if (!session) return;
     setGeneratingCode(true);
     const code = generateCode();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const expiresAt = expiryFor(session.session_date);
+    const remainingSec = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+    if (remainingSec <= 0) {
+      toast({
+        title: "Janela encerrada",
+        description: "A janela de check-in via app vai até as 17h00 do dia da aula.",
+        variant: "destructive",
+      });
+      setGeneratingCode(false);
+      return;
+    }
     const { error } = await supabase
       .from("class_sessions")
       .update({ checkin_code: code, checkin_code_expires_at: expiresAt })
@@ -130,8 +147,8 @@ export default function AttendanceSessionPage() {
       toast({ title: "Erro ao gerar código", description: error.message, variant: "destructive" });
     } else {
       setSession((prev: any) => ({ ...prev, checkin_code: code, checkin_code_expires_at: expiresAt }));
-      setCountdown(15 * 60);
-      toast({ title: "Código gerado!", description: `Válido por 15 minutos: ${code}` });
+      setCountdown(remainingSec);
+      toast({ title: `Token ${code}`, description: "Válido até as 17h00 do dia da aula." });
     }
     setGeneratingCode(false);
   }
@@ -258,8 +275,14 @@ export default function AttendanceSessionPage() {
   const pct = stats.total > 0 ? Math.round((stats.presentes / stats.total) * 100) : 0;
 
   const codeActive = session?.checkin_code && countdown > 0;
-  const countdownMin = Math.floor(countdown / 60);
+  const countdownHr = Math.floor(countdown / 3600);
+  const countdownMin = Math.floor((countdown % 3600) / 60);
   const countdownSec = countdown % 60;
+  const countdownLabel = countdownHr > 0
+    ? `${countdownHr}h ${String(countdownMin).padStart(2, "0")}min restantes`
+    : countdownMin > 0
+      ? `${countdownMin}min ${String(countdownSec).padStart(2, "0")}s restantes`
+      : `${countdownSec}s restantes`;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loading) {
@@ -304,6 +327,11 @@ export default function AttendanceSessionPage() {
               {session.session_type === "live" ? "Live" : "Presencial"}
             </Badge>
             {session.subject && <Badge variant="outline">{session.subject}</Badge>}
+            {session.class_label && (
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-black">
+                Turma {session.class_label}
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             {format(new Date(session.session_date + "T12:00:00"), "EEEE, dd 'de' MMMM 'de' yyyy", {
@@ -362,11 +390,11 @@ export default function AttendanceSessionPage() {
           {codeActive ? (
             <div className="flex flex-col md:flex-row items-center gap-4">
               <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl px-8 py-4 text-center">
-                <p className="text-4xl font-black tracking-[0.3em] text-orange-600">
+                <p className="text-5xl font-black tracking-[0.4em] text-orange-600 font-mono">
                   {session.checkin_code}
                 </p>
-                <p className="text-sm text-orange-500 mt-1">
-                  Expira em {countdownMin}:{String(countdownSec).padStart(2, "0")}
+                <p className="text-xs text-orange-500 mt-2 font-bold uppercase tracking-widest">
+                  Encerra às 17h00 · {countdownLabel}
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap">

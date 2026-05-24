@@ -23,11 +23,13 @@ export default function NewAttendanceSessionPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lives, setLives] = useState<any[]>([]);
+  const [classOptions, setClassOptions] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     subject: "",
+    class_label: "",
     session_date: format(new Date(), "yyyy-MM-dd"),
     start_time: "",
     session_type: "presencial" as "presencial" | "live",
@@ -44,6 +46,18 @@ export default function NewAttendanceSessionPage() {
       .limit(50)
       .then(({ data }) => {
         if (data) setLives(data);
+      });
+
+    // Carregar lista distinta de turmas a partir de profiles.course
+    supabase
+      .from("profiles")
+      .select("course")
+      .eq("profile_type", "student")
+      .not("course", "is", null)
+      .then(({ data }) => {
+        if (!data) return;
+        const distinct = Array.from(new Set(data.map(p => (p.course || "").trim()).filter(Boolean))).sort();
+        setClassOptions(distinct);
       });
   }, [user]);
 
@@ -72,12 +86,19 @@ export default function NewAttendanceSessionPage() {
       return;
     }
     setIsSubmitting(true);
+    if (!formData.class_label) {
+      toast({ title: "Selecione uma sala/turma", description: "A chamada precisa estar vinculada a uma turma.", variant: "destructive" });
+      setIsSubmitting(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("class_sessions")
       .insert({
         title: formData.title,
         description: formData.description || null,
         subject: formData.subject || null,
+        class_label: formData.class_label,
         session_date: formData.session_date,
         start_time: formData.start_time || null,
         session_type: formData.session_type,
@@ -185,6 +206,32 @@ export default function NewAttendanceSessionPage() {
                   value={formData.subject}
                   onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
                 />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="class_label">
+                  Sala / Turma <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.class_label}
+                  onValueChange={(v) => setFormData((prev) => ({ ...prev, class_label: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar turma..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classOptions.length === 0 ? (
+                      <SelectItem value="__none__" disabled>Nenhuma turma cadastrada</SelectItem>
+                    ) : (
+                      classOptions.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground font-medium">
+                  A chamada será vinculada à turma — só alunos desta sala poderão usar o token.
+                </p>
               </div>
 
               <div className="space-y-2">

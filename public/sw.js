@@ -1,15 +1,63 @@
-self.addEventListener('install', (event) => {
-  console.log('SW installed');
+// Service Worker — Compromisso 360 Push Notifications
+// Recebe push events do servidor (web-push) e exibe notificação OS estilo WhatsApp.
+
+self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  console.log('SW activated');
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
-  // Always respond with network — ensures POST bodies are forwarded correctly.
-  // An empty handler without respondWith() can silently drop large POST bodies
-  // in some browsers when the service worker is active.
+// Network passthrough — não interceptar fetches (preserva uploads/POST grandes).
+self.addEventListener("fetch", (event) => {
   event.respondWith(fetch(event.request));
+});
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch (e) {
+    payload = { title: "Compromisso", body: event.data.text() };
+  }
+
+  const title = payload.title || "Compromisso";
+  const options = {
+    body: payload.body || "",
+    icon: payload.icon || "/icons/icon-192.png",
+    badge: payload.badge || "/icons/icon-72.png",
+    image: payload.image,
+    tag: payload.tag || payload.type || "compromisso",
+    renotify: true,
+    requireInteraction: false,
+    data: {
+      url: payload.url || "/dashboard",
+      type: payload.type || "info",
+    },
+    vibrate: [200, 100, 200],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/dashboard";
+
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of allClients) {
+        if (client.url.includes(self.location.origin)) {
+          await client.focus();
+          if ("navigate" in client) await client.navigate(url);
+          return;
+        }
+      }
+      await self.clients.openWindow(url);
+    })()
+  );
 });
