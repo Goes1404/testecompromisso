@@ -1,4 +1,3 @@
-
 "use client";
 
 export const runtime = 'edge';
@@ -6,12 +5,11 @@ export const runtime = 'edge';
 import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, ChevronLeft, Loader2, MessageSquare, Bot, ShieldCheck, AlertCircle, Sparkles, Terminal } from "lucide-react";
+import { Send, ChevronLeft, Loader2, MessageSquare, Bot, ShieldCheck, AlertCircle, Sparkles, Terminal, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
@@ -33,7 +31,6 @@ export default function DirectChatPage() {
   const contactId = params.id as string;
   const isAurora = contactId === "aurora-ai";
   const { user, profile, loading: authLoading } = useAuth();
-  const isStaffUser = ['teacher', 'staff', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
   const router = useRouter();
   const { toast } = useToast();
   
@@ -43,7 +40,10 @@ export default function DirectChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isBlockedStudentToStudent, setIsBlockedStudentToStudent] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const isStaffUser = ['teacher', 'staff', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
 
   useEffect(() => {
     if (!user || isAurora || !contactId) return;
@@ -82,8 +82,17 @@ export default function DirectChatPage() {
             .eq('id', contactId)
             .single();
           
-          if (!profileError) {
+          if (!profileError && profileData) {
             setContact(profileData);
+            
+            // Enforce student-to-student direct messaging block
+            const myType = (profile?.profile_type || '').toLowerCase();
+            const theirType = (profileData.profile_type || '').toLowerCase();
+            if (myType === 'student' && theirType === 'student') {
+              setIsBlockedStudentToStudent(true);
+              setLoading(false);
+              return;
+            }
           } else {
             setContact({ name: "Mentor da Rede", institution: "Compromisso 360" });
           }
@@ -135,7 +144,7 @@ export default function DirectChatPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user, contactId, isAurora, toast, authLoading]);
+  }, [user, contactId, isAurora, toast, authLoading, profile]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -149,7 +158,7 @@ export default function DirectChatPage() {
   const handleSend = async (e?: React.FormEvent, customText?: string) => {
     e?.preventDefault();
     const userText = customText || input;
-    if (!userText.trim() || !user || !contactId || isSending) return;
+    if (!userText.trim() || !user || !contactId || isSending || isBlockedStudentToStudent) return;
 
     if (!customText) setInput("");
 
@@ -159,7 +168,6 @@ export default function DirectChatPage() {
       setIsAiThinking(true);
 
       try {
-        // Formata o histórico para o formato que a API espera
         const history = messages
           .filter(m => !m.isError && m.id !== 'initial')
           .map(m => ({
@@ -215,7 +223,7 @@ export default function DirectChatPage() {
           return [...prev, data as ChatMessage];
         });
 
-        // Push notification para o destinatário (fire-and-forget)
+        // Push notification (fire-and-forget)
         fetch("/api/push/notify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -230,22 +238,55 @@ export default function DirectChatPage() {
   };
   
   if (loading) return (
-    <div className="flex h-screen items-center justify-center flex-col gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sintonizando Canal de Mentoria...</p>
+    <div className="h-screen flex flex-col items-center justify-center gap-4">
+      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center relative">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
+      </div>
+      <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 animate-pulse">Sintonizando Canal de Mentoria...</p>
     </div>
   );
 
+  // Render blocked screen if student-to-student
+  if (isBlockedStudentToStudent) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center p-4">
+        <Card className="aurora-dark border-none shadow-2xl rounded-[3rem] overflow-hidden max-w-md w-full relative gradient-border dot-grid text-white">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-transparent pointer-events-none" />
+          <div className="p-8 md:p-10 flex flex-col items-center text-center space-y-6 relative z-10">
+            <div className="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shadow-xl animate-float">
+              <ShieldAlert className="h-9 w-9" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl md:text-2xl font-black italic tracking-tighter leading-none text-red-400">Acesso Restrito</h2>
+              <p className="text-xs font-semibold text-slate-300 leading-relaxed italic mt-3">
+                De acordo com as diretrizes de segurança da plataforma Compromisso, conversas diretas entre estudantes não são permitidas.
+              </p>
+            </div>
+            <Button onClick={() => router.back()} className="w-full h-12 bg-white text-slate-900 hover:bg-slate-100 font-black rounded-xl border-none transition-all active:scale-95 text-xs uppercase tracking-wider">
+              Voltar ao Painel
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full bg-slate-50 animate-in fade-in overflow-hidden">
-      <div className="flex items-center justify-between p-3 md:p-5 bg-white shadow-sm border-b shrink-0 z-10">
-        <div className="flex items-center gap-4 overflow-hidden min-w-0">
+    <div className="flex flex-col h-full bg-slate-50 animate-in fade-in overflow-hidden relative rounded-3xl border border-muted/20 shadow-xl min-h-[75vh]">
+      {/* Background dot grid overlay */}
+      <div className="absolute inset-0 dot-grid-dark opacity-10 pointer-events-none" />
+      
+      {/* ── CABEÇALHO DO CHAT (Glassmorphism + Gradient Border) ── */}
+      <div className="flex items-center justify-between p-3 md:p-5 bg-white/80 backdrop-blur-md border-b shrink-0 z-10">
+        <div className="flex items-center gap-3 md:gap-4 overflow-hidden min-w-0">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full h-11 w-11 shrink-0 hover:bg-primary/5">
             <ChevronLeft className="h-6 w-6 text-primary" />
           </Button>
-          <div className="flex items-center gap-4 overflow-hidden min-w-0">
+          
+          <div className="flex items-center gap-3 overflow-hidden min-w-0">
             <div className="relative shrink-0">
-              <Avatar className={`h-11 w-11 md:h-14 md:w-14 border-2 shadow-sm ${isAurora ? 'bg-accent border-white' : 'border-primary/5'}`}>
+              <Avatar className={`h-11 w-11 md:h-14 md:w-14 border-[3px] shadow-lg ${isAurora ? 'bg-accent border-white' : 'border-primary/5'}`}>
                 {isAurora ? (
                   <div className="h-full w-full flex items-center justify-center text-accent-foreground"><Bot className="h-7 w-7" /></div>
                 ) : (
@@ -259,37 +300,44 @@ export default function DirectChatPage() {
             </div>
             <div className="min-w-0">
               <h1 className="text-base md:text-xl font-black text-primary italic leading-none truncate">{contact?.name || "Mentor da Rede"}</h1>
-              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-2 truncate">
-                {isAurora ? 'Engine de Apoio 24/7' : (contact?.institution || 'Compromisso 360')}
-              </p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest truncate">
+                  {isAurora ? 'Engine de Apoio 24/7' : (contact?.institution || 'Compromisso 360')}
+                </span>
+                <Badge variant="outline" className="bg-primary/5 border-none text-primary/45 font-black text-[7px] px-2 h-4 uppercase tracking-widest leading-none flex items-center justify-center shrink-0">
+                  {contact?.profile_type === 'teacher' ? 'Docente' : (contact?.profile_type === 'staff' ? 'Secretaria' : 'Estudante')}
+                </Badge>
+              </div>
             </div>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-3 pr-4">
-          <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] uppercase tracking-widest flex items-center gap-2 h-10 px-4 rounded-xl">
+        
+        <div className="hidden sm:flex items-center gap-3 pr-2">
+          <Badge className="bg-primary/5 text-primary border-none font-black text-[8px] uppercase tracking-widest flex items-center gap-1.5 h-9 px-4 rounded-xl">
             <ShieldCheck className="h-4 w-4 text-accent" /> SINAL SEGURO
           </Badge>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col relative">
+      {/* ── CONVERSAÇÃO (BOM INTERFACE DE CHAT STITCH STYLE) ── */}
+      <div className="flex-1 min-h-0 flex flex-col relative z-0">
         <ScrollArea className="flex-1" ref={scrollRef}>
-          <div className="flex flex-col gap-6 py-10 px-4 md:px-16 max-w-5xl mx-auto w-full">
+          <div className="flex flex-col gap-5 py-8 px-4 md:px-12 max-w-4xl mx-auto w-full">
             {messages.map((msg, i) => {
               const isMe = msg.sender_id === user?.id;
               const isError = msg.isError;
               return (
                 <div key={msg.id || i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-in slide-in-from-bottom-2 duration-300`}>
-                  <div className="flex items-center gap-3 mb-1.5 px-3">
-                    {!isMe && <span className="text-[8px] font-black uppercase text-primary/40 tracking-widest">{msg.sender_id === contactId ? contact?.name : 'Aurora'}</span>}
-                    <span className="text-[8px] font-bold text-muted-foreground italic opacity-60">{format(new Date(msg.created_at), "HH:mm")}</span>
+                  <div className="flex items-center gap-2 mb-1 px-3">
+                    {!isMe && <span className="text-[8px] font-black uppercase text-primary/30 tracking-widest">{msg.sender_id === contactId ? contact?.name : 'Aurora'}</span>}
+                    <span className="text-[7px] font-bold text-muted-foreground italic opacity-50">{format(new Date(msg.created_at), "HH:mm")}</span>
                   </div>
-                  <div className={`px-6 py-4 rounded-[2rem] text-sm leading-relaxed font-medium shadow-sm max-w-[90%] md:max-w-[75%] transition-all border ${
+                  <div className={`px-5 py-3.5 rounded-[2rem] text-sm leading-relaxed font-medium shadow-sm max-w-[85%] md:max-w-[70%] transition-all border ${
                       isMe 
-                        ? 'bg-primary text-white border-transparent rounded-tr-none shadow-primary/10' 
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-transparent rounded-tr-none shadow-orange-500/10' 
                         : isError 
-                          ? 'bg-red-50 text-red-700 border-red-100 rounded-tl-none font-black italic flex items-start gap-3' 
-                          : 'bg-white text-primary border-slate-100 rounded-tl-none'
+                          ? 'bg-red-50 text-red-700 border-red-100 rounded-tl-none font-black italic flex items-start gap-2.5' 
+                          : 'bg-white text-primary border-slate-200/50 rounded-tl-none'
                     }`}>
                      {isError && <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />}
                      
@@ -320,11 +368,12 @@ export default function DirectChatPage() {
                 </div>
               );
             })}
+            
             {isAiThinking && (
               <div className="flex justify-start">
-                <div className="flex items-center gap-4 bg-white px-6 py-4 rounded-[2rem] rounded-tl-none border border-slate-100 shadow-sm animate-pulse">
+                <div className="flex items-center gap-3 bg-white px-5 py-3.5 rounded-[2rem] rounded-tl-none border border-slate-100 shadow-sm animate-pulse">
                   <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/40 italic">Aurora sintonizando resposta...</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/30 italic">Aurora respondendo...</span>
                 </div>
               </div>
             )}
@@ -332,7 +381,7 @@ export default function DirectChatPage() {
         </ScrollArea>
 
         {isAurora && !isAiThinking && messages.length < 3 && (
-          <div className="px-4 md:px-16 max-w-5xl mx-auto w-full mb-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="px-4 md:px-12 max-w-4xl mx-auto w-full mb-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="flex flex-wrap gap-2">
               <button 
                 onClick={() => handleSend(undefined, "O que é a regra de 1,5 salário mínimo?")}
@@ -350,21 +399,26 @@ export default function DirectChatPage() {
           </div>
         )}
 
-        <div className="p-4 md:p-8 bg-white border-t shrink-0">
+        {/* Input area styled with Stitch glassmorphism */}
+        <div className="p-4 md:p-6 bg-white/90 border-t shrink-0 backdrop-blur-md relative z-10">
           {isAurora && (
-            <p className="text-[10px] text-center text-muted-foreground/60 mb-3 px-4 uppercase tracking-widest italic font-bold">
+            <p className="text-[9px] text-center text-muted-foreground/60 mb-2 px-4 uppercase tracking-widest italic font-bold">
               A Aurora IA é uma inteligência artificial e pode cometer erros. Verifique informações importantes.
             </p>
           )}
-          <form onSubmit={(e) => handleSend(e)} className="flex items-center gap-4 max-w-4xl mx-auto bg-slate-100 p-2 pl-8 rounded-[2.5rem] border border-slate-200 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
-             <Input 
+          <form onSubmit={(e) => handleSend(e)} className="flex items-center gap-3 max-w-4xl mx-auto bg-slate-100 p-2 pl-6 rounded-[2.5rem] border border-slate-200/80 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
+             <input 
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isAiThinking || isSending}
               placeholder={isAurora ? "Tire uma dúvida pedagógica..." : (isStaffUser ? "Digite sua mensagem..." : "Digite sua mensagem para o mentor...")}
-              className="flex-1 h-12 md:h-14 bg-transparent border-none text-primary font-bold italic focus-visible:ring-0 px-0 text-base"
+              className="flex-1 h-10 md:h-12 bg-transparent border-none text-primary font-bold italic focus-visible:outline-none text-sm px-0"
             />
-            <button type="submit" disabled={!input.trim() || isAiThinking || isSending} className="h-12 w-12 md:h-14 md:w-14 bg-primary hover:bg-primary/95 text-white rounded-full shadow-2xl shrink-0 border-none transition-all active:scale-90 flex items-center justify-center">
+            <button 
+              type="submit" 
+              disabled={!input.trim() || isAiThinking || isSending} 
+              className="h-10 w-10 md:h-12 md:w-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full shadow-lg shrink-0 border-none transition-all active:scale-90 flex items-center justify-center hover:scale-105"
+            >
               {isAiThinking || isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </button>
           </form>
