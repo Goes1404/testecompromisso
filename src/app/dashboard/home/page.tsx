@@ -466,103 +466,86 @@ export default function DashboardHome() {
 
       {/* ── CARD DE TELEFONE PENDENTE ── */}
       {profile && !profile.phone && (
-        <div className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-orange-200 bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 p-6 md:p-8 shadow-2xl glow-orange text-white flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
-          <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
-          
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-5 relative z-10 w-full md:w-auto">
-            <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-xl animate-float">
-              <Phone className="h-7 w-7 text-white" />
+        <div className="gradient-border relative overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 p-5 md:p-8 shadow-2xl glow-orange text-white">
+          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2rem]" />
+          <div className="flex flex-col gap-4 relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/30">
+                <Phone className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/70">Cadastro Obrigatório</span>
+                <h2 className="text-base md:text-xl font-black italic tracking-tighter leading-tight">Cadastre seu Telefone</h2>
+              </div>
             </div>
-            <div className="text-center sm:text-left space-y-1">
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/80">Cadastro Obrigatório</span>
-              <h2 className="text-xl md:text-2xl font-black italic tracking-tighter leading-none">Cadastre seu Telefone</h2>
-              <p className="text-white/80 font-semibold text-xs leading-relaxed max-w-lg italic">
-                Insira seu número de celular para que a secretaria possa entrar em contato com você sobre convocações, isenções de taxa e avisos cruciais.
-              </p>
-            </div>
-          </div>
-          
-          <form onSubmit={handlePhoneSubmit} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto relative z-10 shrink-0">
-            <div className="relative">
+            <p className="text-white/80 font-semibold text-xs leading-relaxed italic">
+              Insira seu número para que a secretaria possa entrar em contato sobre convocações e isenções.
+            </p>
+            <form onSubmit={handlePhoneSubmit} className="flex flex-col sm:flex-row gap-3">
               <input
-                type="text"
+                type="tel"
+                inputMode="numeric"
                 value={phoneValue}
                 onChange={handlePhoneChange}
                 placeholder="(00) 00000-0000"
-                className="h-12 w-full sm:w-56 bg-white/10 backdrop-blur-md text-white placeholder:text-white/50 border border-white/20 hover:border-white/40 focus:border-white rounded-xl font-bold font-mono text-center text-sm shadow-inner focus-visible:outline-none px-3"
+                className="h-12 flex-1 bg-white/10 backdrop-blur-md text-white placeholder:text-white/50 border border-white/20 focus:border-white rounded-xl font-bold font-mono text-center text-sm shadow-inner focus-visible:outline-none px-3"
               />
-            </div>
-            <Button
-              type="submit"
-              disabled={submittingPhone}
-              className="bg-white text-orange-600 hover:bg-orange-50 font-black rounded-xl shadow-lg border-none shrink-0 h-12 px-6 text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 justify-center"
-            >
-              {submittingPhone ? (
-                <Loader2 className="h-4 w-4 animate-spin text-orange-600" />
-              ) : (
-                <>
-                  <Check className="h-4 w-4" />
-                  Salvar
-                </>
-              )}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                disabled={submittingPhone}
+                className="bg-white text-orange-600 hover:bg-orange-50 font-black rounded-xl shadow-lg border-none h-12 px-6 text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 justify-center shrink-0"
+              >
+                {submittingPhone ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4" /> Salvar</>}
+              </Button>
+            </form>
+          </div>
         </div>
       )}
 
       {/* ── CARD DE TURMA/EXAME PENDENTE ── */}
       {profile && userRole === 'student' && (!profile.course || !profile.exam_target) && (
-        <div className="relative overflow-hidden rounded-[2.5rem] border border-blue-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-6 md:p-8 shadow-2xl text-white flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
-          <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
-
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-5 relative z-10 w-full md:w-auto">
-            <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-xl animate-float">
-              <GraduationCap className="h-7 w-7 text-white" />
+        <div className="relative overflow-hidden rounded-[2rem] border border-blue-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-5 md:p-8 shadow-2xl text-white">
+          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2rem]" />
+          <div className="flex flex-col gap-4 relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/30">
+                <GraduationCap className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/70">Cadastro Obrigatório</span>
+                <h2 className="text-base md:text-xl font-black italic tracking-tighter leading-tight">Complete seu Perfil</h2>
+              </div>
             </div>
-            <div className="text-center sm:text-left space-y-1">
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/80">Cadastro Obrigatório</span>
-              <h2 className="text-xl md:text-2xl font-black italic tracking-tighter leading-none">Complete seu Perfil</h2>
-              <p className="text-white/80 font-semibold text-xs leading-relaxed max-w-lg italic">
-                Informe sua turma/sala e foco de exame para que a secretaria possa organizar as chamadas e personalizar seu conteúdo.
-              </p>
-            </div>
+            <p className="text-white/80 font-semibold text-xs leading-relaxed italic">
+              Informe sua turma e foco de exame para chamadas e conteúdo personalizado.
+            </p>
+            <form onSubmit={handleClassSubmit} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                value={courseValue}
+                onChange={(e) => setCourseValue(e.target.value)}
+                placeholder="Turma / Sala (ex: A1)"
+                className="h-12 flex-1 bg-white/10 text-white placeholder:text-white/50 border border-white/20 focus:border-white rounded-xl font-bold text-center text-sm shadow-inner focus-visible:outline-none px-3"
+              />
+              <select
+                value={examTargetValue}
+                onChange={(e) => setExamTargetValue(e.target.value)}
+                className="h-12 flex-1 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm shadow-inner focus-visible:outline-none px-3 cursor-pointer"
+              >
+                <option value="" className="text-slate-800">Foco de exame…</option>
+                <option value="ENEM" className="text-slate-800">ENEM</option>
+                <option value="ETEC" className="text-slate-800">ETEC</option>
+                <option value="Outros" className="text-slate-800">Outros</option>
+              </select>
+              <Button
+                type="submit"
+                disabled={submittingClass}
+                className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl shadow-lg border-none h-12 px-5 text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 justify-center shrink-0"
+              >
+                {submittingClass ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4" /> Salvar</>}
+              </Button>
+            </form>
           </div>
-
-          <form onSubmit={handleClassSubmit} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto relative z-10 shrink-0">
-            <input
-              type="text"
-              value={courseValue}
-              onChange={(e) => setCourseValue(e.target.value)}
-              placeholder="Turma / Sala (ex: A1)"
-              className="h-12 w-full sm:w-44 bg-white/10 backdrop-blur-md text-white placeholder:text-white/50 border border-white/20 hover:border-white/40 focus:border-white rounded-xl font-bold text-center text-sm shadow-inner focus-visible:outline-none px-3"
-            />
-            <select
-              value={examTargetValue}
-              onChange={(e) => setExamTargetValue(e.target.value)}
-              className="h-12 w-full sm:w-36 bg-white/10 backdrop-blur-md text-white border border-white/20 hover:border-white/40 focus:border-white rounded-xl font-bold text-sm shadow-inner focus-visible:outline-none px-3 cursor-pointer"
-            >
-              <option value="" className="text-slate-800">Foco de exame…</option>
-              <option value="ENEM" className="text-slate-800">ENEM</option>
-              <option value="ETEC" className="text-slate-800">ETEC</option>
-              <option value="Outros" className="text-slate-800">Outros</option>
-            </select>
-            <Button
-              type="submit"
-              disabled={submittingClass}
-              className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl shadow-lg border-none shrink-0 h-12 px-6 text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 justify-center"
-            >
-              {submittingClass ? (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-              ) : (
-                <>
-                  <Check className="h-4 w-4" />
-                  Salvar
-                </>
-              )}
-            </Button>
-          </form>
         </div>
       )}
 
@@ -598,52 +581,42 @@ export default function DashboardHome() {
       )}
 
       {/* ── HERO BANNER ── */}
-      <section className="relative rounded-3xl overflow-hidden bg-slate-900 min-h-[160px] md:min-h-[200px] flex items-end p-5 md:p-6 shadow-2xl">
-        {/* Background glow — oculto no mobile para evitar GPU compositing */}
+      <section className="relative rounded-3xl overflow-hidden bg-slate-900 flex flex-col p-5 md:p-6 shadow-2xl gap-5">
+        {/* Background glow — oculto no mobile */}
         <div className="absolute inset-0 pointer-events-none hidden md:block">
           <div className="absolute top-[-30%] right-[-10%] w-[400px] h-[400px] bg-primary/25 rounded-full blur-[100px]" />
           <div className="absolute bottom-[-30%] left-[-5%] w-[300px] h-[300px] bg-accent/15 rounded-full blur-[80px]" />
         </div>
-
-        {/* Dot-grid overlay */}
         <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 w-full">
-          <div className="space-y-2 md:space-y-3">
-            {/* Greeting chip */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full">
-              <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{greeting}</span>
-            </div>
-
-            <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tighter">
-              {userName}! <span className="text-primary italic">Pronto para hoje?</span>
-            </h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-              {profile?.exam_target || 'ENEM'} • {profile?.institution || 'Colégio Colaço'}
-            </p>
-
-            <p className="text-sm text-white/50 font-medium max-w-md leading-relaxed">
-              Sua IA Aurora está monitorando seu progresso em tempo real. Continue de onde parou.
-            </p>
+        <div className="relative z-10 space-y-2">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full">
+            <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{greeting}</span>
           </div>
+          <h1 className="text-2xl md:text-4xl font-black text-white leading-tight tracking-tighter">
+            {userName}! <span className="text-primary italic">Pronto para hoje?</span>
+          </h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+            {profile?.exam_target || 'ENEM'} • {profile?.institution || 'Colégio Colaço'}
+          </p>
+        </div>
 
-          {/* Stats row */}
-          <div className="flex flex-wrap gap-3 shrink-0">
-            {[
-              { label: "Acertos", value: examStats?.totalAssessed ? `${examStats.averageScore}%` : '–', icon: BrainCircuit, color: "text-accent" },
-              { label: "Redação", value: essayStats?.count ? `${essayStats.average}pts` : '–', icon: FilePenLine, color: "text-green-400" },
-              { label: "Trilhas", value: `${recentProgress.length}`, icon: PlayCircle, color: "text-yellow-400" },
-            ].map(stat => (
-              <div key={stat.label} className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 min-w-[110px]">
-                <stat.icon className={`h-5 w-5 ${stat.color} shrink-0`} />
-                <div>
-                  <p className="font-black text-white text-base leading-none">{stat.value}</p>
-                  <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
-                </div>
+        {/* Stats — scroll horizontal no mobile, inline no desktop */}
+        <div className="relative z-10 flex gap-3 overflow-x-auto pb-0.5 scrollbar-hide -mx-1 px-1">
+          {[
+            { label: "Acertos", value: examStats?.totalAssessed ? `${examStats.averageScore}%` : '–', icon: BrainCircuit, color: "text-accent" },
+            { label: "Redação", value: essayStats?.count ? `${essayStats.average}pts` : '–', icon: FilePenLine, color: "text-green-400" },
+            { label: "Trilhas", value: `${recentProgress.length}`, icon: PlayCircle, color: "text-yellow-400" },
+          ].map(stat => (
+            <div key={stat.label} className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 shrink-0 min-w-[120px]">
+              <stat.icon className={`h-4 w-4 ${stat.color} shrink-0`} />
+              <div>
+                <p className="font-black text-white text-base leading-none">{stat.value}</p>
+                <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -667,27 +640,34 @@ export default function DashboardHome() {
       </div>
 
       {/* ── AURORA INSIGHT ── */}
-      <div className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-7 md:p-8 shadow-2xl glow-orange group">
+      <div className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-5 md:p-8 shadow-2xl glow-orange group">
         <div className="absolute inset-0 dot-grid-dark opacity-40 pointer-events-none rounded-[2.5rem]" />
         <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-accent/5 rounded-full blur-[80px] group-hover:bg-accent/10 transition-colors duration-1000" />
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
-          <div className="relative h-16 w-16 shrink-0 group-hover:scale-110 transition-transform duration-500">
-            <div className="h-full w-full rounded-2xl bg-white shadow-xl flex items-center justify-center border border-accent/10">
-              <Bot className="h-8 w-8 text-accent animate-pulse-subtle" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 relative z-10">
+          <div className="flex items-center gap-4 sm:gap-0">
+            <div className="relative h-12 w-12 md:h-16 md:w-16 shrink-0 group-hover:scale-110 transition-transform duration-500">
+              <div className="h-full w-full rounded-2xl bg-white shadow-xl flex items-center justify-center border border-accent/10">
+                <Bot className="h-6 w-6 md:h-8 md:w-8 text-accent animate-pulse-subtle" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
             </div>
-            <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+            {/* Label inline com ícone no mobile */}
+            <div className="flex items-center gap-2 sm:hidden">
+              <Sparkles className="h-3 w-3 text-accent" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Aurora IA</span>
+            </div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 translate-y-1 opacity-0 animate-in fade-in fill-mode-forwards duration-700">
+            <div className="hidden sm:flex items-center gap-2 mb-2">
               <Sparkles className="h-3.5 w-3.5 text-accent" />
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Aurora IA · Mentoria Estratégica</span>
             </div>
-            <p className="text-slate-700 font-semibold italic text-base leading-relaxed tracking-tight group-hover:text-black transition-colors">
+            <p className="text-slate-700 font-semibold italic text-sm md:text-base leading-relaxed tracking-tight group-hover:text-black transition-colors">
               "A constância é a chave da aprovação! Revise os erros do último simulado antes de avançar. Estou disponível 24h para corrigir redações."
             </p>
           </div>
-          <Button asChild className="bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 border-none hover:scale-105 hover:bg-primary-dark transition-all shrink-0 h-14 px-8 text-sm uppercase tracking-widest italic active:scale-95">
-            <Link href="/dashboard/support" className="flex items-center gap-2">
+          <Button asChild className="bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 border-none hover:scale-105 hover:bg-primary-dark transition-all w-full sm:w-auto shrink-0 h-12 md:h-14 px-6 md:px-8 text-xs md:text-sm uppercase tracking-widest italic active:scale-95">
+            <Link href="/dashboard/support" className="flex items-center justify-center gap-2">
               Falar com Aurora <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -696,6 +676,43 @@ export default function DashboardHome() {
 
       {/* ── SUGESTÃO DE ESTUDO ── */}
       {user && <StudySuggestionWidget userId={user.id} />}
+
+      {/* ── WIDGETS RÁPIDOS — visíveis apenas no mobile, antes do grid principal ── */}
+      <div className="lg:hidden grid grid-cols-2 gap-4">
+        {/* Taxa de Acertos compacta */}
+        <div className="gradient-border bg-white rounded-[1.5rem] shadow-xl border border-muted/20 p-4 space-y-3 relative overflow-hidden">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-xl bg-violet-100 flex items-center justify-center">
+              <BrainCircuit className="h-3.5 w-3.5 text-violet-600" />
+            </div>
+            <span className="font-black text-xs text-primary italic">Acertos</span>
+          </div>
+          <div className="text-center">
+            <p className="text-4xl font-black text-primary">{examStats?.averageScore || 0}<span className="text-lg text-muted-foreground">%</span></p>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">{examStats?.totalAssessed || 0} avaliações</p>
+          </div>
+        </div>
+
+        {/* Lab. Redação compacto */}
+        <div className="bg-white rounded-[1.5rem] shadow-xl border border-muted/20 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-xl bg-green-100 flex items-center justify-center">
+              <FilePenLine className="h-3.5 w-3.5 text-green-600" />
+            </div>
+            <span className="font-black text-xs text-primary italic">Redações</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-slate-50 rounded-xl p-2.5 text-center">
+              <span className="text-2xl font-black text-primary">{essayStats?.count || 0}</span>
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Envios</p>
+            </div>
+            <div className="bg-accent/5 rounded-xl p-2.5 text-center">
+              <span className="text-2xl font-black text-accent">{essayStats?.average || 0}</span>
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Média</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── MAIN CONTENT GRID ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -825,8 +842,8 @@ export default function DashboardHome() {
         {/* RIGHT — 1/3 width */}
         <div className="space-y-5">
 
-          {/* Taxa de Acertos — Data Viz */}
-          <div className="gradient-border bg-white rounded-[2rem] shadow-xl border border-muted/20 p-5 md:p-6 space-y-4 relative overflow-hidden group hover:glow-orange transition-shadow duration-300">
+          {/* Taxa de Acertos — Data Viz (oculto no mobile, já aparece acima como widget compacto) */}
+          <div className="hidden lg:block gradient-border bg-white rounded-[2rem] shadow-xl border border-muted/20 p-5 md:p-6 space-y-4 relative overflow-hidden group hover:glow-orange transition-shadow duration-300">
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-xl bg-violet-100 flex items-center justify-center shadow-inner">
@@ -854,8 +871,8 @@ export default function DashboardHome() {
             </Button>
           </div>
 
-          {/* Laboratório de Redação */}
-          <div className="bg-white rounded-3xl shadow-xl border border-muted/20 p-5 md:p-6 space-y-4">
+          {/* Laboratório de Redação (oculto no mobile) */}
+          <div className="hidden lg:block bg-white rounded-3xl shadow-xl border border-muted/20 p-5 md:p-6 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-xl bg-green-100 flex items-center justify-center">
                 <FilePenLine className="h-4 w-4 text-green-600" />

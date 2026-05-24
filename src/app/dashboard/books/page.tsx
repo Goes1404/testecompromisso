@@ -13,7 +13,8 @@ import {
   BookOpen, 
   Filter, 
   Loader2,
-  PenLine
+  PenLine,
+  Sparkles
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -27,6 +28,34 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import Link from "next/link";
+
+const CATEGORY_IMAGES: Record<string, string> = {
+  'Matemática': 'https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=800&auto=format&fit=crop',
+  'Física': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop',
+  'Química': 'https://images.unsplash.com/photo-1532187863486-abf9d39d66e8?q=80&w=800&auto=format&fit=crop',
+  'Biologia': 'https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?q=80&w=800&auto=format&fit=crop',
+  'História': 'https://images.unsplash.com/photo-1461360370896-922624d12aa1?q=80&w=800&auto=format&fit=crop',
+  'Geografia': 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop',
+  'Linguagens': 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=800&auto=format&fit=crop',
+  'Saúde': 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=800&auto=format&fit=crop',
+  'Atualidades': 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=800&auto=format&fit=crop',
+  'Literatura': 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=800&auto=format&fit=crop',
+  'Filosofia': 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop',
+  'Sociologia': 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=800&auto=format&fit=crop',
+  'Didáticos': 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=800&auto=format&fit=crop',
+  'Técnicos': 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop',
+  'Guias': 'https://images.unsplash.com/photo-1501534159981-3ef501f27838?q=80&w=800&auto=format&fit=crop',
+};
+
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop';
+
+function getSafeLibraryImage(url: string | null | undefined, category: string) {
+  if (!url || url.includes('picsum.photos')) {
+    const cleanCategory = category.replace('LIVRO|', '');
+    return CATEGORY_IMAGES[cleanCategory] || DEFAULT_IMAGE;
+  }
+  return url;
+}
 
 const categories = ["Todos", "Didáticos", "Literatura", "Técnicos", "Guias"];
 const types = ["Todos", "PDF", "E-book", "Interativo"];
@@ -84,31 +113,48 @@ export default function BooksPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-primary italic leading-none">Meus Livros</h1>
-          <p className="text-muted-foreground text-lg font-medium">Acervo de livros digitais e obras literárias recomendadas.</p>
+      
+      {/* ── HERO BANNER ── */}
+      <section className="aurora-dark relative overflow-hidden rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl border border-white/5 group">
+        <div className="absolute inset-0 dot-grid opacity-15 pointer-events-none rounded-[2.5rem]" />
+        <div className="absolute top-[-25%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-primary/20 rounded-full blur-[85px] hidden md:block" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-primary/10 rounded-full blur-[60px] hidden md:block" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 w-full">
+          <div className="space-y-4 max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 px-3.5 py-1 rounded-full animate-float">
+              <Sparkles className="h-3.5 w-3.5 text-accent" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/80">Obras Recomendadas</span>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none uppercase">
+              Minha <span className="text-gradient-brand italic">Biblioteca</span>
+            </h1>
+            <p className="text-xs md:text-sm text-gray-300 font-medium italic leading-relaxed">
+              Acesse o acervo de livros didáticos, técnicos e obras de literatura recomendadas para enriquecer seu repertório.
+            </p>
+          </div>
+          
+          <div className="relative w-full md:w-80 group/search shrink-0">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 transition-colors group-focus-within/search:text-accent" />
+            <Input
+              placeholder="Buscar obra..."
+              className="pl-12 h-14 bg-white/10 backdrop-blur-md border border-white/10 hover:border-white/20 text-white placeholder:text-white/40 rounded-[1.25rem] text-sm font-medium italic focus-visible:ring-accent focus-visible:ring-1 focus-visible:border-accent transition-all duration-300"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="relative w-full md:w-80 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
-          <Input
-            placeholder="Buscar obra..."
-            className="pl-12 h-14 bg-white border-none shadow-xl rounded-[1.25rem] text-lg font-medium italic focus-visible:ring-accent focus-visible:ring-2 transition-[box-shadow] duration-300 focus-visible:shadow-[0_0_0_3px_rgba(255,107,0,0.15),0_4px_24px_rgba(255,107,0,0.10)]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+      </section>
 
-      <Tabs defaultValue="Todos" className="w-full">
-        <div className="flex items-center justify-between mb-6 overflow-x-auto pb-4 scrollbar-hide gap-4">
-          <TabsList className="bg-white/80 p-1.5 h-14 rounded-2xl border-none shadow-sm shrink-0">
+      <Tabs defaultValue="Todos" className="w-full space-y-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between overflow-x-auto pb-2 gap-4">
+          <TabsList className="bg-white/80 p-1.5 h-14 rounded-2xl border-none shadow-sm flex items-center gap-1 overflow-x-auto max-w-full scrollbar-hide">
             {categories.map(cat => (
               <TabsTrigger 
                 key={cat} 
                 value={cat} 
                 onClick={() => setActiveCategory(cat)}
-                className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 duration-300"
+                className="rounded-xl px-5 h-11 data-[state=active]:bg-primary data-[state=active]:text-white font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 duration-300"
               >
                 {cat}
               </TabsTrigger>
@@ -117,8 +163,9 @@ export default function BooksPage() {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="shrink-0 h-14 w-14 rounded-2xl bg-white border-none shadow-xl hover:bg-accent hover:text-white transition-all group active:scale-90 duration-300">
-                <Filter className={`h-6 w-6 ${activeType !== 'Todos' ? 'text-accent group-hover:text-white' : ''}`} />
+              <Button variant="outline" className="h-14 px-6 rounded-2xl bg-white border-none shadow-sm hover:bg-slate-50 transition-all font-black text-[10px] uppercase gap-2 active:scale-95 shrink-0 w-full sm:w-auto">
+                <Filter className="h-4 w-4 text-accent" />
+                Formato: <span className="text-primary">{activeType}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-none shadow-2xl">
@@ -139,10 +186,10 @@ export default function BooksPage() {
         {filteredResources.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredResources.map((item, index) => (
-              <Card key={item.id} className="gradient-border overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-1 hover:glow-orange transition-[transform,box-shadow] duration-300 group bg-white rounded-[2.5rem] flex flex-col">
-                <div className="relative aspect-[16/10] overflow-hidden">
+              <Card key={item.id} className="gradient-border overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-1.5 hover:glow-orange-strong transition-all duration-300 group bg-white rounded-[2.5rem] flex flex-col h-full">
+                <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 shrink-0">
                   <Image
-                    src={item.image_url || `https://picsum.photos/seed/${item.id}/400/250`}
+                    src={getSafeLibraryImage(item.image_url, item.category)}
                     alt={item.title || "Obra"}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -150,18 +197,18 @@ export default function BooksPage() {
                     priority={index === 0}
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
-                    <Badge className="bg-white/80 backdrop-blur-md text-primary border-none shadow-lg flex items-center gap-2 px-4 py-1.5 rounded-xl">
-                      <BookOpen className="h-4 w-4" />
-                      <span className="text-[10px] font-black uppercase tracking-wider">{item.type}</span>
+                    <Badge className="bg-white/95 backdrop-blur-md text-primary border-none shadow-lg flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider">
+                      <BookOpen className="h-3.5 w-3.5 text-accent" />
+                      {item.type}
                     </Badge>
                   </div>
                 </div>
                 
-                <CardHeader className="p-8 space-y-4 flex-1">
-                  <Badge variant="outline" className="w-fit text-[9px] border-accent/20 text-accent font-black uppercase px-2 py-0.5 bg-accent/5">
+                <CardHeader className="p-8 space-y-3 flex-1">
+                  <Badge variant="outline" className="w-fit text-[8px] border-accent/20 text-accent font-black uppercase px-2 py-0.5 bg-accent/5 tracking-wider rounded-md">
                     {item.category?.replace('LIVRO|', '')}
                   </Badge>
-                  <CardTitle className="text-xl font-black text-primary italic leading-tight line-clamp-2">
+                  <CardTitle className="text-xl font-black text-primary italic leading-tight line-clamp-2 group-hover:text-accent transition-colors">
                     {item.title}
                   </CardTitle>
                   <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-3 italic opacity-80">
@@ -171,7 +218,7 @@ export default function BooksPage() {
                 
                 <CardFooter className="p-8 pt-0 mt-auto">
                   <div className="flex gap-3 w-full pt-6 border-t border-muted/10">
-                    <Button asChild className="flex-1 bg-primary text-white h-12 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
+                    <Button asChild className="btn-shimmer flex-1 bg-primary text-white h-12 rounded-2xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
                       <Link href={`/dashboard/library/book/${item.id}`}>
                         <PenLine className="h-4 w-4 mr-2 text-accent" /> Iniciar Leitura
                       </Link>
