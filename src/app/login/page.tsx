@@ -1,50 +1,65 @@
 import { LoginForm } from "@/app/login/LoginForm";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden bg-white">
-      <div className="flex flex-1 flex-col md:flex-row">
-        <div className="hidden md:flex md:w-1/2 relative bg-orange-600 border-b-2 md:border-b-0 border-orange-600 overflow-hidden">
-          <Image 
-            src="/images/login_hero.jpg"
-            alt="Estudantes"
-            fill
-            className="object-cover brightness-[0.85] contrast-[1.1] saturate-[1.1] transition-transform duration-700 hover:scale-105"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-orange-600/40 to-transparent mix-blend-overlay pointer-events-none" />
-          <div className="absolute inset-0 bg-orange-900/10 pointer-events-none" />
-        </div>
-        
-        {/* Lado do Login */}
-        <div className="w-full md:w-1/2 flex flex-col bg-white relative">
-          <div className="flex justify-end p-4 md:p-8 w-full z-10">
-            <Link 
-              href="/" 
-              className="group flex items-center gap-2 text-sm text-gray-500 hover:text-orange-600 transition-colors font-medium bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-full border border-gray-200"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left group-hover:-translate-x-1 transition-transform">
-                <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
-              </svg>
-              Voltar para o site
-            </Link>
-          </div>
-          <div className="flex-1 flex items-center justify-center p-8">
-            <LoginForm />
-          </div>
-        </div>
+    <div className="relative min-h-screen overflow-hidden aurora-login grain">
+
+      {/* ── Dot grid overlay ── */}
+      <div className="absolute inset-0 dot-grid opacity-25 pointer-events-none" />
+
+      {/* ── Animated orbs ── */}
+      <div
+        className="absolute top-[-15%] right-[-8%] w-[480px] h-[480px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(255,100,0,0.22) 0%, transparent 70%)",
+          filter: "blur(60px)",
+          animation: "float-y 9s ease-in-out infinite",
+        }}
+      />
+      <div
+        className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(255,60,0,0.16) 0%, transparent 70%)",
+          filter: "blur(80px)",
+          animation: "float-y 12s ease-in-out infinite reverse",
+        }}
+      />
+      <div
+        className="absolute top-[40%] left-[35%] w-[260px] h-[260px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(255,160,0,0.10) 0%, transparent 70%)",
+          filter: "blur(50px)",
+          animation: "float-y 7s ease-in-out infinite 2s",
+        }}
+      />
+
+      {/* ── Back button ── */}
+      <div className="absolute top-5 left-5 z-20">
+        <Link
+          href="/"
+          className="group inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-white/80 transition-colors bg-white/5 hover:bg-white/10 border border-white/8 px-4 py-2 rounded-full backdrop-blur-sm"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          Voltar
+        </Link>
       </div>
-      
-      {/* Footer */}
-      <footer className="bg-[#002f6c] text-white text-xs py-4 text-center">
-        <p>Copyright © 1997-2026 Colégio Compromisso. Todos os direitos reservados.</p>
-        <div className="flex items-center justify-center gap-2 mt-1">
-          <Link href="#" className="hover:underline">Política de Privacidade</Link>
-          <span>|</span>
-          <Link href="#" className="hover:underline">Acessibilidade</Link>
+
+      {/* ── Center content ── */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-16">
+        <LoginForm />
+      </div>
+
+      {/* ── Footer ── */}
+      <footer className="relative z-10 border-t border-white/5 py-4 text-center">
+        <p className="text-[10px] font-bold text-white/25 uppercase tracking-widest">
+          © 2026 Cursinho Compromisso · Santana de Parnaíba
+        </p>
+        <div className="flex items-center justify-center gap-4 mt-1.5">
+          <Link href="#" className="text-[9px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest">Privacidade</Link>
+          <span className="text-white/15">·</span>
+          <Link href="#" className="text-[9px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest">Acessibilidade</Link>
         </div>
       </footer>
     </div>

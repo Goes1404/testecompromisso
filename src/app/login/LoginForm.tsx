@@ -2,45 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Loader2, Eye, EyeOff, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+
+const logoUrl = "/images/logocompromisso.png";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-
   const [showPassword, setShowPassword] = useState(false);
-
-  const logoUrl = "/images/logocompromisso.png";
+  const [focused, setFocused]   = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    
+
     if (!isSupabaseConfigured) {
-      setAuthError("Erro: Conexão com banco de dados não configurada.");
+      setAuthError("Conexão com banco de dados não configurada.");
       return;
     }
-
     if (!email || !password) return;
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
       if (error) {
         setLoading(false);
-        setAuthError("Usuário ou senha inválidos.");
+        setAuthError("E-mail ou senha inválidos. Tente novamente.");
         return;
       }
 
@@ -52,93 +46,182 @@ export function LoginForm() {
         window.location.assign("/dashboard/first-access");
         return;
       }
-
       window.location.assign("/dashboard");
-    } catch (err: any) {
+    } catch {
       setLoading(false);
-      setAuthError("Falha crítica na autenticação.");
+      setAuthError("Falha crítica na autenticação. Tente novamente.");
     }
   };
 
   return (
-    <div className="w-full max-w-[400px] flex flex-col items-center animate-in fade-in zoom-in duration-500">
-      <div className="mb-4 w-48 relative h-16 pointer-events-none">
-        <Image 
-          src={logoUrl} 
-          alt="Logo Compromisso" 
-          fill 
-          unoptimized
-          className="object-contain"
-        />
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full max-w-[420px]"
+    >
+      {/* ── Outer glow ring ── */}
+      <div className="border-prism rounded-[2rem]">
+        <div className="glass-login rounded-[2rem] p-8 md:p-10 relative overflow-hidden">
 
-      <div className="text-center mb-8">
-        <h1 className="text-2xl md:text-[22px] font-bold text-[#002f6c] mb-1 leading-tight uppercase italic tracking-tighter">
-          Portal do Aluno
-        </h1>
-        <p className="text-sm text-gray-400 font-medium">
-          Acesse sua jornada de alto desempenho.
-        </p>
-      </div>
+          {/* Inner shimmer top */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-400/40 to-transparent pointer-events-none" />
 
-      <form onSubmit={handleLogin} className="w-full space-y-4">
-        <div className="space-y-1">
-          <Label htmlFor="email" className="text-[11px] text-gray-500 font-bold uppercase tracking-widest ml-1">E-mail de Acesso</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="seu.nome@compromisso.com"
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            className="w-full h-12 bg-white border-2 border-slate-400 rounded-xl focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 transition-all text-sm font-bold shadow-sm" 
-            required 
-            disabled={loading} 
+          {/* Subtle inner orb */}
+          <div
+            className="absolute top-[-40px] right-[-40px] w-[180px] h-[180px] rounded-full pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(255,107,0,0.12) 0%, transparent 70%)",
+              filter: "blur(30px)",
+            }}
           />
-        </div>
 
-        <div className="space-y-1 mt-6">
-          <Label htmlFor="password" className="text-[11px] text-gray-500 font-bold uppercase tracking-widest ml-1">Senha</Label>
-          <div className="relative">
-            <Input 
-              id="password" 
-              type={showPassword ? "text" : "password"} 
-              placeholder="••••••••"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              className="w-full h-12 bg-white border-2 border-slate-400 rounded-xl focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 transition-all text-sm font-bold pr-12 shadow-sm" 
-              required 
-              disabled={loading} 
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-600 transition-colors"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
-
-        {authError && (
-          <div className="flex items-center gap-2 bg-red-50 p-3 rounded-lg border border-red-100 mt-4">
-             <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
-             <p className="text-red-700 text-xs font-bold uppercase">{authError}</p>
-          </div>
-        )}
-
-        <Button type="submit" disabled={loading} className="w-full bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-black h-14 rounded-xl shadow-lg shadow-orange-600/20 transition-all mt-8 text-lg uppercase italic tracking-wider">
-          {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Entrar no Portal"}
-        </Button>
-
-        <div className="flex justify-center flex-wrap items-center gap-4 mt-10 text-[10px] font-black uppercase tracking-widest">
-          <Link 
-            href="/forgot-password"
-            className="text-slate-400 hover:text-orange-600 transition-colors"
+          {/* ── Logo ── */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.5 }}
+            className="flex justify-center mb-6"
           >
-            Esqueceu seus dados de acesso?
-          </Link>
+            <div className="relative w-44 h-14">
+              <Image src={logoUrl} alt="Logo Compromisso" fill unoptimized className="object-contain drop-shadow-[0_0_12px_rgba(255,107,0,0.5)]" />
+            </div>
+          </motion.div>
+
+          {/* ── Heading ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.5 }}
+            className="text-center mb-8 space-y-2"
+          >
+            <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full mb-1">
+              <Sparkles className="h-3 w-3 text-orange-400" />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-orange-400">Plataforma Educacional</span>
+            </div>
+            <h1 className="text-2xl font-black italic tracking-tighter text-white leading-tight">
+              Portal do <span className="text-gradient-fire">Aluno</span>
+            </h1>
+            <p className="text-xs text-white/40 font-semibold">
+              Acesse sua jornada de alto desempenho.
+            </p>
+          </motion.div>
+
+          {/* ── Form ── */}
+          <motion.form
+            onSubmit={handleLogin}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.5 }}
+            className="space-y-4"
+          >
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 ml-1">
+                E-mail de Acesso
+              </label>
+              <div className={`relative transition-all duration-200 ${focused === 'email' ? 'drop-shadow-[0_0_8px_rgba(255,107,0,0.25)]' : ''}`}>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="seu.nome@compromisso.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setFocused('email')}
+                  onBlur={() => setFocused(null)}
+                  className="input-dark w-full h-12 rounded-xl px-4 text-sm font-semibold"
+                  required
+                  disabled={loading}
+                  autoComplete="email"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 ml-1">
+                Senha
+              </label>
+              <div className={`relative transition-all duration-200 ${focused === 'password' ? 'drop-shadow-[0_0_8px_rgba(255,107,0,0.25)]' : ''}`}>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setFocused('password')}
+                  onBlur={() => setFocused(null)}
+                  className="input-dark w-full h-12 rounded-xl px-4 pr-12 text-sm font-semibold"
+                  required
+                  disabled={loading}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-orange-400 transition-colors p-1"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error */}
+            <AnimatePresence>
+              {authError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  className="flex items-center gap-3 bg-red-500/10 border border-red-500/25 p-3.5 rounded-xl"
+                >
+                  <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                  <p className="text-red-300 text-xs font-bold">{authError}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* CTA Button */}
+            <motion.button
+              type="submit"
+              disabled={loading}
+              whileTap={{ scale: 0.975 }}
+              className="btn-orange-neon w-full h-14 rounded-xl text-white font-black text-sm uppercase tracking-wider italic mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Autenticando...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  Entrar no Portal
+                  <span className="text-white/60">→</span>
+                </span>
+              )}
+            </motion.button>
+
+            {/* Forgot password */}
+            <div className="flex justify-center pt-2">
+              <Link
+                href="/forgot-password"
+                className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-orange-400 transition-colors"
+              >
+                Esqueceu seus dados de acesso?
+              </Link>
+            </div>
+          </motion.form>
+
+          {/* ── Trust badge ── */}
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+            className="mt-8 pt-5 border-t border-white/5 flex items-center justify-center gap-2"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-white/20" />
+            <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
+              Acesso seguro · Dados criptografados
+            </span>
+          </motion.div>
+
+          {/* Bottom shimmer line */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-400/20 to-transparent pointer-events-none" />
         </div>
-      </form>
-    </div>
+      </div>
+    </motion.div>
   );
 }
