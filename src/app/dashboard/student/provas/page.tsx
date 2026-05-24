@@ -289,56 +289,56 @@ export default function ProvasCompletasPage() {
             {exams.map(exam => {
               const coverUrl = getExamCover(exam.title, exam.exam_type);
               return (
-                <Card key={exam.id} className="border border-white/5 shadow-xl rounded-[2rem] bg-slate-900/40 backdrop-blur-md overflow-hidden hover:border-accent/40 transition-all duration-300 group hover:-translate-y-1 flex flex-col">
+                <Card key={exam.id} className="border border-white/10 shadow-2xl rounded-[2rem] bg-slate-900/80 backdrop-blur-xl overflow-hidden hover:border-accent/50 transition-all duration-300 group hover:-translate-y-1 flex flex-col">
                   {/* Capa do Card */}
                   <div className="h-44 w-full relative overflow-hidden bg-slate-950">
                     <img 
                       src={coverUrl} 
                       alt={exam.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
                     
                     {exam.year && (
-                      <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-lg border-none px-3 py-1">
+                      <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground font-black text-[10px] uppercase shadow-xl border-none px-3 py-1">
                         {exam.year}
                       </Badge>
                     )}
                     
-                    <Badge className="absolute bottom-4 left-4 bg-primary/20 backdrop-blur-md text-white border border-white/10 font-black text-[9px] uppercase tracking-wider">
+                    <Badge className="absolute bottom-4 left-4 bg-slate-900/60 backdrop-blur-md text-white border border-white/20 font-black text-[9px] uppercase tracking-wider px-2 py-1">
                       {exam.exam_type}
                     </Badge>
                   </div>
 
-                  <CardContent className="p-6 flex-1 flex flex-col justify-between gap-5">
+                  <CardContent className="p-6 flex-1 flex flex-col justify-between gap-5 bg-gradient-to-b from-transparent to-slate-950/50">
                     <div className="space-y-2">
-                      <h3 className="text-base font-black text-white italic group-hover:text-accent transition-colors leading-tight">
+                      <h3 className="text-lg font-black text-white group-hover:text-accent transition-colors leading-tight drop-shadow-md">
                         {exam.title}
                       </h3>
                       {exam.description && (
-                        <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                        <p className="text-sm text-slate-300 font-medium line-clamp-2 leading-relaxed">
                           {exam.description}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs font-bold text-slate-400 pb-2 border-b border-white/[0.04]">
+                    <div className="flex items-center gap-4 text-xs font-bold text-slate-300 pb-3 border-b border-white/10">
                       {exam.question_count > 0 && (
-                        <span className="flex items-center gap-1.5">
-                          <BookOpen className="h-4 w-4 text-slate-500" /> {exam.question_count} questões
+                        <span className="flex items-center gap-1.5 bg-slate-800/50 px-2.5 py-1 rounded-md border border-white/5">
+                          <BookOpen className="h-4 w-4 text-accent" /> {exam.question_count} questões
                         </span>
                       )}
                       {exam.pdf_url && (
-                        <span className="flex items-center gap-1.5 text-emerald-400">
-                          <FileText className="h-4 w-4" /> PDF Habilitado
+                        <span className="flex items-center gap-1.5 text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-md border border-emerald-400/20">
+                          <FileText className="h-4 w-4" /> PDF
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-2.5">
+                    <div className="flex flex-col gap-3">
                       {exam.pdf_url && (
                         <Link href={`/dashboard/student/provas/${exam.id}`} className="w-full">
-                          <Button className="w-full h-11 rounded-xl bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-accent/25 hover:shadow-accent/40 border-none transition-all">
+                          <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-accent to-accent/80 hover:from-accent hover:to-accent text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-accent/20 hover:shadow-accent/40 border border-accent/50 transition-all">
                             PDF Interativo & Anotação
                           </Button>
                         </Link>
@@ -347,14 +347,14 @@ export default function ProvasCompletasPage() {
                       {exam.question_count > 0 && (
                         <Button
                           onClick={() => startExam(exam)}
-                          className="w-full h-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black text-xs uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all"
+                          className="w-full h-12 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 hover:border-slate-500 text-slate-100 font-black text-xs uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-95 transition-all"
                         >
                           Simulado na Tela
                         </Button>
                       )}
 
                       {!exam.pdf_url && exam.question_count === 0 && (
-                        <p className="text-center text-xs text-slate-500 italic py-2">Material em preparação...</p>
+                        <p className="text-center text-xs text-slate-400 font-medium italic py-2">Material em preparação...</p>
                       )}
                     </div>
                   </CardContent>
