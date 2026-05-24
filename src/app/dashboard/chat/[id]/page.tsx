@@ -85,13 +85,11 @@ export default function DirectChatPage() {
           if (!profileError && profileData) {
             setContact(profileData);
             
-            // Enforce student-to-student direct messaging block
+            // Check student-to-student direct messaging restriction
             const myType = (profile?.profile_type || '').toLowerCase();
             const theirType = (profileData.profile_type || '').toLowerCase();
             if (myType === 'student' && theirType === 'student') {
               setIsBlockedStudentToStudent(true);
-              setLoading(false);
-              return;
             }
           } else {
             setContact({ name: "Mentor da Rede", institution: "Compromisso 360" });
@@ -247,31 +245,6 @@ export default function DirectChatPage() {
     </div>
   );
 
-  // Render blocked screen if student-to-student
-  if (isBlockedStudentToStudent) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center p-4">
-        <Card className="aurora-dark border-none shadow-2xl rounded-[3rem] overflow-hidden max-w-md w-full relative gradient-border dot-grid text-white">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-transparent pointer-events-none" />
-          <div className="p-8 md:p-10 flex flex-col items-center text-center space-y-6 relative z-10">
-            <div className="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shadow-xl animate-float">
-              <ShieldAlert className="h-9 w-9" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl md:text-2xl font-black italic tracking-tighter leading-none text-red-400">Acesso Restrito</h2>
-              <p className="text-xs font-semibold text-slate-300 leading-relaxed italic mt-3">
-                De acordo com as diretrizes de segurança da plataforma Compromisso, conversas diretas entre estudantes não são permitidas.
-              </p>
-            </div>
-            <Button onClick={() => router.back()} className="w-full h-12 bg-white text-slate-900 hover:bg-slate-100 font-black rounded-xl border-none transition-all active:scale-95 text-xs uppercase tracking-wider">
-              Voltar ao Painel
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full bg-slate-50 animate-in fade-in overflow-hidden relative rounded-3xl border border-muted/20 shadow-xl min-h-[75vh]">
       {/* Background dot grid overlay */}
@@ -406,22 +379,31 @@ export default function DirectChatPage() {
               A Aurora IA é uma inteligência artificial e pode cometer erros. Verifique informações importantes.
             </p>
           )}
-          <form onSubmit={(e) => handleSend(e)} className="flex items-center gap-3 max-w-4xl mx-auto bg-slate-100 p-2 pl-6 rounded-[2.5rem] border border-slate-200/80 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
-             <input 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={isAiThinking || isSending}
-              placeholder={isAurora ? "Tire uma dúvida pedagógica..." : (isStaffUser ? "Digite sua mensagem..." : "Digite sua mensagem para o mentor...")}
-              className="flex-1 h-10 md:h-12 bg-transparent border-none text-primary font-bold italic focus-visible:outline-none text-sm px-0"
-            />
-            <button 
-              type="submit" 
-              disabled={!input.trim() || isAiThinking || isSending} 
-              className="h-10 w-10 md:h-12 md:w-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full shadow-lg shrink-0 border-none transition-all active:scale-90 flex items-center justify-center hover:scale-105"
-            >
-              {isAiThinking || isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-            </button>
-          </form>
+          {isBlockedStudentToStudent ? (
+            <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center gap-3 text-red-700 shadow-sm">
+              <ShieldAlert className="h-5 w-5 shrink-0 animate-pulse" />
+              <p className="text-xs font-black uppercase tracking-tight italic">
+                Diretrizes de Segurança: Estudantes não podem enviar mensagens para outros estudantes.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={(e) => handleSend(e)} className="flex items-center gap-3 max-w-4xl mx-auto bg-slate-100 p-2 pl-6 rounded-[2.5rem] border border-slate-200/80 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
+               <input 
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                disabled={isAiThinking || isSending}
+                placeholder={isAurora ? "Tire uma dúvida pedagógica..." : (isStaffUser ? "Digite sua mensagem..." : "Digite sua mensagem para o mentor...")}
+                className="flex-1 h-10 md:h-12 bg-transparent border-none text-primary font-bold italic focus-visible:outline-none text-sm px-0"
+              />
+              <button 
+                type="submit" 
+                disabled={!input.trim() || isAiThinking || isSending} 
+                className="h-10 w-10 md:h-12 md:w-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full shadow-lg shrink-0 border-none transition-all active:scale-90 flex items-center justify-center hover:scale-105"
+              >
+                {isAiThinking || isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

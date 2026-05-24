@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, Bot, User, MapPin, ShieldCheck, GraduationCap, MessagesSquare, MessageSquare } from "lucide-react";
+import { Search, Loader2, Bot, User, Users, MapPin, ShieldCheck, GraduationCap, MessagesSquare, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/AuthProvider";
@@ -17,6 +17,7 @@ export default function ChatListPage() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [contacts, setContacts] = useState<any[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+  const [latestMessages, setLatestMessages] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
   const isStaffUser = ['teacher', 'staff', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
@@ -29,90 +30,142 @@ export default function ChatListPage() {
     )
   ];
 
-  useEffect(() => {
-    async function fetchData() {
-      if (authLoading) return;
-      if (!user || !profile) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      
-      try {
-        const userType = (profile.profile_type || 'student').toLowerCase();
-        const userInstitution = (profile.institution || '').toLowerCase().trim();
-        
-        // Query para buscar contatos
-        let query = supabase
-          .from('profiles')
-          .select('*')
-          .neq('id', user.id);
+  const fetchUnreadCounts = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data: unreadData, error: unreadError } = await supabase
+        .from('direct_messages')
+        .select('sender_id')
+        .eq('receiver_id', user.id)
+        .eq('is_read', false);
 
-        if (['teacher', 'staff', 'admin'].includes(userType)) {
-          // Equipe de gestão/docente vê todo mundo (alunos, professores, secretaria)
-          query = query.or('role.eq.student,profile_type.eq.student,role.eq.teacher,profile_type.eq.teacher,role.eq.staff,profile_type.eq.staff,role.eq.admin,profile_type.eq.admin');
+      if (unreadError) throw unreadError;
+
+      const unreadCounts: Record<string, number> = {};
+      if (unreadData) {
+        unreadData.forEach((m: any) => {
+          unreadCounts[m.sender_id] = (unreadCounts[m.sender_id] || 0) + 1;
+        });
+      }
+      setUnreadMessages(unreadCounts);
+    } catch (e) {
+      console.error("Erro ao buscar mensagens não lidas:", e);
+    }
+  }, [user]);
+
+  const fetchLatestMessages = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data: lastMsgs, error: lastMsgsError } = await supabase
+        .from('direct_messages')
+        .select('id, sender_id, receiver_id, content, created_at')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (lastMsgsError) throw lastMsgsError;
+
+      const latestMsgMap: Record<string, any> = {};
+      if (lastMsgs) {
+        lastMsgs.forEach((msg: any) => {
+          const partnerId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+          if (!latestMsgMap[partnerId]) {
+            latestMsgMap[partnerId] = msg;
+          }
+        });
+      }
+      setLatestMessages(latestMsgMap);
+    } catch (e) {
+      console.error("Erro ao buscar últimas mensagens:", e);
+    }
+  }, [user]);
+
+  const fetchData = useCallback(async () => {
+    if (authLoading) return;
+    if (!user || !profile) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    
+    try {
+      const userType = (profile.profile_type || 'student').toLowerCase();
+      const userInstitution = (profile.institution || '').toLowerCase().trim();
+
+      // 1. Buscar histórico de chat com qualquer pessoa para permitir responder mensagens recebidas
+      const { data: chatHistory, error: historyError } = await supabase
+        .from('direct_messages')
+        .select('sender_id, receiver_id')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+
+      const historyIds = new Set<string>();
+      if (!historyError && chatHistory) {
+        chatHistory.forEach((msg: any) => {
+          if (msg.sender_id !== user.id) historyIds.add(msg.sender_id);
+          if (msg.receiver_id !== user.id) historyIds.add(msg.receiver_id);
+        });
+      }
+      
+      // 2. Query para buscar contatos (professores, secretaria ou quem tem histórico de chat)
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', user.id);
+
+      if (['teacher', 'staff', 'admin'].includes(userType)) {
+        // Equipe de gestão/docente vê todo mundo (alunos, professores, secretaria)
+        query = query.or('role.eq.student,profile_type.eq.student,role.eq.teacher,profile_type.eq.teacher,role.eq.staff,profile_type.eq.staff,role.eq.admin,profile_type.eq.admin');
+      } else {
+        // Aluno vê mentores, secretaria E qualquer pessoa com quem tenha histórico de chat
+        if (historyIds.size > 0) {
+          const idsList = Array.from(historyIds).join(',');
+          query = query.or(`id.in.(${idsList}),profile_type.eq.teacher,profile_type.eq.staff`);
         } else {
-          // Aluno vê mentores e secretaria
           query = query.or('profile_type.eq.teacher,profile_type.eq.staff');
         }
+      }
 
-        const { data, error } = await query.order('name', { ascending: true });
+      const { data, error } = await query.order('name', { ascending: true });
+      
+      if (error) throw error;
+
+      // LÓGICA DE SEGMENTAÇÃO POR POLO (INDUSTRIAL)
+      // Alunos veem apenas mentores do seu polo ou mentores "Gerais" ou com quem tem histórico
+      const filteredByPolo = data?.filter(mentor => {
+        // Se tiver histórico de chat anterior com a pessoa, ela sempre aparece
+        if (historyIds.has(mentor.id)) return true;
+
+        // Secretaria e Admins globais sempre aparecem para todos os alunos
+        if (mentor.profile_type === 'staff' || mentor.profile_type === 'admin') return true;
+
+        // Admin, Professor e Secretaria veem todo mundo
+        if (['admin', 'teacher', 'staff'].includes(userType)) return true;
         
-        if (error) throw error;
-
-        // LÓGICA DE SEGMENTAÇÃO POR POLO (INDUSTRIAL)
-        // Alunos veem apenas mentores do seu polo ou mentores "Gerais"
-        const filteredByPolo = data?.filter(mentor => {
-          // Admin, Professor e Secretaria veem todo mundo na listagem final de segmentação de polo
-          if (['admin', 'teacher', 'staff'].includes(userType)) return true;
-          
-          const mentorInstitution = (mentor.institution || '').toLowerCase();
-          
-          // Se o aluno não tem polo definido, vê mentores "Geral" ou sem polo
-          if (!userInstitution) {
-            return !mentorInstitution || mentorInstitution.includes('geral');
-          }
-
-          // Se o aluno tem polo (ex: CPOP Santana), vê mentores do mesmo polo ou "Geral"
-          return mentorInstitution.includes(userInstitution) || mentorInstitution.includes('geral') || !mentorInstitution;
-        }) || [];
-
-        setContacts(filteredByPolo);
-      } catch (err: any) {
-        console.error("Erro ao carregar rede de mentoria:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    const fetchUnreadCounts = async () => {
-      if (!user) return;
-      try {
-        const { data: unreadData, error: unreadError } = await supabase
-          .from('direct_messages')
-          .select('sender_id')
-          .eq('receiver_id', user.id)
-          .eq('is_read', false);
-
-        if (unreadError) throw unreadError;
-
-        const unreadCounts: Record<string, number> = {};
-        if (unreadData) {
-          unreadData.forEach((m: any) => {
-            unreadCounts[m.sender_id] = (unreadCounts[m.sender_id] || 0) + 1;
-          });
+        const mentorInstitution = (mentor.institution || '').toLowerCase();
+        
+        // Se o aluno não tem polo definido, vê mentores "Geral" ou sem polo
+        if (!userInstitution) {
+          return !mentorInstitution || mentorInstitution.includes('geral');
         }
-        setUnreadMessages(unreadCounts);
-      } catch (e) {
-        console.error("Erro ao buscar mensagens não lidas:", e);
-      }
-    };
 
+        // Se o aluno tem polo, vê mentores do mesmo polo ou "Geral"
+        return mentorInstitution.includes(userInstitution) || mentorInstitution.includes('geral') || !mentorInstitution;
+      }) || [];
+
+      setContacts(filteredByPolo);
+    } catch (err: any) {
+      console.error("Erro ao carregar rede de mentoria:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, profile, authLoading]);
+
+  useEffect(() => {
     if (!authLoading && user && profile) {
       fetchData();
       fetchUnreadCounts();
+      fetchLatestMessages();
 
-      // Canal realtime para novas mensagens não lidas direcionadas a mim
+      // Realtime para atualizações nas mensagens direcionadas a mim (atualiza não lidas e últimas mensagens)
       const channel = supabase
         .channel('chat_list_unread_realtime')
         .on('postgres_changes', { 
@@ -121,7 +174,17 @@ export default function ChatListPage() {
           table: 'direct_messages',
           filter: `receiver_id=eq.${user.id}`
         }, () => {
+          fetchData();
           fetchUnreadCounts();
+          fetchLatestMessages();
+        })
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'direct_messages',
+          filter: `sender_id=eq.${user.id}`
+        }, () => {
+          fetchLatestMessages();
         })
         .subscribe();
 
@@ -129,7 +192,7 @@ export default function ChatListPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user, profile, authLoading]);
+  }, [user, profile, authLoading, fetchData, fetchUnreadCounts, fetchLatestMessages]);
 
   const filteredContacts = contacts.filter((c) => {
     const term = searchTerm.toLowerCase();
@@ -139,7 +202,7 @@ export default function ChatListPage() {
     if (activeCategory === "Todos") return matchesSearch;
 
     if (isStaffUser) {
-      // Filtros da equipe de gestão/docente: se for ETEC ou ENEM (procura no curso, polo, exam_target etc)
+      // Filtros da equipe: ETEC, ENEM ou ano (procura no curso, polo, etc)
       return matchesSearch && searchString.includes(activeCategory.toLowerCase());
     }
 
@@ -148,6 +211,98 @@ export default function ChatListPage() {
     
     return matchesSearch && matchesCategory;
   });
+
+  // ORDENAÇÃO INTELIGENTE: Mensagens Não Lidas no topo -> Conversas Recentes -> Alfabeto
+  const sortedContacts = [...filteredContacts].sort((a, b) => {
+    const unreadA = unreadMessages[a.id] || 0;
+    const unreadB = unreadMessages[b.id] || 0;
+    if (unreadA !== unreadB) {
+      return unreadB - unreadA; // Não lidas primeiro
+    }
+
+    const dateA = latestMessages[a.id]?.created_at || '';
+    const dateB = latestMessages[b.id]?.created_at || '';
+    if (dateA || dateB) {
+      return dateB.localeCompare(dateA); // Mensagem mais recente primeiro
+    }
+
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
+  // Separar conversas ativas (mensagens não lidas ou histórico) dos contatos disponíveis (estilo WhatsApp)
+  const activeChats = sortedContacts.filter(
+    (c) => (unreadMessages[c.id] || 0) > 0 || latestMessages[c.id]
+  );
+  const directoryContacts = sortedContacts.filter(
+    (c) => !((unreadMessages[c.id] || 0) > 0) && !latestMessages[c.id]
+  );
+
+  const renderContactCard = (contact: any) => {
+    const unreadCount = unreadMessages[contact.id] || 0;
+    const hasUnread = unreadCount > 0;
+    const lastMsg = latestMessages[contact.id];
+
+    return (
+      <Card 
+        key={contact.id} 
+        className={`gradient-border relative overflow-hidden flex flex-col shadow-xl rounded-[2.5rem] bg-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-transparent ${
+          hasUnread ? 'glow-orange-strong bg-gradient-to-br from-orange-500/5 via-white to-white' : ''
+        }`}
+      >
+        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
+        <CardContent className="p-8 flex flex-col items-center text-center space-y-5 flex-grow">
+          <div className="relative">
+            <Avatar className={`h-20 w-20 md:h-24 md:w-24 border-[4px] shadow-2xl transition-all ${
+              hasUnread ? 'border-orange-500 animate-pulse-subtle' : 'border-primary/5'
+            }`}>
+              <AvatarImage src={`https://picsum.photos/seed/${contact.id}/200/200`} className="object-cover" />
+              <AvatarFallback className="bg-primary text-white font-black text-2xl italic">{contact.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+            
+            {hasUnread ? (
+              <div className="absolute -top-1 -right-1 h-7 w-7 bg-red-500 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg animate-bounce border-2 border-white">
+                {unreadCount}
+              </div>
+            ) : (
+              <div className="absolute bottom-0 right-0 h-5 w-5 bg-green-500 rounded-full border-4 border-white shadow-xl ring-1 ring-black/5 animate-pulse" />
+            )}
+          </div>
+          
+          <div className="space-y-2 w-full flex-grow">
+            <CardTitle className="text-lg md:text-xl font-black text-primary leading-tight truncate px-2 italic">{contact.name}</CardTitle>
+            <div className="flex flex-col gap-2 items-center">
+              <div className="flex flex-col items-center justify-center gap-1.5 text-accent font-black text-[9px] uppercase tracking-widest mt-1">
+                <div className="flex items-center gap-1 opacity-80">
+                  <MapPin className="h-3 w-3" />
+                  <span>{contact.institution || "Rede Geral"}</span>
+                </div>
+                <Badge variant="outline" className="bg-primary/5 border-none text-primary/40 font-black text-[8px] px-3 h-5 uppercase tracking-widest leading-none flex items-center justify-center mt-1">
+                  <GraduationCap className="h-2.5 w-2.5 mr-1 text-accent" />
+                  {contact.profile_type === 'teacher' ? (contact.course || 'DOCENTE') : (contact.profile_type === 'staff' ? 'SECRETARIA' : (contact.exam_target || 'ENEM'))}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Exibe trecho da última mensagem */}
+            {lastMsg && (
+              <div className="pt-2 mt-2 border-t border-slate-100 w-full">
+                <p className="text-[11px] text-slate-500 line-clamp-1 italic font-medium">
+                  {lastMsg.sender_id === user?.id ? "Você: " : ""}
+                  {lastMsg.content}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <Button className="w-full btn-shimmer bg-primary text-white hover:bg-primary/95 font-black h-12 rounded-xl shadow-xl transition-all active:scale-95 border-none text-xs uppercase tracking-wider" asChild>
+            <Link href={`/dashboard/chat/${contact.id}`}>
+              {isStaffUser ? "Enviar Mensagem" : "Abrir Mentoria"}
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1 md:px-0.5">
@@ -171,7 +326,7 @@ export default function ChatListPage() {
             <h1 className="text-3xl md:text-5xl font-black text-white leading-tight tracking-tighter italic">
               {isStaffUser ? "Gestão de Conversas" : "Mentoria Especializada"}
             </h1>
-            <p className="text-sm text-white/50 font-medium max-w-lg leading-relaxed">
+            <p className="text-sm text-white/55 font-medium max-w-lg leading-relaxed">
               {isStaffUser 
                 ? "Atendimento direto e suporte aos estudantes cadastrados na plataforma." 
                 : "Conecte-se com professores de referência e sane suas dúvidas pedagógicas em tempo real."
@@ -241,77 +396,51 @@ export default function ChatListPage() {
         </div>
       )}
 
-      {/* ── LISTAGEM DE CONTATOS (GRID DE CARDS STITCH STYLE) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pt-2">
+      {/* ── SEÇÕES DE CONTATOS ESTILO WHATSAPP ── */}
+      <div className="space-y-12 pt-2">
         {loading ? (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center gap-4">
+          <div className="py-20 flex flex-col items-center justify-center gap-4">
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center relative">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
             </div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 animate-pulse">Sintonizando Rede de Mentores...</p>
           </div>
-        ) : filteredContacts.length > 0 ? (
-          filteredContacts.map((contact) => {
-            const unreadCount = unreadMessages[contact.id] || 0;
-            const hasUnread = unreadCount > 0;
-            return (
-              <Card 
-                key={contact.id} 
-                className={`gradient-border relative overflow-hidden flex flex-col shadow-xl rounded-[2.5rem] bg-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-transparent ${
-                  hasUnread ? 'glow-orange-strong bg-gradient-to-br from-orange-500/5 via-white to-white' : ''
-                }`}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
-                <CardContent className="p-8 flex flex-col items-center text-center space-y-5 flex-grow">
-                  <div className="relative">
-                    <Avatar className={`h-20 w-20 md:h-24 md:w-24 border-[4px] shadow-2xl transition-all ${
-                      hasUnread ? 'border-orange-500 animate-pulse-subtle' : 'border-primary/5'
-                    }`}>
-                      <AvatarImage src={`https://picsum.photos/seed/${contact.id}/200/200`} className="object-cover" />
-                      <AvatarFallback className="bg-primary text-white font-black text-2xl italic">{contact.name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    
-                    {hasUnread ? (
-                      <div className="absolute -top-1 -right-1 h-7 w-7 bg-red-500 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg animate-bounce border-2 border-white">
-                        {unreadCount}
-                      </div>
-                    ) : (
-                      <div className="absolute bottom-0 right-0 h-5 w-5 bg-green-500 rounded-full border-4 border-white shadow-xl ring-1 ring-black/5 animate-pulse" />
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2 w-full flex-grow">
-                    <CardTitle className="text-lg md:text-xl font-black text-primary leading-tight truncate px-2 italic">{contact.name}</CardTitle>
-                    <div className="flex flex-col gap-2 items-center">
-                      <div className="flex flex-col items-center justify-center gap-1.5 text-accent font-black text-[9px] uppercase tracking-widest mt-1">
-                        <div className="flex items-center gap-1 opacity-80">
-                          <MapPin className="h-3 w-3" />
-                          <span>{contact.institution || "Rede Geral"}</span>
-                        </div>
-                        <Badge variant="outline" className="bg-primary/5 border-none text-primary/40 font-black text-[8px] px-3 h-5 uppercase tracking-widest leading-none flex items-center justify-center mt-1">
-                          <GraduationCap className="h-2.5 w-2.5 mr-1 text-accent" />
-                          {contact.profile_type === 'teacher' ? (contact.course || 'DOCENTE') : (contact.exam_target || 'ENEM')}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button className="w-full btn-shimmer bg-primary text-white hover:bg-primary/95 font-black h-12 rounded-xl shadow-xl transition-all active:scale-95 border-none text-xs uppercase tracking-wider" asChild>
-                    <Link href={`/dashboard/chat/${contact.id}`}>
-                      {isStaffUser ? "Enviar Mensagem" : "Abrir Mentoria"}
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })
         ) : (
-          <div className="col-span-full py-24 text-center border-4 border-dashed rounded-[3.5rem] bg-white/50 opacity-30 animate-in zoom-in-95">
-            <User className="h-20 w-20 mx-auto mb-6 text-primary/20" />
-            <p className="font-black italic text-2xl text-primary uppercase">Ninguém localizado por aqui</p>
-            <p className="text-sm font-medium italic mt-2">Use a barra de pesquisa ou mude os filtros acima.</p>
-          </div>
+          <>
+            {/* 1. SEÇÃO DE CONVERSAS ATIVAS */}
+            {activeChats.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <MessagesSquare className="h-6 w-6 text-accent" />
+                  <h2 className="text-xl md:text-2xl font-black text-primary italic uppercase tracking-tight">Conversas Recentes</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                  {activeChats.map(renderContactCard)}
+                </div>
+              </div>
+            )}
+
+            {/* 2. SEÇÃO DE DIRETÓRIO / NOVOS CONTATOS */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <Users className="h-6 w-6 text-primary/30" />
+                <h2 className="text-xl md:text-2xl font-black text-primary/40 italic uppercase tracking-tight">
+                  {isStaffUser ? "Iniciar Nova Conversa com Alunos" : "Disponíveis para Contato"}
+                </h2>
+              </div>
+              
+              {directoryContacts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                  {directoryContacts.map(renderContactCard)}
+                </div>
+              ) : (
+                <div className="py-12 text-center border border-dashed rounded-[2.5rem] bg-white opacity-40">
+                  <p className="text-sm font-medium italic">Nenhum outro contato disponível.</p>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
