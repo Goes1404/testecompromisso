@@ -41,7 +41,8 @@ import {
   Layout,
   Pencil,
   BookOpen,
-  Save
+  Save,
+  Unlink
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -80,6 +81,7 @@ export default function TrailManagementPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [detachingId, setDetachingId] = useState<string | null>(null);
 
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
@@ -496,6 +498,60 @@ export default function TrailManagementPage() {
     setDeletingId(null);
   };
 
+  const handleDetachModule = async (mod: any) => {
+    if (detachingId) return;
+    if (!confirm(`Tornar "${mod.title}" uma aula independente? Ela será desvinculada desta série e criará uma nova trilha avulsa.`)) return;
+
+    setDetachingId(mod.id);
+    try {
+      // 1. Cria nova trilha standalone com os dados da série atual
+      const { data: newTrail, error: trailErr } = await supabase
+        .from('trails')
+        .insert({
+          title: mod.title,
+          category: trail.category,
+          description: trail.description,
+          teacher_id: trail.teacher_id,
+          teacher_name: trail.teacher_name,
+          status: trail.status,
+          image_url: trail.image_url,
+          target_audience: trail.target_audience,
+          trail_type: 'standalone',
+        })
+        .select()
+        .single();
+
+      if (trailErr) throw trailErr;
+
+      // 2. Reassocia o módulo à nova trilha
+      const { error: modErr } = await supabase
+        .from('modules')
+        .update({ trail_id: newTrail.id })
+        .eq('id', mod.id);
+
+      if (modErr) throw modErr;
+
+      // 3. Atualiza estado local — remove o módulo da série atual
+      setModules((prev) => prev.filter((m) => m.id !== mod.id));
+      setContents((prev) => {
+        const next = { ...prev };
+        delete next[mod.id];
+        return next;
+      });
+
+      toast({
+        title: 'Aula desvinculada!',
+        description: `"${mod.title}" agora é uma trilha independente.`,
+      });
+
+      router.refresh();
+    } catch (err: any) {
+      toast({ title: 'Erro ao desvincular', description: err.message, variant: 'destructive' });
+    } finally {
+      setDetachingId(null);
+    }
+  };
+
   const handleDeleteContent = async (id: string) => {
     if (deletingId) return;
     setDeletingId(id);
@@ -632,6 +688,22 @@ export default function TrailManagementPage() {
                     </div>
                   </div>
                   <div className='flex items-center gap-2'>
+                    {trail?.trail_type === 'serie' && (
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        title='Tornar aula independente'
+                        onClick={() => handleDetachModule(mod)}
+                        disabled={!!detachingId}
+                        className='text-muted-foreground hover:text-indigo-600 rounded-full h-10 w-10 hover:bg-indigo-50'
+                      >
+                        {detachingId === mod.id ? (
+                          <Loader2 className='h-4 w-4 animate-spin' />
+                        ) : (
+                          <Unlink className='h-4 w-4' />
+                        )}
+                      </Button>
+                    )}
                     <Button
                       variant='ghost'
                       size='icon'

@@ -37,7 +37,8 @@ import {
   KeyRound,
   CheckCircle2,
   ShieldAlert,
-  AlertTriangle
+  AlertTriangle,
+  GraduationCap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -134,6 +135,10 @@ export default function DashboardHome() {
   const [phoneValue, setPhoneValue] = useState("");
   const [submittingPhone, setSubmittingPhone] = useState(false);
 
+  const [courseValue, setCourseValue] = useState("");
+  const [examTargetValue, setExamTargetValue] = useState("");
+  const [submittingClass, setSubmittingClass] = useState(false);
+
   const [recommendedTrails, setRecommendedTrails] = useState<any[]>([]);
   const [libraryResources, setLibraryResources] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -208,6 +213,37 @@ export default function DashboardHome() {
       });
     } finally {
       setSubmittingPhone(false);
+    }
+  };
+
+  const handleClassSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    if (!courseValue.trim()) {
+      toast({ title: "Campo obrigatório ⚠️", description: "Informe sua turma/sala.", variant: "destructive" });
+      return;
+    }
+    if (!examTargetValue) {
+      toast({ title: "Campo obrigatório ⚠️", description: "Selecione seu foco de exame.", variant: "destructive" });
+      return;
+    }
+
+    setSubmittingClass(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ course: courseValue.trim(), exam_target: examTargetValue })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({ title: "Perfil atualizado! 🎉", description: "Sua turma e foco de exame foram salvos com sucesso." });
+      if (refreshProfile) await refreshProfile();
+    } catch (err: any) {
+      toast({ title: "Erro ao Salvar ❌", description: err.message || "Ocorreu um erro.", variant: "destructive" });
+    } finally {
+      setSubmittingClass(false);
     }
   };
 
@@ -464,6 +500,61 @@ export default function DashboardHome() {
             >
               {submittingPhone ? (
                 <Loader2 className="h-4 w-4 animate-spin text-orange-600" />
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Salvar
+                </>
+              )}
+            </Button>
+          </form>
+        </div>
+      )}
+
+      {/* ── CARD DE TURMA/EXAME PENDENTE ── */}
+      {profile && userRole === 'student' && (!profile.course || !profile.exam_target) && (
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-blue-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-6 md:p-8 shadow-2xl text-white flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
+          <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
+
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-5 relative z-10 w-full md:w-auto">
+            <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-xl animate-float">
+              <GraduationCap className="h-7 w-7 text-white" />
+            </div>
+            <div className="text-center sm:text-left space-y-1">
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/80">Cadastro Obrigatório</span>
+              <h2 className="text-xl md:text-2xl font-black italic tracking-tighter leading-none">Complete seu Perfil</h2>
+              <p className="text-white/80 font-semibold text-xs leading-relaxed max-w-lg italic">
+                Informe sua turma/sala e foco de exame para que a secretaria possa organizar as chamadas e personalizar seu conteúdo.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleClassSubmit} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto relative z-10 shrink-0">
+            <input
+              type="text"
+              value={courseValue}
+              onChange={(e) => setCourseValue(e.target.value)}
+              placeholder="Turma / Sala (ex: A1)"
+              className="h-12 w-full sm:w-44 bg-white/10 backdrop-blur-md text-white placeholder:text-white/50 border border-white/20 hover:border-white/40 focus:border-white rounded-xl font-bold text-center text-sm shadow-inner focus-visible:outline-none px-3"
+            />
+            <select
+              value={examTargetValue}
+              onChange={(e) => setExamTargetValue(e.target.value)}
+              className="h-12 w-full sm:w-36 bg-white/10 backdrop-blur-md text-white border border-white/20 hover:border-white/40 focus:border-white rounded-xl font-bold text-sm shadow-inner focus-visible:outline-none px-3 cursor-pointer"
+            >
+              <option value="" className="text-slate-800">Foco de exame…</option>
+              <option value="ENEM" className="text-slate-800">ENEM</option>
+              <option value="ETEC" className="text-slate-800">ETEC</option>
+              <option value="Outros" className="text-slate-800">Outros</option>
+            </select>
+            <Button
+              type="submit"
+              disabled={submittingClass}
+              className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl shadow-lg border-none shrink-0 h-12 px-6 text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 justify-center"
+            >
+              {submittingClass ? (
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
               ) : (
                 <>
                   <Check className="h-4 w-4" />

@@ -24,6 +24,8 @@ import {
   UserCheck,
   Camera,
   ImageIcon,
+  FileSpreadsheet,
+  Link2,
 } from "lucide-react";
 import {
   Select,
@@ -48,6 +50,12 @@ import { ptBR } from "date-fns/locale";
 type AttendanceStatus = "presente" | "ausente" | "justificado";
 type AttendanceMethod = "app" | "manual" | "override";
 interface AttendanceCell { status: AttendanceStatus; justification: string; method: AttendanceMethod; }
+interface ImportRow {
+  rawName: string;
+  matchedStudent: any | null;
+  manualStudentId: string;
+  status: "presente" | "ausente";
+}
 
 export default function SecretaryAttendancePage() {
   const { toast } = useToast();
@@ -92,6 +100,12 @@ export default function SecretaryAttendancePage() {
   // Upload de foto da chamada em papel
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // Importação de planilha Excel
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importRows, setImportRows] = useState<ImportRow[]>([]);
+  const [importingExcel, setImportingExcel] = useState(false);
+  const excelInputRef = useRef<HTMLInputElement>(null);
 
   // Diálogo de confirmação para sobrescritas (audit)
   const [overrideOpen, setOverrideOpen] = useState(false);
@@ -435,6 +449,147 @@ export default function SecretaryAttendancePage() {
     }
   };
 
+  // ── Helpers de matching por nome ──────────────────────────────
+  const normalizeName = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z\s]/g, "")
+      .trim()
+      .replace(/\s+/g, " ");
+
+  const matchStudentByName = (rawName: string): any | null => {
+    const norm = normalizeName(rawName);
+    if (!norm || norm.length < 2) return null;
+    // 1. Exact match
+    const exact = students.find(s => normalizeName(s.name) === norm);
+    if (exact) return exact;
+    // 2. All Excel words found in profile name
+    const words = norm.split(" ").filter(w => w.length > 2);
+    if (words.length >= 2) {
+      const wordMatch = students.find(s => {
+        const pn = normalizeName(s.name);
+        return words.every(w => pn.includes(w));
+      });
+      if (wordMatch) return wordMatch;
+    }
+    // 3. All profile name words found in Excel name (handles abbreviated names)
+    const partialMatch = students.find(s => {
+      const profileWords = normalizeName(s.name).split(" ").filter(w => w.length > 2);
+      return profileWords.length >= 2 && profileWords.every(w => norm.includes(w));
+    });
+    return partialMatch || null;
+  };
+
+  // ── Processa o arquivo Excel/CSV ──────────────────────────────
+  const handleExcelFile = async (file: File) => {
+    try {
+      const XLSX = await import("xlsx");
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      if (!rows || rows.length === 0) {
+        toast({ title: "Planilha vazia", variant: "destructive" }); return;
+      }
+
+      // Detecta coluna de nome e de status a partir do cabeçalho
+      const headerRow = (rows[0] || []).map((h: any) => String(h ?? "").toLowerCase());
+      const nameKw = ["nome", "aluno", "name", "estudante", "student"];
+      const statusKw = ["status", "presen", "frequen", "sit", "chamada"];
+
+      let nameColIdx = 0;
+      let statusColIdx = -1;
+      const hasHeader = headerRow.some(h => nameKw.some(k => h.includes(k)));
+
+      if (hasHeader) {
+        const ni = headerRow.findIndex(h => nameKw.some(k => h.includes(k)));
+        if (ni >= 0) nameColIdx = ni;
+        const si = headerRow.findIndex(h => statusKw.some(k => h.includes(k)));
+        if (si >= 0) statusColIdx = si;
+      }
+
+      const dataRows = hasHeader ? rows.slice(1) : rows;
+      const parsed: ImportRow[] = [];
+
+      for (const row of dataRows) {
+        const rawName = String(row[nameColIdx] ?? "").trim();
+        if (!rawName || rawName.length < 2) continue;
+
+        let status: "presente" | "ausente" = "presente";
+        if (statusColIdx >= 0) {
+          const rs = String(row[statusColIdx] ?? "").toLowerCase().trim();
+          if (["a", "f", "ausente", "falta", "0", "nao", "não", "false"].includes(rs)) {
+            status = "ausente";
+          }
+        }
+
+        parsed.push({
+          rawName,
+          matchedStudent: matchStudentByName(rawName),
+          manualStudentId: "",
+          status,
+        });
+      }
+
+      if (parsed.length === 0) {
+        toast({ title: "Nenhum nome válido encontrado na planilha", variant: "destructive" }); return;
+      }
+
+      setImportRows(parsed);
+      setImportModalOpen(true);
+    } catch (err: any) {
+      toast({ title: "Erro ao ler planilha", description: err.message, variant: "destructive" });
+    }
+  };
+
+  // ── Confirma importação e grava no banco ──────────────────────
+  const handleConfirmImport = async () => {
+    if (!selectedSession) return;
+    setImportingExcel(true);
+    try {
+      const toInsert = importRows
+        .map(row => ({
+          session_id: selectedSession.id,
+          student_id: row.matchedStudent?.id || row.manualStudentId || null,
+          status: row.status,
+          method: "manual" as AttendanceMethod,
+        }))
+        .filter(r => r.student_id);
+
+      if (toInsert.length === 0) {
+        toast({ title: "Nenhum aluno vinculado para importar", variant: "destructive" }); return;
+      }
+
+      const { error } = await supabase
+        .from("attendance_records")
+        .upsert(toInsert, { onConflict: "session_id,student_id" });
+      if (error) throw error;
+
+      // Atualiza estado local
+      setRecords(prev => {
+        const next = { ...prev };
+        for (const item of toInsert) {
+          next[item.student_id!] = { status: item.status as AttendanceStatus, justification: "", method: "manual" };
+        }
+        return next;
+      });
+
+      const skipped = importRows.filter(r => !r.matchedStudent?.id && !r.manualStudentId).length;
+      toast({
+        title: `${toInsert.length} aluno(s) importados!`,
+        description: skipped > 0 ? `${skipped} nome(s) ignorados por não terem sido vinculados.` : undefined,
+      });
+      setImportModalOpen(false);
+      setImportRows([]);
+    } catch (err: any) {
+      toast({ title: "Erro ao importar", description: err.message, variant: "destructive" });
+    } finally {
+      setImportingExcel(false);
+    }
+  };
+
   // Filtra alunos na lista de chamada
   const filteredStudents = students.filter(s => {
     if (!records[s.id]) return false; // apenas na chamada
@@ -635,6 +790,26 @@ export default function SecretaryAttendancePage() {
                       <UserPlus className="h-3.5 w-3.5 text-slate-500" />
                       <span className="hidden sm:inline">Adicionar Aluno</span>
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 h-9 rounded-xl font-bold text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                      onClick={() => excelInputRef.current?.click()}
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Importar Planilha</span>
+                    </Button>
+                    <input
+                      ref={excelInputRef}
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleExcelFile(f);
+                        e.target.value = "";
+                      }}
+                    />
                   </div>
 
                   {showAddPanel && (
@@ -817,6 +992,116 @@ export default function SecretaryAttendancePage() {
           )}
         </Card>
       </div>
+
+      {/* Diálogo de Importação de Planilha */}
+      <Dialog open={importModalOpen} onOpenChange={(v) => { if (!v) { setImportModalOpen(false); setImportRows([]); } }}>
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-2xl w-full">
+          <DialogHeader className="p-8 pb-4 bg-emerald-50 border-b border-emerald-100">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center font-black text-white shadow shrink-0">
+                <FileSpreadsheet className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black italic text-emerald-800 leading-none uppercase tracking-tight">
+                  Importar Lista de Chamada
+                </DialogTitle>
+                <DialogDescription className="text-xs mt-0.5 font-medium text-muted-foreground">
+                  {importRows.filter(r => r.matchedStudent).length} encontrado(s) &nbsp;·&nbsp;{" "}
+                  <span className="text-amber-600 font-bold">{importRows.filter(r => !r.matchedStudent).length} não identificado(s)</span>
+                  &nbsp;·&nbsp; {importRows.length} total
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 max-h-[60vh] overflow-y-auto space-y-2">
+            {importRows.map((row, idx) => (
+              <div
+                key={idx}
+                className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-2xl border transition-all ${
+                  row.matchedStudent
+                    ? "bg-green-50 border-green-200"
+                    : "bg-amber-50 border-amber-200"
+                }`}
+              >
+                {/* Nome da planilha */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 truncate leading-tight">{row.rawName}</p>
+                  {row.matchedStudent ? (
+                    <p className="text-[9px] font-black uppercase text-green-700 mt-0.5">
+                      Vinculado → {row.matchedStudent.name}
+                    </p>
+                  ) : (
+                    <p className="text-[9px] font-black uppercase text-amber-600 mt-0.5">Não encontrado</p>
+                  )}
+                </div>
+
+                {/* Se não encontrado: select manual */}
+                {!row.matchedStudent && (
+                  <Select
+                    value={row.manualStudentId}
+                    onValueChange={(val) =>
+                      setImportRows(prev =>
+                        prev.map((r, i) => i === idx ? { ...r, manualStudentId: val } : r)
+                      )
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-48 rounded-xl bg-white border-amber-200 text-xs font-bold shrink-0">
+                      <SelectValue placeholder="Vincular manualmente…" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-none shadow-2xl max-h-60">
+                      {students.map(s => (
+                        <SelectItem key={s.id} value={s.id} className="text-xs font-bold">{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Toggle P / A */}
+                <div className="flex rounded-lg overflow-hidden border shrink-0">
+                  {(["presente", "ausente"] as const).map((st) => (
+                    <button
+                      key={st}
+                      onClick={() =>
+                        setImportRows(prev =>
+                          prev.map((r, i) => i === idx ? { ...r, status: st } : r)
+                        )
+                      }
+                      className={`px-3 py-1.5 text-[10px] font-black transition-colors ${
+                        row.status === st
+                          ? st === "presente"
+                            ? "bg-green-500 text-white"
+                            : "bg-red-500 text-white"
+                          : "bg-white hover:bg-slate-100 text-slate-400"
+                      }`}
+                    >
+                      {st === "presente" ? "P" : "A"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-6 pt-4 border-t border-slate-100 flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-2xl font-black text-xs border-slate-200"
+              onClick={() => { setImportModalOpen(false); setImportRows([]); }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmImport}
+              disabled={importingExcel}
+              className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg shadow-emerald-200 border-none text-xs"
+            >
+              {importingExcel ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <FileSpreadsheet className="h-4 w-4 mr-2" />}
+              Confirmar Importação ({importRows.filter(r => r.matchedStudent?.id || r.manualStudentId).length} alunos)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Diálogo Criar Sessão */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

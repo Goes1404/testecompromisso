@@ -28,8 +28,10 @@ import {
   GraduationCap,
   UserPlus,
   Trash2,
-  Phone
+  Phone,
+  Eye
 } from "lucide-react";
+import Link from "next/link";
 import { SCHOOL_LIST } from "@/lib/constants";
 import {
   Select,
@@ -846,6 +848,18 @@ export default function SecretaryEnrollmentDirectory() {
 
                         <TableCell className="text-right px-4 md:px-6">
                           <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Ver perfil 360°"
+                              asChild
+                              className="h-10 w-10 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                            >
+                              <Link href={`/dashboard/secretary/students/${u.id}`}>
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                            </Button>
+
                             <Button
                               variant="ghost"
                               size="icon"
