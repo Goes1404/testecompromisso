@@ -35,6 +35,33 @@ interface FamilyMember {
   income: string;
 }
 
+const formatBrazilianCurrency = (value: string): string => {
+  if (!value) return "";
+  const clean = value.replace(/\D/g, "");
+  if (!clean) return "";
+  const floatValue = Number(clean) / 100;
+  return floatValue.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const parseBrazilianNumber = (value: string): number => {
+  if (!value) return 0;
+  const cleanValue = value.replace(/\./g, "").replace(",", ".");
+  return Number(cleanValue) || 0;
+};
+
+const formatInitialValue = (val: any): string => {
+  if (val === undefined || val === null || val === "") return "";
+  const num = Number(val);
+  if (isNaN(num)) return String(val);
+  return num.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 export default function ExemptionSimulationPage() {
   const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -59,7 +86,11 @@ export default function ExemptionSimulationPage() {
   useEffect(() => {
     if (profile) {
       if (profile.family_members && Array.isArray(profile.family_members) && profile.family_members.length > 0) {
-        setFamilyMembers(profile.family_members as FamilyMember[]);
+        const formattedMembers = (profile.family_members as FamilyMember[]).map(m => ({
+          ...m,
+          income: formatInitialValue(m.income)
+        }));
+        setFamilyMembers(formattedMembers);
       }
       if (profile.family_income !== undefined && profile.family_income !== null && profile.family_size) {
         setResult({
@@ -75,7 +106,7 @@ export default function ExemptionSimulationPage() {
   }, [profile]);
 
   const totalFamilyIncome = useMemo(() => {
-    return members.reduce((acc, m) => acc + (Number(m.income) || 0), 0);
+    return members.reduce((acc, m) => acc + parseBrazilianNumber(m.income), 0);
   }, [members]);
 
   const addMember = () => {
@@ -246,10 +277,10 @@ export default function ExemptionSimulationPage() {
                       <div className="w-full sm:w-48 space-y-2">
                         <Label className="text-[9px] font-black uppercase text-primary/40 ml-2">Renda Bruta (R$)</Label>
                         <Input 
-                          type="number" 
-                          placeholder="0.00" 
+                          type="text" 
+                          placeholder="0,00" 
                           value={member.income} 
-                          onChange={(e) => updateMember(member.id, 'income', e.target.value)}
+                          onChange={(e) => updateMember(member.id, 'income', formatBrazilianCurrency(e.target.value))}
                           className="h-12 bg-white rounded-xl border-none font-black text-primary"
                         />
                       </div>

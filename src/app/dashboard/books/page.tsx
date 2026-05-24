@@ -1,241 +1,384 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, 
-  FileText, 
-  Video, 
-  BookOpen, 
-  Filter, 
-  Loader2,
-  PenLine,
-  Sparkles
+import {
+  Search,
+  BookOpen,
+  BookMarked,
+  FileText,
+  Sparkles,
+  X,
+  LayoutGrid,
+  List,
+  ChevronRight,
 } from "lucide-react";
-import Image from "next/image";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import Link from "next/link";
 
-const CATEGORY_IMAGES: Record<string, string> = {
-  'Matemática': 'https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=800&auto=format&fit=crop',
-  'Física': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop',
-  'Química': 'https://images.unsplash.com/photo-1532187863486-abf9d39d66e8?q=80&w=800&auto=format&fit=crop',
-  'Biologia': 'https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?q=80&w=800&auto=format&fit=crop',
-  'História': 'https://images.unsplash.com/photo-1461360370896-922624d12aa1?q=80&w=800&auto=format&fit=crop',
-  'Geografia': 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop',
-  'Linguagens': 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=800&auto=format&fit=crop',
-  'Saúde': 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=800&auto=format&fit=crop',
-  'Atualidades': 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=800&auto=format&fit=crop',
-  'Literatura': 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=800&auto=format&fit=crop',
-  'Filosofia': 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop',
-  'Sociologia': 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=800&auto=format&fit=crop',
-  'Didáticos': 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=800&auto=format&fit=crop',
-  'Técnicos': 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop',
-  'Guias': 'https://images.unsplash.com/photo-1501534159981-3ef501f27838?q=80&w=800&auto=format&fit=crop',
-};
+// ─── constants ────────────────────────────────────────────────────────────────
+const CATEGORIES = ["Todos", "Didáticos", "Literatura", "Técnicos", "Guias"];
+const TYPES = ["Todos", "PDF", "E-book", "Interativo"];
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop';
+const COVER_GRADIENTS = [
+  "from-violet-600 to-indigo-700",
+  "from-rose-500 to-pink-700",
+  "from-amber-500 to-orange-600",
+  "from-emerald-500 to-teal-700",
+  "from-cyan-500 to-blue-700",
+  "from-fuchsia-600 to-purple-800",
+  "from-lime-500 to-green-700",
+  "from-red-500 to-rose-700",
+];
 
-function getSafeLibraryImage(url: string | null | undefined, category: string) {
-  if (!url || url.includes('picsum.photos')) {
-    const cleanCategory = category.replace('LIVRO|', '');
-    return CATEGORY_IMAGES[cleanCategory] || DEFAULT_IMAGE;
-  }
-  return url;
+function coverGradient(id: string) {
+  const hash = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return COVER_GRADIENTS[hash % COVER_GRADIENTS.length];
 }
 
-const categories = ["Todos", "Didáticos", "Literatura", "Técnicos", "Guias"];
-const types = ["Todos", "PDF", "E-book", "Interativo"];
+const TYPE_BADGE: Record<string, { bg: string; text: string; icon: React.ElementType }> = {
+  PDF:        { bg: "bg-rose-100",   text: "text-rose-700",   icon: FileText  },
+  "E-book":   { bg: "bg-blue-100",   text: "text-blue-700",   icon: BookOpen  },
+  Interativo: { bg: "bg-violet-100", text: "text-violet-700", icon: Sparkles  },
+};
+function typeMeta(type: string) {
+  return TYPE_BADGE[type] ?? { bg: "bg-slate-100", text: "text-slate-700", icon: BookMarked };
+}
 
+// ─── skeletons ────────────────────────────────────────────────────────────────
+function CardSkeleton() {
+  return (
+    <div className="rounded-[2rem] bg-white border border-slate-100 overflow-hidden animate-pulse flex flex-col">
+      <div className="aspect-[3/4] bg-slate-100" />
+      <div className="p-5 space-y-3 flex-1">
+        <div className="h-3 w-16 bg-slate-100 rounded-full" />
+        <div className="h-4 w-4/5 bg-slate-100 rounded-full" />
+        <div className="h-3 w-full  bg-slate-100 rounded-full" />
+        <div className="h-3 w-2/3  bg-slate-100 rounded-full" />
+      </div>
+      <div className="px-5 pb-5">
+        <div className="h-10 bg-slate-100 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+function RowSkeleton() {
+  return (
+    <div className="rounded-2xl bg-white border border-slate-100 p-4 flex gap-4 items-center animate-pulse">
+      <div className="w-14 h-[4.5rem] rounded-xl bg-slate-100 shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3 w-16 bg-slate-100 rounded-full" />
+        <div className="h-4 w-2/3 bg-slate-100 rounded-full" />
+        <div className="h-3 w-full bg-slate-100 rounded-full" />
+      </div>
+      <div className="w-9 h-9 bg-slate-100 rounded-xl shrink-0" />
+    </div>
+  );
+}
+
+// ─── page ─────────────────────────────────────────────────────────────────────
 export default function BooksPage() {
   const { user, profile } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm]         = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
-  const [activeType, setActiveType] = useState("Todos");
-  const [resources, setResources] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeType, setActiveType]         = useState("Todos");
+  const [resources, setResources]           = useState<any[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [viewMode, setViewMode]             = useState<"grid" | "list">("grid");
 
   const loadResources = useCallback(async () => {
     if (!user || !profile) return;
-    
     setLoading(true);
     try {
-      // Busca apenas recursos que começam com LIVRO| na categoria
-      const { data, error } = await supabase.from('library_resources')
-        .select('*')
-        .ilike('category', 'LIVRO|%')
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await supabase
+        .from("library_resources")
+        .select("*")
+        .ilike("category", "LIVRO|%")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       setResources(data || []);
     } catch (err: any) {
-      console.error("Erro ao carregar livros:", err);
+      toast({ title: "Erro ao carregar livros", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [user, profile]);
+  }, [user, profile, toast]);
 
   useEffect(() => {
     if (user && profile) loadResources();
   }, [user, profile, loadResources]);
 
   const deferredSearch = useDeferredValue(searchTerm);
-  const filteredResources = useMemo(() => resources.filter(resource => {
-    const displayCategory = resource.category?.replace('LIVRO|', '') || '';
-    const title = (resource.title || '').toLowerCase();
-    const matchesSearch = title.includes(deferredSearch.toLowerCase());
-    const matchesCategory = activeCategory === "Todos" || displayCategory === activeCategory;
-    const matchesType = activeType === "Todos" || resource.type === activeType;
-    return matchesSearch && matchesCategory && matchesType;
-  }), [resources, deferredSearch, activeCategory, activeType]);
+  const filtered = useMemo(() =>
+    resources.filter(r => {
+      const cat   = r.category?.replace("LIVRO|", "") || "";
+      const title = (r.title || "").toLowerCase();
+      return (
+        title.includes(deferredSearch.toLowerCase()) &&
+        (activeCategory === "Todos" || cat === activeCategory) &&
+        (activeType === "Todos" || r.type === activeType)
+      );
+    }),
+    [resources, deferredSearch, activeCategory, activeType]
+  );
 
-  if (loading) {
-    return (
-      <div className="py-20 flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="font-black text-muted-foreground uppercase text-xs tracking-widest animate-pulse">Abrindo Biblioteca de Livros...</p>
-      </div>
-    );
+  const hasFilters = activeCategory !== "Todos" || activeType !== "Todos" || searchTerm !== "";
+  function clearFilters() {
+    setActiveCategory("Todos");
+    setActiveType("Todos");
+    setSearchTerm("");
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      
-      {/* ── HERO BANNER ── */}
-      <section className="aurora-dark relative overflow-hidden rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl border border-white/5 group">
-        <div className="absolute inset-0 dot-grid opacity-15 pointer-events-none rounded-[2.5rem]" />
-        <div className="absolute top-[-25%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-primary/20 rounded-full blur-[85px] hidden md:block" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-primary/10 rounded-full blur-[60px] hidden md:block" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 w-full">
-          <div className="space-y-4 max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 px-3.5 py-1 rounded-full animate-float">
-              <Sparkles className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/80">Obras Recomendadas</span>
+    <div className="pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ── HERO ── */}
+      <div className="aurora-dark rounded-[2.5rem] p-7 md:p-10 mb-8 relative overflow-hidden">
+        <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <BookMarked className="h-5 w-5 text-accent" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Acervo Digital</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none uppercase">
-              Minha <span className="text-gradient-brand italic">Biblioteca</span>
+            <h1 className="text-3xl md:text-4xl font-black italic text-white leading-none tracking-tight">
+              Biblioteca de Livros
             </h1>
-            <p className="text-xs md:text-sm text-gray-300 font-medium italic leading-relaxed">
-              Acesse o acervo de livros didáticos, técnicos e obras de literatura recomendadas para enriquecer seu repertório.
+            <p className="text-white/60 font-medium text-sm leading-relaxed max-w-sm">
+              Obras didáticas, literatura e guias curados para o seu ENEM e ETEC.
             </p>
           </div>
-          
-          <div className="relative w-full md:w-80 group/search shrink-0">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 transition-colors group-focus-within/search:text-accent" />
+
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1 shrink-0">
+            {[
+              { label: "Obras",       value: resources.length, icon: BookOpen  },
+              { label: "Disponíveis", value: filtered.length,  icon: Sparkles  },
+            ].map(s => (
+              <div key={s.label} className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 shrink-0 min-w-[110px]">
+                <s.icon className="h-4 w-4 text-accent shrink-0" />
+                <div>
+                  <p className="text-white font-black text-lg leading-none">{loading ? "–" : s.value}</p>
+                  <p className="text-white/50 text-[9px] font-black uppercase tracking-wider mt-0.5">{s.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── STICKY FILTER BAR ── */}
+      <div className="sticky top-2 z-20 space-y-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-2 bg-white/80 backdrop-blur-xl rounded-2xl p-3 shadow-xl border border-slate-100">
+          {/* search */}
+          <div className="relative flex-1 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 transition-colors group-focus-within:text-accent" />
             <Input
               placeholder="Buscar obra..."
-              className="pl-12 h-14 bg-white/10 backdrop-blur-md border border-white/10 hover:border-white/20 text-white placeholder:text-white/40 rounded-[1.25rem] text-sm font-medium italic focus-visible:ring-accent focus-visible:ring-1 focus-visible:border-accent transition-all duration-300"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-10 h-10 rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-accent focus-visible:ring-2 text-sm font-medium"
             />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* type pills */}
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+            {TYPES.map(t => (
+              <button
+                key={t}
+                onClick={() => setActiveType(t)}
+                aria-pressed={activeType === t}
+                className={`shrink-0 h-10 px-4 rounded-xl text-xs font-black uppercase tracking-wide transition-all duration-200
+                  ${activeType === t
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* view toggle + clear */}
+          <div className="flex gap-1.5 shrink-0">
+            <button
+              onClick={() => setViewMode(v => v === "grid" ? "list" : "grid")}
+              className="h-10 w-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-all"
+              aria-label="Alternar visualização"
+            >
+              {viewMode === "grid" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+            </button>
+            {hasFilters && (
+              <button
+                onClick={clearFilters}
+                className="h-10 px-3 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center gap-1.5 text-xs font-black uppercase tracking-wide transition-all"
+              >
+                <X className="h-3.5 w-3.5" /> Limpar
+              </button>
+            )}
           </div>
         </div>
-      </section>
 
-      <Tabs defaultValue="Todos" className="w-full space-y-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between overflow-x-auto pb-2 gap-4">
-          <TabsList className="bg-white/80 p-1.5 h-14 rounded-2xl border-none shadow-sm flex items-center gap-1 overflow-x-auto max-w-full scrollbar-hide">
-            {categories.map(cat => (
-              <TabsTrigger 
-                key={cat} 
-                value={cat} 
-                onClick={() => setActiveCategory(cat)}
-                className="rounded-xl px-5 h-11 data-[state=active]:bg-primary data-[state=active]:text-white font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 duration-300"
-              >
-                {cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-14 px-6 rounded-2xl bg-white border-none shadow-sm hover:bg-slate-50 transition-all font-black text-[10px] uppercase gap-2 active:scale-95 shrink-0 w-full sm:w-auto">
-                <Filter className="h-4 w-4 text-accent" />
-                Formato: <span className="text-primary">{activeType}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-none shadow-2xl">
-              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-3 py-3">Filtrar por Formato</DropdownMenuLabel>
-              {types.map(type => (
-                <DropdownMenuItem 
-                  key={type} 
-                  onClick={() => setActiveType(type)}
-                  className={`rounded-xl px-3 py-2.5 font-bold text-sm cursor-pointer mb-1 last:mb-0 ${activeType === type ? 'bg-primary text-white' : ''}`}
-                >
-                  {type}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* category pills */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5 px-0.5">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              aria-pressed={activeCategory === cat}
+              className={`shrink-0 h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200
+                ${activeCategory === cat
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-white text-slate-500 border border-slate-200 hover:border-primary/30 hover:text-primary"}`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {filteredResources.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredResources.map((item, index) => (
-              <Card key={item.id} className="gradient-border overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-1.5 hover:glow-orange-strong transition-all duration-300 group bg-white rounded-[2.5rem] flex flex-col h-full">
-                <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 shrink-0">
-                  <Image
-                    src={getSafeLibraryImage(item.image_url, item.category)}
-                    alt={item.title || "Obra"}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    priority={index === 0}
-                  />
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    <Badge className="bg-white/95 backdrop-blur-md text-primary border-none shadow-lg flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider">
-                      <BookOpen className="h-3.5 w-3.5 text-accent" />
-                      {item.type}
-                    </Badge>
-                  </div>
-                </div>
-                
-                <CardHeader className="p-8 space-y-3 flex-1">
-                  <Badge variant="outline" className="w-fit text-[8px] border-accent/20 text-accent font-black uppercase px-2 py-0.5 bg-accent/5 tracking-wider rounded-md">
-                    {item.category?.replace('LIVRO|', '')}
-                  </Badge>
-                  <CardTitle className="text-xl font-black text-primary italic leading-tight line-clamp-2 group-hover:text-accent transition-colors">
-                    {item.title}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-3 italic opacity-80">
-                    {item.description || "Obra literária selecionada para compor sua base de conhecimento e repertório."}
-                  </p>
-                </CardHeader>
-                
-                <CardFooter className="p-8 pt-0 mt-auto">
-                  <div className="flex gap-3 w-full pt-6 border-t border-muted/10">
-                    <Button asChild className="btn-shimmer flex-1 bg-primary text-white h-12 rounded-2xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all border-none">
-                      <Link href={`/dashboard/library/book/${item.id}`}>
-                        <PenLine className="h-4 w-4 mr-2 text-accent" /> Iniciar Leitura
-                      </Link>
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
+      {/* results count */}
+      {!loading && (
+        <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">
+          {filtered.length} {filtered.length === 1 ? "obra encontrada" : "obras encontradas"}
+          {hasFilters && " com filtros ativos"}
+        </p>
+      )}
+
+      {/* ── CONTENT ── */}
+      {loading ? (
+        viewMode === "grid" ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="py-24 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-white/50 animate-in zoom-in-95 duration-500">
-            <BookOpen className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-            <p className="font-black italic text-xl text-primary/40">Biblioteca em Construção</p>
-            <p className="text-sm text-muted-foreground mt-2">Nenhum livro disponível neste filtro no momento.</p>
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => <RowSkeleton key={i} />)}
+          </div>
+        )
+      ) : filtered.length === 0 ? (
+        <div className="py-24 text-center border-2 border-dashed border-slate-200 rounded-[3rem] bg-white/60 animate-in zoom-in-95 duration-500">
+          <BookOpen className="h-14 w-14 text-slate-200 mx-auto mb-4" />
+          <p className="font-black italic text-xl text-slate-400">Nenhuma obra encontrada</p>
+          <p className="text-sm text-slate-400 mt-1 mb-5">Tente ajustar os filtros ou a busca.</p>
+          {hasFilters && (
+            <button onClick={clearFilters} className="text-xs font-black uppercase tracking-wider text-accent hover:underline">
+              Limpar filtros
+            </button>
+          )}
+        </div>
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+          {filtered.map(item => <BookCard key={item.id} item={item} />)}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(item => <BookRow key={item.id} item={item} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── BookCard ─────────────────────────────────────────────────────────────────
+function BookCard({ item }: { item: any }) {
+  const cat      = item.category?.replace("LIVRO|", "") || "";
+  const meta     = typeMeta(item.type);
+  const Icon     = meta.icon;
+  const grad     = coverGradient(item.id);
+  const hasImage = !!item.image_url;
+
+  return (
+    <Link
+      href={`/dashboard/library/book/${item.id}`}
+      className="group flex flex-col rounded-[2rem] bg-white border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+    >
+      <div className={`aspect-[3/4] relative overflow-hidden shrink-0 bg-gradient-to-br ${grad}`}>
+        {hasImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.image_url}
+            alt={item.title || "Capa"}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 gap-2">
+            <BookOpen className="h-10 w-10 text-white/30" />
+            <p className="text-white/80 font-black italic text-center text-xs leading-tight line-clamp-4">{item.title}</p>
           </div>
         )}
-      </Tabs>
-    </div>
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+        <div className="absolute top-2.5 left-2.5">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wide ${meta.bg} ${meta.text}`}>
+            <Icon className="h-2.5 w-2.5" /> {item.type || "Livro"}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-4 flex-1 flex flex-col gap-1">
+        {cat && <span className="text-[9px] font-black uppercase tracking-widest text-accent">{cat}</span>}
+        <p className="text-sm font-black text-slate-800 italic leading-snug line-clamp-2">{item.title}</p>
+        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 flex-1 mt-0.5">
+          {item.description || "Obra selecionada para ampliar seu repertório."}
+        </p>
+      </div>
+
+      <div className="px-4 pb-4">
+        <div className="h-9 bg-primary rounded-xl flex items-center justify-center gap-1.5 text-white text-[10px] font-black uppercase tracking-wide group-hover:bg-primary/90 transition-colors">
+          <BookOpen className="h-3.5 w-3.5" /> Ler Agora
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ─── BookRow ──────────────────────────────────────────────────────────────────
+function BookRow({ item }: { item: any }) {
+  const cat      = item.category?.replace("LIVRO|", "") || "";
+  const meta     = typeMeta(item.type);
+  const Icon     = meta.icon;
+  const grad     = coverGradient(item.id);
+  const hasImage = !!item.image_url;
+
+  return (
+    <Link
+      href={`/dashboard/library/book/${item.id}`}
+      className="group flex items-center gap-4 rounded-2xl bg-white border border-slate-100 p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+    >
+      <div className={`w-14 h-[4.5rem] rounded-xl shrink-0 relative overflow-hidden bg-gradient-to-br ${grad}`}>
+        {hasImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <BookOpen className="h-6 w-6 text-white/50" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          {cat && <span className="text-[9px] font-black uppercase tracking-widest text-accent">{cat}</span>}
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wide ${meta.bg} ${meta.text}`}>
+            <Icon className="h-2.5 w-2.5" /> {item.type || "Livro"}
+          </span>
+        </div>
+        <p className="text-sm font-black text-slate-800 italic leading-snug truncate">{item.title}</p>
+        <p className="text-xs text-slate-400 line-clamp-1">
+          {item.description || "Obra selecionada para ampliar seu repertório."}
+        </p>
+      </div>
+
+      <div className="shrink-0 h-9 w-9 rounded-xl bg-slate-50 group-hover:bg-primary flex items-center justify-center transition-all duration-200">
+        <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" />
+      </div>
+    </Link>
   );
 }

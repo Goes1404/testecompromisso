@@ -36,6 +36,33 @@ interface FamilyMember {
   income: string;
 }
 
+const formatBrazilianCurrency = (value: string): string => {
+  if (!value) return "";
+  const clean = value.replace(/\D/g, "");
+  if (!clean) return "";
+  const floatValue = Number(clean) / 100;
+  return floatValue.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const parseBrazilianNumber = (value: string): number => {
+  if (!value) return 0;
+  const cleanValue = value.replace(/\./g, "").replace(",", ".");
+  return Number(cleanValue) || 0;
+};
+
+const formatInitialValue = (val: any): string => {
+  if (val === undefined || val === null || val === "") return "";
+  const num = Number(val);
+  if (isNaN(num)) return String(val);
+  return num.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 export default function FinancialAidPage() {
   const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -60,7 +87,11 @@ export default function FinancialAidPage() {
   useEffect(() => {
     if (profile) {
       if (profile.family_members && Array.isArray(profile.family_members) && profile.family_members.length > 0) {
-        setFamilyMembers(profile.family_members);
+        const formattedMembers = (profile.family_members as FamilyMember[]).map(m => ({
+          ...m,
+          income: formatInitialValue(m.income)
+        }));
+        setFamilyMembers(formattedMembers);
       }
       if (profile.family_income !== undefined && profile.family_income !== null && profile.family_size) {
         setResult({
@@ -76,7 +107,7 @@ export default function FinancialAidPage() {
   }, [profile]);
 
   const totalFamilyIncome = useMemo(() => {
-    return members.reduce((acc, m) => acc + (Number(m.income) || 0), 0);
+    return members.reduce((acc, m) => acc + parseBrazilianNumber(m.income), 0);
   }, [members]);
 
   const addMember = () => {
@@ -144,7 +175,7 @@ export default function FinancialAidPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
+    <div className="max-w-6xl mx-auto space-y-5 md:space-y-8 animate-in fade-in duration-500 pb-8 px-1">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
@@ -168,16 +199,16 @@ export default function FinancialAidPage() {
         
         {/* Coluna 1: Instruções e Regras */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative group transition-all duration-500 hover:shadow-primary/20">
-            <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-            <CardHeader className="p-8">
-              <div className="h-12 w-12 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center mb-6 shadow-xl rotate-3 group-hover:rotate-0 transition-transform">
-                <Scale className="h-6 w-6" />
+          <Card className="border-none shadow-xl bg-primary text-white rounded-2xl md:rounded-[2.5rem] overflow-hidden relative group transition-all duration-500">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-accent/20 rounded-full blur-2xl pointer-events-none" />
+            <CardHeader className="p-5 md:p-8">
+              <div className="h-10 w-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center mb-4 shadow-xl">
+                <Scale className="h-5 w-5" />
               </div>
-              <CardTitle className="text-2xl font-black italic">A Regra de 1,5 SM</CardTitle>
-              <CardDescription className="text-white/60 font-medium italic">O critério oficial do Governo Federal.</CardDescription>
+              <CardTitle className="text-xl font-black italic">A Regra de 1,5 SM</CardTitle>
+              <CardDescription className="text-white/60 font-medium italic text-xs">O critério oficial do Governo Federal.</CardDescription>
             </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-6">
+            <CardContent className="p-5 md:p-8 pt-0 space-y-5">
               <div className="p-5 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-sm space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
                   <CheckCircle2 className="h-3 w-3" /> Teto Atualizado
@@ -201,7 +232,7 @@ export default function FinancialAidPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
+          <Card className="border-none shadow-md bg-white rounded-2xl p-5 md:p-7 space-y-3">
             <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
               <HelpCircle className="h-3.5 w-3.5 text-accent" /> Dica da Aurora
             </h3>
@@ -213,23 +244,23 @@ export default function FinancialAidPage() {
 
         {/* Coluna 2: Formulário e Resultado */}
         <div className="lg:col-span-8 space-y-8">
-          <Card className="shadow-2xl border-none bg-white rounded-[2.5rem] overflow-hidden transition-all duration-500">
-            <CardHeader className="bg-muted/10 p-10 border-b border-muted/20">
+          <Card className="shadow-xl border-none bg-white rounded-2xl md:rounded-[2.5rem] overflow-hidden">
+            <CardHeader className="bg-muted/10 p-5 md:p-8 border-b border-muted/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-3">
+                  <CardTitle className="text-xl font-black text-primary italic flex items-center gap-2">
                     Calculadora de Renda
-                    <Sparkles className="h-5 w-5 text-accent" />
+                    <Sparkles className="h-4 w-4 text-accent" />
                   </CardTitle>
-                  <CardDescription className="font-medium italic">Adicione cada integrante que mora com você (campos opcionais).</CardDescription>
+                  <CardDescription className="font-medium italic text-xs mt-0.5">Adicione cada integrante que mora com você.</CardDescription>
                 </div>
                 <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Soma Atual</p>
-                  <p className="text-2xl font-black text-primary italic">R$ {totalFamilyIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Soma Atual</p>
+                  <p className="text-xl font-black text-primary italic">R$ {totalFamilyIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-10">
+            <CardContent className="p-5 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 
                 <div className="space-y-4">
@@ -247,10 +278,10 @@ export default function FinancialAidPage() {
                       <div className="w-full sm:w-48 space-y-2">
                         <Label className="text-[9px] font-black uppercase text-primary/40 ml-2">Renda Bruta (R$)</Label>
                         <Input 
-                          type="number" 
-                          placeholder="0.00" 
+                          type="text" 
+                          placeholder="0,00" 
                           value={member.income} 
-                          onChange={(e) => updateMember(member.id, 'income', e.target.value)}
+                          onChange={(e) => updateMember(member.id, 'income', formatBrazilianCurrency(e.target.value))}
                           className="h-12 bg-white rounded-xl border-none font-black text-primary"
                         />
                       </div>
@@ -294,50 +325,54 @@ export default function FinancialAidPage() {
 
           {result && !loading && (
             <div className="animate-in zoom-in-95 slide-in-from-top-10 duration-700">
-              <Card className={`border-none shadow-2xl rounded-[3rem] overflow-hidden ${result.eligible ? 'bg-green-50/50' : 'bg-red-50/50'}`}>
-                <div className={`p-10 flex flex-col md:flex-row items-center gap-8 ${result.eligible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'} transition-all duration-1000`}>
-                  <div className="h-20 w-20 rounded-[2rem] bg-white/20 backdrop-blur-xl flex items-center justify-center shrink-0 shadow-2xl rotate-3">
-                    {result.eligible ? <CheckCircle2 className="h-10 w-10" /> : <FileWarning className="h-10 w-10" />}
+              <Card className={`border-none shadow-xl rounded-2xl md:rounded-[2.5rem] overflow-hidden ${result.eligible ? 'bg-green-50/50' : 'bg-red-50/50'}`}>
+                <div className={`p-5 md:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 ${result.eligible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                  <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-xl flex items-center justify-center shrink-0 shadow-xl">
+                    {result.eligible ? <CheckCircle2 className="h-7 w-7" /> : <FileWarning className="h-7 w-7" />}
                   </div>
-                  <div className="text-center md:text-left space-y-1">
-                    <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter leading-none">
+                  <div className="space-y-0.5">
+                    <h3 className="text-xl md:text-2xl font-black italic tracking-tighter leading-tight">
                       {result.eligible ? "Elegível para Isenção" : "Fora do Critério de Isenção"}
                     </h3>
-                    <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] opacity-80">
-                      Diagnóstico: {result.familySize} pessoas / R$ {result.totalFamilyIncome.toLocaleString('pt-BR')} total
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-80">
+                      {result.familySize} pessoas · R$ {result.totalFamilyIncome.toLocaleString('pt-BR')} total
                     </p>
                   </div>
                 </div>
-                <CardContent className="p-10">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-6 bg-white rounded-3xl border-2 border-muted/10 flex flex-col gap-1 shadow-inner group hover:border-accent/30 transition-all">
-                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Sua Renda Per Capita</span>
-                      <span className={`text-3xl font-black italic ${result.eligible ? 'text-green-600' : 'text-red-600'}`}>R$ {result.perCapita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                      <p className="text-[8px] font-bold text-muted-foreground mt-2 uppercase">Valor por cada morador da casa</p>
+                <CardContent className="p-5 md:p-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-2xl border border-muted/20 flex flex-col gap-1 shadow-sm">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Renda Per Capita</span>
+                      <span className={`text-2xl font-black italic ${result.eligible ? 'text-green-600' : 'text-red-500'}`}>
+                        R$ {result.perCapita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase">Por morador</p>
                     </div>
-                    <div className="p-6 bg-white rounded-3xl border-2 border-muted/10 flex flex-col gap-1 shadow-inner">
-                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Limite de 1,5 Salário Mínimo</span>
-                      <span className="text-3xl font-black text-primary italic">R$ {result.threshold.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                      <p className="text-[8px] font-bold text-muted-foreground mt-2 uppercase">Referência MEC / Governo Federal</p>
+                    <div className="p-4 bg-white rounded-2xl border border-muted/20 flex flex-col gap-1 shadow-sm">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Limite 1,5 SM</span>
+                      <span className="text-2xl font-black text-primary italic">
+                        R$ {result.threshold.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase">Referência MEC</p>
                     </div>
                   </div>
-                  
-                  <div className="mt-10 flex flex-col md:flex-row gap-4">
-                    <Button asChild className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 font-black h-16 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95 text-base">
-                      <Link href="/dashboard/chat/aurora-ai">
+
+                  <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                    <Button asChild className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 font-black h-12 rounded-xl shadow-lg active:scale-95 transition-all [touch-action:manipulation]">
+                      <Link href="/dashboard/chat/aurora-ai" className="flex items-center justify-center gap-2">
                         Tirar Dúvidas com Aurora
-                        <ArrowRight className="h-5 w-5 ml-2" />
+                        <ArrowRight className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button variant="outline" className="flex-1 h-16 rounded-2xl border-2 font-black text-primary hover:bg-muted/50 transition-all" asChild>
+                    <Button variant="outline" asChild className="flex-1 h-12 rounded-xl border-2 font-black text-primary hover:bg-muted/50 active:scale-95 transition-all [touch-action:manipulation]">
                       <Link href="/dashboard/student/documents">
-                        Checklist de Documentos
+                        Checklist de Docs
                       </Link>
                     </Button>
                   </div>
-                  
-                  <p className="mt-8 text-[10px] text-center text-muted-foreground font-bold uppercase italic opacity-60">
-                    *Este cálculo considera o Salário Mínimo de R$ {result.minWage.toLocaleString('pt-BR')}. Os editais podem sofrer variações anuais.
+
+                  <p className="mt-5 text-[9px] text-center text-muted-foreground font-bold uppercase italic opacity-60">
+                    *Salário Mínimo de referência: R$ {result.minWage.toLocaleString('pt-BR')}. Editais podem variar.
                   </p>
                 </CardContent>
               </Card>

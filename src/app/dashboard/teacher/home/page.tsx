@@ -2,25 +2,25 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  Users, 
-  PlayCircle, 
-  TrendingUp, 
-  Bell, 
-  ArrowRight, 
-  Loader2, 
-  AlertCircle, 
-  ShieldAlert,
+import {
+  Users,
+  PlayCircle,
+  TrendingUp,
+  Bell,
+  Loader2,
+  AlertCircle,
   Activity,
   HandHeart,
   Info,
   Megaphone,
   AlertOctagon,
-  MessageSquare
+  ClipboardCheck,
+  MonitorPlay,
+  FilePenLine,
+  Database,
+  CalendarDays
 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -191,180 +191,200 @@ export default function TeacherHomePage() {
     return null; // Redirecionamento no useEffect tratará isso
   }
 
+  const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const firstName = (profile as any)?.name?.split(' ')[0] || (profile as any)?.full_name?.split(' ')[0] || 'Professor';
+
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      {/* Banner Principal Estilizado */}
-      <div className="aurora-dark dot-grid rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-[100px] animate-pulse" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
-                <Users className="h-6 w-6 text-accent" />
-              </div>
-              <Badge className="bg-accent text-accent-foreground border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-xl">
-                Espaço do Professor
-              </Badge>
+    <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500 pb-6 px-0.5">
+
+      {/* ── HERO ── */}
+      <div className="aurora-dark dot-grid rounded-2xl md:rounded-[2.5rem] p-5 md:p-10 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-56 h-56 bg-accent/20 rounded-full blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse block" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Painel do Professor</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white italic leading-none uppercase">
-              Painel de Gestão <span className="text-accent">Docente</span>
+            <h1 className="text-2xl md:text-4xl font-black text-white italic tracking-tighter leading-tight">
+              Olá, {firstName}! 👋
             </h1>
-            <p className="text-white/60 font-medium italic text-lg max-w-xl">
-              Bem-vindo, {profile?.full_name?.split(' ')[0] || 'Professor'}. Pronto para elevar o nível da sua turma hoje?
-            </p>
+            <p className="text-white/40 text-xs font-semibold mt-1 capitalize">{today}</p>
           </div>
-          
-          <div className="flex flex-wrap items-center gap-4">
-            <Button 
-              variant="outline" 
-              onClick={runDiagnostic} 
-              disabled={diagLoading}
-              className="btn-shimmer rounded-2xl h-14 border-none bg-white/5 hover:bg-white/10 text-white font-black shadow-2xl glow-orange-strong px-6 backdrop-blur-md transition-all active:scale-95"
-            >
-              {diagLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Activity className="h-5 w-5 mr-2 text-accent" />}
-              Diagnóstico de Rede
+          <div className="flex gap-2 flex-wrap">
+            <Button asChild className="btn-shimmer rounded-xl h-11 bg-accent text-accent-foreground font-black border-none px-5 text-xs uppercase tracking-wide active:scale-95 transition-all [touch-action:manipulation] shadow-lg shadow-accent/30">
+              <Link href="/dashboard/teacher/attendance/new">
+                <ClipboardCheck className="h-4 w-4 mr-1.5" />
+                Iniciar Chamada
+              </Link>
             </Button>
-            <Button className="btn-shimmer rounded-2xl h-14 bg-accent text-accent-foreground font-black hover:bg-accent/90 shadow-2xl glow-orange-strong border-none px-10 [touch-action:manipulation] active:scale-95 transition-all" asChild>
-              <Link href="/dashboard/teacher/trails">
-                <PlayCircle className="h-5 w-5 mr-2" />
-                Nova Trilha
+            <Button asChild variant="outline" className="rounded-xl h-11 border-white/10 bg-white/5 text-white font-black px-5 text-xs uppercase hover:bg-white/10 active:scale-95 transition-all [touch-action:manipulation]">
+              <Link href="/dashboard/teacher/live">
+                <MonitorPlay className="h-4 w-4 mr-1.5" />
+                Lives
               </Link>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ── KPI CARDS — 2×2 on mobile ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
-          { label: "Total Alunos", value: stats.totalStudents, icon: Users, color: "text-blue-600", bg: "bg-blue-50", href: "/dashboard/teacher/students" },
-          { label: "Apoio Social", value: stats.eligibleStudents, icon: HandHeart, color: "text-green-600", bg: "bg-green-50", href: "/dashboard/teacher/students" },
-          { label: "Minhas Trilhas", value: stats.myTrails, icon: PlayCircle, color: "text-orange-600", bg: "bg-orange-50", href: "/dashboard/teacher/trails" },
-          { label: "Rankings", value: "Top 10", icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", href: "/dashboard/teacher/rankings" },
+          { label: "Alunos",       value: stats.totalStudents,   sub: "Total ativo",   icon: Users,      color: "text-blue-600",   bg: "bg-blue-50",   href: "/dashboard/teacher/students" },
+          { label: "Apoio Social", value: stats.eligibleStudents, sub: "Elegíveis",     icon: HandHeart,  color: "text-green-600",  bg: "bg-green-50",  href: "/dashboard/teacher/students" },
+          { label: "Em Risco",     value: stats.atRisk,           sub: "Inativos >7d",  icon: AlertCircle,color: "text-red-500",    bg: "bg-red-50",    href: "/dashboard/teacher/students" },
+          { label: "Acerto Médio", value: `${stats.avgScore}%`,   sub: "Taxa global",   icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", href: "/dashboard/teacher/analytics" },
         ].map((stat, i) => (
           <Link key={i} href={stat.href} className="block">
-            <Card className="gradient-border border-none shadow-xl overflow-hidden group hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 rounded-[2rem] bg-white cursor-pointer active:scale-[0.98] [touch-action:manipulation]">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between">
-                  <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 shadow-inner`}>
-                    <stat.icon className="h-7 w-7" />
-                  </div>
-                  <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-widest bg-muted/30 border-none px-2 py-1">Sincronizado</Badge>
-                </div>
-                <div className="mt-6">
-                  {dataLoading ? (
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground opacity-20" />
-                  ) : (
-                    <p className="text-4xl font-black text-primary leading-none italic">{stat.value}</p>
-                  )}
-                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-3">{stat.label}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all [touch-action:manipulation] cursor-pointer">
+              <div className={`h-9 w-9 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </div>
+              {dataLoading ? (
+                <div className="h-7 w-14 bg-slate-100 animate-pulse rounded-lg mb-1" />
+              ) : (
+                <p className="text-2xl md:text-3xl font-black text-slate-900 italic leading-none">{stat.value}</p>
+              )}
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-1.5">{stat.label}</p>
+              <p className="text-[9px] text-slate-400 italic">{stat.sub}</p>
+            </div>
           </Link>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-          <CardHeader className="p-10 pb-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl font-black text-primary italic">Engajamento de Rede</CardTitle>
-                <CardDescription className="font-medium italic text-lg mt-1">Comparativo de atividade por janela de tempo.</CardDescription>
-              </div>
-              <Activity className="h-8 w-8 text-accent opacity-20" />
+      {/* ── QUICK ACTIONS — horizontal scroll ── */}
+      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+        {[
+          { label: "Nova Trilha",  icon: PlayCircle,    href: "/dashboard/teacher/trails",        color: "from-violet-500 to-purple-600" },
+          { label: "Comunicado",   icon: Bell,           href: "/dashboard/teacher/communication",  color: "from-blue-500 to-indigo-600" },
+          { label: "Redações",     icon: FilePenLine,    href: "/dashboard/teacher/essays",         color: "from-emerald-500 to-green-600" },
+          { label: "Questões",     icon: Database,       href: "/dashboard/teacher/questions",      color: "from-amber-500 to-orange-500" },
+          { label: "Calendário",   icon: CalendarDays,   href: "/dashboard/teacher/calendar",       color: "from-pink-500 to-rose-500" },
+          { label: "Analytics",    icon: Activity,       href: "/dashboard/teacher/analytics",      color: "from-slate-600 to-slate-800" },
+        ].map((action) => (
+          <Link key={action.label} href={action.href} className="shrink-0">
+            <div className={`btn-shimmer flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${action.color} rounded-2xl p-3.5 w-[88px] shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all [touch-action:manipulation]`}>
+              <action.icon className="h-5 w-5 text-white" strokeWidth={1.5} />
+              <span className="text-[9px] font-bold text-white/90 uppercase tracking-wide text-center leading-tight">{action.label}</span>
             </div>
-          </CardHeader>
-          <CardContent className="p-10 pt-6">
-            <div className="h-[300px] w-full">
-              {dataLoading ? (
-                <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/20">Renderizando Analíticos...</p>
-                </div>
-              ) : (
-                <TeacherEngagementChart data={chartData} />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          </Link>
+        ))}
+      </div>
 
-        <div className="space-y-8">
-          <Card className="aurora-dark border-none shadow-2xl text-primary-foreground rounded-[3rem] overflow-hidden relative group gradient-border dot-grid">
-            <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150" />
-            <CardHeader className="pb-2 p-10 relative z-10">
-              <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 text-accent">
-                <Bell className="h-5 w-5 animate-pulse" />
-                Busca Ativa (Social)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-10 pb-10 space-y-5 relative z-10">
-              {eligibleList.length === 0 ? (
-                <div className="py-10 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
-                  <p className="text-[10px] font-bold italic">Sem alertas pendentes.</p>
-                </div>
-              ) : (
-                eligibleList.map((aluno, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
-                    <div className="flex flex-col overflow-hidden">
-                      <span className="text-sm font-black truncate max-w-[120px] italic">{aluno.name}</span>
-                      <span className="text-[8px] font-black text-accent uppercase tracking-widest mt-1">Elegível Isenção</span>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-9 text-[9px] font-black uppercase text-accent hover:bg-white hover:text-primary transition-all px-4 rounded-xl shrink-0" asChild>
-                      <Link href={`/dashboard/chat/${aluno.id}`}>Orientar</Link>
-                    </Button>
-                  </div>
-                ))
-              )}
-              <Button asChild variant="secondary" className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black text-xs uppercase shadow-xl hover:scale-105 transition-transform mt-4 border-none">
-                <Link href="/dashboard/teacher/students">Ver Base Completa</Link>
-              </Button>
-            </CardContent>
-          </Card>
+      {/* ── MAIN CONTENT ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
 
-          <Card className="gradient-border border-none shadow-xl bg-white rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center space-y-4 glow-orange">
-            <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-primary shadow-inner">
-              <TrendingUp className="h-7 w-7" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Taxa de Sucesso</p>
-              <p className="text-3xl font-black text-primary italic">{stats.avgScore}%</p>
-            </div>
-          </Card>
+        {/* LEFT — chart + announcements */}
+        <div className="lg:col-span-2 space-y-4 md:space-y-5">
 
-          {/* Seção de Avisos Destacados para Professores */}
-          <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden">
-            <CardHeader className="p-8 pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-black text-primary italic uppercase tracking-tighter">Comunicados</CardTitle>
-                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center">
-                  <Megaphone className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-4">
+          {/* Announcements */}
+          <div className="bg-white rounded-2xl md:rounded-[2rem] shadow-md border border-slate-100 p-4 md:p-7">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-black text-sm text-slate-900 italic flex items-center gap-2">
+                <Megaphone className="h-4 w-4 text-amber-500" />
+                Comunicados
+              </h2>
+              <Link href="/dashboard/teacher/communication" className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors">
+                Ver tudo
+              </Link>
+            </div>
+            <div className="space-y-2.5">
               {announcements.map((ann) => {
                 const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                 const Icon = styles.icon;
                 return (
-                  <div key={ann.id} className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} transition-all hover:bg-white hover:shadow-md relative overflow-hidden group`}>
-                    <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
-                      <Icon className={`h-5 w-5 ${styles.color}`} />
+                  <div key={ann.id} className={`flex items-start gap-3 p-3 rounded-xl ${styles.bgColor} border ${styles.border} relative overflow-hidden`}>
+                    {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-l-xl" />}
+                    <div className="h-9 w-9 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                      <Icon className={`h-4 w-4 ${styles.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                       <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
-                       </div>
-                       <p className="font-bold text-sm text-slate-900 truncate">{ann.title}</p>
-                       <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed italic">{ann.message}</p>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`text-[7px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
+                      </div>
+                      <p className="font-black text-xs text-slate-900 truncate">{ann.title}</p>
+                      <p className="text-[11px] text-slate-500 line-clamp-1 italic mt-0.5">{ann.message}</p>
                     </div>
                   </div>
                 );
               })}
-              <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors">
-                <Link href="/dashboard/teacher/communication">Histórico Completo</Link>
+            </div>
+          </div>
+
+          {/* Engagement chart */}
+          <div className="bg-white rounded-2xl md:rounded-[2rem] shadow-md border border-slate-100 p-4 md:p-7">
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="h-4 w-4 text-accent" />
+              <h2 className="font-black text-sm text-slate-900 italic">Engajamento da Turma</h2>
+            </div>
+            <div className="h-[180px] md:h-[260px] w-full">
+              {dataLoading ? (
+                <div className="h-full w-full bg-slate-50 animate-pulse rounded-xl" />
+              ) : (
+                <TeacherEngagementChart data={chartData} />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT — busca ativa + diagnostic */}
+        <div className="space-y-4">
+
+          {/* Busca Ativa */}
+          <div className="aurora-dark dot-grid rounded-2xl md:rounded-[2rem] p-5 md:p-7 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-accent/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative z-10">
+              <h2 className="font-black text-sm text-white italic flex items-center gap-2 mb-3">
+                <Bell className="h-4 w-4 text-accent animate-pulse" />
+                Busca Ativa
+              </h2>
+              {eligibleList.length === 0 ? (
+                <p className="text-white/40 text-xs italic text-center py-5 border border-white/10 rounded-xl">
+                  Sem alertas pendentes ✅
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {eligibleList.map((aluno, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/8 border border-white/10">
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-white italic truncate max-w-[130px]">{aluno.name}</p>
+                        <p className="text-[8px] font-black text-accent uppercase tracking-widest">Elegível Isenção</p>
+                      </div>
+                      <Button asChild size="sm" className="h-8 text-[9px] font-black uppercase bg-accent/15 hover:bg-accent/25 text-accent border-none rounded-xl px-3 shrink-0 transition-all active:scale-95">
+                        <Link href={`/dashboard/chat/${aluno.id}`}>Orientar</Link>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Button asChild className="w-full mt-4 h-11 rounded-xl bg-accent text-accent-foreground font-black text-xs uppercase border-none shadow-lg active:scale-95 transition-all [touch-action:manipulation]">
+                <Link href="/dashboard/teacher/students">Ver Todos Alunos</Link>
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          {/* Avg score pill */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-md p-4 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-purple-50 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Taxa de Sucesso</p>
+              <p className="text-2xl font-black text-slate-900 italic leading-none">{stats.avgScore}%</p>
+            </div>
+          </div>
+
+          {/* Diagnostic */}
+          <Button
+            variant="outline"
+            onClick={runDiagnostic}
+            disabled={diagLoading}
+            className="w-full rounded-xl h-11 border-slate-200 font-black text-xs uppercase tracking-wide active:scale-95 transition-all [touch-action:manipulation]"
+          >
+            {diagLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Activity className="h-4 w-4 mr-2 text-accent" />}
+            Diagnóstico de Rede
+          </Button>
         </div>
       </div>
     </div>

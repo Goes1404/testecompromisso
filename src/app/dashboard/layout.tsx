@@ -20,6 +20,7 @@ import { PushPermissionBanner } from "@/components/push-permission-banner";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
 import { ExtractionProvider } from "@/lib/ExtractionContext";
 import { FloatingExtractionBubble } from "@/components/FloatingExtractionBubble";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 type NavChild = { icon: any; label: string; href: string; id: string; badge?: boolean };
 type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: boolean; children?: NavChild[] };
@@ -372,12 +373,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user, isUserLoading, router, hasHydrated, pathname]);
 
   const isFullBleedPage = useMemo(
-    () => pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/'),
+    () => pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/') || (pathname.includes('/student/provas/') && pathname !== '/dashboard/student/provas'),
     [pathname]
   );
 
   const hideLayoutHeader = useMemo(
-    () => pathname.includes('/library/book/'),
+    () => pathname.includes('/library/book/') || (pathname.includes('/student/provas/') && pathname !== '/dashboard/student/provas'),
     [pathname]
   );
 
@@ -494,7 +495,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
         )}
 
-        <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'}`}>
+        <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'} ${userRole === 'student' ? 'pb-20 lg:pb-8' : ''}`}>
           <div className={isFullBleedPage ? 'flex-1 flex flex-col min-h-0' : 'max-w-7xl mx-auto w-full'}>
             <Suspense fallback={<div className="p-8 opacity-20 animate-pulse"><Sparkles className="h-10 w-10 text-accent" /></div>}>
               {children}
@@ -506,6 +507,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <UrgentNotice />
         <PushPermissionBanner />
         <FloatingExtractionBubble />
+        {userRole === 'student' && <MobileBottomNav />}
       </SidebarInset>
     </SidebarProvider>
     </ExtractionProvider>

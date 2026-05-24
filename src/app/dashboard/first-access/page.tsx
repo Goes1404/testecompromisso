@@ -5,227 +5,463 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  ShieldCheck, 
-  Loader2, 
-  Sparkles, 
-  AlertCircle, 
-  Eye, 
-  EyeOff, 
-  LockKeyhole,
-  CheckCircle2,
-  Info
+import {
+  ShieldCheck, Loader2, Sparkles, AlertCircle,
+  Eye, EyeOff, LockKeyhole, CheckCircle2, Info,
+  Phone, BookOpen, School, ChevronRight, ChevronLeft,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import Image from "next/image";
 
+type Step = 1 | 2 | 3;
+
+const EXAM_OPTIONS = [
+  { id: 'enem', label: 'ENEM', icon: BookOpen, desc: 'Ensino Superior — vestibulares' },
+  { id: 'etec', label: 'ETEC', icon: School,   desc: 'Ensino Técnico — ETEC/FATEC' },
+];
+const TURNO_OPTIONS = [
+  { id: 'manha',    label: 'Manhã',    emoji: '🌅', hint: '07h–12h' },
+  { id: 'tarde',    label: 'Tarde',    emoji: '☀️',  hint: '13h–18h' },
+  { id: 'integral', label: 'Integral', emoji: '🕐', hint: 'Manhã + Tarde' },
+];
+
+// Aplica máscara (11) 99999-9999
+function maskPhone(raw: string) {
+  const d = raw.replace(/\D/g, '').slice(0, 11);
+  if (d.length === 0) return '';
+  if (d.length <= 2)  return `(${d}`;
+  if (d.length <= 7)  return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+// ─── step indicator com labels ───────────────────────────────────────────────
+function StepBar({ current }: { current: Step }) {
+  const steps = [
+    { n: 1 as Step, label: 'Senha'  },
+    { n: 2 as Step, label: 'Perfil' },
+  ];
+  return (
+    <div className="flex items-center gap-3 justify-center">
+      {steps.map((s, i) => (
+        <div key={s.n} className="flex items-center gap-3">
+          <div className="flex flex-col items-center gap-1">
+            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black transition-all duration-300
+              ${current > s.n ? 'bg-green-500 text-white' : current === s.n ? 'bg-white text-primary' : 'bg-white/15 text-white/40'}`}>
+              {current > s.n ? <CheckCircle2 className="h-4 w-4" /> : s.n}
+            </div>
+            <span className={`text-[9px] font-black uppercase tracking-wider transition-colors
+              ${current >= s.n ? 'text-white/70' : 'text-white/30'}`}>
+              {s.label}
+            </span>
+          </div>
+          {i === 0 && (
+            <div className={`h-0.5 w-12 rounded-full mb-4 transition-all duration-500
+              ${current > 1 ? 'bg-white/60' : 'bg-white/15'}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── page ────────────────────────────────────────────────────────────────────
 export default function FirstAccessPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  // Requisitos de senha
+  const [step, setStep]       = useState<Step>(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
+
+  // step 1
+  const [newPassword, setNewPassword]         = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPass, setShowPass]               = useState(false);
+  const [showConfirm, setShowConfirm]         = useState(false);
+
+  // step 2
+  const [phone, setPhone]           = useState("");
+  const [sala, setSala]             = useState("");
+  const [examTarget, setExamTarget] = useState("");
+  const [turno, setTurno]           = useState("");
+
+  // pré-preenche com máscara aplicada
+  useEffect(() => {
+    if (!profile) return;
+    const p = profile as any;
+    if (p.phone)       setPhone(maskPhone(p.phone));
+    if (p.sala)        setSala(p.sala);
+    if (p.exam_target) setExamTarget(p.exam_target);
+    if (p.turno)       setTurno(p.turno);
+  }, [profile]);
+
+  useEffect(() => {
+    if (!authLoading && !user) router.replace("/login");
+  }, [user, authLoading, router]);
+
+  // validações step 1
   const hasLength = newPassword.length >= 8;
   const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
   const hasNumber = /[0-9]/.test(newPassword);
-  const isMatch = newPassword === confirmPassword && confirmPassword.length > 0;
+  const isMatch   = newPassword === confirmPassword && confirmPassword.length > 0;
+  const step1OK   = hasLength && hasSymbol && hasNumber && isMatch;
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, authLoading, router]);
+  function handlePhoneChange(v: string) {
+    setPhone(maskPhone(v));
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ── step 1 ──
+  const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    if (!hasLength || !hasSymbol || !hasNumber) {
-      setError("A senha não atende aos requisitos mínimos de segurança.");
-      return;
-    }
-
-    if (!isMatch) {
-      setError("As senhas não coincidem.");
-      return;
-    }
-
+    if (!step1OK) { setError("Verifique os requisitos de senha antes de continuar."); return; }
     setLoading(true);
-
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error: err } = await supabase.auth.updateUser({
         password: newPassword,
-        data: { must_change_password: false }
+        data: { must_change_password: false },
       });
-
-      if (updateError) throw updateError;
-
-      // Se tudo der certo, marca como sucesso
-      setSuccess(true);
-      toast({
-        title: "Senha atualizada com sucesso!",
-        description: "Seu acesso seguro foi configurado.",
-      });
-
-      // Aguarda 2 segundos para o feedback visual antes de ir para a home
-      setTimeout(() => {
-        window.location.assign("/dashboard");
-      }, 2000);
-
+      if (err) throw err;
+      setStep(2);
     } catch (err: any) {
-      setError(err.message || "Erro ao atualizar senha residencial.");
+      setError(err.message || "Não foi possível salvar a senha. Tente novamente.");
+    } finally {
       setLoading(false);
     }
   };
 
-  // Se o usuário já está logado no Auth, deixamos ele ver a página mesmo que o Perfil demore
+  // ── step 2 ──
+  const handleProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!examTarget) { setError("Selecione seu objetivo: ENEM ou ETEC."); return; }
+    if (!turno)      { setError("Selecione o turno em que você estuda."); return; }
+    setLoading(true);
+    try {
+      if (!user) throw new Error("Sessão expirada. Faça login novamente.");
+      const { error: err } = await supabase
+        .from('profiles')
+        .update({
+          phone:       phone.replace(/\D/g, '') || null,
+          sala:        sala.trim() || null,
+          exam_target: examTarget,
+          turno,
+        })
+        .eq('id', user.id);
+      if (err) throw err;
+      toast({ title: "Perfil salvo!", description: "Seja bem-vindo ao Compromisso!" });
+      setStep(3);
+      setTimeout(() => window.location.assign("/dashboard"), 2000);
+    } catch (err: any) {
+      setError(err.message || "Não foi possível salvar o perfil. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (authLoading && !user) return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-gray-950">
+    <div className="h-screen w-full flex items-center justify-center bg-gray-950">
       <Loader2 className="h-10 w-10 animate-spin text-accent" />
     </div>
   );
 
   return (
-    <div className="min-h-screen w-full bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decorativo */}
+    // items-start + py-8 permite scroll em telas pequenas sem truncar conteúdo
+    <div className="min-h-screen w-full bg-gray-950 flex items-start sm:items-center justify-center p-4 py-8 relative overflow-x-hidden">
+      {/* glows */}
       <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
-      
-      <div className="w-full max-w-xl space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
+
+      <div className="w-full max-w-lg space-y-6 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+        {/* cabeçalho */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 shadow-lg" title="Configuração de Segurança">
+          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10">
             <Sparkles className="h-4 w-4 text-accent" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Configuração de Segurança</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Primeiro Acesso</span>
           </div>
-          
           <h1 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
             Bem-vindo ao <span className="text-primary">Compromisso!</span>
           </h1>
-          <p className="text-white/50 text-sm font-medium italic max-w-md mx-auto">
-            Este é seu primeiro acesso. Por favor, defina sua senha definitiva de segurança.
-          </p>
+          {step < 3 && <StepBar current={step} />}
         </div>
 
-        <Card className="border-none shadow-2xl overflow-hidden bg-white rounded-[2.5rem]">
-          <CardHeader className="p-8 pb-4 text-center border-b border-dashed border-muted">
-            <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <LockKeyhole className="h-7 w-7 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-black text-primary italic uppercase">Sua Nova Senha</CardTitle>
-          </CardHeader>
-          
-          <CardContent className="p-8 space-y-6">
-            {error && (
-              <Alert variant="destructive" className="bg-red-50 border-red-200">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-xs font-bold uppercase">{error}</AlertDescription>
-              </Alert>
-            )}
+        {/* ════ card ════ */}
+        <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
 
-            {success ? (
-              <div className="py-10 text-center space-y-4">
-                <div className="h-20 w-20 bg-green-100 rounded-3xl flex items-center justify-center mx-auto text-green-600 animate-bounce">
-                  <CheckCircle2 className="h-10 w-10" />
+          {/* ══ STEP 1: SENHA ══ */}
+          {step === 1 && (
+            <form onSubmit={handlePassword} noValidate>
+              <div className="p-7 pb-5 border-b border-dashed border-slate-100 flex flex-col items-center gap-2 text-center">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <LockKeyhole className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-black text-primary italic">Acesso Configurado!</h3>
-                <p className="text-sm text-slate-500 font-medium">Você será redirecionado para a plataforma principal...</p>
+                <h2 className="text-xl font-black text-primary italic">Crie sua Senha</h2>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-xs">
+                  Escolha uma senha segura — ela será seu acesso único à plataforma.
+                </p>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-black uppercase text-primary/60 px-2 tracking-widest">Nova Senha</Label>
-                    <div className="relative">
-                      <Input 
-                        type={showPassword ? "text" : "password"} 
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="h-14 bg-muted/30 border-none rounded-2xl font-bold px-6 pr-14 text-lg focus-visible:ring-accent shadow-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-5 top-1/2 -translate-y-1/2 text-primary/30 hover:text-primary transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-black uppercase text-primary/60 px-2 tracking-widest">Confirmar Senha</Label>
-                    <div className="relative">
-                      <Input 
-                        type={showConfirmPassword ? "text" : "password"} 
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="h-14 bg-muted/30 border-none rounded-2xl font-bold px-6 pr-14 text-lg focus-visible:ring-accent shadow-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-5 top-1/2 -translate-y-1/2 text-primary/30 hover:text-primary transition-colors"
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
-                      </button>
-                    </div>
+              <div className="p-7 space-y-5">
+                {error && (
+                  <div className="flex items-start gap-2.5 bg-red-50 text-red-600 rounded-2xl px-4 py-3 text-xs font-bold border border-red-100">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {error}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-password" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    Nova Senha
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showPass ? "text" : "password"}
+                      name="new-password"
+                      autoComplete="new-password"
+                      autoFocus
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="Mín. 8 caracteres"
+                      className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold px-5 pr-14 text-base focus-visible:ring-accent"
+                    />
+                    <button type="button" onClick={() => setShowPass(p => !p)} aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
+                      {showPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </div>
 
-                {/* Score de Segurança */}
-                <div className="grid grid-cols-2 gap-3 bg-muted/20 p-4 rounded-2xl border border-muted/20">
-                  <p className="col-span-2 text-[10px] font-black uppercase text-primary/40 tracking-widest mb-1 flex items-center gap-1.5">
-                    <ShieldCheck className="h-3 w-3" /> Requisitos de Segurança
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    Confirmar Senha
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm-password"
+                      type={showConfirm ? "text" : "password"}
+                      name="confirm-password"
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Digite a senha novamente"
+                      className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold px-5 pr-14 text-base focus-visible:ring-accent"
+                    />
+                    <button type="button" onClick={() => setShowConfirm(p => !p)} aria-label={showConfirm ? "Ocultar confirmação" : "Mostrar confirmação"}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
+                      {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* checklist de requisitos — sempre visível, verde quando ok */}
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="col-span-2 text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-1.5">
+                    <ShieldCheck className="h-3 w-3" /> Sua senha precisa ter
                   </p>
                   {[
-                    { label: "Mín. 8 caracteres", met: hasLength },
-                    { label: "Símbolo especial", met: hasSymbol },
-                    { label: "Número incluído", met: hasNumber },
-                    { label: "Senhas conferem", met: isMatch },
-                  ].map((req, i) => (
-                    <div key={i} className={`flex items-center gap-2 text-[10px] font-black uppercase ${req.met ? 'text-green-600' : 'text-slate-400'}`}>
-                      <div className={`h-1.5 w-1.5 rounded-full ${req.met ? 'bg-green-600' : 'bg-slate-300'}`} />
-                      {req.label}
+                    { label: "Mínimo 8 caracteres", met: hasLength },
+                    { label: "Pelo menos 1 número",  met: hasNumber },
+                    { label: "1 símbolo (ex: @, !)",  met: hasSymbol },
+                    { label: "Confirmação igual",    met: isMatch   },
+                  ].map((r, i) => (
+                    <div key={i} className={`flex items-center gap-1.5 text-[10px] font-bold transition-colors ${r.met ? 'text-green-600' : 'text-slate-400'}`}>
+                      <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 transition-colors ${r.met ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      {r.label}
                     </div>
                   ))}
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  <Button 
-                    type="submit" 
-                    disabled={loading || !isMatch || !hasLength}
-                    className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl hover:scale-[1.02] transition-all border-none"
-                  >
-                    {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Ativar Minha Conta"}
-                  </Button>
-                  
-                  <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase italic">
-                    <Info className="h-3 w-3 text-primary/30" />
-                    Esta senha será seu acesso único ao COMPROMISSO
+                <Button
+                  type="submit"
+                  disabled={loading || !step1OK}
+                  className="w-full h-14 bg-primary text-white font-black text-base rounded-2xl shadow-xl flex items-center justify-center gap-2 disabled:opacity-40"
+                >
+                  {loading
+                    ? <><Loader2 className="h-5 w-5 animate-spin" /> Salvando...</>
+                    : <><span>Continuar</span><ChevronRight className="h-4 w-4" /></>}
+                </Button>
+
+                <p className="text-center text-[10px] text-slate-400 font-medium flex items-center justify-center gap-1.5">
+                  <Info className="h-3 w-3 shrink-0" /> Esta senha substitui a senha temporária fornecida pela secretaria
+                </p>
+              </div>
+            </form>
+          )}
+
+          {/* ══ STEP 2: PERFIL ══ */}
+          {step === 2 && (
+            <form onSubmit={handleProfile} noValidate>
+              <div className="p-7 pb-5 border-b border-dashed border-slate-100 flex flex-col items-center gap-2 text-center">
+                <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-accent" />
+                </div>
+                <h2 className="text-xl font-black text-primary italic">Seus Dados</h2>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-xs">
+                  Essas informações ajudam o cursinho a personalizar sua experiência e entrar em contato.
+                </p>
+              </div>
+
+              <div className="p-7 space-y-6">
+                {error && (
+                  <div className="flex items-start gap-2.5 bg-red-50 text-red-600 rounded-2xl px-4 py-3 text-xs font-bold border border-red-100">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {error}
+                  </div>
+                )}
+
+                {/* telefone */}
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                    Celular / WhatsApp
+                    <span className="normal-case font-medium text-slate-400">(opcional)</span>
+                  </Label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      autoFocus
+                      value={phone}
+                      onChange={e => handlePhoneChange(e.target.value)}
+                      placeholder="(11) 99999-9999"
+                      className="pl-11 h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 ml-1">Usado para comunicados e lembretes do cursinho.</p>
+                </div>
+
+                {/* sala */}
+                <div className="space-y-2">
+                  <Label htmlFor="sala" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                    Sala / Turma
+                    <span className="normal-case font-medium text-slate-400">(opcional)</span>
+                  </Label>
+                  <Input
+                    id="sala"
+                    autoComplete="off"
+                    value={sala}
+                    onChange={e => setSala(e.target.value)}
+                    placeholder="Ex: Turma A, Sala 3, T2..."
+                    className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent"
+                  />
+                </div>
+
+                {/* objetivo */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                    Qual é o seu objetivo?
+                    <span className="text-red-400 font-black">*</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {EXAM_OPTIONS.map(o => (
+                      <button
+                        key={o.id}
+                        type="button"
+                        onClick={() => setExamTarget(o.id)}
+                        aria-pressed={examTarget === o.id}
+                        className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 text-left
+                          ${examTarget === o.id
+                            ? 'border-primary bg-primary/5 shadow-md'
+                            : 'border-slate-200 bg-slate-50 hover:border-slate-300 active:scale-[0.97]'}`}
+                      >
+                        {examTarget === o.id && (
+                          <CheckCircle2 className="absolute top-2.5 right-2.5 h-4 w-4 text-primary" />
+                        )}
+                        <o.icon className={`h-7 w-7 ${examTarget === o.id ? 'text-primary' : 'text-slate-400'}`} />
+                        <div className="text-center">
+                          <p className={`font-black text-base ${examTarget === o.id ? 'text-primary' : 'text-slate-700'}`}>{o.label}</p>
+                          <p className="text-[10px] text-slate-400 font-medium leading-snug mt-0.5">{o.desc}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </form>
-            )}
-          </CardContent>
-        </Card>
 
-        <footer className="text-center opacity-40">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Compromisso • Sistema Acadêmico Inteligente</p>
+                {/* turno */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                    Qual turno você estuda?
+                    <span className="text-red-400 font-black">*</span>
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TURNO_OPTIONS.map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTurno(t.id)}
+                        aria-pressed={turno === t.id}
+                        className={`relative flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl border-2 transition-all duration-200
+                          ${turno === t.id
+                            ? 'border-primary bg-primary/5 shadow-md'
+                            : 'border-slate-200 bg-slate-50 hover:border-slate-300 active:scale-[0.97]'}`}
+                      >
+                        {turno === t.id && (
+                          <CheckCircle2 className="absolute top-2 right-2 h-3.5 w-3.5 text-primary" />
+                        )}
+                        <span className="text-2xl leading-none">{t.emoji}</span>
+                        <p className={`font-black text-xs ${turno === t.id ? 'text-primary' : 'text-slate-700'}`}>{t.label}</p>
+                        <p className="text-[9px] text-slate-400 font-medium">{t.hint}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* rodapé obrigatórios */}
+                <p className="text-[10px] text-slate-400 ml-1">
+                  <span className="text-red-400 font-black">*</span> Campos obrigatórios
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setStep(1); setError(null); }}
+                    aria-label="Voltar para definição de senha"
+                    className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 active:scale-95 transition-all shrink-0"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <Button
+                    type="submit"
+                    disabled={loading || !examTarget || !turno}
+                    className="flex-1 h-14 bg-primary text-white font-black text-base rounded-2xl shadow-xl flex items-center justify-center gap-2 disabled:opacity-40"
+                  >
+                    {loading
+                      ? <><Loader2 className="h-5 w-5 animate-spin" /> Salvando...</>
+                      : <><span>Ativar Minha Conta</span><ChevronRight className="h-4 w-4" /></>}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {/* ══ STEP 3: SUCESSO ══ */}
+          {step === 3 && (
+            <div className="p-12 text-center space-y-5">
+              <div className="h-20 w-20 bg-green-100 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-primary italic">Tudo pronto!</h3>
+                <p className="text-sm text-slate-400 font-medium mt-1.5 leading-relaxed">
+                  Sua conta foi ativada com sucesso.<br />Você será redirecionado em instantes.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                <span className="text-xs text-slate-400 font-medium">Entrando na plataforma...</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <footer className="text-center opacity-40 pb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white">
+            Compromisso • Sistema Acadêmico Inteligente
+          </p>
         </footer>
       </div>
     </div>

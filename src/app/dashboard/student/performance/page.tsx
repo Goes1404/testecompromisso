@@ -181,124 +181,127 @@ export default function StudentPerformancePage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-4 md:px-0">
-      {/* Header Estilizado */}
-      <div className="aurora-dark dot-grid rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-accent/20 rounded-full blur-[100px] animate-pulse" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
-                <BarChart3 className="h-6 w-6 text-accent" />
+    <div className="space-y-4 md:space-y-7 animate-in fade-in duration-500 pb-8 px-1 md:px-0">
+
+      {/* ── HERO — compact on mobile ── */}
+      <div className="aurora-dark dot-grid rounded-2xl md:rounded-[3rem] p-5 md:p-10 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-56 h-56 bg-accent/20 rounded-full blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+                <BarChart3 className="h-5 w-5 text-accent" />
               </div>
-              <Badge className="bg-accent text-accent-foreground border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 shadow-xl">
-                Analytics de Alta Performance
+              <Badge className="bg-accent text-accent-foreground border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">
+                Meu Desempenho
               </Badge>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white italic leading-none uppercase">
-              Seu Centro de <span className="text-accent">Comando</span>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-white italic leading-tight">
+              Centro de <span className="text-accent">Comando</span>
             </h1>
-            <p className="text-white/60 font-medium italic text-lg max-w-xl">
-              Dados reais sobre sua jornada rumo à aprovação. Refine seus pontos cegos.
+            <p className="text-white/50 text-xs font-medium italic">
+              Dados reais sobre sua jornada. Refine seus pontos cegos.
             </p>
           </div>
-          
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2.5rem] flex items-center gap-6 shadow-2xl">
-             <div className="text-right">
-                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">SINAL DE EVOLUÇÃO</p>
-                <p className="text-3xl font-black text-accent italic">{stats.accuracy}%</p>
-             </div>
-             <div className="h-12 w-12 rounded-full border-4 border-accent border-t-transparent animate-spin-slow" />
+          <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-5 py-3 rounded-2xl self-start md:self-auto">
+            <div>
+              <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Taxa de Acerto</p>
+              <p className="text-3xl font-black text-accent italic leading-none">{stats.accuracy}%</p>
+            </div>
+            <div className="h-10 w-10 rounded-full border-4 border-accent border-t-transparent animate-spin-slow shrink-0" />
           </div>
         </div>
       </div>
 
-      {/* Grid de Métricas Rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ── KPI CARDS — 2×2 on mobile ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
         {[
-          { label: "Questões Respondidas", value: stats.totalAnswered, icon: BrainCircuit, color: "text-blue-500", bg: "bg-blue-50" },
-          { label: "Taxa de Acerto", value: `${stats.accuracy}%`, icon: Target, color: "text-orange-500", bg: "bg-orange-50" },
-          { label: "Tempo de Estudo", value: `${Math.round(stats.timeSpent / 3600)}h`, icon: Clock, color: "text-purple-500", bg: "bg-purple-50" },
-          { label: "Ofensiva (Dais)", value: stats.streak, icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
+          { label: "Questões",     value: stats.totalAnswered,                      icon: BrainCircuit, color: "text-blue-500",   bg: "bg-blue-50" },
+          { label: "Taxa de Acerto", value: `${stats.accuracy}%`,                   icon: Target,       color: "text-orange-500", bg: "bg-orange-50" },
+          { label: "Tempo Estudo", value: `${Math.round(stats.timeSpent / 3600)}h`, icon: Clock,        color: "text-purple-500", bg: "bg-purple-50" },
+          { label: "Sequência",    value: `${stats.streak}d`,                       icon: Zap,          color: "text-amber-500",  bg: "bg-amber-50" },
         ].map((stat, i) => (
-          <Card key={i} className="gradient-border border-none shadow-xl rounded-[2.5rem] bg-white group hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`h-12 w-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110 shadow-inner`}>
-                  <stat.icon className="h-6 w-6" />
-                </div>
-                <Badge variant="outline" className="text-[8px] font-black text-muted-foreground uppercase tracking-widest border-none">Live</Badge>
-              </div>
-              <p className="text-4xl font-black text-primary italic">{stat.value}</p>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-2">{stat.label}</p>
-            </CardContent>
-          </Card>
+          <div key={i} className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+            <div className={`h-9 w-9 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            </div>
+            <p className="text-2xl md:text-3xl font-black text-slate-900 italic leading-none">{stat.value}</p>
+            <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider mt-1.5">{stat.label}</p>
+          </div>
         ))}
       </div>
 
-      {/* Gráficos Principais */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <Card className="lg:col-span-7 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden gradient-border">
-          <CardHeader className="p-10 pb-0 flex flex-row items-center justify-between">
+      {/* ── CHARTS ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+
+        {/* Radar chart */}
+        <div className="lg:col-span-7 bg-white rounded-2xl md:rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
+          <div className="p-4 md:p-8 pb-2 flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl font-black text-primary italic">Mapa de Competências</CardTitle>
-              <CardDescription className="font-medium italic">Distribuição de acertos por eixo temático.</CardDescription>
+              <h2 className="font-black text-base md:text-xl text-slate-900 italic">Mapa de Competências</h2>
+              <p className="text-xs text-slate-400 italic mt-0.5">Distribuição de acertos por área.</p>
             </div>
-            <Award className="h-8 w-8 text-accent opacity-20" />
-          </CardHeader>
-          <CardContent className="p-10 pt-6 h-[450px]">
+            <Award className="h-6 w-6 text-accent/30" />
+          </div>
+          <div className="p-4 md:p-8 pt-2 h-[260px] md:h-[400px]">
             {subjectData.length > 0 ? (
               <RadarChartComponent data={subjectData} />
             ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-20 italic">
-                <p>Responda mais questões para gerar seu mapa.</p>
+              <div className="h-full flex flex-col items-center justify-center opacity-20 italic text-sm">
+                <p>Responda questões para gerar seu mapa.</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <div className="lg:col-span-5 space-y-8">
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden h-full">
-            <CardHeader className="p-10 pb-0">
-              <CardTitle className="text-2xl font-black text-primary italic">Atividade Diária</CardTitle>
-              <CardDescription className="font-medium italic">Volume de acertos nos últimos 15 dias.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-10 pt-6 h-[300px]">
+        <div className="lg:col-span-5 space-y-4">
+          {/* Line chart */}
+          <div className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
+            <div className="p-4 md:p-8 pb-2">
+              <h2 className="font-black text-base text-slate-900 italic">Atividade Diária</h2>
+              <p className="text-xs text-slate-400 italic mt-0.5">Acertos nos últimos 15 dias.</p>
+            </div>
+            <div className="p-4 md:p-8 pt-2 h-[200px] md:h-[260px]">
               <LineChartComponent data={historyData} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="gradient-border border-none shadow-2xl bg-primary text-white rounded-[2.5rem] p-8 overflow-hidden relative group">
-             <div className="absolute top-[-20%] right-[-20%] w-40 h-40 bg-accent/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-             <div className="relative z-10 flex items-center gap-6">
-                <div className="h-16 w-16 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center shadow-2xl">
-                  <Sparkles className="h-8 w-8 text-accent animate-pulse" />
-                </div>
-                <div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-accent">Análise Aurora</p>
-                   <p className="text-sm font-bold italic leading-relaxed">"Seu desempenho em Linguagens cresceu 15% esta semana. Foque em Natureza para equilibrar sua média TRI."</p>
-                </div>
-             </div>
-          </Card>
+          {/* Aurora tip */}
+          <div className="bg-primary rounded-2xl md:rounded-[2rem] p-4 md:p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative z-10 flex items-start gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+                <Sparkles className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-accent mb-1">Aurora IA</p>
+                <p className="text-xs font-semibold italic text-white/80 leading-relaxed">
+                  "Seu desempenho em Linguagens cresceu 15% esta semana. Foque em Natureza para equilibrar sua média TRI."
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Lista de Matérias Detalhada */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-black text-primary italic px-2 uppercase tracking-tighter">Detalhamento por Área</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* ── SUBJECT BREAKDOWN ── */}
+      <div className="space-y-3">
+        <h3 className="text-base font-black text-slate-900 italic px-1 uppercase tracking-tighter">Detalhamento por Área</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
           {subjectData.map((item, idx) => (
-            <Card key={idx} className="border-none shadow-lg bg-white rounded-3xl p-6 hover:shadow-xl transition-all border-b-4 border-transparent hover:border-accent">
-               <div className="flex justify-between items-center mb-4">
-                  <p className="font-black italic text-primary">{item.subject}</p>
-                  <Badge className="bg-slate-50 text-primary border-none font-bold text-[10px]">{item.score}%</Badge>
-               </div>
-               <Progress value={item.score} className="h-2 rounded-full" />
-               <div className="flex justify-between mt-3 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                  <span>Iniciante</span>
-                  <span className="text-accent">Maestro</span>
-               </div>
-            </Card>
+            <div key={idx} className="bg-white rounded-2xl p-4 md:p-5 shadow-md border border-slate-100 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+              <div className="flex justify-between items-center mb-3">
+                <p className="font-black text-sm italic text-slate-900">{item.subject}</p>
+                <span className={`text-xs font-black px-2 py-0.5 rounded-full ${item.score >= 70 ? 'bg-green-50 text-green-600' : item.score >= 50 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'}`}>
+                  {item.score}%
+                </span>
+              </div>
+              <Progress value={item.score} className="h-1.5 rounded-full" />
+              <div className="flex justify-between mt-2 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                <span>Iniciante</span>
+                <span className="text-accent">Maestro</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>

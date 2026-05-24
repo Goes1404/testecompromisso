@@ -38,7 +38,8 @@ import {
   CheckCircle2,
   ShieldAlert,
   AlertTriangle,
-  GraduationCap
+  GraduationCap,
+  Scroll
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -451,10 +452,12 @@ export default function DashboardHome() {
   const greeting = greetingByHour();
 
   const quickActions = [
-    { label: "Checklist", icon: FileCheck, href: "/dashboard/student/documents", color: "from-blue-500 to-blue-600", shadow: "shadow-blue-500/20" },
-    { label: "Simulado", icon: BrainCircuit, href: "/dashboard/student/simulados", color: "from-violet-500 to-purple-600", shadow: "shadow-purple-500/20" },
-    { label: "Isenção", icon: Calculator, href: "/dashboard/student/documents/exemption", color: "from-amber-500 to-orange-500", shadow: "shadow-amber-500/20" },
-    { label: "Biblioteca", icon: Library, href: "/dashboard/library", color: "from-emerald-500 to-green-600", shadow: "shadow-green-500/20" },
+    { label: "Simulado",   icon: BrainCircuit, href: "/dashboard/student/simulados",             color: "from-violet-500 to-purple-600" },
+    { label: "Redação",    icon: FilePenLine,  href: "/dashboard/student/essays",                color: "from-emerald-500 to-green-600" },
+    { label: "Provas",     icon: Scroll,       href: "/dashboard/student/provas",                color: "from-red-500 to-rose-600" },
+    { label: "Checklist",  icon: FileCheck,    href: "/dashboard/student/documents",             color: "from-blue-500 to-blue-600" },
+    { label: "Biblioteca", icon: Library,      href: "/dashboard/library",                       color: "from-teal-500 to-cyan-600" },
+    { label: "Isenção",    icon: Calculator,   href: "/dashboard/student/documents/exemption",   color: "from-amber-500 to-orange-500" },
   ];
 
   const score = examStats?.averageScore || 0;
@@ -462,7 +465,7 @@ export default function DashboardHome() {
   const dashOffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="space-y-6 pb-10 animate-in fade-in duration-700 px-3 md:px-0.5">
+    <div className="space-y-4 md:space-y-6 pb-10 animate-in fade-in duration-700 px-3 md:px-0.5">
 
       {/* ── CARD DE TELEFONE PENDENTE ── */}
       {profile && !profile.phone && (
@@ -620,20 +623,13 @@ export default function DashboardHome() {
         </div>
       </section>
 
-      {/* ── QUICK ACTIONS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── QUICK ACTIONS — horizontal scroll ── */}
+      <div className="flex gap-3 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-hide">
         {quickActions.map((action) => (
-          <Link key={action.label} href={action.href}>
-            <div className={`btn-shimmer group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.color} p-4 md:p-5 shadow-lg ${action.shadow} hover:-translate-y-1 hover:shadow-xl active:scale-[0.97] transition-[transform,box-shadow] duration-300 cursor-pointer [touch-action:manipulation]`}>
-              <div className="flex flex-col h-[76px] justify-between">
-                <div>
-                  <action.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
-                </div>
-                <div className="flex items-center justify-between w-full">
-                  <p className="font-extrabold text-white uppercase text-[11px] tracking-wider">{action.label}</p>
-                  <ChevronRight className="h-4 w-4 text-white/60 group-hover:translate-x-0.5 group-hover:text-white transition-all" />
-                </div>
-              </div>
+          <Link key={action.label} href={action.href} className="shrink-0">
+            <div className={`btn-shimmer flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${action.color} rounded-2xl w-[80px] h-[80px] shadow-md hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all [touch-action:manipulation]`}>
+              <action.icon className="h-5 w-5 text-white" strokeWidth={1.5} />
+              <p className="font-bold text-white uppercase text-[9px] tracking-wide text-center leading-tight px-1">{action.label}</p>
             </div>
           </Link>
         ))}
