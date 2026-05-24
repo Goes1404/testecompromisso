@@ -504,7 +504,21 @@ function NewStudentModal({ open, onClose, onCreated }: { open: boolean; onClose:
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Turma</Label>
-                  <Input value={course} onChange={e => setCourse(e.target.value)} placeholder="Ex: 3A, Noturno..." className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm" />
+                  <Select value={course} onValueChange={setCourse}>
+                    <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm">
+                      <SelectValue placeholder="Escolha" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const num = String(i + 1).padStart(2, '0');
+                        return (
+                          <SelectItem key={num} value={num} className="font-bold text-xs">
+                            Sala {num}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Foco de Exame</Label>
@@ -1015,7 +1029,26 @@ export default function SecretaryEnrollmentDirectory() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Turma</Label>
-                <Input value={editCourse} onChange={e => setEditCourse(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm" />
+                <Select value={editCourse} onValueChange={setEditCourse}>
+                  <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm">
+                    <SelectValue placeholder="Selecionar Sala" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-none shadow-2xl">
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const num = String(i + 1).padStart(2, '0');
+                      return (
+                        <SelectItem key={num} value={num} className="font-bold text-xs">
+                          Sala {num}
+                        </SelectItem>
+                      );
+                    })}
+                    {editCourse && !Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).includes(editCourse) && (
+                      <SelectItem value={editCourse} className="font-bold text-xs">
+                        {editCourse}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

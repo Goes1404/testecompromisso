@@ -83,6 +83,11 @@ export default function SecretaryAttendancePage() {
   // Snapshot do estado inicial para detectar sobrescritas em check-ins via app
   const [originals, setOriginals] = useState<Record<string, { status: AttendanceStatus; method: AttendanceMethod }>>({});
   const [searchStudent, setSearchStudent] = useState("");
+  const [showAddPanel, setShowAddPanel] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [addingAll, setAddingAll] = useState(false);
 
   // Upload de foto da chamada em papel
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -209,6 +214,96 @@ export default function SecretaryAttendancePage() {
 
   const setJustification = (studentId: string, text: string) => {
     setRecords(prev => ({ ...prev, [studentId]: { ...prev[studentId], justification: text } }));
+  };
+
+  // Adiciona um aluno à chamada manualmente
+  const handleAddStudent = async (studentId: string) => {
+    if (!selectedSession) return;
+    setAddingId(studentId);
+    try {
+      const { error } = await supabase.from("attendance_records").insert({
+        session_id: selectedSession.id,
+        student_id: studentId,
+        status: "ausente",
+        method: "manual"
+      });
+      if (error) throw error;
+      setRecords(prev => ({
+        ...prev,
+        [studentId]: { status: "ausente", justification: "", method: "manual" }
+      }));
+      toast({ title: "Aluno adicionado à lista" });
+    } catch (err: any) {
+      toast({ title: "Erro ao adicionar aluno", description: err.message, variant: "destructive" });
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  // Remove um aluno da chamada
+  const handleRemoveStudent = async (studentId: string) => {
+    if (!selectedSession) return;
+    setRemovingId(studentId);
+    try {
+      const { error } = await supabase
+        .from("attendance_records")
+        .delete()
+        .eq("session_id", selectedSession.id)
+        .eq("student_id", studentId);
+      if (error) throw error;
+      setRecords(prev => {
+        const next = { ...prev };
+        delete next[studentId];
+        return next;
+      });
+      setOriginals(prev => {
+        const next = { ...prev };
+        delete next[studentId];
+        return next;
+      });
+      toast({ title: "Aluno removido da lista" });
+    } catch (err: any) {
+      toast({ title: "Erro ao remover aluno", description: err.message, variant: "destructive" });
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  // Adiciona todos os alunos à chamada
+  const handleAddAll = async () => {
+    if (!selectedSession) return;
+    const toAdd = students.filter(s => !records[s.id]);
+    if (toAdd.length === 0) {
+      toast({ title: "Todos os alunos já estão na lista." });
+      return;
+    }
+    setAddingAll(true);
+    try {
+      const payload = toAdd.map(s => ({
+        session_id: selectedSession.id,
+        student_id: s.id,
+        status: "ausente",
+        method: "manual"
+      }));
+      const { error } = await supabase
+        .from("attendance_records")
+        .upsert(payload, { onConflict: "session_id,student_id" });
+      if (error) throw error;
+      
+      setRecords(prev => {
+        const next = { ...prev };
+        toAdd.forEach(s => {
+          next[s.id] = { status: "ausente", justification: "", method: "manual" };
+        });
+        return next;
+      });
+      toast({ title: `${toAdd.length} alunos adicionados à lista.` });
+      setShowAddPanel(false);
+    } catch (err: any) {
+      toast({ title: "Erro ao adicionar todos", description: err.message, variant: "destructive" });
+    } finally {
+      setAddingAll(false);
+    }
   };
 
   // Detecta sobrescritas de check-ins originados no app (method='app')
@@ -345,6 +440,12 @@ export default function SecretaryAttendancePage() {
     if (!records[s.id]) return false; // apenas na chamada
     return (s.name || "").toLowerCase().includes(searchStudent.toLowerCase());
   });
+
+  const availableStudents = students.filter(
+    (s) =>
+      records[s.id] === undefined &&
+      (!addSearch || s.name?.toLowerCase().includes(addSearch.toLowerCase()))
+  );
 
   // Turmas distintas extraídas das sessões (consistente com o filtro visibleSessions)
   const classOptions = Array.from(
@@ -515,15 +616,98 @@ export default function SecretaryAttendancePage() {
                 <div className="py-20 flex-1 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
               ) : (
                 <div className="space-y-4 flex-1 flex flex-col min-h-0">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                    <Input 
-                      placeholder="Filtrar aluno..." 
-                      className="h-9 pl-9 pr-3 rounded-xl bg-slate-50 border-none text-xs" 
-                      value={searchStudent}
-                      onChange={e => setSearchStudent(e.target.value)}
-                    />
+                  <div className="flex gap-2 items-center">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                      <Input 
+                        placeholder="Filtrar aluno..." 
+                        className="h-9 pl-9 pr-3 rounded-xl bg-slate-50 border-none text-xs" 
+                        value={searchStudent}
+                        onChange={e => setSearchStudent(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 h-9 rounded-xl font-bold text-xs border-slate-200"
+                      onClick={() => { setShowAddPanel((v) => !v); setAddSearch(""); }}
+                    >
+                      <UserPlus className="h-3.5 w-3.5 text-slate-500" />
+                      <span className="hidden sm:inline">Adicionar Aluno</span>
+                    </Button>
                   </div>
+
+                  {showAddPanel && (
+                    <div className="border rounded-2xl p-4 bg-slate-50/50 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-slate-700">
+                          Adicionar à chamada
+                          {availableStudents.length < students.filter((s) => !records[s.id]).length && (
+                            <span className="text-muted-foreground font-normal"> — {availableStudents.length} resultado(s)</span>
+                          )}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-2 text-[10px] text-muted-foreground font-bold hover:bg-slate-100 h-7"
+                          onClick={handleAddAll}
+                          disabled={addingAll || students.filter((s) => !records[s.id]).length === 0}
+                        >
+                          {addingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Users className="h-3 w-3" />}
+                          Adicionar todos ({students.filter((s) => !records[s.id]).length})
+                        </Button>
+                      </div>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <Input
+                          className="pl-9 h-8 text-xs bg-white rounded-lg border-slate-200"
+                          placeholder="Buscar aluno pelo nome..."
+                          value={addSearch}
+                          onChange={(e) => setAddSearch(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                      {students.filter((s) => !records[s.id]).length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2 italic">
+                          Todos os alunos já estão na lista.
+                        </p>
+                      ) : availableStudents.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2 italic">
+                          Nenhum aluno encontrado para "{addSearch}".
+                        </p>
+                      ) : (
+                        <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                          {availableStudents.map((student) => (
+                            <div
+                              key={student.id}
+                              className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-100 hover:border-slate-200 transition-colors"
+                            >
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-800 truncate">{student.name || "Sem nome"}</p>
+                                <p className="text-[9px] text-muted-foreground font-semibold">
+                                  {student.course || "Sem Turma"} • {student.institution || "Sem Polo"}
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 h-7 text-[10px] font-bold"
+                                onClick={() => handleAddStudent(student.id)}
+                                disabled={addingId === student.id}
+                              >
+                                {addingId === student.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <UserPlus className="h-3 w-3" />
+                                )}
+                                Adicionar
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex-1 overflow-y-auto space-y-2 max-h-[300px] pr-1">
                     {filteredStudents.length === 0 ? (
@@ -592,6 +776,20 @@ export default function SecretaryAttendancePage() {
                                   </button>
                                 ))}
                               </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg shrink-0"
+                                title="Remover da chamada"
+                                onClick={() => handleRemoveStudent(student.id)}
+                                disabled={removingId === student.id}
+                              >
+                                {removingId === student.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <UserMinus className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
                             </div>
                           </div>
                         );

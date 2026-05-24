@@ -19,7 +19,8 @@ import {
   Mail,
   ArrowUpRight,
   Filter,
-  Clock
+  Clock,
+  Pencil
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +28,8 @@ import { supabase } from "@/app/lib/supabase";
 import { formatDistanceToNow, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function TeacherStudentsPage() {
   const { user } = useAuth();
@@ -38,6 +41,31 @@ export default function TeacherStudentsPage() {
   const [displayCount, setDisplayCount] = useState(50);
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [editCourse, setEditCourse] = useState("");
+  const [isSubmittingCourse, setIsSubmittingCourse] = useState(false);
+
+  const handleUpdateStudentCourse = async () => {
+    if (!editingStudent) return;
+    setIsSubmittingCourse(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ course: editCourse || null })
+        .eq('id', editingStudent.id);
+
+      if (error) throw error;
+
+      setStudents(prev => prev.map(s => s.id === editingStudent.id ? { ...s, course: editCourse } : s));
+      toast({ title: "Sala / Turma atualizada!" });
+      setEditingStudent(null);
+    } catch (err: any) {
+      toast({ title: "Erro ao atualizar", description: err.message, variant: "destructive" });
+    } finally {
+      setIsSubmittingCourse(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchStudents() {
@@ -227,9 +255,16 @@ export default function TeacherStudentsPage() {
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-black text-primary/70">{student.institution || 'Não Informado'}</span>
-                            <Badge className="w-fit bg-primary/5 text-primary border-none text-[7px] font-black uppercase px-2">
-                              {student.exam_target || 'student'}
-                            </Badge>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge className="w-fit bg-primary/5 text-primary border-none text-[7px] font-black uppercase px-2">
+                                {student.exam_target || 'student'}
+                              </Badge>
+                              {student.course && (
+                                <Badge className="w-fit bg-emerald-50 text-emerald-700 border-none text-[7px] font-black uppercase px-2">
+                                  Sala {student.course}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -263,6 +298,18 @@ export default function TeacherStudentsPage() {
                         </TableCell>
                         <TableCell className="text-right px-8">
                           <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="rounded-xl h-10 w-10 text-slate-500 hover:text-primary hover:bg-slate-50"
+                              onClick={() => {
+                                setEditingStudent(student);
+                                setEditCourse(student.course || "");
+                              }}
+                              title="Alterar Sala/Turma"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
                             <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 text-accent hover:bg-accent/10" asChild title="Abrir Chat">
                               <Link href={`/dashboard/chat/${student.id}`}><Send className="h-4 w-4" /></Link>
                             </Button>
@@ -299,6 +346,71 @@ export default function TeacherStudentsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog para alterar Sala/Turma */}
+      <Dialog open={!!editingStudent} onOpenChange={(open) => { if (!open) setEditingStudent(null); }}>
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
+          <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center font-black text-white shadow shrink-0">
+                <Pencil className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black italic text-primary leading-none uppercase tracking-tight">
+                  Mudar Sala / Turma
+                </DialogTitle>
+                <DialogDescription className="text-xs mt-0.5 font-medium text-muted-foreground">
+                  Altere a sala/turma do aluno: {editingStudent?.name}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-8 space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Sala / Turma *</Label>
+              <Select value={editCourse} onValueChange={setEditCourse}>
+                <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
+                  <SelectValue placeholder="Selecionar Sala" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-none shadow-2xl">
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const num = String(i + 1).padStart(2, '0');
+                    return (
+                      <SelectItem key={num} value={num} className="font-bold text-xs">
+                        Sala {num}
+                      </SelectItem>
+                    );
+                  })}
+                  {editCourse && !Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).includes(editCourse) && (
+                    <SelectItem value={editCourse} className="font-bold text-xs">
+                      {editCourse}
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setEditingStudent(null)}
+                className="flex-1 h-12 rounded-2xl font-black text-xs border-slate-200"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleUpdateStudentCourse}
+                disabled={isSubmittingCourse}
+                className="flex-1 h-12 bg-primary hover:bg-primary/95 text-white font-black rounded-2xl shadow-xl border-none text-xs"
+              >
+                {isSubmittingCourse ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                Confirmar e Salvar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
