@@ -22,7 +22,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function StudentAttendancePage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [sessions, setSessions] = useState<any[]>([]);
   const [myRecords, setMyRecords] = useState<Record<string, string>>({});
@@ -39,10 +39,13 @@ export default function StudentAttendancePage() {
     setLoading(true);
     try {
       const [sessionsRes, recordsRes] = await Promise.all([
-        supabase
-          .from("class_sessions")
-          .select("id, title, subject, session_date, session_type, teacher_name")
-          .order("session_date", { ascending: false }),
+        (() => {
+          const q = supabase
+            .from("class_sessions")
+            .select("id, title, subject, session_date, session_type, teacher_name")
+            .order("session_date", { ascending: false });
+          return profile?.course ? q.eq("class_label", profile.course) : q;
+        })(),
         supabase
           .from("attendance_records")
           .select("session_id, status")

@@ -1,20 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { useState, useEffect, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   FileCheck,
   ExternalLink,
@@ -26,46 +16,13 @@ import {
   MousePointer2,
   FolderPlus,
   Loader2,
-  Calculator,
-  Users2,
-  Trash2,
-  TrendingUp,
-  UserPlus,
-  FileWarning,
-  Scale,
-  Sparkles,
-  ClipboardList,
   FileSearch,
   Clock,
-  LayoutList,
-  Upload,
-  FileText,
-  X,
-  AlertCircle
+  LayoutList
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
-import Link from "next/link";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-
-const DOC_TYPES: Record<string, { label: string; color: string }> = {
-  atestado:               { label: 'Atestado Médico',           color: 'bg-red-100 text-red-700' },
-  rg:                     { label: 'RG',                        color: 'bg-blue-100 text-blue-700' },
-  cpf:                    { label: 'CPF',                       color: 'bg-indigo-100 text-indigo-700' },
-  historico:              { label: 'Histórico Escolar',         color: 'bg-purple-100 text-purple-700' },
-  comprovante_residencia: { label: 'Comprovante de Residência', color: 'bg-green-100 text-green-700' },
-  certidao:               { label: 'Certidão',                  color: 'bg-yellow-100 text-yellow-700' },
-  comprovante_renda:      { label: 'Comprovante de Renda',      color: 'bg-orange-100 text-orange-700' },
-  outro:                  { label: 'Outro',                     color: 'bg-slate-100 text-slate-700' },
-};
-
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  pendente:  { label: 'Aguardando',  color: 'bg-amber-100 text-amber-700' },
-  aprovado:  { label: 'Aprovado',    color: 'bg-emerald-100 text-emerald-700' },
-  rejeitado: { label: 'Rejeitado',   color: 'bg-red-100 text-red-700' },
-};
 
 const DOCUMENT_GROUPS = [
   {
@@ -97,124 +54,13 @@ const DOCUMENT_GROUPS = [
   }
 ];
 
-interface FamilyMember {
-  id: string;
-  label: string;
-  income: string;
-}
-
-interface StudentUpload {
-  id: string;
-  doc_type: string;
-  title: string;
-  file_url: string;
-  file_path: string;
-  status: string;
-  notes: string | null;
-  uploaded_at: string;
-}
-
 export default function StudentAdmissionCentral() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [savingDoc, setSavingDoc] = useState(false);
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
-
-  // Upload state
-  const [uploads, setUploads] = useState<StudentUpload[]>([]);
-  const [loadingUploads, setLoadingUploads] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadDocType, setUploadDocType] = useState('outro');
-  const [uploadTitle, setUploadTitle] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const fetchUploads = useCallback(async () => {
-    if (!user) return;
-    setLoadingUploads(true);
-    const { data } = await supabase
-      .from('student_uploads')
-      .select('id,doc_type,title,file_url,file_path,status,notes,uploaded_at')
-      .eq('student_id', user.id)
-      .order('uploaded_at', { ascending: false });
-    setUploads(data || []);
-    setLoadingUploads(false);
-  }, [user]);
-
-  const handleUpload = async () => {
-    if (!user || !selectedFile) {
-      toast({ title: 'Selecione um arquivo', variant: 'destructive' }); return;
-    }
-    if (!uploadTitle.trim()) {
-      toast({ title: 'Informe um título para o documento', variant: 'destructive' }); return;
-    }
-    setUploading(true);
-    try {
-      const ext = selectedFile.name.split('.').pop() || 'pdf';
-      const filePath = `${user.id}/${Date.now()}_${uploadDocType}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('student-documents')
-        .upload(filePath, selectedFile, { upsert: false });
-      if (upErr) throw upErr;
-
-      const { data: urlData } = supabase.storage
-        .from('student-documents')
-        .getPublicUrl(filePath);
-
-      const { error: dbErr } = await supabase.from('student_uploads').insert({
-        student_id: user.id,
-        student_name: profile?.name || profile?.full_name || null,
-        doc_type: uploadDocType,
-        title: uploadTitle.trim(),
-        file_url: urlData.publicUrl,
-        file_path: filePath,
-        status: 'pendente',
-      });
-      if (dbErr) throw dbErr;
-
-      toast({ title: 'Documento enviado com sucesso!' });
-      setUploadTitle('');
-      setSelectedFile(null);
-      setUploadDocType('outro');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      fetchUploads();
-    } catch (err: any) {
-      toast({ title: 'Erro ao enviar', description: err.message, variant: 'destructive' });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteUpload = async (upload: StudentUpload) => {
-    if (upload.status !== 'pendente') {
-      toast({ title: 'Não é possível remover documentos já revisados', variant: 'destructive' }); return;
-    }
-    try {
-      await supabase.storage.from('student-documents').remove([upload.file_path]);
-      await supabase.from('student_uploads').delete().eq('id', upload.id);
-      setUploads(prev => prev.filter(u => u.id !== upload.id));
-      toast({ title: 'Documento removido.' });
-    } catch (err: any) {
-      toast({ title: 'Erro ao remover', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  const [loadingCalc, setLoadingCalc] = useState(false);
-  const [members, setFamilyMembers] = useState<FamilyMember[]>([
-    { id: '1', label: 'Você', income: '' }
-  ]);
-  const [calcResult, setCalcResult] = useState<{
-    eligible: boolean;
-    perCapita: number;
-    totalFamilyIncome: number;
-    familySize: number;
-    threshold: number;
-  } | null>(null);
-
-  const MIN_WAGE = 1621;
-  const THRESHOLD = MIN_WAGE * 1.5;
 
   useEffect(() => {
     async function loadData() {
@@ -232,8 +78,7 @@ export default function StudentAdmissionCentral() {
       }
     }
     loadData();
-    fetchUploads();
-  }, [user, fetchUploads]);
+  }, [user]);
 
   const toggleItem = async (itemId: string) => {
     if (!user || savingDoc) return;
@@ -254,42 +99,13 @@ export default function StudentAdmissionCentral() {
     }
   };
 
-  const totalFamilyIncome = useMemo(() => {
-    return members.reduce((acc, m) => acc + (Number(m.income) || 0), 0);
-  }, [members]);
-
-  const addMember = () => setFamilyMembers([...members, { id: Math.random().toString(36).substr(2, 9), label: '', income: '' }]);
-  const removeMember = (id: string) => members.length > 1 && setFamilyMembers(members.filter(m => m.id !== id));
-  const updateMember = (id: string, field: 'label' | 'income', value: string) => {
-    setFamilyMembers(members.map(m => m.id === id ? { ...m, [field]: value } : m));
-  };
-
-  const handleCalcSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoadingCalc(true);
-    await new Promise(r => setTimeout(r, 1000));
-    const familySize = members.length;
-    const perCapita = totalFamilyIncome / familySize;
-    const eligible = perCapita <= THRESHOLD;
-
-    setCalcResult({ eligible, perCapita, totalFamilyIncome, familySize, threshold: THRESHOLD });
-
-    if (user) {
-      try {
-        await supabase.from('profiles').update({ is_financial_aid_eligible: eligible }).eq('id', user.id);
-      } catch (e) { console.error(e); }
-    }
-    setLoadingCalc(false);
-    toast({ title: "Cálculo Concluído ✅", description: "Status de isenção atualizado no seu perfil." });
-  };
-
   const totalDocs = DOCUMENT_GROUPS.reduce((acc, group) => acc + group.items.length, 0);
   const progressPercent = Math.round((checkedItems.length / totalDocs) * 100);
 
   if (loadingDocs) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
       <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">Sincronizando Central de Ingresso...</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">Sincronizando Checklist...</p>
     </div>
   );
 
@@ -301,7 +117,7 @@ export default function StudentAdmissionCentral() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <Badge className="bg-accent text-accent-foreground border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest mb-2">Padrão SiSU/ProUni</Badge>
-              <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none">Central de <span className="text-white">Ingresso</span></h1>
+              <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none">Checklist de <span className="text-white">Matrícula</span></h1>
               <p className="text-sm md:text-lg text-white/90 font-medium italic">Gerencie seus dados e organize sua documentação oficial.</p>
             </div>
             <div className="flex flex-col items-end gap-3 bg-white/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
@@ -317,401 +133,103 @@ export default function StudentAdmissionCentral() {
         </div>
       </section>
 
-      <Tabs defaultValue="checklist" className="space-y-8">
-        <TabsList className="grid w-full grid-cols-3 h-16 bg-white shadow-xl rounded-2xl p-1.5 border-none">
-          <TabsTrigger value="checklist" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-            <ClipboardList className="h-4 w-4 mr-2" /> Checklist
-          </TabsTrigger>
-          <TabsTrigger value="uploads" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-            <Upload className="h-4 w-4 mr-2" /> Enviar Docs
-          </TabsTrigger>
-          <TabsTrigger value="exemption" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-            <Calculator className="h-4 w-4 mr-2" /> Cálculo de Renda
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="checklist" className="animate-in slide-in-from-left-4 duration-500">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2 space-y-8">
-              {DOCUMENT_GROUPS.map((group, idx) => (
-                <Card key={idx} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                  <CardHeader className="bg-slate-50/50 border-b border-muted/10 p-8">
-                    <CardTitle className="text-lg font-black text-primary italic uppercase flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg text-xs font-black">
-                        {idx + 1}
-                      </div>
-                      {group.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 space-y-4">
-                    {group.items.map((item) => (
-                      <div 
-                        key={item.id} 
-                        className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                          checkedItems.includes(item.id) 
-                            ? 'bg-green-50/50 border-green-200' 
-                            : 'bg-white border-transparent hover:border-muted/20'
-                        }`}
-                        onClick={() => toggleItem(item.id)}
-                      >
-                        <Checkbox checked={checkedItems.includes(item.id)} onCheckedChange={() => toggleItem(item.id)} className="h-6 w-6 rounded-lg border-2" />
-                        <span className={`text-sm font-bold italic transition-colors ${checkedItems.includes(item.id) ? 'text-green-700' : 'text-primary'}`}>{item.label}</span>
-                        {checkedItems.includes(item.id) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <div className="space-y-8">
-              <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative group">
-                <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
-                <CardHeader className="p-8 relative z-10">
-                  <div className="h-14 w-14 rounded-3xl bg-white/10 flex items-center justify-center mb-6 shadow-xl"><Cloud className="h-8 w-8 text-white" /></div>
-                  <CardTitle className="text-2xl font-black italic">Nuvem de Documentos</CardTitle>
-                  <CardDescription className="text-white/90 font-medium font-bold italic">Use o Google Drive para não perder nada.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 pt-0 space-y-6 relative z-10">
-                  <div className="space-y-4">
-                    {[
-                      { icon: MousePointer2, text: "Acesse drive.google.com" },
-                      { icon: FolderPlus, text: 'Crie a pasta "Ingresso 2024"' },
-                      { icon: Smartphone, text: 'Escaneie com a câmera do celular' }
-                    ].map((step, i) => (
-                      <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
-                        <step.icon className="h-4 w-4 text-white shrink-0" />
-                        <span className="text-xs font-bold italic opacity-90">{step.text}</span>
-                      </div>
-                    ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-8">
+          {DOCUMENT_GROUPS.map((group, idx) => (
+            <Card key={idx} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-muted/10 p-8">
+                <CardTitle className="text-lg font-black text-primary italic uppercase flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg text-xs font-black">
+                    {idx + 1}
                   </div>
-                  <Button asChild className="w-full h-14 bg-accent text-accent-foreground font-black text-xs uppercase rounded-2xl shadow-xl hover:scale-105 transition-all">
-                    <a href="https://drive.google.com" target="_blank" rel="noopener noreferrer">ABRIR MEU DRIVE <ExternalLink className="ml-2 h-4 w-4" /></a>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
-                <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
-                  <FileSearch className="h-3.5 w-3.5 text-accent" /> Qualidade da Imagem
-                </h3>
-                <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
-                  "Evite fotos com sombras ou reflexos de luz. Se o texto não estiver legível, sua inscrição poderá ser indeferida pela universidade."
-                </p>
-              </Card>
-
-              <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
-                <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-accent" /> Validade dos Papéis
-                </h3>
-                <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
-                  "Comprovantes de residência devem ter no máximo 90 dias. Certidões não podem ter rasuras ou remendos."
-                </p>
-              </Card>
-
-              <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
-                <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
-                  <LayoutList className="h-3.5 w-3.5 text-accent" /> Organização Maestro
-                </h3>
-                <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
-                  "Renomeie seus arquivos como 'RG_FRENTE.pdf' ou 'HISTORICO_MEDIO.pdf'. Isso agiliza a conferência do tutor e evita erros de envio."
-                </p>
-              </Card>
-
-              <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
-                <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
-                  <ShieldCheck className="h-3 w-3 text-accent" /> Dica de Segurança
-                </h3>
-                <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
-                  "Nunca envie documentos originais por chats informais. Mantenha seu rastro digital seguro em pastas oficiais."
-                </p>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="uploads" className="animate-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* Formulário de Upload */}
-            <div className="lg:col-span-1">
-              <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden sticky top-4">
-                <CardHeader className="bg-primary p-8">
-                  <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
-                    <Upload className="h-6 w-6 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl font-black italic text-white leading-none">Enviar Documento</CardTitle>
-                  <CardDescription className="text-white/70 font-medium italic text-sm mt-1">
-                    Atestados, certidões e outros documentos para a secretaria.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 space-y-5">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Tipo de Documento</Label>
-                    <Select value={uploadDocType} onValueChange={setUploadDocType}>
-                      <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl border-none shadow-2xl">
-                        {Object.entries(DOC_TYPES).map(([val, meta]) => (
-                          <SelectItem key={val} value={val} className="font-bold text-xs">{meta.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Título / Descrição</Label>
-                    <Input
-                      value={uploadTitle}
-                      onChange={e => setUploadTitle(e.target.value)}
-                      placeholder="Ex: Atestado médico 20/05/2026"
-                      className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Arquivo (PDF ou imagem)</Label>
-                    <label className="flex flex-col items-center justify-center h-28 rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png,.webp"
-                        className="hidden"
-                        onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-                      />
-                      {selectedFile ? (
-                        <div className="flex items-center gap-2 p-4 text-center">
-                          <FileText className="h-5 w-5 text-primary shrink-0" />
-                          <span className="text-xs font-bold text-primary truncate max-w-[180px]">{selectedFile.name}</span>
-                          <button type="button" onClick={e => { e.preventDefault(); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}>
-                            <X className="h-4 w-4 text-slate-400 hover:text-red-500" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="text-center space-y-1">
-                          <Upload className="h-6 w-6 text-primary/40 mx-auto" />
-                          <p className="text-[11px] font-bold text-slate-400">Clique para selecionar</p>
-                          <p className="text-[9px] text-slate-300 font-medium uppercase tracking-widest">PDF · JPG · PNG · WEBP · Máx 10MB</p>
-                        </div>
-                      )}
-                    </label>
-                  </div>
-
-                  <Button
-                    onClick={handleUpload}
-                    disabled={uploading || !selectedFile}
-                    className="w-full h-14 bg-primary text-white font-black rounded-2xl shadow-xl border-none text-sm"
+                  {group.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-4">
+                {group.items.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                      checkedItems.includes(item.id) 
+                        ? 'bg-green-50/50 border-green-200' 
+                        : 'bg-white border-transparent hover:border-muted/20'
+                    }`}
+                    onClick={() => toggleItem(item.id)}
                   >
-                    {uploading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Upload className="h-5 w-5 mr-2" />}
-                    Enviar para a Secretaria
-                  </Button>
-
-                  <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                    <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
-                      Seus documentos ficam disponíveis para revisão da secretaria. Documentos pendentes podem ser removidos por você.
-                    </p>
+                    <Checkbox checked={checkedItems.includes(item.id)} onCheckedChange={() => toggleItem(item.id)} className="h-6 w-6 rounded-lg border-2" />
+                    <span className={`text-sm font-bold italic transition-colors ${checkedItems.includes(item.id) ? 'text-green-700' : 'text-primary'}`}>{item.label}</span>
+                    {checkedItems.includes(item.id) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-            {/* Lista de Uploads */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-black text-primary italic">Documentos Enviados</h2>
-                {uploads.length > 0 && (
-                  <Badge className="bg-primary/10 text-primary border-none font-black text-xs">
-                    {uploads.length} {uploads.length === 1 ? 'arquivo' : 'arquivos'}
-                  </Badge>
-                )}
+        <div className="space-y-8">
+          <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative group">
+            <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
+            <CardHeader className="p-8 relative z-10">
+              <div className="h-14 w-14 rounded-3xl bg-white/10 flex items-center justify-center mb-6 shadow-xl"><Cloud className="h-8 w-8 text-white" /></div>
+              <CardTitle className="text-2xl font-black italic">Nuvem de Documentos</CardTitle>
+              <CardDescription className="text-white/90 font-medium font-bold italic">Use o Google Drive para não perder nada.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 pt-0 space-y-6 relative z-10">
+              <div className="space-y-4">
+                {[
+                  { icon: MousePointer2, text: "Acesse drive.google.com" },
+                  { icon: FolderPlus, text: 'Crie a pasta "Ingresso 2024"' },
+                  { icon: Smartphone, text: 'Escaneie com a câmera do celular' }
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                    <step.icon className="h-4 w-4 text-white shrink-0" />
+                    <span className="text-xs font-bold italic opacity-90">{step.text}</span>
+                  </div>
+                ))}
               </div>
+              <Button asChild className="w-full h-14 bg-accent text-accent-foreground font-black text-xs uppercase rounded-2xl shadow-xl hover:scale-105 transition-all">
+                <a href="https://drive.google.com" target="_blank" rel="noopener noreferrer">ABRIR MEU DRIVE <ExternalLink className="ml-2 h-4 w-4" /></a>
+              </Button>
+            </CardContent>
+          </Card>
 
-              {loadingUploads ? (
-                <div className="py-16 flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : uploads.length === 0 ? (
-                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
-                  <CardContent className="py-16 flex flex-col items-center text-center gap-3">
-                    <div className="h-16 w-16 rounded-3xl bg-primary/5 flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-primary/30" />
-                    </div>
-                    <p className="font-black text-primary/40 italic text-sm">Nenhum documento enviado ainda</p>
-                    <p className="text-xs text-muted-foreground font-medium">Envie seus documentos usando o formulário ao lado.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {uploads.map(upload => {
-                    const typeMeta = DOC_TYPES[upload.doc_type] || DOC_TYPES.outro;
-                    const statusMeta = STATUS_META[upload.status] || STATUS_META.pendente;
-                    return (
-                      <Card key={upload.id} className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden hover:shadow-2xl transition-all duration-200">
-                        <CardContent className="p-5 flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0">
-                            <FileText className="h-6 w-6 text-primary/40" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="font-bold text-sm text-primary italic truncate">{upload.title}</p>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <Badge className={`${statusMeta.color} border-none font-black text-[9px] uppercase px-2`}>
-                                  {statusMeta.label}
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <Badge className={`${typeMeta.color} border-none font-bold text-[9px] px-2`}>
-                                {typeMeta.label}
-                              </Badge>
-                              <span className="text-[10px] text-muted-foreground font-medium">
-                                {format(new Date(upload.uploaded_at), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
-                              </span>
-                            </div>
-                            {upload.notes && (
-                              <p className="text-[11px] text-slate-500 mt-2 p-2.5 bg-slate-50 rounded-xl font-medium border border-slate-100">
-                                <span className="font-black text-primary/60">Nota da secretaria:</span> {upload.notes}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Button
-                              asChild
-                              variant="ghost"
-                              size="icon"
-                              title="Visualizar documento"
-                              className="h-9 w-9 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
-                            >
-                              <a href={upload.file_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            </Button>
-                            {upload.status === 'pendente' && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="Remover documento"
-                                onClick={() => handleDeleteUpload(upload)}
-                                className="h-9 w-9 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
+          <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
+            <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
+              <FileSearch className="h-3.5 w-3.5 text-accent" /> Qualidade da Imagem
+            </h3>
+            <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
+              "Evite fotos com sombras ou reflexos de luz. Se o text não estiver legível, sua inscrição poderá ser indeferida pela universidade."
+            </p>
+          </Card>
 
-        <TabsContent value="exemption" className="animate-in slide-in-from-right-4 duration-500">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-4 space-y-6">
-              <Card className="border-none shadow-2xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative group">
-                <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                <CardHeader className="p-8">
-                  <div className="h-12 w-12 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center mb-6 shadow-xl rotate-3"><Scale className="h-6 w-6" /></div>
-                  <CardTitle className="text-2xl font-black italic">Critério Social</CardTitle>
-                  <CardDescription className="text-white/60 font-medium italic">O parâmetro de 1,5 salário mínimo per capita.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 pt-0 space-y-6">
-                  <div className="p-5 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-sm space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2"><CheckCircle2 className="h-3 w-3" /> Teto de Isenção</p>
-                    <p className="text-sm font-medium leading-relaxed italic">Até <strong className="text-accent text-lg">R$ {THRESHOLD.toLocaleString('pt-BR')}</strong> por morador.</p>
-                  </div>
-                  <div className="space-y-4">
-                    {[
-                      { icon: Users2, text: "Inclua quem não tem renda (0,00)" },
-                      { icon: Info, text: "Ignore auxílios governamentais" }
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center gap-3 opacity-80">
-                        <item.icon className="h-4 w-4 text-accent" />
-                        <span className="text-[11px] font-bold uppercase tracking-tight italic">{item.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
+            <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-accent" /> Validade dos Papéis
+            </h3>
+            <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
+              "Comprovantes de residência devem ter no máximo 90 dias. Certidões não podem ter rasuras ou remendos."
+            </p>
+          </Card>
 
-            <div className="lg:col-span-8 space-y-8">
-              <Card className="shadow-2xl border-none bg-white rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="bg-muted/10 p-10 border-b border-muted/20">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-3">Cálculo de Renda <Sparkles className="h-5 w-5 text-accent" /></CardTitle>
-                      <CardDescription className="font-medium italic">Adicione cada integrante da sua residência.</CardDescription>
-                    </div>
-                    <div className="text-right hidden sm:block">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Soma Familiar</p>
-                      <p className="text-2xl font-black text-primary italic">R$ {totalFamilyIncome.toLocaleString('pt-BR')}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-10">
-                  <form onSubmit={handleCalcSubmit} className="space-y-6">
-                    <div className="space-y-4">
-                      {members.map((member, index) => (
-                        <div key={member.id} className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl bg-muted/20 border border-transparent hover:border-accent/20 transition-all">
-                          <div className="flex-1 space-y-2">
-                            <Label className="text-[9px] font-black uppercase text-primary/40 ml-2">Membro da Casa</Label>
-                            <Input placeholder={index === 0 ? "Você" : "Ex: Mãe, Irmão..."} value={member.label} onChange={(e) => updateMember(member.id, 'label', e.target.value)} className="h-12 bg-white rounded-xl border-none font-bold italic" />
-                          </div>
-                          <div className="w-full sm:w-48 space-y-2">
-                            <Label className="text-[9px] font-black uppercase text-primary/40 ml-2">Renda Bruta (R$)</Label>
-                            <Input type="number" placeholder="0.00" value={member.income} onChange={(e) => updateMember(member.id, 'income', e.target.value)} className="h-12 bg-white rounded-xl border-none font-black text-primary" />
-                          </div>
-                          <div className="flex items-end pb-1">
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeMember(member.id)} disabled={members.length === 1} className="h-10 w-10 text-muted-foreground hover:text-red-500 rounded-full"><Trash2 className="h-4 w-4" /></Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                      <Button type="button" variant="outline" onClick={addMember} className="flex-1 h-14 border-dashed border-2 border-primary/20 rounded-2xl font-bold text-primary"><UserPlus className="h-4 w-4 mr-2" /> Adicionar Membro</Button>
-                      <Button type="submit" disabled={loadingCalc} className="flex-1 bg-primary text-white h-14 rounded-2xl font-black text-lg shadow-xl">
-                        {loadingCalc ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <TrendingUp className="h-5 w-5 mr-2 text-accent" />} Verificar Elegibilidade
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+          <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
+            <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
+              <LayoutList className="h-3.5 w-3.5 text-accent" /> Organização Maestro
+            </h3>
+            <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
+              "Renomeie seus arquivos como 'RG_FRENTE.pdf' ou 'HISTORICO_MEDIO.pdf'. Isso agiliza a conferência do tutor e evita erros de envio."
+            </p>
+          </Card>
 
-              {calcResult && (
-                <div className="animate-in zoom-in-95 slide-in-from-top-10 duration-700">
-                  <Card className={`border-none shadow-2xl rounded-[3rem] overflow-hidden ${calcResult.eligible ? 'bg-green-50/50' : 'bg-red-50/50'}`}>
-                    <div className={`p-10 flex flex-col md:flex-row items-center gap-8 ${calcResult.eligible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
-                      <div className="h-20 w-20 rounded-[2rem] bg-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl">
-                        {calcResult.eligible ? <CheckCircle2 className="h-10 w-10" /> : <FileWarning className="h-10 w-10" />}
-                      </div>
-                      <div>
-                        <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter leading-none">{calcResult.eligible ? "Elegível para Isenção" : "Fora do Critério Social"}</h3>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mt-2">Diagnóstico: {calcResult.familySize} moradores registrados</p>
-                      </div>
-                    </div>
-                    <CardContent className="p-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="p-6 bg-white rounded-3xl border-2 border-muted/10 shadow-inner">
-                        <span className="text-[9px] font-black text-muted-foreground uppercase">Sua Renda Per Capita</span>
-                        <p className={`text-3xl font-black italic ${calcResult.eligible ? 'text-green-600' : 'text-red-600'}`}>R$ {calcResult.perCapita.toLocaleString('pt-BR')}</p>
-                      </div>
-                      <div className="p-6 bg-white rounded-3xl border-2 border-muted/10 shadow-inner">
-                        <span className="text-[9px] font-black text-muted-foreground uppercase">Limite do Governo (1,5 SM)</span>
-                        <p className="text-3xl font-black text-primary italic">R$ {calcResult.threshold.toLocaleString('pt-BR')}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          <Card className="border-none shadow-xl bg-white rounded-[2rem] p-8 space-y-4">
+            <h3 className="text-[10px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3 text-accent" /> Dica de Segurança
+            </h3>
+            <p className="text-xs font-medium italic text-primary/70 leading-relaxed">
+              "Nunca envie documentos originais por chats informais. Mantenha seu rastro digital seguro em pastas oficiais."
+            </p>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

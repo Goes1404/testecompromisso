@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Library,
   Bot,
@@ -30,7 +32,12 @@ import {
   Clock,
   Star,
   Phone,
-  Check
+  Check,
+  ClipboardCheck,
+  KeyRound,
+  CheckCircle2,
+  ShieldAlert,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -135,6 +142,14 @@ export default function DashboardHome() {
   const [examStats, setExamStats] = useState<{ totalAssessed: number; averageScore: number; history?: any[] } | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Estados do Auto Check-in (Chamada Ativa)
+  const [activeSession, setActiveSession] = useState<any>(null);
+  const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const [attendanceStep, setAttendanceStep] = useState<"code" | "fraud">("code");
+  const [checkinCode, setCheckinCode] = useState("");
+  const [confirmoInput, setConfirmoInput] = useState("");
+  const [checkingIn, setCheckingIn] = useState(false);
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const digits = value.replace(/\D/g, "");
@@ -196,6 +211,74 @@ export default function DashboardHome() {
     }
   };
 
+  const checkActiveSession = useCallback(async () => {
+    if (!user || !profile?.course) return;
+    try {
+      const nowIso = new Date().toISOString();
+      const { data: activeSessions } = await supabase
+        .from("class_sessions")
+        .select("id, title, subject, session_date, teacher_name, class_label, checkin_code, checkin_code_expires_at")
+        .eq("class_label", profile.course)
+        .gt("checkin_code_expires_at", nowIso)
+        .order("checkin_code_expires_at", { ascending: true })
+        .limit(1);
+
+      if (activeSessions && activeSessions.length > 0) {
+        const session = activeSessions[0];
+        const { data: record } = await supabase
+          .from("attendance_records")
+          .select("status")
+          .eq("session_id", session.id)
+          .eq("student_id", user.id)
+          .maybeSingle();
+
+        if (!record || record.status === "ausente") {
+          setActiveSession(session);
+          return;
+        }
+      }
+      setActiveSession(null);
+    } catch (err) {
+      console.error("Error checking active attendance session:", err);
+    }
+  }, [user, profile]);
+
+  const handleOpenAttendanceCheckin = () => {
+    setAttendanceStep("code");
+    setCheckinCode("");
+    setConfirmoInput("");
+    setAttendanceDialogOpen(true);
+  };
+
+  const handleConfirmedCheckin = async () => {
+    const code = checkinCode.trim().toUpperCase();
+    if (confirmoInput.trim().toUpperCase() !== "CONFIRMO") {
+      toast({ title: "Digite CONFIRMO para prosseguir", variant: "destructive" });
+      return;
+    }
+    setCheckingIn(true);
+    try {
+      const res = await fetch("/api/attendance/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, confirmed: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: "Erro no check-in", description: data.error || "Código inválido ou expirado.", variant: "destructive" });
+      } else {
+        toast({ title: "Presença registrada!", description: `Aula: ${data.session_title}` });
+        setAttendanceDialogOpen(false);
+        setActiveSession(null);
+        fetchData(true);
+      }
+    } catch {
+      toast({ title: "Erro de conexão", variant: "destructive" });
+    } finally {
+      setCheckingIn(false);
+    }
+  };
+
   useEffect(() => {
     if (!isUserLoading && userRole !== 'student') {
       if (userRole === 'admin' || userRole === 'staff') router.replace("/dashboard/admin/home");
@@ -203,8 +286,8 @@ export default function DashboardHome() {
     }
   }, [userRole, isUserLoading, router]);
 
-  const fetchData = useCallback(async () => {
-    if (!user || dataFetchedRef.current) return;
+  const fetchData = useCallback(async (force = false) => {
+    if (!user || (dataFetchedRef.current && !force)) return;
     
     // 1. Tentar carregar do Cache Local para velocidade instantânea
     const cacheKey = `dash_cache_${user.id}`;
@@ -308,8 +391,9 @@ export default function DashboardHome() {
   useEffect(() => {
     if (user && profile && userRole === 'student') {
       fetchData();
+      checkActiveSession();
     }
-  }, [user, profile, userRole, fetchData]);
+  }, [user, profile, userRole, fetchData, checkActiveSession]);
 
   if (isUserLoading || (userRole === 'student' && loadingData && !dataFetchedRef.current)) return (
     <div className="flex flex-col h-[70vh] items-center justify-center gap-5">
@@ -333,7 +417,7 @@ export default function DashboardHome() {
   const quickActions = [
     { label: "Checklist", icon: FileCheck, href: "/dashboard/student/documents", color: "from-blue-500 to-blue-600", shadow: "shadow-blue-500/20" },
     { label: "Simulado", icon: BrainCircuit, href: "/dashboard/student/simulados", color: "from-violet-500 to-purple-600", shadow: "shadow-purple-500/20" },
-    { label: "Isenção", icon: Calculator, href: "/dashboard/student/documents?tab=exemption", color: "from-amber-500 to-orange-500", shadow: "shadow-amber-500/20" },
+    { label: "Isenção", icon: Calculator, href: "/dashboard/student/documents/exemption", color: "from-amber-500 to-orange-500", shadow: "shadow-amber-500/20" },
     { label: "Biblioteca", icon: Library, href: "/dashboard/library", color: "from-emerald-500 to-green-600", shadow: "shadow-green-500/20" },
   ];
 
@@ -388,6 +472,37 @@ export default function DashboardHome() {
               )}
             </Button>
           </form>
+        </div>
+      )}
+
+      {/* ── CARD DE CHAMADA ATIVA ── */}
+      {activeSession && (
+        <div className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-violet-200 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 md:p-8 shadow-2xl glow-purple text-white flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
+          <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-5 relative z-10 w-full md:w-auto">
+            <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-xl animate-float">
+              <ClipboardCheck className="h-7 w-7 text-white" />
+            </div>
+            <div className="text-center sm:text-left space-y-1">
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/80 animate-pulse">Chamada em Andamento 🚨</span>
+              <h2 className="text-xl md:text-2xl font-black italic tracking-tighter leading-none">Registre sua Presença</h2>
+              <p className="text-white/80 font-semibold text-xs leading-relaxed max-w-lg italic">
+                A chamada para a aula <strong className="text-white">{activeSession.title}</strong> ({activeSession.subject || 'Geral'}) está aberta para a sua turma (<strong className="text-white">{activeSession.class_label}</strong>).
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3 w-full md:w-auto relative z-10 shrink-0 justify-center">
+            <Button
+              onClick={handleOpenAttendanceCheckin}
+              className="bg-white text-violet-600 hover:bg-violet-50 font-black rounded-xl shadow-lg border-none shrink-0 h-12 px-6 text-xs uppercase tracking-widest transition-all active:scale-[0.98] flex items-center gap-2 justify-center"
+            >
+              <KeyRound className="h-4 w-4" />
+              Responder Chamada
+            </Button>
+          </div>
         </div>
       )}
 
@@ -754,6 +869,137 @@ export default function DashboardHome() {
           <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">Compromisso • 2024</p>
         </div>
       </footer>
+
+      {/* ── DIALOG DE AUTO CHECK-IN ── */}
+      <Dialog open={attendanceDialogOpen} onOpenChange={(v) => { if (!v) { setAttendanceDialogOpen(false); setConfirmoInput(""); } }}>
+        <DialogContent className="sm:max-w-lg rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
+          {attendanceStep === "code" ? (
+            <>
+              <DialogHeader className="p-8 pb-4 bg-violet-50 border-b-2 border-violet-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-14 w-14 rounded-2xl bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                    <KeyRound className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl font-black text-violet-700 leading-none italic uppercase tracking-tighter">
+                      Check-in da Aula
+                    </DialogTitle>
+                    <DialogDescription className="text-xs mt-1 font-bold text-violet-500">
+                      Confirme sua presença inserindo o token da lousa
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="p-8 space-y-6">
+                <div className="space-y-4 text-sm leading-relaxed text-slate-600">
+                  <p className="font-semibold">
+                    Digite o token de 4 a 6 caracteres exibido pelo professor para a aula <strong className="text-violet-700">{activeSession?.title}</strong>.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="checkin-code" className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-1">
+                      Token da aula
+                    </Label>
+                    <Input
+                      id="checkin-code"
+                      className="h-14 text-center text-2xl font-black tracking-[0.4em] uppercase font-mono rounded-2xl border-2 border-violet-200 focus:border-violet-500 bg-white"
+                      maxLength={6}
+                      placeholder="A7X9"
+                      value={checkinCode}
+                      onChange={(e) => setCheckinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                      onKeyDown={(e) => e.key === "Enter" && checkinCode.length >= 4 && setAttendanceStep("fraud")}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setAttendanceDialogOpen(false)}
+                    className="flex-1 h-12 rounded-2xl font-black text-xs border-slate-200"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={() => setAttendanceStep("fraud")}
+                    disabled={checkinCode.length < 4}
+                    className="flex-1 h-12 bg-violet-600 hover:bg-violet-700 text-white font-black rounded-2xl shadow-lg shadow-violet-200 border-none text-xs disabled:opacity-40"
+                  >
+                    Prosseguir
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader className="p-8 pb-4 bg-red-50 border-b-2 border-red-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-14 w-14 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-300">
+                    <ShieldAlert className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl font-black text-red-700 leading-none italic uppercase tracking-tighter">
+                      Aviso de Fraude
+                    </DialogTitle>
+                    <DialogDescription className="text-xs mt-1 font-bold text-red-600">
+                      Leia com atenção antes de confirmar
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="p-8 space-y-5">
+                <div className="space-y-4 text-sm leading-relaxed">
+                  <div className="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
+                    <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                    <p className="text-red-700 font-bold">
+                      Você está prestes a registrar sua <strong>presença em uma aula presencial</strong>. O token só pode ser digitado por <strong>você, dentro da sala</strong>.
+                    </p>
+                  </div>
+
+                  <ul className="space-y-2 text-slate-700 font-medium text-[13px]">
+                    <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Compartilhar o token com colegas que faltaram caracteriza <strong>fraude documental</strong>.</li>
+                    <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Alunos detectados em fraude perdem a vaga no cursinho <strong>imediatamente</strong>.</li>
+                    <li className="flex gap-2"><span className="text-red-600 font-black">·</span> A lista de papel da sala é cruzada com os check-ins do app pela secretaria.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="confirmo" className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-1">
+                    Para prosseguir, digite a palavra <span className="text-red-600 font-black">CONFIRMO</span>
+                  </Label>
+                  <Input
+                    id="confirmo"
+                    placeholder="CONFIRMO"
+                    value={confirmoInput}
+                    onChange={(e) => setConfirmoInput(e.target.value.toUpperCase())}
+                    className="h-14 text-center text-xl font-black tracking-[0.3em] rounded-2xl border-2 border-red-200 focus:border-red-500 bg-white"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setAttendanceStep("code")}
+                    className="flex-1 h-12 rounded-2xl font-black text-xs border-slate-200"
+                  >
+                    Voltar
+                  </Button>
+                  <Button
+                    onClick={handleConfirmedCheckin}
+                    disabled={checkingIn || confirmoInput.trim().toUpperCase() !== "CONFIRMO"}
+                    className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-lg shadow-red-200 border-none text-xs disabled:opacity-40"
+                  >
+                    {checkingIn ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                    Registrar Presença ({checkinCode})
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

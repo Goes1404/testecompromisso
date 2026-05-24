@@ -144,8 +144,14 @@ export default function TeacherMaterialsPage() {
         is_published: true,
       };
 
-      const { error } = await supabase.from('class_materials').insert(payload);
+      const { data: matData, error } = await supabase.from('class_materials').insert(payload).select('id').single();
       if (error) throw error;
+
+      fetch("/api/push/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "material", materialId: matData.id }),
+      }).catch(() => {});
 
       toast({ title: 'Material publicado!' });
       setForm(blank);

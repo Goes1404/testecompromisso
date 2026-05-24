@@ -69,9 +69,9 @@ export default function AttendanceSessionPage() {
         supabase.from("class_sessions").select("*").eq("id", id).single(),
         supabase
           .from("profiles")
-          .select("id, full_name, institution, exam_target")
-          .eq("role", "student")
-          .order("full_name"),
+          .select("id, name, institution, exam_target")
+          .eq("profile_type", "student")
+          .order("name"),
         supabase.from("attendance_records").select("*").eq("session_id", id),
       ]);
 
@@ -263,7 +263,7 @@ export default function AttendanceSessionPage() {
   const availableStudents = allStudents.filter(
     (s) =>
       records[s.id] === undefined &&
-      (!addSearch || s.full_name?.toLowerCase().includes(addSearch.toLowerCase()))
+      (!addSearch || s.name?.toLowerCase().includes(addSearch.toLowerCase()))
   );
 
   const stats = {
@@ -536,7 +536,7 @@ export default function AttendanceSessionPage() {
                       className="flex items-center justify-between p-2 rounded-lg hover:bg-background transition-colors"
                     >
                       <div>
-                        <p className="text-sm font-medium">{student.full_name || "Sem nome"}</p>
+                        <p className="text-sm font-medium">{student.name || "Sem nome"}</p>
                         <p className="text-xs text-muted-foreground">
                           {student.institution || student.exam_target || "—"}
                         </p>
@@ -586,7 +586,7 @@ export default function AttendanceSessionPage() {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm truncate">
-                        {student.full_name || "Aluno sem nome"}
+                        {student.name || "Aluno sem nome"}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {student.institution || student.exam_target || "—"}

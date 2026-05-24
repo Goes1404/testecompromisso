@@ -140,6 +140,12 @@ export default function CommunicationPage() {
         entity_id: data.id
       });
 
+      fetch("/api/push/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "communication", announcementId: data.id }),
+      }).catch(() => {});
+
       setAnnouncements(prev => [data, ...prev]);
       setFormData({ title: '', message: '', priority: 'low', target_group: 'all' });
       toast({ title: "Comunicado Fixado!", description: "A rede foi notificada com sucesso." });

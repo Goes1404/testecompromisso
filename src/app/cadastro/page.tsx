@@ -48,6 +48,11 @@ function CadastroForm() {
       return;
     }
 
+    if (!formData.course) {
+      setError('Selecione a sua sala/turma.');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('As senhas não coincidem.');
       return;
@@ -192,15 +197,25 @@ function CadastroForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="course" className="font-bold text-gray-700">Curso Desejado <span className="text-gray-400 font-normal">(Opcional)</span></Label>
-          <Input
-            id="course"
-            name="course"
-            placeholder="Ex: Medicina, Direito, Informática..."
-            value={formData.course}
-            onChange={handleChange}
-            className="h-12 bg-gray-50/50"
-          />
+          <Label htmlFor="course" className="font-bold text-gray-700">Sala / Turma <span className="text-red-500">*</span></Label>
+          <Select 
+            value={formData.course} 
+            onValueChange={(val) => setFormData({ ...formData, course: val })}
+          >
+            <SelectTrigger className="h-12 bg-gray-50/50">
+              <SelectValue placeholder="Selecione sua sala..." />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 12 }, (_, i) => {
+                const num = String(i + 1).padStart(2, '0');
+                return (
+                  <SelectItem key={num} value={num}>
+                    Sala {num}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-2 gap-4 pt-2">

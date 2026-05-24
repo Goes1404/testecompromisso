@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -68,9 +68,16 @@ const studentItems: NavItem[] = [
     ],
   },
   {
+    icon: FileCheck, label: "Matrícula & Isenção", id: "nav-matricula-isenção",
+    children: [
+      { icon: ClipboardList, label: "Checklist de Matrícula", href: "/dashboard/student/documents", id: "nav-student-documents" },
+      { icon: Upload, label: "Enviar Documentos", href: "/dashboard/student/documents/uploads", id: "nav-student-uploads" },
+      { icon: Calculator, label: "Simulador de Isenção", href: "/dashboard/student/documents/exemption", id: "nav-student-exemption" },
+    ],
+  },
+  {
     icon: Settings, label: "Conta", id: "nav-conta",
     children: [
-      { icon: FileCheck,  label: "Meus Documentos", href: "/dashboard/student/documents", id: "nav-documents" },
       { icon: Settings,   label: "Meu Perfil",      href: "/dashboard/settings",          id: "nav-settings" },
     ],
   },

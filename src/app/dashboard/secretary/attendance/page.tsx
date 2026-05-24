@@ -1,27 +1,29 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  ClipboardCheck, 
-  Loader2, 
-  Search, 
-  PlusCircle, 
-  Calendar, 
-  CheckCircle2, 
-  XCircle, 
-  AlertCircle, 
-  UserPlus, 
-  UserMinus, 
-  BookOpen, 
-  Users, 
+import {
+  ClipboardCheck,
+  Loader2,
+  Search,
+  PlusCircle,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  UserPlus,
+  UserMinus,
+  BookOpen,
+  Users,
   X,
   FileText,
-  UserCheck
+  UserCheck,
+  Camera,
+  ImageIcon,
 } from "lucide-react";
 import {
   Select,
@@ -81,6 +83,10 @@ export default function SecretaryAttendancePage() {
   // Snapshot do estado inicial para detectar sobrescritas em check-ins via app
   const [originals, setOriginals] = useState<Record<string, { status: AttendanceStatus; method: AttendanceMethod }>>({});
   const [searchStudent, setSearchStudent] = useState("");
+
+  // Upload de foto da chamada em papel
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Diálogo de confirmação para sobrescritas (audit)
   const [overrideOpen, setOverrideOpen] = useState(false);
@@ -305,15 +311,44 @@ export default function SecretaryAttendancePage() {
     }
   };
 
+  // Upload da foto da chamada em papel
+  const handleUploadPhoto = async (file: File) => {
+    if (!selectedSession || !user) return;
+    setUploadingPhoto(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `attendance-photos/${selectedSession.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("learning-contents")
+        .upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage
+        .from("learning-contents")
+        .getPublicUrl(path);
+      const { error: updateErr } = await supabase
+        .from("class_sessions")
+        .update({ paper_photo_url: urlData.publicUrl })
+        .eq("id", selectedSession.id);
+      if (updateErr) throw updateErr;
+      setSelectedSession((prev: any) => ({ ...prev, paper_photo_url: urlData.publicUrl }));
+      setSessions(prev => prev.map(s => s.id === selectedSession.id ? { ...s, paper_photo_url: urlData.publicUrl } : s));
+      toast({ title: "Foto da chamada salva!" });
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar foto", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   // Filtra alunos na lista de chamada
   const filteredStudents = students.filter(s => {
     if (!records[s.id]) return false; // apenas na chamada
     return (s.name || "").toLowerCase().includes(searchStudent.toLowerCase());
   });
 
-  // Lista de turmas distintas (extraída de profiles.course)
+  // Turmas distintas extraídas das sessões (consistente com o filtro visibleSessions)
   const classOptions = Array.from(
-    new Set(students.map(s => (s.course || "").trim()).filter(Boolean))
+    new Set(sessions.map(s => (s.class_label || "").trim()).filter(Boolean))
   ).sort();
 
   // Sessões visíveis após o filtro de turma
@@ -428,6 +463,52 @@ export default function SecretaryAttendancePage() {
                 <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => setSelectedSession(null)}>
                   <X className="h-4 w-4" />
                 </Button>
+              </div>
+
+              {/* Foto da Chamada em Papel */}
+              <div className="p-3 rounded-2xl border border-amber-200 bg-amber-50/60 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Camera className="h-3.5 w-3.5 text-amber-600" />
+                    <span className="text-[10px] font-black uppercase text-amber-700 tracking-widest">Chamada em Papel</span>
+                    {selectedSession.paper_photo_url && (
+                      <span className="text-[8px] font-black uppercase bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Enviada</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={uploadingPhoto}
+                    className="h-7 px-3 text-[10px] font-black rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-1 shrink-0"
+                  >
+                    {uploadingPhoto ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+                    {selectedSession.paper_photo_url ? "Trocar" : "Enviar Foto"}
+                  </button>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleUploadPhoto(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+                {selectedSession.paper_photo_url ? (
+                  <a href={selectedSession.paper_photo_url} target="_blank" rel="noopener noreferrer" title="Abrir em tamanho real">
+                    <img
+                      src={selectedSession.paper_photo_url}
+                      alt="Lista de presença em papel"
+                      className="w-full rounded-xl object-cover max-h-40 border border-amber-200 hover:opacity-90 transition-opacity cursor-zoom-in"
+                    />
+                  </a>
+                ) : (
+                  <p className="text-[9px] text-amber-600/80 font-medium italic">
+                    Fotografe a lista de presença em papel e envie para arquivamento. Será cruzada com os check-ins do app.
+                  </p>
+                )}
               </div>
 
               {loadingDetails ? (

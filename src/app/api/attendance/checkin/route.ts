@@ -57,6 +57,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Código inválido ou expirado." }, { status: 400 });
     }
 
+    // Buscar perfil do aluno para validar a turma (barreira anti-fraude)
+    const { data: studentProfile, error: profileError } = await adminClient
+      .from("profiles")
+      .select("course")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError || !studentProfile) {
+      return NextResponse.json({ error: "Perfil do aluno não encontrado." }, { status: 400 });
+    }
+
+    if (session.class_label && studentProfile.course !== session.class_label) {
+      return NextResponse.json(
+        {
+          error: `Este token é exclusivo para a turma ${session.class_label}. Sua turma cadastrada é ${
+            studentProfile.course || "Sem Turma"
+          }.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Bloquear sobrescrita: se já tem status válido (presente/justificado) ou foi marcado manualmente
     const { data: existing } = await adminClient
       .from("attendance_records")
