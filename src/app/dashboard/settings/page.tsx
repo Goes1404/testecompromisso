@@ -303,7 +303,7 @@ export default function SettingsPage() {
                         </Label>
                         <div className="relative">
                           <Input 
-                            value={profile?.institution || "Não Informado"} 
+                            value={profile?.institution || "Completar no perfil"}
                             disabled 
                             className="h-16 rounded-2xl border-none font-bold text-xl italic bg-muted/30 opacity-60" 
                           />

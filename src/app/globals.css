@@ -22,7 +22,7 @@
     --secondary-foreground: 0 0% 8%;
     
     --muted: 25 100% 95%;
-    --muted-foreground: 0 0% 35%;
+    --muted-foreground: 220 9% 46%;    /* #6B7280 — WCAG AA contra branco */
     
     --accent: 25 100% 50%;
     --accent-foreground: 0 0% 100%;
@@ -61,7 +61,22 @@
     overflow-x: hidden;
     min-height: 100vh;
     position: relative;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sora, var(--font-inter, system-ui, sans-serif));
+    letter-spacing: -0.02em;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sora, sans-serif);
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+
+  /* Focus ring visível — WCAG AA */
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 

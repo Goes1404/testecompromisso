@@ -860,7 +860,7 @@ export default function SecretaryAttendancePage() {
                               <div className="min-w-0">
                                 <p className="text-xs font-bold text-slate-800 truncate">{student.name || "Sem nome"}</p>
                                 <p className="text-[9px] text-muted-foreground font-semibold">
-                                  {student.course || "Sem Turma"} • {student.institution || "Sem Polo"}
+                                  {student.course || "Turma não definida"} • {student.institution || "Polo não definido"}
                                 </p>
                               </div>
                               <Button

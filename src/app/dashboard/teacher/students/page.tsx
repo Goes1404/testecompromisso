@@ -254,7 +254,7 @@ export default function TeacherStudentsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs font-black text-primary/70">{student.institution || 'Não Informado'}</span>
+                            <span className="text-xs font-black text-primary/70">{student.institution || 'Escola não cadastrada'}</span>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <Badge className="w-fit bg-primary/5 text-primary border-none text-[7px] font-black uppercase px-2">
                                 {student.exam_target || 'student'}

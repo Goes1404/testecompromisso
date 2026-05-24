@@ -1,7 +1,7 @@
 import { AuthProvider } from '@/lib/AuthProvider';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { Inter } from 'next/font/google';
+import { Inter, Sora } from 'next/font/google';
 import { ClientWrapper } from '@/components/ClientWrapper';
 import { Suspense } from 'react';
 import { LoadingShell } from '@/components/LoadingShell';
@@ -12,6 +12,13 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
+});
+
+const sora = Sora({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sora',
+  weight: ['300', '400', '500', '600', '700', '800'],
 });
 
 export const metadata = {
@@ -36,7 +43,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} font-sans`}>
+    <html lang="pt-BR" className={`${sora.variable} ${inter.variable} font-sans`}>
       <head>
         <script
           dangerouslySetInnerHTML={{

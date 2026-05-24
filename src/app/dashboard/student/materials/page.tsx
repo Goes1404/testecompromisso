@@ -420,7 +420,7 @@ export default function StudentMaterialsPage() {
                   <div className="flex items-center justify-between gap-4 pt-1">
                     <div className="flex flex-col min-w-0">
                       <span className="text-[10px] text-slate-500 font-bold truncate">
-                        {m.teacher_name || 'Professor Não Informado'}
+                        {m.teacher_name || 'Professor não identificado'}
                       </span>
                       <span className="text-[9px] text-slate-400 font-medium">
                         {format(new Date(m.created_at), "dd 'de' MMM", { locale: ptBR })}
@@ -477,7 +477,7 @@ export default function StudentMaterialsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium mt-0.5">
-                    <span>{m.teacher_name || 'Professor Não Informado'}</span>
+                    <span>{m.teacher_name || 'Professor não identificado'}</span>
                     <span>•</span>
                     <span>{format(new Date(m.created_at), "dd 'de' MMM", { locale: ptBR })}</span>
                   </div>
