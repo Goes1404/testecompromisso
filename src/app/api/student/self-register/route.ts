@@ -19,7 +19,7 @@ function generateEmail(fullName: string): string {
 
 export async function POST(request: Request) {
   try {
-    const { token, fullName, cpf, examTarget, institution, course, password } = await request.json();
+    const { token, fullName, cpf, examTarget, institution, sala, turno, password } = await request.json();
 
     if (!token) {
       return NextResponse.json({ error: 'Token ausente.' }, { status: 400 });
@@ -83,7 +83,8 @@ export async function POST(request: Request) {
         role: 'student',
         institution: institution || '',
         exam_target: examTarget || 'ENEM',
-        course: course || '',
+        sala: sala || '',
+        turno: turno || '',
         cpf: cpf || '',
       },
     });
@@ -101,7 +102,8 @@ export async function POST(request: Request) {
       role: 'student',
       status: 'active',
       institution: institution || null,
-      course: course || null,
+      sala: sala || null,
+      turno: turno || null,
       exam_target: examTarget || null,
     });
 

@@ -30,7 +30,8 @@ function CadastroForm() {
     cpf: '',
     examTarget: 'ENEM',
     institution: '',
-    course: '',
+    sala: '',
+    turno: '',
     password: '',
     confirmPassword: '',
   });
@@ -48,8 +49,13 @@ function CadastroForm() {
       return;
     }
 
-    if (!formData.course) {
-      setError('Selecione a sua sala/turma.');
+    if (!formData.sala) {
+      setError('Selecione o número da sua sala.');
+      return;
+    }
+
+    if (!formData.turno) {
+      setError('Selecione o turno em que você estuda.');
       return;
     }
 
@@ -77,7 +83,8 @@ function CadastroForm() {
           cpf: formData.cpf,
           examTarget: formData.examTarget,
           institution: formData.institution,
-          course: formData.course,
+          sala: formData.sala,
+          turno: formData.turno,
           password: formData.password,
         }),
       });
@@ -196,26 +203,40 @@ function CadastroForm() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="course" className="font-bold text-gray-700">Sala / Turma <span className="text-red-500">*</span></Label>
-          <Select 
-            value={formData.course} 
-            onValueChange={(val) => setFormData({ ...formData, course: val })}
-          >
-            <SelectTrigger className="h-12 bg-gray-50/50">
-              <SelectValue placeholder="Selecione sua sala..." />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => {
-                const num = String(i + 1).padStart(2, '0');
-                return (
-                  <SelectItem key={num} value={num}>
-                    Sala {num}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="font-bold text-gray-700">Número da Sala <span className="text-red-500">*</span></Label>
+            <Select
+              value={formData.sala}
+              onValueChange={(val) => setFormData({ ...formData, sala: val })}
+            >
+              <SelectTrigger className="h-12 bg-gray-50/50">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 15 }, (_, i) => String(i + 1)).map(n => (
+                  <SelectItem key={n} value={n}>Sala {n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-bold text-gray-700">Turno <span className="text-red-500">*</span></Label>
+            <Select
+              value={formData.turno}
+              onValueChange={(val) => setFormData({ ...formData, turno: val })}
+            >
+              <SelectTrigger className="h-12 bg-gray-50/50">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manha">Manhã</SelectItem>
+                <SelectItem value="tarde">Tarde</SelectItem>
+                <SelectItem value="integral">Integral</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 pt-2">

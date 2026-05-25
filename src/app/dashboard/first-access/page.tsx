@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ShieldCheck, Loader2, Sparkles, AlertCircle,
   Eye, EyeOff, LockKeyhole, CheckCircle2, Info,
   Phone, BookOpen, School, ChevronRight, ChevronLeft,
@@ -336,18 +343,20 @@ export default function FirstAccessPage() {
 
                 {/* sala */}
                 <div className="space-y-2">
-                  <Label htmlFor="sala" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
-                    Sala / Turma
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                    Número da Sala
                     <span className="normal-case font-medium text-slate-400">(opcional)</span>
                   </Label>
-                  <Input
-                    id="sala"
-                    autoComplete="off"
-                    value={sala}
-                    onChange={e => setSala(e.target.value)}
-                    placeholder="Ex: Turma A, Sala 3, T2..."
-                    className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent"
-                  />
+                  <Select value={sala} onValueChange={setSala}>
+                    <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent">
+                      <SelectValue placeholder="Selecione a sala..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 15 }, (_, i) => String(i + 1)).map(n => (
+                        <SelectItem key={n} value={n}>Sala {n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* objetivo */}
@@ -387,27 +396,16 @@ export default function FirstAccessPage() {
                     Qual turno você estuda?
                     <span className="text-red-400 font-black">*</span>
                   </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {TURNO_OPTIONS.map(t => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setTurno(t.id)}
-                        aria-pressed={turno === t.id}
-                        className={`relative flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl border-2 transition-all duration-200
-                          ${turno === t.id
-                            ? 'border-primary bg-primary/5 shadow-md'
-                            : 'border-slate-200 bg-slate-50 hover:border-slate-300 active:scale-[0.97]'}`}
-                      >
-                        {turno === t.id && (
-                          <CheckCircle2 className="absolute top-2 right-2 h-3.5 w-3.5 text-primary" />
-                        )}
-                        <span className="text-2xl leading-none">{t.emoji}</span>
-                        <p className={`font-black text-xs ${turno === t.id ? 'text-primary' : 'text-slate-700'}`}>{t.label}</p>
-                        <p className="text-[9px] text-slate-400 font-medium">{t.hint}</p>
-                      </button>
-                    ))}
-                  </div>
+                  <Select value={turno} onValueChange={setTurno}>
+                    <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent">
+                      <SelectValue placeholder="Selecione o turno..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manha">Manhã (07h–12h)</SelectItem>
+                      <SelectItem value="tarde">Tarde (13h–18h)</SelectItem>
+                      <SelectItem value="integral">Integral (Manhã + Tarde)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* rodapé obrigatórios */}
