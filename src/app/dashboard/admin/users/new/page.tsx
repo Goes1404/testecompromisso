@@ -78,6 +78,8 @@ interface FormData {
   examTarget: ExamTarget;
   institution: string;
   course: string;
+  sala: string;
+  turno: string;
   emailOverride: string;
 }
 
@@ -86,6 +88,14 @@ const ROLE_OPTIONS: { value: Role; label: string; color: string }[] = [
   { value: 'teacher', label: 'Professor', color: 'bg-purple-100 text-purple-700' },
   { value: 'admin', label: 'Coordenação / Admin', color: 'bg-indigo-100 text-indigo-700' },
   { value: 'staff', label: 'Equipe de Apoio', color: 'bg-orange-100 text-orange-700' },
+];
+
+const SALA_OPTIONS = ['1','2','3','4','5','6','7','8','9','10'];
+
+const TURNO_OPTIONS = [
+  { value: 'manha',    label: 'Manhã'    },
+  { value: 'tarde',    label: 'Tarde'    },
+  { value: 'integral', label: 'Integral' },
 ];
 
 const PROFILE_TYPES: Record<Role, string[]> = {
@@ -192,6 +202,8 @@ export default function AdminNewUserPage() {
     examTarget: 'ENEM',
     institution: '',
     course: '',
+    sala: '',
+    turno: '',
     emailOverride: '',
   });
 
@@ -245,6 +257,8 @@ export default function AdminNewUserPage() {
           profileType: form.profileType,
           institution: form.institution,
           course: form.course,
+          sala: form.sala || undefined,
+          turno: form.turno || undefined,
           examTarget: form.examTarget,
           emailOverride: useCustomEmail ? form.emailOverride : undefined,
         }),
@@ -361,7 +375,7 @@ export default function AdminNewUserPage() {
               setInviteLink(null);
               setForm({
                 fullName: '', cpf: '', birthDate: '', role: 'student', profileType: 'Estudante ENEM',
-                examTarget: 'ENEM', institution: '', course: '', emailOverride: '',
+                examTarget: 'ENEM', institution: '', course: '', sala: '', turno: '', emailOverride: '',
               });
               setGeneratedEmail('');
             }}
@@ -604,6 +618,40 @@ export default function AdminNewUserPage() {
                 placeholder="Ex: 3ª Série A, Informática"
                 className="h-12 rounded-xl bg-slate-50 border-none font-medium shadow-sm focus-visible:ring-accent"
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-primary/60 tracking-widest">
+                  Número da Sala
+                </Label>
+                <Select value={form.sala} onValueChange={v => setField('sala', v)}>
+                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-medium shadow-sm">
+                    <SelectValue placeholder="Selecione a sala..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SALA_OPTIONS.map(n => (
+                      <SelectItem key={n} value={n}>Sala {n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-primary/60 tracking-widest">
+                  Turno
+                </Label>
+                <Select value={form.turno} onValueChange={v => setField('turno', v)}>
+                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-medium shadow-sm">
+                    <SelectValue placeholder="Selecione o turno..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TURNO_OPTIONS.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </fieldset>
         )}

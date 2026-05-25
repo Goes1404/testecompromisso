@@ -34,6 +34,8 @@ export async function POST(request: Request) {
       role,
       institution,
       course,
+      sala,
+      turno,
       examTarget,
       emailOverride,
       birthDate,
@@ -107,6 +109,8 @@ export async function POST(request: Request) {
       status: 'active',
       institution: institution || null,
       course: course || null,
+      sala: sala || null,
+      turno: turno || null,
       exam_target: examTarget || null,
       birth_date: birthDate || null,
     });

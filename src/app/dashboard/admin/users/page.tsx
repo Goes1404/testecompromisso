@@ -507,12 +507,21 @@ export default function AdminUserDirectoryPage() {
   const [resetOpen, setResetOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
 
+  const SALA_OPTIONS = ['1','2','3','4','5','6','7','8','9','10'];
+  const TURNO_OPTIONS = [
+    { value: 'manha',    label: 'Manhã'    },
+    { value: 'tarde',    label: 'Tarde'    },
+    { value: 'integral', label: 'Integral' },
+  ];
+
   // Estado do modal de edição
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editInstitution, setEditInstitution] = useState("");
   const [editCourse, setEditCourse] = useState("");
+  const [editSala, setEditSala] = useState("");
+  const [editTurno, setEditTurno] = useState("");
   const [editExamTarget, setEditExamTarget] = useState("");
   const [editProfileType, setEditProfileType] = useState("");
   const [editIsSubmitting, setEditIsSubmitting] = useState(false);
@@ -593,6 +602,8 @@ export default function AdminUserDirectoryPage() {
     setEditEmail(u.email || "");
     setEditInstitution(u.institution || "");
     setEditCourse(u.course || "");
+    setEditSala(u.sala || "");
+    setEditTurno(u.turno || "");
     setEditExamTarget(u.exam_target || "");
     setEditProfileType(u.profile_type || "");
   };
@@ -606,6 +617,8 @@ export default function AdminUserDirectoryPage() {
       if (editEmail.trim()) updates.email = editEmail.trim();
       updates.institution = editInstitution.trim();
       updates.course = editCourse.trim();
+      updates.sala = editSala;
+      updates.turno = editTurno;
       updates.exam_target = editExamTarget;
       if (editProfileType.trim()) updates.profile_type = editProfileType.trim();
 
@@ -1003,13 +1016,48 @@ export default function AdminUserDirectoryPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Sala / Turma</Label>
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Turma / Curso</Label>
                 <Input
                   value={editCourse}
                   onChange={e => setEditCourse(e.target.value)}
                   placeholder="Ex: 3ª Série A"
                   className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Número da Sala</Label>
+                <Select value={editSala} onValueChange={setEditSala}>
+                  <SelectTrigger className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SALA_OPTIONS.map(n => (
+                      <SelectItem key={n} value={n}>Sala {n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Turno</Label>
+                <div className="flex gap-2">
+                  {TURNO_OPTIONS.map(t => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setEditTurno(t.value)}
+                      className={`flex-1 h-12 rounded-xl font-black text-xs transition-all border-2 ${
+                        editTurno === t.value
+                          ? 'bg-primary text-white border-primary shadow'
+                          : 'bg-white border-muted text-muted-foreground hover:border-primary/30'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
