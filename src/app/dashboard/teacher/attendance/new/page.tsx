@@ -3,19 +3,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Loader2, ClipboardCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 export default function NewAttendanceSessionPage() {
   const { user, profile } = useAuth();
@@ -48,7 +45,6 @@ export default function NewAttendanceSessionPage() {
         if (data) setLives(data);
       });
 
-    // Carregar lista distinta de turmas a partir de profiles.course
     supabase
       .from("profiles")
       .select("course")
@@ -56,7 +52,7 @@ export default function NewAttendanceSessionPage() {
       .not("course", "is", null)
       .then(({ data }) => {
         if (!data) return;
-        const distinct = Array.from(new Set(data.map(p => (p.course || "").trim()).filter(Boolean))).sort();
+        const distinct = Array.from(new Set(data.map((p) => (p.course || "").trim()).filter(Boolean))).sort();
         setClassOptions(distinct);
       });
   }, [user]);
@@ -82,15 +78,22 @@ export default function NewAttendanceSessionPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formData.title || !formData.session_date || !user) {
-      toast({ title: "Dados incompletos", description: "Título e data são obrigatórios.", variant: "destructive" });
+      toast({
+        title: "Dados incompletos",
+        description: "Título e data são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!formData.class_label) {
+      toast({
+        title: "Selecione uma sala/turma",
+        description: "A chamada precisa estar vinculada a uma turma.",
+        variant: "destructive",
+      });
       return;
     }
     setIsSubmitting(true);
-    if (!formData.class_label) {
-      toast({ title: "Selecione uma sala/turma", description: "A chamada precisa estar vinculada a uma turma.", variant: "destructive" });
-      setIsSubmitting(false);
-      return;
-    }
 
     const { data, error } = await supabase
       .from("class_sessions")
@@ -120,162 +123,209 @@ export default function NewAttendanceSessionPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard/teacher/attendance">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-100 rounded-xl">
-            <ClipboardCheck className="h-6 w-6 text-orange-600" />
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ── Back link ── */}
+      <Link
+        href="/dashboard/teacher/attendance"
+        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white/70 transition-colors"
+      >
+        <ArrowLeft className="h-3 w-3" />
+        Chamadas
+      </Link>
+
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <ClipboardCheck className="h-3 w-3 text-orange-400" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+              Nova Sessão
+            </p>
           </div>
-          <div>
-            <h1 className="text-2xl font-black italic">Nova Sessão</h1>
-            <p className="text-sm text-muted-foreground">Crie uma aula para registrar chamada</p>
-          </div>
+          <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+            Criar Chamada
+          </h1>
+          <p className="text-white/40 text-xs font-semibold mt-1">
+            Vincule a uma turma para gerar o token
+          </p>
         </div>
       </div>
 
-      <Card className="rounded-[2.5rem] shadow-2xl border-none">
-        <CardHeader>
-          <CardTitle className="font-black italic">Detalhes da Aula</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="live_id">Vincular a uma Live (opcional)</Label>
-              <Select onValueChange={handleLiveSelect} defaultValue="none">
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar live..." />
+      {/* ── Form ── */}
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden"
+      >
+        <div className="p-4 border-b border-white/5 bg-white/3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-orange-400/70" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+              Detalhes da Aula
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Live link */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              Vincular a uma Live (opcional)
+            </Label>
+            <Select onValueChange={handleLiveSelect} defaultValue="none">
+              <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold text-sm">
+                <SelectValue placeholder="Selecionar live..." />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                <SelectItem value="none" className="font-bold text-white/70 text-xs">Nenhuma</SelectItem>
+                {lives.map((live) => (
+                  <SelectItem key={live.id} value={live.id} className="font-bold text-white/70 text-xs">
+                    {live.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Title */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              Título <span className="text-red-400">*</span>
+            </Label>
+            <input
+              type="text"
+              placeholder="Ex: Matemática — Funções"
+              value={formData.title}
+              onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+              required
+              className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+            />
+          </div>
+
+          {/* Date + Time grid */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                Data <span className="text-red-400">*</span>
+              </Label>
+              <input
+                type="date"
+                value={formData.session_date}
+                onChange={(e) => setFormData((prev) => ({ ...prev, session_date: e.target.value }))}
+                required
+                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-3 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                Horário
+              </Label>
+              <input
+                type="time"
+                value={formData.start_time}
+                onChange={(e) => setFormData((prev) => ({ ...prev, start_time: e.target.value }))}
+                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-3 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+              />
+            </div>
+          </div>
+
+          {/* Subject + Type */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                Matéria
+              </Label>
+              <input
+                type="text"
+                placeholder="Matemática"
+                value={formData.subject}
+                onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
+                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                Tipo
+              </Label>
+              <Select
+                value={formData.session_type}
+                onValueChange={(v) =>
+                  setFormData((prev) => ({ ...prev, session_type: v as "presencial" | "live" }))
+                }
+              >
+                <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold text-sm">
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {lives.map((live) => (
-                    <SelectItem key={live.id} value={live.id}>
-                      {live.title}
-                    </SelectItem>
-                  ))}
+                <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                  <SelectItem value="presencial" className="font-bold text-white/70 text-xs">Presencial</SelectItem>
+                  <SelectItem value="live" className="font-bold text-white/70 text-xs">Live (Online)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="title">
-                  Título <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="title"
-                  placeholder="Ex: Matemática — Funções"
-                  value={formData.title}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                  required
-                />
-              </div>
+          {/* Class */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              Sala / Turma <span className="text-red-400">*</span>
+            </Label>
+            <Select
+              value={formData.class_label}
+              onValueChange={(v) => setFormData((prev) => ({ ...prev, class_label: v }))}
+            >
+              <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold text-sm">
+                <SelectValue placeholder="Selecionar turma..." />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                {classOptions.length === 0 ? (
+                  <SelectItem value="__none__" disabled className="font-bold text-white/30 text-xs">
+                    Nenhuma turma cadastrada
+                  </SelectItem>
+                ) : (
+                  classOptions.map((c) => (
+                    <SelectItem key={c} value={c} className="font-bold text-white/70 text-xs">
+                      {c}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-white/30 font-medium leading-snug px-1">
+              Só alunos desta sala poderão usar o token.
+            </p>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="session_date">
-                  Data <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="session_date"
-                  type="date"
-                  value={formData.session_date}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, session_date: e.target.value }))}
-                  required
-                />
-              </div>
+          {/* Description */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              Descrição (opcional)
+            </Label>
+            <Textarea
+              placeholder="Observações sobre a aula..."
+              value={formData.description}
+              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+              rows={3}
+              className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/25 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
+            />
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="start_time">Horário</Label>
-                <Input
-                  id="start_time"
-                  type="time"
-                  value={formData.start_time}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, start_time: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subject">Matéria</Label>
-                <Input
-                  id="subject"
-                  placeholder="Ex: Matemática"
-                  value={formData.subject}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="class_label">
-                  Sala / Turma <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={formData.class_label}
-                  onValueChange={(v) => setFormData((prev) => ({ ...prev, class_label: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecionar turma..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classOptions.length === 0 ? (
-                      <SelectItem value="__none__" disabled>Nenhuma turma cadastrada</SelectItem>
-                    ) : (
-                      classOptions.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                <p className="text-[10px] text-muted-foreground font-medium">
-                  A chamada será vinculada à turma — só alunos desta sala poderão usar o token.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="session_type">Tipo</Label>
-                <Select
-                  value={formData.session_type}
-                  onValueChange={(v) => setFormData((prev) => ({ ...prev, session_type: v as "presencial" | "live" }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="presencial">Presencial</SelectItem>
-                    <SelectItem value="live">Live (Online)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição (opcional)</Label>
-              <Textarea
-                id="description"
-                placeholder="Observações sobre a aula..."
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                rows={3}
-              />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Link href="/dashboard/teacher/attendance">
-                <Button type="button" variant="outline">
-                  Cancelar
-                </Button>
-              </Link>
-              <Button type="submit" disabled={isSubmitting} className="gap-2">
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Criar Sessão e Registrar Chamada
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+          >
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Criar Sessão e Registrar Chamada
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

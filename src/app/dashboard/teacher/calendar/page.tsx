@@ -1,18 +1,25 @@
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { CalendarDays, PlusCircle, Trash2, Loader2, Pencil, ShieldCheck, Lock } from 'lucide-react';
-import { supabase } from '@/app/lib/supabase';
-import { useAuth } from '@/lib/AuthProvider';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  CalendarDays,
+  PlusCircle,
+  Trash2,
+  Loader2,
+  Pencil,
+  ShieldCheck,
+  Lock,
+  Inbox,
+} from "lucide-react";
+import { supabase } from "@/app/lib/supabase";
+import { useAuth } from "@/lib/AuthProvider";
 
 type AcademicEvent = {
   id: string;
@@ -26,26 +33,26 @@ type AcademicEvent = {
 };
 
 const EVENT_TYPES = [
-  { value: 'simulado',             label: 'Simulado',               color: 'bg-blue-100 text-blue-700' },
-  { value: 'aulao',                label: 'Aulão de Revisão',        color: 'bg-purple-100 text-purple-700' },
-  { value: 'entrega_redacao',      label: 'Entrega Redação',         color: 'bg-pink-100 text-pink-700' },
-  { value: 'inscricao',            label: 'Inscrição (Cursinho)',     color: 'bg-amber-100 text-amber-700' },
-  { value: 'feriado',              label: 'Feriado',                 color: 'bg-green-100 text-green-700' },
-  { value: 'vestibular',           label: 'Prova de Vestibular',     color: 'bg-red-100 text-red-700' },
-  { value: 'abertura_inscricao',   label: 'Abertura de Inscrições',  color: 'bg-emerald-100 text-emerald-700' },
-  { value: 'fechamento_inscricao', label: 'Fechamento de Inscrições', color: 'bg-orange-100 text-orange-700' },
-  { value: 'resultado',            label: 'Resultado / Gabarito',    color: 'bg-indigo-100 text-indigo-700' },
-  { value: 'matricula',            label: 'Matrícula',               color: 'bg-cyan-100 text-cyan-700' },
-  { value: 'outro',                label: 'Outro',                   color: 'bg-slate-100 text-slate-600' },
+  { value: "simulado",             label: "Simulado",                chip: "bg-blue-500/15 text-blue-400 border-blue-500/25",        dot: "bg-blue-500" },
+  { value: "aulao",                label: "Aulão",                   chip: "bg-purple-500/15 text-purple-400 border-purple-500/25",  dot: "bg-purple-500" },
+  { value: "entrega_redacao",      label: "Redação",                 chip: "bg-pink-500/15 text-pink-400 border-pink-500/25",        dot: "bg-pink-500" },
+  { value: "inscricao",            label: "Inscrição",               chip: "bg-amber-500/15 text-amber-400 border-amber-500/25",     dot: "bg-amber-500" },
+  { value: "feriado",              label: "Feriado",                 chip: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25", dot: "bg-emerald-500" },
+  { value: "vestibular",           label: "Vestibular",              chip: "bg-red-500/15 text-red-400 border-red-500/25",           dot: "bg-red-500" },
+  { value: "abertura_inscricao",   label: "Abre Inscrições",         chip: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25", dot: "bg-emerald-500" },
+  { value: "fechamento_inscricao", label: "Fecha Inscrições",        chip: "bg-orange-500/15 text-orange-400 border-orange-500/25",  dot: "bg-orange-500" },
+  { value: "resultado",            label: "Resultado",               chip: "bg-indigo-500/15 text-indigo-400 border-indigo-500/25",  dot: "bg-indigo-500" },
+  { value: "matricula",            label: "Matrícula",               chip: "bg-cyan-500/15 text-cyan-400 border-cyan-500/25",        dot: "bg-cyan-500" },
+  { value: "outro",                label: "Outro",                   chip: "bg-white/8 text-white/50 border-white/10",                dot: "bg-white/40" },
 ];
 
 const TARGET_GROUPS = [
-  { value: 'all',  label: 'Todos' },
-  { value: 'enem', label: 'ENEM' },
-  { value: 'etec', label: 'ETEC/FATEC' },
+  { value: "all", label: "Todos" },
+  { value: "enem", label: "ENEM" },
+  { value: "etec", label: "ETEC/FATEC" },
 ];
 
-const blankForm = { title: '', description: '', event_date: '', event_type: 'outro', target_group: 'all' };
+const blankForm = { title: "", description: "", event_date: "", event_type: "outro", target_group: "all" };
 
 export default function TeacherCalendarPage() {
   const { user } = useAuth();
@@ -60,152 +67,294 @@ export default function TeacherCalendarPage() {
 
   const fetchEvents = async () => {
     const { data } = await supabase
-      .from('academic_events')
-      .select('*')
-      .order('event_date', { ascending: true });
+      .from("academic_events")
+      .select("*")
+      .order("event_date", { ascending: true });
     setEvents(data ?? []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchEvents(); }, []);
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
   const handleSubmit = async () => {
     if (!form.title || !form.event_date || !user) return;
     setSaving(true);
     try {
       if (editId) {
-        const { error } = await supabase.from('academic_events').update({ ...form }).eq('id', editId);
+        const { error } = await supabase.from("academic_events").update({ ...form }).eq("id", editId);
         if (error) throw error;
-        toast({ title: 'Evento atualizado!' });
+        toast({ title: "Evento atualizado!" });
       } else {
-        const { error } = await supabase.from('academic_events').insert({ ...form, created_by: user.id });
+        const { error } = await supabase
+          .from("academic_events")
+          .insert({ ...form, created_by: user.id });
         if (error) throw error;
-        toast({ title: 'Evento criado!' });
+        toast({ title: "Evento criado!" });
       }
       setForm(blankForm);
       setShowForm(false);
       setEditId(null);
       fetchEvents();
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('academic_events').delete().eq('id', id);
-    if (error) { toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Evento excluído.' });
-    setEvents(prev => prev.filter(e => e.id !== id));
+    const { error } = await supabase.from("academic_events").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Evento excluído." });
+    setEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
   const startEdit = (ev: AcademicEvent) => {
-    setForm({ title: ev.title, description: ev.description ?? '', event_date: ev.event_date, event_type: ev.event_type, target_group: ev.target_group });
+    setForm({
+      title: ev.title,
+      description: ev.description ?? "",
+      event_date: ev.event_date,
+      event_type: ev.event_type,
+      target_group: ev.target_group,
+    });
     setEditId(ev.id);
     setShowForm(true);
   };
 
-  const getTypeMeta = (type: string) => EVENT_TYPES.find(t => t.value === type) ?? EVENT_TYPES[EVENT_TYPES.length - 1];
-
-  // Professor pode editar apenas eventos próprios (não oficiais)
   const canEdit = (ev: AcademicEvent) => !ev.is_official && ev.created_by === user?.id;
 
-  const upcoming = events.filter(e => new Date(e.event_date + 'T00:00:00') >= new Date(new Date().toDateString()));
-  const past     = events.filter(e => new Date(e.event_date + 'T00:00:00') < new Date(new Date().toDateString()));
+  const today = new Date(new Date().toDateString());
+  const upcoming = events.filter((e) => new Date(e.event_date + "T00:00:00") >= today);
+  const past = events.filter((e) => new Date(e.event_date + "T00:00:00") < today);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24">
-      <header className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl rotate-3">
-            <CalendarDays className="h-7 w-7" />
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.10) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <CalendarDays className="h-3 w-3 text-orange-400" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+              Staff · Agenda
+            </p>
           </div>
-          <div>
-            <h1 className="text-3xl font-black text-primary italic leading-none">Calendário Acadêmico</h1>
-            <p className="text-muted-foreground font-medium italic">Gerencie eventos, prazos e datas importantes.</p>
+          <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+            Calendário Acadêmico
+          </h1>
+          <p className="text-white/40 text-xs font-semibold mt-1">
+            Cadastre prazos e datas importantes
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 mt-5">
+            <div className="flex flex-col items-center bg-orange-500/10 border border-orange-500/20 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-orange-400 leading-none">{upcoming.length}</span>
+              <span className="text-[8px] font-bold text-orange-400/60 uppercase tracking-wider mt-0.5">Futuros</span>
+            </div>
+            <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-white/60 leading-none">{past.length}</span>
+              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Passados</span>
+            </div>
           </div>
         </div>
-        <Button
-          onClick={() => { setShowForm(true); setEditId(null); setForm(blankForm); }}
-          className="h-12 px-6 rounded-2xl bg-primary text-white font-black shadow-xl"
-        >
-          <PlusCircle className="h-5 w-5 mr-2" /> Novo Evento
-        </Button>
-      </header>
-
-      {/* Legenda */}
-      <div className="flex flex-wrap gap-2">
-        {EVENT_TYPES.map(t => (
-          <Badge key={t.value} className={`text-[9px] font-black border-none ${t.color}`}>{t.label}</Badge>
-        ))}
       </div>
 
-      {showForm && (
-        <Card className="border-none shadow-2xl rounded-[2.5rem] animate-in slide-in-from-top-4 duration-300">
-          <CardContent className="p-8 space-y-5">
-            <h2 className="text-xl font-black text-primary italic">{editId ? 'Editar Evento' : 'Criar Evento'}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5 md:col-span-2">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Título</Label>
-                <Input placeholder="Ex: Aulão de Revisão — Matemática" className="h-11 rounded-2xl bg-muted/30 border-none font-bold" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Data</Label>
-                <Input type="date" className="h-11 rounded-2xl bg-muted/30 border-none font-bold" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Tipo</Label>
-                <Select value={form.event_type} onValueChange={val => setForm(f => ({ ...f, event_type: val }))}>
-                  <SelectTrigger className="h-11 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    {EVENT_TYPES.map(t => <SelectItem key={t.value} value={t.value} className="font-bold">{t.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Público Alvo</Label>
-                <Select value={form.target_group} onValueChange={val => setForm(f => ({ ...f, target_group: val }))}>
-                  <SelectTrigger className="h-11 rounded-2xl bg-muted/30 border-none font-bold"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    {TARGET_GROUPS.map(t => <SelectItem key={t.value} value={t.value} className="font-bold">{t.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5 md:col-span-2">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Descrição (opcional)</Label>
-                <Textarea placeholder="Detalhes adicionais..." className="rounded-2xl bg-muted/30 border-none font-medium" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={handleSubmit} disabled={saving || !form.title || !form.event_date} className="flex-1 h-12 rounded-2xl bg-primary text-white font-black shadow-xl">
-                {saving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                {editId ? 'Salvar Alterações' : 'Criar Evento'}
-              </Button>
-              <Button variant="outline" onClick={() => { setShowForm(false); setEditId(null); }} className="h-12 px-6 rounded-2xl font-black">Cancelar</Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* ── CTA ── */}
+      {!showForm && (
+        <Button
+          onClick={() => {
+            setShowForm(true);
+            setEditId(null);
+            setForm(blankForm);
+          }}
+          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Novo Evento
+        </Button>
       )}
 
+      {/* ── Form ── */}
+      {showForm && (
+        <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
+          <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <PlusCircle className="h-4 w-4 text-orange-400/70" />
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+                {editId ? "Editar Evento" : "Criar Evento"}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowForm(false);
+                setEditId(null);
+              }}
+              className="text-[10px] font-bold text-white/30 hover:text-white/60 uppercase tracking-wider"
+            >
+              Fechar
+            </button>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Título *</Label>
+              <input
+                type="text"
+                placeholder="Ex: Aulão de Revisão — Matemática"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Data *</Label>
+                <input
+                  type="date"
+                  value={form.event_date}
+                  onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
+                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Público</Label>
+                <Select value={form.target_group} onValueChange={(val) => setForm((f) => ({ ...f, target_group: val }))}>
+                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                    {TARGET_GROUPS.map((t) => (
+                      <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Tipo</Label>
+              <Select value={form.event_type} onValueChange={(val) => setForm((f) => ({ ...f, event_type: val }))}>
+                <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                  {EVENT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${t.dot}`} />
+                        {t.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Descrição (opcional)</Label>
+              <Textarea
+                placeholder="Detalhes adicionais..."
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/25 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
+              />
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={saving || !form.title || !form.event_date}
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {editId ? "Salvar Alterações" : "Criar Evento"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Type legend (compact horizontal scroll) ── */}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-1 mb-2">
+          Tipos
+        </p>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+          {EVENT_TYPES.map((t) => (
+            <Badge
+              key={t.value}
+              className={`${t.chip} border font-black text-[9px] uppercase px-2 h-5 shrink-0 flex items-center gap-1`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${t.dot}`} />
+              {t.label}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Lists ── */}
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        <div className="py-16 flex justify-center">
+          <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
+        </div>
       ) : events.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground font-medium">Nenhum evento cadastrado ainda.</div>
+        <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+          <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
+          <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+            Nenhum evento cadastrado
+          </p>
+        </div>
       ) : (
-        <div className="space-y-8">
-          {/* Próximos eventos */}
+        <div className="space-y-5">
           {upcoming.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-black text-primary italic uppercase tracking-wide">Próximos Eventos</h2>
-              {upcoming.map(ev => <EventRow key={ev.id} ev={ev} canEdit={canEdit(ev)} onEdit={startEdit} onDelete={handleDelete} />)}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse" />
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+                  Próximos eventos ({upcoming.length})
+                </p>
+              </div>
+              {upcoming.map((ev) => (
+                <EventRow
+                  key={ev.id}
+                  ev={ev}
+                  canEdit={canEdit(ev)}
+                  onEdit={startEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
             </div>
           )}
-          {/* Eventos passados */}
           {past.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-black text-muted-foreground italic uppercase tracking-wide">Eventos Passados</h2>
-              {past.map(ev => <EventRow key={ev.id} ev={ev} canEdit={canEdit(ev)} onEdit={startEdit} onDelete={handleDelete} past />)}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/30">
+                  Eventos passados ({past.length})
+                </p>
+              </div>
+              {past.map((ev) => (
+                <EventRow
+                  key={ev.id}
+                  ev={ev}
+                  canEdit={canEdit(ev)}
+                  onEdit={startEdit}
+                  onDelete={handleDelete}
+                  past
+                />
+              ))}
             </div>
           )}
         </div>
@@ -227,49 +376,80 @@ function EventRow({
   onDelete: (id: string) => void;
   past?: boolean;
 }) {
-  const meta = EVENT_TYPES.find(t => t.value === ev.event_type) ?? EVENT_TYPES[EVENT_TYPES.length - 1];
+  const meta = EVENT_TYPES.find((t) => t.value === ev.event_type) ?? EVENT_TYPES[EVENT_TYPES.length - 1];
+  const d = new Date(ev.event_date + "T00:00:00");
+  const dayNum = d.getDate();
+  const monthShort = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase();
+
   return (
-    <div className={`flex items-center gap-4 bg-white rounded-2xl shadow-md p-4 group transition-all hover:shadow-lg ${past ? 'opacity-50' : ''}`}>
-      <div className="text-center w-14 shrink-0">
-        <p className="text-xs font-black text-primary">
-          {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-        </p>
-        <p className="text-[10px] text-muted-foreground">
-          {new Date(ev.event_date + 'T00:00:00').getFullYear()}
-        </p>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-black text-primary text-sm truncate">{ev.title}</p>
-          {ev.is_official && (
-            <Badge className="text-[9px] font-black border-none bg-yellow-100 text-yellow-700 gap-1 shrink-0">
-              <ShieldCheck className="h-2.5 w-2.5" />
-              Oficial
+    <div
+      className={`group bg-white/3 border border-white/6 hover:border-white/15 rounded-2xl p-3.5 transition-all ${past ? "opacity-40" : ""}`}
+    >
+      <div className="flex items-start gap-3">
+        {/* Date anchor */}
+        <div className="flex flex-col items-center justify-center min-w-[42px] py-1 px-2 bg-white/3 border border-white/8 rounded-xl shrink-0">
+          <span className="text-xl font-black italic leading-none text-white">
+            {String(dayNum).padStart(2, "0")}
+          </span>
+          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${past ? "text-white/30" : "text-orange-400/70"}`}>
+            {monthShort}
+          </span>
+        </div>
+
+        {/* Color bar */}
+        <div className={`w-0.5 self-stretch ${meta.dot} rounded-full shrink-0`} />
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-black text-white italic leading-snug line-clamp-2 flex-1">
+              {ev.title}
+            </p>
+            {ev.is_official && (
+              <ShieldCheck className="h-3.5 w-3.5 text-yellow-400 shrink-0" />
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <Badge className={`${meta.chip} border font-black text-[8px] uppercase px-1.5 h-4`}>
+              {meta.label}
             </Badge>
+            {ev.is_official && (
+              <Badge className="bg-yellow-500/15 text-yellow-400 border border-yellow-500/25 font-black text-[8px] uppercase px-1.5 h-4 flex items-center gap-1">
+                <ShieldCheck className="h-2 w-2" /> Oficial
+              </Badge>
+            )}
+          </div>
+          {ev.description && (
+            <p className="text-[11px] text-white/40 font-medium italic mt-1.5 line-clamp-2 leading-tight">
+              {ev.description}
+            </p>
           )}
         </div>
-        {ev.description && <p className="text-xs text-muted-foreground font-medium truncate">{ev.description}</p>}
       </div>
-      <Badge className={`text-[9px] font-black border-none shrink-0 ${meta.color}`}>{meta.label}</Badge>
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-white/5">
         {canEdit ? (
           <>
             <button
               onClick={() => onEdit(ev)}
-              className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-50 text-blue-500 transition-all"
+              className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all active:scale-95 touch-manipulation"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-3 w-3" />
+              Editar
             </button>
             <button
               onClick={() => onDelete(ev.id)}
-              className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-red-50 text-red-400 transition-all"
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-all active:scale-95 touch-manipulation"
+              title="Excluir"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3 w-3" />
             </button>
           </>
         ) : (
-          <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center text-muted-foreground/40" title="Evento oficial — edite pelo painel do Coordenador">
+          <div className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/25 bg-white/3">
             <Lock className="h-3 w-3" />
+            Coordenação
           </div>
         )}
       </div>
