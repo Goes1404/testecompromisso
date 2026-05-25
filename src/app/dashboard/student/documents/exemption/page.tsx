@@ -147,7 +147,7 @@ export default function ExemptionSimulationPage() {
 
     if (user) {
       try {
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ 
             is_financial_aid_eligible: eligible,
@@ -157,6 +157,11 @@ export default function ExemptionSimulationPage() {
             income_per_capita: perCapita
           })
           .eq('id', user.id);
+          
+        if (error) {
+          console.error("Erro ao atualizar perfil (exemption):", error);
+          throw error;
+        }
         
         if (refreshProfile) {
           await refreshProfile();

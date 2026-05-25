@@ -558,7 +558,7 @@ export default function StudentDetailPage() {
           </Card>
 
           {/* Income */}
-          {(profile.family_income > 0 || profile.is_financial_aid_eligible) && (
+          {(Number(profile.family_income) > 0 || profile.is_financial_aid_eligible) && (
             <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white">
               <CardHeader className="p-6 pb-2">
                 <CardTitle className="text-base font-black text-primary italic flex items-center gap-2">
@@ -569,7 +569,7 @@ export default function StudentDetailPage() {
               <CardContent className="p-6 pt-0">
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   {[
-                    { label: "Renda Familiar", value: profile.family_income > 0 ? `R$ ${Number(profile.family_income).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—" },
+                    { label: "Renda Familiar", value: Number(profile.family_income) > 0 ? `R$ ${Number(profile.family_income).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—" },
                     { label: "Moradores", value: profile.family_size || "—" },
                     { label: "Per Capita", value: profile.income_per_capita > 0 ? `R$ ${Number(profile.income_per_capita).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—" },
                   ].map((item) => (

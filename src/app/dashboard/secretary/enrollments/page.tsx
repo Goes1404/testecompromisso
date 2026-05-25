@@ -687,8 +687,8 @@ export default function SecretaryEnrollmentDirectory() {
       (statusFilter === 'suspended' && u.status === 'suspended') ||
       (statusFilter === 'is_financial_aid_eligible' && u.is_financial_aid_eligible) ||
       (statusFilter === 'income_ok' && u.is_financial_aid_eligible) ||
-      (statusFilter === 'income_exceeded' && u.family_income > 0 && !u.is_financial_aid_eligible) ||
-      (statusFilter === 'income_pending' && !u.is_financial_aid_eligible && (!u.family_income || u.family_income === 0));
+      (statusFilter === 'income_exceeded' && Number(u.family_income) > 0 && !u.is_financial_aid_eligible) ||
+      (statusFilter === 'income_pending' && !u.is_financial_aid_eligible && (!u.family_income || Number(u.family_income) === 0));
 
     return matchesSearch && matchesStatus;
   });
@@ -815,7 +815,7 @@ export default function SecretaryEnrollmentDirectory() {
                         </TableCell>
 
                         <TableCell>
-                          {u.family_income > 0 ? (
+                          {Number(u.family_income) > 0 ? (
                             <div className="flex flex-col gap-0.5 items-start">
                               <Badge className={`border-none font-bold text-[9px] uppercase px-2 h-5 flex items-center gap-1 ${
                                 u.is_financial_aid_eligible

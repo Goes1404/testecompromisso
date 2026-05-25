@@ -46,8 +46,10 @@ type StatusFilter = "all" | "ok" | "exceeded" | "pending";
 type SortDir = "desc" | "asc";
 
 function incomeStatus(u: any): "ok" | "exceeded" | "pending" {
-  if (!u.family_income || u.family_income === 0 || !u.income_per_capita || u.income_per_capita === 0) return "pending";
-  return u.income_per_capita <= THRESHOLD ? "ok" : "exceeded";
+  const inc = Number(u.family_income) || 0;
+  const cap = Number(u.income_per_capita) || 0;
+  if (inc === 0 || cap === 0) return "pending";
+  return cap <= THRESHOLD ? "ok" : "exceeded";
 }
 
 function fmt(val: number) {
@@ -103,8 +105,8 @@ export default function SecretaryIncomePage() {
         return matchesSearch && matchesStatus;
       })
       .sort((a, b) => {
-        const av = a.income_per_capita ?? 0;
-        const bv = b.income_per_capita ?? 0;
+        const av = Number(a.income_per_capita) || 0;
+        const bv = Number(b.income_per_capita) || 0;
         if (av === 0 && bv === 0) return 0;
         if (av === 0) return 1;   // pendentes vão para o final
         if (bv === 0) return -1;
@@ -281,7 +283,7 @@ export default function SecretaryIncomePage() {
                           </TableCell>
 
                           <TableCell className="text-right">
-                            {u.family_income > 0 ? (
+                            {Number(u.family_income) > 0 ? (
                               <span className="font-mono text-sm font-bold text-slate-700">
                                 R$ {fmtShort(u.family_income)}
                               </span>
@@ -292,7 +294,7 @@ export default function SecretaryIncomePage() {
 
                           <TableCell className="text-center">
                             <span className="font-black text-sm text-slate-700">
-                              {u.family_income > 0 ? (u.family_size || 1) : "—"}
+                              {Number(u.family_income) > 0 ? (u.family_size || 1) : "—"}
                             </span>
                           </TableCell>
 
@@ -340,7 +342,7 @@ export default function SecretaryIncomePage() {
                           }`}>
                             <TableCell colSpan={6} className="px-6 pb-5 pt-1">
                               <div className="rounded-2xl bg-white border border-slate-100 p-4 space-y-4">
-                                {u.family_income > 0 ? (
+                                {Number(u.family_income) > 0 ? (
                                   <>
                                     {/* Barra indicadora de posição em relação ao limite */}
                                     <ThresholdBar perCapita={u.income_per_capita} threshold={THRESHOLD} />
