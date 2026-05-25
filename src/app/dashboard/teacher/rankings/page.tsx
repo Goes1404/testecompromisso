@@ -2,22 +2,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Trophy, 
-  Medal, 
-  Star, 
-  TrendingUp, 
-  Users, 
-  ArrowLeft,
+import {
+  Trophy,
+  Medal,
   Loader2,
   Sparkles,
-  Target,
   School,
-  ChevronRight
+  Crown,
+  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
@@ -28,13 +21,13 @@ export default function TeacherRankingsPage() {
   const [loading, setLoading] = useState(true);
   const [etecRank, setEtecRank] = useState<any[]>([]);
   const [enemRank, setEnemRank] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"etec" | "enem">("etec");
 
   const fetchRankings = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch all attempts with profile info
       const { data: attempts, error } = await supabase
-        .from('simulation_attempts')
+        .from("simulation_attempts")
         .select(`
           score,
           total_questions,
@@ -50,9 +43,8 @@ export default function TeacherRankingsPage() {
 
       if (error) throw error;
 
-      // Aggregate by user
       const userStats: Record<string, any> = {};
-      
+
       attempts?.forEach((att: any) => {
         const profile = att.profiles;
         if (!userStats[profile.id]) {
@@ -63,7 +55,7 @@ export default function TeacherRankingsPage() {
             institution: profile.institution,
             totalScore: 0,
             bestScore: 0,
-            attempts: 0
+            attempts: 0,
           };
         }
         userStats[profile.id].totalScore += att.score;
@@ -72,15 +64,14 @@ export default function TeacherRankingsPage() {
       });
 
       const allUsers = Object.values(userStats);
-      
-      // Sort and split
+
       const etec = allUsers
-        .filter((u: any) => u.type === 'etec')
+        .filter((u: any) => u.type === "etec")
         .sort((a: any, b: any) => b.bestScore - a.bestScore)
         .slice(0, 10);
 
       const enem = allUsers
-        .filter((u: any) => u.type === 'enem')
+        .filter((u: any) => u.type === "enem")
         .sort((a: any, b: any) => b.bestScore - a.bestScore)
         .slice(0, 10);
 
@@ -97,108 +88,199 @@ export default function TeacherRankingsPage() {
     fetchRankings();
   }, [fetchRankings]);
 
-  const RenderRankList = ({ data, title, color }: { data: any[], title: string, color: string }) => (
-    <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-      <CardHeader className={`${color} p-8 text-white relative`}>
-        <div className="absolute right-6 top-6 opacity-20">
-            <Trophy className="h-16 w-16" />
-        </div>
-        <div className="relative z-10">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-2">Elite Performance</p>
-            <CardTitle className="text-3xl font-black italic uppercase tracking-tighter">{title}</CardTitle>
-            <CardDescription className="text-white/60 font-medium italic mt-2">Top 10 estudantes com as maiores pontuações em simulados.</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="p-8">
-        <div className="space-y-4">
-          {data.length === 0 ? (
-            <div className="py-20 text-center opacity-20 italic font-bold">Aguardando dados de performance...</div>
-          ) : (
-            data.map((student, index) => (
-              <div key={student.id} className="flex items-center justify-between p-5 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-xl hover:scale-[1.02] transition-all group">
-                <div className="flex items-center gap-5">
-                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-black italic shadow-lg relative ${
-                    index === 0 ? 'bg-amber-400 text-amber-900' : 
-                    index === 1 ? 'bg-slate-300 text-slate-700' :
-                    index === 2 ? 'bg-orange-400 text-orange-900' : 'bg-white text-primary'
-                  }`}>
-                    {index + 1}
-                    {index < 3 && <Medal className="h-4 w-4 absolute -top-2 -right-2 drop-shadow-sm" />}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                        <span className="font-black text-primary italic text-lg">{student.name}</span>
-                        {index === 0 && <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />}
-                    </div>
-                    <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 uppercase">
-                            <School className="h-3 w-3" /> {student.institution || 'Rede Municipal'}
-                        </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">Recorde</p>
-                  <p className="text-2xl font-black text-primary italic mt-1">{student.bestScore} <span className="text-[10px] opacity-40">PTS</span></p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const activeRank = activeTab === "etec" ? etecRank : enemRank;
+  const accentClasses =
+    activeTab === "etec"
+      ? {
+          ringBg: "bg-indigo-500/15",
+          ringBorder: "border-indigo-500/25",
+          ringText: "text-indigo-400",
+          badge: "bg-indigo-500/15 text-indigo-400 border border-indigo-500/25",
+        }
+      : {
+          ringBg: "bg-purple-500/15",
+          ringBorder: "border-purple-500/25",
+          ringText: "text-purple-400",
+          badge: "bg-purple-500/15 text-purple-400 border border-purple-500/25",
+        };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <Button asChild variant="ghost" className="rounded-full h-8 px-4 text-[10px] font-black uppercase text-primary/40 hover:text-primary mb-2">
-            <Link href="/dashboard/teacher/home"><ArrowLeft className="h-3 w-3 mr-2" /> Voltar ao Painel</Link>
-          </Button>
-          <div className="flex items-center gap-4">
-            <h1 className="text-4xl font-black text-primary italic uppercase tracking-tighter leading-none">Rankings de Elite</h1>
-            <Badge className="bg-accent text-accent-foreground border-none font-black text-[10px] px-3 uppercase tracking-tighter">AUDITORIA VIVA</Badge>
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ── Back link ── */}
+      <Link
+        href="/dashboard/teacher/home"
+        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white/70 transition-colors"
+      >
+        <ArrowLeft className="h-3 w-3" />
+        Voltar ao Painel
+      </Link>
+
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              activeTab === "etec"
+                ? "radial-gradient(ellipse at 80% 10%, rgba(99,102,241,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(255,107,0,0.08) 0%, transparent 60%)"
+                : "radial-gradient(ellipse at 80% 10%, rgba(168,85,247,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(255,107,0,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <Trophy className="absolute right-4 top-4 h-20 w-20 text-white/[0.04]" />
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <Crown className={`h-3 w-3 ${activeTab === "etec" ? "text-indigo-400" : "text-purple-400"}`} />
+            <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${activeTab === "etec" ? "text-indigo-400/80" : "text-purple-400/80"}`}>
+              Auditoria Viva
+            </p>
           </div>
-          <p className="text-muted-foreground font-medium text-lg italic">Classificação meritocrática baseada em performance técnica real.</p>
-        </div>
-        <div className="flex items-center gap-4">
-            <div className="bg-white p-4 rounded-3xl shadow-xl flex items-center gap-4 border border-slate-100">
-                <div className="h-10 w-10 rounded-2xl bg-primary/5 flex items-center justify-center text-primary">
-                    <Target className="h-5 w-5" />
-                </div>
-                <div>
-                    <p className="text-[9px] font-black text-muted-foreground uppercase leading-none">Atividade Global</p>
-                    <p className="text-xl font-black text-primary italic mt-1">Calculando...</p>
-                </div>
-            </div>
+          <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+            Rankings de Elite
+          </h1>
+          <p className="text-white/40 text-xs font-semibold mt-1">
+            Top 10 por performance em simulados
+          </p>
+
+          {/* Tab pills */}
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <button
+              onClick={() => setActiveTab("etec")}
+              className={`h-11 rounded-xl font-black text-xs uppercase tracking-widest italic transition-all touch-manipulation active:scale-95 ${
+                activeTab === "etec"
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                  : "bg-white/5 border border-white/8 text-white/40"
+              }`}
+            >
+              ETEC
+            </button>
+            <button
+              onClick={() => setActiveTab("enem")}
+              className={`h-11 rounded-xl font-black text-xs uppercase tracking-widest italic transition-all touch-manipulation active:scale-95 ${
+                activeTab === "enem"
+                  ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                  : "bg-white/5 border border-white/8 text-white/40"
+              }`}
+            >
+              ENEM
+            </button>
+          </div>
         </div>
       </div>
 
-      <Tabs defaultValue="etec" className="w-full">
-        <div className="flex justify-center mb-10">
-            <TabsList className="bg-white p-1.5 h-16 rounded-[2rem] shadow-xl border border-slate-100 gap-2">
-                <TabsTrigger value="etec" className="rounded-full px-10 h-full font-black text-xs uppercase italic data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Ranking ETEC</TabsTrigger>
-                <TabsTrigger value="enem" className="rounded-full px-10 h-full font-black text-xs uppercase italic data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all">Ranking ENEM</TabsTrigger>
-            </TabsList>
+      {/* ── Ranking content ── */}
+      {loading ? (
+        <div className="py-20 flex flex-col items-center gap-3">
+          <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/30 animate-pulse">
+            Sincronizando posições...
+          </p>
         </div>
+      ) : activeRank.length === 0 ? (
+        <div className="py-20 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+          <Trophy className="h-8 w-8 mx-auto mb-2 text-white/15" />
+          <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+            Aguardando dados de performance
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {/* Top 3 podium */}
+          {activeRank.length >= 1 && (
+            <div className="grid grid-cols-3 gap-2">
+              {/* 2nd */}
+              {activeRank[1] && (
+                <div className="flex flex-col items-center pt-6">
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-slate-300 to-slate-500 text-slate-900 flex items-center justify-center font-black text-lg italic shadow-lg">
+                      2
+                    </div>
+                    <Medal className="h-3.5 w-3.5 absolute -top-1 -right-1 text-slate-300 drop-shadow" />
+                  </div>
+                  <p className="text-[11px] font-black text-white text-center mt-2 truncate w-full px-1">
+                    {activeRank[1].name?.split(" ")[0]}
+                  </p>
+                  <p className="text-base font-black text-slate-300 italic">{activeRank[1].bestScore}</p>
+                </div>
+              )}
+              {/* 1st */}
+              {activeRank[0] && (
+                <div className="flex flex-col items-center">
+                  <Crown className="h-4 w-4 text-amber-400 mb-1 animate-pulse" />
+                  <div className="relative">
+                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-amber-900 flex items-center justify-center font-black text-2xl italic shadow-xl shadow-amber-500/30">
+                      1
+                    </div>
+                    <Medal className="h-4 w-4 absolute -top-1 -right-1 text-amber-300 drop-shadow" />
+                  </div>
+                  <p className="text-xs font-black text-white text-center mt-2 truncate w-full px-1">
+                    {activeRank[0].name?.split(" ")[0]}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-amber-400" />
+                    <p className="text-lg font-black text-amber-400 italic">{activeRank[0].bestScore}</p>
+                  </div>
+                </div>
+              )}
+              {/* 3rd */}
+              {activeRank[2] && (
+                <div className="flex flex-col items-center pt-8">
+                  <div className="relative">
+                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-700 text-orange-100 flex items-center justify-center font-black text-base italic shadow-lg">
+                      3
+                    </div>
+                    <Medal className="h-3 w-3 absolute -top-1 -right-1 text-orange-300 drop-shadow" />
+                  </div>
+                  <p className="text-[11px] font-black text-white text-center mt-2 truncate w-full px-1">
+                    {activeRank[2].name?.split(" ")[0]}
+                  </p>
+                  <p className="text-base font-black text-orange-400 italic">{activeRank[2].bestScore}</p>
+                </div>
+              )}
+            </div>
+          )}
 
-        {loading ? (
-          <div className="py-40 flex flex-col items-center justify-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-accent" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse leading-none italic">Sincronizando Posições de Liderança...</p>
-          </div>
-        ) : (
-          <>
-            <TabsContent value="etec" className="animate-in fade-in slide-in-from-bottom-6 duration-500">
-              <RenderRankList data={etecRank} title="Master ETEC 2024" color="bg-indigo-600" />
-            </TabsContent>
-            <TabsContent value="enem" className="animate-in fade-in slide-in-from-bottom-6 duration-500">
-              <RenderRankList data={enemRank} title="Elite ENEM 2024" color="bg-purple-600" />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
+          {/* Rest of the list (4-10) */}
+          {activeRank.slice(3).length > 0 && (
+            <div className="space-y-2 pt-3 border-t border-white/5">
+              {activeRank.slice(3).map((student, idx) => {
+                const position = idx + 4;
+                return (
+                  <div
+                    key={student.id}
+                    className="flex items-center gap-3 bg-white/3 border border-white/6 rounded-2xl p-3"
+                  >
+                    <div className={`h-8 w-8 rounded-xl ${accentClasses.ringBg} border ${accentClasses.ringBorder} flex items-center justify-center font-black italic ${accentClasses.ringText} text-xs shrink-0`}>
+                      {position}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white italic text-sm truncate leading-none">{student.name}</p>
+                      {student.institution && (
+                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-wider flex items-center gap-1 mt-1">
+                          <School className="h-2.5 w-2.5" />
+                          {student.institution}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[8px] font-black text-white/30 uppercase tracking-widest leading-none">Recorde</p>
+                      <p className="text-base font-black text-white italic mt-0.5">
+                        {student.bestScore}
+                        <span className="text-[9px] opacity-40 ml-1">pts</span>
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <Badge className={`mx-auto mt-4 block w-fit ${accentClasses.badge} font-black text-[9px] uppercase tracking-widest px-3 py-1.5`}>
+            Master {activeTab.toUpperCase()} 2024
+          </Badge>
+        </div>
+      )}
     </div>
   );
 }

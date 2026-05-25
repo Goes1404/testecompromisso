@@ -1,18 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Sparkles, 
-  BookOpen, 
-  Send, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  Sparkles,
+  BookOpen,
+  Loader2,
   TrendingUp,
   ChevronRight,
   ArrowRight,
@@ -21,14 +16,12 @@ import {
   Lightbulb,
   Target,
   Link as LinkIcon,
-  FileText,
   Zap,
   History,
-  Info,
   ShieldCheck,
   Star,
   FileSearch,
-  MessageSquareQuote
+  MessageSquareQuote,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import dynamic from "next/dynamic";
@@ -37,45 +30,56 @@ import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 
 const EssayChart = dynamic(
-  () => import('recharts').then(({ AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }) => {
-    function Chart({ data }: { data: { date: string; score: number; theme?: string }[] }) {
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorScoreEssay" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(25 100% 50%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(25 100% 50%)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis dataKey="date" stroke="#888" fontSize={11} tickLine={false} axisLine={false} dy={6} />
-            <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} domain={[0, 1000]} />
-            <Tooltip content={({ active, payload, label }: any) => active && payload?.length ? (
-              <div className="bg-white p-4 rounded-2xl border-none shadow-2xl flex flex-col gap-1 max-w-[200px]">
-                <p className="font-bold text-primary mb-1 text-xs">{label}</p>
-                <p className="font-black text-accent text-xl">{payload[0].value} pts</p>
-                {payload[0].payload.theme && <p className="text-[9px] font-bold text-muted-foreground leading-tight italic line-clamp-3 mt-1">"{payload[0].payload.theme}"</p>}
-              </div>
-            ) : null} />
-            <Area type="monotone" dataKey="score" stroke="hsl(25 100% 50%)" strokeWidth={3} fillOpacity={1} fill="url(#colorScoreEssay)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      );
-    }
-    return { default: Chart };
-  }),
-  { ssr: false, loading: () => <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl" /> }
+  () =>
+    import("recharts").then(({ AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }) => {
+      function Chart({ data }: { data: { date: string; score: number; theme?: string }[] }) {
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorScoreEssay" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#fb923c" stopOpacity={0.5} />
+                  <stop offset="95%" stopColor="#fb923c" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="date" stroke="rgba(255,255,255,0.3)" fontSize={10} tickLine={false} axisLine={false} dy={6} />
+              <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} tickLine={false} axisLine={false} domain={[0, 1000]} />
+              <Tooltip
+                content={({ active, payload, label }: any) =>
+                  active && payload?.length ? (
+                    <div className="bg-[#1a1a1f] border border-white/10 p-3 rounded-2xl shadow-2xl flex flex-col gap-1 max-w-[200px]">
+                      <p className="font-bold text-white/60 text-[10px]">{label}</p>
+                      <p className="font-black text-orange-400 text-lg">{payload[0].value} pts</p>
+                      {payload[0].payload.theme && (
+                        <p className="text-[9px] font-bold text-white/40 leading-tight italic line-clamp-3 mt-1">
+                          "{payload[0].payload.theme}"
+                        </p>
+                      )}
+                    </div>
+                  ) : null
+                }
+              />
+              <Area type="monotone" dataKey="score" stroke="#fb923c" strokeWidth={2.5} fillOpacity={1} fill="url(#colorScoreEssay)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+      }
+      return { default: Chart };
+    }),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-2xl" />,
+  }
 );
 
-const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: string }> = {
-  c1: { label: "C1: Norma Culta", icon: PenTool, color: "text-blue-500" },
-  c2: { label: "C2: Estrutura", icon: FileSearch, color: "text-purple-500" },
-  c3: { label: "C3: Argumentação", icon: Target, color: "text-orange-500" },
-  c4: { label: "C4: Coesão", icon: LinkIcon, color: "text-cyan-500" },
-  c5: { label: "C5: Intervenção", icon: ShieldCheck, color: "text-green-500" }
+const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: string; bg: string }> = {
+  c1: { label: "C1: Norma Culta", icon: PenTool, color: "text-blue-400", bg: "bg-blue-500/15 border-blue-500/25" },
+  c2: { label: "C2: Estrutura", icon: FileSearch, color: "text-purple-400", bg: "bg-purple-500/15 border-purple-500/25" },
+  c3: { label: "C3: Argumentação", icon: Target, color: "text-orange-400", bg: "bg-orange-500/15 border-orange-500/25" },
+  c4: { label: "C4: Coesão", icon: LinkIcon, color: "text-cyan-400", bg: "bg-cyan-500/15 border-cyan-500/25" },
+  c5: { label: "C5: Intervenção", icon: ShieldCheck, color: "text-emerald-400", bg: "bg-emerald-500/15 border-emerald-500/25" },
 };
-
 
 export default function StudentEssayPage() {
   const { user, profile } = useAuth();
@@ -84,7 +88,7 @@ export default function StudentEssayPage() {
   const [supportingTexts, setSupportingTexts] = useState<any[]>([
     { id: 1, content: "A inteligência artificial pode personalizar o ensino, mas levanta questões éticas sobre a autonomia do aluno.", source: "MEC 2024" },
     { id: 2, content: "O Brasil ocupa a 5ª posição no ranking de países que mais buscam ferramentas de IA para estudo.", source: "G1 Notícias" },
-    { id: 3, content: "A desigualdade digital no Brasil ainda é um entrave para a implementação plena de tecnologias educacionais.", source: "IBGE" }
+    { id: 3, content: "A desigualdade digital no Brasil ainda é um entrave para a implementação plena de tecnologias educacionais.", source: "IBGE" },
   ]);
   const [customTheme, setCustomTheme] = useState(false);
   const [text, setText] = useState("");
@@ -98,26 +102,28 @@ export default function StudentEssayPage() {
     if (!user) return;
     try {
       const { data, error } = await supabase
-        .from('essay_submissions')
-        .select('created_at, score, theme')
-        .eq('user_id', user.id)
-        .not('score', 'is', null)
-        .order('created_at', { ascending: true });
-      
+        .from("essay_submissions")
+        .select("created_at, score, theme")
+        .eq("user_id", user.id)
+        .not("score", "is", null)
+        .order("created_at", { ascending: true });
+
       if (error) throw error;
-      
+
       if (data && data.length > 0) {
         if (data.length === 1) {
-           setHistory([
-             { date: 'Início', score: 0, theme: '' }, 
-             { date: format(new Date(data[0].created_at), 'dd/MM'), score: Number(data[0].score), theme: data[0].theme }
-           ]);
+          setHistory([
+            { date: "Início", score: 0, theme: "" },
+            { date: format(new Date(data[0].created_at), "dd/MM"), score: Number(data[0].score), theme: data[0].theme },
+          ]);
         } else {
-           setHistory(data.map(d => ({
-             date: format(new Date(d.created_at), 'dd/MM'),
-             score: Number(d.score),
-             theme: d.theme
-           })));
+          setHistory(
+            data.map((d) => ({
+              date: format(new Date(d.created_at), "dd/MM"),
+              score: Number(d.score),
+              theme: d.theme,
+            }))
+          );
         }
       }
     } catch (e) {
@@ -138,11 +144,10 @@ export default function StudentEssayPage() {
     setResult(null);
     setCustomTheme(false);
     try {
-      const res = await fetch('/api/essay-theme', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      const res = await fetch("/api/essay-theme", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
-      
       const data = await res.json();
       if (res.ok && data.success) {
         setTheme(data.result.title);
@@ -151,29 +156,49 @@ export default function StudentEssayPage() {
       } else {
         throw new Error(data.error || "IA falhou");
       }
-    } catch (e: any) {
+    } catch {
       const etecThemes = [
-        { theme: "A importância da qualificação técnica profissional para a juventude no mercado atual", texts: [{ id: 1, content: "Os cursos técnicos favorecem o contato com a prática profissional e aceleram a empregabilidade.", source: "Censo Inep" }, { id: 2, content: "A demanda por profissionais de tecnologia e indústria se mantém alta no interior paulista.", source: "Guia do Estudante" }] },
-        { theme: "O papel do jovem na construção de mobilidade urbana sustentável nas grandes cidades", texts: [{ id: 1, content: "O planejamento urbano frequentemente negligencia o transporte coletivo sustentável.", source: "Mobilize Brasil" }] }
-      ];
-      
-      const enemThemes = [
-        { theme: "O desafio de democratizar o acesso à tecnologia e informação no Brasil", texts: [{ id: 1, content: "O acesso à internet no Brasil ainda é desigual, afetando principalmente as áreas rurais e as classes D e E.", source: "TIC Domicílios" }, { id: 2, content: "A educação mediada pela tecnologia exige infraestrutura e capacitação docente contínua.", source: "Portal Educação" }] },
-        { theme: "Caminhos para combater a insegurança alimentar no Brasil contemporâneo", texts: [{ id: 1, content: "O desperdício na cadeia logística de alimentos agrava as crises sociais.", source: "ONU Brasil" }] }
+        {
+          theme: "A importância da qualificação técnica profissional para a juventude no mercado atual",
+          texts: [
+            { id: 1, content: "Os cursos técnicos favorecem o contato com a prática profissional e aceleram a empregabilidade.", source: "Censo Inep" },
+            { id: 2, content: "A demanda por profissionais de tecnologia e indústria se mantém alta no interior paulista.", source: "Guia do Estudante" },
+          ],
+        },
+        {
+          theme: "O papel do jovem na construção de mobilidade urbana sustentável nas grandes cidades",
+          texts: [{ id: 1, content: "O planejamento urbano frequentemente negligencia o transporte coletivo sustentável.", source: "Mobilize Brasil" }],
+        },
       ];
 
-       const audience = (
-        profile?.exam_target || 
-        user?.user_metadata?.exam_target || 
-        profile?.profile_type || 
-        user?.user_metadata?.profile_type || 
-        'enem'
-      ).toLowerCase().trim();
-      const isEtec = audience.includes('etec');
+      const enemThemes = [
+        {
+          theme: "O desafio de democratizar o acesso à tecnologia e informação no Brasil",
+          texts: [
+            { id: 1, content: "O acesso à internet no Brasil ainda é desigual, afetando principalmente as áreas rurais e as classes D e E.", source: "TIC Domicílios" },
+            { id: 2, content: "A educação mediada pela tecnologia exige infraestrutura e capacitação docente contínua.", source: "Portal Educação" },
+          ],
+        },
+        {
+          theme: "Caminhos para combater a insegurança alimentar no Brasil contemporâneo",
+          texts: [{ id: 1, content: "O desperdício na cadeia logística de alimentos agrava as crises sociais.", source: "ONU Brasil" }],
+        },
+      ];
+
+      const audience = (
+        profile?.exam_target ||
+        user?.user_metadata?.exam_target ||
+        profile?.profile_type ||
+        user?.user_metadata?.profile_type ||
+        "enem"
+      )
+        .toLowerCase()
+        .trim();
+      const isEtec = audience.includes("etec");
       const pool = isEtec ? etecThemes : enemThemes;
       const pick = pool[Math.floor(Math.random() * pool.length)];
 
-      toast({ title: "Banco de Apoio", description: `Gerado tema formatado para padrão ${isEtec ? 'ETEC (Dissertação)' : 'ENEM'}.` });
+      toast({ title: "Banco de Apoio", description: `Tema padrão ${isEtec ? "ETEC" : "ENEM"}` });
       setTheme(pick.theme);
       setSupportingTexts(pick.texts);
     } finally {
@@ -189,324 +214,386 @@ export default function StudentEssayPage() {
 
     setLoadingGrading(true);
     try {
-      const res = await fetch('/api/essay-evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme, text })
+      const res = await fetch("/api/essay-evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme, text }),
       });
-      
       const data = await res.json();
       if (res.ok && data.success) {
         const aiOutput = data.result;
         setResult(aiOutput);
-        
-        // Salvar no Supabase via API para bypassar restrições RLS
+
         if (user) {
           try {
-            const saveRes = await fetch('/api/essay-save', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+            const saveRes = await fetch("/api/essay-save", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 user_id: user.id,
-                theme: theme,
+                theme,
                 content: text,
                 score: aiOutput.total_score,
                 feedback: aiOutput.general_feedback,
-                result_data: aiOutput
-              })
+                result_data: aiOutput,
+              }),
             });
             const saveData = await saveRes.json();
             if (!saveRes.ok || !saveData.success) throw new Error(saveData.error || "Erro ao salvar");
-            
             fetchHistory();
           } catch (insertError) {
-             console.error("Erro insert", insertError);
-             toast({ title: "Erro na Evolução", description: "Avaliação finalizada, mas houve falha ao salvar no histórico permanente.", variant: "destructive" });
-             
-             // Fallback visual local
-             setHistory(prev => {
-                const newScore = { date: format(new Date(), 'dd/MM'), score: aiOutput.total_score, theme: theme };
-                if (prev.length === 0) return [{ date: 'Início', score: 0, theme: '' }, newScore];
-                return [...prev, newScore];
-             });
+            console.error("Erro insert", insertError);
+            toast({ title: "Erro na Evolução", description: "Avaliação finalizada, mas houve falha ao salvar no histórico.", variant: "destructive" });
+            setHistory((prev) => {
+              const newScore = { date: format(new Date(), "dd/MM"), score: aiOutput.total_score, theme };
+              if (prev.length === 0) return [{ date: "Início", score: 0, theme: "" }, newScore];
+              return [...prev, newScore];
+            });
           }
         }
 
-        toast({ title: "Avaliação Concluída! ✅" });
+        toast({ title: "Avaliação Concluída!" });
         setTimeout(() => {
-          document.getElementById('audit-results')?.scrollIntoView({ behavior: 'smooth' });
+          document.getElementById("audit-results")?.scrollIntoView({ behavior: "smooth" });
         }, 100);
       } else {
         throw new Error(data.error || "IA offline");
       }
-    } catch (e: any) {
-      toast({ title: "Erro de Sincronização", description: "Houve uma oscilação na rede Aurora. Tente novamente.", variant: "destructive" });
+    } catch {
+      toast({ title: "Erro de Sincronização", description: "Houve uma oscilação na rede. Tente novamente.", variant: "destructive" });
     } finally {
       setLoadingGrading(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-700 pb-12 px-4 md:px-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-4xl font-extrabold text-primary italic tracking-tighter uppercase leading-none">
-              Redação <span className="text-accent">Master</span>
-            </h1>
-            <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-3 py-1 uppercase tracking-widest h-6">SINAL ATIVO</Badge>
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(139,92,246,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="h-3 w-3 text-orange-400" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+                  Aurora IA Ativa
+                </p>
+              </div>
+              <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+                Lab de Redação
+              </h1>
+              <p className="text-white/40 text-xs font-semibold mt-1">
+                Auditoria por IA · critérios INEP
+              </p>
+            </div>
+            <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl px-3 py-2 shrink-0">
+              <span className="text-lg font-black text-white leading-none">{charCount}</span>
+              <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Sinais</span>
+            </div>
           </div>
-          <p className="text-muted-foreground font-medium text-sm md:text-lg italic">
-            Refine sua escrita com o motor de auditoria Aurora IA.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button 
-            variant="ghost"
-            onClick={() => { setCustomTheme(!customTheme); setTheme(""); setSupportingTexts([]); setResult(null); }}
-            className={`rounded-xl h-12 px-6 font-black text-[10px] uppercase border-2 transition-all ${customTheme ? 'bg-primary text-white border-primary shadow-lg' : 'bg-white border-muted/20 text-primary'}`}
-          >
-            {customTheme ? "Sair do Manual" : "Tema Personalizado"}
-          </Button>
-          <Button
-            onClick={handleGenerateTopic}
-            disabled={loadingTopic || loadingGrading}
-            className="btn-shimmer rounded-xl h-12 bg-accent text-accent-foreground font-black px-8 shadow-xl shadow-accent/20 active:scale-95 transition-[transform,box-shadow] [touch-action:manipulation] text-[10px] uppercase border-none"
-          >
-            {loadingTopic ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-            Gerar Tema com IA
-          </Button>
+
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <Button
+              onClick={() => {
+                setCustomTheme(!customTheme);
+                setTheme("");
+                setSupportingTexts([]);
+                setResult(null);
+              }}
+              className={`h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${
+                customTheme
+                  ? "bg-white/10 border-white/20 text-white"
+                  : "bg-transparent border-white/10 text-white/50 hover:text-white/80"
+              }`}
+            >
+              {customTheme ? "Sair do Manual" : "Tema Manual"}
+            </Button>
+            <Button
+              onClick={handleGenerateTopic}
+              disabled={loadingTopic || loadingGrading}
+              className="h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-500/20 border-none disabled:opacity-40"
+            >
+              {loadingTopic ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              Gerar com IA
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Card className="gradient-border glow-orange border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden ring-1 ring-black/5 relative group">
-        <CardHeader className="bg-primary/5 p-6 md:p-8 border-b border-dashed border-primary/10">
+      {/* ── Theme + Editor ── */}
+      <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
+        {/* Theme header */}
+        <div className="p-5 border-b border-white/5 bg-white/3">
           {customTheme ? (
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase text-primary/40 ml-2 tracking-widest flex items-center gap-2">
-                <PenTool className="h-3 w-3" /> Sua Proposta de Tema
-              </Label>
-              <Input 
-                value={theme} 
-                onChange={(e) => setTheme(e.target.value)} 
-                placeholder="Ex: A inteligência artificial na educação brasileira..."
-                className="h-12 rounded-xl bg-white border-none shadow-inner font-bold italic text-lg md:text-xl text-primary placeholder:opacity-30"
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <PenTool className="h-3 w-3 text-orange-400/70" />
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                  Sua proposta
+                </label>
+              </div>
+              <input
+                type="text"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                placeholder="Ex: A inteligência artificial na educação..."
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold italic text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
           ) : (
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-              <div className="space-y-3 flex-1">
-                <div className="flex items-center gap-2 text-accent">
-                  <Sparkles className="h-4 w-4" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em]">IA Sintonizada</p>
-                </div>
-                <CardTitle className="text-xl md:text-3xl font-extrabold text-primary italic leading-[1.1] uppercase tracking-tighter">
-                  {theme || "Aguardando geração de tema..."}
-                </CardTitle>
+            <>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-3 w-3 text-orange-400" />
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-400/70">Tema Sintonizado</p>
               </div>
-              <div className="bg-white p-6 rounded-3xl border border-muted/10 shadow-sm shrink-0 flex flex-col items-center min-w-[120px]">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contagem</p>
-                <p className="text-2xl font-black text-primary italic leading-none mt-1">{charCount}</p>
-                <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Sinais</p>
+              <h2 className="text-base font-black italic text-white leading-snug">
+                {theme || "Aguardando geração de tema..."}
+              </h2>
+            </>
+          )}
+        </div>
+
+        {/* Textarea */}
+        <Textarea
+          placeholder="Inicie seu texto aqui... Desenvolva sua tese com clareza."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          disabled={loadingGrading}
+          className="min-h-[280px] sm:min-h-[400px] border-none p-5 font-medium text-sm leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-white/85 placeholder:text-white/20 scrollbar-hide rounded-none"
+        />
+
+        {/* Submit footer */}
+        <div className="border-t border-white/5 p-4 space-y-3">
+          <Button
+            onClick={handleSubmitEssay}
+            disabled={loadingGrading || !text || !theme}
+            className="w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 group"
+          >
+            {loadingGrading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Sincronizando Auditoria...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                Submeter para Aurora IA
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            )}
+          </Button>
+          <div className="flex items-center justify-center gap-1.5">
+            <AlertCircle className="h-3 w-3 text-white/20" />
+            <p className="text-[9px] text-white/25 uppercase tracking-widest font-bold">
+              Aurora é uma IA · correção pode ter imprecisões
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Results ── */}
+      {result && (
+        <div id="audit-results" className="space-y-5 animate-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center gap-2 px-1">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Diagnóstico</p>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
+          </div>
+
+          {/* Score Card */}
+          <div className="relative bg-[#0d0d0f] border border-white/8 rounded-[1.5rem] overflow-hidden p-6">
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.2) 0%, transparent 60%)",
+              }}
+            />
+            <div className="relative z-10 flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="h-3 w-3 text-orange-400 fill-orange-400 animate-pulse" />
+                  <Badge className="bg-orange-500/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">
+                    Pontuação Final
+                  </Badge>
+                </div>
+                <h2 className="text-6xl font-black italic tracking-tighter leading-none text-white drop-shadow-xl">
+                  {result.total_score}
+                </h2>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-1">
+                  de 1000 pontos
+                </p>
+              </div>
+            </div>
+            <div className="relative z-10 mt-5 pt-5 border-t border-white/8">
+              <MessageSquareQuote className="h-4 w-4 text-orange-400 mb-2" />
+              <p className="text-xs font-medium italic text-white/70 leading-relaxed">
+                "{result.general_feedback}"
+              </p>
+            </div>
+          </div>
+
+          {/* Competencies grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {Object.entries(result.competencies || {}).map(([key, comp]: any) => {
+              const info = COMPETENCY_LABELS[key];
+              if (!info) return null;
+              const Icon = info.icon;
+              return (
+                <div
+                  key={key}
+                  className="bg-white/3 border border-white/6 rounded-2xl p-4"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`p-2 rounded-xl border ${info.bg}`}>
+                      <Icon className={`h-4 w-4 ${info.color}`} />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">Nota</p>
+                      <p className="text-2xl font-black italic text-white leading-none">{comp.score}</p>
+                    </div>
+                  </div>
+                  <p className={`text-[10px] font-black uppercase tracking-widest mb-1.5 ${info.color}`}>
+                    {info.label}
+                  </p>
+                  <p className="text-xs font-medium italic text-white/60 leading-relaxed">{comp.feedback}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Corrections */}
+          {result.detailed_corrections?.length > 0 && (
+            <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
+              <div className="p-5 border-b border-white/5 bg-red-500/5">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                    <AlertCircle className="h-3.5 w-3.5 text-red-400" />
+                  </div>
+                  <h3 className="text-sm font-black italic text-red-400 uppercase tracking-wide">
+                    Raio-X de Desvios
+                  </h3>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                {result.detailed_corrections.map((corr: any, i: number) => (
+                  <div key={i} className="p-4 bg-white/3 border border-white/5 rounded-2xl space-y-2">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <Badge className="bg-red-500/15 text-red-400 border-none font-black text-[9px] px-2 line-through opacity-70">
+                        {corr.original}
+                      </Badge>
+                      <ChevronRight className="h-3 w-3 text-white/30" />
+                      <Badge className="bg-emerald-500/15 text-emerald-400 border-none font-black text-[9px] px-2">
+                        {corr.suggestion}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] font-medium text-white/50 italic leading-relaxed flex items-start gap-2">
+                      <Lightbulb className="h-3 w-3 text-orange-400 shrink-0 mt-0.5" />
+                      {corr.reason}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
-        </CardHeader>
-        
-        <CardContent className="p-0">
-          <Textarea 
-            placeholder="Inicie seu texto aqui... Desenvolva sua tese com clareza industrial."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            disabled={loadingGrading}
-            className="min-h-[300px] md:min-h-[450px] border-none p-6 md:p-10 font-medium text-base md:text-lg leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary/90 scrollbar-hide"
-          />
-          
-          <div className="p-6 md:p-8 bg-slate-50 border-t border-muted/10 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white shadow-xl flex items-center justify-center">
-                <ShieldCheck className="h-6 w-6 text-accent" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Segurança Pedagógica</p>
-                <p className="text-sm font-bold italic text-primary/60">Análise baseada nos critérios INEP 2024</p>
-              </div>
-            </div>
-            <Button
-              onClick={handleSubmitEssay}
-              disabled={loadingGrading || !text || !theme}
-              className="btn-shimmer bg-primary text-white font-extrabold h-14 px-8 rounded-2xl shadow-lg glow-orange-strong active:scale-95 transition-[transform,box-shadow] [touch-action:manipulation] text-sm md:text-base uppercase border-none group w-full md:w-auto"
-            >
-              {loadingGrading ? (
-                <div className="flex items-center gap-4">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                  <span>Sincronizando Auditoria...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <span>Submeter para Aurora IA</span>
-                  <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
-                </div>
-              )}
-            </Button>
-          </div>
-          <div className="px-6 pb-6 bg-slate-50 text-center flex items-center justify-center gap-2">
-            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest italic font-bold">
-              A Aurora IA é uma inteligência artificial e sua correção pode apresentar imprecisões.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
-      {result && (
-        <div id="audit-results" className="space-y-12 py-10 animate-in slide-in-from-bottom-10 duration-1000">
-          <div className="flex items-center gap-4 px-2">
-            <div className="h-1 w-12 bg-accent rounded-full" />
-            <h2 className="text-3xl font-black text-primary italic uppercase tracking-tighter">Diagnóstico de Performance</h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <Card className="lg:col-span-4 aurora-dark border-none shadow-2xl text-white rounded-[2rem] overflow-hidden relative group gradient-border dot-grid">
-              <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-[60px] group-hover:scale-150 transition-transform duration-1000" />
-              <div className="p-8 relative z-10 space-y-6">
-                <div className="flex justify-between items-center">
-                  <Badge className="bg-accent text-accent-foreground font-bold text-[10px] px-3 py-1 uppercase rounded-lg shadow-md">SINAL FINAL</Badge>
-                  <Star className="h-6 w-6 text-accent fill-accent animate-pulse" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Pontuação Maestro</p>
-                  <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none mt-2 drop-shadow-xl">{result.total_score}</h2>
-                </div>
-                <div className="pt-6 border-t border-white/10">
-                  <p className="text-sm font-medium italic opacity-90 leading-relaxed text-white/80">
-                    <MessageSquareQuote className="h-6 w-6 text-accent mb-3" />
-                    "{result.general_feedback}"
-                  </p>
+          {/* Suggestions */}
+          {result.suggestions?.length > 0 && (
+            <div className="bg-[#0d0d0f] border border-orange-500/15 rounded-[1.5rem] overflow-hidden">
+              <div className="p-5 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
+                    <Zap className="h-3.5 w-3.5 text-orange-400" />
+                  </div>
+                  <h3 className="text-sm font-black italic text-orange-400 uppercase tracking-wide">
+                    Plano de Evolução
+                  </h3>
                 </div>
               </div>
-            </Card>
-
-            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(result.competencies || {}).map(([key, comp]: any) => {
-                const info = COMPETENCY_LABELS[key];
-                if (!info) return null;
-                const Icon = info.icon;
-                return (
-                  <Card key={key} className="gradient-border border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 border-b-8 border-transparent hover:border-accent group">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className={`p-4 rounded-2xl bg-slate-50 transition-all group-hover:scale-110 shadow-inner ${info.color}`}>
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Nota</p>
-                        <p className="text-3xl font-black text-primary italic leading-none">{comp.score}</p>
-                      </div>
+              <div className="p-4 space-y-2.5">
+                {result.suggestions.map((sug: string, i: number) => (
+                  <div key={i} className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/3 border border-white/5">
+                    <div className="h-6 w-6 rounded-lg bg-orange-500 text-white flex items-center justify-center font-black text-[10px] shrink-0">
+                      {i + 1}
                     </div>
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-black uppercase tracking-widest text-primary/60">{info.label}</h4>
-                      <p className="text-sm font-medium italic text-primary/80 leading-relaxed">{comp.feedback}</p>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-              <CardHeader className="bg-red-50/50 p-8 border-b border-dashed border-red-100">
-                <CardTitle className="text-xl font-black text-red-600 italic uppercase flex items-center gap-3">
-                  <AlertCircle className="h-6 w-6" /> Raio-X de Desvios
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 space-y-6">
-                {result.detailed_corrections?.length > 0 ? (
-                  result.detailed_corrections.map((corr: any, i: number) => (
-                    <div key={i} className="p-6 bg-slate-50 rounded-3xl space-y-4 border border-slate-100 hover:bg-white hover:shadow-lg transition-all group">
-                      <div className="flex flex-wrap gap-3 items-center">
-                        <Badge className="bg-red-100 text-red-600 border-none font-black text-[10px] px-3 line-through opacity-60 decoration-2">{corr.original}</Badge>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px] px-4 py-1.5 shadow-sm">{corr.suggestion}</Badge>
-                      </div>
-                      <p className="text-xs font-bold text-primary/60 italic leading-relaxed flex items-start gap-3">
-                        <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                        {corr.reason}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="py-10 text-center opacity-30 italic">Nenhum desvio gramatical detectado pela Aurora.</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="aurora-dark border-none shadow-2xl rounded-[3rem] text-white overflow-hidden gradient-border">
-              <CardHeader className="bg-white/5 p-8 border-b border-white/10">
-                <CardTitle className="text-xl font-black italic uppercase flex items-center gap-3">
-                  <Zap className="h-6 w-6 text-accent" /> Plano de Evolução
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 space-y-6">
-                {result.suggestions?.map((sug: string, i: number) => (
-                  <div key={i} className="flex items-start gap-5 p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                    <div className="h-8 w-8 rounded-xl bg-accent text-accent-foreground flex items-center justify-center font-black text-xs shrink-0">{i+1}</div>
-                    <p className="text-sm md:text-base font-medium italic leading-relaxed">{sug}</p>
+                    <p className="text-xs font-medium italic text-white/70 leading-relaxed">{sug}</p>
                   </div>
                 ))}
-                <Button className="w-full h-16 bg-white text-primary hover:bg-white/90 font-black rounded-2xl shadow-xl uppercase text-xs tracking-widest mt-4">
-                  Sincronizado no Meu Mural
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Support texts ── */}
+      {supportingTexts.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <BookOpen className="h-4 w-4 text-orange-400/60" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+              Textos Motivadores
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {supportingTexts.map((st) => (
+              <div
+                key={st.id}
+                className="bg-white/3 border border-white/6 border-l-2 border-l-orange-500 rounded-2xl p-4"
+              >
+                <p className="text-xs font-medium italic text-white/70 leading-relaxed">
+                  "{st.content}"
+                </p>
+                <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                  <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">
+                    Fonte: {st.source}
+                  </span>
+                  <Badge className="bg-orange-500/10 text-orange-400/80 border border-orange-500/20 font-black text-[7px] uppercase px-1.5 h-4">
+                    Motivador
+                  </Badge>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-10 border-t border-muted/20">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="flex items-center gap-3 px-2">
-            <BookOpen className="h-6 w-6 text-accent" />
-            <h2 className="text-xl font-black text-primary italic uppercase tracking-widest">Base de Apoio ENEM</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {supportingTexts.map((st) => (
-              <Card key={st.id} className="gradient-border border-none shadow-xl bg-white p-8 rounded-[2.5rem] hover:-translate-y-1 transition-all group border-l-4 border-accent hover:shadow-2xl">
-                <p className="text-sm font-medium italic text-primary/80 leading-relaxed">"{st.content}"</p>
-                <div className="flex justify-between items-center mt-6 pt-4 border-t border-muted/10">
-                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Fonte: {st.source}</span>
-                  <Badge variant="outline" className="border-accent/30 text-accent font-black text-[7px] uppercase">Motivador</Badge>
-                </div>
-              </Card>
-            ))}
-          </div>
+      {/* ── Evolution chart ── */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 px-1">
+          <TrendingUp className="h-4 w-4 text-orange-400/60" />
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+            Evolução
+          </p>
         </div>
-
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <TrendingUp className="h-6 w-6 text-accent" />
-            <h2 className="text-xl font-black text-primary italic uppercase tracking-widest">Evolução</h2>
-          </div>
-          <Card className="gradient-border border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-            <CardContent className="p-8">
-              {history.length > 0 ? (
-                <div className="h-[250px] w-full">
-                  <EssayChart data={history} />
-                </div>
-              ) : (
-                <div className="h-[250px] flex flex-col items-center justify-center opacity-30 italic text-center gap-2">
-                  <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center shadow-inner">
-                     <History className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary">Radar de Evolução</p>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Aguardando seu primeiro envio</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden p-4">
+          {history.length > 0 ? (
+            <div className="h-[220px] w-full">
+              <EssayChart data={history} />
+            </div>
+          ) : (
+            <div className="h-[220px] flex flex-col items-center justify-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center">
+                <History className="h-4 w-4 text-white/30" />
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                  Radar de Evolução
+                </p>
+                <p className="text-[9px] font-bold text-white/20 uppercase mt-1">
+                  Aguardando seu primeiro envio
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

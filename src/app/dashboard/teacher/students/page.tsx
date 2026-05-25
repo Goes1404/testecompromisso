@@ -2,25 +2,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Search, 
-  AlertCircle, 
-  UserCircle, 
-  Send, 
-  ShieldCheck, 
-  Loader2, 
-  Mail,
+import {
+  Search,
+  AlertCircle,
+  UserCircle,
+  Send,
+  ShieldCheck,
+  Loader2,
   ArrowUpRight,
-  Filter,
   Clock,
-  Pencil
+  Pencil,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -51,13 +46,15 @@ export default function TeacherStudentsPage() {
     setIsSubmittingCourse(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ course: editCourse || null })
-        .eq('id', editingStudent.id);
+        .eq("id", editingStudent.id);
 
       if (error) throw error;
 
-      setStudents(prev => prev.map(s => s.id === editingStudent.id ? { ...s, course: editCourse } : s));
+      setStudents((prev) =>
+        prev.map((s) => (s.id === editingStudent.id ? { ...s, course: editCourse } : s))
+      );
       toast({ title: "Sala / Turma atualizada!" });
       setEditingStudent(null);
     } catch (err: any) {
@@ -73,10 +70,10 @@ export default function TeacherStudentsPage() {
       setLoading(true);
       try {
         const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'student')
-          .order('name')
+          .from("profiles")
+          .select("*")
+          .eq("role", "student")
+          .order("name")
           .limit(5000);
 
         if (error) throw error;
@@ -84,15 +81,17 @@ export default function TeacherStudentsPage() {
         const studentProfiles = profiles || [];
 
         const { data: progressData } = await supabase
-          .from('user_progress')
-          .select('user_id, percentage');
+          .from("user_progress")
+          .select("user_id, percentage");
 
-        const mapped = studentProfiles.map(s => {
-          const userProg = progressData?.filter(p => p.user_id === s.id) || [];
-          const avg = userProg.length > 0 
-            ? Math.round(userProg.reduce((acc, curr) => acc + curr.percentage, 0) / userProg.length)
-            : 0;
-          
+        const mapped = studentProfiles.map((s) => {
+          const userProg = progressData?.filter((p) => p.user_id === s.id) || [];
+          const avg =
+            userProg.length > 0
+              ? Math.round(
+                  userProg.reduce((acc, curr) => acc + curr.percentage, 0) / userProg.length
+                )
+              : 0;
           return { ...s, progress: avg };
         });
 
@@ -106,37 +105,46 @@ export default function TeacherStudentsPage() {
     fetchStudents();
   }, [user, toast]);
 
-  const filteredStudents = students.filter(student => {
+  const filteredStudents = students.filter((student) => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      (student.name || '').toLowerCase().includes(searchLower) || 
-      (student.email || '').toLowerCase().includes(searchLower) ||
-      (student.institution || '').toLowerCase().includes(searchLower);
-    
-    const matchesInstitution = filterInstitution === "all" || student.institution === filterInstitution;
+    const matchesSearch =
+      (student.name || "").toLowerCase().includes(searchLower) ||
+      (student.email || "").toLowerCase().includes(searchLower) ||
+      (student.institution || "").toLowerCase().includes(searchLower);
+
+    const matchesInstitution =
+      filterInstitution === "all" || student.institution === filterInstitution;
     const matchesCourse = filterCourse === "all" || student.course === filterCourse;
 
     const baseMatches = matchesSearch && matchesInstitution && matchesCourse;
-    
+
     if (activeFilter === "at_risk") {
       const sevenDaysAgo = subDays(new Date(), 7);
-      const isInactive = !student.last_access || new Date(student.last_access) < sevenDaysAgo;
+      const isInactive =
+        !student.last_access || new Date(student.last_access) < sevenDaysAgo;
       return baseMatches && isInactive;
     }
     if (activeFilter === "financial_aid") {
       return baseMatches && student.is_financial_aid_eligible === true;
     }
     if (activeFilter === "etec") {
-      return baseMatches && (student.exam_target || '').toLowerCase().includes('etec');
+      return baseMatches && (student.exam_target || "").toLowerCase().includes("etec");
     }
     if (activeFilter === "enem") {
-      return baseMatches && (student.exam_target || '').toLowerCase().includes('enem');
+      return baseMatches && (student.exam_target || "").toLowerCase().includes("enem");
     }
     return baseMatches;
   });
 
-  const institutions = Array.from(new Set(students.map(s => s.institution).filter(Boolean)));
-  const courses = Array.from(new Set(students.map(s => s.course).filter(Boolean)));
+  const institutions = Array.from(new Set(students.map((s) => s.institution).filter(Boolean)));
+  const courses = Array.from(new Set(students.map((s) => s.course).filter(Boolean)));
+
+  const atRiskCount = students.filter((s) => {
+    const sevenDaysAgo = subDays(new Date(), 7);
+    return !s.last_access || new Date(s.last_access) < sevenDaysAgo;
+  }).length;
+
+  const aidCount = students.filter((s) => s.is_financial_aid_eligible === true).length;
 
   const formatTime = (seconds: number) => {
     if (!seconds) return "0h";
@@ -146,221 +154,294 @@ export default function TeacherStudentsPage() {
     return `${m}m`;
   };
 
+  const FILTERS = [
+    { key: "all", label: "Todos", count: students.length, color: "bg-orange-500" },
+    { key: "etec", label: "ETEC", count: students.filter((s) => (s.exam_target || "").toLowerCase().includes("etec")).length, color: "bg-indigo-500" },
+    { key: "enem", label: "ENEM", count: students.filter((s) => (s.exam_target || "").toLowerCase().includes("enem")).length, color: "bg-purple-500" },
+    { key: "at_risk", label: "Em Risco", count: atRiskCount, color: "bg-red-500" },
+    { key: "financial_aid", label: "Isenção", count: aidCount, color: "bg-emerald-500" },
+  ] as const;
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary italic leading-none uppercase tracking-tighter">Gestão de Rede</h1>
-          <p className="text-muted-foreground font-medium text-lg italic">Monitoramento estratégico do corpo discente em tempo real.</p>
-        </div>
-        <div className="relative w-full md:w-80 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
-          <Input 
-            placeholder="Pesquisar por nome, email ou polo..." 
-            className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl italic font-medium focus-visible:ring-accent"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-primary/40 ml-2">Filtrar por Instituição/Escola</label>
-            <Select value={filterInstitution} onValueChange={setFilterInstitution}>
-                <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
-                    <SelectValue placeholder="Todas as Instituições" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    <SelectItem value="all">Todas as Instituições</SelectItem>
-                    {institutions.map(inst => (
-                        <SelectItem key={inst as string} value={inst as string}>{inst as string}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        </div>
-        <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-primary/40 ml-2">Filtrar por Carreira/Curso</label>
-            <Select value={filterCourse} onValueChange={setFilterCourse}>
-                <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-md font-bold italic">
-                    <SelectValue placeholder="Todas as Carreiras" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    <SelectItem value="all">Todas as Carreiras</SelectItem>
-                    {courses.map(c => (
-                        <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-4">
-        <Button onClick={() => setActiveFilter("all")} variant={activeFilter === "all" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'all' ? 'bg-primary scale-105 shadow-primary/20' : 'bg-white border-none'}`}>
-          <UserCircle className="h-5 w-5 md:mr-2" /> <span className="hidden md:inline">Total Rede ({students.length})</span>
-        </Button>
-        <Button onClick={() => setActiveFilter("etec")} variant={activeFilter === "etec" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'etec' ? 'bg-indigo-600 scale-105 text-white' : 'bg-white text-indigo-600 border-none'}`}>
-          <Filter className="h-5 w-5 md:mr-2" /> Turma ETEC
-        </Button>
-        <Button onClick={() => setActiveFilter("enem")} variant={activeFilter === "enem" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'enem' ? 'bg-purple-600 scale-105 text-white' : 'bg-white text-purple-600 border-none'}`}>
-          <Filter className="h-5 w-5 md:mr-2" /> Turma ENEM
-        </Button>
-        <Button onClick={() => setActiveFilter("at_risk")} variant={activeFilter === "at_risk" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'at_risk' ? 'bg-red-600 scale-105 text-white' : 'bg-white text-red-600 border-none'}`}>
-          <AlertCircle className="h-5 w-5 md:mr-2" /> Alunos em Risco
-        </Button>
-        <Button onClick={() => setActiveFilter("financial_aid")} variant={activeFilter === "financial_aid" ? "default" : "outline"} className={`h-12 md:h-16 flex-1 min-w-[140px] rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all ${activeFilter === 'financial_aid' ? 'bg-green-600 scale-105 text-white' : 'bg-white text-green-600 border-none'}`}>
-          <ShieldCheck className="h-5 w-5 md:mr-2" /> Isenção Social
-        </Button>
-      </div>
-
-      <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="py-24 flex flex-col items-center justify-center gap-4">
-              <Loader2 className="animate-spin h-12 w-12 text-accent" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Banco de Identidades...</p>
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 80% 20%, rgba(255,107,0,0.12) 0%, transparent 60%), radial-gradient(ellipse at 10% 80%, rgba(139,92,246,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70 mb-1">
+              Gestão de Rede
+            </p>
+            <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+              Corpo Discente
+            </h1>
+            <p className="text-white/40 text-xs font-semibold mt-1">
+              Monitoramento em tempo real
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl px-4 py-2.5 min-w-[72px]">
+              <span className="text-xl font-black text-white leading-none">{students.length}</span>
+              <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Total</span>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50 border-b border-muted/10">
-                  <TableRow className="border-none h-16">
-                    <TableHead className="px-8 font-black uppercase text-[10px] tracking-widest text-primary/40">Estudante</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Instituição / Polo</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Último Acesso</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Tempo na Platforma</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary/40">Evolução</TableHead>
-                    <TableHead className="text-right px-8 font-black uppercase text-[10px] tracking-widest text-primary/40">Ações de Apoio</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStudents.slice(0, displayCount).map((student) => {
-                    const isInactive = !student.last_access || new Date(student.last_access) < subDays(new Date(), 7);
-                    
-                    return (
-                      <TableRow key={student.id} className="border-b last:border-0 hover:bg-accent/5 transition-all group h-24">
-                        <TableCell className="px-8">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-black italic shadow-lg group-hover:scale-110 transition-transform">
-                              {(student.name || 'A').charAt(0)}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-black text-primary text-sm italic">{student.name}</span>
-                              <span className="text-[10px] text-muted-foreground font-bold flex items-center gap-1">
-                                @{student.username || 'aluno'}
-                              </span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <span className="text-xs font-black text-primary/70">{student.institution || 'Escola não cadastrada'}</span>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <Badge className="w-fit bg-primary/5 text-primary border-none text-[7px] font-black uppercase px-2">
-                                {student.exam_target || 'student'}
-                              </Badge>
-                              {student.course && (
-                                <Badge className="w-fit bg-emerald-50 text-emerald-700 border-none text-[7px] font-black uppercase px-2">
-                                  Sala {student.course}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <Badge className={`border-none font-black text-[8px] uppercase h-6 px-3 w-fit ${isInactive ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                              {isInactive ? 'Risco Detectado' : 'Ativo'}
+            <div className="flex flex-col items-center bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-2.5 min-w-[72px]">
+              <span className="text-xl font-black text-red-400 leading-none">{atRiskCount}</span>
+              <span className="text-[9px] font-bold text-red-400/60 uppercase tracking-wider mt-0.5">Em Risco</span>
+            </div>
+            <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-2.5 min-w-[72px]">
+              <span className="text-xl font-black text-emerald-400 leading-none">{aidCount}</span>
+              <span className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider mt-0.5">Isenção</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Search ── */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Pesquisar por nome, e-mail ou polo..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
+        />
+      </div>
+
+      {/* ── Selects ── */}
+      <div className="grid grid-cols-2 gap-3">
+        <Select value={filterInstitution} onValueChange={setFilterInstitution}>
+          <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white/70 text-xs font-bold focus:ring-orange-500/30">
+            <SelectValue placeholder="Instituição" />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl border-white/10 bg-[#1a1a1f] shadow-2xl">
+            <SelectItem value="all" className="text-white/70 text-xs font-bold">Todas</SelectItem>
+            {institutions.map((inst) => (
+              <SelectItem key={inst as string} value={inst as string} className="text-white/70 text-xs font-bold">
+                {inst as string}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterCourse} onValueChange={setFilterCourse}>
+          <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white/70 text-xs font-bold focus:ring-orange-500/30">
+            <SelectValue placeholder="Sala / Turma" />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl border-white/10 bg-[#1a1a1f] shadow-2xl">
+            <SelectItem value="all" className="text-white/70 text-xs font-bold">Todas</SelectItem>
+            {courses.map((c) => (
+              <SelectItem key={c as string} value={c as string} className="text-white/70 text-xs font-bold">
+                {c as string}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* ── Filter chips ── */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setActiveFilter(f.key as typeof activeFilter)}
+            className={`shrink-0 flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
+              activeFilter === f.key
+                ? `${f.color} text-white shadow-lg`
+                : "bg-white/5 border border-white/8 text-white/50 hover:text-white/80"
+            }`}
+          >
+            {f.label}
+            <span
+              className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                activeFilter === f.key ? "bg-black/20 text-white" : "bg-white/10 text-white/40"
+              }`}
+            >
+              {f.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── Content ── */}
+      {loading ? (
+        <div className="py-20 flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/30 animate-pulse">
+            Sincronizando...
+          </p>
+        </div>
+      ) : filteredStudents.length === 0 ? (
+        <div className="py-20 text-center border border-dashed border-white/10 rounded-[2rem]">
+          <Users className="h-10 w-10 mx-auto mb-3 text-white/10" />
+          <p className="font-black italic text-white/20 uppercase tracking-widest text-sm">
+            Nenhum registro encontrado
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {filteredStudents.slice(0, displayCount).map((student) => {
+              const isInactive =
+                !student.last_access || new Date(student.last_access) < subDays(new Date(), 7);
+              const initials = (student.name || "A").charAt(0).toUpperCase();
+              const progress = student.progress || 0;
+
+              return (
+                <div
+                  key={student.id}
+                  className="group relative bg-white/3 border border-white/6 hover:border-orange-500/20 rounded-[1.5rem] p-4 transition-all hover:bg-white/5"
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Avatar */}
+                    <div
+                      className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-lg ${
+                        isInactive ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                      }`}
+                    >
+                      {initials}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-black text-white text-sm italic truncate leading-tight">
+                            {student.name || "Aluno"}
+                          </p>
+                          <p className="text-[10px] text-white/35 font-medium truncate mt-0.5">
+                            {student.email || "—"}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          {isInactive ? (
+                            <Badge className="bg-red-500/15 text-red-400 border-none text-[8px] font-black uppercase px-2 h-5">
+                              Risco
                             </Badge>
-                            <span className="text-[9px] font-bold text-muted-foreground mt-1 px-1">
-                              {student.last_access 
-                                ? formatDistanceToNow(new Date(student.last_access), { addSuffix: true, locale: ptBR })
-                                : 'Nunca acessou'}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-accent opacity-40" />
-                            <span className="text-sm font-black text-primary italic">
-                              {formatTime(student.total_time_spent)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="w-24 space-y-1.5">
-                            <div className="flex justify-between text-[8px] font-black text-primary/40 uppercase">
-                              <span>Progresso</span>
-                              <span>{student.progress}%</span>
-                            </div>
-                            <Progress value={student.progress} className="h-1.5 w-full bg-slate-100" />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right px-8">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="rounded-xl h-10 w-10 text-slate-500 hover:text-primary hover:bg-slate-50"
-                              onClick={() => {
-                                setEditingStudent(student);
-                                setEditCourse(student.course || "");
-                              }}
-                              title="Alterar Sala/Turma"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 text-accent hover:bg-accent/10" asChild title="Abrir Chat">
-                              <Link href={`/dashboard/chat/${student.id}`}><Send className="h-4 w-4" /></Link>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 text-primary hover:bg-primary/5" asChild title="Ver Analíticos">
-                              <Link href={`/dashboard/teacher/analytics?user=${student.id}`}><ArrowUpRight className="h-4 w-4" /></Link>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              
-              {displayCount < filteredStudents.length && (
-                <div className="p-12 flex justify-center">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setDisplayCount(prev => prev + 100)}
-                    className="rounded-[2rem] border-dashed border-primary/20 font-black italic px-16 hover:bg-primary/5 h-16 shadow-xl"
-                  >
-                    Carregar Mais Alunos (+100)
-                  </Button>
+                          ) : (
+                            <Badge className="bg-emerald-500/15 text-emerald-400 border-none text-[8px] font-black uppercase px-2 h-5">
+                              Ativo
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Tags row */}
+                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        {student.institution && (
+                          <span className="text-[9px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full truncate max-w-[120px]">
+                            {student.institution}
+                          </span>
+                        )}
+                        {student.exam_target && (
+                          <span className="text-[9px] font-bold text-orange-400/70 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                            {student.exam_target}
+                          </span>
+                        )}
+                        {student.course && (
+                          <span className="text-[9px] font-bold text-indigo-400/70 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                            Sala {student.course}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="mt-3 space-y-1">
+                        <div className="flex justify-between text-[9px] font-bold text-white/25 uppercase">
+                          <span>Progresso</span>
+                          <span>{progress}%</span>
+                        </div>
+                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Footer row */}
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                        <div className="flex items-center gap-1.5 text-white/30">
+                          <Clock className="h-3 w-3" />
+                          <span className="text-[10px] font-black">
+                            {formatTime(student.total_time_spent)}
+                          </span>
+                          {student.last_access && (
+                            <>
+                              <span className="text-white/15">·</span>
+                              <span className="text-[10px] font-bold">
+                                {formatDistanceToNow(new Date(student.last_access), {
+                                  addSuffix: true,
+                                  locale: ptBR,
+                                })}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingStudent(student);
+                              setEditCourse(student.course || "");
+                            }}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/25 hover:text-orange-400 hover:bg-orange-500/10 transition-all active:scale-90"
+                            title="Alterar Sala/Turma"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <Link
+                            href={`/dashboard/chat/${student.id}`}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/25 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all active:scale-90"
+                            title="Chat"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                          </Link>
+                          <Link
+                            href={`/dashboard/teacher/analytics?user=${student.id}`}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/25 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-90"
+                            title="Analytics"
+                          >
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+              );
+            })}
+          </div>
 
-          {!loading && filteredStudents.length === 0 && (
-            <div className="py-32 text-center border-4 border-dashed rounded-[3rem] m-8 opacity-20">
-              <UserCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="font-black italic text-xl text-primary uppercase tracking-widest">Nenhum registro localizado</p>
-            </div>
+          {displayCount < filteredStudents.length && (
+            <button
+              onClick={() => setDisplayCount((prev) => prev + 100)}
+              className="w-full h-12 rounded-2xl border border-dashed border-white/10 text-white/30 hover:text-white/60 hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+            >
+              Carregar mais (+{Math.min(100, filteredStudents.length - displayCount)})
+            </button>
           )}
-        </CardContent>
-      </Card>
+        </>
+      )}
 
-      {/* Dialog para alterar Sala/Turma */}
+      {/* Dialog: Sala / Turma */}
       <Dialog open={!!editingStudent} onOpenChange={(open) => { if (!open) setEditingStudent(null); }}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
-          <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md bg-[#131316]">
+          <DialogHeader className="p-8 pb-4 border-b border-white/5">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center font-black text-white shadow shrink-0">
-                <Pencil className="h-5 w-5" />
+              <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
+                <Pencil className="h-5 w-5 text-orange-400" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-black italic text-primary leading-none uppercase tracking-tight">
+                <DialogTitle className="text-xl font-black italic text-white leading-none uppercase tracking-tight">
                   Mudar Sala / Turma
                 </DialogTitle>
-                <DialogDescription className="text-xs mt-0.5 font-medium text-muted-foreground">
-                  Altere a sala/turma do aluno: {editingStudent?.name}
+                <DialogDescription className="text-xs mt-0.5 font-medium text-white/40">
+                  {editingStudent?.name}
                 </DialogDescription>
               </div>
             </div>
@@ -368,25 +449,30 @@ export default function TeacherStudentsPage() {
 
           <div className="p-8 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Sala / Turma *</Label>
+              <Label className="text-[10px] font-black uppercase text-white/30 tracking-widest ml-1">
+                Sala / Turma
+              </Label>
               <Select value={editCourse} onValueChange={setEditCourse}>
-                <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
+                <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold">
                   <SelectValue placeholder="Selecionar Sala" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-none shadow-2xl">
+                <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f] shadow-2xl">
                   {Array.from({ length: 12 }, (_, i) => {
-                    const num = String(i + 1).padStart(2, '0');
+                    const num = String(i + 1).padStart(2, "0");
                     return (
-                      <SelectItem key={num} value={num} className="font-bold text-xs">
+                      <SelectItem key={num} value={num} className="font-bold text-xs text-white/70">
                         Sala {num}
                       </SelectItem>
                     );
                   })}
-                  {editCourse && !Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).includes(editCourse) && (
-                    <SelectItem value={editCourse} className="font-bold text-xs">
-                      {editCourse}
-                    </SelectItem>
-                  )}
+                  {editCourse &&
+                    !Array.from({ length: 12 }, (_, i) =>
+                      String(i + 1).padStart(2, "0")
+                    ).includes(editCourse) && (
+                      <SelectItem value={editCourse} className="font-bold text-xs text-white/70">
+                        {editCourse}
+                      </SelectItem>
+                    )}
                 </SelectContent>
               </Select>
             </div>
@@ -395,17 +481,17 @@ export default function TeacherStudentsPage() {
               <Button
                 variant="outline"
                 onClick={() => setEditingStudent(null)}
-                className="flex-1 h-12 rounded-2xl font-black text-xs border-slate-200"
+                className="flex-1 h-12 rounded-2xl font-black text-xs bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleUpdateStudentCourse}
                 disabled={isSubmittingCourse}
-                className="flex-1 h-12 bg-primary hover:bg-primary/95 text-white font-black rounded-2xl shadow-xl border-none text-xs"
+                className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl border-none text-xs"
               >
-                {isSubmittingCourse ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                Confirmar e Salvar
+                {isSubmittingCourse && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+                Confirmar
               </Button>
             </div>
           </div>

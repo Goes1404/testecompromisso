@@ -1,24 +1,30 @@
+"use client";
 
-'use client';
-
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import {
-  FolderOpen, PlusCircle, Trash2, Loader2, FileText, Video,
-  Link2, Image, File, Users, BookOpen, Calendar, Eye,
-} from 'lucide-react';
-import { supabase } from '@/app/lib/supabase';
-import { useAuth } from '@/lib/AuthProvider';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { EDUCATIONAL_CATEGORIES } from '@/lib/constants';
+  FolderOpen,
+  PlusCircle,
+  Trash2,
+  Loader2,
+  FileText,
+  Video,
+  Link2,
+  Image,
+  File,
+  Eye,
+  BookOpen,
+} from "lucide-react";
+import { supabase } from "@/app/lib/supabase";
+import { useAuth } from "@/lib/AuthProvider";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { EDUCATIONAL_CATEGORIES } from "@/lib/constants";
 
 type ClassMaterial = {
   id: string;
@@ -43,32 +49,32 @@ type ClassSession = {
 };
 
 const FILE_TYPES = [
-  { value: 'pdf',    label: 'PDF',    icon: FileText },
-  { value: 'video',  label: 'Vídeo',  icon: Video },
-  { value: 'link',   label: 'Link',   icon: Link2 },
-  { value: 'imagem', label: 'Imagem', icon: Image },
-  { value: 'outro',  label: 'Outro',  icon: File },
+  { value: "pdf", label: "PDF", icon: FileText },
+  { value: "video", label: "Vídeo", icon: Video },
+  { value: "link", label: "Link", icon: Link2 },
+  { value: "imagem", label: "Imagem", icon: Image },
+  { value: "outro", label: "Outro", icon: File },
 ];
 
 const TARGET_GROUPS = [
-  { value: 'all',  label: 'Todos' },
-  { value: 'enem', label: 'ENEM' },
-  { value: 'etec', label: 'ETEC/FATEC' },
+  { value: "all", label: "Todos" },
+  { value: "enem", label: "ENEM" },
+  { value: "etec", label: "ETEC/FATEC" },
 ];
 
-const blank = { title: '', description: '', subject: 'none', file_type: 'pdf', target_group: 'all', session_id: 'none' };
+const blank = { title: "", description: "", subject: "none", file_type: "pdf", target_group: "all", session_id: "none" };
 
 function getTypeIcon(type: string) {
-  return FILE_TYPES.find(t => t.value === type)?.icon ?? File;
+  return FILE_TYPES.find((t) => t.value === type)?.icon ?? File;
 }
 
 function getTypeBadgeColor(type: string) {
   const map: Record<string, string> = {
-    pdf:    'bg-red-100 text-red-700',
-    video:  'bg-blue-100 text-blue-700',
-    link:   'bg-purple-100 text-purple-700',
-    imagem: 'bg-green-100 text-green-700',
-    outro:  'bg-slate-100 text-slate-600',
+    pdf: "bg-red-500/15 text-red-400 border-red-500/25",
+    video: "bg-blue-500/15 text-blue-400 border-blue-500/25",
+    link: "bg-purple-500/15 text-purple-400 border-purple-500/25",
+    imagem: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
+    outro: "bg-white/5 text-white/40 border-white/8",
   };
   return map[type] ?? map.outro;
 }
@@ -84,10 +90,10 @@ export default function TeacherMaterialsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(blank);
   const [file, setFile] = useState<File | null>(null);
-  const [urlInput, setUrlInput] = useState('');
+  const [urlInput, setUrlInput] = useState("");
   const [useUpload, setUseUpload] = useState(true);
-  const [filterType, setFilterType] = useState('all');
-  const [filterSubject, setFilterSubject] = useState('all');
+  const [filterType, setFilterType] = useState("all");
+  const [filterSubject, setFilterSubject] = useState("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function fetchData() {
@@ -95,22 +101,24 @@ export default function TeacherMaterialsPage() {
     setLoading(true);
     const [matRes, sesRes] = await Promise.all([
       supabase
-        .from('class_materials')
-        .select('*, material_views(count)')
-        .eq('teacher_id', user.id)
-        .order('created_at', { ascending: false }),
+        .from("class_materials")
+        .select("*, material_views(count)")
+        .eq("teacher_id", user.id)
+        .order("created_at", { ascending: false }),
       supabase
-        .from('class_sessions')
-        .select('id, title, session_date')
-        .eq('teacher_id', user.id)
-        .order('session_date', { ascending: false }),
+        .from("class_sessions")
+        .select("id, title, session_date")
+        .eq("teacher_id", user.id)
+        .order("session_date", { ascending: false }),
     ]);
     setMaterials(matRes.data ?? []);
     setSessions(sesRes.data ?? []);
     setLoading(false);
   }
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => {
+    fetchData();
+  }, [user]);
 
   async function handleSubmit() {
     if (!form.title || (!file && !urlInput) || !user) return;
@@ -119,32 +127,32 @@ export default function TeacherMaterialsPage() {
       let finalUrl = urlInput;
 
       if (file) {
-        const ext = file.name.split('.').pop();
+        const ext = file.name.split(".").pop();
         const path = `materials/${user.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from('learning-contents')
-          .upload(path, file);
+        const { error: upErr } = await supabase.storage.from("learning-contents").upload(path, file);
         if (upErr) throw upErr;
-        const { data: urlData } = supabase.storage
-          .from('learning-contents')
-          .getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("learning-contents").getPublicUrl(path);
         finalUrl = urlData.publicUrl;
       }
 
       const payload = {
         title: form.title,
         description: form.description || null,
-        subject: form.subject === 'none' ? null : form.subject,
+        subject: form.subject === "none" ? null : form.subject,
         file_url: finalUrl,
         file_type: form.file_type,
         target_group: form.target_group,
-        session_id: form.session_id === 'none' ? null : form.session_id,
+        session_id: form.session_id === "none" ? null : form.session_id,
         teacher_id: user.id,
         teacher_name: profile?.full_name ?? null,
         is_published: true,
       };
 
-      const { data: matData, error } = await supabase.from('class_materials').insert(payload).select('id').single();
+      const { data: matData, error } = await supabase
+        .from("class_materials")
+        .insert(payload)
+        .select("id")
+        .single();
       if (error) throw error;
 
       fetch("/api/push/notify", {
@@ -153,246 +161,295 @@ export default function TeacherMaterialsPage() {
         body: JSON.stringify({ type: "material", materialId: matData.id }),
       }).catch(() => {});
 
-      toast({ title: 'Material publicado!' });
+      toast({ title: "Material publicado!" });
       setForm(blank);
       setFile(null);
-      setUrlInput('');
+      setUrlInput("");
       setShowForm(false);
       fetchData();
     } catch (e: any) {
-      toast({ title: 'Erro ao publicar', description: e.message, variant: 'destructive' });
+      toast({ title: "Erro ao publicar", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Remover este material?')) return;
+    if (!confirm("Remover este material?")) return;
     setDeletingId(id);
-    const { error } = await supabase.from('class_materials').delete().eq('id', id);
+    const { error } = await supabase.from("class_materials").delete().eq("id", id);
     if (error) {
-      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: 'Material removido.' });
-      setMaterials(prev => prev.filter(m => m.id !== id));
+      toast({ title: "Material removido." });
+      setMaterials((prev) => prev.filter((m) => m.id !== id));
     }
     setDeletingId(null);
   }
 
-  const subjects = Array.from(new Set(materials.map(m => m.subject).filter(Boolean))) as string[];
+  const subjects = Array.from(new Set(materials.map((m) => m.subject).filter(Boolean))) as string[];
 
-  const filtered = materials.filter(m => {
-    if (filterType !== 'all' && m.file_type !== filterType) return false;
-    if (filterSubject !== 'all' && m.subject !== filterSubject) return false;
+  const filtered = materials.filter((m) => {
+    if (filterType !== "all" && m.file_type !== filterType) return false;
+    if (filterSubject !== "all" && m.subject !== filterSubject) return false;
     return true;
   });
 
   const totalViews = materials.reduce((acc, m) => acc + (m.material_views?.[0]?.count ?? 0), 0);
-  const thisMonth = materials.filter(m =>
+  const thisMonth = materials.filter((m) =>
     m.created_at.startsWith(new Date().toISOString().slice(0, 7))
   ).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24">
-      <header className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl rotate-3">
-            <FolderOpen className="h-7 w-7" />
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(59,130,246,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <FolderOpen className="h-3 w-3 text-orange-400" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+                  Acervo Pedagógico
+                </p>
+              </div>
+              <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+                Materiais de Aula
+              </h1>
+              <p className="text-white/40 text-xs font-semibold mt-1">
+                PDFs, vídeos e links para alunos
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-black text-primary italic leading-none">Materiais de Aula</h1>
-            <p className="text-muted-foreground font-medium italic">Publique PDFs, vídeos e links para seus alunos.</p>
+
+          {/* KPI row */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-white leading-none">{materials.length}</span>
+              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Total</span>
+            </div>
+            <div className="flex flex-col items-center bg-blue-500/10 border border-blue-500/20 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-blue-400 leading-none">{totalViews}</span>
+              <span className="text-[8px] font-bold text-blue-400/60 uppercase tracking-wider mt-0.5">Views</span>
+            </div>
+            <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-emerald-400 leading-none">{thisMonth}</span>
+              <span className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-wider mt-0.5">Mês</span>
+            </div>
           </div>
         </div>
-        <Button
-          onClick={() => setShowForm(s => !s)}
-          className="h-12 px-6 rounded-2xl bg-primary text-white font-black shadow-xl"
-        >
-          <PlusCircle className="h-5 w-5 mr-2" /> Novo Material
-        </Button>
-      </header>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: 'Total de Materiais', value: materials.length, icon: FolderOpen },
-          { label: 'Visualizações Totais', value: totalViews, icon: Eye },
-          { label: 'Publicados Este Mês', value: thisMonth, icon: Calendar },
-        ].map(s => (
-          <Card key={s.label} className="border-none shadow-xl rounded-[2.5rem]">
-            <CardContent className="pt-5 pb-5 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                <s.icon className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-black text-primary">{s.value}</p>
-                <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
       </div>
 
-      {/* Formulário inline */}
+      {/* ── Composer toggle ── */}
+      {!showForm && (
+        <Button
+          onClick={() => setShowForm(true)}
+          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Novo Material
+        </Button>
+      )}
+
+      {/* ── Form ── */}
       {showForm && (
-        <Card className="border-none shadow-2xl rounded-[2.5rem] animate-in slide-in-from-top-4 duration-300">
-          <CardContent className="p-8 space-y-5">
-            <h2 className="text-xl font-black text-primary italic">Publicar Novo Material</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5 md:col-span-2">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Título *</Label>
-                <Input
-                  placeholder="Ex: Slides — Funções do 2º Grau"
-                  className="h-11 rounded-2xl bg-muted/30 border-none font-bold"
-                  value={form.title}
-                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                />
-              </div>
+        <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
+          <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <PlusCircle className="h-4 w-4 text-orange-400/70" />
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+                Publicar Material
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowForm(false);
+                setForm(blank);
+                setFile(null);
+                setUrlInput("");
+              }}
+              className="text-[10px] font-bold text-white/30 hover:text-white/60 uppercase tracking-wider"
+            >
+              Fechar
+            </button>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                Título *
+              </Label>
+              <input
+                type="text"
+                placeholder="Ex: Slides — Funções do 2º Grau"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Matéria</Label>
-                <Select value={form.subject} onValueChange={val => setForm(f => ({ ...f, subject: val }))}>
-                  <SelectTrigger className="h-11 rounded-2xl bg-muted/30 border-none font-bold">
-                    <SelectValue placeholder="Selecione a matéria" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Matéria</Label>
+                <Select value={form.subject} onValueChange={(val) => setForm((f) => ({ ...f, subject: val }))}>
+                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                    <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl max-h-60">
-                    <SelectItem value="none" className="font-bold">Nenhuma</SelectItem>
-                    {EDUCATIONAL_CATEGORIES.map(c => (
-                      <SelectItem key={c} value={c} className="font-bold">{c}</SelectItem>
+                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f] max-h-60">
+                    <SelectItem value="none" className="font-bold text-white/70 text-xs">Nenhuma</SelectItem>
+                    {EDUCATIONAL_CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c} className="font-bold text-white/70 text-xs">{c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Tipo</Label>
-                <Select value={form.file_type} onValueChange={val => setForm(f => ({ ...f, file_type: val }))}>
-                  <SelectTrigger className="h-11 rounded-2xl bg-muted/30 border-none font-bold">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Tipo</Label>
+                <Select value={form.file_type} onValueChange={(val) => setForm((f) => ({ ...f, file_type: val }))}>
+                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    {FILE_TYPES.map(t => (
-                      <SelectItem key={t.value} value={t.value} className="font-bold">{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Público Alvo</Label>
-                <Select value={form.target_group} onValueChange={val => setForm(f => ({ ...f, target_group: val }))}>
-                  <SelectTrigger className="h-11 rounded-2xl bg-muted/30 border-none font-bold">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    {TARGET_GROUPS.map(t => (
-                      <SelectItem key={t.value} value={t.value} className="font-bold">{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Aula Vinculada (opcional)</Label>
-                <Select value={form.session_id} onValueChange={val => setForm(f => ({ ...f, session_id: val }))}>
-                  <SelectTrigger className="h-11 rounded-2xl bg-muted/30 border-none font-bold">
-                    <SelectValue placeholder="Nenhuma" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    <SelectItem value="none" className="font-bold">Nenhuma</SelectItem>
-                    {sessions.map(s => (
-                      <SelectItem key={s.id} value={s.id} className="font-bold">
-                        {format(new Date(s.session_date + 'T00:00:00'), 'dd/MM', { locale: ptBR })} — {s.title}
+                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                    {FILE_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                        {t.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Upload ou URL */}
-              <div className="space-y-2 md:col-span-2">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setUseUpload(true)}
-                    className={`text-[9px] font-black uppercase px-3 py-1 rounded-full transition-all ${useUpload ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}
-                  >
-                    Fazer Upload
-                  </button>
-                  <button
-                    onClick={() => setUseUpload(false)}
-                    className={`text-[9px] font-black uppercase px-3 py-1 rounded-full transition-all ${!useUpload ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}
-                  >
-                    Colar URL / Link
-                  </button>
-                </div>
-                {useUpload ? (
-                  <Input
-                    key="file-input"
-                    type="file"
-                    onChange={e => setFile(e.target.files?.[0] ?? null)}
-                    className="h-11 rounded-2xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-primary/40 p-2 file:mr-3 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-primary file:text-white"
-                  />
-                ) : (
-                  <Input
-                    key="url-input"
-                    placeholder="https://..."
-                    className="h-11 rounded-2xl bg-muted/30 border-none font-medium"
-                    value={urlInput}
-                    onChange={e => setUrlInput(e.target.value)}
-                  />
-                )}
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Público</Label>
+                <Select value={form.target_group} onValueChange={(val) => setForm((f) => ({ ...f, target_group: val }))}>
+                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                    {TARGET_GROUPS.map((t) => (
+                      <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Aula</Label>
+                <Select value={form.session_id} onValueChange={(val) => setForm((f) => ({ ...f, session_id: val }))}>
+                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                    <SelectValue placeholder="Nenhuma" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                    <SelectItem value="none" className="font-bold text-white/70 text-xs">Nenhuma</SelectItem>
+                    {sessions.map((s) => (
+                      <SelectItem key={s.id} value={s.id} className="font-bold text-white/70 text-xs">
+                        {format(new Date(s.session_date + "T00:00:00"), "dd/MM", { locale: ptBR })} — {s.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-              <div className="space-y-1.5 md:col-span-2">
-                <Label className="text-[9px] font-black uppercase opacity-40 ml-1">Descrição (opcional)</Label>
-                <Textarea
-                  placeholder="Detalhes sobre este material..."
-                  className="rounded-2xl bg-muted/30 border-none font-medium"
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+            {/* Upload / URL toggle */}
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setUseUpload(true)}
+                  className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
+                    useUpload
+                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                      : "bg-white/5 border border-white/8 text-white/40"
+                  }`}
+                >
+                  Upload
+                </button>
+                <button
+                  onClick={() => setUseUpload(false)}
+                  className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
+                    !useUpload
+                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                      : "bg-white/5 border border-white/8 text-white/40"
+                  }`}
+                >
+                  URL / Link
+                </button>
+              </div>
+              {useUpload ? (
+                <input
+                  key="file-input"
+                  type="file"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  className="w-full h-11 rounded-xl bg-white/5 border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-white/70 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-white"
                 />
-              </div>
+              ) : (
+                <input
+                  key="url-input"
+                  type="text"
+                  placeholder="https://..."
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-medium text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                />
+              )}
             </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={handleSubmit}
-                disabled={saving || !form.title || (!file && !urlInput)}
-                className="flex-1 h-12 rounded-2xl bg-primary text-white font-black shadow-xl"
-              >
-                {saving && <Loader2 className="h-5 w-5 animate-spin mr-2" />}
-                Publicar Material
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => { setShowForm(false); setForm(blank); setFile(null); setUrlInput(''); }}
-                className="h-12 px-6 rounded-2xl font-black"
-              >
-                Cancelar
-              </Button>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                Descrição (opcional)
+              </Label>
+              <Textarea
+                placeholder="Detalhes sobre este material..."
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/25 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
+              />
             </div>
-          </CardContent>
-        </Card>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={saving || !form.title || (!file && !urlInput)}
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Publicar Material
+            </Button>
+          </div>
+        </div>
       )}
 
-      {/* Filtros */}
+      {/* ── Filters ── */}
       {!loading && materials.length > 0 && (
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="h-9 w-44 rounded-2xl bg-white shadow-sm border-none font-bold text-xs">
-              <SelectValue placeholder="Todos os tipos" />
+            <SelectTrigger className="h-10 rounded-xl bg-white/5 border-white/8 text-white/70 font-bold text-xs">
+              <SelectValue placeholder="Todos tipos" />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl border-none shadow-2xl">
-              <SelectItem value="all" className="font-bold">Todos os tipos</SelectItem>
-              {FILE_TYPES.map(t => (
-                <SelectItem key={t.value} value={t.value} className="font-bold">{t.label}</SelectItem>
+            <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+              <SelectItem value="all" className="font-bold text-white/70 text-xs">Todos os tipos</SelectItem>
+              {FILE_TYPES.map((t) => (
+                <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                  {t.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {subjects.length > 0 && (
             <Select value={filterSubject} onValueChange={setFilterSubject}>
-              <SelectTrigger className="h-9 w-44 rounded-2xl bg-white shadow-sm border-none font-bold text-xs">
-                <SelectValue placeholder="Todas as matérias" />
+              <SelectTrigger className="h-10 rounded-xl bg-white/5 border-white/8 text-white/70 font-bold text-xs">
+                <SelectValue placeholder="Todas matérias" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-none shadow-2xl">
-                <SelectItem value="all" className="font-bold">Todas as matérias</SelectItem>
-                {subjects.map(s => (
-                  <SelectItem key={s} value={s} className="font-bold">{s}</SelectItem>
+              <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                <SelectItem value="all" className="font-bold text-white/70 text-xs">Todas matérias</SelectItem>
+                {subjects.map((s) => (
+                  <SelectItem key={s} value={s} className="font-bold text-white/70 text-xs">{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -400,73 +457,86 @@ export default function TeacherMaterialsPage() {
         </div>
       )}
 
-      {/* Lista */}
+      {/* ── List ── */}
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="py-16 flex justify-center">
+          <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-20 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-muted/5">
-          <FolderOpen className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-          <p className="font-black text-primary italic text-xl">Nenhum material publicado ainda</p>
-          <p className="text-muted-foreground text-sm mt-1">Clique em "Novo Material" para começar.</p>
+        <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+          <FolderOpen className="h-8 w-8 text-white/15 mx-auto mb-2" />
+          <p className="font-black italic text-xs text-white/25 uppercase tracking-widest">
+            Nenhum material publicado
+          </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map(m => {
+        <div className="space-y-2">
+          {filtered.map((m) => {
             const Icon = getTypeIcon(m.file_type);
             const viewCount = m.material_views?.[0]?.count ?? 0;
             return (
               <div
                 key={m.id}
-                className="flex items-center gap-4 bg-white rounded-2xl shadow-md p-4 group hover:shadow-lg transition-all"
+                className="bg-white/3 border border-white/6 rounded-2xl p-3.5 group"
               >
-                <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-black text-primary text-sm truncate">{m.title}</p>
-                    {m.subject && (
-                      <Badge className="text-[8px] font-black border-none bg-primary/10 text-primary shrink-0">
-                        {m.subject}
-                      </Badge>
-                    )}
-                    <Badge className={`text-[8px] font-black border-none shrink-0 ${getTypeBadgeColor(m.file_type)}`}>
-                      {FILE_TYPES.find(t => t.value === m.file_type)?.label ?? m.file_type}
-                    </Badge>
-                    <Badge className="text-[8px] font-black border-none bg-slate-100 text-slate-600 shrink-0">
-                      {TARGET_GROUPS.find(t => t.value === m.target_group)?.label ?? 'Todos'}
-                    </Badge>
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0">
+                    <Icon className="h-4 w-4 text-orange-400" />
                   </div>
-                  {m.description && (
-                    <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">{m.description}</p>
-                  )}
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {format(new Date(m.created_at), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
-                    {' · '}
-                    <span className="font-bold">{viewCount} {viewCount === 1 ? 'aluno visualizou' : 'alunos visualizaram'}</span>
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-black text-white text-sm truncate flex-1 italic leading-tight">
+                        {m.title}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <Badge className={`text-[8px] font-black border px-2 h-4 ${getTypeBadgeColor(m.file_type)}`}>
+                        {FILE_TYPES.find((t) => t.value === m.file_type)?.label ?? m.file_type}
+                      </Badge>
+                      {m.subject && (
+                        <Badge className="text-[8px] font-black border-none bg-white/5 text-white/40 px-2 h-4">
+                          {m.subject}
+                        </Badge>
+                      )}
+                      <Badge className="text-[8px] font-black border-none bg-white/5 text-white/40 px-2 h-4">
+                        {TARGET_GROUPS.find((t) => t.value === m.target_group)?.label ?? "Todos"}
+                      </Badge>
+                    </div>
+                    {m.description && (
+                      <p className="text-[11px] text-white/40 font-medium italic mt-1.5 truncate leading-tight">
+                        {m.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-2 text-[9px] font-bold text-white/25 uppercase tracking-wider">
+                      <span>{format(new Date(m.created_at), "dd/MM/yy", { locale: ptBR })}</span>
+                      <span className="text-white/15">·</span>
+                      <span className="flex items-center gap-0.5">
+                        <Eye className="h-2.5 w-2.5" />
+                        {viewCount}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-white/5">
                   <a
                     href={m.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-50 text-blue-500 transition-all"
-                    title="Abrir material"
+                    className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all active:scale-95 touch-manipulation"
                   >
-                    <BookOpen className="h-4 w-4" />
+                    <BookOpen className="h-3 w-3" />
+                    Abrir
                   </a>
                   <button
                     onClick={() => handleDelete(m.id)}
                     disabled={deletingId === m.id}
-                    className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-red-50 text-red-400 transition-all disabled:opacity-50"
-                    title="Remover"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-all active:scale-95 disabled:opacity-40 touch-manipulation"
                   >
-                    {deletingId === m.id
-                      ? <Loader2 className="h-4 w-4 animate-spin" />
-                      : <Trash2 className="h-4 w-4" />}
+                    {deletingId === m.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
                   </button>
                 </div>
               </div>

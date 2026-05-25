@@ -2,10 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -14,7 +12,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ClipboardCheck, Loader2, CheckCircle2, XCircle, AlertCircle, BarChart3, KeyRound, ShieldAlert, AlertTriangle } from "lucide-react";
+import {
+  ClipboardCheck,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  KeyRound,
+  ShieldAlert,
+  AlertTriangle,
+  CalendarDays,
+} from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
@@ -30,7 +37,6 @@ export default function StudentAttendancePage() {
   const [checkinCode, setCheckinCode] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
 
-  // Modal de impacto (anti-fraude)
   const [impactOpen, setImpactOpen] = useState(false);
   const [confirmoInput, setConfirmoInput] = useState("");
 
@@ -65,11 +71,8 @@ export default function StudentAttendancePage() {
     }
   }
 
-  useEffect(() => {
-    fetchData();
-  }, [user]);
+  useEffect(() => { fetchData(); }, [user]);
 
-  // Passo 1: valida o tamanho do token e abre o Modal de Impacto (barreira anti-fraude).
   function handleOpenImpact() {
     const code = checkinCode.trim().toUpperCase();
     if (code.length < 4 || code.length > 6) {
@@ -80,7 +83,6 @@ export default function StudentAttendancePage() {
     setImpactOpen(true);
   }
 
-  // Passo 2: chamada à API só ocorre após CONFIRMO ter sido digitado e validado.
   async function handleConfirmedCheckin() {
     const code = checkinCode.trim().toUpperCase();
     if (confirmoInput.trim().toUpperCase() !== "CONFIRMO") {
@@ -117,230 +119,298 @@ export default function StudentAttendancePage() {
   const pct = totalSessions > 0 ? Math.round((presentes / totalSessions) * 100) : 0;
   const atRisk = pct < 75 && totalSessions > 0;
 
-  function statusBadge(sessionId: string) {
-    const status = myRecords[sessionId];
-    if (!status || status === "ausente") {
-      return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Ausente</Badge>;
-    }
-    if (status === "presente") {
-      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Presente</Badge>;
-    }
-    return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">Justificado</Badge>;
-  }
-
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-orange-100 rounded-xl">
-          <ClipboardCheck className="h-6 w-6 text-orange-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-black italic">Minha Frequência</h1>
-          <p className="text-sm text-muted-foreground">Acompanhe sua presença nas aulas</p>
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 70% 0%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 100%, rgba(59,130,246,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70 mb-1">
+            Aluno
+          </p>
+          <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none mb-4">
+            Minha Frequência
+          </h1>
+
+          {/* KPI row */}
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { label: "Aulas", value: totalSessions, color: "text-white" },
+              { label: "Presente", value: presentes, color: "text-emerald-400" },
+              { label: "Ausente", value: ausentes, color: "text-red-400" },
+              { label: "Taxa", value: `${pct}%`, color: atRisk ? "text-red-400" : "text-emerald-400" },
+            ].map((kpi) => (
+              <div
+                key={kpi.label}
+                className={`flex flex-col items-center rounded-2xl py-3 px-2 border ${
+                  kpi.label === "Taxa" && atRisk
+                    ? "bg-red-500/10 border-red-500/20"
+                    : "bg-white/4 border-white/6"
+                }`}
+              >
+                <span className={`text-xl font-black leading-none ${kpi.color}`}>{kpi.value}</span>
+                <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider mt-1">{kpi.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4 space-y-1.5">
+            <div className="flex justify-between text-[9px] font-black text-white/30 uppercase">
+              <span>Frequência geral</span>
+              <span className={atRisk ? "text-red-400" : "text-emerald-400"}>{pct}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ${atRisk ? "bg-red-500" : "bg-gradient-to-r from-emerald-500 to-teal-400"}`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="rounded-[2.5rem] shadow-2xl border-none">
-          <CardContent className="pt-5 pb-5 text-center">
-            <p className="text-2xl font-black">{totalSessions}</p>
-            <p className="text-xs text-muted-foreground font-medium mt-0.5">Total de Aulas</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-[2.5rem] shadow-2xl border-none">
-          <CardContent className="pt-5 pb-5 text-center">
-            <p className="text-2xl font-black text-green-600">{presentes}</p>
-            <p className="text-xs text-muted-foreground font-medium mt-0.5">Presente</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-[2.5rem] shadow-2xl border-none">
-          <CardContent className="pt-5 pb-5 text-center">
-            <p className="text-2xl font-black text-red-600">{ausentes}</p>
-            <p className="text-xs text-muted-foreground font-medium mt-0.5">Ausente</p>
-          </CardContent>
-        </Card>
-        <Card className={`rounded-[2.5rem] shadow-2xl border-none ${atRisk ? "bg-red-50" : "bg-green-50"}`}>
-          <CardContent className="pt-5 pb-5 text-center">
-            <p className={`text-2xl font-black ${atRisk ? "text-red-600" : "text-green-600"}`}>{pct}%</p>
-            <p className={`text-xs font-medium mt-0.5 ${atRisk ? "text-red-500" : "text-green-500"}`}>
-              {atRisk ? "Em Risco" : "Frequência"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* ── Alert: at risk ── */}
       {atRisk && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700">
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <p className="text-sm font-medium">
+        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+          <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+          <p className="text-xs font-bold text-red-300 leading-relaxed">
             Sua frequência está abaixo de 75%. Entre em contato com seu professor para regularizar a situação.
           </p>
         </div>
       )}
 
-      <Card className="rounded-[2.5rem] shadow-2xl border-none">
-        <CardHeader>
-          <CardTitle className="font-black italic flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-orange-500" />
-            Check-in da Aula
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            O professor exibirá um token curto (ex: <span className="font-mono font-black">A7X9</span>) na lousa.
-            Digite-o aqui até <strong>às 17h00</strong> do dia da aula.
-          </p>
-          <div className="flex gap-3 items-end">
-            <div className="space-y-1">
-              <Label htmlFor="checkin-code">Token da aula</Label>
-              <Input
-                id="checkin-code"
-                className="text-center text-2xl font-black tracking-[0.4em] w-44 uppercase font-mono"
-                maxLength={6}
-                placeholder="A7X9"
-                value={checkinCode}
-                onChange={(e) => setCheckinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
-                onKeyDown={(e) => e.key === "Enter" && handleOpenImpact()}
-              />
-            </div>
-            <Button onClick={handleOpenImpact} disabled={checkingIn || checkinCode.length < 4} className="gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Confirmar Presença
-            </Button>
+      {/* ── Check-in ── */}
+      <div className="bg-white/3 border border-white/6 rounded-[1.5rem] p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
+            <KeyRound className="h-4 w-4 text-orange-400" />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <p className="font-black text-white text-sm italic">Check-in da Aula</p>
+            <p className="text-[10px] text-white/35 font-medium">
+              Token exibido pelo professor na lousa
+            </p>
+          </div>
+        </div>
 
-      {/* Modal de Impacto — Barreira Anti-Fraude */}
-      <Dialog open={impactOpen} onOpenChange={(v) => { if (!v) { setImpactOpen(false); setConfirmoInput(""); } }}>
-        <DialogContent className="sm:max-w-lg rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-8 pb-4 bg-red-50 border-b-2 border-red-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-14 w-14 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-300">
-                <ShieldAlert className="h-7 w-7 text-white" />
+        <div className="flex gap-3 items-end">
+          <div className="flex-1 space-y-1.5">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              Token (ex: A7X9)
+            </Label>
+            <input
+              type="text"
+              placeholder="A7X9"
+              maxLength={6}
+              value={checkinCode}
+              onChange={(e) => setCheckinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+              onKeyDown={(e) => e.key === "Enter" && handleOpenImpact()}
+              className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-center text-xl font-black tracking-[0.4em] text-white font-mono placeholder:text-white/20 outline-none focus:border-orange-500/40 transition-all uppercase"
+            />
+          </div>
+          <Button
+            onClick={handleOpenImpact}
+            disabled={checkingIn || checkinCode.length < 4}
+            className="h-12 px-5 bg-orange-500 hover:bg-orange-600 text-white font-black text-xs rounded-xl shadow-lg disabled:opacity-40"
+          >
+            <CheckCircle2 className="h-4 w-4 mr-1.5" />
+            Confirmar
+          </Button>
+        </div>
+      </div>
+
+      {/* ── History ── */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 px-1">
+          <CalendarDays className="h-4 w-4 text-orange-400/60" />
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">Histórico de Aulas</p>
+        </div>
+
+        {loading ? (
+          <div className="py-16 flex flex-col items-center gap-3">
+            <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 animate-pulse">Carregando...</p>
+          </div>
+        ) : sessions.length === 0 ? (
+          <div className="py-16 flex flex-col items-center gap-3 border border-dashed border-white/8 rounded-[1.5rem]">
+            <ClipboardCheck className="h-8 w-8 text-white/10" />
+            <p className="text-xs font-bold text-white/20 uppercase tracking-widest">Nenhuma aula registrada</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {sessions.map((session) => {
+              const status = myRecords[session.id];
+              const isPresente = status === "presente";
+              const isJustificado = status === "justificado";
+              return (
+                <div
+                  key={session.id}
+                  className="flex items-center gap-3 bg-white/3 border border-white/5 rounded-2xl p-4"
+                >
+                  {/* Status dot */}
+                  <div
+                    className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      isPresente
+                        ? "bg-emerald-500/15 border border-emerald-500/25"
+                        : isJustificado
+                        ? "bg-amber-500/15 border border-amber-500/25"
+                        : "bg-red-500/15 border border-red-500/25"
+                    }`}
+                  >
+                    {isPresente ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    ) : isJustificado ? (
+                      <AlertCircle className="h-4 w-4 text-amber-400" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-red-400" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black text-white italic truncate leading-tight">
+                      {session.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[10px] text-white/35 font-bold">
+                        {format(new Date(session.session_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                      </span>
+                      {session.subject && (
+                        <>
+                          <span className="text-white/15">·</span>
+                          <span className="text-[10px] text-white/35 font-bold">{session.subject}</span>
+                        </>
+                      )}
+                      {session.teacher_name && (
+                        <>
+                          <span className="text-white/15">·</span>
+                          <span className="text-[10px] text-white/35 font-bold">{session.teacher_name}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge
+                      className={`border-none font-black text-[8px] uppercase px-2 h-5 ${
+                        isPresente
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : isJustificado
+                          ? "bg-amber-500/15 text-amber-400"
+                          : "bg-red-500/15 text-red-400"
+                      }`}
+                    >
+                      {isPresente ? "Presente" : isJustificado ? "Justificado" : "Ausente"}
+                    </Badge>
+                    <Badge
+                      className={`border-none font-bold text-[8px] uppercase px-2 h-4 ${
+                        session.session_type === "live"
+                          ? "bg-purple-500/10 text-purple-400"
+                          : "bg-blue-500/10 text-blue-400"
+                      }`}
+                    >
+                      {session.session_type === "live" ? "Live" : "Presencial"}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Anti-fraud Dialog ── */}
+      <Dialog
+        open={impactOpen}
+        onOpenChange={(v) => { if (!v) { setImpactOpen(false); setConfirmoInput(""); } }}
+      >
+        <DialogContent className="sm:max-w-lg rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden bg-[#131316]">
+          <DialogHeader className="p-6 pb-4 border-b border-red-500/20 bg-red-500/5">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+                <ShieldAlert className="h-6 w-6 text-white" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-black text-red-700 leading-none italic uppercase tracking-tighter">
+                <DialogTitle className="text-xl font-black text-red-400 leading-none italic uppercase tracking-tighter">
                   Aviso de Fraude
                 </DialogTitle>
-                <DialogDescription className="text-xs mt-1 font-bold text-red-600">
+                <DialogDescription className="text-[10px] mt-0.5 font-bold text-red-400/60">
                   Leia com atenção antes de confirmar
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="p-8 space-y-5">
-            <div className="space-y-4 text-sm leading-relaxed">
-              <div className="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
-                <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
-                <p className="text-red-700 font-bold">
-                  Você está prestes a registrar sua <strong>presença em uma aula presencial</strong>. O token só pode ser digitado por <strong>você, dentro da sala</strong>.
-                </p>
-              </div>
-
-              <ul className="space-y-2 text-slate-700 font-medium text-[13px]">
-                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Compartilhar o token com colegas que faltaram caracteriza <strong>fraude documental</strong>.</li>
-                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Alunos detectados em fraude perdem a vaga no cursinho <strong>imediatamente</strong>.</li>
-                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> A lista de papel da sala é cruzada com os check-ins do app pela secretaria.</li>
-                <li className="flex gap-2"><span className="text-red-600 font-black">·</span> Divergências entre lista física e app geram <strong>auditoria</strong>.</li>
-              </ul>
+          <div className="p-6 space-y-4">
+            <div className="flex items-start gap-3 p-4 bg-red-500/8 border border-red-500/15 rounded-2xl">
+              <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-red-300 text-xs font-bold leading-relaxed">
+                O token só pode ser digitado por você, fisicamente dentro da sala de aula.
+              </p>
             </div>
 
-            <div className="space-y-2 pt-2">
-              <Label htmlFor="confirmo" className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-1">
-                Para prosseguir, digite a palavra <span className="text-red-600 font-black">CONFIRMO</span>
+            <ul className="space-y-2 text-white/50 text-xs font-medium">
+              {[
+                "Compartilhar o token com colegas que faltaram caracteriza fraude documental.",
+                "Alunos detectados em fraude perdem a vaga no cursinho imediatamente.",
+                "A lista de papel é cruzada com os check-ins do app pela secretaria.",
+                "Divergências entre lista física e app geram auditoria.",
+              ].map((item, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="text-red-500 font-black shrink-0">·</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <div className="space-y-1.5 pt-1">
+              <Label className="text-[10px] font-black uppercase text-white/30 tracking-widest ml-1">
+                Digite <span className="text-red-400">CONFIRMO</span> para prosseguir
               </Label>
-              <Input
-                id="confirmo"
+              <input
+                type="text"
                 placeholder="CONFIRMO"
                 value={confirmoInput}
                 onChange={(e) => setConfirmoInput(e.target.value.toUpperCase())}
-                className="h-14 text-center text-xl font-black tracking-[0.3em] rounded-2xl border-2 border-red-200 focus:border-red-500 bg-white"
                 autoComplete="off"
+                className="w-full h-12 bg-white/5 border-2 border-red-500/20 focus:border-red-500/50 rounded-xl px-4 text-center text-lg font-black tracking-[0.3em] text-white placeholder:text-white/20 outline-none transition-all"
               />
-              <p className="text-[10px] text-muted-foreground font-medium text-center">
+              <p className="text-[10px] text-white/25 font-medium text-center">
                 Esta ação é registrada e seu nome ficará vinculado a este check-in.
               </p>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-1">
               <Button
                 variant="outline"
                 onClick={() => { setImpactOpen(false); setConfirmoInput(""); }}
-                className="flex-1 h-12 rounded-2xl font-black text-xs border-slate-200"
+                className="flex-1 h-12 rounded-2xl font-black text-xs bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleConfirmedCheckin}
                 disabled={checkingIn || confirmoInput.trim().toUpperCase() !== "CONFIRMO"}
-                className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl shadow-lg shadow-red-200 border-none text-xs disabled:opacity-40"
+                className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl border-none text-xs disabled:opacity-40 shadow-lg shadow-red-500/20"
               >
-                {checkingIn ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                Registrar Presença ({checkinCode})
+                {checkingIn ? (
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                Registrar ({checkinCode})
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
-      <Card className="rounded-[2.5rem] shadow-2xl border-none">
-        <CardHeader>
-          <CardTitle className="font-black italic flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-blue-500" />
-            Histórico de Aulas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="flex flex-col items-center py-14 gap-3 text-muted-foreground border-2 border-dashed rounded-2xl">
-              <ClipboardCheck className="h-10 w-10 opacity-30" />
-              <p className="font-semibold">Nenhuma aula registrada ainda</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-muted-foreground">
-                    <th className="text-left py-3 px-2 font-semibold">Data</th>
-                    <th className="text-left py-3 px-2 font-semibold">Aula</th>
-                    <th className="text-left py-3 px-2 font-semibold">Matéria</th>
-                    <th className="text-left py-3 px-2 font-semibold">Tipo</th>
-                    <th className="text-left py-3 px-2 font-semibold">Professor</th>
-                    <th className="text-left py-3 px-2 font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((session) => (
-                    <tr key={session.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-2 whitespace-nowrap">
-                        {format(new Date(session.session_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
-                      </td>
-                      <td className="py-3 px-2 font-medium max-w-[180px] truncate">{session.title}</td>
-                      <td className="py-3 px-2 text-muted-foreground">{session.subject || "—"}</td>
-                      <td className="py-3 px-2">
-                        <Badge
-                          variant="secondary"
-                          className={session.session_type === "live" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}
-                        >
-                          {session.session_type === "live" ? "Live" : "Presencial"}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-2 text-muted-foreground">{session.teacher_name || "—"}</td>
-                      <td className="py-3 px-2">{statusBadge(session.id)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
