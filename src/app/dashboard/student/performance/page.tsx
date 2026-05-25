@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -205,7 +205,7 @@ export default function StudentPerformancePage() {
           </div>
           <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-5 py-3 rounded-2xl self-start md:self-auto">
             <div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Taxa de Acerto</p>
+              <p className="text-[9px] font-black text-white/65 uppercase tracking-widest">Taxa de Acerto</p>
               <p className="text-3xl font-black text-accent italic leading-none">{stats.accuracy}%</p>
             </div>
             <div className="h-10 w-10 rounded-full border-4 border-accent border-t-transparent animate-spin-slow shrink-0" />

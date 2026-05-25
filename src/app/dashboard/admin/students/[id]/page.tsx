@@ -308,7 +308,7 @@ export default function AdminStudentProfilePage() {
               )}
             </div>
 
-            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">
+            <p className="text-white/65 text-[10px] font-black uppercase tracking-widest">
               Último acesso: {formatLastAccess(student.last_access)}
             </p>
           </div>

@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -139,7 +139,7 @@ export default function TeacherRankingsPage() {
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Rankings de Elite
           </h1>
-          <p className="text-white/40 text-xs font-semibold mt-1">
+          <p className="text-white/65 text-xs font-semibold mt-1">
             Top 10 por performance em simulados
           </p>
 
@@ -150,7 +150,7 @@ export default function TeacherRankingsPage() {
               className={`h-11 rounded-xl font-black text-xs uppercase tracking-widest italic transition-all touch-manipulation active:scale-95 ${
                 activeTab === "etec"
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                  : "bg-white/5 border border-white/8 text-white/40"
+                  : "bg-white/5 border border-white/8 text-white/65"
               }`}
             >
               ETEC
@@ -160,7 +160,7 @@ export default function TeacherRankingsPage() {
               className={`h-11 rounded-xl font-black text-xs uppercase tracking-widest italic transition-all touch-manipulation active:scale-95 ${
                 activeTab === "enem"
                   ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
-                  : "bg-white/5 border border-white/8 text-white/40"
+                  : "bg-white/5 border border-white/8 text-white/65"
               }`}
             >
               ENEM

@@ -422,7 +422,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="text-base font-black text-white italic leading-none">Compromisso</span>
-              <span className="text-[7px] text-white/40 uppercase tracking-widest font-black">Sistema de Ensino</span>
+              <span className="text-[7px] text-white/60 uppercase tracking-widest font-black">Sistema de Ensino</span>
             </div>
           </div>
         </SidebarHeader>

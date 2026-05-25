@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 export const runtime = 'edge';
@@ -101,7 +101,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-slate-950 gap-4">
       <Loader2 className="animate-spin h-12 w-12 text-red-600" />
-      <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Sincronizando Studio Master...</p>
+      <p className="text-[10px] font-black text-white/65 uppercase tracking-[0.3em]">Sincronizando Studio Master...</p>
     </div>
   );
 
@@ -149,7 +149,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
            <div className="w-full h-full relative flex flex-col items-center justify-center gap-8 bg-gradient-to-br from-slate-900 via-black to-slate-900">
               <div className="absolute top-8 left-8 flex items-center gap-3">
                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
-                 <span className="text-[10px] font-black uppercase text-white/30 tracking-[0.2em]">Sinal Monitorado</span>
+                 <span className="text-[10px] font-black uppercase text-white/60 tracking-[0.2em]">Sinal Monitorado</span>
               </div>
 
               <div className="h-48 w-48 rounded-[2.5rem] bg-accent/5 border-2 border-accent/20 flex items-center justify-center relative shadow-inner">

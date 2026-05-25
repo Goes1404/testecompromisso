@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -202,7 +202,7 @@ export default function CommunicationPage() {
             <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
               Comunicados
             </h1>
-            <p className="text-white/40 text-xs font-semibold mt-1">
+            <p className="text-white/70 text-xs font-semibold mt-1">
               Alertas em tempo real para a rede
             </p>
           </div>
@@ -236,7 +236,7 @@ export default function CommunicationPage() {
           <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <PlusCircle className="h-4 w-4 text-orange-400/85" />
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
                 Nova Mensagem
               </p>
             </div>
@@ -334,7 +334,7 @@ export default function CommunicationPage() {
 
       {/* ── Quick templates ── */}
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-1 mb-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70 px-1 mb-2">
           Atalhos
         </p>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
@@ -422,7 +422,7 @@ export default function CommunicationPage() {
                           {styles.label}
                         </Badge>
                         {ann.target_group && (
-                          <Badge className="bg-white/5 text-white/40 border border-white/8 font-black text-[8px] uppercase px-2 h-4 flex items-center gap-1">
+                          <Badge className="bg-white/5 text-white/70 border border-white/8 font-black text-[8px] uppercase px-2 h-4 flex items-center gap-1">
                             {targetCohort ? <Layers className="h-2 w-2" /> : <Target className="h-2 w-2" />}
                             {targetCohort ? targetCohort.name : ann.target_group === "all" ? "Toda Rede" : ann.target_group}
                           </Badge>

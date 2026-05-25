@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -336,7 +336,7 @@ export default function ProvasCompletasPage() {
             <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
               Provas Completas
             </h1>
-            <p className="text-white/40 text-xs font-semibold mt-1 max-w-md leading-relaxed">
+            <p className="text-white/65 text-xs font-semibold mt-1 max-w-md leading-relaxed">
               Treine resistência e gestão de tempo com provas anteriores sob simulado real.
             </p>
 
@@ -410,7 +410,7 @@ export default function ProvasCompletasPage() {
                         {exam.title}
                       </h3>
                       {exam.description && (
-                        <p className="text-[11px] text-white/40 font-medium italic line-clamp-2 leading-snug mt-1.5">
+                        <p className="text-[11px] text-white/65 font-medium italic line-clamp-2 leading-snug mt-1.5">
                           {exam.description}
                         </p>
                       )}
@@ -502,7 +502,7 @@ export default function ProvasCompletasPage() {
 
           {/* Progress + question counter */}
           <div className="mt-3 space-y-1.5">
-            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/65">
               <span>Questão {currentIndex + 1} de {questions.length}</span>
               <span>{answeredCount}/{questions.length} respondidas</span>
             </div>
@@ -532,7 +532,7 @@ export default function ProvasCompletasPage() {
             className={`ml-auto h-7 w-7 rounded-lg flex items-center justify-center transition-all active:scale-95 ${
               markedForReview.has(currentQuestion.id)
                 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                : "bg-white/5 border border-white/10 text-white/40 hover:text-white/70"
+                : "bg-white/5 border border-white/10 text-white/65 hover:text-white/70"
             }`}
             title="Marcar para revisar"
           >
@@ -552,7 +552,7 @@ export default function ProvasCompletasPage() {
         {/* ── Question Grid (jump-to) — collapsed by default ── */}
         {showGrid && (
           <div className="bg-white/3 border border-white/6 rounded-2xl p-4 animate-in slide-in-from-top-2 duration-200">
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65 mb-2">
               Mapa de questões
             </p>
             <div className="grid grid-cols-8 sm:grid-cols-10 gap-1.5">
@@ -571,7 +571,7 @@ export default function ProvasCompletasPage() {
                         ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                         : isAnswered
                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : "bg-white/5 border border-white/10 text-white/40 hover:bg-white/10"
+                        : "bg-white/5 border border-white/10 text-white/65 hover:bg-white/10"
                     }`}
                   >
                     {idx + 1}
@@ -632,7 +632,7 @@ export default function ProvasCompletasPage() {
                     <div className="flex gap-2.5 flex-1">
                       <span
                         className={`font-black italic text-sm shrink-0 ${
-                          isSelected ? "text-orange-400" : "text-white/40"
+                          isSelected ? "text-orange-400" : "text-white/65"
                         }`}
                       >
                         {opt.key})
@@ -720,7 +720,7 @@ export default function ProvasCompletasPage() {
           <div className="relative z-10 flex flex-col items-center text-center space-y-4">
             <div className="flex items-center gap-2">
               <Award className={`h-4 w-4 ${isGood ? "text-emerald-400" : "text-amber-400"}`} />
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/65">
                 {pct >= 80 ? "Excelente rendimento" : pct >= 60 ? "Bom trabalho" : "Continue praticando"}
               </p>
             </div>
@@ -747,7 +747,7 @@ export default function ProvasCompletasPage() {
               </svg>
               <div className="absolute flex flex-col items-center">
                 <span className="text-4xl font-black italic text-white tracking-tighter leading-none">{pct}</span>
-                <span className="text-sm font-black text-white/40 italic">%</span>
+                <span className="text-sm font-black text-white/65 italic">%</span>
                 <span className="text-[8px] font-black uppercase tracking-widest text-white/55 mt-1">
                   Aproveitamento
                 </span>
@@ -796,7 +796,7 @@ export default function ProvasCompletasPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 px-1">
             <BookOpen className="h-4 w-4 text-orange-400/80" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">
               Gabarito analítico
             </p>
           </div>
@@ -844,7 +844,7 @@ export default function ProvasCompletasPage() {
                             ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
                             : isSelectedOpt && !isCorrect
                             ? "bg-red-500/10 border-red-500/20 text-red-300 line-through"
-                            : "bg-white/3 border-white/5 text-white/40"
+                            : "bg-white/3 border-white/5 text-white/65"
                         }`}
                       >
                         <span className="font-black italic w-4 shrink-0">{opt.key})</span>

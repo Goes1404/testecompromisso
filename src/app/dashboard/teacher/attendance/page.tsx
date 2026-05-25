@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect } from "react";
@@ -113,7 +113,7 @@ export default function TeacherAttendancePage() {
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Frequência
           </h1>
-          <p className="text-white/40 text-xs font-semibold mt-1">
+          <p className="text-white/70 text-xs font-semibold mt-1">
             Gerencie a presença dos alunos
           </p>
 
@@ -161,7 +161,7 @@ export default function TeacherAttendancePage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
           <CalendarDays className="h-4 w-4 text-orange-400/80" />
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
             Histórico de Sessões
           </p>
         </div>
@@ -196,7 +196,7 @@ export default function TeacherAttendancePage() {
                   ? "text-emerald-400 bg-emerald-500/15 border-emerald-500/25"
                   : stats.pct > 0
                   ? "text-amber-400 bg-amber-500/15 border-amber-500/25"
-                  : "text-white/40 bg-white/5 border-white/10";
+                  : "text-white/70 bg-white/5 border-white/10";
 
               return (
                 <div
@@ -230,7 +230,7 @@ export default function TeacherAttendancePage() {
                           {isLive ? "Live" : "Presencial"}
                         </Badge>
                         {session.subject && (
-                          <Badge className="bg-white/5 text-white/40 border border-white/8 font-black text-[8px] uppercase px-1.5 h-4">
+                          <Badge className="bg-white/5 text-white/70 border border-white/8 font-black text-[8px] uppercase px-1.5 h-4">
                             {session.subject}
                           </Badge>
                         )}

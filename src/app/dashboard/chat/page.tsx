@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -335,7 +335,7 @@ export default function ChatListPage() {
           </div>
           
           <div className="flex flex-col items-start md:items-end gap-1.5 shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 min-w-[155px]">
-            <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest leading-none">Contatos Ativos</p>
+            <p className="text-[9px] text-white/65 font-bold uppercase tracking-widest leading-none">Contatos Ativos</p>
             <p className="font-black text-white text-2xl leading-none mt-1">{filteredContacts.length}</p>
             {Object.keys(unreadMessages).length > 0 && (
               <span className="text-[9px] bg-red-500 text-white font-black px-2.5 py-0.5 rounded-full animate-pulse mt-2">

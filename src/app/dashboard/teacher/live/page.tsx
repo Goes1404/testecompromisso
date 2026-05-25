@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect } from "react";
@@ -150,7 +150,7 @@ export default function ManageLivePage() {
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Lives & Mentorias
           </h1>
-          <p className="text-white/40 text-xs font-semibold mt-1">
+          <p className="text-white/65 text-xs font-semibold mt-1">
             Gerencie reuniões (Meet/YouTube)
           </p>
 
@@ -317,7 +317,7 @@ export default function ManageLivePage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                      <span className="text-[10px] font-bold text-white/40 flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-white/65 flex items-center gap-1">
                         <Clock className="h-2.5 w-2.5" />
                         {format(d, "HH:mm")}
                       </span>

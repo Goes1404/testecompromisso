@@ -335,7 +335,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <Compass className="h-3 w-3 text-accent" />
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40">{trail?.category}</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/65">{trail?.category}</p>
             </div>
             <h1 className="text-sm md:text-lg font-black italic truncate max-w-[150px] md:max-w-xl">{trail?.title}</h1>
           </div>
@@ -343,7 +343,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         
         <div className="flex items-center gap-3 md:gap-6">
           <div className="hidden sm:flex flex-col items-end gap-1.5 w-32 md:w-48">
-            <div className="flex justify-between w-full text-[9px] font-black uppercase text-white/40 tracking-widest">
+            <div className="flex justify-between w-full text-[9px] font-black uppercase text-white/65 tracking-widest">
               <span>EVOLUÇÃO</span>
               <span className="text-accent">{Math.round(videoProgress)}%</span>
             </div>
@@ -391,8 +391,8 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                     onTouchStart={handleDragStart}
                   >
                     <div className="flex items-center gap-3">
-                      <GripHorizontal className="h-4 w-4 text-white/40 group-hover:text-accent transition-colors" />
-                      <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Console</span>
+                      <GripHorizontal className="h-4 w-4 text-white/65 group-hover:text-accent transition-colors" />
+                      <span className="text-[8px] font-black text-white/65 uppercase tracking-widest">Console</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={(e) => { e.stopPropagation(); setMiniPlayerWidth(prev => Math.min(prev + 50, 800)); }} className="h-6 w-6 rounded-md hover:bg-white/10 flex items-center justify-center text-white/60"><Plus className="h-3 w-3" /></button>

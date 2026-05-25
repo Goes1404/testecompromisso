@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect } from "react";
@@ -181,7 +181,7 @@ export default function TeacherStudentsPage() {
             <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
               Corpo Discente
             </h1>
-            <p className="text-white/40 text-xs font-semibold mt-1">
+            <p className="text-white/65 text-xs font-semibold mt-1">
               Monitoramento em tempo real
             </p>
           </div>
@@ -259,7 +259,7 @@ export default function TeacherStudentsPage() {
             {f.label}
             <span
               className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
-                activeFilter === f.key ? "bg-black/20 text-white" : "bg-white/10 text-white/40"
+                activeFilter === f.key ? "bg-black/20 text-white" : "bg-white/10 text-white/65"
               }`}
             >
               {f.count}
@@ -334,7 +334,7 @@ export default function TeacherStudentsPage() {
                       {/* Tags row */}
                       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                         {student.institution && (
-                          <span className="text-[9px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full truncate max-w-[120px]">
+                          <span className="text-[9px] font-bold text-white/65 bg-white/5 px-2 py-0.5 rounded-full truncate max-w-[120px]">
                             {student.institution}
                           </span>
                         )}
@@ -440,7 +440,7 @@ export default function TeacherStudentsPage() {
                 <DialogTitle className="text-xl font-black italic text-white leading-none uppercase tracking-tight">
                   Mudar Sala / Turma
                 </DialogTitle>
-                <DialogDescription className="text-xs mt-0.5 font-medium text-white/40">
+                <DialogDescription className="text-xs mt-0.5 font-medium text-white/65">
                   {editingStudent?.name}
                 </DialogDescription>
               </div>

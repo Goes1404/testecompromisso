@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState } from "react";
@@ -127,7 +127,7 @@ export function AccessibilityWidget() {
                   <p className="text-[8px] font-black uppercase tracking-widest text-accent mt-1">Gabinete de Apoio 360</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setMessages([{role: "assistant", content: "Sintonizando dados..."}])} className="text-white/40 hover:text-white rounded-full"><Eraser className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setMessages([{role: "assistant", content: "Sintonizando dados..."}])} className="text-white/65 hover:text-white rounded-full"><Eraser className="h-4 w-4" /></Button>
             </div>
           </SheetHeader>
 

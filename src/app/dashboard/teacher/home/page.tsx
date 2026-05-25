@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -209,7 +209,7 @@ export default function TeacherHomePage() {
             <h1 className="text-2xl md:text-4xl font-black text-white italic tracking-tighter leading-tight">
               Olá, {firstName}! 👋
             </h1>
-            <p className="text-white/40 text-xs font-semibold mt-1 capitalize">{today}</p>
+            <p className="text-white/65 text-xs font-semibold mt-1 capitalize">{today}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button asChild className="btn-shimmer rounded-xl h-11 bg-accent text-accent-foreground font-black border-none px-5 text-xs uppercase tracking-wide active:scale-95 transition-all [touch-action:manipulation] shadow-lg shadow-accent/30">
@@ -340,7 +340,7 @@ export default function TeacherHomePage() {
                 Busca Ativa
               </h2>
               {eligibleList.length === 0 ? (
-                <p className="text-white/40 text-xs italic text-center py-5 border border-white/10 rounded-xl">
+                <p className="text-white/65 text-xs italic text-center py-5 border border-white/10 rounded-xl">
                   Sem alertas pendentes ✅
                 </p>
               ) : (

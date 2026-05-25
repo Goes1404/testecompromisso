@@ -161,7 +161,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                       </a>
                     </Button>
-                    <div className="flex items-center justify-center gap-3 text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">
+                    <div className="flex items-center justify-center gap-3 text-[10px] font-black text-white/60 uppercase tracking-[0.4em]">
                       <Users className="h-3 w-3" /> Sessão Restrita à Rede
                     </div>
                   </div>

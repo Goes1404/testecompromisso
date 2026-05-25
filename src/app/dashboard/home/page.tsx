@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
@@ -546,7 +546,7 @@ export default function DashboardHome() {
 
               <motion.p
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-white/65">
                 {profile?.exam_target || 'ENEM'} · {profile?.institution || 'Colégio Colaço'}
               </motion.p>
             </div>
@@ -570,10 +570,10 @@ export default function DashboardHome() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-base font-black text-white leading-none">{score}</span>
-                  <span className="text-[7px] text-white/40 font-bold uppercase">%</span>
+                  <span className="text-[7px] text-white/65 font-bold uppercase">%</span>
                 </div>
               </div>
-              <span className="text-[8px] text-white/30 font-bold uppercase tracking-widest">Acertos</span>
+              <span className="text-[8px] text-white/60 font-bold uppercase tracking-widest">Acertos</span>
             </motion.div>
           </div>
 
@@ -590,7 +590,7 @@ export default function DashboardHome() {
                 <stat.icon className={`h-4 w-4 ${stat.color} shrink-0`} />
                 <div>
                   <p className="font-black text-white text-base leading-none">{stat.value}</p>
-                  <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
+                  <p className="text-[9px] text-white/65 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
                 </div>
               </motion.div>
             ))}

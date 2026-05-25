@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState } from "react";
@@ -84,7 +84,7 @@ export default function ExemptionSimulatorPage() {
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Simulador de Isenção
           </h1>
-          <p className="text-white/40 text-xs font-semibold mt-1">
+          <p className="text-white/65 text-xs font-semibold mt-1">
             Descubra se você tem direito à isenção da taxa
           </p>
         </div>
@@ -95,7 +95,7 @@ export default function ExemptionSimulatorPage() {
         <div className="p-4 border-b border-white/5 bg-white/3">
           <div className="flex items-center gap-2">
             <Calculator className="h-4 w-4 text-emerald-400/70" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">
               Preencha os dados
             </p>
           </div>

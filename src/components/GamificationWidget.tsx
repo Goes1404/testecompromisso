@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/app/lib/supabase';
@@ -44,12 +44,12 @@ export function GamificationWidget({ userId }: Props) {
           </div>
           <div className="ml-auto text-right">
             <p className="text-2xl font-black text-white leading-none">{xp}</p>
-            <p className="text-[9px] font-black uppercase tracking-widest text-white/40">XP Total</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/65">XP Total</p>
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/40">
+          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/65">
             <span>{current.minXP} XP</span>
             {next && <span>Próximo: {next.minXP} XP</span>}
           </div>

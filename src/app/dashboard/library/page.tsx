@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,10 +156,10 @@ export default function LibraryPage() {
           </div>
           
           <div className="relative w-full md:w-80 group/search shrink-0">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 transition-colors group-focus-within/search:text-accent" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/65 transition-colors group-focus-within/search:text-accent" />
             <Input
               placeholder="Buscar material..."
-              className="pl-12 h-14 bg-white/10 backdrop-blur-md border border-white/10 hover:border-white/20 text-white placeholder:text-white/40 rounded-[1.25rem] text-sm font-medium italic focus-visible:ring-accent focus-visible:ring-1 focus-visible:border-accent transition-all duration-300"
+              className="pl-12 h-14 bg-white/10 backdrop-blur-md border border-white/10 hover:border-white/20 text-white placeholder:text-white/65 rounded-[1.25rem] text-sm font-medium italic focus-visible:ring-accent focus-visible:ring-1 focus-visible:border-accent transition-all duration-300"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

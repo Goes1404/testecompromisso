@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -54,11 +54,11 @@ function StepBar({ current }: { current: Step }) {
         <div key={s.n} className="flex items-center gap-3">
           <div className="flex flex-col items-center gap-1">
             <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black transition-all duration-300
-              ${current > s.n ? 'bg-green-500 text-white' : current === s.n ? 'bg-white text-primary' : 'bg-white/15 text-white/40'}`}>
+              ${current > s.n ? 'bg-green-500 text-white' : current === s.n ? 'bg-white text-primary' : 'bg-white/15 text-white/65'}`}>
               {current > s.n ? <CheckCircle2 className="h-4 w-4" /> : s.n}
             </div>
             <span className={`text-[9px] font-black uppercase tracking-wider transition-colors
-              ${current >= s.n ? 'text-white/70' : 'text-white/30'}`}>
+              ${current >= s.n ? 'text-white/70' : 'text-white/60'}`}>
               {s.label}
             </span>
           </div>

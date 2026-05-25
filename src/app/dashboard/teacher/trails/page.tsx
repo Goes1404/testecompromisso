@@ -1,33 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle, CardFooter, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Plus,
-  LayoutDashboard,
-  Search,
-  Loader2,
-  Database,
-  Eye,
-  Globe,
-  Lock,
-  Trash2,
-  Layers,
-  Film,
-  ListVideo,
-  X,
+  Plus, Search, Loader2, Eye, Globe, Lock, Trash2, Layers,
+  Film, ListVideo, X, Sparkles, Inbox, LayoutDashboard, ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
-import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { EDUCATIONAL_CATEGORIES } from "@/lib/constants";
@@ -35,7 +18,6 @@ import { EDUCATIONAL_CATEGORIES } from "@/lib/constants";
 export default function TeacherTrailsPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -45,7 +27,6 @@ export default function TeacherTrailsPage() {
   const [newTrail, setNewTrail] = useState({ title: "", category: "Matemática", description: "", target_audience: "all", image_url: "" });
   const [coverFile, setCoverFile] = useState<File | null>(null);
 
-  // Merge mode
   const [mergeMode, setMergeMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
@@ -56,10 +37,7 @@ export default function TeacherTrailsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('trails')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from("trails").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       setTrails(data || []);
     } catch (e) {
@@ -90,11 +68,11 @@ export default function TeacherTrailsPage() {
       };
 
       if (coverFile) {
-        const fileExt = coverFile.name.split('.').pop();
+        const fileExt = coverFile.name.split(".").pop();
         const filePath = `trails/cover-${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('learning-contents').upload(filePath, coverFile);
+        const { error: uploadError } = await supabase.storage.from("learning-contents").upload(filePath, coverFile);
         if (!uploadError) {
-          const { data: urlData } = supabase.storage.from('learning-contents').getPublicUrl(filePath);
+          const { data: urlData } = supabase.storage.from("learning-contents").getPublicUrl(filePath);
           trailData.image_url = urlData.publicUrl;
         }
       }
@@ -105,11 +83,11 @@ export default function TeacherTrailsPage() {
         trailData.target_audience = newTrail.target_audience;
       }
 
-      const { data, error } = await supabase.from('trails').insert([trailData]).select().single();
+      const { data, error } = await supabase.from("trails").insert([trailData]).select().single();
       if (error) throw new Error(error.message);
 
       toast({ title: "Trilha Criada!", description: "Continue editando os módulos para publicar." });
-      setTrails(prev => [data, ...prev]);
+      setTrails((prev) => [data, ...prev]);
       setIsCreateDialogOpen(false);
       setNewTrail({ title: "", category: "Matemática", description: "", target_audience: "all", image_url: "" });
       setCoverFile(null);
@@ -122,11 +100,11 @@ export default function TeacherTrailsPage() {
   };
 
   const handleDeleteTrail = async (id: string) => {
-    if (!confirm("Tem certeza? Todos os módulos e conteúdos vinculados serão removidos.")) return;
+    if (!confirm("Tem certeza? Todos os módulos serão removidos.")) return;
     try {
-      const { error } = await supabase.from('trails').delete().eq('id', id);
+      const { error } = await supabase.from("trails").delete().eq("id", id);
       if (error) throw error;
-      setTrails(prev => prev.filter(t => t.id !== id));
+      setTrails((prev) => prev.filter((t) => t.id !== id));
       toast({ title: "Trilha excluída." });
     } catch (e: any) {
       toast({ title: "Falha na exclusão", description: e.message, variant: "destructive" });
@@ -134,7 +112,7 @@ export default function TeacherTrailsPage() {
   };
 
   const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
@@ -144,14 +122,11 @@ export default function TeacherTrailsPage() {
   const handleMergeTrails = async () => {
     if (selectedIds.size < 2 || !serieName.trim() || !user || isMerging) return;
     setIsMerging(true);
-
     const ids = Array.from(selectedIds);
-    const firstTrail = trails.find(t => t.id === ids[0]);
-
+    const firstTrail = trails.find((t) => t.id === ids[0]);
     try {
-      // 1. Criar a trilha série
       const { data: serie, error: serieErr } = await supabase
-        .from('trails')
+        .from("trails")
         .insert({
           title: serieName.trim(),
           category: firstTrail?.category || "Geral",
@@ -163,22 +138,17 @@ export default function TeacherTrailsPage() {
           target_audience: firstTrail?.target_audience || "all",
           image_url: firstTrail?.image_url || `https://picsum.photos/seed/serie-${Date.now()}/600/400`,
         })
-        .select('id')
+        .select("id")
         .single();
 
       if (serieErr || !serie) throw new Error(serieErr?.message || "Falha ao criar série");
 
-      // 2. Reassociar os módulos de cada trilha selecionada para a série
       for (const trailId of ids) {
-        const { error: modErr } = await supabase
-          .from('modules')
-          .update({ trail_id: serie.id })
-          .eq('trail_id', trailId);
+        const { error: modErr } = await supabase.from("modules").update({ trail_id: serie.id }).eq("trail_id", trailId);
         if (modErr) throw new Error(`Módulos de ${trailId}: ${modErr.message}`);
       }
 
-      // 3. Remover as trilhas originais
-      const { error: delErr } = await supabase.from('trails').delete().in('id', ids);
+      const { error: delErr } = await supabase.from("trails").delete().in("id", ids);
       if (delErr) throw new Error(delErr.message);
 
       toast({ title: "Série criada!", description: `"${serieName}" agrupa ${ids.length} aulas.` });
@@ -194,287 +164,385 @@ export default function TeacherTrailsPage() {
     }
   };
 
-  const filteredTrails = trails.filter(t =>
-    t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTrails = trails.filter(
+    (t) =>
+      t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const activeCount = trails.filter((t) => t.status === "active" || t.status === "published").length;
+  const serieCount = trails.filter((t) => t.trail_type === "serie").length;
   const selectedCount = selectedIds.size;
 
   return (
-    <div className="space-y-8 md:space-y-10 animate-in fade-in duration-500 pb-20 px-1">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-black text-primary italic leading-none">Gestão de Trilhas</h1>
-          <p className="text-muted-foreground font-medium text-sm">Administre aulas avulsas e séries pedagógicas.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Modo Unificar */}
-          {mergeMode ? (
-            <Button
-              variant="outline"
-              onClick={() => { setMergeMode(false); setSelectedIds(new Set()); }}
-              className="rounded-xl h-12 border-2 font-black text-sm px-5 gap-2"
-            >
-              <X className="h-4 w-4" /> Cancelar
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={() => setMergeMode(true)}
-              className="rounded-xl h-12 border-2 border-primary/20 font-black text-sm px-5 gap-2 hover:border-primary hover:bg-primary/5"
-            >
-              <Layers className="h-4 w-4 text-primary" /> Criar Série
-            </Button>
-          )}
+    <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-          {/* Nova Trilha Manual */}
-          <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
-            setIsCreateDialogOpen(open);
-            if (!open) setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
-          }}>
-            <DialogTrigger asChild>
-              <Button className="rounded-xl md:rounded-2xl h-12 md:h-14 bg-primary text-white font-black px-6 md:px-8 shadow-xl hover:scale-105 transition-all">
-                <Plus className="h-5 w-5 mr-2" /> Nova Aula
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[2rem] p-5 md:p-6 bg-white w-[95vw] sm:w-full max-w-lg border-none shadow-2xl max-h-[95vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-black italic text-primary">Nova Aula / Trilha</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-3 py-2">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase opacity-40">Título</Label>
-                  <Input placeholder="Ex: Funções do 2º Grau" className="h-10 rounded-xl bg-muted/30 border-none font-bold" value={newTrail.title} onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })} disabled={isSubmitting} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Categoria</Label>
-                    <Select value={newTrail.category} onValueChange={(v) => setNewTrail({ ...newTrail, category: v })} disabled={isSubmitting}>
-                      <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl max-h-60">
-                        {EDUCATIONAL_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Público-Alvo</Label>
-                    <Select value={newTrail.target_audience} onValueChange={(v) => setNewTrail({ ...newTrail, target_audience: v })} disabled={isSubmitting}>
-                      <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none font-bold">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="etec">Apenas ETEC</SelectItem>
-                        <SelectItem value="enem">Apenas ENEM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase opacity-40">Capa (arquivo ou URL)</Label>
-                  <div className="flex flex-col gap-2">
-                    <Input type="file" accept="image/*" onChange={e => setCoverFile(e.target.files?.[0] || null)} className="h-10 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer p-1.5 file:mr-4 file:py-1 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white" disabled={isSubmitting} />
-                    {!coverFile && (
-                      <Input placeholder="Ou URL: https://..." className="h-10 rounded-xl bg-muted/30 border-none font-bold text-xs" value={newTrail.image_url} onChange={(e) => setNewTrail({ ...newTrail, image_url: e.target.value })} disabled={isSubmitting} />
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase opacity-40">Descrição</Label>
-                  <Textarea placeholder="O que o aluno aprenderá?" className="min-h-[60px] rounded-xl bg-muted/30 border-none font-medium resize-none px-3 py-2" value={newTrail.description} onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })} disabled={isSubmitting} />
-                </div>
+      {/* ── Hero ── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(168,85,247,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <ClipboardList className="h-3 w-3 text-orange-400" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
+                  Conteúdo Pedagógico
+                </p>
               </div>
-              <DialogFooter className="mt-2">
-                <Button onClick={handleCreateTrail} disabled={isSubmitting || !newTrail.title} className="w-full h-12 bg-primary text-white font-black rounded-2xl shadow-xl">
-                  {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
-                  {isSubmitting ? "Gravando..." : "Criar Aula"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+                Minhas Trilhas
+              </h1>
+              <p className="text-white/70 text-xs font-semibold mt-1">
+                Aulas avulsas e séries pedagógicas
+              </p>
+            </div>
+          </div>
+
+          {/* KPI row */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-white leading-none">{trails.length}</span>
+              <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Total</span>
+            </div>
+            <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-emerald-400 leading-none">{activeCount}</span>
+              <span className="text-[8px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5">Ativas</span>
+            </div>
+            <div className="flex flex-col items-center bg-purple-500/10 border border-purple-500/20 rounded-2xl py-2.5">
+              <span className="text-lg font-black text-purple-400 leading-none">{serieCount}</span>
+              <span className="text-[8px] font-bold text-purple-400/80 uppercase tracking-wider mt-0.5">Séries</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Barra de merge mode */}
+      {/* ── Action buttons ── */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="h-12 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" />
+          Nova Aula
+        </button>
+        {mergeMode ? (
+          <button
+            onClick={() => { setMergeMode(false); setSelectedIds(new Set()); }}
+            className="h-12 flex items-center justify-center gap-2 bg-white/5 border border-white/8 text-white/70 font-black rounded-2xl text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
+          >
+            <X className="h-4 w-4" />
+            Cancelar
+          </button>
+        ) : (
+          <button
+            onClick={() => setMergeMode(true)}
+            className="h-12 flex items-center justify-center gap-2 bg-purple-500/15 border border-purple-500/25 text-purple-400 font-black rounded-2xl text-xs uppercase tracking-widest transition-all hover:bg-purple-500/20 touch-manipulation active:scale-[0.98]"
+          >
+            <Layers className="h-4 w-4" />
+            Criar Série
+          </button>
+        )}
+      </div>
+
+      {/* ── Merge mode bar ── */}
       {mergeMode && (
-        <div className="flex items-center justify-between bg-primary/5 border-2 border-primary/20 rounded-2xl px-6 py-4 animate-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center gap-3">
-            <Layers className="h-5 w-5 text-primary" />
-            <p className="font-black text-primary text-sm">
-              {selectedCount === 0 ? "Selecione 2 ou mais aulas para unificar em uma série" : `${selectedCount} aula${selectedCount > 1 ? 's' : ''} selecionada${selectedCount > 1 ? 's' : ''}`}
+        <div className="flex items-center justify-between bg-purple-500/8 border border-purple-500/20 rounded-2xl px-4 py-3 animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-purple-400" />
+            <p className="font-black text-purple-300 text-xs">
+              {selectedCount === 0 ? "Selecione 2+ aulas para unificar" : `${selectedCount} aula${selectedCount > 1 ? "s" : ""} selecionada${selectedCount > 1 ? "s" : ""}`}
             </p>
           </div>
-          <Button
+          <button
             onClick={() => setIsMergeDialogOpen(true)}
             disabled={selectedCount < 2}
-            className="h-10 px-6 rounded-xl bg-primary text-white font-black text-sm shadow-lg disabled:opacity-40"
+            className="h-8 px-4 flex items-center gap-1.5 bg-purple-500 text-white font-black rounded-xl text-[9px] uppercase tracking-widest shadow-lg disabled:opacity-40 transition-all touch-manipulation active:scale-95"
           >
-            <ListVideo className="h-4 w-4 mr-2" /> Unificar em Série
-          </Button>
+            <ListVideo className="h-3.5 w-3.5" />
+            Unificar
+          </button>
         </div>
       )}
 
-      {/* Search */}
-      <div className="relative max-w-xl group w-full">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-accent transition-colors" />
-        <Input placeholder="Pesquisar trilhas..." className="pl-12 h-14 bg-white border-none shadow-xl rounded-2xl italic focus-visible:ring-accent" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+      {/* ── Search ── */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Pesquisar trilhas..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full h-11 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+        />
       </div>
 
-      {/* Dialog Criar Série */}
-      <Dialog open={isMergeDialogOpen} onOpenChange={(open) => {
-        setIsMergeDialogOpen(open);
-        if (!open) setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
-      }}>
-        <DialogContent className="rounded-[2rem] p-6 bg-white max-w-md border-none shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black italic text-primary flex items-center gap-2">
-              <ListVideo className="h-5 w-5 text-accent" /> Criar Série
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground font-medium">
-              As <strong>{selectedCount} aulas</strong> selecionadas vão se tornar capítulos desta série. As aulas originais serão removidas.
-            </p>
-            <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase opacity-40">Nome da Série</Label>
-              <Input
-                placeholder="Ex: Matemática — Funções Completo"
-                className="h-11 rounded-xl bg-muted/30 border-none font-bold"
-                value={serieName}
-                onChange={(e) => setSerieName(e.target.value)}
-                disabled={isMerging}
-                autoFocus
-                onKeyDown={(e) => { if (e.key === 'Enter') handleMergeTrails(); }}
-              />
-            </div>
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
-              <p className="text-xs font-bold text-amber-700">Aulas que serão unificadas:</p>
-              <ul className="mt-1 space-y-0.5">
-                {Array.from(selectedIds).map(id => {
-                  const t = trails.find(x => x.id === id);
-                  return <li key={id} className="text-xs text-amber-800 font-medium">• {t?.title}</li>;
-                })}
-              </ul>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsMergeDialogOpen(false)} className="flex-1 h-11 rounded-xl font-black">
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleMergeTrails}
-              disabled={isMerging || !serieName.trim()}
-              className="flex-1 h-11 rounded-xl bg-primary text-white font-black shadow-xl"
-            >
-              {isMerging ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <ListVideo className="h-4 w-4 mr-2" />}
-              {isMerging ? "Criando..." : "Criar Série"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Grid de trilhas */}
+      {/* ── Trail grid ── */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-accent" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando...</p>
+        <div className="py-20 flex flex-col items-center gap-3">
+          <Sparkles className="h-7 w-7 text-orange-400 animate-pulse" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/55">Sincronizando...</p>
+        </div>
+      ) : filteredTrails.length === 0 ? (
+        <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+          <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
+          <p className="font-black italic text-xs text-white/55 uppercase tracking-widest">Nenhuma trilha encontrada</p>
+          <p className="text-[10px] text-white/65 mt-1">Crie uma nova aula ou ajuste a pesquisa</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filteredTrails.map((trail) => {
-            const isActive = trail.status === 'active' || trail.status === 'published';
-            const isSerie = trail.trail_type === 'serie';
+            const isActive = trail.status === "active" || trail.status === "published";
+            const isSerie = trail.trail_type === "serie";
             const isSelected = selectedIds.has(trail.id);
 
             return (
-              <Card
+              <div
                 key={trail.id}
                 onClick={() => mergeMode && toggleSelect(trail.id)}
-                className={`border-none shadow-xl overflow-hidden group bg-white rounded-[2rem] flex flex-col transition-all duration-300
-                  ${mergeMode ? 'cursor-pointer hover:shadow-2xl' : 'hover:shadow-2xl'}
-                  ${isSelected ? 'ring-4 ring-primary shadow-primary/20' : ''}
-                `}
+                className={`group relative bg-white/3 border rounded-[1.5rem] overflow-hidden flex flex-col transition-all duration-200 ${
+                  mergeMode ? "cursor-pointer" : ""
+                } ${isSelected ? "border-purple-500/50 bg-purple-500/5" : "border-white/6 hover:border-white/10"}`}
               >
-                <div className="relative aspect-video bg-muted overflow-hidden">
+                {/* Cover */}
+                <div className="relative aspect-video overflow-hidden bg-black/30">
                   <img
-                    src={trail.image_url || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop`}
+                    src={trail.image_url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop"}
                     alt={trail.title}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop';
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop";
                     }}
                   />
-                  {/* Overlay seleção */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                  {/* Merge selection overlay */}
                   {mergeMode && (
-                    <div className={`absolute inset-0 transition-all ${isSelected ? 'bg-primary/30' : 'bg-black/10'}`}>
-                      <div className="absolute top-4 right-4">
-                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shadow-lg
-                          ${isSelected ? 'bg-primary border-primary' : 'bg-white/80 border-white'}`}>
-                          {isSelected && <span className="text-white text-xs font-black">✓</span>}
+                    <div className={`absolute inset-0 transition-all ${isSelected ? "bg-purple-500/25" : "bg-black/10"}`}>
+                      <div className="absolute top-3 right-3">
+                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shadow-lg transition-all ${isSelected ? "bg-purple-500 border-purple-500" : "bg-black/40 border-white/60"}`}>
+                          {isSelected && <span className="text-white text-[10px] font-black">✓</span>}
                         </div>
                       </div>
                     </div>
                   )}
-                  {/* Badges status + tipo */}
-                  <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
-                    <Badge className={`${isActive ? 'bg-green-600' : 'bg-orange-500'} text-white border-none px-3 py-1 font-black text-[10px] uppercase shadow-lg flex items-center gap-1.5`}>
-                      {isActive ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                      {isActive ? 'PÚBLICA' : 'RASCUNHO'}
-                    </Badge>
-                    <Badge className={`${isSerie ? 'bg-purple-600' : 'bg-blue-500'} text-white border-none px-3 py-1 font-black text-[10px] uppercase shadow-lg flex items-center gap-1.5`}>
-                      {isSerie ? <ListVideo className="h-3 w-3" /> : <Film className="h-3 w-3" />}
-                      {isSerie ? 'SÉRIE' : 'AULA'}
-                    </Badge>
+
+                  {/* Status + type badges */}
+                  <div className="absolute top-3 left-3 flex gap-1.5">
+                    <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-1 rounded-full flex items-center gap-1 border ${isActive ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30"}`}>
+                      {isActive ? <Globe className="h-2.5 w-2.5" /> : <Lock className="h-2.5 w-2.5" />}
+                      {isActive ? "Pública" : "Rascunho"}
+                    </span>
+                    <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-1 rounded-full flex items-center gap-1 border ${isSerie ? "bg-purple-500/20 text-purple-400 border-purple-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"}`}>
+                      {isSerie ? <ListVideo className="h-2.5 w-2.5" /> : <Film className="h-2.5 w-2.5" />}
+                      {isSerie ? "Série" : "Aula"}
+                    </span>
                   </div>
                 </div>
 
-                <CardHeader className="p-6 md:p-8 pb-4">
-                  <span className="text-[10px] font-black text-accent uppercase tracking-[0.2em]">{trail.category || "Geral"}</span>
-                  <CardTitle className="text-xl font-black italic truncate mt-2 group-hover:text-accent transition-colors">{trail.title}</CardTitle>
-                </CardHeader>
+                {/* Info */}
+                <div className="p-4 flex-1 flex flex-col">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400/85 mb-0.5">{trail.category || "Geral"}</p>
+                  <h3 className="font-black italic text-white text-sm leading-snug flex-1">{trail.title}</h3>
 
-                <CardFooter className="p-6 md:p-8 pt-4 border-t border-muted/10 mt-auto flex justify-between items-center">
                   {!mergeMode && (
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-accent hover:bg-accent/10" asChild title="Ver como aluno">
-                        <Link href={`/dashboard/classroom/${trail.id}`}>
-                          <Eye className="h-5 w-5" />
-                        </Link>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteTrail(trail.id)} className="h-10 w-10 rounded-full text-red-500 hover:bg-red-50" title="Excluir">
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
+                      <Link
+                        href={`/dashboard/teacher/trails/${trail.id}`}
+                        className="flex-1 h-9 flex items-center justify-center gap-1.5 bg-orange-500/15 border border-orange-500/25 text-orange-400 rounded-xl text-[9px] font-black uppercase tracking-wider hover:bg-orange-500/20 transition-all touch-manipulation active:scale-95"
+                      >
+                        <LayoutDashboard className="h-3.5 w-3.5" />
+                        Gerenciar
+                      </Link>
+                      <Link
+                        href={`/dashboard/classroom/${trail.id}`}
+                        className="h-9 w-9 flex items-center justify-center bg-white/5 border border-white/8 text-white/70 rounded-xl hover:text-white hover:bg-white/8 transition-all touch-manipulation active:scale-95"
+                        title="Ver como aluno"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteTrail(trail.id)}
+                        className="h-9 w-9 flex items-center justify-center bg-white/3 border border-white/6 text-white/55 rounded-xl hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all touch-manipulation active:scale-95"
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   )}
-                  {mergeMode ? (
-                    <p className="text-xs text-muted-foreground font-bold w-full text-center">
-                      {isSelected ? 'Selecionada ✓' : 'Clique para selecionar'}
+
+                  {mergeMode && (
+                    <p className="text-[10px] font-black text-purple-400/80 uppercase tracking-widest mt-3 pt-3 border-t border-white/5 text-center">
+                      {isSelected ? "Selecionada ✓" : "Toque para selecionar"}
                     </p>
-                  ) : (
-                    <Button variant="ghost" className="text-accent font-black text-[10px] uppercase group/btn" asChild>
-                      <Link href={`/dashboard/teacher/trails/${trail.id}`}>
-                        Gerenciar <LayoutDashboard className="h-4 w-4 ml-2 group-hover/btn:rotate-12 transition-transform" />
-                      </Link>
-                    </Button>
                   )}
-                </CardFooter>
-              </Card>
+                </div>
+              </div>
             );
           })}
-
-          {filteredTrails.length === 0 && (
-            <div className="col-span-full py-20 text-center border-4 border-dashed border-muted/20 rounded-[3rem] bg-muted/5">
-              <Database className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-              <p className="font-black text-primary italic text-xl">Nenhuma trilha encontrada</p>
-              <p className="text-muted-foreground font-medium mt-2">Crie uma nova aula ou ajuste a pesquisa.</p>
-            </div>
-          )}
         </div>
       )}
+
+      {/* ── Create Dialog ── */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        setIsCreateDialogOpen(open);
+        if (!open) setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
+      }}>
+        <DialogContent className="rounded-[1.5rem] bg-[#111113] border border-white/10 shadow-2xl w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto p-0">
+          <DialogHeader className="p-5 pb-0">
+            <DialogTitle className="text-lg font-black italic text-white flex items-center gap-2">
+              <Plus className="h-4 w-4 text-orange-400" />
+              Nova Aula / Trilha
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-5 space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Título *</Label>
+              <input
+                type="text"
+                placeholder="Ex: Funções do 2º Grau"
+                value={newTrail.title}
+                onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })}
+                disabled={isSubmitting}
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Categoria</Label>
+                <Select value={newTrail.category} onValueChange={(v) => setNewTrail({ ...newTrail, category: v })} disabled={isSubmitting}>
+                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f] max-h-60">
+                    {EDUCATIONAL_CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c} className="font-bold text-white/70 text-xs">{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Público-Alvo</Label>
+                <Select value={newTrail.target_audience} onValueChange={(v) => setNewTrail({ ...newTrail, target_audience: v })} disabled={isSubmitting}>
+                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                    <SelectItem value="all" className="font-bold text-white/70 text-xs">Todos</SelectItem>
+                    <SelectItem value="etec" className="font-bold text-white/70 text-xs">Apenas ETEC</SelectItem>
+                    <SelectItem value="enem" className="font-bold text-white/70 text-xs">Apenas ENEM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Capa (arquivo ou URL)</Label>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                  disabled={isSubmitting}
+                  className="w-full h-11 rounded-xl bg-white/5 border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-white/70 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-white"
+                />
+                {!coverFile && (
+                  <input
+                    type="text"
+                    placeholder="Ou URL: https://..."
+                    value={newTrail.image_url}
+                    onChange={(e) => setNewTrail({ ...newTrail, image_url: e.target.value })}
+                    disabled={isSubmitting}
+                    className="w-full h-10 bg-white/5 border border-white/8 rounded-xl px-4 text-xs font-medium text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
+                  />
+                )}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Descrição</Label>
+              <Textarea
+                placeholder="O que o aluno aprenderá?"
+                value={newTrail.description}
+                onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })}
+                disabled={isSubmitting}
+                className="rounded-xl min-h-[70px] bg-white/5 border-white/8 text-white placeholder:text-white/55 text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
+              />
+            </div>
+          </div>
+          <DialogFooter className="p-5 pt-0">
+            <button
+              onClick={handleCreateTrail}
+              disabled={isSubmitting || !newTrail.title}
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2 transition-all touch-manipulation active:scale-[0.99]"
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {isSubmitting ? "Criando..." : "Criar Aula"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Merge Dialog ── */}
+      <Dialog open={isMergeDialogOpen} onOpenChange={(open) => {
+        setIsMergeDialogOpen(open);
+        if (!open) setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
+      }}>
+        <DialogContent className="rounded-[1.5rem] bg-[#111113] border border-white/10 shadow-2xl max-w-md p-0">
+          <DialogHeader className="p-5 pb-0">
+            <DialogTitle className="text-lg font-black italic text-white flex items-center gap-2">
+              <ListVideo className="h-4 w-4 text-purple-400" />
+              Criar Série
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-5 space-y-4">
+            <p className="text-xs font-medium text-white/70">
+              As <strong className="text-white">{selectedCount} aulas</strong> selecionadas virarão capítulos desta série. As aulas originais serão removidas.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Nome da Série</Label>
+              <input
+                type="text"
+                placeholder="Ex: Matemática — Funções Completo"
+                value={serieName}
+                onChange={(e) => setSerieName(e.target.value)}
+                disabled={isMerging}
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter") handleMergeTrails(); }}
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-purple-500/40 transition-all disabled:opacity-50"
+              />
+            </div>
+            <div className="bg-purple-500/8 border border-purple-500/20 rounded-xl p-3">
+              <p className="text-[10px] font-black text-purple-400 uppercase tracking-wider mb-1.5">Aulas que serão unificadas:</p>
+              <ul className="space-y-0.5">
+                {Array.from(selectedIds).map((id) => {
+                  const t = trails.find((x) => x.id === id);
+                  return <li key={id} className="text-xs text-white/75 font-medium">• {t?.title}</li>;
+                })}
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="p-5 pt-0 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setIsMergeDialogOpen(false)}
+              className="h-11 flex items-center justify-center bg-white/5 border border-white/8 text-white/70 font-black rounded-xl text-xs uppercase tracking-widest hover:bg-white/8 transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleMergeTrails}
+              disabled={isMerging || !serieName.trim()}
+              className="h-11 flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg disabled:opacity-40 transition-all"
+            >
+              {isMerging ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListVideo className="h-4 w-4" />}
+              {isMerging ? "Criando..." : "Criar Série"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

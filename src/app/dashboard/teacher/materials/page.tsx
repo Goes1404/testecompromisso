@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,7 @@ function getTypeBadgeColor(type: string) {
     video: "bg-blue-500/15 text-blue-400 border-blue-500/25",
     link: "bg-purple-500/15 text-purple-400 border-purple-500/25",
     imagem: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
-    outro: "bg-white/5 text-white/40 border-white/8",
+    outro: "bg-white/5 text-white/70 border-white/8",
   };
   return map[type] ?? map.outro;
 }
@@ -224,7 +224,7 @@ export default function TeacherMaterialsPage() {
               <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
                 Materiais de Aula
               </h1>
-              <p className="text-white/40 text-xs font-semibold mt-1">
+              <p className="text-white/70 text-xs font-semibold mt-1">
                 PDFs, vídeos e links para alunos
               </p>
             </div>
@@ -265,7 +265,7 @@ export default function TeacherMaterialsPage() {
           <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <PlusCircle className="h-4 w-4 text-orange-400/85" />
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
                 Publicar Material
               </p>
             </div>
@@ -366,7 +366,7 @@ export default function TeacherMaterialsPage() {
                   className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
                     useUpload
                       ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "bg-white/5 border border-white/8 text-white/40"
+                      : "bg-white/5 border border-white/8 text-white/70"
                   }`}
                 >
                   Upload
@@ -376,7 +376,7 @@ export default function TeacherMaterialsPage() {
                   className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
                     !useUpload
                       ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "bg-white/5 border border-white/8 text-white/40"
+                      : "bg-white/5 border border-white/8 text-white/70"
                   }`}
                 >
                   URL / Link
@@ -494,16 +494,16 @@ export default function TeacherMaterialsPage() {
                         {FILE_TYPES.find((t) => t.value === m.file_type)?.label ?? m.file_type}
                       </Badge>
                       {m.subject && (
-                        <Badge className="text-[8px] font-black border-none bg-white/5 text-white/40 px-2 h-4">
+                        <Badge className="text-[8px] font-black border-none bg-white/5 text-white/70 px-2 h-4">
                           {m.subject}
                         </Badge>
                       )}
-                      <Badge className="text-[8px] font-black border-none bg-white/5 text-white/40 px-2 h-4">
+                      <Badge className="text-[8px] font-black border-none bg-white/5 text-white/70 px-2 h-4">
                         {TARGET_GROUPS.find((t) => t.value === m.target_group)?.label ?? "Todos"}
                       </Badge>
                     </div>
                     {m.description && (
-                      <p className="text-[11px] text-white/40 font-medium italic mt-1.5 truncate leading-tight">
+                      <p className="text-[11px] text-white/70 font-medium italic mt-1.5 truncate leading-tight">
                         {m.description}
                       </p>
                     )}

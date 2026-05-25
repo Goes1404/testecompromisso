@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
@@ -53,7 +53,7 @@ function urgencyTone(days: number) {
   if (days === 1) return { label: "Amanhã", color: "text-orange-400", bg: "bg-orange-500/15", emoji: "→" };
   if (days <= 7) return { label: `${days}d`, color: "text-amber-400", bg: "bg-amber-500/15", emoji: "→" };
   if (days <= 30) return { label: `${days}d`, color: "text-yellow-400", bg: "bg-yellow-500/10", emoji: "→" };
-  return { label: `${days}d`, color: "text-white/40", bg: "bg-white/5", emoji: "→" };
+  return { label: `${days}d`, color: "text-white/65", bg: "bg-white/5", emoji: "→" };
 }
 
 export default function StudentCalendarPage() {
@@ -149,7 +149,7 @@ export default function StudentCalendarPage() {
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Sua jornada
           </h1>
-          <p className="text-white/40 text-xs font-semibold mt-1">
+          <p className="text-white/65 text-xs font-semibold mt-1">
             Vestibulares, prazos e marcos importantes
           </p>
 
@@ -164,7 +164,7 @@ export default function StudentCalendarPage() {
                   <span className="text-[5rem] sm:text-[6rem] font-black italic leading-[0.85] tracking-tighter bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">
                     {nextDays}
                   </span>
-                  <span className="text-xl font-black italic tracking-tighter text-white/40">
+                  <span className="text-xl font-black italic tracking-tighter text-white/65">
                     {nextDays === 1 ? "dia" : "dias"}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export default function StudentCalendarPage() {
                 <p className="text-sm font-black italic text-white leading-snug line-clamp-2">
                   {nextEvent.title}
                 </p>
-                <p className="text-[10px] font-bold text-white/40 mt-1 uppercase tracking-wider">
+                <p className="text-[10px] font-bold text-white/65 mt-1 uppercase tracking-wider">
                   {new Date(nextEvent.event_date + "T12:00:00").toLocaleDateString("pt-BR", {
                     weekday: "long",
                     day: "2-digit",
@@ -237,7 +237,7 @@ export default function StudentCalendarPage() {
           className={`h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all touch-manipulation active:scale-95 flex items-center justify-center gap-1.5 ${
             view === "timeline"
               ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-              : "bg-white/5 border border-white/8 text-white/40"
+              : "bg-white/5 border border-white/8 text-white/65"
           }`}
         >
           <ListIcon className="h-3.5 w-3.5" />
@@ -248,7 +248,7 @@ export default function StudentCalendarPage() {
           className={`h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all touch-manipulation active:scale-95 flex items-center justify-center gap-1.5 ${
             view === "grid"
               ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-              : "bg-white/5 border border-white/8 text-white/40"
+              : "bg-white/5 border border-white/8 text-white/65"
           }`}
         >
           <Grid3x3 className="h-3.5 w-3.5" />
@@ -343,13 +343,13 @@ export default function StudentCalendarPage() {
                                 </span>
                               </div>
                               {ev.description && (
-                                <p className="text-[11px] text-white/40 font-medium italic mt-1.5 line-clamp-2 leading-tight">
+                                <p className="text-[11px] text-white/65 font-medium italic mt-1.5 line-clamp-2 leading-tight">
                                   {ev.description}
                                 </p>
                               )}
                             </div>
 
-                            <ChevronRight className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 transition-colors shrink-0" />
+                            <ChevronRight className="h-3.5 w-3.5 text-white/15 group-hover:text-white/65 transition-colors shrink-0" />
                           </div>
                         </button>
                       );
@@ -397,7 +397,7 @@ export default function StudentCalendarPage() {
           {/* Events on selected date */}
           {eventsOnSelected.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65 px-1">
                 {selectedDate?.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
               </p>
               {eventsOnSelected.map((ev) => {

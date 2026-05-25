@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -302,7 +302,7 @@ export default function StudentMaterialsPage() {
         {/* Barra de progresso linear no rodapé do hero */}
         {!loading && materials.length > 0 && (
           <div className="relative z-10 mt-6 space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/40">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/65">
               <span className="flex items-center gap-1.5"><TrendingUp className="h-3 w-3" /> Progresso Geral</span>
               <span>{totalStudied} / {materials.length} materiais</span>
             </div>

@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -290,7 +290,7 @@ export default function StudentAttendancePage() {
                 className={`h-14 w-12 sm:w-14 rounded-xl border-2 text-center text-2xl font-black italic font-mono uppercase outline-none transition-all touch-manipulation ${
                   filled
                     ? "bg-orange-500/15 border-orange-500/50 text-orange-300 shadow-lg shadow-orange-500/20"
-                    : "bg-white/3 border-white/10 text-white/40 focus:border-orange-500/40 focus:bg-white/5"
+                    : "bg-white/3 border-white/10 text-white/65 focus:border-orange-500/40 focus:bg-white/5"
                 }`}
               />
             );
@@ -311,7 +311,7 @@ export default function StudentAttendancePage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
           <CalendarDays className="h-4 w-4 text-orange-400/80" />
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">Histórico de Aulas</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">Histórico de Aulas</p>
         </div>
 
         {loading ? (

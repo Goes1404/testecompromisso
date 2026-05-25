@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -198,7 +198,7 @@ export default function TeacherHelpPage() {
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Central de Ajuda
           </h1>
-          <p className="text-white/40 text-xs font-semibold mt-1">
+          <p className="text-white/70 text-xs font-semibold mt-1">
             Tutoriais interativos passo a passo
           </p>
         </div>
@@ -286,7 +286,7 @@ export default function TeacherHelpPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-black text-white italic text-sm leading-snug">{faq.question}</p>
-                    <Badge className="mt-1.5 bg-white/5 text-white/40 border border-white/8 font-black text-[8px] uppercase px-1.5 h-4">
+                    <Badge className="mt-1.5 bg-white/5 text-white/70 border border-white/8 font-black text-[8px] uppercase px-1.5 h-4">
                       {faq.category}
                     </Badge>
                   </div>

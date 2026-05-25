@@ -243,8 +243,8 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
               <Badge className="bg-orange-500/15 text-orange-400 border border-orange-500/25 font-black text-[8px] uppercase tracking-widest px-1.5 h-4">
                 Simulado Digital
               </Badge>
-              <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">·</span>
-              <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">
+              <span className="text-[8px] font-black text-white/60 uppercase tracking-widest">·</span>
+              <span className="text-[8px] font-black text-white/65 uppercase tracking-widest">
                 {exam?.exam_type}
               </span>
             </div>
@@ -289,14 +289,14 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
             </div>
             <div className="text-left">
               <p className="text-xs font-black text-white italic leading-none">Gabarito</p>
-              <p className="text-[8px] font-bold text-white/30 uppercase tracking-widest mt-0.5">
+              <p className="text-[8px] font-bold text-white/60 uppercase tracking-widest mt-0.5">
                 {answeredCount} de {questions.length} respondidas
               </p>
             </div>
           </div>
           <div className="md:hidden">
             <ChevronUp
-              className={`h-4 w-4 text-white/40 transition-transform duration-300 ${
+              className={`h-4 w-4 text-white/65 transition-transform duration-300 ${
                 isTrayExpanded ? "rotate-180" : ""
               }`}
             />
@@ -322,9 +322,9 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                   <Award className="h-10 w-10 text-emerald-400 mx-auto mb-2" />
                   <p className="text-4xl font-black italic text-white leading-none tracking-tighter">
                     {result.score}
-                    <span className="text-xl text-white/40">/{result.total}</span>
+                    <span className="text-xl text-white/65">/{result.total}</span>
                   </p>
-                  <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mt-2">
+                  <p className="text-[8px] font-black uppercase tracking-widest text-white/65 mt-2">
                     Questões Acertadas
                   </p>
                   <div className="mt-3 pt-3 border-t border-white/10">
@@ -340,7 +340,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
 
               {exam?.exam_type.toLowerCase() === "enem" && (
                 <div className="bg-white/3 border border-orange-500/20 rounded-2xl p-3 text-center">
-                  <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-1">
+                  <p className="text-[8px] font-black uppercase tracking-widest text-white/65 mb-1">
                     Simulação TRI INEP
                   </p>
                   <p className="text-lg font-black text-orange-400 italic">{result.triRange}</p>
@@ -349,7 +349,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
 
               {/* Detailed gabarito */}
               <div className="space-y-1.5">
-                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/40 px-1">
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/65 px-1">
                   Gabarito completo
                 </p>
                 {questions.map((q, idx) => {
@@ -366,7 +366,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className="font-black text-[10px] text-white/40 w-5">{idx + 1}.</span>
+                        <span className="font-black text-[10px] text-white/65 w-5">{idx + 1}.</span>
                         {isRight ? (
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                         ) : (
@@ -398,12 +398,12 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
               <div className="p-4 pb-3 border-b border-white/5">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/40">
+                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/65">
                       Questão
                     </p>
                     <p className="text-3xl font-black italic text-white leading-none tracking-tighter mt-0.5">
                       {String(currentIndex + 1).padStart(2, "0")}
-                      <span className="text-base text-white/30 font-bold ml-1">
+                      <span className="text-base text-white/60 font-bold ml-1">
                         /{String(questions.length).padStart(2, "0")}
                       </span>
                     </p>
@@ -434,7 +434,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                 <div className="flex-1 flex flex-col">
                   <div className="p-5 flex-1 flex flex-col justify-center">
                     {currentQ.question.subjects?.name && (
-                      <Badge className="bg-white/5 text-white/40 border border-white/10 font-black text-[8px] uppercase tracking-widest px-2 h-5 self-start mb-3">
+                      <Badge className="bg-white/5 text-white/65 border border-white/10 font-black text-[8px] uppercase tracking-widest px-2 h-5 self-start mb-3">
                         {currentQ.question.subjects.name}
                       </Badge>
                     )}
@@ -469,7 +469,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                           ✓ Resposta marcada: <span className="text-orange-400">{currentAnswer}</span>
                         </p>
                       ) : (
-                        <p className="text-[10px] font-bold text-white/25 uppercase tracking-widest">
+                        <p className="text-[10px] font-bold text-white/55 uppercase tracking-widest">
                           Nenhuma resposta marcada
                         </p>
                       )}
@@ -480,16 +480,16 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                       {(["A", "B", "C", "D", "E"] as const).map((k) => (
                         <kbd
                           key={k}
-                          className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/40"
+                          className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65"
                         >
                           {k}
                         </kbd>
                       ))}
-                      <span className="text-[9px] text-white/30">·</span>
-                      <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/40">
+                      <span className="text-[9px] text-white/60">·</span>
+                      <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65">
                         ←
                       </kbd>
-                      <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/40">
+                      <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65">
                         →
                       </kbd>
                     </div>
@@ -522,7 +522,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
               {/* ── QUESTION GRID (jump-to) ──────────────────────────────── */}
               {showGrid && (
                 <div className="flex-1 overflow-y-auto p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 mb-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65 mb-3">
                     Mapa de questões
                   </p>
                   <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5">
@@ -541,7 +541,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                               ? "bg-orange-500 text-white ring-2 ring-orange-300 ring-offset-2 ring-offset-[#0d0d0f]"
                               : answered
                               ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                              : "bg-white/5 border border-white/10 text-white/40 hover:bg-white/10"
+                              : "bg-white/5 border border-white/10 text-white/65 hover:bg-white/10"
                           }`}
                         >
                           {idx + 1}
@@ -554,15 +554,15 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                   <div className="flex items-center gap-3 mt-4 pt-3 border-t border-white/5 flex-wrap">
                     <div className="flex items-center gap-1.5">
                       <div className="h-3 w-3 rounded bg-orange-500" />
-                      <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Atual</span>
+                      <span className="text-[9px] font-bold text-white/65 uppercase tracking-wider">Atual</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="h-3 w-3 rounded bg-emerald-500/20 border border-emerald-500/30" />
-                      <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Respondida</span>
+                      <span className="text-[9px] font-bold text-white/65 uppercase tracking-wider">Respondida</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="h-3 w-3 rounded bg-white/5 border border-white/10" />
-                      <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Em branco</span>
+                      <span className="text-[9px] font-bold text-white/65 uppercase tracking-wider">Em branco</span>
                     </div>
                   </div>
                 </div>

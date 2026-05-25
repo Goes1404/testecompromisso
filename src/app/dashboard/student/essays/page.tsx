@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ const EssayChart = dynamic(
                       <p className="font-bold text-white/60 text-[10px]">{label}</p>
                       <p className="font-black text-orange-400 text-lg">{payload[0].value} pts</p>
                       {payload[0].payload.theme && (
-                        <p className="text-[9px] font-bold text-white/40 leading-tight italic line-clamp-3 mt-1">
+                        <p className="text-[9px] font-bold text-white/65 leading-tight italic line-clamp-3 mt-1">
                           "{payload[0].payload.theme}"
                         </p>
                       )}
@@ -289,7 +289,7 @@ export default function StudentEssayPage() {
               <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
                 Lab de Redação
               </h1>
-              <p className="text-white/40 text-xs font-semibold mt-1">
+              <p className="text-white/65 text-xs font-semibold mt-1">
                 Auditoria por IA · critérios INEP
               </p>
             </div>
@@ -312,7 +312,7 @@ export default function StudentEssayPage() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-sm font-black text-white leading-none italic">{charCount}</span>
-                <span className="text-[7px] font-bold text-white/40 uppercase tracking-wider mt-0.5">/ 1500</span>
+                <span className="text-[7px] font-bold text-white/65 uppercase tracking-wider mt-0.5">/ 1500</span>
               </div>
             </div>
           </div>
@@ -357,7 +357,7 @@ export default function StudentEssayPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <PenTool className="h-3 w-3 text-orange-400/85" />
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/65">
                   Sua proposta
                 </label>
               </div>
@@ -424,7 +424,7 @@ export default function StudentEssayPage() {
         <div id="audit-results" className="space-y-5 animate-in slide-in-from-bottom-4 duration-700">
           <div className="flex items-center gap-2 px-1">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Diagnóstico</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/65">Diagnóstico</p>
             <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
           </div>
 
@@ -591,7 +591,7 @@ export default function StudentEssayPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <BookOpen className="h-4 w-4 text-orange-400/80" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">
               Textos Motivadores
             </p>
           </div>
@@ -622,7 +622,7 @@ export default function StudentEssayPage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
           <TrendingUp className="h-4 w-4 text-orange-400/80" />
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">
             Evolução
           </p>
         </div>

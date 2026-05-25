@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
 import { Input } from "@/components/ui/input";
@@ -310,7 +310,7 @@ function BookCard({ item }: { item: any }) {
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 gap-2">
-            <BookOpen className="h-10 w-10 text-white/30" />
+            <BookOpen className="h-10 w-10 text-white/60" />
             <p className="text-white/80 font-black italic text-center text-xs leading-tight line-clamp-4">{item.title}</p>
           </div>
         )}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 // As bibliotecas serão carregadas via CDN e acessadas pelo window
@@ -459,7 +459,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
 
         <div className="flex items-center gap-2 shrink-0 pr-4">
           <Button variant="ghost" size="icon" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.25))} className="text-white hover:bg-white/10"><ZoomOut className="h-5 w-5" /></Button>
-          <span className="text-[10px] font-black text-white/40 w-10 text-center">{Math.round(zoom * 100)}%</span>
+          <span className="text-[10px] font-black text-white/65 w-10 text-center">{Math.round(zoom * 100)}%</span>
           <Button variant="ghost" size="icon" onClick={() => setZoom(prev => Math.min(3, prev + 0.25))} className="text-white hover:bg-white/10"><ZoomIn className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" onClick={() => setZoom(1.0)} className="text-white hover:bg-white/10" title="Reset Zoom"><Maximize2 className="h-4 w-4" /></Button>
           <div className="w-px h-8 bg-white/10 mx-1" />
@@ -518,7 +518,7 @@ export function InteractiveWorkbook({ materialId, pdfUrl: initialPdfUrl, userNam
             onChange={(e) => setInputPage(e.target.value)}
             className="w-14 h-8 bg-transparent border-none text-center font-black text-white p-0 focus-visible:ring-0 text-xl italic"
           />
-          <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">DE {numPages}</span>
+          <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">DE {numPages}</span>
         </form>
 
         <div className="flex items-center gap-2">

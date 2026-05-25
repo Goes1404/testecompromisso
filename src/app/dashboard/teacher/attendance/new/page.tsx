@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect } from "react";
@@ -153,7 +153,7 @@ export default function NewAttendanceSessionPage() {
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Criar Chamada
           </h1>
-          <p className="text-white/40 text-xs font-semibold mt-1">
+          <p className="text-white/65 text-xs font-semibold mt-1">
             Vincule a uma turma para gerar o token
           </p>
         </div>
@@ -167,7 +167,7 @@ export default function NewAttendanceSessionPage() {
         <div className="p-4 border-b border-white/5 bg-white/3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-orange-400/85" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">
               Detalhes da Aula
             </p>
           </div>
