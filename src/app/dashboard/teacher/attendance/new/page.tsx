@@ -128,7 +128,7 @@ export default function NewAttendanceSessionPage() {
       {/* ── Back link ── */}
       <Link
         href="/dashboard/teacher/attendance"
-        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white/70 transition-colors"
+        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/55 hover:text-white/70 transition-colors"
       >
         <ArrowLeft className="h-3 w-3" />
         Chamadas
@@ -146,7 +146,7 @@ export default function NewAttendanceSessionPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <ClipboardCheck className="h-3 w-3 text-orange-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
               Nova Sessão
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function NewAttendanceSessionPage() {
       >
         <div className="p-4 border-b border-white/5 bg-white/3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-orange-400/70" />
+            <Sparkles className="h-4 w-4 text-orange-400/85" />
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
               Detalhes da Aula
             </p>
@@ -176,7 +176,7 @@ export default function NewAttendanceSessionPage() {
         <div className="p-4 space-y-4">
           {/* Live link */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
               Vincular a uma Live (opcional)
             </Label>
             <Select onValueChange={handleLiveSelect} defaultValue="none">
@@ -196,7 +196,7 @@ export default function NewAttendanceSessionPage() {
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
               Título <span className="text-red-400">*</span>
             </Label>
             <input
@@ -205,14 +205,14 @@ export default function NewAttendanceSessionPage() {
               value={formData.title}
               onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               required
-              className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+              className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
             />
           </div>
 
           {/* Date + Time grid */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Data <span className="text-red-400">*</span>
               </Label>
               <input
@@ -224,7 +224,7 @@ export default function NewAttendanceSessionPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Horário
               </Label>
               <input
@@ -239,7 +239,7 @@ export default function NewAttendanceSessionPage() {
           {/* Subject + Type */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Matéria
               </Label>
               <input
@@ -247,11 +247,11 @@ export default function NewAttendanceSessionPage() {
                 placeholder="Matemática"
                 value={formData.subject}
                 onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
-                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Tipo
               </Label>
               <Select
@@ -273,7 +273,7 @@ export default function NewAttendanceSessionPage() {
 
           {/* Class */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
               Sala / Turma <span className="text-red-400">*</span>
             </Label>
             <Select
@@ -285,7 +285,7 @@ export default function NewAttendanceSessionPage() {
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
                 {classOptions.length === 0 ? (
-                  <SelectItem value="__none__" disabled className="font-bold text-white/30 text-xs">
+                  <SelectItem value="__none__" disabled className="font-bold text-white/55 text-xs">
                     Nenhuma turma cadastrada
                   </SelectItem>
                 ) : (
@@ -297,14 +297,14 @@ export default function NewAttendanceSessionPage() {
                 )}
               </SelectContent>
             </Select>
-            <p className="text-[10px] text-white/30 font-medium leading-snug px-1">
+            <p className="text-[10px] text-white/55 font-medium leading-snug px-1">
               Só alunos desta sala poderão usar o token.
             </p>
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
               Descrição (opcional)
             </Label>
             <Textarea
@@ -312,7 +312,7 @@ export default function NewAttendanceSessionPage() {
               value={formData.description}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
-              className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/25 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
+              className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/55 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
             />
           </div>
 

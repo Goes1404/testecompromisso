@@ -103,11 +103,11 @@ export default function ExemptionSimulatorPage() {
 
         <div className="p-4 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
               Renda mensal total da família
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm font-bold pointer-events-none">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/55 text-sm font-bold pointer-events-none">
                 R$
               </span>
               <input
@@ -116,16 +116,16 @@ export default function ExemptionSimulatorPage() {
                 placeholder="2100,50"
                 value={familyIncome}
                 onChange={(e) => setFamilyIncome(e.target.value)}
-                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl pl-10 pr-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-emerald-500/40 transition-all"
+                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl pl-10 pr-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-emerald-500/40 transition-all"
               />
             </div>
-            <p className="text-[9px] text-white/25 font-medium ml-1">
+            <p className="text-[9px] text-white/55 font-medium ml-1">
               Salário mínimo de referência: R$ 1.412,00
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
               Cursou todo o ensino médio em escola pública?
             </label>
             <Select value={schoolType} onValueChange={setSchoolType}>
@@ -140,7 +140,7 @@ export default function ExemptionSimulatorPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
               Família inscrita no CadÚnico?
             </label>
             <Select value={hasCadUnico} onValueChange={setHasCadUnico}>
@@ -221,8 +221,8 @@ export default function ExemptionSimulatorPage() {
                 {result.reason}
               </p>
               <div className="flex items-start gap-1.5 mt-3 pt-3 border-t border-white/5">
-                <AlertCircle className="h-3 w-3 text-white/30 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-white/30 font-medium leading-relaxed">
+                <AlertCircle className="h-3 w-3 text-white/55 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-white/55 font-medium leading-relaxed">
                   Este é um resultado preliminar. A confirmação final depende das regras de cada edital de vestibular.
                 </p>
               </div>

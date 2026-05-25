@@ -175,7 +175,7 @@ export default function TeacherStudentsPage() {
         />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70 mb-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85 mb-1">
               Gestão de Rede
             </p>
             <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
@@ -188,15 +188,15 @@ export default function TeacherStudentsPage() {
           <div className="flex gap-3">
             <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl px-4 py-2.5 min-w-[72px]">
               <span className="text-xl font-black text-white leading-none">{students.length}</span>
-              <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Total</span>
+              <span className="text-[9px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Total</span>
             </div>
             <div className="flex flex-col items-center bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-2.5 min-w-[72px]">
               <span className="text-xl font-black text-red-400 leading-none">{atRiskCount}</span>
-              <span className="text-[9px] font-bold text-red-400/60 uppercase tracking-wider mt-0.5">Em Risco</span>
+              <span className="text-[9px] font-bold text-red-400/80 uppercase tracking-wider mt-0.5">Em Risco</span>
             </div>
             <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-2.5 min-w-[72px]">
               <span className="text-xl font-black text-emerald-400 leading-none">{aidCount}</span>
-              <span className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider mt-0.5">Isenção</span>
+              <span className="text-[9px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5">Isenção</span>
             </div>
           </div>
         </div>
@@ -204,13 +204,13 @@ export default function TeacherStudentsPage() {
 
       {/* ── Search ── */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
         <input
           type="text"
           placeholder="Pesquisar por nome, e-mail ou polo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
+          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
         />
       </div>
 
@@ -272,14 +272,14 @@ export default function TeacherStudentsPage() {
       {loading ? (
         <div className="py-20 flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/30 animate-pulse">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/55 animate-pulse">
             Sincronizando...
           </p>
         </div>
       ) : filteredStudents.length === 0 ? (
         <div className="py-20 text-center border border-dashed border-white/10 rounded-[2rem]">
           <Users className="h-10 w-10 mx-auto mb-3 text-white/10" />
-          <p className="font-black italic text-white/20 uppercase tracking-widest text-sm">
+          <p className="font-black italic text-white/45 uppercase tracking-widest text-sm">
             Nenhum registro encontrado
           </p>
         </div>
@@ -314,7 +314,7 @@ export default function TeacherStudentsPage() {
                           <p className="font-black text-white text-sm italic truncate leading-tight">
                             {student.name || "Aluno"}
                           </p>
-                          <p className="text-[10px] text-white/35 font-medium truncate mt-0.5">
+                          <p className="text-[10px] text-white/60 font-medium truncate mt-0.5">
                             {student.email || "—"}
                           </p>
                         </div>
@@ -339,7 +339,7 @@ export default function TeacherStudentsPage() {
                           </span>
                         )}
                         {student.exam_target && (
-                          <span className="text-[9px] font-bold text-orange-400/70 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                          <span className="text-[9px] font-bold text-orange-400/85 bg-orange-500/10 px-2 py-0.5 rounded-full">
                             {student.exam_target}
                           </span>
                         )}
@@ -352,7 +352,7 @@ export default function TeacherStudentsPage() {
 
                       {/* Progress bar */}
                       <div className="mt-3 space-y-1">
-                        <div className="flex justify-between text-[9px] font-bold text-white/25 uppercase">
+                        <div className="flex justify-between text-[9px] font-bold text-white/55 uppercase">
                           <span>Progresso</span>
                           <span>{progress}%</span>
                         </div>
@@ -366,7 +366,7 @@ export default function TeacherStudentsPage() {
 
                       {/* Footer row */}
                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
-                        <div className="flex items-center gap-1.5 text-white/30">
+                        <div className="flex items-center gap-1.5 text-white/55">
                           <Clock className="h-3 w-3" />
                           <span className="text-[10px] font-black">
                             {formatTime(student.total_time_spent)}
@@ -389,21 +389,21 @@ export default function TeacherStudentsPage() {
                               setEditingStudent(student);
                               setEditCourse(student.course || "");
                             }}
-                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/25 hover:text-orange-400 hover:bg-orange-500/10 transition-all active:scale-90"
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/55 hover:text-orange-400 hover:bg-orange-500/10 transition-all active:scale-90"
                             title="Alterar Sala/Turma"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <Link
                             href={`/dashboard/chat/${student.id}`}
-                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/25 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all active:scale-90"
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/55 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all active:scale-90"
                             title="Chat"
                           >
                             <Send className="h-3.5 w-3.5" />
                           </Link>
                           <Link
                             href={`/dashboard/teacher/analytics?user=${student.id}`}
-                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/25 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-90"
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/55 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-90"
                             title="Analytics"
                           >
                             <ArrowUpRight className="h-3.5 w-3.5" />
@@ -420,7 +420,7 @@ export default function TeacherStudentsPage() {
           {displayCount < filteredStudents.length && (
             <button
               onClick={() => setDisplayCount((prev) => prev + 100)}
-              className="w-full h-12 rounded-2xl border border-dashed border-white/10 text-white/30 hover:text-white/60 hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+              className="w-full h-12 rounded-2xl border border-dashed border-white/10 text-white/55 hover:text-white/60 hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
             >
               Carregar mais (+{Math.min(100, filteredStudents.length - displayCount)})
             </button>
@@ -449,7 +449,7 @@ export default function TeacherStudentsPage() {
 
           <div className="p-8 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase text-white/30 tracking-widest ml-1">
+              <Label className="text-[10px] font-black uppercase text-white/55 tracking-widest ml-1">
                 Sala / Turma
               </Label>
               <Select value={editCourse} onValueChange={setEditCourse}>

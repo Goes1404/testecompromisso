@@ -110,7 +110,7 @@ export default function TeacherRankingsPage() {
       {/* ── Back link ── */}
       <Link
         href="/dashboard/teacher/home"
-        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white/70 transition-colors"
+        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/55 hover:text-white/70 transition-colors"
       >
         <ArrowLeft className="h-3 w-3" />
         Voltar ao Painel
@@ -173,14 +173,14 @@ export default function TeacherRankingsPage() {
       {loading ? (
         <div className="py-20 flex flex-col items-center gap-3">
           <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/30 animate-pulse">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/55 animate-pulse">
             Sincronizando posições...
           </p>
         </div>
       ) : activeRank.length === 0 ? (
         <div className="py-20 text-center border border-dashed border-white/10 rounded-[1.5rem]">
           <Trophy className="h-8 w-8 mx-auto mb-2 text-white/15" />
-          <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+          <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
             Aguardando dados de performance
           </p>
         </div>
@@ -257,14 +257,14 @@ export default function TeacherRankingsPage() {
                     <div className="flex-1 min-w-0">
                       <p className="font-black text-white italic text-sm truncate leading-none">{student.name}</p>
                       {student.institution && (
-                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-wider flex items-center gap-1 mt-1">
+                        <p className="text-[9px] font-bold text-white/55 uppercase tracking-wider flex items-center gap-1 mt-1">
                           <School className="h-2.5 w-2.5" />
                           {student.institution}
                         </p>
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[8px] font-black text-white/30 uppercase tracking-widest leading-none">Recorde</p>
+                      <p className="text-[8px] font-black text-white/55 uppercase tracking-widest leading-none">Recorde</p>
                       <p className="text-base font-black text-white italic mt-0.5">
                         {student.bestScore}
                         <span className="text-[9px] opacity-40 ml-1">pts</span>

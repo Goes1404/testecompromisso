@@ -48,7 +48,7 @@ function daysBetween(target: string) {
 }
 
 function urgencyTone(days: number) {
-  if (days < 0) return { label: "Passou", color: "text-white/25", bg: "bg-white/3", emoji: "✓" };
+  if (days < 0) return { label: "Passou", color: "text-white/55", bg: "bg-white/3", emoji: "✓" };
   if (days === 0) return { label: "Hoje", color: "text-red-400", bg: "bg-red-500/15", emoji: "•" };
   if (days === 1) return { label: "Amanhã", color: "text-orange-400", bg: "bg-orange-500/15", emoji: "→" };
   if (days <= 7) return { label: `${days}d`, color: "text-amber-400", bg: "bg-amber-500/15", emoji: "→" };
@@ -106,7 +106,7 @@ export default function StudentCalendarPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="h-9 w-9 animate-spin text-orange-400" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 animate-pulse">
+        <p className="text-[10px] font-black uppercase tracking-widest text-white/55 animate-pulse">
           Carregando calendário acadêmico...
         </p>
       </div>
@@ -142,7 +142,7 @@ export default function StudentCalendarPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <CalendarDays className="h-3 w-3 text-orange-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
               Calendário Acadêmico
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function StudentCalendarPage() {
           {nextEvent && nextDays !== null && nextMeta && (
             <div className="mt-6 flex items-end gap-5">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/30 leading-none mb-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/55 leading-none mb-1">
                   Próximo evento
                 </p>
                 <div className="flex items-baseline gap-1">
@@ -266,7 +266,7 @@ export default function StudentCalendarPage() {
           {groupedByMonth.length === 0 ? (
             <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
               <CalendarDays className="h-8 w-8 mx-auto mb-2 text-white/15" />
-              <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+              <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
                 Nenhum evento agendado
               </p>
             </div>
@@ -283,9 +283,9 @@ export default function StudentCalendarPage() {
                       <h2 className="text-3xl font-black italic tracking-tighter text-white leading-none">
                         {MONTHS_PT[monthIdx]}
                       </h2>
-                      <span className="text-base font-black italic text-white/30 tracking-tighter">{year}</span>
+                      <span className="text-base font-black italic text-white/55 tracking-tighter">{year}</span>
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-white/30 pb-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/55 pb-1">
                       {monthEvents.length} {monthEvents.length === 1 ? "evento" : "eventos"}
                     </span>
                   </div>
@@ -313,7 +313,7 @@ export default function StudentCalendarPage() {
                               <span className="text-3xl font-black italic leading-none tracking-tighter text-white">
                                 {String(dayNum).padStart(2, "0")}
                               </span>
-                              <span className="text-[8px] font-black uppercase tracking-widest text-white/30 mt-0.5">
+                              <span className="text-[8px] font-black uppercase tracking-widest text-white/55 mt-0.5">
                                 {weekday}
                               </span>
                             </div>
@@ -434,7 +434,7 @@ export default function StudentCalendarPage() {
 
           {eventsOnSelected.length === 0 && selectedDate && (
             <div className="py-10 text-center border border-dashed border-white/10 rounded-2xl">
-              <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+              <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
                 Nenhum evento neste dia
               </p>
             </div>

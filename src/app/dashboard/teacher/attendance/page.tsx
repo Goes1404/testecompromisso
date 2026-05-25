@@ -106,7 +106,7 @@ export default function TeacherAttendancePage() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <ClipboardCheck className="h-3 w-3 text-orange-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
               Staff · Chamadas
             </p>
           </div>
@@ -121,7 +121,7 @@ export default function TeacherAttendancePage() {
           <div className="grid grid-cols-3 gap-2 mt-5">
             <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
               <span className="text-lg font-black text-white leading-none">{sessions.length}</span>
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Sessões</span>
+              <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Sessões</span>
             </div>
             <div
               className={`flex flex-col items-center rounded-2xl py-2.5 border ${
@@ -139,11 +139,11 @@ export default function TeacherAttendancePage() {
               >
                 {avgPct}%
               </span>
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Média</span>
+              <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Média</span>
             </div>
             <div className="flex flex-col items-center bg-blue-500/10 border border-blue-500/20 rounded-2xl py-2.5">
               <span className="text-lg font-black text-blue-400 leading-none">{thisMonth.length}</span>
-              <span className="text-[8px] font-bold text-blue-400/60 uppercase tracking-wider mt-0.5">Mês</span>
+              <span className="text-[8px] font-bold text-blue-400/80 uppercase tracking-wider mt-0.5">Mês</span>
             </div>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function TeacherAttendancePage() {
       {/* ── Sessions list ── */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
-          <CalendarDays className="h-4 w-4 text-orange-400/60" />
+          <CalendarDays className="h-4 w-4 text-orange-400/80" />
           <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
             Histórico de Sessões
           </p>
@@ -173,10 +173,10 @@ export default function TeacherAttendancePage() {
         ) : sessions.length === 0 ? (
           <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
             <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-            <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+            <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
               Nenhuma sessão criada
             </p>
-            <p className="text-[10px] font-medium text-white/20 mt-1">
+            <p className="text-[10px] font-medium text-white/45 mt-1">
               Clique em "Nova Sessão" para começar
             </p>
           </div>
@@ -209,7 +209,7 @@ export default function TeacherAttendancePage() {
                       <span className="text-xl font-black italic leading-none text-white">
                         {String(dayNum).padStart(2, "0")}
                       </span>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-orange-400/70 mt-0.5">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-orange-400/85 mt-0.5">
                         {monthShort}
                       </span>
                     </div>

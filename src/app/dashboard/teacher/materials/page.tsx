@@ -217,7 +217,7 @@ export default function TeacherMaterialsPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <FolderOpen className="h-3 w-3 text-orange-400" />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
                   Acervo Pedagógico
                 </p>
               </div>
@@ -234,15 +234,15 @@ export default function TeacherMaterialsPage() {
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
               <span className="text-lg font-black text-white leading-none">{materials.length}</span>
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Total</span>
+              <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Total</span>
             </div>
             <div className="flex flex-col items-center bg-blue-500/10 border border-blue-500/20 rounded-2xl py-2.5">
               <span className="text-lg font-black text-blue-400 leading-none">{totalViews}</span>
-              <span className="text-[8px] font-bold text-blue-400/60 uppercase tracking-wider mt-0.5">Views</span>
+              <span className="text-[8px] font-bold text-blue-400/80 uppercase tracking-wider mt-0.5">Views</span>
             </div>
             <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 rounded-2xl py-2.5">
               <span className="text-lg font-black text-emerald-400 leading-none">{thisMonth}</span>
-              <span className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-wider mt-0.5">Mês</span>
+              <span className="text-[8px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5">Mês</span>
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ export default function TeacherMaterialsPage() {
         <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
           <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4 text-orange-400/70" />
+              <PlusCircle className="h-4 w-4 text-orange-400/85" />
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
                 Publicar Material
               </p>
@@ -276,14 +276,14 @@ export default function TeacherMaterialsPage() {
                 setFile(null);
                 setUrlInput("");
               }}
-              className="text-[10px] font-bold text-white/30 hover:text-white/60 uppercase tracking-wider"
+              className="text-[10px] font-bold text-white/55 hover:text-white/60 uppercase tracking-wider"
             >
               Fechar
             </button>
           </div>
           <div className="p-4 space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Título *
               </Label>
               <input
@@ -291,13 +291,13 @@ export default function TeacherMaterialsPage() {
                 placeholder="Ex: Slides — Funções do 2º Grau"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Matéria</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Matéria</Label>
                 <Select value={form.subject} onValueChange={(val) => setForm((f) => ({ ...f, subject: val }))}>
                   <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
                     <SelectValue placeholder="Selecione" />
@@ -311,7 +311,7 @@ export default function TeacherMaterialsPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Tipo</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Tipo</Label>
                 <Select value={form.file_type} onValueChange={(val) => setForm((f) => ({ ...f, file_type: val }))}>
                   <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
                     <SelectValue />
@@ -326,7 +326,7 @@ export default function TeacherMaterialsPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Público</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Público</Label>
                 <Select value={form.target_group} onValueChange={(val) => setForm((f) => ({ ...f, target_group: val }))}>
                   <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
                     <SelectValue />
@@ -341,7 +341,7 @@ export default function TeacherMaterialsPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Aula</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Aula</Label>
                 <Select value={form.session_id} onValueChange={(val) => setForm((f) => ({ ...f, session_id: val }))}>
                   <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
                     <SelectValue placeholder="Nenhuma" />
@@ -396,20 +396,20 @@ export default function TeacherMaterialsPage() {
                   placeholder="https://..."
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-medium text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-medium text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
                 />
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Descrição (opcional)
               </Label>
               <Textarea
                 placeholder="Detalhes sobre este material..."
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/25 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
+                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/55 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
               />
             </div>
 
@@ -465,7 +465,7 @@ export default function TeacherMaterialsPage() {
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
           <FolderOpen className="h-8 w-8 text-white/15 mx-auto mb-2" />
-          <p className="font-black italic text-xs text-white/25 uppercase tracking-widest">
+          <p className="font-black italic text-xs text-white/55 uppercase tracking-widest">
             Nenhum material publicado
           </p>
         </div>
@@ -507,7 +507,7 @@ export default function TeacherMaterialsPage() {
                         {m.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-1.5 mt-2 text-[9px] font-bold text-white/25 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 mt-2 text-[9px] font-bold text-white/55 uppercase tracking-wider">
                       <span>{format(new Date(m.created_at), "dd/MM/yy", { locale: ptBR })}</span>
                       <span className="text-white/15">·</span>
                       <span className="flex items-center gap-0.5">

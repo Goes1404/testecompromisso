@@ -157,15 +157,15 @@ export default function ManageLivePage() {
           <div className="grid grid-cols-3 gap-2 mt-5">
             <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
               <span className="text-lg font-black text-white leading-none">{lives.length}</span>
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Total</span>
+              <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Total</span>
             </div>
             <div className="flex flex-col items-center bg-purple-500/10 border border-purple-500/20 rounded-2xl py-2.5">
               <span className="text-lg font-black text-purple-400 leading-none">{upcomingCount}</span>
-              <span className="text-[8px] font-bold text-purple-400/60 uppercase tracking-wider mt-0.5">Futuras</span>
+              <span className="text-[8px] font-bold text-purple-400/80 uppercase tracking-wider mt-0.5">Futuras</span>
             </div>
             <div className="flex flex-col items-center bg-red-500/10 border border-red-500/20 rounded-2xl py-2.5">
               <span className="text-lg font-black text-red-400 leading-none">{liveNow}</span>
-              <span className="text-[8px] font-bold text-red-400/60 uppercase tracking-wider mt-0.5">No ar</span>
+              <span className="text-[8px] font-bold text-red-400/80 uppercase tracking-wider mt-0.5">No ar</span>
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function ManageLivePage() {
           </DialogHeader>
           <div className="p-5 space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Título da Aula
               </Label>
               <input
@@ -195,13 +195,13 @@ export default function ManageLivePage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Data</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Data</Label>
                 <input
                   type="date"
                   value={formData.date}
@@ -211,7 +211,7 @@ export default function ManageLivePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Horário</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Horário</Label>
                 <input
                   type="time"
                   value={formData.time}
@@ -223,23 +223,23 @@ export default function ManageLivePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Link da Reunião
               </Label>
               <div className="relative">
-                <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30 pointer-events-none" />
+                <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/55 pointer-events-none" />
                 <input
                   placeholder="https://meet.google.com/..."
                   value={formData.meet_link}
                   onChange={(e) => setFormData({ ...formData, meet_link: e.target.value })}
                   disabled={isSubmitting}
-                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl pl-10 pr-3 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl pl-10 pr-3 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Pauta (opcional)
               </Label>
               <textarea
@@ -247,7 +247,7 @@ export default function ManageLivePage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full min-h-[70px] bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-sm font-medium text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all resize-none"
+                className="w-full min-h-[70px] bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-sm font-medium text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all resize-none"
               />
             </div>
           </div>
@@ -262,7 +262,7 @@ export default function ManageLivePage() {
               ) : null}
               Publicar na Agenda
             </Button>
-            <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold text-white/30 uppercase tracking-wider">
+            <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold text-white/55 uppercase tracking-wider">
               <AlertCircle className="h-3 w-3" /> Execute o SQL no Supabase
             </div>
           </DialogFooter>
@@ -278,7 +278,7 @@ export default function ManageLivePage() {
         ) : lives.length === 0 ? (
           <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
             <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-            <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+            <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
               Nenhuma aula agendada
             </p>
           </div>

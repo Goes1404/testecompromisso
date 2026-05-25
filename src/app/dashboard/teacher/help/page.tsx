@@ -191,7 +191,7 @@ export default function TeacherHelpPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <HelpCircle className="h-3 w-3 text-orange-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
               Suporte · FAQ
             </p>
           </div>
@@ -206,13 +206,13 @@ export default function TeacherHelpPage() {
 
       {/* ── Search ── */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
         <input
           type="text"
           placeholder="Buscar por pergunta ou categoria..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
         />
       </div>
 
@@ -268,8 +268,8 @@ export default function TeacherHelpPage() {
       {filteredFaqs.length === 0 ? (
         <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
           <HelpCircle className="h-8 w-8 mx-auto mb-2 text-white/15" />
-          <p className="text-xs font-bold text-white/25 uppercase tracking-widest">Nenhum resultado</p>
-          <p className="text-[10px] font-medium text-white/20 mt-1">Tente outros termos</p>
+          <p className="text-xs font-bold text-white/55 uppercase tracking-widest">Nenhum resultado</p>
+          <p className="text-[10px] font-medium text-white/45 mt-1">Tente outros termos</p>
         </div>
       ) : (
         <Accordion type="single" collapsible className="space-y-2">

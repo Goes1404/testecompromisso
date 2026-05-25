@@ -147,7 +147,7 @@ export default function TeacherCalendarPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <CalendarDays className="h-3 w-3 text-orange-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
               Staff · Agenda
             </p>
           </div>
@@ -161,11 +161,11 @@ export default function TeacherCalendarPage() {
           <div className="grid grid-cols-2 gap-2 mt-5">
             <div className="flex flex-col items-center bg-orange-500/10 border border-orange-500/20 rounded-2xl py-2.5">
               <span className="text-lg font-black text-orange-400 leading-none">{upcoming.length}</span>
-              <span className="text-[8px] font-bold text-orange-400/60 uppercase tracking-wider mt-0.5">Futuros</span>
+              <span className="text-[8px] font-bold text-orange-400/80 uppercase tracking-wider mt-0.5">Futuros</span>
             </div>
             <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
               <span className="text-lg font-black text-white/60 leading-none">{past.length}</span>
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Passados</span>
+              <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Passados</span>
             </div>
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function TeacherCalendarPage() {
         <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
           <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4 text-orange-400/70" />
+              <PlusCircle className="h-4 w-4 text-orange-400/85" />
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
                 {editId ? "Editar Evento" : "Criar Evento"}
               </p>
@@ -201,26 +201,26 @@ export default function TeacherCalendarPage() {
                 setShowForm(false);
                 setEditId(null);
               }}
-              className="text-[10px] font-bold text-white/30 hover:text-white/60 uppercase tracking-wider"
+              className="text-[10px] font-bold text-white/55 hover:text-white/60 uppercase tracking-wider"
             >
               Fechar
             </button>
           </div>
           <div className="p-4 space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Título *</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Título *</Label>
               <input
                 type="text"
                 placeholder="Ex: Aulão de Revisão — Matemática"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Data *</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Data *</Label>
                 <input
                   type="date"
                   value={form.event_date}
@@ -229,7 +229,7 @@ export default function TeacherCalendarPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Público</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Público</Label>
                 <Select value={form.target_group} onValueChange={(val) => setForm((f) => ({ ...f, target_group: val }))}>
                   <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
                     <SelectValue />
@@ -246,7 +246,7 @@ export default function TeacherCalendarPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Tipo</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Tipo</Label>
               <Select value={form.event_type} onValueChange={(val) => setForm((f) => ({ ...f, event_type: val }))}>
                 <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
                   <SelectValue />
@@ -265,12 +265,12 @@ export default function TeacherCalendarPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Descrição (opcional)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Descrição (opcional)</Label>
               <Textarea
                 placeholder="Detalhes adicionais..."
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/25 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
+                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/55 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
               />
             </div>
 
@@ -312,7 +312,7 @@ export default function TeacherCalendarPage() {
       ) : events.length === 0 ? (
         <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
           <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-          <p className="text-xs font-bold text-white/25 uppercase tracking-widest">
+          <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
             Nenhum evento cadastrado
           </p>
         </div>
@@ -341,7 +341,7 @@ export default function TeacherCalendarPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/30">
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/55">
                   Eventos passados ({past.length})
                 </p>
               </div>
@@ -391,7 +391,7 @@ function EventRow({
           <span className="text-xl font-black italic leading-none text-white">
             {String(dayNum).padStart(2, "0")}
           </span>
-          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${past ? "text-white/30" : "text-orange-400/70"}`}>
+          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${past ? "text-white/55" : "text-orange-400/85"}`}>
             {monthShort}
           </span>
         </div>
@@ -447,7 +447,7 @@ function EventRow({
             </button>
           </>
         ) : (
-          <div className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/25 bg-white/3">
+          <div className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/55 bg-white/3">
             <Lock className="h-3 w-3" />
             Coordenação
           </div>

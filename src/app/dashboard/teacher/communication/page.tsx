@@ -195,7 +195,7 @@ export default function CommunicationPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Megaphone className="h-3 w-3 text-orange-400" />
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
                 Push · Mural
               </p>
             </div>
@@ -209,11 +209,11 @@ export default function CommunicationPage() {
           <div className="flex gap-2 shrink-0">
             <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl px-3 py-2 min-w-[60px]">
               <span className="text-lg font-black text-white leading-none">{announcements.length}</span>
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Ativos</span>
+              <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Ativos</span>
             </div>
             <div className="flex flex-col items-center bg-red-500/10 border border-red-500/20 rounded-2xl px-3 py-2 min-w-[60px]">
               <span className="text-lg font-black text-red-400 leading-none">{urgentCount}</span>
-              <span className="text-[8px] font-bold text-red-400/60 uppercase tracking-wider mt-0.5">Urgente</span>
+              <span className="text-[8px] font-bold text-red-400/80 uppercase tracking-wider mt-0.5">Urgente</span>
             </div>
           </div>
         </div>
@@ -235,21 +235,21 @@ export default function CommunicationPage() {
         <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
           <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4 text-orange-400/70" />
+              <PlusCircle className="h-4 w-4 text-orange-400/85" />
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
                 Nova Mensagem
               </p>
             </div>
             <button
               onClick={() => setShowComposer(false)}
-              className="text-[10px] font-bold text-white/30 hover:text-white/60 uppercase tracking-wider"
+              className="text-[10px] font-bold text-white/55 hover:text-white/60 uppercase tracking-wider"
             >
               Fechar
             </button>
           </div>
           <div className="p-4 space-y-3">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Assunto
               </label>
               <input
@@ -257,25 +257,25 @@ export default function CommunicationPage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Título do aviso..."
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold italic text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold italic text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                 Corpo
               </label>
               <Textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 placeholder="Detalhes do comunicado..."
-                className="rounded-xl min-h-[100px] bg-white/5 border-white/8 text-white placeholder:text-white/25 text-sm italic resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
+                className="rounded-xl min-h-[100px] bg-white/5 border-white/8 text-white placeholder:text-white/55 text-sm italic resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                   Prioridade
                 </label>
                 <Select value={formData.priority} onValueChange={(v: any) => setFormData({ ...formData, priority: v })}>
@@ -290,7 +290,7 @@ export default function CommunicationPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
                   Público
                 </label>
                 <Select value={formData.target_group} onValueChange={(v) => setFormData({ ...formData, target_group: v })}>
@@ -299,7 +299,7 @@ export default function CommunicationPage() {
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f] max-h-60">
                     <SelectGroup>
-                      <SelectLabel className="text-[9px] font-black uppercase text-white/30 px-2 pt-2">Geral</SelectLabel>
+                      <SelectLabel className="text-[9px] font-black uppercase text-white/55 px-2 pt-2">Geral</SelectLabel>
                       <SelectItem value="all" className="font-bold italic text-white/70 text-xs">Toda a Rede</SelectItem>
                       <SelectItem value="etec" className="font-bold italic text-white/70 text-xs">ETEC</SelectItem>
                       <SelectItem value="enem" className="font-bold italic text-white/70 text-xs">ENEM</SelectItem>
@@ -307,7 +307,7 @@ export default function CommunicationPage() {
                     </SelectGroup>
                     {cohorts.length > 0 && (
                       <SelectGroup>
-                        <SelectLabel className="text-[9px] font-black uppercase text-white/30 px-2 pt-3 border-t border-white/5 mt-1">Turmas</SelectLabel>
+                        <SelectLabel className="text-[9px] font-black uppercase text-white/55 px-2 pt-3 border-t border-white/5 mt-1">Turmas</SelectLabel>
                         {cohorts.map((cohort) => (
                           <SelectItem key={cohort.id} value={cohort.id} className="font-bold italic text-white/70 text-xs">
                             {cohort.name}
@@ -349,7 +349,7 @@ export default function CommunicationPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-black text-white italic leading-tight truncate">{tpl.title}</p>
-                <p className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Aplicar template</p>
+                <p className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Aplicar template</p>
               </div>
             </button>
           ))}
@@ -358,13 +358,13 @@ export default function CommunicationPage() {
 
       {/* ── Search ── */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
         <input
           type="text"
           placeholder="Pesquisar no histórico..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-11 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+          className="w-full h-11 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
         />
       </div>
 
@@ -373,12 +373,12 @@ export default function CommunicationPage() {
         {loading ? (
           <div className="py-16 flex flex-col items-center gap-3">
             <Sparkles className="h-7 w-7 text-orange-400 animate-pulse" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Sincronizando...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/55">Sincronizando...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
             <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-            <p className="font-black italic text-xs text-white/25 uppercase tracking-widest">
+            <p className="font-black italic text-xs text-white/55 uppercase tracking-widest">
               Nenhum aviso localizado
             </p>
           </div>
@@ -412,7 +412,7 @@ export default function CommunicationPage() {
                         <h3 className="font-black text-white italic text-sm leading-snug flex-1">{ann.title}</h3>
                         <button
                           onClick={() => handleDelete(ann.id)}
-                          className="h-7 w-7 rounded-lg text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-60 group-hover:opacity-100 flex items-center justify-center shrink-0"
+                          className="h-7 w-7 rounded-lg text-white/55 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-60 group-hover:opacity-100 flex items-center justify-center shrink-0"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -427,7 +427,7 @@ export default function CommunicationPage() {
                             {targetCohort ? targetCohort.name : ann.target_group === "all" ? "Toda Rede" : ann.target_group}
                           </Badge>
                         )}
-                        <span className="flex items-center gap-1 text-[8px] font-bold text-white/30 uppercase tracking-wider">
+                        <span className="flex items-center gap-1 text-[8px] font-bold text-white/55 uppercase tracking-wider">
                           <Clock className="h-2.5 w-2.5" />
                           {format(new Date(ann.created_at), "dd/MM HH:mm", { locale: ptBR })}
                         </span>

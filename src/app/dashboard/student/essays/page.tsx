@@ -282,7 +282,7 @@ export default function StudentEssayPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="h-3 w-3 text-orange-400" />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
                   Aurora IA Ativa
                 </p>
               </div>
@@ -356,7 +356,7 @@ export default function StudentEssayPage() {
           {customTheme ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <PenTool className="h-3 w-3 text-orange-400/70" />
+                <PenTool className="h-3 w-3 text-orange-400/85" />
                 <label className="text-[10px] font-black uppercase tracking-widest text-white/40">
                   Sua proposta
                 </label>
@@ -366,14 +366,14 @@ export default function StudentEssayPage() {
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
                 placeholder="Ex: A inteligência artificial na educação..."
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold italic text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold italic text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
           ) : (
             <>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-3 w-3 text-orange-400" />
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-400/70">Tema Sintonizado</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-400/85">Tema Sintonizado</p>
               </div>
               <h2 className="text-base font-black italic text-white leading-snug">
                 {theme || "Aguardando geração de tema..."}
@@ -388,7 +388,7 @@ export default function StudentEssayPage() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           disabled={loadingGrading}
-          className="min-h-[280px] sm:min-h-[400px] border-none p-5 font-medium text-sm leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-white/85 placeholder:text-white/20 scrollbar-hide rounded-none"
+          className="min-h-[280px] sm:min-h-[400px] border-none p-5 font-medium text-sm leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-white/85 placeholder:text-white/45 scrollbar-hide rounded-none"
         />
 
         {/* Submit footer */}
@@ -411,8 +411,8 @@ export default function StudentEssayPage() {
             )}
           </Button>
           <div className="flex items-center justify-center gap-1.5">
-            <AlertCircle className="h-3 w-3 text-white/20" />
-            <p className="text-[9px] text-white/25 uppercase tracking-widest font-bold">
+            <AlertCircle className="h-3 w-3 text-white/45" />
+            <p className="text-[9px] text-white/55 uppercase tracking-widest font-bold">
               Aurora é uma IA · correção pode ter imprecisões
             </p>
           </div>
@@ -456,7 +456,7 @@ export default function StudentEssayPage() {
                 <h2 className="text-6xl sm:text-7xl font-black italic tracking-tighter leading-[0.85] text-white drop-shadow-xl">
                   {result.total_score}
                 </h2>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-2">
+                <p className="text-[10px] font-bold text-white/55 uppercase tracking-widest mt-2">
                   de 1000 pontos
                 </p>
               </div>
@@ -481,7 +481,7 @@ export default function StudentEssayPage() {
                   <span className="text-base font-black text-orange-400 leading-none italic">
                     {Math.round(((result.total_score || 0) / 1000) * 100)}
                   </span>
-                  <span className="text-[7px] font-bold text-white/30 uppercase tracking-wider mt-0.5">%</span>
+                  <span className="text-[7px] font-bold text-white/55 uppercase tracking-wider mt-0.5">%</span>
                 </div>
               </div>
             </div>
@@ -510,7 +510,7 @@ export default function StudentEssayPage() {
                       <Icon className={`h-4 w-4 ${info.color}`} />
                     </div>
                     <div className="text-right">
-                      <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">Nota</p>
+                      <p className="text-[8px] font-black text-white/55 uppercase tracking-widest">Nota</p>
                       <p className="text-2xl font-black italic text-white leading-none">{comp.score}</p>
                     </div>
                   </div>
@@ -543,7 +543,7 @@ export default function StudentEssayPage() {
                       <Badge className="bg-red-500/15 text-red-400 border-none font-black text-[9px] px-2 line-through opacity-70">
                         {corr.original}
                       </Badge>
-                      <ChevronRight className="h-3 w-3 text-white/30" />
+                      <ChevronRight className="h-3 w-3 text-white/55" />
                       <Badge className="bg-emerald-500/15 text-emerald-400 border-none font-black text-[9px] px-2">
                         {corr.suggestion}
                       </Badge>
@@ -590,7 +590,7 @@ export default function StudentEssayPage() {
       {supportingTexts.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <BookOpen className="h-4 w-4 text-orange-400/60" />
+            <BookOpen className="h-4 w-4 text-orange-400/80" />
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
               Textos Motivadores
             </p>
@@ -605,7 +605,7 @@ export default function StudentEssayPage() {
                   "{st.content}"
                 </p>
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                  <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">
+                  <span className="text-[8px] font-black text-white/55 uppercase tracking-widest">
                     Fonte: {st.source}
                   </span>
                   <Badge className="bg-orange-500/10 text-orange-400/80 border border-orange-500/20 font-black text-[7px] uppercase px-1.5 h-4">
@@ -621,7 +621,7 @@ export default function StudentEssayPage() {
       {/* ── Evolution chart ── */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
-          <TrendingUp className="h-4 w-4 text-orange-400/60" />
+          <TrendingUp className="h-4 w-4 text-orange-400/80" />
           <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
             Evolução
           </p>
@@ -634,13 +634,13 @@ export default function StudentEssayPage() {
           ) : (
             <div className="h-[220px] flex flex-col items-center justify-center gap-3">
               <div className="h-10 w-10 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center">
-                <History className="h-4 w-4 text-white/30" />
+                <History className="h-4 w-4 text-white/55" />
               </div>
               <div className="text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/55">
                   Radar de Evolução
                 </p>
-                <p className="text-[9px] font-bold text-white/20 uppercase mt-1">
+                <p className="text-[9px] font-bold text-white/45 uppercase mt-1">
                   Aguardando seu primeiro envio
                 </p>
               </div>

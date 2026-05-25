@@ -135,7 +135,7 @@ export default function AssessmentsGraderPage() {
           />
           <div className="relative z-10 flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70 mb-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85 mb-1">
                 Staff · Maestro
               </p>
               <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
@@ -148,11 +148,11 @@ export default function AssessmentsGraderPage() {
             <div className="flex gap-2 shrink-0">
               <div className="flex flex-col items-center bg-amber-500/10 border border-amber-500/20 rounded-2xl px-3 py-2 min-w-[60px]">
                 <span className="text-lg font-black text-amber-400 leading-none">{pendingCount}</span>
-                <span className="text-[8px] font-bold text-amber-400/60 uppercase tracking-wider mt-0.5">Fila</span>
+                <span className="text-[8px] font-bold text-amber-400/80 uppercase tracking-wider mt-0.5">Fila</span>
               </div>
               <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-3 py-2 min-w-[60px]">
                 <span className="text-lg font-black text-emerald-400 leading-none">{reviewedCount}</span>
-                <span className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-wider mt-0.5">OK</span>
+                <span className="text-[8px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5">OK</span>
               </div>
             </div>
           </div>
@@ -161,13 +161,13 @@ export default function AssessmentsGraderPage() {
 
       {/* ── Search (hidden on mobile when essay selected) ── */}
       <div className={`${selectedEssay ? "hidden lg:block" : "block"} relative`}>
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
         <input
           type="text"
           placeholder="Buscar estudante ou tema..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
+          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
         />
       </div>
 
@@ -179,7 +179,7 @@ export default function AssessmentsGraderPage() {
           <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
             <div className="p-4 border-b border-white/5 bg-white/3">
               <div className="flex items-center gap-2">
-                <ClipboardCheck className="h-4 w-4 text-orange-400/70" />
+                <ClipboardCheck className="h-4 w-4 text-orange-400/85" />
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
                   Fila de Avaliação ({filteredSubmissions.length})
                 </p>
@@ -194,7 +194,7 @@ export default function AssessmentsGraderPage() {
               ) : filteredSubmissions.length === 0 ? (
                 <div className="p-12 text-center">
                   <Inbox className="h-8 w-8 text-white/15 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-white/25 uppercase tracking-widest">Sem envios</p>
+                  <p className="text-xs font-bold text-white/55 uppercase tracking-widest">Sem envios</p>
                 </div>
               ) : (
                 <div className="flex flex-col">
@@ -228,14 +228,14 @@ export default function AssessmentsGraderPage() {
                             {isPending ? "Pendente" : "OK"}
                           </Badge>
                         </div>
-                        <p className="text-[10px] font-bold text-white/35 truncate italic mb-2 leading-tight">
+                        <p className="text-[10px] font-bold text-white/60 truncate italic mb-2 leading-tight">
                           "{item.theme}"
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest">
                             {item.score} pts
                           </span>
-                          <span className="text-[8px] font-bold text-white/25 uppercase">
+                          <span className="text-[8px] font-bold text-white/55 uppercase">
                             {format(new Date(item.created_at), "dd/MM HH:mm", { locale: ptBR })}
                           </span>
                         </div>
@@ -275,7 +275,7 @@ export default function AssessmentsGraderPage() {
                     <p className="text-base font-black text-white italic truncate leading-none">
                       {selectedEssay.profiles?.name}
                     </p>
-                    <p className="text-[10px] font-bold text-white/35 uppercase tracking-widest mt-1">
+                    <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">
                       Submissão acadêmica
                     </p>
                   </div>
@@ -283,7 +283,7 @@ export default function AssessmentsGraderPage() {
 
                 {/* Theme block */}
                 <div className="bg-white/3 border border-white/5 rounded-2xl p-4">
-                  <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">
+                  <p className="text-[9px] font-black text-white/55 uppercase tracking-widest mb-1">
                     Tema da Redação
                   </p>
                   <h3 className="text-sm font-black text-white italic leading-snug">
@@ -293,7 +293,7 @@ export default function AssessmentsGraderPage() {
 
                 {/* Content */}
                 <div className="relative bg-white/3 border border-dashed border-white/10 rounded-2xl p-5">
-                  <p className="text-[9px] font-black uppercase text-white/20 tracking-widest absolute -top-2 left-4 bg-[#0a0a0c] px-2">
+                  <p className="text-[9px] font-black uppercase text-white/45 tracking-widest absolute -top-2 left-4 bg-[#0a0a0c] px-2">
                     Transcrição
                   </p>
                   <div className="font-medium text-sm leading-relaxed italic text-white/75 whitespace-pre-wrap max-h-[400px] overflow-y-auto scrollbar-hide">
@@ -316,7 +316,7 @@ export default function AssessmentsGraderPage() {
                     <Sparkles className="h-4 w-4 text-orange-400 animate-pulse" />
                   </div>
                   <div className="relative z-10">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/55 mb-1">
                       Nota
                     </p>
                     <p className="text-5xl font-black italic text-white leading-none drop-shadow-xl">
@@ -339,7 +339,7 @@ export default function AssessmentsGraderPage() {
                     value={mentorFeedback}
                     onChange={(e) => setMentorFeedback(e.target.value)}
                     placeholder="Adicione suas notas pedagógicas ou orientações personalizadas..."
-                    className="min-h-[140px] rounded-2xl bg-white/5 border-white/8 p-4 font-medium italic text-sm text-white placeholder:text-white/25 resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 transition-all"
+                    className="min-h-[140px] rounded-2xl bg-white/5 border-white/8 p-4 font-medium italic text-sm text-white placeholder:text-white/55 resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 transition-all"
                   />
                   <div className="flex gap-2">
                     <Button
@@ -370,12 +370,12 @@ export default function AssessmentsGraderPage() {
           ) : (
             <div className="hidden lg:flex flex-col items-center justify-center text-center py-20 bg-white/3 border border-dashed border-white/8 rounded-[1.5rem] min-h-[400px]">
               <div className="h-16 w-16 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center mb-4">
-                <FileText className="h-7 w-7 text-white/20" />
+                <FileText className="h-7 w-7 text-white/45" />
               </div>
-              <p className="text-sm font-black text-white/30 italic uppercase tracking-widest">
+              <p className="text-sm font-black text-white/55 italic uppercase tracking-widest">
                 Selecione uma Submissão
               </p>
-              <p className="text-[10px] font-bold text-white/20 mt-2 max-w-xs uppercase tracking-wider">
+              <p className="text-[10px] font-bold text-white/45 mt-2 max-w-xs uppercase tracking-wider">
                 Clique em um aluno na fila para iniciar a auditoria
               </p>
             </div>

@@ -192,7 +192,7 @@ export default function StudentAttendancePage() {
           <div className="flex items-center gap-2 mb-1">
             {isStellar && <Sparkles className="h-3 w-3 text-emerald-400 animate-pulse" />}
             <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${
-              isStellar ? "text-emerald-400/80" : "text-orange-400/70"
+              isStellar ? "text-emerald-400/80" : "text-orange-400/85"
             }`}>
               {isStellar ? "Frequência exemplar" : "Aluno"}
             </p>
@@ -218,14 +218,14 @@ export default function StudentAttendancePage() {
                 }`}
               >
                 <span className={`text-xl font-black leading-none ${kpi.color}`}>{kpi.value}</span>
-                <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider mt-1">{kpi.label}</span>
+                <span className="text-[9px] font-bold text-white/55 uppercase tracking-wider mt-1">{kpi.label}</span>
               </div>
             ))}
           </div>
 
           {/* Progress bar */}
           <div className="mt-4 space-y-1.5">
-            <div className="flex justify-between text-[9px] font-black text-white/30 uppercase">
+            <div className="flex justify-between text-[9px] font-black text-white/55 uppercase">
               <span>Frequência geral</span>
               <span className={atRisk ? "text-red-400" : "text-emerald-400"}>{pct}%</span>
             </div>
@@ -263,7 +263,7 @@ export default function StudentAttendancePage() {
           </div>
           <div>
             <p className="font-black text-white text-sm italic">Check-in da Aula</p>
-            <p className="text-[10px] text-white/35 font-medium">
+            <p className="text-[10px] text-white/60 font-medium">
               Digite o token exibido na lousa
             </p>
           </div>
@@ -310,19 +310,19 @@ export default function StudentAttendancePage() {
       {/* ── History ── */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
-          <CalendarDays className="h-4 w-4 text-orange-400/60" />
+          <CalendarDays className="h-4 w-4 text-orange-400/80" />
           <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">Histórico de Aulas</p>
         </div>
 
         {loading ? (
           <div className="py-16 flex flex-col items-center gap-3">
             <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 animate-pulse">Carregando...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/55 animate-pulse">Carregando...</p>
           </div>
         ) : sessions.length === 0 ? (
           <div className="py-16 flex flex-col items-center gap-3 border border-dashed border-white/8 rounded-[1.5rem]">
             <ClipboardCheck className="h-8 w-8 text-white/10" />
-            <p className="text-xs font-bold text-white/20 uppercase tracking-widest">Nenhuma aula registrada</p>
+            <p className="text-xs font-bold text-white/45 uppercase tracking-widest">Nenhuma aula registrada</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -360,19 +360,19 @@ export default function StudentAttendancePage() {
                       {session.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[10px] text-white/35 font-bold">
+                      <span className="text-[10px] text-white/60 font-bold">
                         {format(new Date(session.session_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
                       </span>
                       {session.subject && (
                         <>
                           <span className="text-white/15">·</span>
-                          <span className="text-[10px] text-white/35 font-bold">{session.subject}</span>
+                          <span className="text-[10px] text-white/60 font-bold">{session.subject}</span>
                         </>
                       )}
                       {session.teacher_name && (
                         <>
                           <span className="text-white/15">·</span>
-                          <span className="text-[10px] text-white/35 font-bold">{session.teacher_name}</span>
+                          <span className="text-[10px] text-white/60 font-bold">{session.teacher_name}</span>
                         </>
                       )}
                     </div>
@@ -422,7 +422,7 @@ export default function StudentAttendancePage() {
                 <DialogTitle className="text-xl font-black text-red-400 leading-none italic uppercase tracking-tighter">
                   Aviso de Fraude
                 </DialogTitle>
-                <DialogDescription className="text-[10px] mt-0.5 font-bold text-red-400/60">
+                <DialogDescription className="text-[10px] mt-0.5 font-bold text-red-400/80">
                   Leia com atenção antes de confirmar
                 </DialogDescription>
               </div>
@@ -452,7 +452,7 @@ export default function StudentAttendancePage() {
             </ul>
 
             <div className="space-y-1.5 pt-1">
-              <Label className="text-[10px] font-black uppercase text-white/30 tracking-widest ml-1">
+              <Label className="text-[10px] font-black uppercase text-white/55 tracking-widest ml-1">
                 Digite <span className="text-red-400">CONFIRMO</span> para prosseguir
               </Label>
               <input
@@ -461,9 +461,9 @@ export default function StudentAttendancePage() {
                 value={confirmoInput}
                 onChange={(e) => setConfirmoInput(e.target.value.toUpperCase())}
                 autoComplete="off"
-                className="w-full h-12 bg-white/5 border-2 border-red-500/20 focus:border-red-500/50 rounded-xl px-4 text-center text-lg font-black tracking-[0.3em] text-white placeholder:text-white/20 outline-none transition-all"
+                className="w-full h-12 bg-white/5 border-2 border-red-500/20 focus:border-red-500/50 rounded-xl px-4 text-center text-lg font-black tracking-[0.3em] text-white placeholder:text-white/45 outline-none transition-all"
               />
-              <p className="text-[10px] text-white/25 font-medium text-center">
+              <p className="text-[10px] text-white/55 font-medium text-center">
                 Esta ação é registrada e seu nome ficará vinculado a este check-in.
               </p>
             </div>

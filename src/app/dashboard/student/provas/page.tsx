@@ -282,7 +282,7 @@ export default function ProvasCompletasPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-orange-400" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 animate-pulse">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/55 animate-pulse">
           Sintonizando provas...
         </p>
       </div>
@@ -329,7 +329,7 @@ export default function ProvasCompletasPage() {
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-3 w-3 text-orange-400" />
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/85">
                 Área de Treinamento
               </p>
             </div>
@@ -355,10 +355,10 @@ export default function ProvasCompletasPage() {
         {exams.length === 0 ? (
           <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
             <BookOpen className="h-9 w-9 mx-auto mb-2 text-white/15" />
-            <p className="text-sm font-black italic text-white/30 uppercase tracking-widest">
+            <p className="text-sm font-black italic text-white/55 uppercase tracking-widest">
               Nenhuma prova cadastrada
             </p>
-            <p className="text-[10px] text-white/20 font-medium mt-1.5 max-w-xs mx-auto">
+            <p className="text-[10px] text-white/45 font-medium mt-1.5 max-w-xs mx-auto">
               A equipe pedagógica disponibilizará provas em breve.
             </p>
           </div>
@@ -437,7 +437,7 @@ export default function ProvasCompletasPage() {
                         </button>
                       )}
                       {!hasContent && (
-                        <p className="text-center text-[10px] text-white/25 font-medium italic py-2">
+                        <p className="text-center text-[10px] text-white/55 font-medium italic py-2">
                           Material em preparação
                         </p>
                       )}
@@ -474,7 +474,7 @@ export default function ProvasCompletasPage() {
         <div className="relative rounded-2xl overflow-hidden bg-[#0d0d0f] border border-white/5 p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-orange-400/70">
+              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-orange-400/85">
                 Simulado em andamento
               </p>
               <p className="text-sm font-black italic text-white truncate leading-snug">
@@ -748,7 +748,7 @@ export default function ProvasCompletasPage() {
               <div className="absolute flex flex-col items-center">
                 <span className="text-4xl font-black italic text-white tracking-tighter leading-none">{pct}</span>
                 <span className="text-sm font-black text-white/40 italic">%</span>
-                <span className="text-[8px] font-black uppercase tracking-widest text-white/30 mt-1">
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/55 mt-1">
                   Aproveitamento
                 </span>
               </div>
@@ -758,15 +758,15 @@ export default function ProvasCompletasPage() {
             <div className="grid grid-cols-3 gap-2 w-full max-w-md">
               <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 rounded-2xl py-2.5">
                 <span className="text-xl font-black text-emerald-400 leading-none italic">{correctCount}</span>
-                <span className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-wider mt-0.5">Acertos</span>
+                <span className="text-[8px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5">Acertos</span>
               </div>
               <div className="flex flex-col items-center bg-red-500/10 border border-red-500/20 rounded-2xl py-2.5">
                 <span className="text-xl font-black text-red-400 leading-none italic">{answers.length - correctCount}</span>
-                <span className="text-[8px] font-bold text-red-400/60 uppercase tracking-wider mt-0.5">Erros</span>
+                <span className="text-[8px] font-bold text-red-400/80 uppercase tracking-wider mt-0.5">Erros</span>
               </div>
               <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl py-2.5">
                 <span className="text-xl font-black text-white leading-none italic">{answers.length}</span>
-                <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Total</span>
+                <span className="text-[8px] font-bold text-white/55 uppercase tracking-wider mt-0.5">Total</span>
               </div>
             </div>
           </div>
@@ -795,7 +795,7 @@ export default function ProvasCompletasPage() {
         {/* ── Analytical gabarito ── */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 px-1">
-            <BookOpen className="h-4 w-4 text-orange-400/60" />
+            <BookOpen className="h-4 w-4 text-orange-400/80" />
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">
               Gabarito analítico
             </p>
