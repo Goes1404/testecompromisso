@@ -115,6 +115,8 @@ export default function FirstAccessPage() {
   const isMatch   = newPassword === confirmPassword && confirmPassword.length > 0;
   const step1OK   = hasLength && hasSymbol && hasNumber && isMatch;
 
+  const isStudent = profile?.profile_type === 'student' || user?.user_metadata?.profile_type === 'student';
+
   function handlePhoneChange(v: string) {
     setPhone(maskPhone(v));
   }
@@ -143,19 +145,21 @@ export default function FirstAccessPage() {
   const handleProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!examTarget) { setError("Selecione seu objetivo: ENEM ou ETEC."); return; }
-    if (!turno)      { setError("Selecione o turno em que você estuda."); return; }
+    if (isStudent && !examTarget) { setError("Selecione seu objetivo: ENEM ou ETEC."); return; }
+    if (isStudent && !turno)      { setError("Selecione o turno em que você estuda."); return; }
     setLoading(true);
     try {
       if (!user) throw new Error("Sessão expirada. Faça login novamente.");
+      const updateData: any = { phone: phone.replace(/\D/g, '') || null };
+      if (isStudent) {
+        updateData.sala = sala.trim() || null;
+        updateData.exam_target = examTarget;
+        updateData.turno = turno;
+      }
+      
       const { error: err } = await supabase
         .from('profiles')
-        .update({
-          phone:       phone.replace(/\D/g, '') || null,
-          sala:        sala.trim() || null,
-          exam_target: examTarget,
-          turno,
-        })
+        .update(updateData)
         .eq('id', user.id);
       if (err) throw err;
       toast({ title: "Perfil salvo!", description: "Seja bem-vindo ao Compromisso!" });
@@ -307,7 +311,9 @@ export default function FirstAccessPage() {
                 </div>
                 <h2 className="text-xl font-black text-primary italic">Seus Dados</h2>
                 <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-xs">
-                  Essas informações ajudam o cursinho a personalizar sua experiência e entrar em contato.
+                  {isStudent 
+                    ? "Essas informações ajudam o cursinho a personalizar sua experiência e entrar em contato."
+                    : "Informe seu telefone de contato (opcional) para comunicações da escola."}
                 </p>
               </div>
 
@@ -338,80 +344,84 @@ export default function FirstAccessPage() {
                       className="pl-11 h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent"
                     />
                   </div>
-                  <p className="text-[10px] text-slate-400 ml-1">Usado para comunicados e lembretes do cursinho.</p>
+                  <p className="text-[10px] text-slate-400 ml-1">Usado para comunicados e lembretes.</p>
                 </div>
 
-                {/* sala */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
-                    Número da Sala
-                    <span className="normal-case font-medium text-slate-400">(opcional)</span>
-                  </Label>
-                  <Select value={sala} onValueChange={setSala}>
-                    <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent">
-                      <SelectValue placeholder="Selecione a sala..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 15 }, (_, i) => String(i + 1)).map(n => (
-                        <SelectItem key={n} value={n}>Sala {n}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {isStudent && (
+                  <>
+                    {/* sala */}
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                        Número da Sala
+                        <span className="normal-case font-medium text-slate-400">(opcional)</span>
+                      </Label>
+                      <Select value={sala} onValueChange={setSala}>
+                        <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent">
+                          <SelectValue placeholder="Selecione a sala..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 15 }, (_, i) => String(i + 1)).map(n => (
+                            <SelectItem key={n} value={n}>Sala {n}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* objetivo */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
-                    Qual é o seu objetivo?
-                    <span className="text-red-400 font-black">*</span>
-                  </Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {EXAM_OPTIONS.map(o => (
-                      <button
-                        key={o.id}
-                        type="button"
-                        onClick={() => setExamTarget(o.id)}
-                        aria-pressed={examTarget === o.id}
-                        className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 text-left
-                          ${examTarget === o.id
-                            ? 'border-primary bg-primary/5 shadow-md'
-                            : 'border-slate-200 bg-slate-50 hover:border-slate-300 active:scale-[0.97]'}`}
-                      >
-                        {examTarget === o.id && (
-                          <CheckCircle2 className="absolute top-2.5 right-2.5 h-4 w-4 text-primary" />
-                        )}
-                        <o.icon className={`h-7 w-7 ${examTarget === o.id ? 'text-primary' : 'text-slate-400'}`} />
-                        <div className="text-center">
-                          <p className={`font-black text-base ${examTarget === o.id ? 'text-primary' : 'text-slate-700'}`}>{o.label}</p>
-                          <p className="text-[10px] text-slate-400 font-medium leading-snug mt-0.5">{o.desc}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                    {/* objetivo */}
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                        Qual é o seu objetivo?
+                        <span className="text-red-400 font-black">*</span>
+                      </Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {EXAM_OPTIONS.map(o => (
+                          <button
+                            key={o.id}
+                            type="button"
+                            onClick={() => setExamTarget(o.id)}
+                            aria-pressed={examTarget === o.id}
+                            className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 text-left
+                              ${examTarget === o.id
+                                ? 'border-primary bg-primary/5 shadow-md'
+                                : 'border-slate-200 bg-slate-50 hover:border-slate-300 active:scale-[0.97]'}`}
+                          >
+                            {examTarget === o.id && (
+                              <CheckCircle2 className="absolute top-2.5 right-2.5 h-4 w-4 text-primary" />
+                            )}
+                            <o.icon className={`h-7 w-7 ${examTarget === o.id ? 'text-primary' : 'text-slate-400'}`} />
+                            <div className="text-center">
+                              <p className={`font-black text-base ${examTarget === o.id ? 'text-primary' : 'text-slate-700'}`}>{o.label}</p>
+                              <p className="text-[10px] text-slate-400 font-medium leading-snug mt-0.5">{o.desc}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                {/* turno */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
-                    Qual turno você estuda?
-                    <span className="text-red-400 font-black">*</span>
-                  </Label>
-                  <Select value={turno} onValueChange={setTurno}>
-                    <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent">
-                      <SelectValue placeholder="Selecione o turno..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manha">Manhã (07h–12h)</SelectItem>
-                      <SelectItem value="tarde">Tarde (13h–18h)</SelectItem>
-                      <SelectItem value="integral">Integral (Manhã + Tarde)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    {/* turno */}
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-1.5">
+                        Qual turno você estuda?
+                        <span className="text-red-400 font-black">*</span>
+                      </Label>
+                      <Select value={turno} onValueChange={setTurno}>
+                        <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-2xl font-bold text-base focus-visible:ring-accent">
+                          <SelectValue placeholder="Selecione o turno..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="manha">Manhã (07h–12h)</SelectItem>
+                          <SelectItem value="tarde">Tarde (13h–18h)</SelectItem>
+                          <SelectItem value="integral">Integral (Manhã + Tarde)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* rodapé obrigatórios */}
-                <p className="text-[10px] text-slate-400 ml-1">
-                  <span className="text-red-400 font-black">*</span> Campos obrigatórios
-                </p>
+                    {/* rodapé obrigatórios */}
+                    <p className="text-[10px] text-slate-400 ml-1">
+                      <span className="text-red-400 font-black">*</span> Campos obrigatórios
+                    </p>
+                  </>
+                )}
 
                 <div className="flex gap-3">
                   <button
@@ -424,7 +434,7 @@ export default function FirstAccessPage() {
                   </button>
                   <Button
                     type="submit"
-                    disabled={loading || !examTarget || !turno}
+                    disabled={loading || (isStudent && (!examTarget || !turno))}
                     className="flex-1 h-14 bg-primary text-white font-black text-base rounded-2xl shadow-xl flex items-center justify-center gap-2 disabled:opacity-40"
                   >
                     {loading
