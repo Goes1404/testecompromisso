@@ -133,8 +133,9 @@ export default function DashboardHome() {
 
   const [phoneValue, setPhoneValue] = useState("");
   const [submittingPhone, setSubmittingPhone] = useState(false);
-  const [courseValue, setCourseValue] = useState("");
+  const [salaValue, setSalaValue] = useState("");
   const [examTargetValue, setExamTargetValue] = useState("");
+  const [turnoValue, setTurnoValue] = useState("");
   const [submittingClass, setSubmittingClass] = useState(false);
 
   const [recommendedTrails, setRecommendedTrails] = useState<any[]>([]);
@@ -187,13 +188,14 @@ export default function DashboardHome() {
   const handleClassSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!courseValue.trim()) { toast({ title: "Campo obrigatório ⚠️", description: "Informe sua turma.", variant: "destructive" }); return; }
+    if (!salaValue) { toast({ title: "Campo obrigatório ⚠️", description: "Selecione o número da sua sala.", variant: "destructive" }); return; }
     if (!examTargetValue) { toast({ title: "Campo obrigatório ⚠️", description: "Selecione seu foco de exame.", variant: "destructive" }); return; }
+    if (!turnoValue) { toast({ title: "Campo obrigatório ⚠️", description: "Selecione o turno em que você estuda.", variant: "destructive" }); return; }
     setSubmittingClass(true);
     try {
-      const { error } = await supabase.from("profiles").update({ course: courseValue.trim(), exam_target: examTargetValue }).eq("id", user.id);
+      const { error } = await supabase.from("profiles").update({ sala: salaValue, exam_target: examTargetValue, turno: turnoValue }).eq("id", user.id);
       if (error) throw error;
-      toast({ title: "Perfil atualizado! 🎉", description: "Turma e foco de exame salvos com sucesso." });
+      toast({ title: "Perfil atualizado! 🎉", description: "Sala, foco e turno salvos com sucesso." });
       if (refreshProfile) await refreshProfile();
     } catch (err: any) {
       toast({ title: "Erro ao Salvar ❌", description: err.message, variant: "destructive" });
@@ -424,7 +426,7 @@ export default function DashboardHome() {
       )}
 
       {/* ── CARD DE TURMA/EXAME PENDENTE ── */}
-      {profile && userRole === 'student' && (!profile.course || !profile.exam_target) && (
+      {profile && userRole === 'student' && (!profile.sala || !profile.exam_target || !profile.turno) && (
         <motion.div variants={itemVariants}
           className="relative overflow-hidden rounded-[2rem] border border-blue-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-5 md:p-8 shadow-2xl text-white">
           <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2rem]" />
@@ -438,20 +440,35 @@ export default function DashboardHome() {
                 <h2 className="text-base md:text-xl font-black italic tracking-tighter leading-tight">Complete seu Perfil</h2>
               </div>
             </div>
-            <form onSubmit={handleClassSubmit} className="flex flex-col sm:flex-row gap-3">
-              <input type="text" value={courseValue} onChange={(e) => setCourseValue(e.target.value)} placeholder="Turma / Sala (ex: A1)"
-                className="h-12 flex-1 bg-white/10 text-white placeholder:text-white/50 border border-white/20 focus:border-white rounded-xl font-bold text-center text-sm focus-visible:outline-none px-3" />
-              <select value={examTargetValue} onChange={(e) => setExamTargetValue(e.target.value)}
-                className="h-12 flex-1 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 cursor-pointer">
-                <option value="" className="text-slate-800">Foco de exame…</option>
-                <option value="ENEM" className="text-slate-800">ENEM</option>
-                <option value="ETEC" className="text-slate-800">ETEC</option>
-                <option value="Outros" className="text-slate-800">Outros</option>
-              </select>
-              <Button type="submit" disabled={submittingClass}
-                className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl shadow-lg border-none h-12 px-5 text-xs uppercase tracking-widest active:scale-95 flex items-center gap-2 justify-center shrink-0">
-                {submittingClass ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4" /> Salvar</>}
-              </Button>
+            <form onSubmit={handleClassSubmit} className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <select value={salaValue} onChange={(e) => setSalaValue(e.target.value)}
+                  className="h-12 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 cursor-pointer">
+                  <option value="" className="text-slate-800">Número da sala…</option>
+                  {Array.from({ length: 15 }, (_, i) => String(i + 1)).map(n => (
+                    <option key={n} value={n} className="text-slate-800">Sala {n}</option>
+                  ))}
+                </select>
+                <select value={examTargetValue} onChange={(e) => setExamTargetValue(e.target.value)}
+                  className="h-12 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 cursor-pointer">
+                  <option value="" className="text-slate-800">Foco de exame…</option>
+                  <option value="ENEM" className="text-slate-800">ENEM</option>
+                  <option value="ETEC" className="text-slate-800">ETEC</option>
+                </select>
+              </div>
+              <div className="flex gap-3">
+                <select value={turnoValue} onChange={(e) => setTurnoValue(e.target.value)}
+                  className="h-12 flex-1 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 cursor-pointer">
+                  <option value="" className="text-slate-800">Turno…</option>
+                  <option value="manha" className="text-slate-800">Manhã</option>
+                  <option value="tarde" className="text-slate-800">Tarde</option>
+                  <option value="integral" className="text-slate-800">Integral</option>
+                </select>
+                <Button type="submit" disabled={submittingClass}
+                  className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl shadow-lg border-none h-12 px-5 text-xs uppercase tracking-widest active:scale-95 flex items-center gap-2 justify-center shrink-0">
+                  {submittingClass ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4" /> Salvar</>}
+                </Button>
+              </div>
             </form>
           </div>
         </motion.div>
