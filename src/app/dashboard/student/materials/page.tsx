@@ -175,7 +175,19 @@ export default function StudentMaterialsPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   async function handleOpen(material: ClassMaterial) {
-    window.open(material.file_url, '_blank', 'noopener,noreferrer');
+    let url = material.file_url;
+    
+    // Remove query params that force download if any
+    url = url.replace(/[\?&]download=[^&]+/, '');
+    url = url.replace(/[\?&]$/, '');
+    
+    // Force inline viewing for documents via Google Docs Viewer
+    const isDocument = /\.(pdf|doc|docx|ppt|pptx|xls|xlsx)$/i.test(url) || material.file_type === 'pdf';
+    if (isDocument && !url.includes('docs.google.com/viewer')) {
+      url = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
     if (!viewedIds.has(material.id)) await markViewed(material.id);
   }
 
