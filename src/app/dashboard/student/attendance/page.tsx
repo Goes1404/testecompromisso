@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,8 @@ import {
   ShieldAlert,
   AlertTriangle,
   CalendarDays,
+  Sparkles,
+  Flame,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +41,47 @@ export default function StudentAttendancePage() {
 
   const [impactOpen, setImpactOpen] = useState(false);
   const [confirmoInput, setConfirmoInput] = useState("");
+
+  const otpRefs = useRef<Array<HTMLInputElement | null>>([null, null, null, null]);
+
+  const handleOtpChange = (idx: number, raw: string) => {
+    const val = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(-1);
+    const chars = checkinCode.padEnd(4, " ").split("");
+    chars[idx] = val || " ";
+    const next = chars.join("").trimEnd();
+    setCheckinCode(next);
+    if (val && idx < 3) otpRefs.current[idx + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      const chars = checkinCode.padEnd(4, " ").split("");
+      if (chars[idx] && chars[idx] !== " ") {
+        chars[idx] = " ";
+        setCheckinCode(chars.join("").trimEnd());
+      } else if (idx > 0) {
+        chars[idx - 1] = " ";
+        setCheckinCode(chars.join("").trimEnd());
+        otpRefs.current[idx - 1]?.focus();
+      }
+      e.preventDefault();
+    } else if (e.key === "ArrowLeft" && idx > 0) {
+      otpRefs.current[idx - 1]?.focus();
+      e.preventDefault();
+    } else if (e.key === "ArrowRight" && idx < 3) {
+      otpRefs.current[idx + 1]?.focus();
+      e.preventDefault();
+    } else if (e.key === "Enter" && checkinCode.length === 4) {
+      handleOpenImpact();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    setCheckinCode(pasted);
+    setTimeout(() => otpRefs.current[Math.min(pasted.length, 3)]?.focus(), 0);
+  };
 
   async function fetchData() {
     if (!user) return;
@@ -118,23 +161,42 @@ export default function StudentAttendancePage() {
   const ausentes = sessions.filter((s) => myRecords[s.id] === "ausente" || !myRecords[s.id]).length;
   const pct = totalSessions > 0 ? Math.round((presentes / totalSessions) * 100) : 0;
   const atRisk = pct < 75 && totalSessions > 0;
+  const isStellar = pct >= 90 && totalSessions > 0;
 
   return (
     <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* ── Hero ── */}
-      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+      <div className={`relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border p-6 transition-colors ${
+        isStellar ? "border-emerald-500/30" : "border-white/5"
+      }`}>
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              "radial-gradient(ellipse at 70% 0%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 100%, rgba(59,130,246,0.08) 0%, transparent 60%)",
+            background: isStellar
+              ? "radial-gradient(ellipse at 70% 0%, rgba(16,185,129,0.22) 0%, transparent 60%), radial-gradient(ellipse at 10% 100%, rgba(20,184,166,0.12) 0%, transparent 60%)"
+              : "radial-gradient(ellipse at 70% 0%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 100%, rgba(59,130,246,0.08) 0%, transparent 60%)",
           }}
         />
+        {/* Stellar mode: subtle pulsing glow */}
+        {isStellar && (
+          <div
+            className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none animate-pulse"
+            style={{
+              background: "radial-gradient(circle, rgba(16,185,129,0.4) 0%, transparent 70%)",
+              filter: "blur(30px)",
+            }}
+          />
+        )}
         <div className="relative z-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400/70 mb-1">
-            Aluno
-          </p>
+          <div className="flex items-center gap-2 mb-1">
+            {isStellar && <Sparkles className="h-3 w-3 text-emerald-400 animate-pulse" />}
+            <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${
+              isStellar ? "text-emerald-400/80" : "text-orange-400/70"
+            }`}>
+              {isStellar ? "Frequência exemplar" : "Aluno"}
+            </p>
+          </div>
           <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none mb-4">
             Minha Frequência
           </h1>
@@ -187,44 +249,62 @@ export default function StudentAttendancePage() {
         </div>
       )}
 
-      {/* ── Check-in ── */}
-      <div className="bg-white/3 border border-white/6 rounded-[1.5rem] p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
+      {/* ── Check-in (OTP-style) ── */}
+      <div className="relative bg-[#0d0d0f] border border-orange-500/15 rounded-[1.5rem] p-5 space-y-4 overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.10) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative z-10 flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
             <KeyRound className="h-4 w-4 text-orange-400" />
           </div>
           <div>
             <p className="font-black text-white text-sm italic">Check-in da Aula</p>
             <p className="text-[10px] text-white/35 font-medium">
-              Token exibido pelo professor na lousa
+              Digite o token exibido na lousa
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3 items-end">
-          <div className="flex-1 space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">
-              Token (ex: A7X9)
-            </Label>
-            <input
-              type="text"
-              placeholder="A7X9"
-              maxLength={6}
-              value={checkinCode}
-              onChange={(e) => setCheckinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
-              onKeyDown={(e) => e.key === "Enter" && handleOpenImpact()}
-              className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-center text-xl font-black tracking-[0.4em] text-white font-mono placeholder:text-white/20 outline-none focus:border-orange-500/40 transition-all uppercase"
-            />
-          </div>
-          <Button
-            onClick={handleOpenImpact}
-            disabled={checkingIn || checkinCode.length < 4}
-            className="h-12 px-5 bg-orange-500 hover:bg-orange-600 text-white font-black text-xs rounded-xl shadow-lg disabled:opacity-40"
-          >
-            <CheckCircle2 className="h-4 w-4 mr-1.5" />
-            Confirmar
-          </Button>
+        {/* OTP boxes */}
+        <div className="relative z-10 flex justify-center gap-2 py-1">
+          {[0, 1, 2, 3].map((idx) => {
+            const char = checkinCode[idx] || "";
+            const filled = !!char;
+            return (
+              <input
+                key={idx}
+                ref={(el) => { otpRefs.current[idx] = el; }}
+                type="text"
+                inputMode="text"
+                autoComplete="off"
+                maxLength={1}
+                value={char}
+                onChange={(e) => handleOtpChange(idx, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                onPaste={handleOtpPaste}
+                onFocus={(e) => e.target.select()}
+                className={`h-14 w-12 sm:w-14 rounded-xl border-2 text-center text-2xl font-black italic font-mono uppercase outline-none transition-all touch-manipulation ${
+                  filled
+                    ? "bg-orange-500/15 border-orange-500/50 text-orange-300 shadow-lg shadow-orange-500/20"
+                    : "bg-white/3 border-white/10 text-white/40 focus:border-orange-500/40 focus:bg-white/5"
+                }`}
+              />
+            );
+          })}
         </div>
+
+        <Button
+          onClick={handleOpenImpact}
+          disabled={checkingIn || checkinCode.length < 4}
+          className="relative z-10 w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs rounded-xl shadow-xl shadow-orange-500/30 disabled:opacity-40 disabled:shadow-none uppercase tracking-widest"
+        >
+          <CheckCircle2 className="h-4 w-4 mr-1.5" />
+          Confirmar Presença
+        </Button>
       </div>
 
       {/* ── History ── */}
@@ -246,14 +326,15 @@ export default function StudentAttendancePage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {sessions.map((session) => {
+            {sessions.map((session, idx) => {
               const status = myRecords[session.id];
               const isPresente = status === "presente";
               const isJustificado = status === "justificado";
               return (
                 <div
                   key={session.id}
-                  className="flex items-center gap-3 bg-white/3 border border-white/5 rounded-2xl p-4"
+                  className="flex items-center gap-3 bg-white/3 border border-white/5 hover:border-white/10 rounded-2xl p-4 transition-all animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+                  style={{ animationDelay: `${Math.min(idx * 40, 400)}ms`, animationDuration: "400ms" }}
                 >
                   {/* Status dot */}
                   <div

@@ -293,9 +293,27 @@ export default function StudentEssayPage() {
                 Auditoria por IA · critérios INEP
               </p>
             </div>
-            <div className="flex flex-col items-center bg-white/5 border border-white/8 rounded-2xl px-3 py-2 shrink-0">
-              <span className="text-lg font-black text-white leading-none">{charCount}</span>
-              <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider mt-0.5">Sinais</span>
+            {/* Char counter with progress ring (ENEM ~1000-1500 chars ideal) */}
+            <div className="relative shrink-0">
+              <svg className="h-16 w-16 -rotate-90" viewBox="0 0 56 56">
+                <circle cx="28" cy="28" r="24" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                <circle
+                  cx="28"
+                  cy="28"
+                  r="24"
+                  fill="none"
+                  stroke={charCount >= 1000 ? "#10b981" : charCount >= 500 ? "#f97316" : "#f59e0b"}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 24}
+                  strokeDashoffset={(2 * Math.PI * 24) * (1 - Math.min(charCount, 1500) / 1500)}
+                  style={{ transition: "stroke-dashoffset 0.4s ease-out, stroke 0.3s" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-sm font-black text-white leading-none italic">{charCount}</span>
+                <span className="text-[7px] font-bold text-white/40 uppercase tracking-wider mt-0.5">/ 1500</span>
+              </div>
             </div>
           </div>
 
@@ -410,28 +428,61 @@ export default function StudentEssayPage() {
             <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
           </div>
 
-          {/* Score Card */}
-          <div className="relative bg-[#0d0d0f] border border-white/8 rounded-[1.5rem] overflow-hidden p-6">
+          {/* Score Card — dramatic reveal */}
+          <div className="relative bg-[#0d0d0f] border border-orange-500/20 rounded-[1.5rem] overflow-hidden p-6 animate-in zoom-in-95 duration-500">
             <div
-              className="absolute inset-0 pointer-events-none"
+              className="absolute inset-0 pointer-events-none animate-pulse"
               style={{
-                background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.2) 0%, transparent 60%)",
+                background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.25) 0%, transparent 60%)",
+                animationDuration: "3s",
               }}
             />
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
+            {/* Decorative glow */}
+            <div
+              className="absolute -top-20 -right-20 w-60 h-60 rounded-full pointer-events-none opacity-40"
+              style={{
+                background: "radial-gradient(circle, rgba(255,107,0,0.4) 0%, transparent 60%)",
+                filter: "blur(40px)",
+              }}
+            />
+            <div className="relative z-10 flex items-start justify-between gap-4">
+              <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="h-3 w-3 text-orange-400 fill-orange-400 animate-pulse" />
                   <Badge className="bg-orange-500/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">
                     Pontuação Final
                   </Badge>
                 </div>
-                <h2 className="text-6xl font-black italic tracking-tighter leading-none text-white drop-shadow-xl">
+                <h2 className="text-6xl sm:text-7xl font-black italic tracking-tighter leading-[0.85] text-white drop-shadow-xl">
                   {result.total_score}
                 </h2>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-1">
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-2">
                   de 1000 pontos
                 </p>
+              </div>
+              {/* Mini progress ring */}
+              <div className="relative shrink-0">
+                <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
+                  <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    fill="none"
+                    stroke="#fb923c"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 34}
+                    strokeDashoffset={(2 * Math.PI * 34) * (1 - (result.total_score || 0) / 1000)}
+                    style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-base font-black text-orange-400 leading-none italic">
+                    {Math.round(((result.total_score || 0) / 1000) * 100)}
+                  </span>
+                  <span className="text-[7px] font-bold text-white/30 uppercase tracking-wider mt-0.5">%</span>
+                </div>
               </div>
             </div>
             <div className="relative z-10 mt-5 pt-5 border-t border-white/8">
@@ -444,14 +495,15 @@ export default function StudentEssayPage() {
 
           {/* Competencies grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {Object.entries(result.competencies || {}).map(([key, comp]: any) => {
+            {Object.entries(result.competencies || {}).map(([key, comp]: any, idx) => {
               const info = COMPETENCY_LABELS[key];
               if (!info) return null;
               const Icon = info.icon;
               return (
                 <div
                   key={key}
-                  className="bg-white/3 border border-white/6 rounded-2xl p-4"
+                  className="bg-white/3 border border-white/6 rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+                  style={{ animationDelay: `${idx * 80}ms`, animationDuration: "500ms" }}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className={`p-2 rounded-xl border ${info.bg}`}>
