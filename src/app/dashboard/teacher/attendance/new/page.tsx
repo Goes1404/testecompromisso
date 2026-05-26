@@ -128,14 +128,14 @@ export default function NewAttendanceSessionPage() {
       {/* ── Back link ── */}
       <Link
         href="/dashboard/teacher/attendance"
-        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/55 hover:text-white/70 transition-colors"
+        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-600 transition-colors"
       >
         <ArrowLeft className="h-3 w-3" />
         Chamadas
       </Link>
 
       {/* ── Hero ── */}
-      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-slate-100 p-6">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -150,10 +150,10 @@ export default function NewAttendanceSessionPage() {
               Nova Sessão
             </p>
           </div>
-          <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
+          <h1 className="text-2xl font-black italic tracking-tighter text-slate-800 leading-none">
             Criar Chamada
           </h1>
-          <p className="text-white/65 text-xs font-semibold mt-1">
+          <p className="text-slate-600 text-xs font-semibold mt-1">
             Vincule a uma turma para gerar o token
           </p>
         </div>
@@ -162,12 +162,12 @@ export default function NewAttendanceSessionPage() {
       {/* ── Form ── */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden"
+        className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden"
       >
-        <div className="p-4 border-b border-white/5 bg-white/3">
+        <div className="p-4 border-b border-slate-100 bg-white shadow-sm">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-orange-400/85" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
               Detalhes da Aula
             </p>
           </div>
@@ -176,17 +176,17 @@ export default function NewAttendanceSessionPage() {
         <div className="p-4 space-y-4">
           {/* Live link */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
               Vincular a uma Live (opcional)
             </Label>
             <Select onValueChange={handleLiveSelect} defaultValue="none">
-              <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold text-sm">
+              <SelectTrigger className="h-12 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-sm">
                 <SelectValue placeholder="Selecionar live..." />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
-                <SelectItem value="none" className="font-bold text-white/70 text-xs">Nenhuma</SelectItem>
+              <SelectContent className="rounded-xl border-slate-200 bg-white">
+                <SelectItem value="none" className="font-bold text-slate-600 text-xs">Nenhuma</SelectItem>
                 {lives.map((live) => (
-                  <SelectItem key={live.id} value={live.id} className="font-bold text-white/70 text-xs">
+                  <SelectItem key={live.id} value={live.id} className="font-bold text-slate-600 text-xs">
                     {live.title}
                   </SelectItem>
                 ))}
@@ -196,7 +196,7 @@ export default function NewAttendanceSessionPage() {
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
               Título <span className="text-red-400">*</span>
             </Label>
             <input
@@ -205,14 +205,14 @@ export default function NewAttendanceSessionPage() {
               value={formData.title}
               onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               required
-              className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+              className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
             />
           </div>
 
           {/* Date + Time grid */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Data <span className="text-red-400">*</span>
               </Label>
               <input
@@ -220,18 +220,18 @@ export default function NewAttendanceSessionPage() {
                 value={formData.session_date}
                 onChange={(e) => setFormData((prev) => ({ ...prev, session_date: e.target.value }))}
                 required
-                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-3 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Horário
               </Label>
               <input
                 type="time"
                 value={formData.start_time}
                 onChange={(e) => setFormData((prev) => ({ ...prev, start_time: e.target.value }))}
-                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-3 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
               />
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function NewAttendanceSessionPage() {
           {/* Subject + Type */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Matéria
               </Label>
               <input
@@ -247,11 +247,11 @@ export default function NewAttendanceSessionPage() {
                 placeholder="Matemática"
                 value={formData.subject}
                 onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
-                className="w-full h-12 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Tipo
               </Label>
               <Select
@@ -260,12 +260,12 @@ export default function NewAttendanceSessionPage() {
                   setFormData((prev) => ({ ...prev, session_type: v as "presencial" | "live" }))
                 }
               >
-                <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold text-sm">
+                <SelectTrigger className="h-12 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-sm">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
-                  <SelectItem value="presencial" className="font-bold text-white/70 text-xs">Presencial</SelectItem>
-                  <SelectItem value="live" className="font-bold text-white/70 text-xs">Live (Online)</SelectItem>
+                <SelectContent className="rounded-xl border-slate-200 bg-white">
+                  <SelectItem value="presencial" className="font-bold text-slate-600 text-xs">Presencial</SelectItem>
+                  <SelectItem value="live" className="font-bold text-slate-600 text-xs">Live (Online)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -273,38 +273,38 @@ export default function NewAttendanceSessionPage() {
 
           {/* Class */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
               Sala / Turma <span className="text-red-400">*</span>
             </Label>
             <Select
               value={formData.class_label}
               onValueChange={(v) => setFormData((prev) => ({ ...prev, class_label: v }))}
             >
-              <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold text-sm">
+              <SelectTrigger className="h-12 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-sm">
                 <SelectValue placeholder="Selecionar turma..." />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+              <SelectContent className="rounded-xl border-slate-200 bg-white">
                 {classOptions.length === 0 ? (
-                  <SelectItem value="__none__" disabled className="font-bold text-white/55 text-xs">
+                  <SelectItem value="__none__" disabled className="font-bold text-slate-500 text-xs">
                     Nenhuma turma cadastrada
                   </SelectItem>
                 ) : (
                   classOptions.map((c) => (
-                    <SelectItem key={c} value={c} className="font-bold text-white/70 text-xs">
+                    <SelectItem key={c} value={c} className="font-bold text-slate-600 text-xs">
                       {c}
                     </SelectItem>
                   ))
                 )}
               </SelectContent>
             </Select>
-            <p className="text-[10px] text-white/55 font-medium leading-snug px-1">
+            <p className="text-[10px] text-slate-500 font-medium leading-snug px-1">
               Só alunos desta sala poderão usar o token.
             </p>
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
               Descrição (opcional)
             </Label>
             <Textarea
@@ -312,14 +312,14 @@ export default function NewAttendanceSessionPage() {
               value={formData.description}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
-              className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/55 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
+              className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
             />
           </div>
 
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+            className="w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             Criar Sessão e Registrar Chamada

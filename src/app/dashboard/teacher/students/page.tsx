@@ -204,39 +204,39 @@ export default function TeacherStudentsPage() {
 
       {/* ── Search ── */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
         <input
           type="text"
           placeholder="Pesquisar por nome, e-mail ou polo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-12 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
+          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
         />
       </div>
 
       {/* ── Selects ── */}
       <div className="grid grid-cols-2 gap-3">
         <Select value={filterInstitution} onValueChange={setFilterInstitution}>
-          <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white/70 text-xs font-bold focus:ring-orange-500/30">
+          <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-600 text-xs font-bold focus:ring-orange-500/30">
             <SelectValue placeholder="Instituição" />
           </SelectTrigger>
-          <SelectContent className="rounded-2xl border-white/10 bg-[#1a1a1f] shadow-2xl">
-            <SelectItem value="all" className="text-white/70 text-xs font-bold">Todas</SelectItem>
+          <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-2xl">
+            <SelectItem value="all" className="text-slate-600 text-xs font-bold">Todas</SelectItem>
             {institutions.map((inst) => (
-              <SelectItem key={inst as string} value={inst as string} className="text-white/70 text-xs font-bold">
+              <SelectItem key={inst as string} value={inst as string} className="text-slate-600 text-xs font-bold">
                 {inst as string}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterCourse} onValueChange={setFilterCourse}>
-          <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white/70 text-xs font-bold focus:ring-orange-500/30">
+          <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-600 text-xs font-bold focus:ring-orange-500/30">
             <SelectValue placeholder="Sala / Turma" />
           </SelectTrigger>
-          <SelectContent className="rounded-2xl border-white/10 bg-[#1a1a1f] shadow-2xl">
-            <SelectItem value="all" className="text-white/70 text-xs font-bold">Todas</SelectItem>
+          <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-2xl">
+            <SelectItem value="all" className="text-slate-600 text-xs font-bold">Todas</SelectItem>
             {courses.map((c) => (
-              <SelectItem key={c as string} value={c as string} className="text-white/70 text-xs font-bold">
+              <SelectItem key={c as string} value={c as string} className="text-slate-600 text-xs font-bold">
                 {c as string}
               </SelectItem>
             ))}
@@ -252,14 +252,14 @@ export default function TeacherStudentsPage() {
             onClick={() => setActiveFilter(f.key as typeof activeFilter)}
             className={`shrink-0 flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
               activeFilter === f.key
-                ? `${f.color} text-white shadow-lg`
-                : "bg-white/5 border border-white/8 text-white/50 hover:text-white/80"
+                ? `${f.color} text-slate-800 shadow-lg`
+                : "bg-white shadow-sm border border-slate-200 text-slate-400 hover:text-slate-800/80"
             }`}
           >
             {f.label}
             <span
               className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
-                activeFilter === f.key ? "bg-black/20 text-white" : "bg-white/10 text-white/65"
+                activeFilter === f.key ? "bg-black/20 text-slate-800" : "bg-white/10 text-slate-600"
               }`}
             >
               {f.count}
@@ -272,14 +272,14 @@ export default function TeacherStudentsPage() {
       {loading ? (
         <div className="py-20 flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/55 animate-pulse">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">
             Sincronizando...
           </p>
         </div>
       ) : filteredStudents.length === 0 ? (
-        <div className="py-20 text-center border border-dashed border-white/10 rounded-[2rem]">
+        <div className="py-20 text-center border border-dashed border-slate-200 rounded-[2rem]">
           <Users className="h-10 w-10 mx-auto mb-3 text-white/10" />
-          <p className="font-black italic text-white/45 uppercase tracking-widest text-sm">
+          <p className="font-black italic text-slate-400 uppercase tracking-widest text-sm">
             Nenhum registro encontrado
           </p>
         </div>
@@ -295,12 +295,12 @@ export default function TeacherStudentsPage() {
               return (
                 <div
                   key={student.id}
-                  className="group relative bg-white/3 border border-white/6 hover:border-orange-500/20 rounded-[1.5rem] p-4 transition-all hover:bg-white/5"
+                  className="group relative bg-white shadow-sm border border-slate-200 hover:border-orange-500/20 rounded-[1.5rem] p-4 transition-all hover:bg-white shadow-sm"
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <div
-                      className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-lg ${
+                      className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm text-slate-800 shrink-0 shadow-lg ${
                         isInactive ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                       }`}
                     >
@@ -311,10 +311,10 @@ export default function TeacherStudentsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-black text-white text-sm italic truncate leading-tight">
+                          <p className="font-black text-slate-800 text-sm italic truncate leading-tight">
                             {student.name || "Aluno"}
                           </p>
-                          <p className="text-[10px] text-white/60 font-medium truncate mt-0.5">
+                          <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
                             {student.email || "—"}
                           </p>
                         </div>
@@ -334,7 +334,7 @@ export default function TeacherStudentsPage() {
                       {/* Tags row */}
                       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                         {student.institution && (
-                          <span className="text-[9px] font-bold text-white/65 bg-white/5 px-2 py-0.5 rounded-full truncate max-w-[120px]">
+                          <span className="text-[9px] font-bold text-slate-600 bg-white shadow-sm px-2 py-0.5 rounded-full truncate max-w-[120px]">
                             {student.institution}
                           </span>
                         )}
@@ -352,11 +352,11 @@ export default function TeacherStudentsPage() {
 
                       {/* Progress bar */}
                       <div className="mt-3 space-y-1">
-                        <div className="flex justify-between text-[9px] font-bold text-white/55 uppercase">
+                        <div className="flex justify-between text-[9px] font-bold text-slate-500 uppercase">
                           <span>Progresso</span>
                           <span>{progress}%</span>
                         </div>
-                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-1 w-full bg-white shadow-sm rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all"
                             style={{ width: `${progress}%` }}
@@ -365,8 +365,8 @@ export default function TeacherStudentsPage() {
                       </div>
 
                       {/* Footer row */}
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
-                        <div className="flex items-center gap-1.5 text-white/55">
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                        <div className="flex items-center gap-1.5 text-slate-500">
                           <Clock className="h-3 w-3" />
                           <span className="text-[10px] font-black">
                             {formatTime(student.total_time_spent)}
@@ -389,21 +389,21 @@ export default function TeacherStudentsPage() {
                               setEditingStudent(student);
                               setEditCourse(student.course || "");
                             }}
-                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/55 hover:text-orange-400 hover:bg-orange-500/10 transition-all active:scale-90"
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-orange-400 hover:bg-orange-500/10 transition-all active:scale-90"
                             title="Alterar Sala/Turma"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <Link
                             href={`/dashboard/chat/${student.id}`}
-                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/55 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all active:scale-90"
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all active:scale-90"
                             title="Chat"
                           >
                             <Send className="h-3.5 w-3.5" />
                           </Link>
                           <Link
                             href={`/dashboard/teacher/analytics?user=${student.id}`}
-                            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/55 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-90"
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-90"
                             title="Analytics"
                           >
                             <ArrowUpRight className="h-3.5 w-3.5" />
@@ -420,7 +420,7 @@ export default function TeacherStudentsPage() {
           {displayCount < filteredStudents.length && (
             <button
               onClick={() => setDisplayCount((prev) => prev + 100)}
-              className="w-full h-12 rounded-2xl border border-dashed border-white/10 text-white/55 hover:text-white/60 hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+              className="w-full h-12 rounded-2xl border border-dashed border-slate-200 text-slate-500 hover:text-slate-500 hover:border-slate-300 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
             >
               Carregar mais (+{Math.min(100, filteredStudents.length - displayCount)})
             </button>
@@ -430,17 +430,17 @@ export default function TeacherStudentsPage() {
 
       {/* Dialog: Sala / Turma */}
       <Dialog open={!!editingStudent} onOpenChange={(open) => { if (!open) setEditingStudent(null); }}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md bg-[#131316]">
-          <DialogHeader className="p-8 pb-4 border-b border-white/5">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md bg-white">
+          <DialogHeader className="p-8 pb-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
                 <Pencil className="h-5 w-5 text-orange-400" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-black italic text-white leading-none uppercase tracking-tight">
+                <DialogTitle className="text-xl font-black italic text-slate-800 leading-none uppercase tracking-tight">
                   Mudar Sala / Turma
                 </DialogTitle>
-                <DialogDescription className="text-xs mt-0.5 font-medium text-white/65">
+                <DialogDescription className="text-xs mt-0.5 font-medium text-slate-600">
                   {editingStudent?.name}
                 </DialogDescription>
               </div>
@@ -449,18 +449,18 @@ export default function TeacherStudentsPage() {
 
           <div className="p-8 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase text-white/55 tracking-widest ml-1">
+              <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest ml-1">
                 Sala / Turma
               </Label>
               <Select value={editCourse} onValueChange={setEditCourse}>
-                <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/8 text-white font-bold">
+                <SelectTrigger className="h-12 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold">
                   <SelectValue placeholder="Selecionar Sala" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f] shadow-2xl">
+                <SelectContent className="rounded-xl border-slate-200 bg-white shadow-2xl">
                   {Array.from({ length: 12 }, (_, i) => {
                     const num = String(i + 1).padStart(2, "0");
                     return (
-                      <SelectItem key={num} value={num} className="font-bold text-xs text-white/70">
+                      <SelectItem key={num} value={num} className="font-bold text-xs text-slate-600">
                         Sala {num}
                       </SelectItem>
                     );
@@ -469,7 +469,7 @@ export default function TeacherStudentsPage() {
                     !Array.from({ length: 12 }, (_, i) =>
                       String(i + 1).padStart(2, "0")
                     ).includes(editCourse) && (
-                      <SelectItem value={editCourse} className="font-bold text-xs text-white/70">
+                      <SelectItem value={editCourse} className="font-bold text-xs text-slate-600">
                         {editCourse}
                       </SelectItem>
                     )}
@@ -481,14 +481,14 @@ export default function TeacherStudentsPage() {
               <Button
                 variant="outline"
                 onClick={() => setEditingStudent(null)}
-                className="flex-1 h-12 rounded-2xl font-black text-xs bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10"
+                className="flex-1 h-12 rounded-2xl font-black text-xs bg-white shadow-sm border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleUpdateStudentCourse}
                 disabled={isSubmittingCourse}
-                className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl border-none text-xs"
+                className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl border-none text-xs"
               >
                 {isSubmittingCourse && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
                 Confirmar

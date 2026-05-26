@@ -252,7 +252,7 @@ export default function TeacherMaterialsPage() {
       {!showForm && (
         <Button
           onClick={() => setShowForm(true)}
-          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
+          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Novo Material
@@ -261,11 +261,11 @@ export default function TeacherMaterialsPage() {
 
       {/* ── Form ── */}
       {showForm && (
-        <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
-          <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+        <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
               <PlusCircle className="h-4 w-4 text-orange-400/85" />
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
                 Publicar Material
               </p>
             </div>
@@ -276,14 +276,14 @@ export default function TeacherMaterialsPage() {
                 setFile(null);
                 setUrlInput("");
               }}
-              className="text-[10px] font-bold text-white/55 hover:text-white/60 uppercase tracking-wider"
+              className="text-[10px] font-bold text-slate-500 hover:text-slate-500 uppercase tracking-wider"
             >
               Fechar
             </button>
           </div>
           <div className="p-4 space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Título *
               </Label>
               <input
@@ -291,34 +291,34 @@ export default function TeacherMaterialsPage() {
                 placeholder="Ex: Slides — Funções do 2º Grau"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Matéria</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Matéria</Label>
                 <Select value={form.subject} onValueChange={(val) => setForm((f) => ({ ...f, subject: val }))}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f] max-h-60">
-                    <SelectItem value="none" className="font-bold text-white/70 text-xs">Nenhuma</SelectItem>
+                  <SelectContent className="rounded-xl border-slate-200 bg-white max-h-60">
+                    <SelectItem value="none" className="font-bold text-slate-600 text-xs">Nenhuma</SelectItem>
                     {EDUCATIONAL_CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c} className="font-bold text-white/70 text-xs">{c}</SelectItem>
+                      <SelectItem key={c} value={c} className="font-bold text-slate-600 text-xs">{c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Tipo</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Tipo</Label>
                 <Select value={form.file_type} onValueChange={(val) => setForm((f) => ({ ...f, file_type: val }))}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                  <SelectContent className="rounded-xl border-slate-200 bg-white">
                     {FILE_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                      <SelectItem key={t.value} value={t.value} className="font-bold text-slate-600 text-xs">
                         {t.label}
                       </SelectItem>
                     ))}
@@ -326,14 +326,14 @@ export default function TeacherMaterialsPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Público</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Público</Label>
                 <Select value={form.target_group} onValueChange={(val) => setForm((f) => ({ ...f, target_group: val }))}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                  <SelectContent className="rounded-xl border-slate-200 bg-white">
                     {TARGET_GROUPS.map((t) => (
-                      <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                      <SelectItem key={t.value} value={t.value} className="font-bold text-slate-600 text-xs">
                         {t.label}
                       </SelectItem>
                     ))}
@@ -341,15 +341,15 @@ export default function TeacherMaterialsPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Aula</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Aula</Label>
                 <Select value={form.session_id} onValueChange={(val) => setForm((f) => ({ ...f, session_id: val }))}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                     <SelectValue placeholder="Nenhuma" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
-                    <SelectItem value="none" className="font-bold text-white/70 text-xs">Nenhuma</SelectItem>
+                  <SelectContent className="rounded-xl border-slate-200 bg-white">
+                    <SelectItem value="none" className="font-bold text-slate-600 text-xs">Nenhuma</SelectItem>
                     {sessions.map((s) => (
-                      <SelectItem key={s.id} value={s.id} className="font-bold text-white/70 text-xs">
+                      <SelectItem key={s.id} value={s.id} className="font-bold text-slate-600 text-xs">
                         {format(new Date(s.session_date + "T00:00:00"), "dd/MM", { locale: ptBR })} — {s.title}
                       </SelectItem>
                     ))}
@@ -365,8 +365,8 @@ export default function TeacherMaterialsPage() {
                   onClick={() => setUseUpload(true)}
                   className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
                     useUpload
-                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "bg-white/5 border border-white/8 text-white/70"
+                      ? "bg-orange-500 text-slate-800 shadow-lg shadow-orange-500/20"
+                      : "bg-white shadow-sm border border-slate-200 text-slate-600"
                   }`}
                 >
                   Upload
@@ -375,8 +375,8 @@ export default function TeacherMaterialsPage() {
                   onClick={() => setUseUpload(false)}
                   className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
                     !useUpload
-                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "bg-white/5 border border-white/8 text-white/70"
+                      ? "bg-orange-500 text-slate-800 shadow-lg shadow-orange-500/20"
+                      : "bg-white shadow-sm border border-slate-200 text-slate-600"
                   }`}
                 >
                   URL / Link
@@ -387,7 +387,7 @@ export default function TeacherMaterialsPage() {
                   key="file-input"
                   type="file"
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="w-full h-11 rounded-xl bg-white/5 border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-white/70 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-white"
+                  className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-slate-800"
                 />
               ) : (
                 <input
@@ -396,27 +396,27 @@ export default function TeacherMaterialsPage() {
                   placeholder="https://..."
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-medium text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
                 />
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Descrição (opcional)
               </Label>
               <Textarea
                 placeholder="Detalhes sobre este material..."
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/55 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
+                className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
               />
             </div>
 
             <Button
               onClick={handleSubmit}
               disabled={saving || !form.title || (!file && !urlInput)}
-              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Publicar Material
@@ -429,13 +429,13 @@ export default function TeacherMaterialsPage() {
       {!loading && materials.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="h-10 rounded-xl bg-white/5 border-white/8 text-white/70 font-bold text-xs">
+            <SelectTrigger className="h-10 rounded-xl bg-white shadow-sm border-slate-200 text-slate-600 font-bold text-xs">
               <SelectValue placeholder="Todos tipos" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
-              <SelectItem value="all" className="font-bold text-white/70 text-xs">Todos os tipos</SelectItem>
+            <SelectContent className="rounded-xl border-slate-200 bg-white">
+              <SelectItem value="all" className="font-bold text-slate-600 text-xs">Todos os tipos</SelectItem>
               {FILE_TYPES.map((t) => (
-                <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                <SelectItem key={t.value} value={t.value} className="font-bold text-slate-600 text-xs">
                   {t.label}
                 </SelectItem>
               ))}
@@ -443,13 +443,13 @@ export default function TeacherMaterialsPage() {
           </Select>
           {subjects.length > 0 && (
             <Select value={filterSubject} onValueChange={setFilterSubject}>
-              <SelectTrigger className="h-10 rounded-xl bg-white/5 border-white/8 text-white/70 font-bold text-xs">
+              <SelectTrigger className="h-10 rounded-xl bg-white shadow-sm border-slate-200 text-slate-600 font-bold text-xs">
                 <SelectValue placeholder="Todas matérias" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
-                <SelectItem value="all" className="font-bold text-white/70 text-xs">Todas matérias</SelectItem>
+              <SelectContent className="rounded-xl border-slate-200 bg-white">
+                <SelectItem value="all" className="font-bold text-slate-600 text-xs">Todas matérias</SelectItem>
                 {subjects.map((s) => (
-                  <SelectItem key={s} value={s} className="font-bold text-white/70 text-xs">{s}</SelectItem>
+                  <SelectItem key={s} value={s} className="font-bold text-slate-600 text-xs">{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -463,9 +463,9 @@ export default function TeacherMaterialsPage() {
           <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+        <div className="py-16 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
           <FolderOpen className="h-8 w-8 text-white/15 mx-auto mb-2" />
-          <p className="font-black italic text-xs text-white/55 uppercase tracking-widest">
+          <p className="font-black italic text-xs text-slate-500 uppercase tracking-widest">
             Nenhum material publicado
           </p>
         </div>
@@ -477,7 +477,7 @@ export default function TeacherMaterialsPage() {
             return (
               <div
                 key={m.id}
-                className="bg-white/3 border border-white/6 rounded-2xl p-3.5 group"
+                className="bg-white shadow-sm border border-slate-200 rounded-2xl p-3.5 group"
               >
                 <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0">
@@ -485,7 +485,7 @@ export default function TeacherMaterialsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-black text-white text-sm truncate flex-1 italic leading-tight">
+                      <p className="font-black text-slate-800 text-sm truncate flex-1 italic leading-tight">
                         {m.title}
                       </p>
                     </div>
@@ -494,20 +494,20 @@ export default function TeacherMaterialsPage() {
                         {FILE_TYPES.find((t) => t.value === m.file_type)?.label ?? m.file_type}
                       </Badge>
                       {m.subject && (
-                        <Badge className="text-[8px] font-black border-none bg-white/5 text-white/70 px-2 h-4">
+                        <Badge className="text-[8px] font-black border-none bg-white shadow-sm text-slate-600 px-2 h-4">
                           {m.subject}
                         </Badge>
                       )}
-                      <Badge className="text-[8px] font-black border-none bg-white/5 text-white/70 px-2 h-4">
+                      <Badge className="text-[8px] font-black border-none bg-white shadow-sm text-slate-600 px-2 h-4">
                         {TARGET_GROUPS.find((t) => t.value === m.target_group)?.label ?? "Todos"}
                       </Badge>
                     </div>
                     {m.description && (
-                      <p className="text-[11px] text-white/70 font-medium italic mt-1.5 truncate leading-tight">
+                      <p className="text-[11px] text-slate-600 font-medium italic mt-1.5 truncate leading-tight">
                         {m.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-1.5 mt-2 text-[9px] font-bold text-white/55 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 mt-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
                       <span>{format(new Date(m.created_at), "dd/MM/yy", { locale: ptBR })}</span>
                       <span className="text-white/15">·</span>
                       <span className="flex items-center gap-0.5">
@@ -517,7 +517,7 @@ export default function TeacherMaterialsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-white/5">
+                <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-slate-100">
                   <a
                     href={m.file_url}
                     target="_blank"

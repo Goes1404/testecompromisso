@@ -173,14 +173,14 @@ export default function TeacherRankingsPage() {
       {loading ? (
         <div className="py-20 flex flex-col items-center gap-3">
           <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/55 animate-pulse">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">
             Sincronizando posições...
           </p>
         </div>
       ) : activeRank.length === 0 ? (
-        <div className="py-20 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+        <div className="py-20 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
           <Trophy className="h-8 w-8 mx-auto mb-2 text-white/15" />
-          <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
             Aguardando dados de performance
           </p>
         </div>
@@ -198,7 +198,7 @@ export default function TeacherRankingsPage() {
                     </div>
                     <Medal className="h-3.5 w-3.5 absolute -top-1 -right-1 text-slate-300 drop-shadow" />
                   </div>
-                  <p className="text-[11px] font-black text-white text-center mt-2 truncate w-full px-1">
+                  <p className="text-[11px] font-black text-slate-800 text-center mt-2 truncate w-full px-1">
                     {activeRank[1].name?.split(" ")[0]}
                   </p>
                   <p className="text-base font-black text-slate-300 italic">{activeRank[1].bestScore}</p>
@@ -214,7 +214,7 @@ export default function TeacherRankingsPage() {
                     </div>
                     <Medal className="h-4 w-4 absolute -top-1 -right-1 text-amber-300 drop-shadow" />
                   </div>
-                  <p className="text-xs font-black text-white text-center mt-2 truncate w-full px-1">
+                  <p className="text-xs font-black text-slate-800 text-center mt-2 truncate w-full px-1">
                     {activeRank[0].name?.split(" ")[0]}
                   </p>
                   <div className="flex items-center gap-1">
@@ -232,7 +232,7 @@ export default function TeacherRankingsPage() {
                     </div>
                     <Medal className="h-3 w-3 absolute -top-1 -right-1 text-orange-300 drop-shadow" />
                   </div>
-                  <p className="text-[11px] font-black text-white text-center mt-2 truncate w-full px-1">
+                  <p className="text-[11px] font-black text-slate-800 text-center mt-2 truncate w-full px-1">
                     {activeRank[2].name?.split(" ")[0]}
                   </p>
                   <p className="text-base font-black text-orange-400 italic">{activeRank[2].bestScore}</p>
@@ -243,29 +243,29 @@ export default function TeacherRankingsPage() {
 
           {/* Rest of the list (4-10) */}
           {activeRank.slice(3).length > 0 && (
-            <div className="space-y-2 pt-3 border-t border-white/5">
+            <div className="space-y-2 pt-3 border-t border-slate-100">
               {activeRank.slice(3).map((student, idx) => {
                 const position = idx + 4;
                 return (
                   <div
                     key={student.id}
-                    className="flex items-center gap-3 bg-white/3 border border-white/6 rounded-2xl p-3"
+                    className="flex items-center gap-3 bg-white shadow-sm border border-slate-200 rounded-2xl p-3"
                   >
                     <div className={`h-8 w-8 rounded-xl ${accentClasses.ringBg} border ${accentClasses.ringBorder} flex items-center justify-center font-black italic ${accentClasses.ringText} text-xs shrink-0`}>
                       {position}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-white italic text-sm truncate leading-none">{student.name}</p>
+                      <p className="font-black text-slate-800 italic text-sm truncate leading-none">{student.name}</p>
                       {student.institution && (
-                        <p className="text-[9px] font-bold text-white/55 uppercase tracking-wider flex items-center gap-1 mt-1">
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mt-1">
                           <School className="h-2.5 w-2.5" />
                           {student.institution}
                         </p>
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[8px] font-black text-white/55 uppercase tracking-widest leading-none">Recorde</p>
-                      <p className="text-base font-black text-white italic mt-0.5">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">Recorde</p>
+                      <p className="text-base font-black text-slate-800 italic mt-0.5">
                         {student.bestScore}
                         <span className="text-[9px] opacity-40 ml-1">pts</span>
                       </p>

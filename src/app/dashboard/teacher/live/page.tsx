@@ -174,20 +174,20 @@ export default function ManageLivePage() {
       {/* ── CTA ── */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogTrigger asChild>
-          <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
+          <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
             <PlusCircle className="h-4 w-4 mr-2" />
             Agendar Aula
           </Button>
         </DialogTrigger>
-        <DialogContent className="rounded-[2rem] p-0 bg-[#131316] border-white/10 w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto shadow-2xl">
-          <DialogHeader className="p-5 border-b border-white/5">
-            <DialogTitle className="text-lg font-black italic text-white uppercase tracking-tighter">
+        <DialogContent className="rounded-[2rem] p-0 bg-white border-slate-200 w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto shadow-2xl">
+          <DialogHeader className="p-5 border-b border-slate-100">
+            <DialogTitle className="text-lg font-black italic text-slate-800 uppercase tracking-tighter">
               Nova Sala Online
             </DialogTitle>
           </DialogHeader>
           <div className="p-5 space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Título da Aula
               </Label>
               <input
@@ -195,51 +195,51 @@ export default function ManageLivePage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Data</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Data</Label>
                 <input
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   disabled={isSubmitting}
-                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-3 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Horário</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Horário</Label>
                 <input
                   type="time"
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                   disabled={isSubmitting}
-                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-3 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Link da Reunião
               </Label>
               <div className="relative">
-                <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/55 pointer-events-none" />
+                <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
                 <input
                   placeholder="https://meet.google.com/..."
                   value={formData.meet_link}
                   onChange={(e) => setFormData({ ...formData, meet_link: e.target.value })}
                   disabled={isSubmitting}
-                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl pl-10 pr-3 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl pl-10 pr-3 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Pauta (opcional)
               </Label>
               <textarea
@@ -247,7 +247,7 @@ export default function ManageLivePage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full min-h-[70px] bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-sm font-medium text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all resize-none"
+                className="w-full min-h-[70px] bg-white shadow-sm border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all resize-none"
               />
             </div>
           </div>
@@ -255,14 +255,14 @@ export default function ManageLivePage() {
             <Button
               onClick={handleCreateLive}
               disabled={isSubmitting || !formData.title}
-              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
             >
               {isSubmitting ? (
                 <Loader2 className="animate-spin h-4 w-4 mr-2" />
               ) : null}
               Publicar na Agenda
             </Button>
-            <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold text-white/55 uppercase tracking-wider">
+            <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
               <AlertCircle className="h-3 w-3" /> Execute o SQL no Supabase
             </div>
           </DialogFooter>
@@ -276,9 +276,9 @@ export default function ManageLivePage() {
             <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
           </div>
         ) : lives.length === 0 ? (
-          <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+          <div className="py-16 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
             <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-            <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
               Nenhuma aula agendada
             </p>
           </div>
@@ -292,7 +292,7 @@ export default function ManageLivePage() {
             return (
               <div
                 key={live.id}
-                className="group bg-white/3 border border-white/6 hover:border-purple-500/20 rounded-2xl p-3.5 transition-all"
+                className="group bg-white shadow-sm border border-slate-200 hover:border-purple-500/20 rounded-2xl p-3.5 transition-all"
               >
                 <div className="flex items-start gap-3">
                   {/* Date anchor */}
@@ -300,10 +300,10 @@ export default function ManageLivePage() {
                     className={`flex flex-col items-center justify-center min-w-[44px] py-1 px-2 rounded-xl shrink-0 border ${
                       isLive
                         ? "bg-red-500/20 border-red-500/30 animate-pulse"
-                        : "bg-white/3 border-white/8"
+                        : "bg-white shadow-sm border-slate-200"
                     }`}
                   >
-                    <span className={`text-xl font-black italic leading-none ${isLive ? "text-red-400" : "text-white"}`}>
+                    <span className={`text-xl font-black italic leading-none ${isLive ? "text-red-400" : "text-slate-800"}`}>
                       {String(dayNum).padStart(2, "0")}
                     </span>
                     <span
@@ -317,7 +317,7 @@ export default function ManageLivePage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                      <span className="text-[10px] font-bold text-white/65 flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1">
                         <Clock className="h-2.5 w-2.5" />
                         {format(d, "HH:mm")}
                       </span>
@@ -331,7 +331,7 @@ export default function ManageLivePage() {
                         {isLive ? "🔴 No ar" : live.status}
                       </Badge>
                     </div>
-                    <p className="text-sm font-black text-white italic leading-snug truncate">
+                    <p className="text-sm font-black text-slate-800 italic leading-snug truncate">
                       {live.title}
                     </p>
                     {live.meet_link && (
@@ -344,7 +344,7 @@ export default function ManageLivePage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-white/5">
+                <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-slate-100">
                   <button
                     onClick={() => handleDelete(live.id)}
                     disabled={deletingId === live.id}

@@ -179,7 +179,7 @@ export default function TeacherCalendarPage() {
             setEditId(null);
             setForm(blankForm);
           }}
-          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
+          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Novo Evento
@@ -188,11 +188,11 @@ export default function TeacherCalendarPage() {
 
       {/* ── Form ── */}
       {showForm && (
-        <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
-          <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+        <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
               <PlusCircle className="h-4 w-4 text-orange-400/85" />
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
                 {editId ? "Editar Evento" : "Criar Evento"}
               </p>
             </div>
@@ -201,42 +201,42 @@ export default function TeacherCalendarPage() {
                 setShowForm(false);
                 setEditId(null);
               }}
-              className="text-[10px] font-bold text-white/55 hover:text-white/60 uppercase tracking-wider"
+              className="text-[10px] font-bold text-slate-500 hover:text-slate-500 uppercase tracking-wider"
             >
               Fechar
             </button>
           </div>
           <div className="p-4 space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Título *</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Título *</Label>
               <input
                 type="text"
                 placeholder="Ex: Aulão de Revisão — Matemática"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Data *</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Data *</Label>
                 <input
                   type="date"
                   value={form.event_date}
                   onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
-                  className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Público</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Público</Label>
                 <Select value={form.target_group} onValueChange={(val) => setForm((f) => ({ ...f, target_group: val }))}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                  <SelectContent className="rounded-xl border-slate-200 bg-white">
                     {TARGET_GROUPS.map((t) => (
-                      <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                      <SelectItem key={t.value} value={t.value} className="font-bold text-slate-600 text-xs">
                         {t.label}
                       </SelectItem>
                     ))}
@@ -246,14 +246,14 @@ export default function TeacherCalendarPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Tipo</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Tipo</Label>
               <Select value={form.event_type} onValueChange={(val) => setForm((f) => ({ ...f, event_type: val }))}>
-                <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
+                <SelectContent className="rounded-xl border-slate-200 bg-white">
                   {EVENT_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value} className="font-bold text-white/70 text-xs">
+                    <SelectItem key={t.value} value={t.value} className="font-bold text-slate-600 text-xs">
                       <span className="flex items-center gap-2">
                         <span className={`h-2 w-2 rounded-full ${t.dot}`} />
                         {t.label}
@@ -265,19 +265,19 @@ export default function TeacherCalendarPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/55 ml-1">Descrição (opcional)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Descrição (opcional)</Label>
               <Textarea
                 placeholder="Detalhes adicionais..."
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="rounded-xl bg-white/5 border-white/8 text-white placeholder:text-white/55 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
+                className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
               />
             </div>
 
             <Button
               onClick={handleSubmit}
               disabled={saving || !form.title || !form.event_date}
-              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {editId ? "Salvar Alterações" : "Criar Evento"}
@@ -288,7 +288,7 @@ export default function TeacherCalendarPage() {
 
       {/* ── Type legend (compact horizontal scroll) ── */}
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70 px-1 mb-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600 px-1 mb-2">
           Tipos
         </p>
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
@@ -310,9 +310,9 @@ export default function TeacherCalendarPage() {
           <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
         </div>
       ) : events.length === 0 ? (
-        <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+        <div className="py-16 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
           <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-          <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
             Nenhum evento cadastrado
           </p>
         </div>
@@ -322,7 +322,7 @@ export default function TeacherCalendarPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse" />
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
                   Próximos eventos ({upcoming.length})
                 </p>
               </div>
@@ -341,7 +341,7 @@ export default function TeacherCalendarPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/55">
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
                   Eventos passados ({past.length})
                 </p>
               </div>
@@ -383,15 +383,15 @@ function EventRow({
 
   return (
     <div
-      className={`group bg-white/3 border border-white/6 hover:border-white/15 rounded-2xl p-3.5 transition-all ${past ? "opacity-40" : ""}`}
+      className={`group bg-white shadow-sm border border-slate-200 hover:border-white/15 rounded-2xl p-3.5 transition-all ${past ? "opacity-40" : ""}`}
     >
       <div className="flex items-start gap-3">
         {/* Date anchor */}
-        <div className="flex flex-col items-center justify-center min-w-[42px] py-1 px-2 bg-white/3 border border-white/8 rounded-xl shrink-0">
-          <span className="text-xl font-black italic leading-none text-white">
+        <div className="flex flex-col items-center justify-center min-w-[42px] py-1 px-2 bg-white shadow-sm border border-slate-200 rounded-xl shrink-0">
+          <span className="text-xl font-black italic leading-none text-slate-800">
             {String(dayNum).padStart(2, "0")}
           </span>
-          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${past ? "text-white/55" : "text-orange-400/85"}`}>
+          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${past ? "text-slate-500" : "text-orange-400/85"}`}>
             {monthShort}
           </span>
         </div>
@@ -402,7 +402,7 @@ function EventRow({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-black text-white italic leading-snug line-clamp-2 flex-1">
+            <p className="text-sm font-black text-slate-800 italic leading-snug line-clamp-2 flex-1">
               {ev.title}
             </p>
             {ev.is_official && (
@@ -420,7 +420,7 @@ function EventRow({
             )}
           </div>
           {ev.description && (
-            <p className="text-[11px] text-white/70 font-medium italic mt-1.5 line-clamp-2 leading-tight">
+            <p className="text-[11px] text-slate-600 font-medium italic mt-1.5 line-clamp-2 leading-tight">
               {ev.description}
             </p>
           )}
@@ -428,7 +428,7 @@ function EventRow({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-white/5">
+      <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-slate-100">
         {canEdit ? (
           <>
             <button
@@ -447,7 +447,7 @@ function EventRow({
             </button>
           </>
         ) : (
-          <div className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/55 bg-white/3">
+          <div className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 bg-white shadow-sm">
             <Lock className="h-3 w-3" />
             Coordenação
           </div>

@@ -247,13 +247,13 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
       </div>
 
       {/* ── Performance por Matéria ── */}
-      <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
-        <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-orange-400/85" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">Performance por Matéria</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">Performance por Matéria</p>
           </div>
-          <span className="text-[8px] font-black uppercase tracking-wider text-white/65 bg-white/5 border border-white/8 rounded-full px-2 py-0.5">Simulados</span>
+          <span className="text-[8px] font-black uppercase tracking-wider text-slate-600 bg-white shadow-sm border border-slate-200 rounded-full px-2 py-0.5">Simulados</span>
         </div>
         <div className="p-4">
           <div className="h-[200px] w-full">
@@ -263,11 +263,11 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
       </div>
 
       {/* ── Engajamento Semanal ── */}
-      <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
-        <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-orange-400/85" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">Engajamento Semanal</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">Engajamento Semanal</p>
           </div>
           <span className="text-[8px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">Ao Vivo</span>
         </div>
@@ -291,17 +291,17 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-400/85">Aurora IA</p>
-              <p className="text-xs font-black text-white italic">Insights Pedagógicos</p>
+              <p className="text-xs font-black text-slate-800 italic">Insights Pedagógicos</p>
             </div>
           </div>
-          <p className="text-xs font-medium text-white/75 leading-relaxed italic">
+          <p className="text-xs font-medium text-slate-600 leading-relaxed italic">
             {isDemo
               ? `"Em modo de demonstração, observamos um potencial de média de 782 pontos. A taxa de engajamento simulada de 42% sugere que as trilhas de Redação e Linguagens são as mais acessadas pela rede."`
               : `"Com base nos dados reais, a rede apresenta uma média de ${data.avgScore} pontos nos simulados. A taxa de conclusão de trilhas (${data.completionRate}%) indica ${data.completionRate > 50 ? "alto" : "moderado"} engajamento nos módulos publicados pelos mentores."`}
           </p>
           <button
             onClick={handleDownloadReport}
-            className="mt-4 h-11 px-5 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl shadow-lg shadow-orange-500/20 text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-95 print:hidden"
+            className="mt-4 h-11 px-5 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-xl shadow-lg shadow-orange-500/20 text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-95 print:hidden"
           >
             <FileDown className="h-4 w-4" />
             Relatório Executivo

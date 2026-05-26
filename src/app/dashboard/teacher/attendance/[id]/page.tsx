@@ -304,11 +304,11 @@ export default function AttendanceSessionPage() {
       </div>
 
       {/* ── Check-in Code ── */}
-      <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
-        <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4 text-orange-400/85" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">Auto Check-in</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">Auto Check-in</p>
           </div>
           {codeActive && (
             <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
@@ -330,14 +330,14 @@ export default function AttendanceSessionPage() {
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => { navigator.clipboard.writeText(session.checkin_code); toast({ title: "Código copiado!" }); }}
-                  className="h-10 flex items-center justify-center gap-1.5 bg-white/5 border border-white/8 rounded-xl text-[10px] font-black uppercase tracking-wider text-white/70 hover:text-white hover:bg-white/8 transition-all touch-manipulation active:scale-95"
+                  className="h-10 flex items-center justify-center gap-1.5 bg-white shadow-sm border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-all touch-manipulation active:scale-95"
                 >
                   <Copy className="h-3.5 w-3.5" />Copiar
                 </button>
                 <button
                   onClick={handleGenerateCode}
                   disabled={generatingCode}
-                  className="h-10 flex items-center justify-center gap-1.5 bg-white/5 border border-white/8 rounded-xl text-[10px] font-black uppercase tracking-wider text-white/70 hover:text-white hover:bg-white/8 transition-all touch-manipulation active:scale-95 disabled:opacity-50"
+                  className="h-10 flex items-center justify-center gap-1.5 bg-white shadow-sm border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-all touch-manipulation active:scale-95 disabled:opacity-50"
                 >
                   {generatingCode ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}Novo
                 </button>
@@ -351,13 +351,13 @@ export default function AttendanceSessionPage() {
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-medium text-white/70">
+              <p className="text-xs font-medium text-slate-600">
                 {session.checkin_code && countdown === 0 ? "Código expirado." : "Gere um código para os alunos confirmarem presença."}
               </p>
               <button
                 onClick={handleGenerateCode}
                 disabled={generatingCode}
-                className="shrink-0 h-11 px-5 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all touch-manipulation active:scale-95 disabled:opacity-50"
+                className="shrink-0 h-11 px-5 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all touch-manipulation active:scale-95 disabled:opacity-50"
               >
                 {generatingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
                 Gerar Código
@@ -368,11 +368,11 @@ export default function AttendanceSessionPage() {
       </div>
 
       {/* ── Student Roster ── */}
-      <div className="bg-white/3 border border-white/6 rounded-[1.5rem] overflow-hidden">
-        <div className="p-4 border-b border-white/5 bg-white/3 flex items-center justify-between">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-orange-400/85" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
               Chamada ({rosterStudents.length})
             </p>
           </div>
@@ -387,40 +387,40 @@ export default function AttendanceSessionPage() {
 
         {/* Add student panel */}
         {showAddPanel && (
-          <div className="border-b border-white/5 p-4 space-y-3 bg-white/2">
+          <div className="border-b border-slate-100 p-4 space-y-3 bg-white/2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-black text-white italic">Adicionar à chamada</p>
+              <p className="text-xs font-black text-slate-800 italic">Adicionar à chamada</p>
               <button
                 onClick={handleAddAll}
                 disabled={addingAll || allStudents.filter((s) => !records[s.id]).length === 0}
-                className="h-7 flex items-center gap-1.5 bg-white/5 border border-white/8 rounded-lg px-2.5 text-[9px] font-black uppercase tracking-wider text-white/70 hover:text-white transition-all disabled:opacity-40"
+                className="h-7 flex items-center gap-1.5 bg-white shadow-sm border border-slate-200 rounded-lg px-2.5 text-[9px] font-black uppercase tracking-wider text-slate-600 hover:text-slate-800 transition-all disabled:opacity-40"
               >
                 {addingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <UsersRound className="h-3 w-3" />}
                 Todos ({allStudents.filter((s) => !records[s.id]).length})
               </button>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Buscar aluno pelo nome..."
                 value={addSearch}
                 onChange={(e) => setAddSearch(e.target.value)}
                 autoFocus
-                className="w-full h-10 bg-white/5 border border-white/8 rounded-xl pl-9 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-10 bg-white shadow-sm border border-slate-200 rounded-xl pl-9 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
             {availableStudents.length === 0 ? (
-              <p className="text-xs text-white/55 text-center py-2">
+              <p className="text-xs text-slate-500 text-center py-2">
                 {allStudents.filter((s) => !records[s.id]).length === 0 ? "Todos os alunos já estão na lista." : `Nenhum resultado para "${addSearch}".`}
               </p>
             ) : (
               <div className="max-h-48 overflow-y-auto scrollbar-hide space-y-1">
                 {availableStudents.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/3 border border-white/5">
+                  <div key={student.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white shadow-sm border border-slate-100">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-white truncate">{student.name || "Sem nome"}</p>
-                      <p className="text-[10px] text-white/60 font-medium">{student.institution || student.exam_target || "—"}</p>
+                      <p className="text-sm font-bold text-slate-800 truncate">{student.name || "Sem nome"}</p>
+                      <p className="text-[10px] text-slate-500 font-medium">{student.institution || student.exam_target || "—"}</p>
                     </div>
                     <button
                       onClick={() => handleAddStudent(student.id)}
@@ -443,8 +443,8 @@ export default function AttendanceSessionPage() {
             <div className="py-14 flex flex-col items-center gap-3">
               <Inbox className="h-8 w-8 text-white/15" />
               <div className="text-center">
-                <p className="font-black italic text-xs text-white/55 uppercase tracking-widest">Lista vazia</p>
-                <p className="text-[10px] text-white/65 mt-0.5">Use "Adicionar" para montar a chamada</p>
+                <p className="font-black italic text-xs text-slate-500 uppercase tracking-widest">Lista vazia</p>
+                <p className="text-[10px] text-slate-600 mt-0.5">Use "Adicionar" para montar a chamada</p>
               </div>
             </div>
           ) : (
@@ -454,20 +454,20 @@ export default function AttendanceSessionPage() {
               return (
                 <div key={student.id} className={`relative flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 border-l-2 transition-colors ${statusBg}`}>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-white text-sm truncate">{student.name || "Aluno sem nome"}</p>
-                    <p className="text-[10px] text-white/60 font-medium">{student.institution || student.exam_target || "—"}</p>
+                    <p className="font-bold text-slate-800 text-sm truncate">{student.name || "Aluno sem nome"}</p>
+                    <p className="text-[10px] text-slate-500 font-medium">{student.institution || student.exam_target || "—"}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* P / A / J Toggle */}
-                    <div className="flex rounded-xl overflow-hidden border border-white/8">
+                    <div className="flex rounded-xl overflow-hidden border border-slate-200">
                       {(["presente", "ausente", "justificado"] as AttendanceStatus[]).map((s) => (
                         <button
                           key={s}
                           onClick={() => setStatus(student.id, s)}
                           className={`px-4 py-2 text-xs font-black uppercase transition-colors touch-manipulation ${
                             rec.status === s
-                              ? s === "presente" ? "bg-emerald-500 text-white" : s === "justificado" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
-                              : "bg-white/3 text-white/50 hover:bg-white/6 hover:text-white/80"
+                              ? s === "presente" ? "bg-emerald-500 text-slate-800" : s === "justificado" ? "bg-amber-500 text-slate-800" : "bg-red-500 text-slate-800"
+                              : "bg-white shadow-sm text-slate-400 hover:bg-white/6 hover:text-slate-800/80"
                           }`}
                         >
                           {s === "presente" ? "P" : s === "ausente" ? "A" : "J"}
@@ -476,7 +476,7 @@ export default function AttendanceSessionPage() {
                     </div>
                     {rec.status === "justificado" && (
                       <input
-                        className="h-9 w-32 bg-white/5 border border-white/8 rounded-lg px-3 text-xs font-medium text-white placeholder:text-white/55 outline-none focus:border-amber-500/40 transition-all"
+                        className="h-9 w-32 bg-white shadow-sm border border-slate-200 rounded-lg px-3 text-xs font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-amber-500/40 transition-all"
                         placeholder="Motivo..."
                         value={rec.justification}
                         onChange={(e) => setJustification(student.id, e.target.value)}
@@ -485,7 +485,7 @@ export default function AttendanceSessionPage() {
                     <button
                       onClick={() => handleRemoveStudent(student.id)}
                       disabled={removingId === student.id}
-                      className="h-9 w-9 rounded-xl bg-white/3 border border-white/8 text-white/55 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center touch-manipulation active:scale-95 disabled:opacity-50"
+                      className="h-9 w-9 rounded-xl bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center touch-manipulation active:scale-95 disabled:opacity-50"
                     >
                       {removingId === student.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserMinus className="h-3.5 w-3.5" />}
                     </button>
@@ -501,7 +501,7 @@ export default function AttendanceSessionPage() {
       <button
         onClick={handleSaveAll}
         disabled={saving || rosterStudents.length === 0}
-        className="w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2 touch-manipulation active:scale-[0.99] transition-all"
+        className="w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2 touch-manipulation active:scale-[0.99] transition-all"
       >
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
         {saving ? "Salvando..." : "Salvar Chamada"}

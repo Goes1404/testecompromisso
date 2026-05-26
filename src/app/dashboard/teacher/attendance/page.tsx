@@ -151,7 +151,7 @@ export default function TeacherAttendancePage() {
 
       {/* ── CTA ── */}
       <Link href="/dashboard/teacher/attendance/new" className="block">
-        <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
+        <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
           <Plus className="h-4 w-4 mr-2" />
           Nova Sessão de Chamada
         </Button>
@@ -161,7 +161,7 @@ export default function TeacherAttendancePage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
           <CalendarDays className="h-4 w-4 text-orange-400/80" />
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
             Histórico de Sessões
           </p>
         </div>
@@ -171,12 +171,12 @@ export default function TeacherAttendancePage() {
             <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
           </div>
         ) : sessions.length === 0 ? (
-          <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+          <div className="py-16 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
             <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-            <p className="text-xs font-bold text-white/55 uppercase tracking-widest">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
               Nenhuma sessão criada
             </p>
-            <p className="text-[10px] font-medium text-white/45 mt-1">
+            <p className="text-[10px] font-medium text-slate-400 mt-1">
               Clique em "Nova Sessão" para começar
             </p>
           </div>
@@ -196,17 +196,17 @@ export default function TeacherAttendancePage() {
                   ? "text-emerald-400 bg-emerald-500/15 border-emerald-500/25"
                   : stats.pct > 0
                   ? "text-amber-400 bg-amber-500/15 border-amber-500/25"
-                  : "text-white/70 bg-white/5 border-white/10";
+                  : "text-slate-600 bg-white shadow-sm border-slate-200";
 
               return (
                 <div
                   key={session.id}
-                  className="group bg-white/3 border border-white/6 hover:border-orange-500/20 rounded-2xl p-3.5 transition-all"
+                  className="group bg-white shadow-sm border border-slate-200 hover:border-orange-500/20 rounded-2xl p-3.5 transition-all"
                 >
                   <div className="flex items-start gap-3">
                     {/* Date anchor */}
-                    <div className="flex flex-col items-center justify-center min-w-[44px] py-1 px-2 bg-white/3 border border-white/8 rounded-xl shrink-0">
-                      <span className="text-xl font-black italic leading-none text-white">
+                    <div className="flex flex-col items-center justify-center min-w-[44px] py-1 px-2 bg-white shadow-sm border border-slate-200 rounded-xl shrink-0">
+                      <span className="text-xl font-black italic leading-none text-slate-800">
                         {String(dayNum).padStart(2, "0")}
                       </span>
                       <span className="text-[8px] font-black uppercase tracking-widest text-orange-400/85 mt-0.5">
@@ -216,7 +216,7 @@ export default function TeacherAttendancePage() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-white italic leading-snug truncate">
+                      <p className="text-sm font-black text-slate-800 italic leading-snug truncate">
                         {session.title}
                       </p>
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -230,7 +230,7 @@ export default function TeacherAttendancePage() {
                           {isLive ? "Live" : "Presencial"}
                         </Badge>
                         {session.subject && (
-                          <Badge className="bg-white/5 text-white/70 border border-white/8 font-black text-[8px] uppercase px-1.5 h-4">
+                          <Badge className="bg-white shadow-sm text-slate-600 border border-slate-200 font-black text-[8px] uppercase px-1.5 h-4">
                             {session.subject}
                           </Badge>
                         )}
@@ -245,7 +245,7 @@ export default function TeacherAttendancePage() {
                   </div>
 
                   {/* Actions footer */}
-                  <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-white/5">
+                  <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-slate-100">
                     <Link
                       href={`/dashboard/teacher/attendance/${session.id}`}
                       className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 transition-all active:scale-95 touch-manipulation"

@@ -226,7 +226,7 @@ export default function TeacherTrailsPage() {
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => setIsCreateDialogOpen(true)}
-          className="h-12 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
+          className="h-12 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" />
           Nova Aula
@@ -234,7 +234,7 @@ export default function TeacherTrailsPage() {
         {mergeMode ? (
           <button
             onClick={() => { setMergeMode(false); setSelectedIds(new Set()); }}
-            className="h-12 flex items-center justify-center gap-2 bg-white/5 border border-white/8 text-white/70 font-black rounded-2xl text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
+            className="h-12 flex items-center justify-center gap-2 bg-white shadow-sm border border-slate-200 text-slate-600 font-black rounded-2xl text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
           >
             <X className="h-4 w-4" />
             Cancelar
@@ -262,7 +262,7 @@ export default function TeacherTrailsPage() {
           <button
             onClick={() => setIsMergeDialogOpen(true)}
             disabled={selectedCount < 2}
-            className="h-8 px-4 flex items-center gap-1.5 bg-purple-500 text-white font-black rounded-xl text-[9px] uppercase tracking-widest shadow-lg disabled:opacity-40 transition-all touch-manipulation active:scale-95"
+            className="h-8 px-4 flex items-center gap-1.5 bg-purple-500 text-slate-800 font-black rounded-xl text-[9px] uppercase tracking-widest shadow-lg disabled:opacity-40 transition-all touch-manipulation active:scale-95"
           >
             <ListVideo className="h-3.5 w-3.5" />
             Unificar
@@ -272,13 +272,13 @@ export default function TeacherTrailsPage() {
 
       {/* ── Search ── */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/55 pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
         <input
           type="text"
           placeholder="Pesquisar trilhas..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-11 bg-white/5 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all"
+          className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
         />
       </div>
 
@@ -286,13 +286,13 @@ export default function TeacherTrailsPage() {
       {loading ? (
         <div className="py-20 flex flex-col items-center gap-3">
           <Sparkles className="h-7 w-7 text-orange-400 animate-pulse" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/55">Sincronizando...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sincronizando...</p>
         </div>
       ) : filteredTrails.length === 0 ? (
-        <div className="py-16 text-center border border-dashed border-white/10 rounded-[1.5rem]">
+        <div className="py-16 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
           <Inbox className="h-8 w-8 mx-auto mb-2 text-white/15" />
-          <p className="font-black italic text-xs text-white/55 uppercase tracking-widest">Nenhuma trilha encontrada</p>
-          <p className="text-[10px] text-white/65 mt-1">Crie uma nova aula ou ajuste a pesquisa</p>
+          <p className="font-black italic text-xs text-slate-500 uppercase tracking-widest">Nenhuma trilha encontrada</p>
+          <p className="text-[10px] text-slate-600 mt-1">Crie uma nova aula ou ajuste a pesquisa</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -305,9 +305,9 @@ export default function TeacherTrailsPage() {
               <div
                 key={trail.id}
                 onClick={() => mergeMode && toggleSelect(trail.id)}
-                className={`group relative bg-white/3 border rounded-[1.5rem] overflow-hidden flex flex-col transition-all duration-200 ${
+                className={`group relative bg-white shadow-sm border rounded-[1.5rem] overflow-hidden flex flex-col transition-all duration-200 ${
                   mergeMode ? "cursor-pointer" : ""
-                } ${isSelected ? "border-purple-500/50 bg-purple-500/5" : "border-white/6 hover:border-white/10"}`}
+                } ${isSelected ? "border-purple-500/50 bg-purple-500/5" : "border-slate-200 hover:border-slate-200"}`}
               >
                 {/* Cover */}
                 <div className="relative aspect-video overflow-hidden bg-black/30">
@@ -325,8 +325,8 @@ export default function TeacherTrailsPage() {
                   {mergeMode && (
                     <div className={`absolute inset-0 transition-all ${isSelected ? "bg-purple-500/25" : "bg-black/10"}`}>
                       <div className="absolute top-3 right-3">
-                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shadow-lg transition-all ${isSelected ? "bg-purple-500 border-purple-500" : "bg-black/40 border-white/60"}`}>
-                          {isSelected && <span className="text-white text-[10px] font-black">✓</span>}
+                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center shadow-lg transition-all ${isSelected ? "bg-purple-500 border-purple-500" : "bg-black/40 border-slate-2000"}`}>
+                          {isSelected && <span className="text-slate-800 text-[10px] font-black">✓</span>}
                         </div>
                       </div>
                     </div>
@@ -348,10 +348,10 @@ export default function TeacherTrailsPage() {
                 {/* Info */}
                 <div className="p-4 flex-1 flex flex-col">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400/85 mb-0.5">{trail.category || "Geral"}</p>
-                  <h3 className="font-black italic text-white text-sm leading-snug flex-1">{trail.title}</h3>
+                  <h3 className="font-black italic text-slate-800 text-sm leading-snug flex-1">{trail.title}</h3>
 
                   {!mergeMode && (
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
                       <Link
                         href={`/dashboard/teacher/trails/${trail.id}`}
                         className="flex-1 h-9 flex items-center justify-center gap-1.5 bg-orange-500/15 border border-orange-500/25 text-orange-400 rounded-xl text-[9px] font-black uppercase tracking-wider hover:bg-orange-500/20 transition-all touch-manipulation active:scale-95"
@@ -361,14 +361,14 @@ export default function TeacherTrailsPage() {
                       </Link>
                       <Link
                         href={`/dashboard/classroom/${trail.id}`}
-                        className="h-9 w-9 flex items-center justify-center bg-white/5 border border-white/8 text-white/70 rounded-xl hover:text-white hover:bg-white/8 transition-all touch-manipulation active:scale-95"
+                        className="h-9 w-9 flex items-center justify-center bg-white shadow-sm border border-slate-200 text-slate-600 rounded-xl hover:text-slate-800 hover:bg-slate-50 transition-all touch-manipulation active:scale-95"
                         title="Ver como aluno"
                       >
                         <Eye className="h-3.5 w-3.5" />
                       </Link>
                       <button
                         onClick={() => handleDeleteTrail(trail.id)}
-                        className="h-9 w-9 flex items-center justify-center bg-white/3 border border-white/6 text-white/55 rounded-xl hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all touch-manipulation active:scale-95"
+                        className="h-9 w-9 flex items-center justify-center bg-white shadow-sm border border-slate-200 text-slate-500 rounded-xl hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all touch-manipulation active:scale-95"
                         title="Excluir"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -377,7 +377,7 @@ export default function TeacherTrailsPage() {
                   )}
 
                   {mergeMode && (
-                    <p className="text-[10px] font-black text-purple-400/80 uppercase tracking-widest mt-3 pt-3 border-t border-white/5 text-center">
+                    <p className="text-[10px] font-black text-purple-400/80 uppercase tracking-widest mt-3 pt-3 border-t border-slate-100 text-center">
                       {isSelected ? "Selecionada ✓" : "Toque para selecionar"}
                     </p>
                   )}
@@ -393,62 +393,62 @@ export default function TeacherTrailsPage() {
         setIsCreateDialogOpen(open);
         if (!open) setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
       }}>
-        <DialogContent className="rounded-[1.5rem] bg-[#111113] border border-white/10 shadow-2xl w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto p-0">
+        <DialogContent className="rounded-[1.5rem] bg-white border border-slate-200 shadow-2xl w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto p-0">
           <DialogHeader className="p-5 pb-0">
-            <DialogTitle className="text-lg font-black italic text-white flex items-center gap-2">
+            <DialogTitle className="text-lg font-black italic text-slate-800 flex items-center gap-2">
               <Plus className="h-4 w-4 text-orange-400" />
               Nova Aula / Trilha
             </DialogTitle>
           </DialogHeader>
           <div className="p-5 space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Título *</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-1">Título *</Label>
               <input
                 type="text"
                 placeholder="Ex: Funções do 2º Grau"
                 value={newTrail.title}
                 onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Categoria</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-1">Categoria</Label>
                 <Select value={newTrail.category} onValueChange={(v) => setNewTrail({ ...newTrail, category: v })} disabled={isSubmitting}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f] max-h-60">
+                  <SelectContent className="rounded-xl border-slate-200 bg-white max-h-60">
                     {EDUCATIONAL_CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c} className="font-bold text-white/70 text-xs">{c}</SelectItem>
+                      <SelectItem key={c} value={c} className="font-bold text-slate-600 text-xs">{c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Público-Alvo</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-1">Público-Alvo</Label>
                 <Select value={newTrail.target_audience} onValueChange={(v) => setNewTrail({ ...newTrail, target_audience: v })} disabled={isSubmitting}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white/5 border-white/8 text-white font-bold text-xs">
+                  <SelectTrigger className="h-11 rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 font-bold text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-white/10 bg-[#1a1a1f]">
-                    <SelectItem value="all" className="font-bold text-white/70 text-xs">Todos</SelectItem>
-                    <SelectItem value="etec" className="font-bold text-white/70 text-xs">Apenas ETEC</SelectItem>
-                    <SelectItem value="enem" className="font-bold text-white/70 text-xs">Apenas ENEM</SelectItem>
+                  <SelectContent className="rounded-xl border-slate-200 bg-white">
+                    <SelectItem value="all" className="font-bold text-slate-600 text-xs">Todos</SelectItem>
+                    <SelectItem value="etec" className="font-bold text-slate-600 text-xs">Apenas ETEC</SelectItem>
+                    <SelectItem value="enem" className="font-bold text-slate-600 text-xs">Apenas ENEM</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Capa (arquivo ou URL)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-1">Capa (arquivo ou URL)</Label>
               <div className="flex flex-col gap-2">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                   disabled={isSubmitting}
-                  className="w-full h-11 rounded-xl bg-white/5 border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-white/70 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-white"
+                  className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-slate-800"
                 />
                 {!coverFile && (
                   <input
@@ -457,19 +457,19 @@ export default function TeacherTrailsPage() {
                     value={newTrail.image_url}
                     onChange={(e) => setNewTrail({ ...newTrail, image_url: e.target.value })}
                     disabled={isSubmitting}
-                    className="w-full h-10 bg-white/5 border border-white/8 rounded-xl px-4 text-xs font-medium text-white placeholder:text-white/55 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
+                    className="w-full h-10 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-xs font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
                   />
                 )}
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Descrição</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-1">Descrição</Label>
               <Textarea
                 placeholder="O que o aluno aprenderá?"
                 value={newTrail.description}
                 onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })}
                 disabled={isSubmitting}
-                className="rounded-xl min-h-[70px] bg-white/5 border-white/8 text-white placeholder:text-white/55 text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
+                className="rounded-xl min-h-[70px] bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
               />
             </div>
           </div>
@@ -477,7 +477,7 @@ export default function TeacherTrailsPage() {
             <button
               onClick={handleCreateTrail}
               disabled={isSubmitting || !newTrail.title}
-              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2 transition-all touch-manipulation active:scale-[0.99]"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2 transition-all touch-manipulation active:scale-[0.99]"
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               {isSubmitting ? "Criando..." : "Criar Aula"}
@@ -491,19 +491,19 @@ export default function TeacherTrailsPage() {
         setIsMergeDialogOpen(open);
         if (!open) setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
       }}>
-        <DialogContent className="rounded-[1.5rem] bg-[#111113] border border-white/10 shadow-2xl max-w-md p-0">
+        <DialogContent className="rounded-[1.5rem] bg-white border border-slate-200 shadow-2xl max-w-md p-0">
           <DialogHeader className="p-5 pb-0">
-            <DialogTitle className="text-lg font-black italic text-white flex items-center gap-2">
+            <DialogTitle className="text-lg font-black italic text-slate-800 flex items-center gap-2">
               <ListVideo className="h-4 w-4 text-purple-400" />
               Criar Série
             </DialogTitle>
           </DialogHeader>
           <div className="p-5 space-y-4">
-            <p className="text-xs font-medium text-white/70">
-              As <strong className="text-white">{selectedCount} aulas</strong> selecionadas virarão capítulos desta série. As aulas originais serão removidas.
+            <p className="text-xs font-medium text-slate-600">
+              As <strong className="text-slate-800">{selectedCount} aulas</strong> selecionadas virarão capítulos desta série. As aulas originais serão removidas.
             </p>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Nome da Série</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-1">Nome da Série</Label>
               <input
                 type="text"
                 placeholder="Ex: Matemática — Funções Completo"
@@ -512,7 +512,7 @@ export default function TeacherTrailsPage() {
                 disabled={isMerging}
                 autoFocus
                 onKeyDown={(e) => { if (e.key === "Enter") handleMergeTrails(); }}
-                className="w-full h-11 bg-white/5 border border-white/8 rounded-xl px-4 text-sm font-bold text-white placeholder:text-white/55 outline-none focus:border-purple-500/40 transition-all disabled:opacity-50"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-purple-500/40 transition-all disabled:opacity-50"
               />
             </div>
             <div className="bg-purple-500/8 border border-purple-500/20 rounded-xl p-3">
@@ -520,7 +520,7 @@ export default function TeacherTrailsPage() {
               <ul className="space-y-0.5">
                 {Array.from(selectedIds).map((id) => {
                   const t = trails.find((x) => x.id === id);
-                  return <li key={id} className="text-xs text-white/75 font-medium">• {t?.title}</li>;
+                  return <li key={id} className="text-xs text-slate-600 font-medium">• {t?.title}</li>;
                 })}
               </ul>
             </div>
@@ -528,14 +528,14 @@ export default function TeacherTrailsPage() {
           <DialogFooter className="p-5 pt-0 grid grid-cols-2 gap-2">
             <button
               onClick={() => setIsMergeDialogOpen(false)}
-              className="h-11 flex items-center justify-center bg-white/5 border border-white/8 text-white/70 font-black rounded-xl text-xs uppercase tracking-widest hover:bg-white/8 transition-all"
+              className="h-11 flex items-center justify-center bg-white shadow-sm border border-slate-200 text-slate-600 font-black rounded-xl text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
             >
               Cancelar
             </button>
             <button
               onClick={handleMergeTrails}
               disabled={isMerging || !serieName.trim()}
-              className="h-11 flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg disabled:opacity-40 transition-all"
+              className="h-11 flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-slate-800 font-black rounded-xl text-xs uppercase tracking-widest shadow-lg disabled:opacity-40 transition-all"
             >
               {isMerging ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListVideo className="h-4 w-4" />}
               {isMerging ? "Criando..." : "Criar Série"}
