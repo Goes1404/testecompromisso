@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
 
 type PushPermissionState = "default" | "granted" | "denied" | "unsupported";
 
@@ -20,6 +21,7 @@ function urlBase64ToUint8Array(base64: string) {
  */
 export function usePushNotifications() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [permission, setPermission] = useState<PushPermissionState>("default");
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,7 @@ export function usePushNotifications() {
     if (!user || typeof window === "undefined") return;
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidKey) {
-      console.error("[push] VAPID public key não configurada");
+      toast({ title: "Configuração pendente", description: "Notificações push ainda não foram ativadas pelo administrador.", variant: "destructive" });
       return;
     }
 
@@ -72,6 +74,11 @@ export function usePushNotifications() {
       if (perm === "default") {
         perm = await Notification.requestPermission();
         setPermission(perm as PushPermissionState);
+      }
+      if (perm === "denied") {
+        toast({ title: "Permissão negada", description: "Ative as notificações nas configurações do seu navegador.", variant: "destructive" });
+        setLoading(false);
+        return;
       }
       if (perm !== "granted") {
         setLoading(false);
@@ -97,13 +104,20 @@ export function usePushNotifications() {
           userAgent: navigator.userAgent,
         }),
       });
-      if (res.ok) setSubscribed(true);
-    } catch (err) {
+      if (res.ok) {
+        setSubscribed(true);
+        toast({ title: "Notificações ativadas! 🔔", description: "Você receberá comunicados e novidades direto aqui." });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast({ title: "Erro ao ativar", description: data.error || "Tente novamente.", variant: "destructive" });
+      }
+    } catch (err: any) {
       console.error("[push] subscribe error:", err);
+      toast({ title: "Erro ao ativar notificações", description: err.message || "Verifique as permissões do navegador.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, toast]);
 
   const unsubscribe = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -121,12 +135,13 @@ export function usePushNotifications() {
         });
       }
       setSubscribed(false);
+      toast({ title: "Notificações desativadas" });
     } catch (err) {
       console.error("[push] unsubscribe error:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   return { permission, subscribed, loading, subscribe, unsubscribe };
 }
