@@ -36,6 +36,22 @@ const StudySuggestionWidget = dynamic(
   () => import('@/components/StudySuggestionWidget').then(m => ({ default: m.StudySuggestionWidget })),
   { ssr: false, loading: () => <div className="h-24 rounded-[2rem] bg-muted/20 animate-pulse" /> }
 );
+const StreakWidget = dynamic(
+  () => import('@/components/StreakWidget').then(m => ({ default: m.StreakWidget })),
+  { ssr: false, loading: () => <div className="h-32 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
+);
+const GoalsWidget = dynamic(
+  () => import('@/components/GoalsWidget').then(m => ({ default: m.GoalsWidget })),
+  { ssr: false, loading: () => <div className="h-44 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
+);
+const JournalWidget = dynamic(
+  () => import('@/components/JournalWidget').then(m => ({ default: m.JournalWidget })),
+  { ssr: false, loading: () => <div className="h-40 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
+);
+const WeeklySummaryWidget = dynamic(
+  () => import('@/components/WeeklySummaryWidget').then(m => ({ default: m.WeeklySummaryWidget })),
+  { ssr: false, loading: () => <div className="h-48 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
+);
 const DashboardChart = dynamic(
   () => import('recharts').then(({ AreaChart, Area, ResponsiveContainer, Tooltip }) => {
     function Chart({ data }: { data: { name: string; score: number }[] }) {
@@ -739,6 +755,9 @@ export default function DashboardHome() {
       {/* ── SUGESTÃO DE ESTUDO ── */}
       {user && <StudySuggestionWidget userId={user.id} />}
 
+      {/* ── RESUMO SEMANAL POR IA ── */}
+      {user && <WeeklySummaryWidget userId={user.id} />}
+
       {/* ── WIDGETS MÓVEL RÁPIDOS ── */}
       <motion.div variants={itemVariants} className="lg:hidden grid grid-cols-2 gap-4">
         <div className="gradient-border bg-white rounded-[1.5rem] shadow-xl border border-muted/20 p-4 space-y-3 relative overflow-hidden">
@@ -996,6 +1015,9 @@ export default function DashboardHome() {
             </div>
           </div>
 
+          {user && <StreakWidget userId={user.id} />}
+          {user && <GoalsWidget userId={user.id} />}
+          {user && <JournalWidget userId={user.id} />}
           {user && <GamificationWidget userId={user.id} />}
           <UpcomingEventsWidget />
         </div>

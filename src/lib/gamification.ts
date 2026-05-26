@@ -1,4 +1,5 @@
 import { supabase } from '@/app/lib/supabase';
+import { bumpStreak, getStreak } from '@/lib/streak';
 
 export const XP_PER_CORRECT_QUESTION = 5;
 export const XP_PER_SIMULADO_COMPLETE = 20;
@@ -59,6 +60,10 @@ export async function awardXP(userId: string, points: number): Promise<number> {
     .update({ xp_points: newXP })
     .eq('id', userId);
 
+  // Cada ganho de XP conta uma atividade de estudo do dia.
+  // Falha silenciosa: streak é melhoria, não pode quebrar o fluxo de XP.
+  bumpStreak(userId).catch(() => undefined);
+
   return newXP;
 }
 
@@ -87,6 +92,14 @@ export async function checkAndAwardBadges(
   if (totalAnswered >= 50)  await badge('questions_50');
   if (totalAnswered >= 100) await badge('questions_100');
   if (isPerfectSimulado)    await badge('perfect_simulado');
+
+  // Ofensiva de 7 dias consecutivos
+  try {
+    const streak = await getStreak(userId);
+    if (streak.current_streak >= 7) await badge('streak_7');
+  } catch {
+    // ignora: badge é melhoria, não pode quebrar fluxo
+  }
 
   return earned;
 }
