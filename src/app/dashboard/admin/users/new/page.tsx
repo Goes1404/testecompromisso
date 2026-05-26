@@ -212,6 +212,7 @@ export default function AdminNewUserPage() {
   const [loading, setLoading] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [defaultPassword, setDefaultPassword] = useState<string | null>(null);
 
   // Estado pós-criação
   const [createdUser, setCreatedUser] = useState<{ id: string; email: string; name: string } | null>(null);
@@ -272,6 +273,7 @@ export default function AdminNewUserPage() {
       }
 
       setCreatedUser(data.user);
+      setDefaultPassword(data.defaultPassword ?? null);
       toast({ title: 'Usuário criado com sucesso!' });
       await generateInviteLink(data.user.email);
 
@@ -330,6 +332,38 @@ export default function AdminNewUserPage() {
           </p>
         </div>
 
+        {/* Senha padrão */}
+        {defaultPassword && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-amber-200 flex items-center justify-center shrink-0">
+                <KeyRound className="h-4 w-4 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-amber-800">Senha Padrão de Acesso</p>
+                <p className="text-[10px] text-amber-600 font-medium">O aluno usa essa senha para entrar pela primeira vez</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-amber-200">
+              <code className="flex-1 text-base font-black text-amber-900 font-mono tracking-wider">{defaultPassword}</code>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(defaultPassword);
+                  toast({ title: 'Senha copiada!' });
+                }}
+                className="h-8 px-3 text-amber-700 hover:bg-amber-100 rounded-lg font-bold text-xs"
+              >
+                <Copy size={13} className="mr-1" /> Copiar
+              </Button>
+            </div>
+            <p className="text-[10px] text-amber-600 font-medium leading-relaxed">
+              No primeiro login o aluno será solicitado a criar uma nova senha.
+            </p>
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl border border-muted/20 shadow-sm p-6 space-y-4">
           <div className="flex items-center gap-2.5 mb-2">
             <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -373,6 +407,7 @@ export default function AdminNewUserPage() {
             onClick={() => {
               setCreatedUser(null);
               setInviteLink(null);
+              setDefaultPassword(null);
               setForm({
                 fullName: '', cpf: '', birthDate: '', role: 'student', profileType: 'Estudante ENEM',
                 examTarget: 'ENEM', institution: '', course: '', sala: '', turno: '', emailOverride: '',

@@ -19,10 +19,7 @@ function generateEmail(fullName: string): string {
   return `${first}${middleInitial}${last}@compromisso.com`;
 }
 
-function generateTempPassword(): string {
-  const pool = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
-  return Array.from({ length: 16 }, () => pool[Math.floor(Math.random() * pool.length)]).join('');
-}
+const DEFAULT_PASSWORD = 'Compromisso@2026';
 
 export async function POST(request: Request) {
   try {
@@ -62,7 +59,6 @@ export async function POST(request: Request) {
 
     const email = (emailOverride?.trim() || generateEmail(fullName)).toLowerCase();
     const username = email.replace('@compromisso.com', '');
-    const tempPassword = generateTempPassword();
 
     // Verificar se email já existe
     const { data: existing } = await supabaseAdmin
@@ -81,7 +77,7 @@ export async function POST(request: Request) {
     // Criar usuário no Supabase Auth
     const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: tempPassword,
+      password: DEFAULT_PASSWORD,
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
@@ -124,6 +120,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       user: { id: authData.user.id, email, name: fullName },
+      defaultPassword: DEFAULT_PASSWORD,
     });
 
   } catch (error: any) {
