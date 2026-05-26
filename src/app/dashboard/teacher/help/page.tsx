@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -180,7 +180,7 @@ export default function TeacherHelpPage() {
     <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* ── Hero ── */}
-      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-slate-100 p-6">
+      <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-6">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -195,10 +195,10 @@ export default function TeacherHelpPage() {
               Suporte · FAQ
             </p>
           </div>
-          <h1 className="text-2xl font-black italic tracking-tighter text-slate-800 leading-none">
+          <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">
             Central de Ajuda
           </h1>
-          <p className="text-slate-600 text-xs font-semibold mt-1">
+          <p className="text-white/70 text-xs font-semibold mt-1">
             Tutoriais interativos passo a passo
           </p>
         </div>
@@ -222,8 +222,8 @@ export default function TeacherHelpPage() {
           onClick={() => setSearchQuery("")}
           className={`shrink-0 h-8 px-3.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
             searchQuery === ""
-              ? "bg-orange-500 text-slate-800 shadow-lg shadow-orange-500/20"
-              : "bg-white shadow-sm border border-slate-200 text-slate-400 hover:text-slate-800/80"
+              ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+              : "bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-slate-800"
           }`}
         >
           Todas
@@ -234,8 +234,8 @@ export default function TeacherHelpPage() {
             onClick={() => setSearchQuery(cat)}
             className={`shrink-0 h-8 px-3.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
               searchQuery === cat
-                ? "bg-orange-500 text-slate-800 shadow-lg shadow-orange-500/20"
-                : "bg-white shadow-sm border border-slate-200 text-slate-400 hover:text-slate-800/80"
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                : "bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-slate-800"
             }`}
           >
             {cat}
@@ -256,8 +256,8 @@ export default function TeacherHelpPage() {
             <Sparkles className="h-4 w-4 text-orange-400" />
           </div>
           <div>
-            <p className="text-xs font-black text-slate-800 italic">Tutoriais Interativos</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+            <p className="text-xs font-black text-white italic">Tutoriais Interativos</p>
+            <p className="text-[11px] text-white/50 leading-relaxed mt-1">
               Clique em <strong className="text-orange-400">"Iniciar Tutorial"</strong> em qualquer pergunta para um passo a passo visual com setas indicando onde clicar.
             </p>
           </div>
@@ -267,7 +267,7 @@ export default function TeacherHelpPage() {
       {/* ── FAQ Accordion ── */}
       {filteredFaqs.length === 0 ? (
         <div className="py-16 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
-          <HelpCircle className="h-8 w-8 mx-auto mb-2 text-white/15" />
+          <HelpCircle className="h-8 w-8 mx-auto mb-2 text-slate-300" />
           <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Nenhum resultado</p>
           <p className="text-[10px] font-medium text-slate-400 mt-1">Tente outros termos</p>
         </div>
@@ -277,7 +277,7 @@ export default function TeacherHelpPage() {
             <AccordionItem
               key={faq.id}
               value={faq.id}
-              className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm data-[state=open]:bg-white shadow-sm data-[state=open]:border-orange-500/20 transition-all"
+              className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm data-[state=open]:bg-slate-50 data-[state=open]:border-orange-500/20 transition-all"
             >
               <AccordionTrigger className="px-4 py-3.5 hover:no-underline group">
                 <div className="flex items-center gap-3 text-left flex-1">
@@ -294,14 +294,14 @@ export default function TeacherHelpPage() {
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
                 <div className="pl-12 space-y-3">
-                  <p className="text-xs text-slate-500 leading-relaxed font-medium italic">
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium italic">
                     {faq.answer}
                   </p>
                   {faq.tourSteps && (
                     <Button
                       onClick={() => handleStartTour(faq)}
                       disabled={activeTourId === faq.id}
-                      className="h-10 px-4 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-xl shadow-lg shadow-orange-500/30 border-none text-[10px] uppercase tracking-widest gap-1.5"
+                      className="h-10 px-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-xl shadow-lg shadow-orange-500/30 border-none text-[10px] uppercase tracking-widest gap-1.5"
                     >
                       <Play className="h-3 w-3" />
                       Iniciar Tutorial

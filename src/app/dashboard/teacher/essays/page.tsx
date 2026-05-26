@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -167,7 +167,7 @@ export default function AssessmentsGraderPage() {
           placeholder="Buscar estudante ou tema..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
+          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 focus:bg-slate-50 transition-all"
         />
       </div>
 
@@ -193,7 +193,7 @@ export default function AssessmentsGraderPage() {
                 </div>
               ) : filteredSubmissions.length === 0 ? (
                 <div className="p-12 text-center">
-                  <Inbox className="h-8 w-8 text-white/15 mx-auto mb-2" />
+                  <Inbox className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Sem envios</p>
                 </div>
               ) : (
@@ -208,7 +208,7 @@ export default function AssessmentsGraderPage() {
                         className={`relative p-4 text-left border-b border-slate-100 last:border-0 transition-all touch-manipulation active:scale-[0.99] ${
                           isSelected
                             ? "bg-orange-500/8"
-                            : "hover:bg-white shadow-sm"
+                            : "hover:bg-slate-50"
                         }`}
                       >
                         {isSelected && (
@@ -257,7 +257,7 @@ export default function AssessmentsGraderPage() {
               <div className="lg:hidden p-3 border-b border-slate-100">
                 <button
                   onClick={() => setSelectedEssay(null)}
-                  className="flex items-center gap-2 text-slate-400 hover:text-slate-800 text-xs font-black uppercase tracking-widest h-9 px-3 rounded-xl bg-white shadow-sm active:scale-95 transition-all touch-manipulation"
+                  className="flex items-center gap-2 text-slate-400 hover:text-slate-800 text-xs font-black uppercase tracking-widest h-9 px-3 rounded-xl bg-slate-50 active:scale-95 transition-all touch-manipulation"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   Voltar à fila
@@ -293,7 +293,7 @@ export default function AssessmentsGraderPage() {
 
                 {/* Content */}
                 <div className="relative bg-white shadow-sm border border-dashed border-slate-200 rounded-2xl p-5">
-                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest absolute -top-2 left-4 bg-[#0a0a0c] px-2">
+                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest absolute -top-2 left-4 bg-white px-2">
                     Transcrição
                   </p>
                   <div className="font-medium text-sm leading-relaxed italic text-slate-600 whitespace-pre-wrap max-h-[400px] overflow-y-auto scrollbar-hide">
@@ -302,4 +302,86 @@ export default function AssessmentsGraderPage() {
                 </div>
 
                 {/* AI Score */}
-                <div className="relative 
+                <div className="relative bg-[#0d0d0f] border border-orange-500/15 rounded-2xl p-5 overflow-hidden">
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.15) 0%, transparent 60%)",
+                    }}
+                  />
+                  <div className="relative z-10 flex items-start justify-between mb-3">
+                    <Badge className="bg-orange-500/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">
+                      Laudo Aurora IA
+                    </Badge>
+                    <Sparkles className="h-4 w-4 text-orange-400 animate-pulse" />
+                  </div>
+                  <div className="relative z-10">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/55 mb-1">
+                      Nota
+                    </p>
+                    <p className="text-5xl font-black italic text-white leading-none drop-shadow-xl">
+                      {selectedEssay.score}
+                    </p>
+                  </div>
+                  {selectedEssay.feedback && (
+                    <p className="relative z-10 text-xs font-medium italic text-white/60 leading-relaxed mt-4 pt-4 border-t border-white/10">
+                      "{selectedEssay.feedback}"
+                    </p>
+                  )}
+                </div>
+
+                {/* Mentor feedback */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-2 ml-1">
+                    <MessageSquare className="h-3 w-3 text-orange-400" /> Parecer do Maestro
+                  </Label>
+                  <Textarea
+                    value={mentorFeedback}
+                    onChange={(e) => setMentorFeedback(e.target.value)}
+                    placeholder="Adicione suas notas pedagógicas ou orientações personalizadas..."
+                    className="min-h-[140px] rounded-2xl bg-white shadow-sm border border-slate-200 p-4 font-medium italic text-sm text-slate-800 placeholder:text-slate-400 resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 transition-all"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSaveFeedback}
+                      disabled={isSaving}
+                      className="flex-1 h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
+                    >
+                      {isSaving ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                      )}
+                      Validar Revisão
+                    </Button>
+                    <Button
+                      asChild
+                      className="h-12 w-12 bg-white shadow-sm border border-slate-200 hover:border-orange-500/40 hover:text-orange-400 text-slate-500 rounded-2xl shrink-0"
+                      title="Conversar com Aluno"
+                    >
+                      <Link href={`/dashboard/chat/${selectedEssay.user_id}`}>
+                        <MessageSquare className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="hidden lg:flex flex-col items-center justify-center text-center py-20 bg-white shadow-sm border border-dashed border-slate-200 rounded-[1.5rem] min-h-[400px]">
+              <div className="h-16 w-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center mb-4">
+                <FileText className="h-7 w-7 text-slate-400" />
+              </div>
+              <p className="text-sm font-black text-slate-500 italic uppercase tracking-widest">
+                Selecione uma Submissão
+              </p>
+              <p className="text-[10px] font-bold text-slate-400 mt-2 max-w-xs uppercase tracking-wider">
+                Clique em um aluno na fila para iniciar a auditoria
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
