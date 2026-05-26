@@ -66,32 +66,31 @@ export async function POST(request: Request) {
 
     // 2. AÇÃO: RESETAR SENHA
     if (action === 'reset') {
-      const { userId, newPassword, birthDate } = body;
-      console.log(`[PRIMEIRO_ACESSO] Resetando senha para ID: ${userId}. Data fornecida (despiste): ${birthDate}`);
+      const { userId, newPassword, phone } = body;
 
       if (!userId || !newPassword || newPassword.length < 8) {
         return NextResponse.json({ error: 'Dados inválidos ou senha curta.' }, { status: 400 });
       }
 
       const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
-      
       if (getUserError || !userData?.user) {
         return NextResponse.json({ error: 'Usuário de autenticação não localizado.' }, { status: 404 });
       }
 
-      const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
         password: newPassword,
         email_confirm: true,
-        user_metadata: { 
+        user_metadata: {
           full_name: userData.user.user_metadata?.full_name,
           must_change_password: false,
-          security_check_date: birthDate
-        }
+        },
       });
-
       if (updateError) {
-        console.error('[PRIMEIRO_ACESSO] Erro no updateById:', updateError);
         return NextResponse.json({ error: 'Falha ao gravar nova senha.' }, { status: 500 });
+      }
+
+      if (phone) {
+        await supabaseAdmin.from('profiles').update({ phone }).eq('id', userId);
       }
 
       return NextResponse.json({ success: true });
