@@ -23,7 +23,7 @@ import { FloatingExtractionBubble } from "@/components/FloatingExtractionBubble"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 type NavChild = { icon: any; label: string; href: string; id: string; badge?: boolean };
-type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: boolean; children?: NavChild[] };
+type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: boolean; initialOpen?: boolean; children?: NavChild[] };
 
 /* ─── ALUNO ─────────────────────────────────────────────────── */
 const studentItems: NavItem[] = [
@@ -54,7 +54,7 @@ const studentItems: NavItem[] = [
     ],
   },
   {
-    icon: Flame, label: "Meu Progresso", id: "nav-progresso",
+    icon: Flame, label: "Meu Progresso", id: "nav-progresso", initialOpen: true,
     children: [
       { icon: Target,     label: "Metas",   href: "/dashboard/student/goals",   id: "nav-student-goals" },
       { icon: BookHeart,  label: "Diário",  href: "/dashboard/student/journal", id: "nav-student-journal" },
@@ -247,7 +247,7 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[]; path
           const groupActive    = isGroupActive(item.children);
           const groupHasBadge  = item.children.some(c => c.badge) && unreadCount > 0;
           return (
-            <Collapsible key={item.id} defaultOpen={groupActive} className="group/collapsible">
+            <Collapsible key={item.id} defaultOpen={groupActive || !!item.initialOpen} className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
