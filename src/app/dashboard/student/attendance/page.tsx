@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -22,7 +22,6 @@ import {
   AlertTriangle,
   CalendarDays,
   Sparkles,
-  Flame,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -167,33 +166,16 @@ export default function StudentAttendancePage() {
     <div className="pb-24 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* ── Hero ── */}
-      <div className={`relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border p-6 transition-colors ${
-        isStellar ? "border-emerald-500/30" : "border-white/5"
+      <div className={`relative rounded-[2rem] overflow-hidden p-6 shadow-2xl ${
+        isStellar
+          ? "bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 shadow-emerald-200"
+          : "bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 shadow-orange-200"
       }`}>
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: isStellar
-              ? "radial-gradient(ellipse at 70% 0%, rgba(16,185,129,0.22) 0%, transparent 60%), radial-gradient(ellipse at 10% 100%, rgba(20,184,166,0.12) 0%, transparent 60%)"
-              : "radial-gradient(ellipse at 70% 0%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 100%, rgba(59,130,246,0.08) 0%, transparent 60%)",
-          }}
-        />
-        {/* Stellar mode: subtle pulsing glow */}
-        {isStellar && (
-          <div
-            className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none animate-pulse"
-            style={{
-              background: "radial-gradient(circle, rgba(16,185,129,0.4) 0%, transparent 70%)",
-              filter: "blur(30px)",
-            }}
-          />
-        )}
+        <div className="absolute top-[-10%] right-[-5%] w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
-            {isStellar && <Sparkles className="h-3 w-3 text-emerald-400 animate-pulse" />}
-            <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${
-              isStellar ? "text-emerald-400/80" : "text-orange-400/85"
-            }`}>
+            {isStellar && <Sparkles className="h-3 w-3 text-white/80 animate-pulse" />}
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/80">
               {isStellar ? "Frequência exemplar" : "Aluno"}
             </p>
           </div>
@@ -205,33 +187,33 @@ export default function StudentAttendancePage() {
           <div className="grid grid-cols-4 gap-2">
             {[
               { label: "Aulas", value: totalSessions, color: "text-white" },
-              { label: "Presente", value: presentes, color: "text-emerald-400" },
-              { label: "Ausente", value: ausentes, color: "text-red-400" },
-              { label: "Taxa", value: `${pct}%`, color: atRisk ? "text-red-400" : "text-emerald-400" },
+              { label: "Presente", value: presentes, color: "text-emerald-200" },
+              { label: "Ausente", value: ausentes, color: "text-red-200" },
+              { label: "Taxa", value: `${pct}%`, color: atRisk ? "text-red-200" : "text-emerald-200" },
             ].map((kpi) => (
               <div
                 key={kpi.label}
                 className={`flex flex-col items-center rounded-2xl py-3 px-2 border ${
                   kpi.label === "Taxa" && atRisk
-                    ? "bg-red-500/10 border-red-500/20"
-                    : "bg-white/4 border-white/6"
+                    ? "bg-red-500/25 border-red-300/30"
+                    : "bg-white/15 border-white/20"
                 }`}
               >
                 <span className={`text-xl font-black leading-none ${kpi.color}`}>{kpi.value}</span>
-                <span className="text-[9px] font-bold text-white/55 uppercase tracking-wider mt-1">{kpi.label}</span>
+                <span className="text-[9px] font-bold text-white/70 uppercase tracking-wider mt-1">{kpi.label}</span>
               </div>
             ))}
           </div>
 
           {/* Progress bar */}
           <div className="mt-4 space-y-1.5">
-            <div className="flex justify-between text-[9px] font-black text-white/55 uppercase">
+            <div className="flex justify-between text-[9px] font-black text-white/70 uppercase">
               <span>Frequência geral</span>
-              <span className={atRisk ? "text-red-400" : "text-emerald-400"}>{pct}%</span>
+              <span className={atRisk ? "text-red-200" : "text-emerald-200"}>{pct}%</span>
             </div>
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ${atRisk ? "bg-red-500" : "bg-gradient-to-r from-emerald-500 to-teal-400"}`}
+                className={`h-full rounded-full transition-all duration-1000 ${atRisk ? "bg-red-300" : "bg-white"}`}
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -241,36 +223,30 @@ export default function StudentAttendancePage() {
 
       {/* ── Alert: at risk ── */}
       {atRisk && (
-        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
-          <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-          <p className="text-xs font-bold text-red-300 leading-relaxed">
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl">
+          <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+          <p className="text-xs font-bold text-red-700 leading-relaxed">
             Sua frequência está abaixo de 75%. Entre em contato com seu professor para regularizar a situação.
           </p>
         </div>
       )}
 
       {/* ── Check-in (OTP-style) ── */}
-      <div className="relative bg-[#0d0d0f] border border-orange-500/15 rounded-[1.5rem] p-5 space-y-4 overflow-hidden">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.10) 0%, transparent 60%)",
-          }}
-        />
-        <div className="relative z-10 flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
-            <KeyRound className="h-4 w-4 text-orange-400" />
+      <div className="bg-white border border-orange-200 shadow-sm rounded-[1.5rem] p-5 space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center shrink-0">
+            <KeyRound className="h-4 w-4 text-orange-600" />
           </div>
           <div>
-            <p className="font-black text-white text-sm italic">Check-in da Aula</p>
-            <p className="text-[10px] text-white/60 font-medium">
+            <p className="font-black text-primary text-sm italic">Check-in da Aula</p>
+            <p className="text-[10px] text-slate-500 font-medium">
               Digite o token exibido na lousa
             </p>
           </div>
         </div>
 
         {/* OTP boxes */}
-        <div className="relative z-10 flex justify-center gap-2 py-1">
+        <div className="flex justify-center gap-2 py-1">
           {[0, 1, 2, 3].map((idx) => {
             const char = checkinCode[idx] || "";
             const filled = !!char;
@@ -289,8 +265,8 @@ export default function StudentAttendancePage() {
                 onFocus={(e) => e.target.select()}
                 className={`h-14 w-12 sm:w-14 rounded-xl border-2 text-center text-2xl font-black italic font-mono uppercase outline-none transition-all touch-manipulation ${
                   filled
-                    ? "bg-orange-500/15 border-orange-500/50 text-orange-300 shadow-lg shadow-orange-500/20"
-                    : "bg-white/3 border-white/10 text-white/65 focus:border-orange-500/40 focus:bg-white/5"
+                    ? "bg-orange-100 border-orange-400 text-orange-700 shadow-lg shadow-orange-200"
+                    : "bg-slate-50 border-slate-200 text-slate-400 focus:border-orange-400 focus:bg-white"
                 }`}
               />
             );
@@ -300,7 +276,7 @@ export default function StudentAttendancePage() {
         <Button
           onClick={handleOpenImpact}
           disabled={checkingIn || checkinCode.length < 4}
-          className="relative z-10 w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs rounded-xl shadow-xl shadow-orange-500/30 disabled:opacity-40 disabled:shadow-none uppercase tracking-widest"
+          className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs rounded-xl shadow-xl shadow-orange-500/30 disabled:opacity-40 disabled:shadow-none uppercase tracking-widest"
         >
           <CheckCircle2 className="h-4 w-4 mr-1.5" />
           Confirmar Presença
@@ -310,19 +286,19 @@ export default function StudentAttendancePage() {
       {/* ── History ── */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
-          <CalendarDays className="h-4 w-4 text-orange-400/80" />
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">Histórico de Aulas</p>
+          <CalendarDays className="h-4 w-4 text-orange-500" />
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">Histórico de Aulas</p>
         </div>
 
         {loading ? (
           <div className="py-16 flex flex-col items-center gap-3">
             <Loader2 className="h-7 w-7 animate-spin text-orange-400" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/55 animate-pulse">Carregando...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 animate-pulse">Carregando...</p>
           </div>
         ) : sessions.length === 0 ? (
-          <div className="py-16 flex flex-col items-center gap-3 border border-dashed border-white/8 rounded-[1.5rem]">
-            <ClipboardCheck className="h-8 w-8 text-white/10" />
-            <p className="text-xs font-bold text-white/45 uppercase tracking-widest">Nenhuma aula registrada</p>
+          <div className="py-16 flex flex-col items-center gap-3 border border-dashed border-slate-200 rounded-[1.5rem]">
+            <ClipboardCheck className="h-8 w-8 text-slate-300" />
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhuma aula registrada</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -333,46 +309,46 @@ export default function StudentAttendancePage() {
               return (
                 <div
                   key={session.id}
-                  className="flex items-center gap-3 bg-white/3 border border-white/5 hover:border-white/10 rounded-2xl p-4 transition-all animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+                  className="flex items-center gap-3 bg-white border border-slate-100 hover:border-slate-200 shadow-sm rounded-2xl p-4 transition-all animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
                   style={{ animationDelay: `${Math.min(idx * 40, 400)}ms`, animationDuration: "400ms" }}
                 >
                   {/* Status dot */}
                   <div
                     className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${
                       isPresente
-                        ? "bg-emerald-500/15 border border-emerald-500/25"
+                        ? "bg-emerald-100 border border-emerald-200"
                         : isJustificado
-                        ? "bg-amber-500/15 border border-amber-500/25"
-                        : "bg-red-500/15 border border-red-500/25"
+                        ? "bg-amber-100 border border-amber-200"
+                        : "bg-red-100 border border-red-200"
                     }`}
                   >
                     {isPresente ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     ) : isJustificado ? (
-                      <AlertCircle className="h-4 w-4 text-amber-400" />
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-red-400" />
+                      <AlertCircle className="h-4 w-4 text-red-600" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-white italic truncate leading-tight">
+                    <p className="text-sm font-black text-primary italic truncate leading-tight">
                       {session.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[10px] text-white/60 font-bold">
+                      <span className="text-[10px] text-slate-500 font-bold">
                         {format(new Date(session.session_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
                       </span>
                       {session.subject && (
                         <>
-                          <span className="text-white/15">·</span>
-                          <span className="text-[10px] text-white/60 font-bold">{session.subject}</span>
+                          <span className="text-slate-300">·</span>
+                          <span className="text-[10px] text-slate-500 font-bold">{session.subject}</span>
                         </>
                       )}
                       {session.teacher_name && (
                         <>
-                          <span className="text-white/15">·</span>
-                          <span className="text-[10px] text-white/60 font-bold">{session.teacher_name}</span>
+                          <span className="text-slate-300">·</span>
+                          <span className="text-[10px] text-slate-500 font-bold">{session.teacher_name}</span>
                         </>
                       )}
                     </div>
@@ -382,10 +358,10 @@ export default function StudentAttendancePage() {
                     <Badge
                       className={`border-none font-black text-[8px] uppercase px-2 h-5 ${
                         isPresente
-                          ? "bg-emerald-500/15 text-emerald-400"
+                          ? "bg-emerald-100 text-emerald-700"
                           : isJustificado
-                          ? "bg-amber-500/15 text-amber-400"
-                          : "bg-red-500/15 text-red-400"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
                       {isPresente ? "Presente" : isJustificado ? "Justificado" : "Ausente"}
@@ -393,8 +369,8 @@ export default function StudentAttendancePage() {
                     <Badge
                       className={`border-none font-bold text-[8px] uppercase px-2 h-4 ${
                         session.session_type === "live"
-                          ? "bg-purple-500/10 text-purple-400"
-                          : "bg-blue-500/10 text-blue-400"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-blue-100 text-blue-700"
                       }`}
                     >
                       {session.session_type === "live" ? "Live" : "Presencial"}

@@ -19,7 +19,7 @@ export function FloatingExtractionBubble() {
         : 0;
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-24 right-6 z-[9999] animate-in slide-in-from-bottom-4 duration-300">
             <Link href="/dashboard/teacher/questions">
                 <div className="bg-primary text-white rounded-[1.5rem] shadow-2xl border border-white/10 p-4 min-w-[240px] cursor-pointer hover:scale-[1.03] transition-all active:scale-[0.98] backdrop-blur-sm">
                     {isAnalyzing ? (
