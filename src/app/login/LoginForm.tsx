@@ -38,10 +38,6 @@ export function LoginForm() {
         return;
       }
 
-      const sessionId = crypto.randomUUID();
-      localStorage.setItem('comp_session_id', sessionId);
-      await supabase.from('profiles').update({ bio: sessionId }).eq('id', data.user.id);
-
       if (data.user.user_metadata?.must_change_password) {
         window.location.assign("/dashboard/first-access");
         return;

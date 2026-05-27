@@ -188,26 +188,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    // 🔒 Verificação de Sessão Única (Anti-Compartilhamento)
-    const checkSessionLock = () => {
-      if (profile?.bio) {
-        const localSessionId = localStorage.getItem('comp_session_id');
-        if (localSessionId && profile.bio !== localSessionId) {
-          console.warn("[SECURITY] Sessão invalidada por novo login em outro dispositivo.");
-          signOut();
-        }
-      }
-    };
-
-    // Checa a cada mudança de perfil
-    checkSessionLock();
-
     return () => {
       if (subscription) {
         subscription.unsubscribe();
       }
     };
-  }, [fetchProfile, router, profile, signOut]);
+  }, [fetchProfile, router]);
 
   const contextValue = useMemo(() => ({
     user,
