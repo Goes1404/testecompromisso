@@ -23,8 +23,6 @@ import {
   Star,
   FileSearch,
   MessageSquareQuote,
-  ChevronDown,
-  Eye,
   Calendar,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -571,14 +569,14 @@ export default function StudentEssayPage() {
               return (
                 <div
                   key={entry.id}
-                  className="bg-white border border-slate-100 shadow-sm rounded-2xl p-5 animate-in fade-in slide-in-from-bottom-2 fill-mode-both cursor-pointer hover:border-orange-200 hover:shadow-md transition-all group"
+                  className="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 md:p-5 animate-in fade-in slide-in-from-bottom-2 fill-mode-both cursor-pointer hover:border-orange-200 hover:shadow-md transition-all group active:scale-[0.99] touch-manipulation"
                   style={{ animationDelay: `${Math.min(idx * 50, 300)}ms` }}
                   onClick={() => setSelectedEntry(entry)}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
                     {/* Score ring */}
                     <div className="relative shrink-0">
-                      <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56">
+                      <svg className="h-12 w-12 -rotate-90" viewBox="0 0 56 56">
                         <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(148,163,184,0.2)" strokeWidth="3" />
                         <circle cx="28" cy="28" r="22" fill="none"
                           stroke={colors.ring}
@@ -607,9 +605,8 @@ export default function StudentEssayPage() {
                       <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">{entry.content}</p>
                     </div>
 
-                    <div className="shrink-0 flex items-center gap-1 text-slate-400 group-hover:text-orange-500 transition-colors">
-                      <Eye className="h-4 w-4" />
-                      <ChevronDown className="h-3 w-3" />
+                    <div className="shrink-0 text-slate-300 group-hover:text-orange-400 transition-colors mt-1">
+                      <ChevronRight className="h-4 w-4" />
                     </div>
                   </div>
                 </div>
@@ -621,16 +618,16 @@ export default function StudentEssayPage() {
 
       {/* ── Essay Detail Sheet ── */}
       <Sheet open={!!selectedEntry} onOpenChange={(v) => { if (!v) setSelectedEntry(null); }}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto p-0">
+        <SheetContent side="bottom" className="h-[92dvh] w-full sm:side-right sm:max-w-2xl overflow-y-auto p-0 rounded-t-[2rem] sm:rounded-none">
           {selectedEntry && (() => {
             const colors = scoreColor(selectedEntry.score);
             const rd = selectedEntry.result_data;
             return (
               <>
-                <SheetHeader className="p-6 pb-4 border-b border-slate-100 bg-gradient-to-r from-orange-500 to-amber-500 text-white sticky top-0 z-10">
-                  <div className="flex items-start gap-4">
+                <SheetHeader className="p-4 md:p-6 pb-4 border-b border-slate-100 bg-gradient-to-r from-orange-500 to-amber-500 text-white sticky top-0 z-10">
+                  <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
-                      <svg className="h-16 w-16 -rotate-90" viewBox="0 0 56 56">
+                      <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56">
                         <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.20)" strokeWidth="3" />
                         <circle cx="28" cy="28" r="22" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"
                           strokeDasharray={2 * Math.PI * 22}
@@ -652,7 +649,7 @@ export default function StudentEssayPage() {
                   </div>
                 </SheetHeader>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 md:p-6 space-y-5">
                   {/* Feedback geral */}
                   {selectedEntry.feedback && (
                     <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
@@ -674,7 +671,7 @@ export default function StudentEssayPage() {
                           if (!info) return null;
                           const Icon = info.icon;
                           return (
-                            <div key={key} className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-4">
+                            <div key={key} className="bg-white border border-slate-100 rounded-2xl p-3 md:p-4 flex items-center gap-3">
                               <div className={`p-2 rounded-xl border shrink-0 ${info.bg}`}>
                                 <Icon className={`h-4 w-4 ${info.color}`} />
                               </div>
