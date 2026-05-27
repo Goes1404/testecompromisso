@@ -155,20 +155,20 @@ export default function GoalsPage() {
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-md">
+      <div className="grid grid-cols-3 gap-2 md:gap-3">
+        <div className="bg-white rounded-2xl p-3 md:p-4 border border-slate-100 shadow-md">
           <Target className="h-4 w-4 text-emerald-600 mb-1.5" />
-          <p className="text-2xl font-black text-primary">{active.length}</p>
+          <p className="text-xl md:text-2xl font-black text-primary">{active.length}</p>
           <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Ativas</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-md">
+        <div className="bg-white rounded-2xl p-3 md:p-4 border border-slate-100 shadow-md">
           <Trophy className="h-4 w-4 text-amber-600 mb-1.5" />
-          <p className="text-2xl font-black text-primary">{completed.length}</p>
+          <p className="text-xl md:text-2xl font-black text-primary">{completed.length}</p>
           <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Concluídas</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-md">
+        <div className="bg-white rounded-2xl p-3 md:p-4 border border-slate-100 shadow-md">
           <TrendingUp className="h-4 w-4 text-violet-600 mb-1.5" />
-          <p className="text-2xl font-black text-primary">{goals.length}</p>
+          <p className="text-xl md:text-2xl font-black text-primary">{goals.length}</p>
           <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Total</p>
         </div>
       </div>
@@ -208,10 +208,10 @@ export default function GoalsPage() {
                     </div>
                     <button
                       onClick={() => handleDelete(g.id)}
-                      className="h-8 w-8 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-600 transition-colors flex items-center justify-center text-slate-400"
+                      className="h-10 w-10 min-w-[40px] rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-600 active:scale-90 transition-all flex items-center justify-center text-slate-400"
                       aria-label="Excluir"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
 
@@ -229,14 +229,14 @@ export default function GoalsPage() {
                       variant="outline"
                       onClick={() => handleProgress(g, -1)}
                       disabled={g.current_value === 0}
-                      className="h-9 rounded-xl text-xs font-black border-slate-200 flex-1"
+                      className="h-11 rounded-xl text-sm font-black border-slate-200 flex-1 active:scale-95"
                     >
                       –
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => handleProgress(g, 1)}
-                      className="h-9 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white flex-1"
+                      className="h-11 rounded-xl text-sm font-black bg-emerald-600 hover:bg-emerald-700 text-white flex-1 active:scale-95"
                     >
                       +1
                     </Button>
@@ -244,7 +244,7 @@ export default function GoalsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleComplete(g.id)}
-                      className="h-9 rounded-xl text-xs font-black border-amber-200 text-amber-700 hover:bg-amber-50 flex-1"
+                      className="h-11 rounded-xl text-xs font-black border-amber-200 text-amber-700 hover:bg-amber-50 flex-1 active:scale-95"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Concluir
                     </Button>
@@ -281,19 +281,19 @@ export default function GoalsPage() {
       {/* CREATE DIALOG */}
       <Dialog open={openCreate} onOpenChange={setOpenCreate}>
         <DialogContent className="sm:max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-7 pb-4 bg-emerald-50 border-b-2 border-emerald-100">
+          <DialogHeader className="p-5 md:p-7 pb-4 bg-emerald-50 border-b-2 border-emerald-100">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
-                <Target className="h-6 w-6 text-white" />
+              <div className="h-11 w-11 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 shrink-0">
+                <Target className="h-5 w-5 text-white" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-black italic text-emerald-700 uppercase tracking-tighter leading-none">Nova Meta</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl font-black italic text-emerald-700 uppercase tracking-tighter leading-none">Nova Meta</DialogTitle>
                 <DialogDescription className="text-xs font-bold text-emerald-600 mt-1">Defina um objetivo claro e mensurável</DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="p-7 space-y-5">
+          <div className="p-5 md:p-7 space-y-5">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Título</Label>
               <Input

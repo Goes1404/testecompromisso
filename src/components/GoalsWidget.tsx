@@ -73,7 +73,7 @@ export function GoalsWidget({ userId }: Props) {
           </div>
           <Link
             href="/dashboard/student/goals"
-            className="h-9 w-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center shadow-md"
+            className="h-11 w-11 min-w-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center shadow-md"
             aria-label="Adicionar meta"
           >
             <Plus className="h-4 w-4 text-white" />

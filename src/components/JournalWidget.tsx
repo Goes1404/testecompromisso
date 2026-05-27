@@ -120,13 +120,13 @@ export function JournalWidget({ userId }: Props) {
               <button
                 onClick={handleSave}
                 disabled={!mood || saving}
-                className="flex-1 h-10 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase tracking-widest rounded-2xl transition-colors"
+                className="flex-1 h-12 bg-violet-600 hover:bg-violet-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase tracking-widest rounded-2xl transition-all"
               >
                 {saving ? 'Salvando...' : 'Registrar'}
               </button>
               <Link
                 href="/dashboard/student/journal"
-                className="h-10 px-4 flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-widest text-violet-700 hover:text-violet-800 rounded-2xl border border-violet-200"
+                className="h-12 px-4 flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-widest text-violet-700 hover:text-violet-800 active:scale-95 rounded-2xl border border-violet-200 transition-all"
               >
                 Histórico <ChevronRight className="h-3 w-3" />
               </Link>

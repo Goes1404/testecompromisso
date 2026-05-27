@@ -130,18 +130,18 @@ export default function JournalPage() {
 
         <div className="space-y-3">
           <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Como foi seu dia?</Label>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-1.5">
             {MOODS.map(m => (
               <button
                 key={m.value}
                 type="button"
                 onClick={() => setMood(m.value)}
-                className={`${m.bg} rounded-2xl p-3 transition-all hover:scale-105 active:scale-95 ${
+                className={`${m.bg} rounded-2xl p-2 transition-all hover:scale-105 active:scale-95 min-h-[56px] flex flex-col items-center justify-center ${
                   mood === m.value ? `ring-2 ${m.ring} scale-105 shadow-md` : 'opacity-60'
                 }`}
               >
-                <div className="text-3xl">{m.emoji}</div>
-                <p className="text-[9px] font-black uppercase tracking-wider text-slate-600 mt-1">{m.label}</p>
+                <div className="text-2xl leading-none">{m.emoji}</div>
+                <p className="text-[8px] font-black uppercase tracking-wider text-slate-600 mt-1 leading-none">{m.label}</p>
               </button>
             ))}
           </div>
