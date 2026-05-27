@@ -9,6 +9,7 @@ export function FloatingExtractionBubble() {
     const { isAnalyzing, progress, extractedQuestions } = useExtraction();
     const pathname = usePathname();
 
+
     const isOnQuestionsPage = pathname === '/dashboard/teacher/questions';
     const hasPending = extractedQuestions.length > 0;
 
