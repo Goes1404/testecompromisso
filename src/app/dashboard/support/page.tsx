@@ -78,7 +78,32 @@ export default function AuroraSupportPage() {
     setLoading(true);
 
     try {
-      toast({ title: "Serviço Indisponível", description: "O chat da Aurora foi desativado pelo administrador.", variant: "destructive" });
+      const allMessages = [...messages, userMessage].map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: allMessages }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Erro ${res.status}`);
+      }
+
+      const data = await res.json();
+      const reply = data?.result?.response || data?.text || "Sem resposta da Aurora.";
+
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+    } catch (err: any) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: `Não consegui processar sua solicitação agora. Tente novamente em instantes. (${err.message})`,
+        isError: true,
+      }]);
     } finally {
       setLoading(false);
     }
