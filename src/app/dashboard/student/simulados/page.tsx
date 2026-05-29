@@ -278,7 +278,7 @@ export default function SimuladoPage() {
     const urgentTime = timeLeft !== null && timeLeft < 300;
 
     return (
-      <div className="max-w-3xl mx-auto pb-24 px-2 sm:px-4">
+      <div className="max-w-3xl mx-auto pb-36 sm:pb-24 px-2 sm:px-4">
 
         {/* sticky progress header */}
         <div className="sticky top-2 z-30 mb-6">
@@ -364,13 +364,14 @@ export default function SimuladoPage() {
                       const isSelected = selectedAnswer === key;
                       return (
                         <motion.div key={key} variants={fadeUp} whileTap={{ scale: 0.985 }} style={{ willChange: 'transform' }}>
-                          <Label
+                          <div
+                            onClick={() => setSelectedAnswer(key)}
                             className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer select-none
                               ${isSelected
                                 ? 'border-primary bg-primary/5 shadow-[0_0_0_2px_rgba(255,107,0,0.1)]'
                                 : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 active:border-primary/40'}`}
                           >
-                            <RadioGroupItem value={key} id={key} className="mt-0.5 shrink-0" />
+                            <RadioGroupItem value={key} id={`opt-${key}`} className="mt-0.5 shrink-0" onClick={(e) => e.stopPropagation()} />
                             <div className="flex gap-2 sm:gap-3 min-w-0">
                               <span className={`font-black italic shrink-0 text-sm sm:text-base
                                 ${isSelected ? 'text-primary' : 'text-slate-300'}`}>
@@ -378,7 +379,7 @@ export default function SimuladoPage() {
                               </span>
                               <span className="font-medium text-slate-700 text-sm sm:text-base whitespace-pre-wrap break-words">{o.text}</span>
                             </div>
-                          </Label>
+                          </div>
                         </motion.div>
                       );
                     })}
@@ -390,13 +391,13 @@ export default function SimuladoPage() {
         </AnimatePresence>
 
         {/* bottom CTA */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
           <div className="max-w-3xl mx-auto flex items-center gap-3">
             <p className="hidden sm:block text-[10px] font-black uppercase text-slate-300 italic flex-1">Analise com calma.</p>
             <Button
               onClick={handleNext}
               disabled={selectedAnswer === null}
-              className="w-full sm:w-auto h-12 sm:h-14 rounded-2xl font-black text-sm sm:text-base px-8 bg-primary shadow-xl active:scale-95 transition-transform flex items-center gap-2"
+              className="w-full sm:w-auto h-12 sm:h-14 rounded-2xl font-black text-sm sm:text-base px-8 bg-primary shadow-xl active:scale-95 transition-transform flex items-center gap-2 touch-manipulation disabled:opacity-50 disabled:pointer-events-none"
             >
               {currentIndex < questions.length - 1
                 ? <><span>Próxima Questão</span><ChevronRight className="h-4 w-4" /></>

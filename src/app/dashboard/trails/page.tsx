@@ -32,28 +32,13 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { getTrailCoverUrl, isPlaceholderImage } from "@/lib/trail-cover";
 
 const TRAIL_CATEGORIES = ["Todos", "Matemática", "Linguagens", "Física", "Biologia", "História", "Geografia", "Atualidades", "Literatura", "Química", "Filosofia", "Sociologia"];
-const CATEGORY_IMAGES: Record<string, string> = {
-  'Matemática': 'https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=800&auto=format&fit=crop',
-  'Física': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop',
-  'Química': 'https://images.unsplash.com/photo-1532187863486-abf9d39d66e8?q=80&w=800&auto=format&fit=crop',
-  'Biologia': 'https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?q=80&w=800&auto=format&fit=crop',
-  'História': 'https://images.unsplash.com/photo-1461360370896-922624d12aa1?q=80&w=800&auto=format&fit=crop',
-  'Geografia': 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop',
-  'Atualidades': 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=800&auto=format&fit=crop',
-  'Literatura': 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=800&auto=format&fit=crop',
-  'Português': 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=800&auto=format&fit=crop',
-  'Linguagens': 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=800&auto=format&fit=crop',
-  'Filosofia': 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop',
-  'Sociologia': 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=800&auto=format&fit=crop',
-};
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop';
-
-function getSafeTrailImage(url: string | null | undefined, category: string) {
-  if (!url || url.includes('pixabay.com') || url.includes('picsum.photos')) {
-    return CATEGORY_IMAGES[category] || DEFAULT_IMAGE;
+function getSafeTrailImage(url: string | null | undefined, title: string, category: string) {
+  if (!url || isPlaceholderImage(url)) {
+    return getTrailCoverUrl(title, category);
   }
   return url;
 }
@@ -77,7 +62,6 @@ export default function LearningTrailsPage() {
   const [allProgress, setAllProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pinningId, setPinningId] = useState<string | null>(null);
-  const [trailImages, setTrailImages] = useState<Record<string, string>>({});
 
   const fetchData = useCallback(async () => {
     // Proteção Industrial: Só busca dados se o perfil estiver carregado
@@ -114,26 +98,6 @@ export default function LearningTrailsPage() {
 
       if (trailsResult.data) {
         setDbTrails(trailsResult.data);
-        // Busca imagens únicas via Pixabay para trilhas sem imagem própria
-        const needsImage = trailsResult.data.filter(
-          t => !t.image_url || t.image_url.includes('picsum.photos') || t.image_url.includes('pixabay.com')
-        );
-        if (needsImage.length > 0) {
-          const results = await Promise.allSettled(
-            needsImage.map(t =>
-              fetch(`/api/image-search?title=${encodeURIComponent(t.title)}&category=${encodeURIComponent(t.category)}`)
-                .then(r => r.json())
-                .then(d => ({ id: t.id, url: d.url as string | null }))
-            )
-          );
-          const map: Record<string, string> = {};
-          for (const r of results) {
-            if (r.status === 'fulfilled' && r.value.url) {
-              map[r.value.id] = r.value.url;
-            }
-          }
-          setTrailImages(map);
-        }
       }
       if (progressResult.data) setAllProgress(progressResult.data);
     } catch (e: any) {
@@ -380,13 +344,13 @@ export default function LearningTrailsPage() {
               <Card key={trail.id} className="gradient-border group overflow-hidden border-none shadow-xl hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 bg-white rounded-[2.5rem] flex flex-col h-full">
                 <div className="relative aspect-video overflow-hidden shrink-0">
                   <Image
-                    src={trailImages[trail.id] || getSafeTrailImage(trail.image_url, trail.category)}
+                    src={getSafeTrailImage(trail.image_url, trail.title, trail.category)}
                     alt={trail.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = CATEGORY_IMAGES[trail.category] || DEFAULT_IMAGE;
+                      (e.target as HTMLImageElement).src = getTrailCoverUrl(trail.title, trail.category);
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-60" />

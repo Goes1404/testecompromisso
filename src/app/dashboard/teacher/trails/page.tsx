@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { EDUCATIONAL_CATEGORIES } from "@/lib/constants";
+import { getTrailCoverUrl, isPlaceholderImage } from "@/lib/trail-cover";
 
 export default function TeacherTrailsPage() {
   const { user, profile } = useAuth();
@@ -76,8 +77,8 @@ export default function TeacherTrailsPage() {
           trailData.image_url = urlData.publicUrl;
         }
       }
-      if (!trailData.image_url) {
-        trailData.image_url = `https://picsum.photos/seed/trail-${Date.now()}/600/400`;
+      if (!trailData.image_url || isPlaceholderImage(trailData.image_url)) {
+        trailData.image_url = getTrailCoverUrl(newTrail.title, newTrail.category);
       }
       if (newTrail.target_audience !== "all") {
         trailData.target_audience = newTrail.target_audience;
@@ -136,7 +137,7 @@ export default function TeacherTrailsPage() {
           status: firstTrail?.status || "draft",
           trail_type: "serie",
           target_audience: firstTrail?.target_audience || "all",
-          image_url: firstTrail?.image_url || `https://picsum.photos/seed/serie-${Date.now()}/600/400`,
+          image_url: (firstTrail?.image_url && !isPlaceholderImage(firstTrail.image_url)) ? firstTrail.image_url : getTrailCoverUrl(serieName.trim(), firstTrail?.category || "Geral"),
         })
         .select("id")
         .single();
@@ -312,11 +313,11 @@ export default function TeacherTrailsPage() {
                 {/* Cover */}
                 <div className="relative aspect-video overflow-hidden bg-black/30">
                   <img
-                    src={trail.image_url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop"}
+                    src={(!trail.image_url || isPlaceholderImage(trail.image_url)) ? getTrailCoverUrl(trail.title, trail.category) : trail.image_url}
                     alt={trail.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop";
+                      (e.target as HTMLImageElement).src = getTrailCoverUrl(trail.title, trail.category);
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

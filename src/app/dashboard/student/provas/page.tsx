@@ -588,9 +588,9 @@ export default function ProvasCompletasPage() {
               {currentQuestion.options.map((opt) => {
                 const isSelected = selectedAnswer === opt.key;
                 return (
-                  <Label
+                  <div
                     key={opt.key}
-                    htmlFor={`opt-${opt.key}`}
+                    onClick={() => setSelectedAnswer(opt.key)}
                     className={`flex items-start gap-3 p-4 rounded-2xl border cursor-pointer transition-all touch-manipulation active:scale-[0.99] ${
                       isSelected
                         ? "bg-orange-50 border-orange-400 shadow-sm shadow-orange-100"
@@ -600,6 +600,7 @@ export default function ProvasCompletasPage() {
                     <RadioGroupItem
                       id={`opt-${opt.key}`}
                       value={opt.key}
+                      onClick={(e) => e.stopPropagation()}
                       className={`mt-1 shrink-0 ${isSelected ? "text-orange-500" : ""}`}
                     />
                     <div className="flex gap-2.5 flex-1">
@@ -618,7 +619,7 @@ export default function ProvasCompletasPage() {
                         {opt.text}
                       </span>
                     </div>
-                  </Label>
+                  </div>
                 );
               })}
             </RadioGroup>
