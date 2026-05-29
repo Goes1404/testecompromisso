@@ -391,7 +391,7 @@ export default function SimuladoPage() {
         </AnimatePresence>
 
         {/* bottom CTA */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
+        <div className="fixed bottom-16 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
           <div className="max-w-3xl mx-auto flex items-center gap-3">
             <p className="hidden sm:block text-[10px] font-black uppercase text-slate-300 italic flex-1">Analise com calma.</p>
             <Button

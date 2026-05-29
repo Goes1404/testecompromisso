@@ -270,8 +270,8 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
          RIGHT — Answer Tray (focused single-question + grid jump)
       ═════════════════════════════════════════════════════════════════════ */}
       <aside
-        className={`w-full md:w-[360px] flex flex-col bg-[#0d0d0f] border-t md:border-t-0 md:border-l border-white/5 shadow-2xl z-40 shrink-0 overflow-hidden transition-all duration-300 ${
-          isTrayExpanded ? "h-[60vh] md:h-auto" : "h-14 md:h-auto"
+        className={`w-full md:w-[360px] flex flex-col bg-[#0d0d0f] border-t md:border-t-0 md:border-l border-white/5 shadow-2xl z-40 shrink-0 overflow-hidden transition-all duration-300 md:min-h-0 ${
+          isTrayExpanded ? "h-[68vh] md:h-full" : "h-14 md:h-full"
         }`}
       >
 
@@ -304,7 +304,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         </button>
 
         {/* ── Body ── */}
-        <div className="flex-1 overflow-y-auto bg-[#0d0d0f]">
+        <div className="flex-1 overflow-y-auto bg-[#0d0d0f] min-h-0">
           {result ? (
             /* ── RESULT VIEW ─────────────────────────────────────────────── */
             <div className="p-4 space-y-4 animate-in fade-in zoom-in-95 duration-300">
@@ -392,7 +392,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
             </div>
           ) : (
             /* ── ANSWER VIEW (focused single question + grid) ────────────── */
-            <div className="flex flex-col h-full">
+            <div>
 
               {/* ── PROGRESS HEADER ── */}
               <div className="p-4 pb-3 border-b border-white/5">
@@ -431,90 +431,66 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
 
               {/* ── FOCUSED QUESTION ─────────────────────────────────────── */}
               {!showGrid && currentQ && (
-                <div className="flex-1 flex flex-col">
-                  <div className="p-5 flex-1 flex flex-col justify-center">
-                    {currentQ.question.subjects?.name && (
-                      <Badge className="bg-white/5 text-white/65 border border-white/10 font-black text-[8px] uppercase tracking-widest px-2 h-5 self-start mb-3">
-                        {currentQ.question.subjects.name}
-                      </Badge>
-                    )}
-                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-400/70 mb-3">
-                      Selecione a resposta
-                    </p>
+                <div className="p-5">
+                  {currentQ.question.subjects?.name && (
+                    <Badge className="bg-white/5 text-white/65 border border-white/10 font-black text-[8px] uppercase tracking-widest px-2 h-5 self-start mb-3">
+                      {currentQ.question.subjects.name}
+                    </Badge>
+                  )}
+                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-400/70 mb-3">
+                    Selecione a resposta
+                  </p>
 
-                    {/* Big A/B/C/D/E buttons */}
-                    <div className="grid grid-cols-5 gap-2">
-                      {["A", "B", "C", "D", "E"].map((letter) => {
-                        const isSelected = currentAnswer === letter;
-                        return (
-                          <button
-                            key={letter}
-                            onClick={() => handleSelectAnswer(currentQ.question.id, letter)}
-                            className={`aspect-square rounded-2xl font-black text-2xl italic transition-all touch-manipulation active:scale-90 flex items-center justify-center ${
-                              isSelected
-                                ? "bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-xl shadow-orange-500/40 scale-105"
-                                : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/8 hover:text-white"
-                            }`}
-                          >
-                            {letter}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Selected feedback */}
-                    <div className="mt-4 text-center">
-                      {currentAnswer ? (
-                        <p className="text-[10px] font-bold text-orange-400/70 uppercase tracking-widest">
-                          ✓ Resposta marcada: <span className="text-orange-400">{currentAnswer}</span>
-                        </p>
-                      ) : (
-                        <p className="text-[10px] font-bold text-white/55 uppercase tracking-widest">
-                          Nenhuma resposta marcada
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Keyboard hint (desktop) */}
-                    <div className="hidden md:flex items-center justify-center gap-3 mt-5 pt-4 border-t border-white/5">
-                      {(["A", "B", "C", "D", "E"] as const).map((k) => (
-                        <kbd
-                          key={k}
-                          className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65"
+                  {/* Big A/B/C/D/E buttons */}
+                  <div className="grid grid-cols-5 gap-2">
+                    {["A", "B", "C", "D", "E"].map((letter) => {
+                      const isSelected = currentAnswer === letter;
+                      return (
+                        <button
+                          key={letter}
+                          onClick={() => handleSelectAnswer(currentQ.question.id, letter)}
+                          className={`aspect-square rounded-2xl font-black text-2xl italic transition-all touch-manipulation active:scale-90 flex items-center justify-center ${
+                            isSelected
+                              ? "bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-xl shadow-orange-500/40 scale-105"
+                              : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/8 hover:text-white"
+                          }`}
                         >
-                          {k}
-                        </kbd>
-                      ))}
-                      <span className="text-[9px] text-white/60">·</span>
-                      <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65">
-                        ←
-                      </kbd>
-                      <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65">
-                        →
-                      </kbd>
-                    </div>
+                          {letter}
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  {/* ── PREV / NEXT NAV ──────────────────────────────────── */}
-                  <div className="p-4 border-t border-white/5 bg-white/[0.02]">
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={goPrev}
-                        disabled={isFirst}
-                        className="h-12 rounded-2xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-widest bg-white/5 border border-white/10 text-white/70 hover:bg-white/8 hover:text-white transition-all active:scale-95 touch-manipulation disabled:opacity-30 disabled:cursor-not-allowed"
+                  {/* Selected feedback */}
+                  <div className="mt-4 text-center">
+                    {currentAnswer ? (
+                      <p className="text-[10px] font-bold text-orange-400/70 uppercase tracking-widest">
+                        ✓ Resposta marcada: <span className="text-orange-400">{currentAnswer}</span>
+                      </p>
+                    ) : (
+                      <p className="text-[10px] font-bold text-white/55 uppercase tracking-widest">
+                        Nenhuma resposta marcada
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Keyboard hint (desktop) */}
+                  <div className="hidden md:flex items-center justify-center gap-3 mt-5 pt-4 border-t border-white/5">
+                    {(["A", "B", "C", "D", "E"] as const).map((k) => (
+                      <kbd
+                        key={k}
+                        className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65"
                       >
-                        <ChevronLeft className="h-4 w-4" />
-                        Anterior
-                      </button>
-                      <button
-                        onClick={goNext}
-                        disabled={isLast}
-                        className="h-12 rounded-2xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-widest bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 transition-all active:scale-95 touch-manipulation disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        Próxima
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
+                        {k}
+                      </kbd>
+                    ))}
+                    <span className="text-[9px] text-white/60">·</span>
+                    <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65">
+                      ←
+                    </kbd>
+                    <kbd className="px-1.5 py-0.5 text-[9px] font-black bg-white/5 border border-white/10 rounded text-white/65">
+                      →
+                    </kbd>
                   </div>
                 </div>
               )}
@@ -571,9 +547,33 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
           )}
         </div>
 
+        {/* ── PREV / NEXT NAV — sempre visível, fora do scroll ── */}
+        {!result && !showGrid && (
+          <div className="shrink-0 px-3 py-2.5 border-t border-white/8 bg-[#0d0d0f]">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={goPrev}
+                disabled={isFirst}
+                className="h-12 rounded-2xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-widest bg-white/5 border border-white/10 text-white/70 hover:bg-white/8 hover:text-white transition-all active:scale-95 touch-manipulation disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </button>
+              <button
+                onClick={goNext}
+                disabled={isLast}
+                className="h-12 rounded-2xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-widest bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 transition-all active:scale-95 touch-manipulation disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Próxima
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── SUBMIT FOOTER ── */}
         {!result && (
-          <div className="p-4 bg-[#0a0a0c] border-t border-white/5 shrink-0">
+          <div className="p-3 bg-[#0a0a0c] border-t border-white/5 shrink-0">
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
