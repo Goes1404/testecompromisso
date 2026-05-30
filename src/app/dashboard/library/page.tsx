@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,8 +32,8 @@ import Link from "next/link";
 const CATEGORY_IMAGES: Record<string, string> = {
   'Matemática': 'https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=800&auto=format&fit=crop',
   'Física': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop',
-  'Química': 'https://images.unsplash.com/photo-1532187863486-abf9d39d66e8?q=80&w=800&auto=format&fit=crop',
-  'Biologia': 'https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?q=80&w=800&auto=format&fit=crop',
+  'Química': 'https://images.unsplash.com/photo-1532094349884-543648cdbd8e?q=80&w=800&auto=format&fit=crop',
+  'Biologia': 'https://images.unsplash.com/photo-1576319155264-99536e0be1ee?q=80&w=800&auto=format&fit=crop',
   'História': 'https://images.unsplash.com/photo-1461360370896-922624d12aa1?q=80&w=800&auto=format&fit=crop',
   'Geografia': 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop',
   'Linguagens': 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=800&auto=format&fit=crop',

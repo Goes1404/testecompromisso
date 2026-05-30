@@ -121,7 +121,7 @@ const TOPIC_POOLS: Array<{ keywords: string[]; pool: string[] }> = [
   {
     keywords: ["organica", "orgânica", "carbono", "hidrocarboneto", "alcool", "álcool", "cetona"],
     pool: [
-      u("1532187863486-abf9d39d66e8"),
+      u("1532094349884-543648cdbd8e"),
       u("1564325724739-bae0bd08762c"),
     ],
   },
@@ -150,7 +150,7 @@ const TOPIC_POOLS: Array<{ keywords: string[]; pool: string[] }> = [
   {
     keywords: ["celula", "célula", "mitose", "meiose", "organela", "membrana"],
     pool: [
-      u("1530026405186-ed1ea0ac7a63"),
+      u("1576319155264-99536e0be1ee"),
       u("1576319155264-99536e0be1ee"),
     ],
   },
@@ -158,7 +158,7 @@ const TOPIC_POOLS: Array<{ keywords: string[]; pool: string[] }> = [
     keywords: ["evolucao", "evolução", "darwin", "selecao", "seleção", "filogenia"],
     pool: [
       u("1518531933037-91b2f5f229cc"),
-      u("1530026405186-ed1ea0ac7a63"),
+      u("1576319155264-99536e0be1ee"),
     ],
   },
   {
@@ -173,7 +173,7 @@ const TOPIC_POOLS: Array<{ keywords: string[]; pool: string[] }> = [
     keywords: ["anatomia", "corpo", "fisiologia", "sistema", "orgao", "órgão", "nervoso", "cardiovascular"],
     pool: [
       u("1576319155264-99536e0be1ee"),
-      u("1530026405186-ed1ea0ac7a63"),
+      u("1576319155264-99536e0be1ee"),
     ],
   },
   {
@@ -341,14 +341,14 @@ const CATEGORY_POOLS: Record<string, string[]> = {
     u("1498049200459-53e4f902e1ab"),
   ],
   "Química": [
-    u("1532187863486-abf9d39d66e8"),
+    u("1532094349884-543648cdbd8e"),
     u("1576086213369-31c54e8a5b96"),
     u("1532094349884-543648cdbd8e"),
     u("1605722905765-96d58e1c5c1d"),
     u("1564325724739-bae0bd08762c"),
   ],
   "Biologia": [
-    u("1530026405186-ed1ea0ac7a63"),
+    u("1576319155264-99536e0be1ee"),
     u("1559757148-5e9d0a5f6a35"),
     u("1552475342-971c97b12d1e"),
     u("1448375240586-882707db888b"),
