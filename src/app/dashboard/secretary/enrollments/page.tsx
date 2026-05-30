@@ -69,6 +69,8 @@ import {
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { exportToCsv } from "@/lib/export-csv";
+import { Download } from "lucide-react";
 
 // ────────────────────────────────────────────────
 // Modal de Convite (Cadastro de Aluno)
@@ -622,10 +624,7 @@ export default function SecretaryEnrollmentDirectory() {
       const res = await fetch('/api/admin/delete-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          masterPassword: 'compromisso2026',
-          userId: id,
-        }),
+        body: JSON.stringify({ userId: id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -693,6 +692,27 @@ export default function SecretaryEnrollmentDirectory() {
     return matchesSearch && matchesStatus;
   });
 
+  const handleExportCsv = () => {
+    if (filtered.length === 0) {
+      toast({ title: "Nada para exportar", description: "A lista filtrada está vazia.", variant: "destructive" });
+      return;
+    }
+    exportToCsv("matriculas", filtered, [
+      { header: "Nome", accessor: (u) => u.name },
+      { header: "Email", accessor: (u) => u.email },
+      { header: "Telefone", accessor: (u) => u.phone },
+      { header: "CPF", accessor: (u) => u.cpf },
+      { header: "Turma", accessor: (u) => u.course },
+      { header: "Escola/Polo", accessor: (u) => u.institution },
+      { header: "Foco", accessor: (u) => u.exam_target },
+      { header: "Status", accessor: (u) => (u.status === "suspended" ? "Suspenso" : "Ativo") },
+      { header: "Renda Familiar", accessor: (u) => (u.family_income ? Number(u.family_income) : "") },
+      { header: "Renda per capita", accessor: (u) => (u.income_per_capita ? Number(u.income_per_capita) : "") },
+      { header: "Elegivel Isencao", accessor: (u) => (u.is_financial_aid_eligible ? "Sim" : "Nao") },
+    ]);
+    toast({ title: "CSV exportado! 📄", description: `${filtered.length} matrículas baixadas.` });
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
       {/* Cabeçalho */}
@@ -708,20 +728,28 @@ export default function SecretaryEnrollmentDirectory() {
             Gere links de convite, suspenda acessos, gerencie turmas e controle isenções sociais.
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
           <Button
             onClick={() => setNewStudentOpen(true)}
-            className="bg-blue-600 text-white border-none font-black rounded-2xl shadow-md h-12 px-6 gap-2 hover:bg-blue-700 transition-all"
+            className="bg-blue-600 text-white border-none font-black rounded-2xl shadow-md h-12 px-4 md:px-6 gap-2 hover:bg-blue-700 transition-all text-xs md:text-sm"
           >
             <UserPlus className="h-4 w-4" />
             Novo Aluno
           </Button>
           <Button
             onClick={() => setInviteOpen(true)}
-            className="bg-white text-orange-600 border border-orange-100 font-black rounded-2xl shadow-md h-12 px-6 gap-2 hover:bg-orange-50 transition-all"
+            className="bg-white text-orange-600 border border-orange-100 font-black rounded-2xl shadow-md h-12 px-4 md:px-6 gap-2 hover:bg-orange-50 transition-all text-xs md:text-sm"
           >
             <Link2 className="h-4 w-4" />
-            Link de Convite
+            Convite
+          </Button>
+          <Button
+            onClick={handleExportCsv}
+            variant="outline"
+            className="bg-white text-slate-600 border-slate-200 font-black rounded-2xl shadow-md h-12 px-4 md:px-6 gap-2 hover:bg-slate-50 transition-all text-xs md:text-sm"
+          >
+            <Download className="h-4 w-4" />
+            Exportar CSV
           </Button>
         </div>
       </div>

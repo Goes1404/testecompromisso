@@ -203,7 +203,7 @@ const secretaryItems: NavItem[] = [
   {
     icon: Bell, label: "Comunicação", id: "nav-secretary-comunicacao",
     children: [
-      { icon: Bell,         label: "Comunicados Globais", href: "/dashboard/teacher/communication", id: "nav-secretary-communication" },
+      { icon: Bell,         label: "Comunicados Globais", href: "/dashboard/secretary/communication", id: "nav-secretary-communication" },
       { icon: CalendarDays, label: "Calendário Escolar",   href: "/dashboard/admin/calendar",        id: "nav-secretary-calendar" },
     ],
   },
