@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import { generateRegistrationToken } from '@/lib/registration-token';
+import { requireAdminUser } from '@/lib/server-auth';
 
 export async function POST(request: Request) {
   try {
-    const { masterPassword, expiryDays } = await request.json();
-
-    if (masterPassword !== process.env.ADMIN_MASTER_PASSWORD && masterPassword !== 'compromisso2026') {
-      return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
+    // Segurança: exige sessão de admin/staff (cookie) em vez de senha mestra no body.
+    const admin = await requireAdminUser();
+    if (!admin) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+
+    const { expiryDays } = await request.json();
 
     const days = typeof expiryDays === 'number' && expiryDays > 0 && expiryDays <= 30
       ? expiryDays

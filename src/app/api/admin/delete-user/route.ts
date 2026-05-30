@@ -1,13 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { requireAdminUser } from '@/lib/server-auth';
 
 export async function POST(request: Request) {
   try {
-    const { masterPassword, userId } = await request.json();
-
-    if (masterPassword !== process.env.ADMIN_MASTER_PASSWORD && masterPassword !== 'compromisso2026') {
-      return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
+    // Segurança: exige sessão de admin/staff (cookie) em vez de senha mestra no body.
+    const admin = await requireAdminUser();
+    if (!admin) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+
+    const { userId } = await request.json();
 
     if (!userId) {
       return NextResponse.json({ error: 'ID do usuário é obrigatório' }, { status: 400 });

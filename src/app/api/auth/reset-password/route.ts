@@ -1,19 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-
-export const runtime = 'edge';
+import { requireAdminUser } from '@/lib/server-auth';
 
 export async function POST(request: Request) {
   try {
-    const { email, newPassword, masterPassword } = await request.json();
-
-    // 1. Validação da Senha Mestra
-    if (masterPassword !== 'compromisso2026') {
-      return NextResponse.json(
-        { error: 'Senha mestra inválida' },
-        { status: 401 }
-      );
+    // Segurança: exige sessão de admin/staff (cookie) em vez de senha mestra no body.
+    const admin = await requireAdminUser();
+    if (!admin) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+
+    const { email, newPassword } = await request.json();
 
     if (!email || !newPassword) {
       return NextResponse.json(

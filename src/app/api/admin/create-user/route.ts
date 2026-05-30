@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { requireAdminUser } from '@/lib/server-auth';
 
 // Converte nome completo para o padrão: primeiroNome + inicialSegundoNome + ultimoNome@compromisso.com
 // "João Carlos Silva" → "joaocsilva@compromisso.com"
@@ -23,8 +24,13 @@ const DEFAULT_PASSWORD = 'compromisso2026';
 
 export async function POST(request: Request) {
   try {
+    // Segurança: exige sessão de admin/staff (cookie) em vez de senha mestra no body.
+    const admin = await requireAdminUser();
+    if (!admin) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
     const {
-      masterPassword,
       fullName,
       cpf,
       profileType,
@@ -37,10 +43,6 @@ export async function POST(request: Request) {
       emailOverride,
       birthDate,
     } = await request.json();
-
-    if (masterPassword !== process.env.ADMIN_MASTER_PASSWORD && masterPassword !== 'compromisso2026') {
-      return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
-    }
 
     if (!fullName?.trim() || !role) {
       return NextResponse.json({ error: 'Nome completo e papel são obrigatórios' }, { status: 400 });

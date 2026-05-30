@@ -112,7 +112,7 @@ servidor+cliente e rotação de segredo (decisão do time):
 
 | Sev | Local | Problema |
 |-----|-------|----------|
-| 🔴 CRÍTICO | `api/auth/reset-password`, `api/admin/{create-user,delete-user,generate-link,generate-registration-link}` | Protegidas só pela string fixa `'compromisso2026'` (que está no bundle do cliente e exibida em `forgot-password`). Permite takeover / criação de admin / exclusão sem sessão. **Fix:** trocar por `requireAdminUser()` e remover o literal. |
+| ✅ CORRIGIDO | `api/auth/reset-password`, `api/admin/{create-user,delete-user,generate-link,generate-registration-link}` | Antes protegidas só pela string fixa `'compromisso2026'`. **Agora exigem sessão de admin/staff via `requireAdminUser()`.** ⚠️ Ainda falta: rotacionar a senha `'compromisso2026'` (é também `DEFAULT_PASSWORD` de novos usuários) e limpar os literais inertes `masterPassword` nos clientes. |
 | 🔴 CRÍTICO | `api/student/primeiro-acesso` (action `reset` + `search`) | Reset de senha de **qualquer** usuário sem autenticação nem prova de identidade (CPF/nascimento); `search` enumera usuários. **Fix:** exigir prova de identidade + rate limit. |
 | 🟠 ALTO | `lib/registration-token.ts` | HMAC dos tokens de cadastro usa a própria `SUPABASE_SERVICE_ROLE_KEY` como chave. Usar segredo dedicado (`REGISTRATION_TOKEN_SECRET`). |
 | 🟠 ALTO | `api/student/weekly-summary` | IDOR: lê dados de qualquer `userId` do body com service role. |
