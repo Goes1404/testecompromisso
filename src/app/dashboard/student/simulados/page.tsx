@@ -189,7 +189,7 @@ export default function SimuladoPage() {
   const currentQuestion = questions[currentIndex];
 
   const handleNext = async () => {
-    if (!selectedAnswer || !currentQuestion) return;
+    if (selectedAnswer === null || !currentQuestion) return;
     const q = currentQuestion;
     const newAnswer: Answer = {
       questionId: q.id, selected: selectedAnswer, correct: q.correct_answer,
@@ -274,7 +274,7 @@ export default function SimuladoPage() {
   // ACTIVE — question view
   // ════════════════════════════════════════════════════════════════════════════
   if (gameState === 'active' && currentQuestion) {
-    const opt = (o: any) => o.key || o.letter || '';
+    const opt = (o: any, i: number) => o.key || o.letter || String.fromCharCode(65 + i).toLowerCase();
     const urgentTime = timeLeft !== null && timeLeft < 300;
 
     return (
@@ -359,8 +359,8 @@ export default function SimuladoPage() {
               <div className="p-6 sm:p-8">
                 <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-2.5">
                   <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer}>
-                    {(currentQuestion.options || []).map((o: any) => {
-                      const key = opt(o);
+                    {(currentQuestion.options || []).map((o: any, i: number) => {
+                      const key = opt(o, i);
                       const isSelected = selectedAnswer === key;
                       return (
                         <motion.div key={key} variants={fadeUp} whileTap={{ scale: 0.985 }} style={{ willChange: 'transform' }}>
@@ -391,7 +391,7 @@ export default function SimuladoPage() {
         </AnimatePresence>
 
         {/* bottom CTA */}
-        <div className="fixed bottom-16 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
+        <div className="fixed bottom-16 left-0 right-0 z-50 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
           <div className="max-w-3xl mx-auto flex items-center gap-3">
             <p className="hidden sm:block text-[10px] font-black uppercase text-slate-300 italic flex-1">Analise com calma.</p>
             <Button
