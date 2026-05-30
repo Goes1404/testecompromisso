@@ -123,6 +123,27 @@ servidor+cliente e rotação de segredo (decisão do time):
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
 novos usuários) e migrar as rotas acima para `requireAdminUser()`.
 
+### 📱 Plano: reset de senha & primeiro acesso (telefone + SMS) — NÃO IMPLEMENTADO
+
+Decisão de produto: **não armazenar CPF**; usar **telefone** como base da recuperação
+(minimização de dados / LGPD). Observação importante: os e-mails `@compromisso.com` são
+sintéticos (login interno, sem caixa de e-mail real), então recuperação por e-mail não é opção.
+
+**Princípio de segurança:** o telefone NÃO é segredo. Nunca validar "digitando o número".
+A prova de identidade é **posse do aparelho** → enviar **OTP via SMS para o número já cadastrado**.
+
+Fases (nenhuma implementada ainda):
+1. **Telefone obrigatório (gate):** transformar o card "Cadastre seu Telefone" da home num
+   bloqueio igual ao `must_change_password` — sem telefone, não acessa o dashboard. Grátis,
+   não depende de SMS, faz a cobertura de telefone tender a 100% com o tempo.
+2. **Reset self-service por SMS OTP:** aluno informa o nome → servidor acha a conta → envia
+   OTP ao telefone cadastrado → valida OTP → permite trocar a senha. Requer provedor SMS
+   (Twilio/Zenvia). Ao implementar, **blindar `api/student/primeiro-acesso`**: a action `search`
+   deve parar de devolver `userId`/`email` (enumeração); responder só "OTP enviado para ***-1234".
+3. **Fallback permanente (os dois):** quem não tem telefone → a **secretaria reseta direto**
+   pelo painel **ou** **gera link de recuperação** (`generate-link`), à escolha dela. Adequado
+   para cursinho presencial (prova de identidade offline).
+
 ### Já corrigido nesta auditoria (mudanças seguras, sem quebrar fluxo)
 - Open-redirect em `auth/callback` (valida `next` interno).
 - XSS armazenado no gerador de documentos da secretaria (escape de HTML).
