@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label";
 import {
   Library, Bot, Loader2, Megaphone, AlertOctagon, Info,
   TrendingUp, PlayCircle, Video, FileText, FileCheck,
-  Calculator, BrainCircuit, Sparkles, Zap, FilePenLine,
+  Calculator, BrainCircuit, FilePenLine,
   ArrowRight, ChevronRight, BookOpen, Phone, Check,
   ClipboardCheck, KeyRound, CheckCircle2, ShieldAlert,
-  AlertTriangle, GraduationCap, Scroll, BarChart3, Star
+  AlertTriangle, GraduationCap, Scroll, BarChart3
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -75,31 +75,6 @@ function getSafeImageUrl(url: string | null | undefined, index: number) {
   return url;
 }
 
-// 3D Tilt Card component
-function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useTransform(y, [-0.5, 0.5], [8, -8]);
-  const rotateY = useTransform(x, [-0.5, 0.5], [-8, 8]);
-  const springX = useSpring(rotateX, { stiffness: 300, damping: 30 });
-  const springY = useSpring(rotateY, { stiffness: 300, damping: 30 });
-
-  return (
-    <motion.div
-      style={{ rotateX: springX, rotateY: springY, transformStyle: "preserve-3d" }}
-      onMouseMove={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        x.set((e.clientX - rect.left) / rect.width - 0.5);
-        y.set((e.clientY - rect.top) / rect.height - 0.5);
-      }}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      whileTap={{ scale: 0.97 }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 interface Announcement {
   id: string;
@@ -496,242 +471,147 @@ export default function DashboardHome() {
         </motion.div>
       )}
 
-      {/* ══════════════════════════════════════════════════
-           HERO — 3D floating orbs + animated score ring
-          ══════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════
+           HERO — editorial, brand-first
+          ══════════════════════════════════ */}
       <motion.section variants={itemVariants}
-        className="relative rounded-3xl overflow-hidden bg-slate-950 flex flex-col p-5 md:p-8 shadow-2xl gap-5 min-h-[200px]"
-        style={{ perspective: "1200px" }}>
+        className="relative rounded-[2rem] overflow-hidden bg-slate-950 p-5 md:p-8 shadow-2xl">
 
-        {/* Floating orbs */}
-        <motion.div
-          className="absolute top-[-20%] right-[-5%] w-[280px] h-[280px] bg-violet-600/30 rounded-full blur-[80px] pointer-events-none"
-          animate={{ y: [0, -16, 0], scale: [1, 1.06, 1] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-[-30%] left-[-10%] w-[240px] h-[240px] bg-indigo-500/20 rounded-full blur-[70px] pointer-events-none"
-          animate={{ y: [0, 20, 0], scale: [1, 0.95, 1] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
-        <motion.div
-          className="absolute top-[30%] left-[40%] w-[160px] h-[160px] bg-accent/15 rounded-full blur-[60px] pointer-events-none"
-          animate={{ x: [0, 12, 0], y: [0, -8, 0] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
-        <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
+        {/* Single focused glow — brand orange, not orb soup */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-primary/25 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
 
-        <div className="relative z-10 flex flex-col gap-4">
-          {/* Greeting row */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1.5">
-              <motion.div
-                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 bg-white/8 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full">
-                <motion.div
-                  className="h-1.5 w-1.5 rounded-full bg-green-400"
-                  animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{greeting}</span>
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-2xl md:text-4xl font-black text-white leading-tight tracking-tighter">
-                {firstName}! <span className="text-accent italic">Pronto para hoje?</span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-white/65">
-                {profile?.exam_target || 'ENEM'} · {profile?.institution || 'Colégio Colaço'}
-              </motion.p>
+        <div className="relative z-10 flex flex-col gap-5">
+          {/* Top row: greeting + score pill */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <motion.div className="h-2 w-2 rounded-full bg-green-400"
+                animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                transition={{ duration: 2, repeat: Infinity }} />
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/50">{greeting}</span>
             </div>
-
-            {/* 3D Score ring */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, type: "spring" }}
-              className="shrink-0 flex flex-col items-center gap-1">
-              <div className="relative w-16 h-16">
-                <svg className="w-16 h-16 -rotate-90" viewBox="0 0 72 72">
-                  <circle cx="36" cy="36" r={ringR} stroke="rgba(255,255,255,0.08)" strokeWidth="4.5" fill="none" />
-                  <motion.circle
-                    cx="36" cy="36" r={ringR}
-                    stroke="hsl(var(--accent))"
-                    strokeWidth="4.5" fill="none" strokeLinecap="round"
-                    strokeDasharray={ringC}
-                    initial={{ strokeDashoffset: ringC }}
-                    animate={{ strokeDashoffset: ringC - (score / 100) * ringC }}
-                    transition={{ duration: 1.8, ease: "easeOut", delay: 0.6 }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-base font-black text-white leading-none">{score}</span>
-                  <span className="text-[7px] text-white/65 font-bold uppercase">%</span>
-                </div>
-              </div>
-              <span className="text-[8px] text-white/60 font-bold uppercase tracking-widest">Acertos</span>
+              initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.35, type: "spring" }}
+              className="flex items-center gap-2 bg-primary/20 border border-primary/40 px-3.5 py-1.5 rounded-full">
+              <BrainCircuit className="h-3 w-3 text-primary" />
+              <span className="text-[11px] font-black text-primary tabular-nums">{score}%</span>
+              <span className="text-[9px] text-white/40 font-bold">acertos</span>
             </motion.div>
           </div>
 
-          {/* Stats strip */}
-          <div className="flex gap-3 overflow-x-auto pb-0.5 scrollbar-hide -mx-1 px-1">
-            {[
-              { label: "Simulados",  value: examStats?.totalAssessed ? `${examStats.averageScore}%` : '–', icon: BrainCircuit, color: "text-accent" },
-              { label: "Redação",    value: essayStats?.count ? `${essayStats.average}pts` : '–',       icon: FilePenLine,  color: "text-green-400" },
-              { label: "Trilhas",    value: `${recentProgress.length}`,                                  icon: PlayCircle,   color: "text-yellow-400" },
-            ].map((stat, i) => (
-              <motion.div key={stat.label}
-                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 + i * 0.08 }}
-                className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 shrink-0 min-w-[120px]">
-                <stat.icon className={`h-4 w-4 ${stat.color} shrink-0`} />
-                <div>
-                  <p className="font-black text-white text-base leading-none">{stat.value}</p>
-                  <p className="text-[9px] text-white/65 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
-                </div>
-              </motion.div>
-            ))}
+          {/* Name — editorial, big */}
+          <div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="text-[3.2rem] md:text-[4.5rem] font-black text-white leading-none tracking-tighter italic">
+              {firstName}<span className="text-primary">.</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+              className="text-sm font-black text-white/40 italic mt-1 tracking-tight">
+              Vamos lá!
+            </motion.p>
           </div>
+
+          {/* Context chips */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+            className="flex flex-wrap gap-2">
+            <span className="px-3 py-1.5 rounded-full bg-white/8 border border-white/12 text-[10px] font-black text-white/55 uppercase tracking-wider">
+              {profile?.exam_target || 'ENEM'} 2025
+            </span>
+            <span className="px-3 py-1.5 rounded-full bg-white/8 border border-white/12 text-[10px] font-black text-white/55 uppercase tracking-wider">
+              {profile?.institution || 'Colaço'}
+            </span>
+            {(examStats?.totalAssessed ?? 0) > 0 && (
+              <span className="px-3 py-1.5 rounded-full bg-primary/15 border border-primary/35 text-[10px] font-black text-primary uppercase tracking-wider">
+                {examStats!.totalAssessed} simulados
+              </span>
+            )}
+            {(essayStats?.count ?? 0) > 0 && (
+              <span className="px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-black text-emerald-400 uppercase tracking-wider">
+                {essayStats!.count} redações
+              </span>
+            )}
+          </motion.div>
         </div>
       </motion.section>
 
-      {/* ══════════════════════════════════
-           QUICK ACTIONS — 3D tilt cards
-          ══════════════════════════════════ */}
-      <motion.div variants={itemVariants} className="flex gap-3 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-hide">
+      {/* ════════════════════════════
+           QUICK ACTIONS — pill style
+          ════════════════════════════ */}
+      <motion.div variants={itemVariants} className="flex gap-2.5 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-hide">
         {quickActions.map((action, i) => (
-          <TiltCard key={action.label} className="shrink-0">
+          <motion.div key={action.label} className="shrink-0"
+            initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.28 + i * 0.045 }}>
             <Link href={action.href}>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.06 }}
-                className={`btn-shimmer flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${action.color} rounded-2xl w-[84px] h-[84px] shadow-lg hover:shadow-xl transition-all [touch-action:manipulation]`}
-                style={{ transformStyle: "preserve-3d" }}>
-                <div style={{ transform: "translateZ(8px)" }}>
-                  <action.icon className="h-5 w-5 text-white" strokeWidth={1.5} />
+              <div className="flex items-center gap-2.5 pl-2.5 pr-4 py-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:border-primary/30 hover:shadow-md active:scale-95 transition-all [touch-action:manipulation]">
+                <div className={`h-7 w-7 rounded-full bg-gradient-to-br ${action.color} flex items-center justify-center shrink-0 shadow-sm`}>
+                  <action.icon className="h-3.5 w-3.5 text-white" strokeWidth={2} />
                 </div>
-                <p className="font-bold text-white uppercase text-[9px] tracking-wide text-center leading-tight px-1"
-                   style={{ transform: "translateZ(4px)" }}>
+                <span className="text-[11px] font-black uppercase tracking-wide text-slate-700 whitespace-nowrap">
                   {action.label}
-                </p>
-              </motion.div>
+                </span>
+              </div>
             </Link>
-          </TiltCard>
+          </motion.div>
         ))}
       </motion.div>
 
-      {/* ══════════════════════════════════════════
-           PLATFORM FEATURES — bento 3D cards
-          ══════════════════════════════════════════ */}
+      {/* ══════════════════════════════════
+           PLATFORM FEATURES — editorial list
+          ══════════════════════════════════ */}
       <motion.section variants={itemVariants}>
-        <div className="flex items-center justify-between px-1 mb-3">
-          <h2 className="text-sm font-black text-slate-900 italic uppercase tracking-tighter flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-3 w-3 text-primary" />
-            </div>
-            Tudo em Um Só Lugar
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden">
+          <div className="px-5 pt-4 pb-2.5 border-b border-slate-50">
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Recursos da plataforma</span>
+          </div>
           {platformFeatures.map((feat, i) => (
-            feat.wide ? (
-              /* Wide card — spans full width */
-              <motion.div key={feat.label} className="col-span-2"
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                <TiltCard>
-                  <Link href={feat.href}>
-                    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${feat.gradient} p-4 md:p-5 shadow-xl ${feat.glow} shadow-lg flex items-center gap-4 [touch-action:manipulation]`}
-                         style={{ transformStyle: "preserve-3d" }}>
-                      {/* Orb glow bg */}
-                      <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-                      <motion.div
-                        className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0"
-                        animate={{ y: [0, -4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        style={{ transform: "translateZ(12px)" }}>
-                        <feat.icon className="h-7 w-7 text-white" strokeWidth={1.5} />
-                      </motion.div>
-                      <div className="relative z-10 flex-1" style={{ transform: "translateZ(6px)" }}>
-                        <p className="font-black text-white text-base italic leading-tight">{feat.label}</p>
-                        <p className="text-white/60 text-xs font-semibold mt-0.5">{feat.desc}</p>
-                      </div>
-                      <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
-                        <ArrowRight className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                  </Link>
-                </TiltCard>
-              </motion.div>
-            ) : (
-              /* Regular card */
-              <motion.div key={feat.label}
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.07 }}>
-                <TiltCard>
-                  <Link href={feat.href}>
-                    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${feat.gradient} p-4 shadow-lg ${feat.glow} shadow-md flex flex-col gap-3 h-full min-h-[120px] [touch-action:manipulation]`}
-                         style={{ transformStyle: "preserve-3d" }}>
-                      <div className="absolute right-[-10px] bottom-[-10px] w-20 h-20 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                      <motion.div
-                        className="h-11 w-11 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center"
-                        animate={{ rotateZ: [0, 5, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
-                        style={{ transform: "translateZ(10px)" }}>
-                        <feat.icon className="h-5 w-5 text-white" strokeWidth={1.5} />
-                      </motion.div>
-                      <div style={{ transform: "translateZ(6px)" }}>
-                        <p className="font-black text-white text-sm italic leading-tight">{feat.label}</p>
-                        <p className="text-white/60 text-[11px] font-semibold mt-0.5 leading-snug">{feat.desc}</p>
-                      </div>
-                    </div>
-                  </Link>
-                </TiltCard>
-              </motion.div>
-            )
+            <Link key={feat.label} href={feat.href}>
+              <div className={`flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50/80 active:bg-slate-100 transition-colors group [touch-action:manipulation]${i < platformFeatures.length - 1 ? ' border-b border-slate-50' : ''}`}>
+                <div className={`h-11 w-11 rounded-2xl bg-gradient-to-br ${feat.gradient} flex items-center justify-center shrink-0 shadow-sm`}>
+                  <feat.icon className="h-5 w-5 text-white" strokeWidth={1.5} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-sm text-slate-900 italic leading-tight">{feat.label}</p>
+                  <p className="text-[10px] text-slate-500 font-medium mt-0.5">{feat.desc}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary group-active:translate-x-0.5 transition-all shrink-0" />
+              </div>
+            </Link>
           ))}
         </div>
       </motion.section>
 
-      {/* ══════════════════════════════════════
-           AURORA AI — full-width CTA banner
-          ══════════════════════════════════════ */}
+      {/* ════════════════════════
+           AURORA CTA — clean dark
+          ════════════════════════ */}
       <motion.div variants={itemVariants}
-        className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-5 md:p-8 shadow-2xl group">
-        <div className="absolute inset-0 dot-grid-dark opacity-40 pointer-events-none rounded-[2.5rem]" />
-        <motion.div
-          className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none"
-          animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 relative z-10">
-          <div className="flex items-center gap-4 sm:gap-0">
-            <motion.div className="relative h-12 w-12 md:h-16 md:w-16 shrink-0"
-              whileHover={{ scale: 1.1, rotateY: 15 }} style={{ transformStyle: "preserve-3d" }}>
-              <div className="h-full w-full rounded-2xl bg-white shadow-xl flex items-center justify-center border border-accent/10">
-                <Bot className="h-6 w-6 md:h-8 md:w-8 text-accent animate-pulse-subtle" />
-              </div>
-              <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
-            </motion.div>
-            <div className="flex items-center gap-2 sm:hidden">
-              <Sparkles className="h-3 w-3 text-accent" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Aurora IA</span>
-            </div>
+        className="aurora-dark relative overflow-hidden rounded-[2rem] p-5 md:p-7 flex items-center gap-4 md:gap-6">
+        <div className="absolute right-0 top-0 w-40 h-40 bg-primary/15 rounded-full blur-[50px] pointer-events-none" />
+
+        <div className="relative shrink-0">
+          <div className="h-14 w-14 rounded-2xl bg-white/8 border border-white/15 flex items-center justify-center">
+            <Bot className="h-7 w-7 text-primary" strokeWidth={1.5} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="hidden sm:flex items-center gap-2 mb-2">
-              <Sparkles className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Aurora IA · Mentoria Estratégica</span>
-            </div>
-            <p className="text-slate-700 font-semibold italic text-sm md:text-base leading-relaxed tracking-tight">
-              "A constância é a chave da aprovação! Revise os erros do último simulado antes de avançar. Estou disponível 24h para corrigir redações."
-            </p>
-          </div>
-          <Button asChild className="bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 border-none hover:scale-105 transition-all w-full sm:w-auto shrink-0 h-12 md:h-14 px-6 md:px-8 text-xs md:text-sm uppercase tracking-widest italic active:scale-95">
-            <Link href="/dashboard/support" className="flex items-center justify-center gap-2">
-              Falar com Aurora <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-green-400 border-2 border-[#0a0a0a] animate-pulse" />
         </div>
+
+        <div className="flex-1 min-w-0 relative z-10">
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-primary mb-1.5">Aurora IA · 24h online</p>
+          <p className="font-black text-white text-sm md:text-base italic leading-tight tracking-tight">
+            Dúvida na matéria? Redação? Estratégia de prova? Estou aqui.
+          </p>
+        </div>
+
+        <Button asChild className="shrink-0 bg-primary text-white font-black h-11 px-5 rounded-2xl text-xs uppercase border-none shadow-lg shadow-primary/30 relative z-10 hover:bg-primary/90 active:scale-95 transition-all [touch-action:manipulation]">
+          <Link href="/dashboard/support">Falar</Link>
+        </Button>
       </motion.div>
 
       {/* ── SUGESTÃO DE ESTUDO ── */}
@@ -740,37 +620,29 @@ export default function DashboardHome() {
       {/* ── RESUMO SEMANAL POR IA ── */}
       {user && <WeeklySummaryWidget userId={user.id} />}
 
-      {/* ── WIDGETS MÓVEL RÁPIDOS ── */}
-      <motion.div variants={itemVariants} className="lg:hidden grid grid-cols-2 gap-4">
-        <div className="gradient-border bg-white rounded-[1.5rem] shadow-xl border border-muted/20 p-4 space-y-3 relative overflow-hidden">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-xl bg-violet-100 flex items-center justify-center">
-              <BrainCircuit className="h-3.5 w-3.5 text-violet-600" />
-            </div>
-            <span className="font-black text-xs text-primary italic">Acertos</span>
+      {/* ── STATS RÁPIDOS (mobile) ── */}
+      <motion.div variants={itemVariants} className="lg:hidden grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-[1.5rem] shadow-lg border border-slate-100 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BrainCircuit className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Simulados</span>
           </div>
-          <div className="text-center">
-            <p className="text-4xl font-black text-primary">{examStats?.averageScore || 0}<span className="text-lg text-muted-foreground">%</span></p>
-            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">{examStats?.totalAssessed || 0} avaliações</p>
-          </div>
+          <p className="text-4xl font-black text-slate-900 italic leading-none tabular-nums">
+            {examStats?.averageScore || 0}<span className="text-xl text-slate-400 ml-0.5">%</span>
+          </p>
+          <p className="text-[9px] font-bold text-slate-400 mt-1.5 uppercase tracking-wider">
+            {examStats?.totalAssessed || 0} avaliações
+          </p>
         </div>
-        <div className="bg-white rounded-[1.5rem] shadow-xl border border-muted/20 p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-xl bg-green-100 flex items-center justify-center">
-              <FilePenLine className="h-3.5 w-3.5 text-green-600" />
-            </div>
-            <span className="font-black text-xs text-primary italic">Redações</span>
+        <div className="bg-white rounded-[1.5rem] shadow-lg border border-slate-100 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <FilePenLine className="h-4 w-4 text-emerald-600" strokeWidth={1.5} />
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Redações</span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-slate-50 rounded-xl p-2.5 text-center">
-              <span className="text-2xl font-black text-primary">{essayStats?.count || 0}</span>
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Envios</p>
-            </div>
-            <div className="bg-accent/5 rounded-xl p-2.5 text-center">
-              <span className="text-2xl font-black text-accent">{essayStats?.average || 0}</span>
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Média</p>
-            </div>
-          </div>
+          <p className="text-4xl font-black text-slate-900 italic leading-none tabular-nums">{essayStats?.count || 0}</p>
+          <p className="text-[9px] font-bold text-slate-400 mt-1.5 uppercase tracking-wider">
+            {essayStats?.average ? `média ${essayStats.average}pts` : 'nenhuma enviada'}
+          </p>
         </div>
       </motion.div>
 
