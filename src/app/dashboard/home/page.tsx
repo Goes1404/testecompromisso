@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
@@ -12,7 +12,7 @@ import {
   Library, Bot, Loader2, Megaphone, AlertOctagon, Info,
   TrendingUp, PlayCircle, Video, FileText, FileCheck,
   Calculator, BrainCircuit, Sparkles, Zap, FilePenLine,
-  ArrowRight, ChevronRight, BookOpen, Phone, Check,
+  ArrowRight, ChevronRight, ChevronDown, BookOpen, Phone, Check,
   ClipboardCheck, KeyRound, CheckCircle2, ShieldAlert,
   AlertTriangle, GraduationCap, Scroll, BarChart3, Star
 } from "lucide-react";
@@ -372,11 +372,11 @@ export default function DashboardHome() {
   ];
 
   const platformFeatures = [
-    { icon: BrainCircuit, label: "Banco de Questões",  desc: "5.000+ questões ENEM/ETEC",   href: "/dashboard/student/simulados", gradient: "from-violet-600 to-purple-700",  glow: "shadow-violet-500/30" },
-    { icon: FilePenLine,  label: "Lab de Redação",     desc: "Correção por IA em minutos",   href: "/dashboard/student/essays",    gradient: "from-emerald-500 to-teal-600",  glow: "shadow-emerald-500/30" },
-    { icon: Bot,          label: "Aurora IA",          desc: "Mentora disponível 24h",       href: "/dashboard/support",           gradient: "from-indigo-500 to-violet-600", glow: "shadow-indigo-500/30", wide: true },
-    { icon: PlayCircle,   label: "Trilhas de Vídeo",   desc: "Aprenda no seu ritmo",         href: "/dashboard/trails",            gradient: "from-blue-500 to-cyan-600",     glow: "shadow-blue-500/30" },
-    { icon: BarChart3,    label: "Meu Desempenho",     desc: "Identifique pontos cegos",     href: "/dashboard/student/performance", gradient: "from-orange-500 to-red-500",  glow: "shadow-orange-500/30" },
+    { icon: BrainCircuit, label: "Banco de Questões",  desc: "novas questões semanais",      href: "/dashboard/student/simulados", gradient: "from-violet-600 to-purple-700",  glow: "shadow-violet-500/30" },
+    { icon: FilePenLine,  label: "Sala de Redação",     desc: "correções para o seu texto",   href: "/dashboard/student/essays",    gradient: "from-emerald-500 to-teal-600",  glow: "shadow-emerald-500/30" },
+    { icon: Bot,          label: "Aurora AI",          desc: "mentora disponível 24h",       href: "/dashboard/support",           gradient: "from-indigo-500 to-violet-600", glow: "shadow-indigo-500/30", wide: true },
+    { icon: PlayCircle,   label: "Trilhas de Vídeo",   desc: "aprenda no seu ritmo",         href: "/dashboard/trails",            gradient: "from-blue-500 to-cyan-600",     glow: "shadow-blue-500/30" },
+    { icon: BarChart3,    label: "Meu Desempenho",     desc: "estatísticas para o seu progresso", href: "/dashboard/student/performance", gradient: "from-orange-500 to-red-500",  glow: "shadow-orange-500/30" },
   ];
 
   const containerVariants = {
@@ -440,28 +440,37 @@ export default function DashboardHome() {
             </div>
             <form onSubmit={handleClassSubmit} className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-3">
-                <select value={salaValue} onChange={(e) => setSalaValue(e.target.value)}
-                  className="h-12 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 cursor-pointer">
-                  <option value="" className="text-slate-800">Número da sala…</option>
-                  {Array.from({ length: 15 }, (_, i) => String(i + 1)).map(n => (
-                    <option key={n} value={n} className="text-slate-800">Sala {n}</option>
-                  ))}
-                </select>
-                <select value={examTargetValue} onChange={(e) => setExamTargetValue(e.target.value)}
-                  className="h-12 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 cursor-pointer">
-                  <option value="" className="text-slate-800">Foco de exame…</option>
-                  <option value="ENEM" className="text-slate-800">ENEM</option>
-                  <option value="ETEC" className="text-slate-800">ETEC</option>
-                </select>
+                <div className="relative">
+                  <select value={salaValue} onChange={(e) => setSalaValue(e.target.value)}
+                    className="h-12 w-full bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 pr-10 cursor-pointer appearance-none">
+                    <option value="" className="text-slate-800">Número de sala...</option>
+                    {Array.from({ length: 15 }, (_, i) => String(i + 1)).map(n => (
+                      <option key={n} value={n} className="text-slate-800">Sala {n}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white pointer-events-none" />
+                </div>
+                <div className="relative">
+                  <select value={examTargetValue} onChange={(e) => setExamTargetValue(e.target.value)}
+                    className="h-12 w-full bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 pr-10 cursor-pointer appearance-none">
+                    <option value="" className="text-slate-800">Foco de exame...</option>
+                    <option value="ENEM" className="text-slate-800">ENEM</option>
+                    <option value="ETEC" className="text-slate-800">ETEC</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white pointer-events-none" />
+                </div>
               </div>
               <div className="flex gap-3">
-                <select value={turnoValue} onChange={(e) => setTurnoValue(e.target.value)}
-                  className="h-12 flex-1 bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 cursor-pointer">
-                  <option value="" className="text-slate-800">Turno…</option>
-                  <option value="manha" className="text-slate-800">Manhã</option>
-                  <option value="tarde" className="text-slate-800">Tarde</option>
-                  <option value="integral" className="text-slate-800">Integral</option>
-                </select>
+                <div className="relative flex-1">
+                  <select value={turnoValue} onChange={(e) => setTurnoValue(e.target.value)}
+                    className="h-12 w-full bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 pr-10 cursor-pointer appearance-none">
+                    <option value="" className="text-slate-800">Turno...</option>
+                    <option value="manha" className="text-slate-800">Manhã</option>
+                    <option value="tarde" className="text-slate-800">Tarde</option>
+                    <option value="integral" className="text-slate-800">Integral</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white pointer-events-none" />
+                </div>
                 <Button type="submit" disabled={submittingClass}
                   className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl shadow-lg border-none h-12 px-5 text-xs uppercase tracking-widest active:scale-95 flex items-center gap-2 justify-center shrink-0">
                   {submittingClass ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4" /> Salvar</>}
@@ -527,28 +536,23 @@ export default function DashboardHome() {
             <div className="space-y-1.5">
               <motion.div
                 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 bg-white/8 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full">
-                <motion.div
-                  className="h-1.5 w-1.5 rounded-full bg-green-400"
-                  animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{greeting}</span>
+                className="inline-flex items-center bg-emerald-600 px-2 py-0.5 rounded-md">
+                <span className="text-[9px] font-black uppercase tracking-wider text-white">ALUNOS</span>
               </motion.div>
-
+ 
               <motion.h1
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
                 className="text-2xl md:text-4xl font-black text-white leading-tight tracking-tighter">
                 {firstName}! <span className="text-accent italic">Pronto para hoje?</span>
               </motion.h1>
-
+ 
               <motion.p
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-white/65">
-                {profile?.exam_target || 'ENEM'} · {profile?.institution || 'Colégio Colaço'}
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+                BOM DIA . BOA TARDE . BOA NOITE
               </motion.p>
             </div>
-
+ 
             {/* 3D Score ring */}
             <motion.div
               initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, type: "spring" }}
@@ -574,13 +578,13 @@ export default function DashboardHome() {
               <span className="text-[8px] text-white/60 font-bold uppercase tracking-widest">Acertos</span>
             </motion.div>
           </div>
-
+ 
           {/* Stats strip */}
           <div className="flex gap-3 overflow-x-auto pb-0.5 scrollbar-hide -mx-1 px-1">
             {[
-              { label: "Simulados",  value: examStats?.totalAssessed ? `${examStats.averageScore}%` : '–', icon: BrainCircuit, color: "text-accent" },
-              { label: "Redação",    value: essayStats?.count ? `${essayStats.average}pts` : '–',       icon: FilePenLine,  color: "text-green-400" },
-              { label: "Trilhas",    value: `${recentProgress.length}`,                                  icon: PlayCircle,   color: "text-yellow-400" },
+              { label: "ACERTOS",  value: examStats?.totalAssessed ? `${examStats.averageScore}%` : '0%', icon: BrainCircuit, color: "text-accent" },
+              { label: "REDAÇÃO",  value: essayStats?.count ? `${essayStats.average}pts` : '0pts',       icon: FilePenLine,  color: "text-green-400" },
+              { label: "TRILHAS",  value: `${recentProgress.length}`,                                  icon: PlayCircle,   color: "text-yellow-400" },
             ].map((stat, i) => (
               <motion.div key={stat.label}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 + i * 0.08 }}
@@ -636,59 +640,34 @@ export default function DashboardHome() {
 
         <div className="grid grid-cols-2 gap-3">
           {platformFeatures.map((feat, i) => (
-            feat.wide ? (
-              /* Wide card — spans full width */
-              <motion.div key={feat.label} className="col-span-2"
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                <TiltCard>
-                  <Link href={feat.href}>
-                    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${feat.gradient} p-4 md:p-5 shadow-xl ${feat.glow} shadow-lg flex items-center gap-4 [touch-action:manipulation]`}
-                         style={{ transformStyle: "preserve-3d" }}>
-                      {/* Orb glow bg */}
-                      <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-                      <motion.div
-                        className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0"
-                        animate={{ y: [0, -4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        style={{ transform: "translateZ(12px)" }}>
-                        <feat.icon className="h-7 w-7 text-white" strokeWidth={1.5} />
-                      </motion.div>
-                      <div className="relative z-10 flex-1" style={{ transform: "translateZ(6px)" }}>
-                        <p className="font-black text-white text-base italic leading-tight">{feat.label}</p>
-                        <p className="text-white/60 text-xs font-semibold mt-0.5">{feat.desc}</p>
-                      </div>
+            <motion.div key={feat.label} className={feat.wide ? "col-span-2" : "col-span-1"}
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+              <TiltCard>
+                <Link href={feat.href}>
+                  <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${feat.gradient} p-4 md:p-5 shadow-xl ${feat.glow} shadow-lg flex items-center gap-4 [touch-action:manipulation]`}
+                       style={{ transformStyle: "preserve-3d" }}>
+                    {/* Orb glow bg */}
+                    <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                    <motion.div
+                      className="h-12 w-12 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0"
+                      animate={{ y: [0, -4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ transform: "translateZ(12px)" }}>
+                      <feat.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
+                    </motion.div>
+                    <div className="relative z-10 flex-1" style={{ transform: "translateZ(6px)" }}>
+                      <p className="font-black text-white text-base italic leading-tight">{feat.label}</p>
+                      <p className="text-white/60 text-xs font-semibold mt-0.5">{feat.desc}</p>
+                    </div>
+                    {feat.wide && (
                       <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
                         <ArrowRight className="h-4 w-4 text-white" />
                       </div>
-                    </div>
-                  </Link>
-                </TiltCard>
-              </motion.div>
-            ) : (
-              /* Regular card */
-              <motion.div key={feat.label}
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.07 }}>
-                <TiltCard>
-                  <Link href={feat.href}>
-                    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${feat.gradient} p-4 shadow-lg ${feat.glow} shadow-md flex flex-col gap-3 h-full min-h-[120px] [touch-action:manipulation]`}
-                         style={{ transformStyle: "preserve-3d" }}>
-                      <div className="absolute right-[-10px] bottom-[-10px] w-20 h-20 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                      <motion.div
-                        className="h-11 w-11 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center"
-                        animate={{ rotateZ: [0, 5, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
-                        style={{ transform: "translateZ(10px)" }}>
-                        <feat.icon className="h-5 w-5 text-white" strokeWidth={1.5} />
-                      </motion.div>
-                      <div style={{ transform: "translateZ(6px)" }}>
-                        <p className="font-black text-white text-sm italic leading-tight">{feat.label}</p>
-                        <p className="text-white/60 text-[11px] font-semibold mt-0.5 leading-snug">{feat.desc}</p>
-                      </div>
-                    </div>
-                  </Link>
-                </TiltCard>
-              </motion.div>
-            )
+                    )}
+                  </div>
+                </Link>
+              </TiltCard>
+            </motion.div>
           ))}
         </div>
       </motion.section>

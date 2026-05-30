@@ -156,8 +156,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authInitialized.current = true;
 
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const { data: { session: initialSession }, error: initialSessionError } = await supabase.auth.getSession();
         
+        if (initialSessionError) {
+          console.warn("[AUTH] Erro ao recuperar sessão inicial:", initialSessionError.message);
+          if (initialSessionError.message.includes("Refresh Token") || 
+              initialSessionError.message.includes("refresh_token") || 
+              initialSessionError.status === 400) {
+            // Limpa tokens salvos no localStorage para evitar tentativas recorrentes do SDK
+            if (typeof window !== 'undefined') {
+              Object.keys(localStorage).forEach(key => {
+                if (key.includes('-auth-token') || key.includes('supabase')) {
+                  localStorage.removeItem(key);
+                }
+              });
+            }
+            try {
+              await supabase.auth.signOut();
+            } catch (e) {}
+            router.replace('/login');
+          }
+        }
+
         if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
