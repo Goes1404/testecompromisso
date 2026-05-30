@@ -535,7 +535,7 @@ export default function StudentDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   {[
                     { label: "Renda Familiar", value: Number(profile.family_income) > 0 ? `R$ ${Number(profile.family_income).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—" },
                     { label: "Moradores", value: profile.family_size || "—" },

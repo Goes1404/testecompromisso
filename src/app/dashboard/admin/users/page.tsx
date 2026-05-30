@@ -967,7 +967,7 @@ export default function AdminUserDirectoryPage() {
 
       {/* ── Modal de Edição ── */}
       <Dialog open={!!editingUser} onOpenChange={v => { if (!v) setEditingUser(null); }}>
-        <DialogContent className="rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
+        <DialogContent className="rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden w-[95vw] sm:max-w-md max-h-[92vh] overflow-y-auto">
           <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center font-black text-white text-lg shadow shrink-0">
@@ -1005,7 +1005,7 @@ export default function AdminUserDirectoryPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Escola / Polo</Label>
                 <Input

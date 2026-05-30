@@ -672,7 +672,7 @@ export default function SimuladoPage() {
           >
             <div>
               <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Quantidade de Questões</p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[10, 20, 45, 90].map(n => (
                   <button
                     key={n}
