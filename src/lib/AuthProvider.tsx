@@ -135,6 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSession(null);
     setProfile(null);
+    // Segurança: limpa dados acadêmicos pessoais em cache (não devem sobreviver ao logout
+    // em dispositivos compartilhados). Remove apenas as chaves de cache do dashboard.
+    try {
+      if (typeof window !== 'undefined') {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith('dash_cache_'))
+          .forEach((k) => localStorage.removeItem(k));
+      }
+    } catch (e) {}
     setLoading(false);
     window.location.assign("/login");
   }, []);

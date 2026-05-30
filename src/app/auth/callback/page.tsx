@@ -14,7 +14,13 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function handleAuth() {
       const code = searchParams.get("code");
-      const next = searchParams.get("next") ?? "/dashboard";
+      // Segurança: só permitimos redirecionar para caminhos internos (mesma origem).
+      // Bloqueia open-redirect via ?next=//site-malicioso.com ou ?next=https://...
+      const rawNext = searchParams.get("next") ?? "/dashboard";
+      const next =
+        rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.startsWith("/\\")
+          ? rawNext
+          : "/dashboard";
 
       if (code) {
         try {

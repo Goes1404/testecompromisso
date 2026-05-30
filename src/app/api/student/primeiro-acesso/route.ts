@@ -39,14 +39,17 @@ export async function POST(request: Request) {
       const { fullName } = body;
       if (!fullName?.trim()) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 });
 
-      console.log(`[PRIMEIRO_ACESSO] Buscando por: ${fullName.trim()}`);
+      console.log('[PRIMEIRO_ACESSO] Busca de aluno recebida');
 
       const generatedEmail = generateEmail(fullName.trim());
-      
+      // Segurança: remove caracteres de controle do PostgREST (vírgula/parênteses/*) antes
+      // de interpolar no filtro .or(), evitando injeção de filtro. Nomes reais não usam isso.
+      const safeName = fullName.trim().replace(/[,()*\\]/g, ' ').replace(/\s+/g, ' ').trim();
+
       const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
         .select('id, email, name')
-        .or(`email.eq.${generatedEmail},name.ilike.%${fullName.trim()}%`)
+        .or(`email.eq.${generatedEmail},name.ilike.%${safeName}%`)
         .limit(1);
 
       if (error) {
@@ -125,7 +128,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Este perfil já existe. Tente recuperar pelo seu nome.' }, { status: 409 });
       }
 
-      console.log(`[PRIMEIRO_ACESSO] Criando Auth User para ${email} com metadata STUDENT`);
+      console.log('[PRIMEIRO_ACESSO] Criando Auth User (student) via convite');
       const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -145,7 +148,7 @@ export async function POST(request: Request) {
         throw createError;
       }
 
-      console.log(`[PRIMEIRO_ACESSO] Auth User criado: ${authData.user.id}. Agora criando Profile...`);
+      console.log('[PRIMEIRO_ACESSO] Auth User criado. Criando Profile...');
 
       const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
         id: authData.user.id,
@@ -167,7 +170,7 @@ export async function POST(request: Request) {
         throw profileError;
       }
 
-      console.log(`[PRIMEIRO_ACESSO] Cadastro concluído com sucesso para ${email}`);
+      console.log('[PRIMEIRO_ACESSO] Cadastro concluído com sucesso');
 
       return NextResponse.json({ success: true, email });
     }

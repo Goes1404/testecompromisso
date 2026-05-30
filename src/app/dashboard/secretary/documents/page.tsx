@@ -87,9 +87,19 @@ export default function SecretaryDocumentsPage() {
     }
 
     const todayStr = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-    const birthStr = selectedStudent.birth_date 
+    const birthStr = selectedStudent.birth_date
       ? format(new Date(selectedStudent.birth_date + "T12:00:00"), "dd/MM/yyyy")
       : "___/___/______";
+
+    // Segurança: escapa qualquer valor vindo do banco/UI antes de injetar no HTML de impressão.
+    // Evita XSS armazenado (ex.: um nome ou observação com <script> executaria na janela de impressão).
+    const esc = (v: unknown) =>
+      String(v ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
     let title = "";
     let contentHtml = "";
@@ -97,33 +107,33 @@ export default function SecretaryDocumentsPage() {
     if (docType === "declaracao") {
       title = "Declaração de Matrícula";
       contentHtml = `
-        <p>Declaramos, para os devidos fins de direito, que o(a) estudante <strong>${selectedStudent.name.toUpperCase()}</strong>, 
-        nascido(a) em <strong>${birthStr}</strong>, inscrito(a) no CPF sob o nº <strong>${studentCpf || "___________________"}</strong> 
-        e no RG sob o nº <strong>${studentRg || "___________________"}</strong>, encontra-se regularmente matriculado(a) 
-        e frequentando as aulas do curso preparatório de <strong>${selectedStudent.course || "Ensino Geral"}</strong> 
-        no polo <strong>${selectedStudent.institution || "Compromisso Geral"}</strong>.</p>
-        
+        <p>Declaramos, para os devidos fins de direito, que o(a) estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong>,
+        nascido(a) em <strong>${esc(birthStr)}</strong>, inscrito(a) no CPF sob o nº <strong>${esc(studentCpf) || "___________________"}</strong>
+        e no RG sob o nº <strong>${esc(studentRg) || "___________________"}</strong>, encontra-se regularmente matriculado(a)
+        e frequentando as aulas do curso preparatório de <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong>
+        no polo <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>.</p>
+
         <p>Por ser verdade, firmamos o presente documento para que surta seus devidos efeitos legais.</p>
       `;
     } else if (docType === "certificado") {
       title = "Certificado de Conclusão";
       contentHtml = `
-        <p>Certificamos que o(a) estudante <strong>${selectedStudent.name.toUpperCase()}</strong> concluiu com êxito 
-        as trilhas de aprendizado e atividades complementares no curso preparatório de <strong>${selectedStudent.course || "Ensino Geral"}</strong>, 
-        realizado no polo <strong>${selectedStudent.institution || "Compromisso Geral"}</strong>, com carga horária total 
-        de <strong>${workload} horas</strong>.</p>
-        
+        <p>Certificamos que o(a) estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong> concluiu com êxito
+        as trilhas de aprendizado e atividades complementares no curso preparatório de <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong>,
+        realizado no polo <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>, com carga horária total
+        de <strong>${esc(workload)} horas</strong>.</p>
+
         <p>O presente certificado atesta o empenho acadêmico e a prontidão do estudante nas competências avaliadas.</p>
       `;
     } else {
       title = "Ficha de Acompanhamento";
       contentHtml = `
-        <p>Documento de acompanhamento da secretaria escolar referente ao estudante <strong>${selectedStudent.name.toUpperCase()}</strong>, 
-        regularmente matriculado(a) na turma <strong>${selectedStudent.course || "Ensino Geral"}</strong>.</p>
-        
+        <p>Documento de acompanhamento da secretaria escolar referente ao estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong>,
+        regularmente matriculado(a) na turma <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong>.</p>
+
         <p><strong>Observações da Secretaria:</strong></p>
         <p style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; font-style: italic;">
-          ${observations || "Nenhuma observação ou ocorrência registrada para este período acadêmico."}
+          ${esc(observations) || "Nenhuma observação ou ocorrência registrada para este período acadêmico."}
         </p>
       `;
     }
@@ -135,7 +145,7 @@ export default function SecretaryDocumentsPage() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>${title} — ${selectedStudent.name}</title>
+          <title>${esc(title)} — ${esc(selectedStudent.name)}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
             body {

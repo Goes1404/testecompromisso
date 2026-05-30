@@ -76,6 +76,60 @@ Todas as tabelas têm RLS ativo. Filtre sempre por `user_id` ou `role`. Nunca ex
 - Metadado `must_change_password: true` no Supabase Auth força `/dashboard/first-access`.
 - Supabase client browser-side: `src/app/lib/supabase.ts` (use `safeExecute()` para queries com tratamento de erro).
 
+## 🔐 Segurança (LEIA ANTES DE MEXER EM AUTH / API ROUTES)
+
+> Esta plataforma está **em produção** com dados reais de alunos. Trate auth, RLS e
+> rotas `/api/*` com o máximo de cuidado. Nunca confie em dados controlados pelo cliente
+> para autorização.
+
+### Regras obrigatórias
+
+1. **Rotas privilegiadas usam sessão, não "senha mestra".** Toda rota em `/api/admin/*`,
+   reset de senha, criação/exclusão de usuário ou qualquer ação com `SUPABASE_SERVICE_ROLE_KEY`
+   **deve** validar o chamador com o helper `requireAdminUser()` / `requireTeacherOrAdmin()`
+   de `src/lib/server-auth.ts` (lê o cookie de sessão + checa `profiles.role` no servidor).
+   Referência correta: `/api/enem-import`. **Nunca** faça gate via campo `masterPassword`
+   no body — ele viaja no bundle do cliente e não é segredo.
+2. **`SUPABASE_SERVICE_ROLE_KEY` só no servidor.** Nunca em arquivos `"use client"`, nunca em
+   `NEXT_PUBLIC_*`. Ele ignora RLS — qualquer rota que o usa precisa fazer a autorização na mão.
+3. **IDOR:** rotas que recebem `userId`/`user_id` no body e leem/escrevem com service role devem
+   conferir que o id pertence ao usuário autenticado (`getAuthUser()`), nunca confiar no id do cliente.
+4. **HTML dinâmico:** ao montar HTML manualmente (`document.write`, `dangerouslySetInnerHTML`)
+   com dados do banco/UI, **escape** os valores (ver `esc()` em `secretary/documents/page.tsx`).
+5. **Redirects:** valide `?next=`/`?redirect=` — só aceite caminho interno (`startsWith('/')` e
+   não `//`). Ver `auth/callback/page.tsx`.
+6. **Filtros Supabase `.or()` / `.ilike()`:** não interpole input cru do usuário (vírgula, `()`, `*`
+   são caracteres de controle do PostgREST). Sanitize ou use o builder com valor parametrizado.
+7. **Logs:** nunca logar senha, token, e-mail ou nome completo (PII) em `console.*`.
+8. **localStorage:** não persista PII/dados acadêmicos sem necessidade; limpe no `signOut`
+   (já feito para `dash_cache_*`).
+9. **Segredos:** nunca commitar senha/chave/token no código. Use env vars + rotação.
+
+### ⚠️ Pendências de segurança conhecidas (backlog priorizado)
+
+Estas falhas foram auditadas mas **não corrigidas** porque exigem mudança coordenada
+servidor+cliente e rotação de segredo (decisão do time):
+
+| Sev | Local | Problema |
+|-----|-------|----------|
+| 🔴 CRÍTICO | `api/auth/reset-password`, `api/admin/{create-user,delete-user,generate-link,generate-registration-link}` | Protegidas só pela string fixa `'compromisso2026'` (que está no bundle do cliente e exibida em `forgot-password`). Permite takeover / criação de admin / exclusão sem sessão. **Fix:** trocar por `requireAdminUser()` e remover o literal. |
+| 🔴 CRÍTICO | `api/student/primeiro-acesso` (action `reset` + `search`) | Reset de senha de **qualquer** usuário sem autenticação nem prova de identidade (CPF/nascimento); `search` enumera usuários. **Fix:** exigir prova de identidade + rate limit. |
+| 🟠 ALTO | `lib/registration-token.ts` | HMAC dos tokens de cadastro usa a própria `SUPABASE_SERVICE_ROLE_KEY` como chave. Usar segredo dedicado (`REGISTRATION_TOKEN_SECRET`). |
+| 🟠 ALTO | `api/student/weekly-summary` | IDOR: lê dados de qualquer `userId` do body com service role. |
+| 🟡 MÉDIO | `api/push/notify` (branch `chat`) | Usuário autenticado pode enviar push com conteúdo arbitrário a qualquer `receiverId`. |
+| 🟡 MÉDIO | `api/essay-save` | Insere `essay_submissions` com `user_id`/`score` do body sem auth. |
+| 🟢 BAIXO | `api/student/self-register` | Sem rate limit (spam de contas via token vazado). |
+
+**Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
+novos usuários) e migrar as rotas acima para `requireAdminUser()`.
+
+### Já corrigido nesta auditoria (mudanças seguras, sem quebrar fluxo)
+- Open-redirect em `auth/callback` (valida `next` interno).
+- XSS armazenado no gerador de documentos da secretaria (escape de HTML).
+- Redação de PII (nome/e-mail) nos logs de `primeiro-acesso`.
+- Sanitização do filtro `.or()` em `primeiro-acesso`.
+- Limpeza do cache acadêmico (`dash_cache_*`) no `signOut`.
+
 ## 📌 Estrutura de Rotas Relevantes
 
 ```
