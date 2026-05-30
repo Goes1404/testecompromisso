@@ -23,6 +23,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
+import { AreaChartPremium } from "@/components/charts/premium";
 
 const GamificationWidget = dynamic(
   () => import('@/components/GamificationWidget').then(m => ({ default: m.GamificationWidget })),
@@ -52,28 +53,9 @@ const WeeklySummaryWidget = dynamic(
   () => import('@/components/WeeklySummaryWidget').then(m => ({ default: m.WeeklySummaryWidget })),
   { ssr: false, loading: () => <div className="h-48 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
 );
-const DashboardChart = dynamic(
-  () => import('recharts').then(({ AreaChart, Area, ResponsiveContainer, Tooltip }) => {
-    function Chart({ data }: { data: { name: string; score: number }[] }) {
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <Tooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-            <Area type="monotone" dataKey="score" stroke="#7c3aed" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      );
-    }
-    return { default: Chart };
-  }),
-  { ssr: false, loading: () => <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl" /> }
-);
+function DashboardChart({ data }: { data: { name: string; score: number }[] }) {
+  return <AreaChartPremium data={data} xKey="name" yKey="score" color="#7c3aed" showAxis={false} domainMax={100} />;
+}
 
 const logoUrl = "/images/logocompromisso.png";
 const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";

@@ -42,39 +42,7 @@ import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SCHOOL_LIST } from "@/lib/constants";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-
-/* ── charts ──────────────────────────────────────────────────── */
-
-const AttendanceTrendChart = dynamic(
-  () =>
-    import("recharts").then(
-      ({ LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine }) => {
-        function Chart({ data }: { data: { week: string; pct: number }[] }) {
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="week" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} dy={6} />
-                <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                <Tooltip
-                  formatter={(v: number) => [`${v}%`, "Presença"]}
-                  contentStyle={{ borderRadius: "1rem", border: "none", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)", fontSize: 12 }}
-                />
-                <ReferenceLine y={75} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
-                <Line type="monotone" dataKey="pct" stroke="#10b981" strokeWidth={3}
-                  dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          );
-        }
-        return { default: Chart };
-      }
-    ),
-  { ssr: false }
-);
+import { LineChartPremium } from "@/components/charts/premium";
 
 /* ── helpers ──────────────────────────────────────────────────── */
 
@@ -551,7 +519,7 @@ export default function StudentDetailPage() {
                 </div>
               ) : (
                 <div className="h-44">
-                  <AttendanceTrendChart data={attTrend} />
+                  <LineChartPremium data={attTrend} xKey="week" yKey="pct" color="#10b981" referenceY={75} unit="%" domainMax={100} />
                 </div>
               )}
             </CardContent>

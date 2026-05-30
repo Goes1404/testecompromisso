@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,58 +30,7 @@ import {
 import { supabase } from "@/app/lib/supabase";
 import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-// ── Charts ──────────────────────────────────────────────────────────────────
-
-const RadarChartComponent = dynamic(
-  () =>
-    import("recharts").then(
-      ({ Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip }) => {
-        function Chart({ data }: { data: any[] }) {
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
-                <PolarGrid stroke="#e2e8f0" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: "#64748b", fontSize: 10, fontWeight: "bold" }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                <Radar name="Desempenho" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} />
-                <Tooltip contentStyle={{ borderRadius: "1rem", border: "none", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }} itemStyle={{ fontWeight: "bold", fontSize: "12px" }} />
-              </RadarChart>
-            </ResponsiveContainer>
-          );
-        }
-        return { default: Chart };
-      }
-    ),
-  { ssr: false, loading: () => <div className="h-full w-full animate-pulse bg-slate-50 rounded-3xl" /> }
-);
-
-const AreaChartComponent = dynamic(
-  () =>
-    import("recharts").then(({ AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }) => {
-      function Chart({ data }: { data: any[] }) {
-        return (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorAcertos" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="date" stroke="#888" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-              <YAxis stroke="#888" fontSize={10} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ borderRadius: "1rem", border: "none", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }} />
-              <Area type="monotone" dataKey="acertos" stroke="hsl(var(--primary))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorAcertos)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        );
-      }
-      return { default: Chart };
-    }),
-  { ssr: false, loading: () => <div className="h-full w-full animate-pulse bg-slate-50 rounded-3xl" /> }
-);
+import { RadarChartPremium, AreaChartPremium } from "@/components/charts/premium";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -379,7 +327,7 @@ export default function AdminStudentProfilePage() {
           </CardHeader>
           <CardContent className="p-4 md:p-8 pt-4 h-[260px] md:h-[350px]">
             {radarData.length > 0 ? (
-              <RadarChartComponent data={radarData} />
+              <RadarChartPremium data={radarData} angleKey="subject" yKey="score" color="#ff6b00" unit="%" />
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground italic text-sm opacity-40">
                 Nenhuma resposta registrada ainda.
@@ -395,7 +343,7 @@ export default function AdminStudentProfilePage() {
             <CardDescription className="italic text-xs">Questões acertadas nos últimos 15 dias.</CardDescription>
           </CardHeader>
           <CardContent className="p-4 md:p-8 pt-4 h-[260px] md:h-[350px]">
-            <AreaChartComponent data={historyData} />
+            <AreaChartPremium data={historyData} xKey="date" yKey="acertos" color="#ff6b00" />
           </CardContent>
         </Card>
       </div>

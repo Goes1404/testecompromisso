@@ -19,115 +19,7 @@ import {
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-
-/* ── chart components ─────────────────────────────────────────── */
-
-const AttendanceTrendChart = dynamic(
-  () =>
-    import("recharts").then(
-      ({
-        LineChart,
-        Line,
-        XAxis,
-        YAxis,
-        CartesianGrid,
-        Tooltip,
-        ResponsiveContainer,
-        ReferenceLine,
-      }) => {
-        function Chart({ data }: { data: { week: string; pct: number }[] }) {
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="week"
-                  stroke="#94a3b8"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={8}
-                />
-                <YAxis
-                  stroke="#94a3b8"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  domain={[0, 100]}
-                  tickFormatter={(v) => `${v}%`}
-                />
-                <Tooltip
-                  formatter={(v: number) => [`${v.toFixed(1)}%`, "Presença"]}
-                  contentStyle={{
-                    borderRadius: "1rem",
-                    border: "none",
-                    boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
-                    fontSize: 12,
-                  }}
-                />
-                <ReferenceLine y={75} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
-                <Line
-                  type="monotone"
-                  dataKey="pct"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{ r: 5, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }}
-                  activeDot={{ r: 7, strokeWidth: 0 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          );
-        }
-        return { default: Chart };
-      }
-    ),
-  { ssr: false }
-);
-
-const StudentsByClassChart = dynamic(
-  () =>
-    import("recharts").then(
-      ({ BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell }) => {
-        const COLORS = ["#1a2c4b", "#f59e0b", "#10b981", "#6366f1", "#f43f5e", "#0ea5e9", "#a855f7"];
-        function Chart({ data }: { data: { turma: string; total: number }[] }) {
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                <XAxis type="number" hide />
-                <YAxis
-                  dataKey="turma"
-                  type="category"
-                  stroke="#64748b"
-                  fontSize={11}
-                  width={90}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  formatter={(v: number) => [v, "Alunos"]}
-                  contentStyle={{
-                    borderRadius: "1rem",
-                    border: "none",
-                    boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
-                    fontSize: 12,
-                  }}
-                />
-                <Bar dataKey="total" radius={[0, 10, 10, 0]} barSize={20}>
-                  {data.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          );
-        }
-        return { default: Chart };
-      }
-    ),
-  { ssr: false }
-);
+import { LineChartPremium, BarChartPremium } from "@/components/charts/premium";
 
 /* ── types ────────────────────────────────────────────────────── */
 
@@ -464,7 +356,15 @@ export default function SecretaryKPIPage() {
               </div>
             ) : (
               <div className="h-52">
-                <AttendanceTrendChart data={kpi.attendanceTrend} />
+                <LineChartPremium
+                  data={kpi.attendanceTrend}
+                  xKey="week"
+                  yKey="pct"
+                  color="#10b981"
+                  referenceY={75}
+                  unit="%"
+                  domainMax={100}
+                />
               </div>
             )}
           </CardContent>
@@ -488,7 +388,13 @@ export default function SecretaryKPIPage() {
               </div>
             ) : (
               <div className="h-52">
-                <StudentsByClassChart data={kpi.byClass} />
+                <BarChartPremium
+                  data={kpi.byClass}
+                  xKey="turma"
+                  yKey="total"
+                  horizontal
+                  colors={["#1a2c4b", "#f59e0b", "#10b981", "#6366f1", "#f43f5e", "#0ea5e9", "#a855f7"]}
+                />
               </div>
             )}
           </CardContent>

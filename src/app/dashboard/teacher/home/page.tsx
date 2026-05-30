@@ -23,35 +23,12 @@ import {
   CalendarDays
 } from "lucide-react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import { subDays } from "date-fns";
-
-const TeacherEngagementChart = dynamic(
-  () => import('recharts').then(({ BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell }) => {
-    function Chart({ data }: { data: { name: string; value: number; color: string }[] }) {
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }} />
-            <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={80}>
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    }
-    return { default: Chart };
-  }),
-  { ssr: false, loading: () => <div className="h-full w-full bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center"><p className="text-[10px] font-black uppercase tracking-widest text-primary/20">Carregando...</p></div> }
-);
+import { BarChartPremium } from "@/components/charts/premium";
 
 export default function TeacherHomePage() {
   const { user, profile, userRole, loading: isUserLoading } = useAuth();
@@ -136,8 +113,8 @@ export default function TeacherHomePage() {
       setEligibleList(eligible.slice(0, 3));
 
       setChartData([
-        { name: "Ativos", value: students.length - atRisk, color: "hsl(var(--primary))" },
-        { name: "Inativos", value: atRisk, color: "hsl(var(--accent))" },
+        { name: "Ativos", value: students.length - atRisk, color: "#10b981" },
+        { name: "Inativos", value: atRisk, color: "#f43f5e" },
       ]);
 
       // Mocks para avaliação do usuário no painel docente
@@ -322,7 +299,7 @@ export default function TeacherHomePage() {
               {dataLoading ? (
                 <div className="h-full w-full bg-slate-50 animate-pulse rounded-xl" />
               ) : (
-                <TeacherEngagementChart data={chartData} />
+                <BarChartPremium data={chartData} xKey="name" yKey="value" colorKey="color" barSize={80} />
               )}
             </div>
           </div>

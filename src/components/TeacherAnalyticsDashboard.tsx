@@ -2,70 +2,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import {
   TrendingUp, Users, Loader2, ClipboardCheck, BrainCircuit,
   Activity, FileDown, BarChart3, Sparkles,
 } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-
-const PerformanceChart = dynamic(
-  () =>
-    import("recharts").then(({ BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, CartesianGrid }) => {
-      function Chart({ data }: { data: { name: string; performance: number }[] }) {
-        const COLORS = ["#f97316", "#fb923c", "#fdba74", "#fcd34d", "#fde68a"];
-        return (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20, top: 4, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
-              <XAxis type="number" domain={[0, 100]} hide />
-              <YAxis dataKey="name" type="category" stroke="rgba(255,255,255,0.4)" fontSize={11} width={80} tickLine={false} axisLine={false} />
-              <Tooltip
-                cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                contentStyle={{ borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.1)", background: "#1a1a1f", color: "#fff", fontSize: 12 }}
-              />
-              <Bar dataKey="performance" radius={[0, 8, 8, 0]} barSize={20}>
-                {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        );
-      }
-      return { default: Chart };
-    }),
-  { ssr: false }
-);
-
-const EngagementChart = dynamic(
-  () =>
-    import("recharts").then(({ LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }) => {
-      function Chart({ data }: { data: { day: string; acessos: number }[] }) {
-        return (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="day" stroke="rgba(255,255,255,0.4)" fontSize={11} tickLine={false} axisLine={false} dy={8} />
-              <YAxis stroke="rgba(255,255,255,0.4)" fontSize={11} tickLine={false} axisLine={false} />
-              <Tooltip
-                contentStyle={{ borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.1)", background: "#1a1a1f", color: "#fff", fontSize: 12 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="acessos"
-                stroke="#f97316"
-                strokeWidth={3}
-                dot={{ r: 5, fill: "#f97316", strokeWidth: 2, stroke: "#0d0d0f" }}
-                activeDot={{ r: 7, strokeWidth: 0, fill: "#fb923c" }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        );
-      }
-      return { default: Chart };
-    }),
-  { ssr: false }
-);
+import { BarChartPremium, LineChartPremium } from "@/components/charts/premium";
 
 export default function TeacherAnalyticsDashboard({ userId }: { userId?: string }) {
   const [loading, setLoading] = useState(true);
@@ -257,7 +200,15 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
         </div>
         <div className="p-4">
           <div className="h-[200px] w-full">
-            <PerformanceChart data={data.performanceBySubject} />
+            <BarChartPremium
+              data={data.performanceBySubject}
+              xKey="name"
+              yKey="performance"
+              horizontal
+              domainMax={100}
+              unit="%"
+              colors={["#ff6b00", "#fb923c", "#fdba74", "#fcd34d", "#fde68a"]}
+            />
           </div>
         </div>
       </div>
@@ -273,7 +224,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
         </div>
         <div className="p-4">
           <div className="h-[200px] w-full">
-            <EngagementChart data={data.engagementTrend} />
+            <LineChartPremium data={data.engagementTrend} xKey="day" yKey="acessos" color="#ff6b00" />
           </div>
         </div>
       </div>

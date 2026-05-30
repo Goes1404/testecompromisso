@@ -19,69 +19,11 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
-import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { format, subDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-const RadarChartComponent = dynamic(
-  () => import('recharts').then(({ Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip }) => {
-    function Chart({ data }: { data: any[] }) {
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-            <PolarGrid stroke="#e2e8f0" />
-            <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} />
-            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-            <Radar
-              name="Desempenho"
-              dataKey="score"
-              stroke="hsl(var(--primary))"
-              fill="hsl(var(--primary))"
-              fillOpacity={0.5}
-            />
-            <Tooltip 
-              contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-              itemStyle={{ fontWeight: 'black', fontSize: '12px' }}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
-      );
-    }
-    return { default: Chart };
-  }),
-  { ssr: false, loading: () => <div className="h-full w-full flex items-center justify-center bg-slate-50/50 animate-pulse rounded-3xl" /> }
-);
-
-const LineChartComponent = dynamic(
-  () => import('recharts').then(({ LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area }) => {
-    function Chart({ data }: { data: any[] }) {
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis dataKey="date" stroke="#888" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-            <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} />
-            <Tooltip 
-              contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-              itemStyle={{ fontWeight: 'black', fontSize: '12px' }}
-            />
-            <Area type="monotone" dataKey="acertos" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      );
-    }
-    return { default: Chart };
-  }),
-  { ssr: false, loading: () => <div className="h-full w-full flex items-center justify-center bg-slate-50/50 animate-pulse rounded-3xl" /> }
-);
+import { RadarChartPremium, AreaChartPremium } from "@/components/charts/premium";
 
 export default function StudentPerformancePage() {
   const { user } = useAuth();
@@ -245,7 +187,7 @@ export default function StudentPerformancePage() {
           </div>
           <div className="p-4 md:p-8 pt-2 h-[260px] md:h-[400px]">
             {subjectData.length > 0 ? (
-              <RadarChartComponent data={subjectData} />
+              <RadarChartPremium data={subjectData} angleKey="subject" yKey="score" color="#ff6b00" unit="%" />
             ) : (
               <div className="h-full flex flex-col items-center justify-center opacity-20 italic text-sm">
                 <p>Responda questões para gerar seu mapa.</p>
@@ -262,7 +204,7 @@ export default function StudentPerformancePage() {
               <p className="text-xs text-slate-400 italic mt-0.5">Acertos nos últimos 15 dias.</p>
             </div>
             <div className="p-4 md:p-8 pt-2 h-[200px] md:h-[260px]">
-              <LineChartComponent data={historyData} />
+              <AreaChartPremium data={historyData} xKey="date" yKey="acertos" color="#ff6b00" />
             </div>
           </div>
 

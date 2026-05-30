@@ -3,11 +3,11 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import dynamic from 'next/dynamic';
 import { FileQuestion, Percent, Loader2 } from "lucide-react";
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BarChartPremium } from "@/components/charts/premium";
 
 type DashboardData = {
   totalQuestions: number;
@@ -17,39 +17,6 @@ type DashboardData = {
   }[];
   answeredRatio: number;
 };
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A239CA', '#FF4560', '#00E396'];
-
-const SubjectChart = dynamic(
-  () => import('recharts').then(({ BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell }) => {
-    function Chart({ data }: { data: { subject: string; count: number }[] }) {
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-            <XAxis dataKey="subject" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-            <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-            <Tooltip
-              cursor={{ fill: '#f8fafc' }}
-              contentStyle={{
-                backgroundColor: 'white',
-                border: 'none',
-                borderRadius: '1.5rem',
-                boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
-              }}
-            />
-            <Bar dataKey="count" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} barSize={40}>
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    }
-    return { default: Chart };
-  }),
-  { ssr: false }
-);
 
 export function QuestionsDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
@@ -168,7 +135,7 @@ export function QuestionsDashboard() {
             </CardHeader>
             <CardContent className="p-8">
                 <div className="h-[300px] w-full">
-                    <SubjectChart data={data.questionsBySubject} />
+                    <BarChartPremium data={data.questionsBySubject} xKey="subject" yKey="count" barSize={40} />
                 </div>
             </CardContent>
         </Card>
