@@ -923,13 +923,13 @@ export default function SecretaryAttendancePage() {
                               <p className="text-[9px] font-black uppercase text-slate-400 mt-0.5">{student.course || 'Sem Turma'}</p>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
                               {rec.status === 'justificado' && (
-                                <Input 
-                                  placeholder="Justificativa..." 
-                                  value={rec.justification} 
+                                <Input
+                                  placeholder="Justificativa..."
+                                  value={rec.justification}
                                   onChange={e => setJustification(student.id, e.target.value)}
-                                  className="h-7 text-[10px] w-24 rounded-lg bg-white"
+                                  className="h-7 text-[10px] flex-1 sm:w-24 sm:flex-none rounded-lg bg-white"
                                 />
                               )}
                               <div className="flex rounded-lg overflow-hidden border">
@@ -995,7 +995,7 @@ export default function SecretaryAttendancePage() {
 
       {/* Diálogo de Importação de Planilha */}
       <Dialog open={importModalOpen} onOpenChange={(v) => { if (!v) { setImportModalOpen(false); setImportRows([]); } }}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-2xl w-full">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-y-auto max-h-[92vh] w-[95vw] sm:max-w-2xl">
           <DialogHeader className="p-8 pb-4 bg-emerald-50 border-b border-emerald-100">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center font-black text-white shadow shrink-0">
@@ -1105,7 +1105,7 @@ export default function SecretaryAttendancePage() {
 
       {/* Diálogo Criar Sessão */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-y-auto max-h-[92vh] w-[95vw] sm:max-w-md">
           <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center font-black text-white shadow shrink-0">
@@ -1133,7 +1133,7 @@ export default function SecretaryAttendancePage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Matéria (Opcional)</Label>
                 <Input value={newSubject} onChange={e => setNewSubject(e.target.value)} placeholder="Ex: Matemática" className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm" />
@@ -1152,7 +1152,7 @@ export default function SecretaryAttendancePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Data da Aula</Label>
                 <Input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm" />
@@ -1200,7 +1200,7 @@ export default function SecretaryAttendancePage() {
 
       {/* Diálogo de Sobrescrita (Audit) */}
       <Dialog open={overrideOpen} onOpenChange={(v) => { if (!v) { setOverrideOpen(false); setOverrideReason(""); } }}>
-        <DialogContent className="rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
+        <DialogContent className="rounded-[2rem] border-none shadow-2xl p-0 overflow-y-auto max-h-[92vh] w-[95vw] sm:max-w-md">
           <DialogHeader className="p-8 pb-4 bg-red-50 border-b-2 border-red-200">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-200">

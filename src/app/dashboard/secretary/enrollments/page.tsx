@@ -458,7 +458,7 @@ function NewStudentModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ex: Maria Silva Santos" className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">CPF (opcional)</Label>
                   <Input value={cpf} onChange={e => setCpf(e.target.value)} placeholder="000.000.000-00" className="h-12 bg-muted/30 border-none rounded-xl font-mono text-sm" />
@@ -503,7 +503,7 @@ function NewStudentModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Turma</Label>
                   <Select value={course} onValueChange={setCourse}>
@@ -803,6 +803,10 @@ export default function SecretaryEnrollmentDirectory() {
                                   📞 {u.phone}
                                 </p>
                               )}
+                              {/* Turma/Polo inline no mobile (coluna dedicada fica oculta < sm) */}
+                              <p className="sm:hidden text-[9px] font-black uppercase tracking-wider text-slate-400 truncate mt-0.5">
+                                {u.course || 'Sem turma'} · {u.institution || 'Sem polo'}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -1003,7 +1007,7 @@ export default function SecretaryEnrollmentDirectory() {
 
       {/* Modal de Edição de Matrícula */}
       <Dialog open={!!editingUser} onOpenChange={v => { if (!v) setEditingUser(null); }}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-y-auto max-h-[92vh] w-[95vw] sm:max-w-md">
           <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center font-black text-white text-lg shadow shrink-0">
@@ -1036,7 +1040,7 @@ export default function SecretaryEnrollmentDirectory() {
               <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm" placeholder="Ex: (11) 99999-9999" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Escola / Polo</Label>
                 <Input value={editInstitution} onChange={e => setEditInstitution(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm" />
