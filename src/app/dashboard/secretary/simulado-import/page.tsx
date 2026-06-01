@@ -264,7 +264,7 @@ export default function SimuladoImportPage() {
                         </td>
                         <td className="px-4">
                           <Badge className="font-black bg-primary/10 text-primary border-none text-xs">
-                            {m.row.nota}/90
+                            {m.row.nota}/60
                           </Badge>
                         </td>
                         <td className="px-4">

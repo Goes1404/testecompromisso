@@ -309,7 +309,7 @@ export default function DashboardHome() {
         setSimuladoOficial({
           title: examObj?.title ?? 'Simulado ENEM',
           score: Number(simOficialData.score),
-          total: 90,
+          total: 60,
           completed_at: simOficialData.completed_at,
         });
       }

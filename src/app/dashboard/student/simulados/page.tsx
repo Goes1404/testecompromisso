@@ -103,7 +103,7 @@ export default function SimuladoPage() {
       .then(({ data }) => {
         const oficiais = (data || [])
           .filter((a: any) => a.exam?.exam_type === 'simulado_importado')
-          .map((a: any) => ({ title: a.exam.title, score: Number(a.score), total: 90, completed_at: a.completed_at }));
+          .map((a: any) => ({ title: a.exam.title, score: Number(a.score), total: 60, completed_at: a.completed_at }));
         setResultadosOficiais(oficiais);
       });
   }, [user]);
