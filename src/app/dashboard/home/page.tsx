@@ -117,6 +117,7 @@ export default function DashboardHome() {
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
   const [essayStats, setEssayStats] = useState<{ count: number; average: number; latest: any } | null>(null);
   const [examStats, setExamStats] = useState<{ totalAssessed: number; averageScore: number; history?: any[] } | null>(null);
+  const [simuladoOficial, setSimuladoOficial] = useState<{ title: string; score: number; total: number; completed_at: string } | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   const [activeSession, setActiveSession] = useState<any>(null);
@@ -257,13 +258,14 @@ export default function DashboardHome() {
     setLoadingData(true);
     dataFetchedRef.current = true;
     try {
-      const [annRes, trailRes, progressRes, libRes, essayRes, examRes] = await Promise.all([
+      const [annRes, trailRes, progressRes, libRes, essayRes, examRes, simOficialRes] = await Promise.all([
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
         supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
         supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3),
         supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id),
+        supabase.from('exam_attempts').select('score, completed_at, exam:exams!inner(title, exam_type)').eq('user_id', user.id).order('completed_at', { ascending: false }),
       ]);
       let essayData = essayRes?.data || [];
       let examData = examRes?.data || [];
@@ -297,6 +299,21 @@ export default function DashboardHome() {
         newExamStats = { totalAssessed: 0, averageScore: 0, history: [{ name: "Jan", score: 40 }, { name: "Fev", score: 55 }, { name: "Mar", score: 85 }] };
       }
       setExamStats(newExamStats);
+
+      // Simulado oficial importado pela secretaria
+      const simOficialData = (simOficialRes?.data || []).find(
+        (a: any) => a.exam?.exam_type === 'simulado_importado'
+      ) as any;
+      if (simOficialData) {
+        const examObj = Array.isArray(simOficialData.exam) ? simOficialData.exam[0] : simOficialData.exam;
+        setSimuladoOficial({
+          title: examObj?.title ?? 'Simulado ENEM',
+          score: Number(simOficialData.score),
+          total: 90,
+          completed_at: simOficialData.completed_at,
+        });
+      }
+
       const cacheData = {
         data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats },
         timestamp: Date.now()
@@ -562,6 +579,48 @@ export default function DashboardHome() {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* ══════════════════════════════════
+           SIMULADO OFICIAL — resultado importado
+          ══════════════════════════════════ */}
+      {simuladoOficial && (
+        <motion.div variants={itemVariants}>
+          <Link href="/dashboard/student/simulados">
+            <div className="relative bg-[#0d0d0f] rounded-[2rem] overflow-hidden p-5 group cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform">
+              <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(255,107,0,0.3) 0%, transparent 60%)" }} />
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="relative shrink-0">
+                  {(() => {
+                    const pct = Math.round((simuladoOficial.score / simuladoOficial.total) * 100);
+                    const r = 24, circ = 2 * Math.PI * r;
+                    const color = pct >= 70 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                    return (
+                      <svg width="60" height="60" className="-rotate-90">
+                        <circle cx="30" cy="30" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" />
+                        <circle cx="30" cy="30" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round"
+                          strokeDasharray={circ} strokeDashoffset={circ - (pct / 100) * circ} />
+                      </svg>
+                    );
+                  })()}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-black text-white leading-none italic">
+                      {Math.round((simuladoOficial.score / simuladoOficial.total) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/40 mb-0.5">Resultado Oficial</p>
+                  <p className="font-black italic text-white leading-tight truncate">{simuladoOficial.title}</p>
+                  <p className="text-xl font-black text-primary leading-none mt-1 italic">
+                    {simuladoOficial.score}<span className="text-sm text-white/40 font-bold">/{simuladoOficial.total} acertos</span>
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-white/20 group-hover:text-primary transition-colors shrink-0" />
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+      )}
 
       {/* ══════════════════════════════════
            PLATFORM FEATURES — editorial list

@@ -91,6 +91,23 @@ export default function SimuladoPage() {
   const [timeLeft, setTimeLeft]     = useState<number | null>(null);
   const [isPaused, setIsPaused]     = useState(false);
 
+  const [resultadosOficiais, setResultadosOficiais] = useState<{ title: string; score: number; total: number; completed_at: string }[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('exam_attempts')
+      .select('score, completed_at, exam:exams!inner(title, exam_type)')
+      .eq('user_id', user.id)
+      .order('completed_at', { ascending: false })
+      .then(({ data }) => {
+        const oficiais = (data || [])
+          .filter((a: any) => a.exam?.exam_type === 'simulado_importado')
+          .map((a: any) => ({ title: a.exam.title, score: Number(a.score), total: 90, completed_at: a.completed_at }));
+        setResultadosOficiais(oficiais);
+      });
+  }, [user]);
+
   // ── data fetching ──
   const fetchSubjects = useCallback(async () => {
     setGameState('loading_subjects');
@@ -737,6 +754,50 @@ export default function SimuladoPage() {
         <p className="text-center text-xs text-slate-400 font-medium mt-2">
           Selecione uma matéria para começar.
         </p>
+      )}
+
+      {/* ── Resultados Oficiais (importados pela secretaria) ── */}
+      {resultadosOficiais.length > 0 && (
+        <div className="mt-8 space-y-3">
+          <div className="flex items-center gap-3 px-1">
+            <div className="h-px flex-1 bg-slate-100" />
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Resultados Oficiais</p>
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+          {resultadosOficiais.map((r, i) => {
+            const pct = Math.round((r.score / r.total) * 100);
+            const color = pct >= 70 ? 'text-emerald-500' : pct >= 50 ? 'text-amber-500' : 'text-red-500';
+            const bg    = pct >= 70 ? 'bg-emerald-50 border-emerald-100' : pct >= 50 ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100';
+            return (
+              <div key={i} className={`rounded-[1.5rem] border p-5 flex items-center gap-4 ${bg}`}>
+                <div className="relative shrink-0">
+                  {(() => {
+                    const rv = 22, circ = 2 * Math.PI * rv;
+                    const stroke = pct >= 70 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                    return (
+                      <svg width="54" height="54" className="-rotate-90">
+                        <circle cx="27" cy="27" r={rv} fill="none" stroke="#e2e8f0" strokeWidth="5" />
+                        <circle cx="27" cy="27" r={rv} fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round"
+                          strokeDasharray={circ} strokeDashoffset={circ - (pct / 100) * circ} />
+                      </svg>
+                    );
+                  })()}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-xs font-black leading-none ${color}`}>{pct}%</span>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Resultado Oficial</p>
+                  <p className="font-black italic text-slate-800 truncate">{r.title}</p>
+                  <p className={`text-2xl font-black italic leading-none mt-1 ${color}`}>
+                    {r.score}<span className="text-sm text-slate-400 font-bold">/{r.total}</span>
+                  </p>
+                </div>
+                <Trophy className="h-5 w-5 text-slate-300 shrink-0" />
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
