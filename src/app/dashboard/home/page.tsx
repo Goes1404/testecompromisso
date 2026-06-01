@@ -250,6 +250,7 @@ export default function DashboardHome() {
           setLibraryResources(parsed.data.libraryResources);
           setEssayStats(parsed.data.essayStats);
           setExamStats(parsed.data.examStats);
+          if (parsed.data.simuladoOficial) setSimuladoOficial(parsed.data.simuladoOficial);
           setLoadingData(false);
           if (Date.now() - parsed.timestamp < 60000) { dataFetchedRef.current = true; return; }
         }
@@ -315,7 +316,7 @@ export default function DashboardHome() {
       }
 
       const cacheData = {
-        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats },
+        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial },
         timestamp: Date.now()
       };
       if (typeof window !== 'undefined') localStorage.setItem(`dash_cache_${user.id}`, JSON.stringify(cacheData));
