@@ -106,8 +106,9 @@ const teacherItems: NavItem[] = [
   {
     icon: Database, label: "Avaliação", id: "nav-teacher-avaliacao",
     children: [
-      { icon: Database,    label: "Banco de Questões",    href: "/dashboard/teacher/questions", id: "nav-teacher-questions" },
-      { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays",    id: "nav-teacher-essays" },
+      { icon: Database,    label: "Banco de Questões",    href: "/dashboard/teacher/questions",           id: "nav-teacher-questions" },
+      { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays",              id: "nav-teacher-essays" },
+      { icon: ClipboardList, label: "Correção de Simulado", href: "/dashboard/teacher/simulado-correcao", id: "nav-teacher-simulado-correcao" },
     ],
   },
   {

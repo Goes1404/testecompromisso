@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import {
   Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle,
   Target, Shuffle, ClipboardList, CheckCircle2, XCircle, BookOpen,
-  Timer, ChevronRight, Zap, Trophy, TrendingUp, Flame,
+  Timer, ChevronRight, ChevronDown, ChevronUp, Zap, Trophy, TrendingUp, Flame,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -91,19 +91,20 @@ export default function SimuladoPage() {
   const [timeLeft, setTimeLeft]     = useState<number | null>(null);
   const [isPaused, setIsPaused]     = useState(false);
 
-  const [resultadosOficiais, setResultadosOficiais] = useState<{ title: string; score: number; total: number; completed_at: string }[]>([]);
+  const [resultadosOficiais, setResultadosOficiais] = useState<{ title: string; score: number; total: number; completed_at: string; answers: { q: number; selected: string }[]; answerKey: string[] | null }[]>([]);
+  const [expandedOficial, setExpandedOficial] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from('exam_attempts')
-      .select('score, completed_at, exam:exams!inner(title, exam_type)')
+      .select('score, completed_at, answers, exam:exams!inner(title, exam_type, answer_key)')
       .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
       .then(({ data }) => {
         const oficiais = (data || [])
           .filter((a: any) => a.exam?.exam_type === 'simulado_importado')
-          .map((a: any) => ({ title: a.exam.title, score: Number(a.score), total: 60, completed_at: a.completed_at }));
+          .map((a: any) => ({ title: a.exam.title, score: Number(a.score), total: 60, completed_at: a.completed_at, answers: a.answers || [], answerKey: a.exam.answer_key || null }));
         setResultadosOficiais(oficiais);
       });
   }, [user]);
@@ -768,32 +769,66 @@ export default function SimuladoPage() {
             const pct = Math.round((r.score / r.total) * 100);
             const color = pct >= 70 ? 'text-emerald-500' : pct >= 50 ? 'text-amber-500' : 'text-red-500';
             const bg    = pct >= 70 ? 'bg-emerald-50 border-emerald-100' : pct >= 50 ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100';
+            const hasCard = r.answers?.length > 0 && r.answerKey;
+            const isOpen = expandedOficial === i;
             return (
-              <div key={i} className={`rounded-[1.5rem] border p-5 flex items-center gap-4 ${bg}`}>
-                <div className="relative shrink-0">
-                  {(() => {
-                    const rv = 22, circ = 2 * Math.PI * rv;
-                    const stroke = pct >= 70 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
-                    return (
-                      <svg width="54" height="54" className="-rotate-90">
-                        <circle cx="27" cy="27" r={rv} fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle cx="27" cy="27" r={rv} fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round"
-                          strokeDasharray={circ} strokeDashoffset={circ - (pct / 100) * circ} />
-                      </svg>
-                    );
-                  })()}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-xs font-black leading-none ${color}`}>{pct}%</span>
+              <div key={i} className={`rounded-[1.5rem] border overflow-hidden ${bg}`}>
+                <div className="p-5 flex items-center gap-4">
+                  <div className="relative shrink-0">
+                    {(() => {
+                      const rv = 22, circ = 2 * Math.PI * rv;
+                      const stroke = pct >= 70 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                      return (
+                        <svg width="54" height="54" className="-rotate-90">
+                          <circle cx="27" cy="27" r={rv} fill="none" stroke="#e2e8f0" strokeWidth="5" />
+                          <circle cx="27" cy="27" r={rv} fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round"
+                            strokeDasharray={circ} strokeDashoffset={circ - (pct / 100) * circ} />
+                        </svg>
+                      );
+                    })()}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className={`text-xs font-black leading-none ${color}`}>{pct}%</span>
+                    </div>
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Resultado Oficial</p>
+                    <p className="font-black italic text-slate-800 truncate">{r.title}</p>
+                    <p className={`text-2xl font-black italic leading-none mt-1 ${color}`}>
+                      {r.score}<span className="text-sm text-slate-400 font-bold">/{r.total}</span>
+                    </p>
+                  </div>
+                  {hasCard ? (
+                    <button onClick={() => setExpandedOficial(isOpen ? null : i)}
+                      className="flex items-center gap-1 text-[10px] font-black uppercase text-slate-500 hover:text-primary transition-colors shrink-0">
+                      Ver gabarito {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  ) : <Trophy className="h-5 w-5 text-slate-300 shrink-0" />}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Resultado Oficial</p>
-                  <p className="font-black italic text-slate-800 truncate">{r.title}</p>
-                  <p className={`text-2xl font-black italic leading-none mt-1 ${color}`}>
-                    {r.score}<span className="text-sm text-slate-400 font-bold">/{r.total}</span>
-                  </p>
-                </div>
-                <Trophy className="h-5 w-5 text-slate-300 shrink-0" />
+                {isOpen && hasCard && r.answerKey && (
+                  <div className="px-5 pb-5 space-y-2">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Gabarito questão a questão</p>
+                    <div className="grid grid-cols-10 sm:grid-cols-15 gap-1">
+                      {r.answerKey.map((correct, qi) => {
+                        const ans = r.answers.find(x => x.q === qi + 1);
+                        const selected = ans?.selected || '';
+                        const right = correct && selected && selected.toUpperCase() === correct.toUpperCase();
+                        const wrong = correct && selected && !right;
+                        return (
+                          <div key={qi} className={`flex flex-col items-center p-1.5 rounded-xl text-[9px] font-black ${right ? 'bg-emerald-100 text-emerald-700' : wrong ? 'bg-red-100 text-red-600' : 'bg-white/60 text-slate-300'}`}>
+                            <span className="opacity-60 text-[8px]">{qi + 1}</span>
+                            <span className="text-xs">{selected || '–'}</span>
+                            {wrong && <span className="text-[7px] opacity-60">{correct}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-3 text-[10px] font-black pt-1">
+                      <span className="text-emerald-700">✓ {r.answers.filter(a => r.answerKey![a.q-1] && a.selected.toUpperCase() === r.answerKey![a.q-1].toUpperCase()).length} acertos</span>
+                      <span className="text-red-500">✗ {r.answers.filter(a => r.answerKey![a.q-1] && a.selected.toUpperCase() !== r.answerKey![a.q-1].toUpperCase()).length} erros</span>
+                      <span className="text-slate-400">– {r.answerKey.length - r.answers.length} sem resposta</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
