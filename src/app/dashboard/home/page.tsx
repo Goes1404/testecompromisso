@@ -707,7 +707,7 @@ export default function DashboardHome() {
       </motion.div>
 
       {/* ── MAIN CONTENT GRID ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 lg:items-start gap-6">
 
         {/* LEFT — 2/3 */}
         <div className="lg:col-span-2 space-y-6">
@@ -897,44 +897,48 @@ export default function DashboardHome() {
             </Button>
           </div>
 
-          {/* Biblioteca */}
-          <div className="bg-white rounded-3xl shadow-xl border border-muted/20 p-5 md:p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <Library className="h-4 w-4 text-emerald-600" />
-                </div>
-                <h3 className="font-black text-sm text-primary italic">Biblioteca</h3>
-              </div>
-              <Link href="/dashboard/library" className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors">Ver tudo</Link>
-            </div>
-            <div className="space-y-2.5">
-              {loadingData ? Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-muted/20 animate-pulse rounded-2xl" />) : libraryResources.length === 0 ? (
-                <div className="py-8 text-center opacity-30 italic text-xs">Materiais em sincronização...</div>
-              ) : (
-                libraryResources.map((res) => (
-                  <Link key={res.id} href="/dashboard/library">
-                    <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 hover:shadow-md transition-all group cursor-pointer border border-transparent hover:border-muted/20">
-                      <div className="h-9 w-9 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary/10 transition-colors">
-                        {res.type === 'Video' ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-xs text-primary truncate italic">{res.title}</h4>
-                      </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors shrink-0" />
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-
-          {user && <StreakWidget userId={user.id} />}
-          {user && <GoalsWidget userId={user.id} />}
-          {user && <JournalWidget userId={user.id} />}
-          {user && <GamificationWidget userId={user.id} />}
-          <UpcomingEventsWidget />
         </div>
+      </motion.div>
+
+      {/* ── WIDGETS ABAIXO DO GRID (desktop: 3 cols; mobile: 1 col) ── */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Biblioteca */}
+        <div className="bg-white rounded-3xl shadow-xl border border-muted/20 p-5 md:p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <Library className="h-4 w-4 text-emerald-600" />
+              </div>
+              <h3 className="font-black text-sm text-primary italic">Biblioteca</h3>
+            </div>
+            <Link href="/dashboard/library" className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors">Ver tudo</Link>
+          </div>
+          <div className="space-y-2.5">
+            {loadingData ? Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-muted/20 animate-pulse rounded-2xl" />) : libraryResources.length === 0 ? (
+              <div className="py-8 text-center opacity-30 italic text-xs">Materiais em sincronização...</div>
+            ) : (
+              libraryResources.map((res) => (
+                <Link key={res.id} href="/dashboard/library">
+                  <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 hover:shadow-md transition-all group cursor-pointer border border-transparent hover:border-muted/20">
+                    <div className="h-9 w-9 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary/10 transition-colors">
+                      {res.type === 'Video' ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-xs text-primary truncate italic">{res.title}</h4>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors shrink-0" />
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+
+        {user && <StreakWidget userId={user.id} />}
+        {user && <GoalsWidget userId={user.id} />}
+        {user && <JournalWidget userId={user.id} />}
+        {user && <GamificationWidget userId={user.id} />}
+        <UpcomingEventsWidget />
       </motion.div>
 
       {/* FOOTER */}
