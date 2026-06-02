@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, MotionConfig } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -389,8 +389,9 @@ export default function DashboardHome() {
   };
 
   return (
+    <MotionConfig reducedMotion="user">
     <motion.div
-      className="space-y-4 md:space-y-6 pb-10 px-3 md:px-0.5"
+      className="space-y-4 md:space-y-6 pb-10"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -1078,5 +1079,6 @@ export default function DashboardHome() {
         </DialogContent>
       </Dialog>
     </motion.div>
+    </MotionConfig>
   );
 }

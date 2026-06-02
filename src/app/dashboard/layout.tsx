@@ -429,7 +429,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="text-base font-black text-white italic leading-none">Compromisso</span>
-              <span className="text-[7px] text-white/60 uppercase tracking-widest font-black">Sistema de Ensino</span>
+              <span className="text-[9px] text-white/60 uppercase tracking-widest font-black">Sistema de Ensino</span>
             </div>
           </div>
         </SidebarHeader>
@@ -445,7 +445,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="relative h-5 w-5 shrink-0 bg-white rounded-md p-0.5">
               <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" sizes="20px" />
             </div>
-            <span className="text-[6.5px] font-black text-white/50 uppercase tracking-widest leading-tight">
+            <span className="text-[9px] font-black text-white/50 uppercase tracking-wide leading-tight">
               Plataforma Patrocinada pela Prefeitura
             </span>
           </div>
@@ -464,7 +464,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </Sidebar>
 
       {/* ── Main content ── */}
-      <SidebarInset className="bg-background flex flex-col h-screen overflow-hidden relative">
+      <SidebarInset className="bg-background flex flex-col h-[100dvh] overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/[0.02] via-transparent to-accent/[0.02] pointer-events-none" />
 
         {!hideLayoutHeader && (
@@ -502,7 +502,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
         )}
 
-        <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'} ${userRole === 'student' ? 'pb-20 lg:pb-8' : ''}`}>
+        <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'} ${!isFullBleedPage ? 'pb-20 lg:pb-8' : ''}`}>
           <div className={isFullBleedPage ? 'flex-1 flex flex-col min-h-0' : 'max-w-7xl mx-auto w-full'}>
             <Suspense fallback={<div className="p-8 opacity-20 animate-pulse"><Sparkles className="h-10 w-10 text-accent" /></div>}>
               {children}
@@ -514,7 +514,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <UrgentNotice />
         <PushPermissionBanner />
         <FloatingExtractionBubble />
-        {userRole === 'student' && <MobileBottomNav />}
+        {!isFullBleedPage && <MobileBottomNav />}
       </SidebarInset>
     </SidebarProvider>
     </ExtractionProvider>
