@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import Image from "next/image";
 import { EDUCATIONAL_CATEGORIES, RESOURCE_TYPES } from "@/lib/constants";
+import { DOCUMENT_ACCEPT } from "@/lib/file-types";
 
 export default function LibraryManagementPage() {
   const { toast } = useToast();
@@ -262,7 +263,7 @@ export default function LibraryManagementPage() {
                 <div className="flex flex-col gap-2">
                   <Input 
                     type="file" 
-                    accept={formData.type === 'PDF' ? '.pdf' : '*'} 
+                    accept={DOCUMENT_ACCEPT}
                     onChange={e => setFile(e.target.files?.[0] || null)} 
                     className="h-10 rounded-xl bg-muted/30 border-2 border-dashed border-primary/20 cursor-pointer hover:border-accent p-1.5 file:mr-4 file:py-1 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-white"
                   />
