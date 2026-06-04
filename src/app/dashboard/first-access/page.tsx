@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -130,7 +130,6 @@ export default function FirstAccessPage() {
     try {
       const { error: err } = await supabase.auth.updateUser({
         password: newPassword,
-        data: { must_change_password: false },
       });
       if (err) throw err;
       setStep(2);
@@ -162,6 +161,13 @@ export default function FirstAccessPage() {
         .update(updateData)
         .eq('id', user.id);
       if (err) throw err;
+
+      // Atualiza o metadata para indicar que o primeiro acesso foi concluído com sucesso
+      const { error: metaErr } = await supabase.auth.updateUser({
+        data: { must_change_password: false },
+      });
+      if (metaErr) throw metaErr;
+
       toast({ title: "Perfil salvo!", description: "Seja bem-vindo ao Compromisso!" });
       setStep(3);
       setTimeout(() => window.location.assign("/dashboard"), 2000);
