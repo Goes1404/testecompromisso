@@ -6,13 +6,11 @@ export async function middleware(request: NextRequest) {
   // request can be joined in any log aggregator (Datadog, Axiom, etc.)
   const requestId =
     request.headers.get('x-request-id') ?? crypto.randomUUID();
+  request.headers.set('x-request-id', requestId);
 
   let response = NextResponse.next({
     request: {
-      headers: new Headers({
-        ...Object.fromEntries(request.headers),
-        'x-request-id': requestId,
-      }),
+      headers: request.headers,
     },
   })
   response.headers.set('x-request-id', requestId);
@@ -27,22 +25,18 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set({ name, value, ...options }))
           response = NextResponse.next({
-            request: { headers: request.headers },
+            request,
           })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          })
-          response.cookies.set({ name, value: '', ...options })
+          response.headers.set('x-request-id', requestId)
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set({ name, value, ...options })
+          )
         },
       },
     }

@@ -18,25 +18,19 @@ export async function createClient() {
     supabaseAnonKey,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set({ name, value, ...options })
+            )
           } catch (error) {
             // Expected in React Server Components: cookies() is read-only there.
             // Supabase SSR docs explicitly recommend catching and ignoring this.
             // Log at debug so it appears only when LOG_LEVEL=debug.
-            log.debug('supabase.cookie.set_skipped', { cookieName: name });
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.delete({ name, ...options })
-          } catch (error) {
-            // Same reason as above — RSC cannot mutate cookies.
-            log.debug('supabase.cookie.remove_skipped', { cookieName: name });
+            log.debug('supabase.cookies.set_skipped', { count: cookiesToSet.length });
           }
         },
       },
