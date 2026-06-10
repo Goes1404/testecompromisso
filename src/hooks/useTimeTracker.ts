@@ -4,7 +4,6 @@ import { supabase } from '@/app/lib/supabase';
 
 export function useTimeTracker(userId: string | undefined) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const bufferRef = useRef<number>(0);
 
   useEffect(() => {
     if (!userId) return;

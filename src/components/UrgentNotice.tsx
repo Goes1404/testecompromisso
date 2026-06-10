@@ -32,10 +32,13 @@ export function UrgentNotice() {
           .limit(1);
 
         if (profile) {
+          // Sanitiza: vírgula/parênteses/asterisco são caracteres de controle
+          // do PostgREST e valores vazios não devem virar condição.
           const audience = (profile.exam_target || "").toLowerCase().trim();
-          query = query.or(
-            `target_group.eq.all,target_group.eq.${profile.profile_type},target_group.eq.${audience},target_group.eq.${profile.class_id}`
-          );
+          const targets = ["all", profile.profile_type, audience, profile.class_id]
+            .filter(Boolean)
+            .map((t) => `target_group.eq.${String(t).replace(/[(),*]/g, "")}`);
+          query = query.or(targets.join(","));
         }
 
         let { data, error } = await query;

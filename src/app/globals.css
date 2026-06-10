@@ -550,6 +550,62 @@
   pointer-events: none;
 }
 
+/* ══════════════════════════════════════════════════════
+   HOME "ARENA" — hero da dashboard do aluno
+   ══════════════════════════════════════════════════════ */
+
+/* Atmosfera do hero: braseiro laranja sobre carvão profundo */
+.hero-arena-bg {
+  background:
+    radial-gradient(ellipse 90% 70% at 85% -10%, rgba(255, 107, 0, 0.20) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at -10% 110%, rgba(255, 60, 0, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 50% 125%, rgba(255, 150, 0, 0.10) 0%, transparent 65%),
+    linear-gradient(165deg, #0b0b0f 0%, #120a06 55%, #0b0b0f 100%);
+}
+
+/* Varredura de luz diagonal — um facho cruza o hero a cada ciclo */
+@keyframes hero-sweep {
+  0%, 55%   { transform: translateX(-160%) skewX(-18deg); opacity: 0; }
+  62%       { opacity: 1; }
+  88%, 100% { transform: translateX(420%) skewX(-18deg); opacity: 0; }
+}
+.hero-sweep {
+  position: absolute;
+  top: -25%;
+  bottom: -25%;
+  left: 0;
+  width: 22%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255, 170, 80, 0.10) 60%,
+    transparent 100%
+  );
+  animation: hero-sweep 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Letreiro editorial — fita rolando no rodapé do hero */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee-x 30s linear infinite;
+  will-change: transform;
+}
+
+/* Texto vazado (outline) — contraste editorial no letreiro */
+.text-outline-white {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.25);
+}
+.text-outline-fire {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 107, 0, 0.55);
+}
+
 /* Grain overlay for dark backgrounds */
 .grain::before {
   content: '';

@@ -49,6 +49,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const authInitialized = useRef(false);
+  // id do usuário cujo perfil já está carregado — evita refetch redundante
+  // quando onAuthStateChange dispara INITIAL_SESSION/TOKEN_REFRESHED
+  const profileUserIdRef = useRef<string | null>(null);
   const router = useRouter();
 
   const userRole = useMemo((): UserRole => {
@@ -101,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             router.replace('/suspended');
             return null;
           }
+          profileUserIdRef.current = userId;
           return data as Profile;
         }
         
@@ -135,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSession(null);
     setProfile(null);
+    profileUserIdRef.current = null;
     // Segurança: limpa dados acadêmicos pessoais em cache (não devem sobreviver ao logout
     // em dispositivos compartilhados). Remove apenas as chaves de cache do dashboard.
     try {
@@ -197,6 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
           setUser(null);
           setSession(null);
+          profileUserIdRef.current = null;
           router.replace('/login');
           return;
         }
@@ -204,11 +210,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(currentUser);
         setSession(currentSession);
 
-        if (currentUser) {
+        if (!currentUser) {
+          setProfile(null);
+          profileUserIdRef.current = null;
+          return;
+        }
+
+        // Busca o perfil apenas quando necessário: usuário trocou ou metadata
+        // foi atualizada (ex.: first-access). INITIAL_SESSION e TOKEN_REFRESHED
+        // do mesmo usuário reutilizam o perfil já carregado.
+        const needsProfile =
+          profileUserIdRef.current !== currentUser.id || event === 'USER_UPDATED';
+        if (needsProfile) {
           const p = await fetchProfile(currentUser.id);
           setProfile(p);
-        } else {
-          setProfile(null);
         }
       });
       

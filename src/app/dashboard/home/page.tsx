@@ -24,6 +24,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 import { AreaChartPremium } from "@/components/charts/premium";
+import { EmberCanvas } from "@/components/EmberCanvas";
 
 const GamificationWidget = dynamic(
   () => import('@/components/GamificationWidget').then(m => ({ default: m.GamificationWidget })),
@@ -100,6 +101,48 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
     </motion.div>
   );
 }
+
+// Contador animado — número sobe com easing até o valor real
+function CountUp({ value, suffix = "", duration = 1400 }: { value: number; suffix?: string; duration?: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let raf: number;
+    const start = performance.now();
+    const step = (t: number) => {
+      const p = Math.min(1, (t - start) / duration);
+      setN(Math.round(value * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return <>{n}{suffix}</>;
+}
+
+// Header editorial numerado — dá ritmo de revista às seções da home
+function SectionHeader({ index, title, icon: Icon, iconClass, children }: {
+  index: string; title: string; icon: any; iconClass: string; children?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-end justify-between gap-4 mb-4 px-1">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${iconClass}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-accent leading-none">{index}</span>
+            <span className="h-px w-8 bg-gradient-to-r from-accent/50 to-transparent" />
+          </div>
+          <h2 className="text-lg font-black text-slate-900 italic tracking-tighter uppercase leading-tight truncate mt-1">{title}</h2>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const MARQUEE_WORDS = ["FOCO", "DISCIPLINA", "CONSTÂNCIA", "APROVAÇÃO", "ENEM", "ETEC", "COMPROMISSO"];
 
 interface Announcement {
   id: string;
@@ -355,11 +398,10 @@ export default function DashboardHome() {
 
   const nameToUse = profile?.name || user?.user_metadata?.full_name || '';
   const nameParts = nameToUse.trim().split(' ');
-  const userName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}` : nameParts[0] || 'Estudante';
   const firstName = nameParts[0] || 'Estudante';
   const greeting = greetingByHour();
   const score = examStats?.averageScore || 0;
-  const ringR = 28;
+  const ringR = 38;
   const ringC = 2 * Math.PI * ringR;
 
   const quickActions = [
@@ -507,95 +549,135 @@ export default function DashboardHome() {
       )}
 
       {/* ══════════════════════════════════════════════════
-           HERO — 3D floating orbs + animated score ring
+           HERO "ARENA" — fundo vivo de brasas + tipografia editorial
           ══════════════════════════════════════════════════ */}
       <motion.section variants={itemVariants}
-        className="relative rounded-3xl overflow-hidden bg-slate-950 flex flex-col p-5 md:p-8 shadow-2xl gap-5 min-h-[200px]"
-        style={{ perspective: "1200px" }}>
+        className="relative rounded-[2.5rem] overflow-hidden hero-arena-bg noise shadow-2xl">
 
-        {/* Floating orbs */}
-        <motion.div
-          className="absolute top-[-20%] right-[-5%] w-[280px] h-[280px] bg-violet-600/30 rounded-full blur-[80px] pointer-events-none"
-          animate={{ y: [0, -16, 0], scale: [1, 1.06, 1] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-[-30%] left-[-10%] w-[240px] h-[240px] bg-indigo-500/20 rounded-full blur-[70px] pointer-events-none"
-          animate={{ y: [0, 20, 0], scale: [1, 0.95, 1] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
-        <motion.div
-          className="absolute top-[30%] left-[40%] w-[160px] h-[160px] bg-accent/15 rounded-full blur-[60px] pointer-events-none"
-          animate={{ x: [0, 12, 0], y: [0, -8, 0] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
-        <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
+        {/* camadas de atmosfera (de trás pra frente) */}
+        <EmberCanvas className="absolute inset-0 h-full w-full pointer-events-none" />
+        <div className="absolute inset-0 dot-grid opacity-[0.14] pointer-events-none" />
+        <div className="hero-sweep" />
+        {/* linha de horizonte incandescente */}
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent z-10" />
 
-        <div className="relative z-10 flex flex-col gap-4">
-          {/* Greeting row */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1.5">
-              <motion.div
-                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-                className="inline-flex items-center bg-emerald-600 px-2 py-0.5 rounded-md">
-                <span className="text-[9px] font-black uppercase tracking-wider text-white">ALUNOS</span>
-              </motion.div>
- 
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-2xl md:text-4xl font-black text-white leading-tight tracking-tighter">
-                {firstName}! <span className="text-accent italic">Pronto para hoje?</span>
-              </motion.h1>
- 
+        <div className="relative z-10 p-5 md:p-10 pb-5 md:pb-7 flex flex-col gap-6">
+
+          {/* topo: status ao vivo + alvo do aluno */}
+          <div className="flex items-center justify-between gap-3">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
+              className="flex items-center gap-2 bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-full pl-2.5 pr-3.5 py-1.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+              </span>
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/80">Área do Aluno</span>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+              className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-md border border-primary/30 rounded-full px-3.5 py-1.5">
+              <GraduationCap className="h-3 w-3 text-accent" />
+              <span className="text-[9px] font-black uppercase tracking-[0.25em] text-accent">
+                Foco · {(profile?.exam_target || 'ENEM').toUpperCase()}
+              </span>
+            </motion.div>
+          </div>
+
+          {/* headline editorial + ring de score */}
+          <div className="flex items-end justify-between gap-5">
+            <div className="min-w-0">
               <motion.p
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-                BOM DIA . BOA TARDE . BOA NOITE
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                className="text-[10px] md:text-xs font-black uppercase tracking-[0.35em] text-white/50">
+                {greeting},
+              </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="text-[2.7rem] leading-[0.92] sm:text-6xl md:text-7xl font-black italic tracking-tighter text-white truncate">
+                {firstName}<span className="text-gradient-fire not-italic">.</span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
+                className="mt-2 md:mt-3 text-sm md:text-base font-bold italic text-white/70">
+                Cada questão te deixa mais perto da <span className="text-gradient-fire font-black">aprovação</span>.
               </motion.p>
             </div>
- 
-            {/* 3D Score ring */}
+
+            {/* Score ring — ticks de relógio + arco com gradiente de fogo */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, type: "spring" }}
-              className="shrink-0 flex flex-col items-center gap-1">
-              <div className="relative w-16 h-16">
-                <svg className="w-16 h-16 -rotate-90" viewBox="0 0 72 72">
-                  <circle cx="36" cy="36" r={ringR} stroke="rgba(255,255,255,0.08)" strokeWidth="4.5" fill="none" />
+              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.45, type: "spring", stiffness: 200, damping: 18 }}
+              className="shrink-0 flex flex-col items-center gap-1.5">
+              <div className="relative w-[88px] h-[88px] md:w-28 md:h-28">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 96 96">
+                  <defs>
+                    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FF9A00" />
+                      <stop offset="60%" stopColor="#FF6B00" />
+                      <stop offset="100%" stopColor="#FF3D00" />
+                    </linearGradient>
+                  </defs>
+                  {Array.from({ length: 48 }, (_, i) => (
+                    <line key={i} x1="48" y1="2.5" x2="48" y2="6.5"
+                      stroke={`rgba(255,255,255,${i % 4 === 0 ? 0.28 : 0.10})`} strokeWidth="1.5"
+                      transform={`rotate(${i * 7.5} 48 48)`} />
+                  ))}
+                  <circle cx="48" cy="48" r={ringR} stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none" />
                   <motion.circle
-                    cx="36" cy="36" r={ringR}
-                    stroke="hsl(var(--accent))"
-                    strokeWidth="4.5" fill="none" strokeLinecap="round"
+                    cx="48" cy="48" r={ringR}
+                    stroke="url(#scoreGrad)"
+                    strokeWidth="5" fill="none" strokeLinecap="round"
                     strokeDasharray={ringC}
                     initial={{ strokeDashoffset: ringC }}
                     animate={{ strokeDashoffset: ringC - (score / 100) * ringC }}
-                    transition={{ duration: 1.8, ease: "easeOut", delay: 0.6 }}
+                    transition={{ duration: 1.8, ease: "easeOut", delay: 0.7 }}
+                    style={{ filter: "drop-shadow(0 0 6px rgba(255,107,0,0.8))" }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-base font-black text-white leading-none">{score}</span>
-                  <span className="text-[7px] text-white/65 font-bold uppercase">%</span>
+                  <span className="text-xl md:text-2xl font-black text-white leading-none tabular-nums"><CountUp value={score} /></span>
+                  <span className="text-[7px] md:text-[8px] text-accent font-black uppercase tracking-widest mt-0.5">% acertos</span>
                 </div>
               </div>
-              <span className="text-[8px] text-white/60 font-bold uppercase tracking-widest">Acertos</span>
             </motion.div>
           </div>
- 
-          {/* Stats strip */}
+
+          {/* Stats strip — contadores animados em vidro */}
           <div className="flex gap-3 overflow-x-auto pb-0.5 scrollbar-hide -mx-1 px-1">
             {[
-              { label: "ACERTOS",  value: examStats?.totalAssessed ? `${examStats.averageScore}%` : '0%', icon: BrainCircuit, color: "text-accent" },
-              { label: "REDAÇÃO",  value: essayStats?.count ? `${essayStats.average}pts` : '0pts',       icon: FilePenLine,  color: "text-green-400" },
-              { label: "TRILHAS",  value: `${recentProgress.length}`,                                  icon: PlayCircle,   color: "text-yellow-400" },
+              { label: "Acertos", value: examStats?.averageScore || 0, suffix: "%",    icon: BrainCircuit },
+              { label: "Redação", value: essayStats?.average || 0,     suffix: " pts", icon: FilePenLine  },
+              { label: "Trilhas", value: recentProgress.length,        suffix: "",     icon: PlayCircle   },
             ].map((stat, i) => (
               <motion.div key={stat.label}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 + i * 0.08 }}
-                className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 shrink-0 min-w-[120px]">
-                <stat.icon className={`h-4 w-4 ${stat.color} shrink-0`} />
+                className="gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 shrink-0 min-w-[128px]">
+                <div className="h-8 w-8 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                  <stat.icon className="h-4 w-4 text-accent" />
+                </div>
                 <div>
-                  <p className="font-black text-white text-base leading-none">{stat.value}</p>
-                  <p className="text-[9px] text-white/65 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
+                  <p className="font-black text-white text-lg leading-none tabular-nums"><CountUp value={stat.value} suffix={stat.suffix} /></p>
+                  <p className="text-[8px] text-white/50 font-black uppercase tracking-[0.25em] mt-1">{stat.label}</p>
                 </div>
               </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Letreiro editorial — fita infinita no rodapé do hero */}
+        <div
+          className="relative z-10 border-t border-white/10 bg-black/40 backdrop-blur-sm overflow-hidden py-2.5"
+          style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>
+          <div className="flex w-max animate-marquee">
+            {[0, 1].map((dup) => (
+              <div key={dup} className="flex shrink-0 items-center" aria-hidden={dup === 1}>
+                {MARQUEE_WORDS.map((w, i) => (
+                  <span key={`${dup}-${w}`} className="flex items-center">
+                    <span className={`text-[10px] font-black uppercase tracking-[0.35em] whitespace-nowrap ${i % 2 === 0 ? 'text-white/40' : 'text-outline-fire'}`}>{w}</span>
+                    <span className="mx-4 text-accent/70 text-[8px]">✦</span>
+                  </span>
+                ))}
+              </div>
             ))}
           </div>
         </div>
@@ -630,14 +712,7 @@ export default function DashboardHome() {
            PLATFORM FEATURES — bento 3D cards
           ══════════════════════════════════════════ */}
       <motion.section variants={itemVariants}>
-        <div className="flex items-center justify-between px-1 mb-3">
-          <h2 className="text-sm font-black text-slate-900 italic uppercase tracking-tighter flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-3 w-3 text-primary" />
-            </div>
-            Tudo em Um Só Lugar
-          </h2>
-        </div>
+        <SectionHeader index="01 · Plataforma" title="Tudo em Um Só Lugar" icon={Sparkles} iconClass="bg-primary/10 text-primary" />
 
         <div className="grid grid-cols-2 gap-3">
           {platformFeatures.map((feat, i) => (
@@ -762,19 +837,13 @@ export default function DashboardHome() {
 
           {/* Trilhas em Progresso */}
           <div>
-            <div className="flex items-center justify-between mb-4 px-1">
-              <h2 className="text-lg font-black text-primary italic flex items-center gap-2">
-                <div className="h-7 w-7 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                </div>
-                Por Onde Começar
-              </h2>
+            <SectionHeader index="02 · Trilhas" title="Por Onde Começar" icon={TrendingUp} iconClass="bg-primary/10 text-primary">
               {recentProgress.length > 0 && (
-                <Link href="/dashboard/trails" className="text-[10px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors flex items-center gap-1">
+                <Link href="/dashboard/trails" className="text-[10px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors flex items-center gap-1 shrink-0 pb-1">
                   Ver todas <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
-            </div>
+            </SectionHeader>
 
             {loadingData ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -841,12 +910,7 @@ export default function DashboardHome() {
           {/* Anúncios */}
           {(!loadingData && announcements.length === 0) ? null : (
             <div>
-              <h2 className="text-lg font-black text-primary italic flex items-center gap-2 px-1 mb-4">
-                <div className="h-7 w-7 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <Megaphone className="h-4 w-4 text-amber-600" />
-                </div>
-                Comunicados
-              </h2>
+              <SectionHeader index="03 · Mural" title="Comunicados" icon={Megaphone} iconClass="bg-amber-100 text-amber-600" />
               <div className="space-y-3">
                 {loadingData ? Array(2).fill(0).map((_, i) => <div key={i} className="h-20 bg-muted/20 animate-pulse rounded-2xl" />) : (
                   announcements.map((ann: any) => {
@@ -997,7 +1061,7 @@ export default function DashboardHome() {
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">Patrocinada pela Prefeitura de Santana de Parnaíba</p>
             </div>
           </div>
-          <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">Compromisso • 2024</p>
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">Compromisso • {new Date().getFullYear()}</p>
         </div>
       </footer>
 
