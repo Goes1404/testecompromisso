@@ -181,19 +181,19 @@ export default function SecretaryUploadsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2.5 md:gap-4">
         {[
           { label: "Aguardando", value: pendingCount, color: "bg-amber-50 text-amber-600" },
           { label: "Aprovados",  value: approvedCount, color: "bg-emerald-50 text-emerald-600" },
           { label: "Rejeitados", value: rejectedCount, color: "bg-red-50 text-red-600" },
         ].map(s => (
-          <Card key={s.label} className="border-none shadow-xl rounded-3xl bg-white">
-            <CardContent className="p-6">
-              <div className={`h-9 w-9 rounded-xl ${s.color} flex items-center justify-center mb-4`}>
+          <Card key={s.label} className="border-none shadow-xl rounded-2xl md:rounded-3xl bg-white">
+            <CardContent className="p-4 md:p-6">
+              <div className={`h-9 w-9 rounded-xl ${s.color} flex items-center justify-center mb-3 md:mb-4`}>
                 <FileText className="h-4 w-4" />
               </div>
-              <p className="text-3xl font-black text-primary leading-none italic">{s.value}</p>
-              <p className="text-[10px] text-primary/70 font-black uppercase tracking-wider mt-2">{s.label}</p>
+              <p className="text-2xl md:text-3xl font-black text-primary leading-none italic">{s.value}</p>
+              <p className="text-[9px] md:text-[10px] text-primary/70 font-black uppercase tracking-wider mt-2">{s.label}</p>
             </CardContent>
           </Card>
         ))}

@@ -50,12 +50,14 @@ export function ForgotPasswordForm() {
 
     try {
       const normalizedEmail = email.toLowerCase().trim();
+      const timeout = <T,>(ms: number): Promise<T> =>
+        new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), ms));
+
       // 1. Verificar se o e-mail existe e qual o papel do usuário
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role, profile_type')
-        .eq('email', normalizedEmail)
-        .maybeSingle();
+      const { data: profile, error: profileError } = await Promise.race([
+        supabase.from('profiles').select('role, profile_type').eq('email', normalizedEmail).maybeSingle(),
+        timeout<never>(15_000),
+      ]);
 
       if (profileError) throw profileError;
 
@@ -68,12 +70,15 @@ export function ForgotPasswordForm() {
       }
 
       // PADRÃO DE MERCADO: Envio do e-mail oficial de Reset para todos
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-      });
-      
+      const { error: resetError } = await Promise.race([
+        supabase.auth.resetPasswordForEmail(normalizedEmail, {
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        }),
+        timeout<never>(15_000),
+      ]);
+
       if (resetError) throw resetError;
-      
+
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Erro ao processar solicitação.");
@@ -98,9 +103,12 @@ export function ForgotPasswordForm() {
     setError(null);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const { error: updateError } = await Promise.race([
+        supabase.auth.updateUser({ password: newPassword }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 15_000)
+        ),
+      ]);
       if (updateError) throw updateError;
       setSuccess(true);
     } catch (err: any) {

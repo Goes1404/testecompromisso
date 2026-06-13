@@ -44,11 +44,15 @@ export const EDUCATIONAL_CATEGORIES = [
 
 export const RESOURCE_TYPES = [
   "PDF",
+  "Documento",
+  "Apresentação",
+  "Planilha",
+  "Texto",
   "Video",
+  "Áudio",
   "E-book",
   "Artigo",
   "Quiz",
-  "Planilha",
   "Prova"
 ];
 

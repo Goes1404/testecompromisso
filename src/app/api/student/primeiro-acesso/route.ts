@@ -2,9 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { verifyRegistrationToken } from '@/lib/registration-token';
 
+const SUPABASE_TIMEOUT_MS = 10_000;
+
 function generateEmail(fullName: string): string {
   const normalize = (s: string) =>
-    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+    s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
 
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '';
@@ -17,7 +19,24 @@ function generateEmail(fullName: string): string {
   return `${first}${middleInitial}${last}@compromisso.com`;
 }
 
+function makeAdmin(signal: AbortSignal) {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: {
+        fetch: (url: RequestInfo | URL, options?: RequestInit) =>
+          fetch(url, { ...options, signal }),
+      },
+    }
+  );
+}
+
 export async function POST(request: Request) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), SUPABASE_TIMEOUT_MS);
+
   try {
     const body = await request.json();
     const { action } = body;
@@ -30,9 +49,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Configuração do servidor incompleta.' }, { status: 500 });
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    const supabaseAdmin = makeAdmin(controller.signal);
 
     // 1. AÇÃO: BUSCAR ALUNO
     if (action === 'search') {
@@ -58,9 +75,9 @@ export async function POST(request: Request) {
       }
 
       if (profiles && profiles.length > 0) {
-        return NextResponse.json({ 
-          found: true, 
-          user: { id: profiles[0].id, email: profiles[0].email, name: profiles[0].name } 
+        return NextResponse.json({
+          found: true,
+          user: { id: profiles[0].id, email: profiles[0].email, name: profiles[0].name }
         });
       } else {
         return NextResponse.json({ found: false });
@@ -102,7 +119,7 @@ export async function POST(request: Request) {
     // 3. AÇÃO: CADASTRAR NOVO
     if (action === 'register') {
       const { fullName, examTarget, password, institution, classroom, inviteToken } = body;
-      
+
       // Validação do Token de Convite
       if (!inviteToken) {
         return NextResponse.json({ error: 'O cadastro requer um link de convite válido.' }, { status: 401 });
@@ -135,8 +152,8 @@ export async function POST(request: Request) {
         email_confirm: true,
         user_metadata: {
           full_name: fullName,
-          profile_type: 'student', // Garantindo que seja student
-          role: 'student',        // Garantindo que seja student
+          profile_type: 'student',
+          role: 'student',
           exam_target: examTarget || 'ENEM',
           institution: institution || '',
           course: classroom || '',
@@ -178,10 +195,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Ação não permitida.' }, { status: 400 });
 
   } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      return NextResponse.json(
+        { error: 'O servidor demorou muito para responder. Tente novamente em instantes.' },
+        { status: 503 }
+      );
+    }
     console.error('[PRIMEIRO_ACESSO_CRITICAL]', error);
     return NextResponse.json(
       { error: error.message || 'Erro crítico no servidor.' },
       { status: 500 }
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

@@ -179,31 +179,40 @@ export default function CoordinatorDashboard() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl md:text-4xl font-black text-primary italic leading-none uppercase tracking-tighter">Gabinete de Gestão</h1>
-            <Badge className="bg-primary text-white border-none font-black text-[10px] px-4 py-1.5 shadow-xl uppercase tracking-widest">Coordenação</Badge>
+    <div className="space-y-6 animate-in fade-in duration-500 pb-20 px-1">
+      {/* HERO */}
+      <div className="relative aurora-dark rounded-[2rem] p-5 md:p-8 shadow-xl overflow-hidden">
+        <div className="absolute top-0 right-0 w-60 h-60 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse block" />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/45">Painel Admin</span>
+            </div>
+            <h1 className="text-[2.5rem] md:text-[3.5rem] font-black text-white italic tracking-tighter leading-none">
+              Compromisso<span className="text-primary">.</span>
+            </h1>
+            <p className="text-white/45 text-[10px] font-bold mt-2 tracking-wide uppercase">Coordenação · {new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</p>
           </div>
-          <p className="text-muted-foreground font-medium text-sm md:text-lg italic">Visão estratégica e controle industrial de rede.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Select value={timeFilter} onValueChange={setTimeFilter}>
-            <SelectTrigger className="w-full md:w-[180px] h-12 rounded-2xl bg-white border-none shadow-xl font-bold italic text-primary">
-              <Filter className="h-4 w-4 mr-2 text-accent" />
-              <SelectValue placeholder="Filtrar Período" />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl border-none shadow-2xl">
-              <SelectItem value="all" className="font-bold">Todo o Período</SelectItem>
-              <SelectItem value="week" className="font-bold">Última Semana</SelectItem>
-              <SelectItem value="month" className="font-bold">Último Mês</SelectItem>
-              <SelectItem value="year" className="font-bold">Último Ano</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={() => fetchDashboardData()} variant="ghost" size="icon" className="rounded-2xl h-12 w-12 bg-white shadow-xl">
-            <Activity className={`h-5 w-5 text-accent ${loading ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-3">
+            <Select value={timeFilter} onValueChange={setTimeFilter}>
+              <SelectTrigger className="h-11 rounded-2xl bg-white/8 border-white/15 text-white font-bold text-xs w-[150px]">
+                <Filter className="h-3.5 w-3.5 mr-2 text-primary" />
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-none shadow-2xl">
+                <SelectItem value="all" className="font-bold">Todo o Período</SelectItem>
+                <SelectItem value="week" className="font-bold">Última Semana</SelectItem>
+                <SelectItem value="month" className="font-bold">Último Mês</SelectItem>
+                <SelectItem value="year" className="font-bold">Último Ano</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={() => fetchDashboardData()} variant="ghost" size="icon" className="rounded-2xl h-11 w-11 bg-white/8 border border-white/15 hover:bg-white/15">
+              <Activity className={`h-4 w-4 text-white ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -242,91 +251,31 @@ export default function CoordinatorDashboard() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Alunos Ativos */}
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-5 md:p-8">
-            <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                <Users className="h-7 w-7" />
-              </div>
-              <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px] tracking-widest px-3 py-1">REDE</Badge>
-            </div>
-            <div className="mt-6">
-              <p className="text-4xl font-black text-primary leading-none italic">{stats.totalStudents}</p>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Alunos na Base</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Corpo Docente */}
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-5 md:p-8">
-            <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-purple-50 text-purple-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                <BookOpen className="h-7 w-7" />
-              </div>
-              <Badge variant="secondary" className="bg-muted text-muted-foreground border-none font-black text-[8px] tracking-widest px-3 py-1">EQUIPE</Badge>
-            </div>
-            <div className="mt-6">
-              <p className="text-4xl font-black text-primary leading-none italic">{stats.totalTeachers}</p>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Staff / Mentoria</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Trilhas Concluídas */}
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-5 md:p-8">
-            <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-green-50 text-green-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                <CheckCircle2 className="h-7 w-7" />
-              </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-700 border-none font-black text-[8px] tracking-widest px-3 py-1">SUCESSO</Badge>
-            </div>
-            <div className="mt-6 space-y-4">
-              <div>
-                <p className="text-4xl font-black text-primary leading-none italic">{stats.finishedTrails}</p>
-                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2">Trilhas Concluídas</p>
-              </div>
-              <div className="pt-3 border-t border-muted/10 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-black text-primary italic">{stats.startedTrails}</p>
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase">Engajados</p>
-                </div>
-                <div>
-                  <p className="text-sm font-black text-green-600 italic">{stats.avgFinishedPerStudent}</p>
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase">Média Geral</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Impacto Social */}
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <CardContent className="p-5 md:p-8">
-            <div className="flex items-center justify-between">
-              <div className="p-4 rounded-2xl bg-orange-50 text-orange-600 shadow-sm group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                <HandHeart className="h-7 w-7" />
-              </div>
-              <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-none font-black text-[8px] tracking-widest px-3 py-1">SOCIAL</Badge>
-            </div>
-            <div className="mt-6">
-              <p className="text-4xl font-black text-primary leading-none italic">{stats.eligibleStudents}</p>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-3">Elegíveis Isenção</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { icon: Users,       value: stats.totalStudents,    label: "Alunos",       sub: "Na base",        accent: "text-primary" },
+          { icon: BookOpen,    value: stats.totalTeachers,    label: "Staff",        sub: "Professores",    accent: "text-violet-600" },
+          { icon: CheckCircle2,value: stats.finishedTrails,   label: "Concluídas",   sub: "Trilhas",        accent: "text-emerald-600" },
+          { icon: HandHeart,   value: stats.eligibleStudents, label: "Isenção",      sub: "Elegíveis",      accent: "text-orange-500" },
+        ].map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm rounded-2xl bg-white overflow-hidden border border-slate-100 hover:shadow-md transition-shadow">
+            <CardContent className="p-4 md:p-5">
+              <stat.icon className={`h-4 w-4 ${stat.accent} mb-3`} strokeWidth={1.5} />
+              <p className={`text-3xl md:text-4xl font-black italic leading-none tabular-nums ${stat.accent}`}>{stat.value}</p>
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-2">{stat.label}</p>
+              <p className="text-[9px] text-slate-400 mt-0.5">{stat.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-8">
-        <Card className="lg:col-span-2 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-          <CardHeader className="p-5 md:p-10 pb-0">
-            <CardTitle className="text-2xl font-black text-primary italic">Rastro Operacional</CardTitle>
-            <CardDescription className="font-medium text-lg">Auditoria de atividades em tempo real.</CardDescription>
+        <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border border-slate-100">
+          <CardHeader className="p-5 md:p-8 pb-0">
+            <CardTitle className="text-xl font-black text-slate-900 italic">Atividade Recente</CardTitle>
+            <CardDescription className="text-sm">Últimas respostas de simulados na plataforma.</CardDescription>
           </CardHeader>
-          <CardContent className="p-5 md:p-10 space-y-3 md:space-y-4">
+          <CardContent className="p-5 md:p-8 space-y-2.5">
             {logs.length === 0 ? (
               <div className="py-16 text-center opacity-30 italic font-medium border-2 border-dashed rounded-[2rem]">Nenhuma atividade recente registrada.</div>
             ) : (
@@ -368,15 +317,15 @@ export default function CoordinatorDashboard() {
             </div>
           </Card>
 
-          <Card className="border-none shadow-2xl bg-primary text-white rounded-[3rem] overflow-hidden relative">
-            <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
-            <CardHeader className="pb-2 p-6 md:p-10 relative z-10">
-              <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 text-accent">
-                <AlertCircle className="h-5 w-5" />
+          <Card className="border-none shadow-xl aurora-dark rounded-[2.5rem] overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/15 rounded-full blur-[60px] pointer-events-none" />
+            <CardHeader className="pb-2 p-5 md:p-7 relative z-10">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 text-primary">
+                <AlertCircle className="h-4 w-4" />
                 Alertas de Risco
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-6 md:px-10 pb-6 md:pb-10 space-y-5 relative z-10">
+            <CardContent className="px-5 md:px-7 pb-5 md:pb-7 space-y-4 relative z-10">
               {riskAlerts.length === 0 ? (
                 <div className="py-12 text-center border-2 border-dashed border-white/10 rounded-[2rem] opacity-40">
                   <p className="text-[10px] font-bold italic tracking-widest uppercase">Rede em Conformidade Total</p>

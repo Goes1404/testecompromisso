@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,8 +106,9 @@ const teacherItems: NavItem[] = [
   {
     icon: Database, label: "Avaliação", id: "nav-teacher-avaliacao",
     children: [
-      { icon: Database,    label: "Banco de Questões",    href: "/dashboard/teacher/questions", id: "nav-teacher-questions" },
-      { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays",    id: "nav-teacher-essays" },
+      { icon: Database,    label: "Banco de Questões",    href: "/dashboard/teacher/questions",           id: "nav-teacher-questions" },
+      { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays",              id: "nav-teacher-essays" },
+      { icon: ClipboardList, label: "Correção de Simulado", href: "/dashboard/teacher/simulado-correcao", id: "nav-teacher-simulado-correcao" },
     ],
   },
   {
@@ -194,16 +195,17 @@ const secretaryItems: NavItem[] = [
   {
     icon: ClipboardCheck, label: "Operações", id: "nav-secretary-operacoes",
     children: [
-      { icon: ClipboardCheck, label: "Frequência / Chamada",    href: "/dashboard/secretary/attendance", id: "nav-secretary-attendance" },
-      { icon: FileCheck,      label: "Emissão de Documentos",  href: "/dashboard/secretary/documents",  id: "nav-secretary-documents" },
-      { icon: FolderOpen,     label: "Docs dos Alunos",        href: "/dashboard/secretary/uploads",    id: "nav-secretary-uploads",   badge: true },
-      { icon: ClipboardList,  label: "Checklist de Docs",      href: "/dashboard/admin/checklists",     id: "nav-secretary-checklists" },
+      { icon: ClipboardCheck, label: "Frequência / Chamada",    href: "/dashboard/secretary/attendance",       id: "nav-secretary-attendance" },
+      { icon: FileCheck,      label: "Emissão de Documentos",  href: "/dashboard/secretary/documents",        id: "nav-secretary-documents" },
+      { icon: FolderOpen,     label: "Docs dos Alunos",        href: "/dashboard/secretary/uploads",          id: "nav-secretary-uploads",   badge: true },
+      { icon: ClipboardList,  label: "Checklist de Docs",      href: "/dashboard/admin/checklists",           id: "nav-secretary-checklists" },
+      { icon: Trophy,         label: "Importar Simulado",      href: "/dashboard/secretary/simulado-import", id: "nav-secretary-simulado" },
     ],
   },
   {
     icon: Bell, label: "Comunicação", id: "nav-secretary-comunicacao",
     children: [
-      { icon: Bell,         label: "Comunicados Globais", href: "/dashboard/teacher/communication", id: "nav-secretary-communication" },
+      { icon: Bell,         label: "Comunicados Globais", href: "/dashboard/secretary/communication", id: "nav-secretary-communication" },
       { icon: CalendarDays, label: "Calendário Escolar",   href: "/dashboard/admin/calendar",        id: "nav-secretary-calendar" },
     ],
   },

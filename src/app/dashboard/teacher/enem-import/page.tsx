@@ -139,7 +139,7 @@ export default function TeacherEnemImportPage() {
                 <p className="text-xs text-muted-foreground font-medium">A prova já aparece na lista de Provas Completas</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-slate-50 rounded-2xl p-4 text-center">
                 <p className="text-3xl font-black text-primary">{result.total}</p>
                 <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mt-1">Questões na API</p>

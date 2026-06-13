@@ -128,7 +128,7 @@ export default function SecretaryIncomePage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Total de Alunos"
           value={stats.total}
@@ -348,7 +348,7 @@ export default function SecretaryIncomePage() {
                                     <ThresholdBar perCapita={u.income_per_capita} threshold={THRESHOLD} />
 
                                     {/* Resumo numérico */}
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                       <InfoBox label="Renda Familiar Total" value={`R$ ${fmt(u.family_income)}`} />
                                       <InfoBox label="Moradores" value={`${u.family_size || 1} pessoa${(u.family_size || 1) !== 1 ? "s" : ""}`} />
                                       <InfoBox

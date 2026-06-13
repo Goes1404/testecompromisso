@@ -19,12 +19,18 @@ import {
   File,
   Eye,
   BookOpen,
+  Presentation,
+  FileSpreadsheet,
+  FileType,
+  FileAudio,
+  FileArchive,
 } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { EDUCATIONAL_CATEGORIES } from "@/lib/constants";
+import { DOCUMENT_ACCEPT, detectKind, toClassMaterialType, describeFile, type FileKind } from "@/lib/file-types";
 
 type ClassMaterial = {
   id: string;
@@ -64,10 +70,6 @@ const TARGET_GROUPS = [
 
 const blank = { title: "", description: "", subject: "none", file_type: "pdf", target_group: "all", session_id: "none" };
 
-function getTypeIcon(type: string) {
-  return FILE_TYPES.find((t) => t.value === type)?.icon ?? File;
-}
-
 function getTypeBadgeColor(type: string) {
   const map: Record<string, string> = {
     pdf: "bg-red-500/15 text-red-400 border-red-500/25",
@@ -77,6 +79,30 @@ function getTypeBadgeColor(type: string) {
     outro: "bg-white/5 text-white/70 border-white/8",
   };
   return map[type] ?? map.outro;
+}
+
+// Ícone por "kind" amplo (PowerPoint, Word, Excel, etc.)
+const KIND_ICON: Record<FileKind, any> = {
+  pdf: FileText,
+  documento: FileType,
+  apresentacao: Presentation,
+  planilha: FileSpreadsheet,
+  texto: FileText,
+  imagem: Image,
+  video: Video,
+  audio: FileAudio,
+  compactado: FileArchive,
+  outro: File,
+};
+
+// Rótulo + ícone para exibição: deriva do arquivo (extensão) quando possível,
+// senão usa o tipo escolhido manualmente.
+function describeMaterial(m: { file_type: string; file_url: string }): { label: string; Icon: any } {
+  if (m.file_type === "link") return { label: "Link", Icon: Link2 };
+  const detected = describeFile(m.file_url);
+  if (detected.kind !== "outro") return { label: detected.label, Icon: KIND_ICON[detected.kind] };
+  const ft = FILE_TYPES.find((t) => t.value === m.file_type);
+  return { label: ft?.label ?? "Arquivo", Icon: ft?.icon ?? File };
 }
 
 export default function TeacherMaterialsPage() {
@@ -383,12 +409,23 @@ export default function TeacherMaterialsPage() {
                 </button>
               </div>
               {useUpload ? (
-                <input
-                  key="file-input"
-                  type="file"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-slate-800"
-                />
+                <>
+                  <input
+                    key="file-input"
+                    type="file"
+                    accept={DOCUMENT_ACCEPT}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setFile(f);
+                      // Detecta automaticamente o tipo a partir da extensão
+                      if (f) setForm((prev) => ({ ...prev, file_type: toClassMaterialType(detectKind(f.name)) }));
+                    }}
+                    className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-slate-800"
+                  />
+                  <p className="text-[9px] font-bold text-slate-400 mt-1 leading-relaxed">
+                    Aceita PDF, Word, PowerPoint, Excel, texto, imagens, vídeo, áudio e mais.
+                  </p>
+                </>
               ) : (
                 <input
                   key="url-input"
@@ -472,7 +509,7 @@ export default function TeacherMaterialsPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((m) => {
-            const Icon = getTypeIcon(m.file_type);
+            const { label: typeLabel, Icon } = describeMaterial(m);
             const viewCount = m.material_views?.[0]?.count ?? 0;
             return (
               <div
@@ -491,7 +528,7 @@ export default function TeacherMaterialsPage() {
                     </div>
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <Badge className={`text-[8px] font-black border px-2 h-4 ${getTypeBadgeColor(m.file_type)}`}>
-                        {FILE_TYPES.find((t) => t.value === m.file_type)?.label ?? m.file_type}
+                        {typeLabel}
                       </Badge>
                       {m.subject && (
                         <Badge className="text-[8px] font-black border-none bg-white shadow-sm text-slate-600 px-2 h-4">

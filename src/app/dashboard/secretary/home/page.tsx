@@ -16,12 +16,14 @@ import {
   FileCheck,
   TrendingUp,
   UserPlus,
-  ArrowRight
+  ArrowRight,
+  Megaphone
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
+import { StudentQuickSearch } from "@/components/StudentQuickSearch";
 
 interface AbsenteeStudent {
   id: string;
@@ -164,13 +166,16 @@ export default function SecretaryDashboard() {
             Controle de matrículas, frequências, emissão de documentos e suporte ao estudante.
           </p>
         </div>
-        <Button onClick={() => fetchDashboardData()} variant="ghost" size="icon" className="rounded-2xl h-12 w-12 bg-white shadow-xl">
+        <Button onClick={() => fetchDashboardData()} variant="ghost" size="icon" className="rounded-2xl h-12 w-12 bg-white shadow-xl shrink-0">
           <Activity className="h-5 w-5 text-primary" />
         </Button>
       </div>
 
+      {/* Busca Global de Alunos */}
+      <StudentQuickSearch />
+
       {/* Ações Rápidas (CEO style operational hubs) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Hub Matrículas */}
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-300">
           <CardContent className="p-6 md:p-8 flex flex-col justify-between h-full">
@@ -311,6 +316,7 @@ export default function SecretaryDashboard() {
           </CardHeader>
           <div className="space-y-3">
             {[
+              { label: 'Comunicados em Massa', href: '/secretary/communication', icon: Megaphone, color: 'text-amber-500 bg-amber-50' },
               { label: 'Calendário de Eventos', href: '/admin/calendar', icon: Calendar, color: 'text-blue-500 bg-blue-50' },
               { label: 'Lista de Chamadas (Professor)', href: '/teacher/attendance', icon: BookOpen, color: 'text-purple-500 bg-purple-50' },
               { label: 'Configurações de Perfil', href: '/settings', icon: Users, color: 'text-slate-600 bg-slate-50' },
