@@ -18,15 +18,15 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function registerGabriel() {
-    const name = 'Gabriel Antônio de Azevedo Fonseca';
-    const email = 'gabrielafonseca@compromisso.com';
-    const institution = 'Ulysses Silveira Guimarães';
-    const sala = 'sala 1';
-    const periodo = 'manhã';
+async function registerAna() {
+    const name = 'Ana Julya Martins de Almeida';
+    const email = 'anajulyamartins@compromisso.com';
+    const institution = 'colaso';
+    const sala = 'sala 09';
+    const periodo = 'manhã'; // Defaulting to manhã, but we can just use null or omit if not required
     const password = 'compromisso2026';
 
-    console.log(`Registering Gabriel: ${email}`);
+    console.log(`Registering Ana: ${email}`);
 
     // 1. Create Auth User
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -42,26 +42,32 @@ async function registerGabriel() {
     if (authError) {
         if (authError.message.includes('already registered')) {
             console.log('Email already registered in Auth. Checking profile...');
-            // Maybe find him and update?
-            const { data: users } = await supabase.auth.admin.listUsers();
-            const existingUser = users.find(u => u.email === email);
-            if (existingUser) {
-                console.log(`Found existing user with ID: ${existingUser.id}`);
-                // Update profile if needed
-                return;
-            }
+        } else {
+            console.error('Error creating auth user:', authError);
+            return;
         }
-        console.error('Error creating auth user:', authError);
-        return;
     }
 
-    const userId = authData.user.id;
-    console.log(`Auth user created with ID: ${userId}`);
+    let userId;
+    if (authData?.user) {
+        userId = authData.user.id;
+        console.log(`Auth user created with ID: ${userId}`);
+    } else {
+        const { data: users } = await supabase.auth.admin.listUsers();
+        const existingUser = users.find(u => u.email === email);
+        if (existingUser) {
+             userId = existingUser.id;
+             console.log(`Found existing user with ID: ${userId}`);
+        } else {
+             console.error('User not created and not found.');
+             return;
+        }
+    }
 
     // 2. Create Profile
     const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
+        .upsert({
             id: userId,
             name: name,
             full_name: name,
@@ -76,11 +82,13 @@ async function registerGabriel() {
         });
 
     if (profileError) {
-        console.error('Error creating profile:', profileError);
+        console.error('Error creating/updating profile:', profileError);
         return;
     }
 
     console.log('Profile created successfully.');
+    console.log(`Email: ${email}`);
+    console.log(`Password: ${password}`);
 }
 
-registerGabriel();
+registerAna();

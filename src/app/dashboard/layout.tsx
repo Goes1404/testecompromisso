@@ -15,6 +15,7 @@ import Image from "next/image";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { LoadingShell } from "@/components/LoadingShell";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { UrgentNotice } from "@/components/UrgentNotice";
 import { PushPermissionBanner } from "@/components/push-permission-banner";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
@@ -375,8 +376,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (hasHydrated && !isUserLoading) {
       if (!user) {
         router.replace("/login");
-      } else if (user.user_metadata?.must_change_password && pathname !== "/dashboard/first-access") {
-        window.location.assign("/dashboard/first-access");
       }
     }
   }, [user, isUserLoading, router, hasHydrated, pathname]);

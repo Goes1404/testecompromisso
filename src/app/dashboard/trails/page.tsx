@@ -25,6 +25,17 @@ import {
   BookOpen,
   SlidersHorizontal,
   X,
+  Folder,
+  FolderOpen,
+  ArrowLeft,
+  Calculator,
+  BookOpenText,
+  Globe,
+  Atom,
+  Dna,
+  Compass,
+  HelpCircle,
+  Users as UsersIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -41,6 +52,96 @@ function getSafeTrailImage(url: string | null | undefined, title: string, catego
     return getTrailCoverUrl(title, category);
   }
   return url;
+}
+
+const SUBJECT_CONFIGS: Record<string, { color: string, bg: string, border: string, glow: string, icon: any }> = {
+  "Matemática": { 
+    color: "text-orange-500", 
+    bg: "bg-orange-500/10", 
+    border: "border-orange-500/20 hover:border-orange-500/40", 
+    glow: "group-hover:shadow-orange-500/10", 
+    icon: Calculator 
+  },
+  "Linguagens": { 
+    color: "text-indigo-500", 
+    bg: "bg-indigo-500/10", 
+    border: "border-indigo-500/20 hover:border-indigo-500/40", 
+    glow: "group-hover:shadow-indigo-500/10", 
+    icon: BookOpenText 
+  },
+  "Física": { 
+    color: "text-blue-500", 
+    bg: "bg-blue-500/10", 
+    border: "border-blue-500/20 hover:border-blue-500/40", 
+    glow: "group-hover:shadow-blue-500/10", 
+    icon: Atom 
+  },
+  "Biologia": { 
+    color: "text-emerald-500", 
+    bg: "bg-emerald-500/10", 
+    border: "border-emerald-500/20 hover:border-emerald-500/40", 
+    glow: "group-hover:shadow-emerald-500/10", 
+    icon: Dna 
+  },
+  "História": { 
+    color: "text-amber-500", 
+    bg: "bg-amber-500/10", 
+    border: "border-amber-500/20 hover:border-amber-500/40", 
+    glow: "group-hover:shadow-amber-500/10", 
+    icon: Compass 
+  },
+  "Geografia": { 
+    color: "text-teal-500", 
+    bg: "bg-teal-500/10", 
+    border: "border-teal-500/20 hover:border-teal-500/40", 
+    glow: "group-hover:shadow-teal-500/10", 
+    icon: Globe 
+  },
+  "Atualidades": { 
+    color: "text-rose-500", 
+    bg: "bg-rose-500/10", 
+    border: "border-rose-500/20 hover:border-rose-500/40", 
+    glow: "group-hover:shadow-rose-500/10", 
+    icon: Zap 
+  },
+  "Literatura": { 
+    color: "text-pink-500", 
+    bg: "bg-pink-500/10", 
+    border: "border-pink-500/20 hover:border-pink-500/40", 
+    glow: "group-hover:shadow-pink-500/10", 
+    icon: BookOpen 
+  },
+  "Química": { 
+    color: "text-cyan-500", 
+    bg: "bg-cyan-500/10", 
+    border: "border-cyan-500/20 hover:border-cyan-500/40", 
+    glow: "group-hover:shadow-cyan-500/10", 
+    icon: Atom 
+  },
+  "Filosofia": { 
+    color: "text-violet-500", 
+    bg: "bg-violet-500/10", 
+    border: "border-violet-500/20 hover:border-violet-500/40", 
+    glow: "group-hover:shadow-violet-500/10", 
+    icon: HelpCircle 
+  },
+  "Sociologia": { 
+    color: "text-yellow-600", 
+    bg: "bg-yellow-500/10", 
+    border: "border-yellow-500/20 hover:border-yellow-500/40", 
+    glow: "group-hover:shadow-yellow-500/10", 
+    icon: UsersIcon 
+  },
+};
+
+function getSubjectConfig(subject: string) {
+  return SUBJECT_CONFIGS[subject] || {
+    color: "text-slate-500",
+    bg: "bg-slate-500/10",
+    border: "border-slate-500/20 hover:border-slate-500/40",
+    glow: "group-hover:shadow-slate-500/10",
+    icon: Folder
+  };
 }
 
 const AUDIENCE_FILTERS = [
@@ -166,6 +267,35 @@ export default function LearningTrailsPage() {
       return matchesSearch && matchesCategory && matchesAudience && matchesType;
     });
   }, [dbTrails, searchTerm, activeCategory, activeAudience, typeFilter]);
+
+  const subjectFolders = useMemo(() => {
+    if (!Array.isArray(dbTrails)) return [];
+    
+    const grouped: Record<string, { completedSum: number, total: number }> = {};
+    
+    dbTrails.forEach(trail => {
+      const matchesAudience = activeAudience === "all" || trail?.target_audience === activeAudience || trail?.target_audience === "both" || !trail?.target_audience;
+      const matchesType = typeFilter === 'all' || (trail?.trail_type ?? 'standalone') === typeFilter;
+      
+      if (matchesAudience && matchesType) {
+        const cat = trail.category || "Outros";
+        if (!grouped[cat]) {
+          grouped[cat] = { completedSum: 0, total: 0 };
+        }
+        
+        const userProgress = allProgress?.find(p => p.trail_id === trail.id);
+        const percentage = userProgress?.percentage || 0;
+        grouped[cat].completedSum += percentage;
+        grouped[cat].total += 1;
+      }
+    });
+
+    return Object.entries(grouped).map(([name, data]) => ({
+      name,
+      count: data.total,
+      avgProgress: Math.round(data.completedSum / data.total)
+    })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [dbTrails, activeAudience, typeFilter, allProgress]);
 
   const hasActiveFilters = activeCategory !== "Todos" || activeAudience !== "all" || typeFilter !== "all" || searchTerm !== "";
 
@@ -304,145 +434,249 @@ export default function LearningTrailsPage() {
         </div>
       </div>
 
+      {/* Pasta Header */}
+      {activeCategory !== "Todos" && !searchTerm && (
+        <div className="flex flex-col gap-4 bg-slate-50/50 border border-slate-100 rounded-3xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setActiveCategory("Todos")}
+              className="flex items-center gap-2 text-xs font-black uppercase text-slate-500 hover:text-primary transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para as matérias
+            </button>
+            <span className="text-[10px] font-black bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full uppercase tracking-wider">
+              Pasta
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`h-12 w-12 rounded-2xl ${getSubjectConfig(activeCategory).bg} flex items-center justify-center`}>
+              <FolderOpen className={`h-6 w-6 ${getSubjectConfig(activeCategory).color}`} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black italic tracking-tighter text-slate-800 leading-none">
+                {activeCategory}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Visualizando todas as trilhas contidas nesta pasta.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Contagem de resultados */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-          {filteredTrails.length === 0
-            ? 'Nenhuma trilha encontrada'
-            : `${filteredTrails.length} trilha${filteredTrails.length !== 1 ? 's' : ''}`}
-        </p>
-        {hasActiveFilters && (
-          <button onClick={clearFilters} className="text-xs text-accent font-bold hover:underline">
-            Ver todas
-          </button>
-        )}
-      </div>
-
-      {/* Grid de Trilhas */}
-      {filteredTrails.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
-          <div className="h-20 w-20 rounded-[2rem] bg-slate-100 flex items-center justify-center">
-            <BookOpen className="h-9 w-9 text-slate-300" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-lg font-black text-primary italic">Nenhuma trilha encontrada</p>
-            <p className="text-sm text-muted-foreground">Tente ajustar os filtros ou pesquisar outro termo.</p>
-          </div>
-          <Button onClick={clearFilters} variant="outline" className="rounded-2xl font-black text-xs uppercase tracking-wider mt-2">
-            Limpar filtros
-          </Button>
+      {(activeCategory !== "Todos" || searchTerm) && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+            {filteredTrails.length === 0
+              ? 'Nenhuma trilha encontrada'
+              : `${filteredTrails.length} trilha${filteredTrails.length !== 1 ? 's' : ''}`}
+          </p>
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className="text-xs text-accent font-bold hover:underline">
+              Ver todas
+            </button>
+          )}
         </div>
+      )}
+
+      {/* Folder or Trails Grid */}
+      {activeCategory === "Todos" && !searchTerm ? (
+        subjectFolders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
+            <div className="h-20 w-20 rounded-[2rem] bg-slate-100 flex items-center justify-center">
+              <BookOpen className="h-9 w-9 text-slate-300" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-black text-primary italic">Nenhuma trilha cadastrada</p>
+              <p className="text-sm text-muted-foreground">Novas aulas estarão disponíveis em breve.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {subjectFolders.map((folder) => {
+              const config = getSubjectConfig(folder.name);
+              const FolderIcon = config.icon;
+              
+              return (
+                <div
+                  key={folder.name}
+                  onClick={() => setActiveCategory(folder.name)}
+                  className="group relative cursor-pointer text-left"
+                >
+                  {/* Folder Top Tab */}
+                  <div className="flex -mb-[1px] ml-4 transition-transform group-hover:translate-y-[-2px] duration-300">
+                    <div className={`h-7 px-4 rounded-t-xl font-black text-[9px] uppercase tracking-widest flex items-center border-t border-x bg-white ${config.color} ${config.border} shadow-[0_-4px_10px_rgba(0,0,0,0.02)]`}>
+                      {folder.name}
+                    </div>
+                    <div className="w-8 h-7 bg-slate-50 border-b border-transparent opacity-50" />
+                  </div>
+                  
+                  {/* Folder Main Body */}
+                  <div className={`rounded-2xl rounded-tl-none border bg-white p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-48 relative overflow-hidden ${config.border}`}>
+                    <FolderIcon className={`absolute -right-8 -bottom-8 h-32 w-32 ${config.color} opacity-5 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12 pointer-events-none`} />
+                    
+                    <div className="relative z-10 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className={`h-11 w-11 rounded-xl ${config.bg} flex items-center justify-center`}>
+                          <Folder className={`h-6 w-6 ${config.color}`} />
+                        </div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          {folder.count} {folder.count === 1 ? 'trilha' : 'trilhas'}
+                        </span>
+                      </div>
+                      
+                      <h3 className="text-xl font-black text-slate-800 italic uppercase tracking-tight mt-2 truncate">
+                        {folder.name}
+                      </h3>
+                    </div>
+
+                    <div className="relative z-10 pt-4 border-t border-slate-100 mt-auto">
+                      <div className="flex justify-between items-center text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                        <span>Progresso Médio</span>
+                        <span className={config.color}>{folder.avgProgress}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-1000"
+                          style={{ width: `${folder.avgProgress}%`, backgroundColor: 'currentColor', color: 'hsl(var(--primary))' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredTrails.map((trail) => {
-            const userProgress = allProgress?.find(p => p.trail_id === trail.id);
-            const percentage = userProgress?.percentage || 0;
-            const isPinned = !!userProgress;
-            const teacherInitial = (trail.teacher_name || "M").charAt(0).toUpperCase();
+        /* Trails Grid */
+        filteredTrails.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
+            <div className="h-20 w-20 rounded-[2rem] bg-slate-100 flex items-center justify-center">
+              <BookOpen className="h-9 w-9 text-slate-300" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-black text-primary italic">Nenhuma trilha encontrada</p>
+              <p className="text-sm text-muted-foreground">Tente ajustar os filtros ou pesquisar outro termo.</p>
+            </div>
+            <Button onClick={clearFilters} variant="outline" className="rounded-2xl font-black text-xs uppercase tracking-wider mt-2">
+              Limpar filtros
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+            {filteredTrails.map((trail) => {
+              const userProgress = allProgress?.find(p => p.trail_id === trail.id);
+              const percentage = userProgress?.percentage || 0;
+              const isPinned = !!userProgress;
+              const teacherInitial = (trail.teacher_name || "M").charAt(0).toUpperCase();
 
-            return (
-              <Card key={trail.id} className="gradient-border group overflow-hidden border-none shadow-xl hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 bg-white rounded-[2.5rem] flex flex-col h-full">
-                <div className="relative aspect-video overflow-hidden shrink-0">
-                  <Image
-                    src={getSafeTrailImage(trail.image_url, trail.title, trail.category)}
-                    alt={trail.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = getTrailCoverUrl(trail.title, trail.category);
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-60" />
-                  <div className="absolute top-5 left-5 flex gap-2">
-                    <Badge className="bg-white/95 backdrop-blur-md text-primary border-none shadow-lg px-4 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-2">
-                      <Zap className="h-3.5 w-3.5 text-accent fill-accent" />
-                      {trail.category}
-                    </Badge>
-                    {trail.trail_type === 'serie' ? (
-                      <Badge className="bg-purple-600/90 backdrop-blur-md text-white border-none shadow-lg px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5">
-                        <ListVideo className="h-3 w-3" /> SÉRIE
+              return (
+                <Card key={trail.id} className="gradient-border group overflow-hidden border-none shadow-xl hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 bg-white rounded-[2.5rem] flex flex-col h-full">
+                  <div className="relative aspect-video overflow-hidden shrink-0">
+                    <Image
+                      src={getSafeTrailImage(trail.image_url, trail.title, trail.category)}
+                      alt={trail.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = getTrailCoverUrl(trail.title, trail.category);
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent opacity-60" />
+                    <div className="absolute top-5 left-5 flex gap-2">
+                      <Badge className="bg-white/95 backdrop-blur-md text-primary border-none shadow-lg px-4 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-2">
+                        <Zap className="h-3.5 w-3.5 text-accent fill-accent" />
+                        {trail.category}
                       </Badge>
-                    ) : (
-                      <Badge className="bg-blue-500/90 backdrop-blur-md text-white border-none shadow-lg px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5">
-                        <Film className="h-3 w-3" /> AULA
-                      </Badge>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => handlePinTrail(trail.id)}
-                    disabled={pinningId === trail.id}
-                    aria-label={isPinned ? "Remover da Home" : "Fixar na Home"}
-                    className={`absolute top-5 right-5 h-10 w-10 rounded-full flex items-center justify-center transition-all shadow-xl active:scale-90 ${isPinned
-                        ? 'bg-accent text-accent-foreground'
-                        : 'bg-white/20 backdrop-blur-md text-white hover:bg-white hover:text-primary'
-                      }`}
-                  >
-                    {pinningId === trail.id ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : isPinned ? (
-                      <CheckCircle2 className="h-5 w-5" />
-                    ) : (
-                      <Pin className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-
-                <CardContent className="p-8 flex-1 flex flex-col">
-                  <div className="space-y-3 flex-1">
-                    <h3 className="text-2xl font-black text-primary italic leading-tight group-hover:text-accent transition-colors">
-                      {trail.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground font-medium italic line-clamp-3 opacity-80 leading-relaxed">
-                      {trail.description || "Inicie agora esta jornada técnica projetada para fortalecer sua base acadêmica e acelerar sua aprovação."}
-                    </p>
-                  </div>
-
-                  <div className="mt-8 space-y-3">
-                    <div className="flex justify-between items-center text-[10px] font-black text-primary/40 uppercase tracking-widest">
-                      <span className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-accent" />
-                        {percentage}% Evoluído
-                      </span>
-                      <span>{percentage === 100 ? 'Finalizada' : percentage > 0 ? 'Em andamento' : 'Não iniciada'}</span>
+                      {trail.trail_type === 'serie' ? (
+                        <Badge className="bg-purple-600/90 backdrop-blur-md text-white border-none shadow-lg px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5">
+                          <ListVideo className="h-3 w-3" /> SÉRIE
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-blue-500/90 backdrop-blur-md text-white border-none shadow-lg px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5">
+                          <Film className="h-3 w-3" /> AULA
+                        </Badge>
+                      )}
                     </div>
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden shadow-inner border border-black/5">
-                      <div
-                        className="h-full bg-accent transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
-                        style={{ width: `${percentage}%` }}
-                        role="progressbar"
-                        aria-valuenow={percentage}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
 
-                <div className="px-8 pb-8 pt-0 mt-auto">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full pt-6 border-t border-muted/10 gap-4 sm:gap-0">
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                      {/* Avatar baseado em inicial — sem dependência de URL externa */}
-                      <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shrink-0 shadow-sm">
-                        <span className="text-white font-black text-sm">{teacherInitial}</span>
+                    <button
+                      onClick={() => handlePinTrail(trail.id)}
+                      disabled={pinningId === trail.id}
+                      aria-label={isPinned ? "Remover da Home" : "Fixar na Home"}
+                      className={`absolute top-5 right-5 h-10 w-10 rounded-full flex items-center justify-center transition-all shadow-xl active:scale-90 ${isPinned
+                          ? 'bg-accent text-accent-foreground'
+                          : 'bg-white/20 backdrop-blur-md text-white hover:bg-white hover:text-primary'
+                        }`}
+                    >
+                      {pinningId === trail.id ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : isPinned ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : (
+                        <Pin className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+
+                  <CardContent className="p-8 flex-1 flex flex-col">
+                    <div className="space-y-3 flex-1">
+                      <h3 className="text-2xl font-black text-primary italic leading-tight group-hover:text-accent transition-colors">
+                        {trail.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-medium italic line-clamp-3 opacity-80 leading-relaxed">
+                        {trail.description || "Inicie agora esta jornada técnica projetada para fortalecer sua base acadêmica e acelerar sua aprovação."}
+                      </p>
+                    </div>
+
+                    <div className="mt-8 space-y-3">
+                      <div className="flex justify-between items-center text-[10px] font-black text-primary/40 uppercase tracking-widest">
+                        <span className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-accent" />
+                          {percentage}% Evoluído
+                        </span>
+                        <span>{percentage === 100 ? 'Finalizada' : percentage > 0 ? 'Em andamento' : 'Não iniciada'}</span>
                       </div>
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <span className="text-[10px] font-black text-primary italic leading-none truncate">{trail.teacher_name || "Mentor da Rede"}</span>
-                        <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Especialista</span>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden shadow-inner border border-black/5">
+                        <div
+                          className="h-full bg-accent transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                          style={{ width: `${percentage}%` }}
+                          role="progressbar"
+                          aria-valuenow={percentage}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                        />
                       </div>
                     </div>
-                    <Button asChild className="btn-shimmer w-full sm:w-auto bg-primary text-white font-black text-[10px] uppercase h-12 px-6 sm:px-8 rounded-2xl shadow-xl active:scale-95 transition-[transform,box-shadow] [touch-action:manipulation] group/btn border-none shrink-0">
-                      <Link href={`/dashboard/classroom/${trail.id}`}>
-                        Entrar <ChevronRight className="h-4 w-4 ml-2 text-accent group-hover/btn:translate-x-1 transition-transform" />
-                      </Link>
-                    </Button>
+                  </CardContent>
+
+                  <div className="px-8 pb-8 pt-0 mt-auto">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full pt-6 border-t border-muted/10 gap-4 sm:gap-0">
+                      <div className="flex items-center gap-3 w-full sm:w-auto">
+                        {/* Avatar baseado em inicial — sem dependência de URL externa */}
+                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shrink-0 shadow-sm">
+                          <span className="text-white font-black text-sm">{teacherInitial}</span>
+                        </div>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span className="text-[10px] font-black text-primary italic leading-none truncate">{trail.teacher_name || "Mentor da Rede"}</span>
+                          <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Especialista</span>
+                        </div>
+                      </div>
+                      <Button asChild className="btn-shimmer w-full sm:w-auto bg-primary text-white font-black text-[10px] uppercase h-12 px-6 sm:px-8 rounded-2xl shadow-xl active:scale-95 transition-[transform,box-shadow] [touch-action:manipulation] group/btn border-none shrink-0">
+                        <Link href={`/dashboard/classroom/${trail.id}`}>
+                          Entrar <ChevronRight className="h-4 w-4 ml-2 text-accent group-hover/btn:translate-x-1 transition-transform" />
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+                </Card>
+              );
+            })}
+          </div>
+        )
       )}
     </div>
   );

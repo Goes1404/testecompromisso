@@ -22,7 +22,7 @@ async function findOrCreatePaulo() {
     const email = 'paulobaraujo@compromisso.com';
     const name = 'Paulo B Araujo';
     const subject = 'Química';
-    const password = 'Compromisso2026!';
+    const password = 'compromisso2026';
 
     console.log(`Checking for user: ${email}`);
 
@@ -67,7 +67,7 @@ async function findOrCreatePaulo() {
         email_confirm: true,
         user_metadata: { 
             full_name: name,
-            must_change_password: true
+            must_change_password: false
         }
     });
 

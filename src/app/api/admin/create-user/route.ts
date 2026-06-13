@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
-        must_change_password: true,
+        must_change_password: false,
         profile_type: profileType || role,
         institution: institution || '',
         exam_target: examTarget || 'ENEM',

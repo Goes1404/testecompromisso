@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useState } from "react";
@@ -98,7 +98,7 @@ export function AccessibilityWidget() {
   
   return (
     <div 
-      className={`fixed ${isInputHeavyPage ? 'bottom-28 md:bottom-10' : 'bottom-6'} right-6 z-40 flex flex-col gap-3 items-end transition-all duration-500`}
+      className={`fixed ${isInputHeavyPage ? 'bottom-28 lg:bottom-10' : 'bottom-24 lg:bottom-6'} right-6 z-40 flex flex-col gap-3 items-end transition-all duration-500`}
     >
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>

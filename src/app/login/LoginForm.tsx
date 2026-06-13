@@ -38,10 +38,6 @@ export function LoginForm() {
         return;
       }
 
-      if (data.user.user_metadata?.must_change_password) {
-        window.location.assign("/dashboard/first-access");
-        return;
-      }
       window.location.assign("/dashboard");
     } catch {
       setLoading(false);
