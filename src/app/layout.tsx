@@ -48,7 +48,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    // Force immediate update check so the fixed SW (no fetch handler)
+                    // replaces any broken cached SW as quickly as possible.
+                    reg.update().catch(function() {});
+
+                    // When a new SW takes control, reload once to ensure all
+                    // in-flight requests go through the updated SW.
+                    var reloading = false;
+                    navigator.serviceWorker.addEventListener('controllerchange', function() {
+                      if (!reloading) { reloading = true; window.location.reload(); }
+                    });
+                  }).catch(function() {});
                 });
               }
             `,

@@ -3,7 +3,21 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Cloudflare Pages compatibility
-  // output: 'standalone', 
+  // output: 'standalone',
+  async headers() {
+    return [
+      {
+        // Service worker must never be served from HTTP cache — browsers need
+        // to detect the updated file immediately on every navigation so the old
+        // SW (which had a broken fetch passthrough) is replaced as fast as possible.
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+        ],
+      },
+    ];
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
