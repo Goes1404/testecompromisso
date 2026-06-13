@@ -188,15 +188,7 @@ export function LoginForm() {
               )}
             </motion.button>
 
-            {/* Forgot password */}
-            <div className="flex justify-center pt-2">
-              <Link
-                href="/forgot-password"
-                className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-orange-400 transition-colors"
-              >
-                Esqueceu seus dados de acesso?
-              </Link>
-            </div>
+
           </motion.form>
 
           {/* ── Trust badge ── */}
