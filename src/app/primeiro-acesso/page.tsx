@@ -62,19 +62,23 @@ function PrimeiroAcessoContent() {
     if (!fullName.trim()) return;
     setError('');
     setIsLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25_000);
     try {
       const res = await fetch('/api/student/primeiro-acesso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'search', fullName }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       if (data.found && data.user) { setUserFound(data.user); setStep('reset'); }
       else setStep('register');
     } catch (err: any) {
-      setError(err.message || 'Erro ao buscar aluno.');
+      setError(err.name === 'AbortError' ? 'Tempo esgotado. Verifique sua conexão e tente novamente.' : (err.message || 'Erro ao buscar aluno.'));
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
@@ -87,19 +91,23 @@ function PrimeiroAcessoContent() {
     if (password !== confirmPassword) { setError('As senhas não coincidem.'); return; }
     setError('');
     setIsLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25_000);
     try {
       const res = await fetch('/api/student/primeiro-acesso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reset', userId: userFound.id, newPassword: password, phone: phone.replace(/\D/g, '') }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setStep('success');
       setTimeout(() => router.push('/login'), 4000);
     } catch (err: any) {
-      setError(err.message || 'Erro ao redefinir senha.');
+      setError(err.name === 'AbortError' ? 'Tempo esgotado. Verifique sua conexão e tente novamente.' : (err.message || 'Erro ao redefinir senha.'));
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
@@ -110,11 +118,14 @@ function PrimeiroAcessoContent() {
     if (password !== confirmPassword) { setError('As senhas não coincidem.'); return; }
     setError('');
     setIsLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25_000);
     try {
       const res = await fetch('/api/student/primeiro-acesso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'register', fullName, examTarget, password, institution, classroom: sala, inviteToken }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -122,8 +133,9 @@ function PrimeiroAcessoContent() {
       setStep('success');
       setTimeout(() => router.push('/login'), 4000);
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar cadastro.');
+      setError(err.name === 'AbortError' ? 'Tempo esgotado. Verifique sua conexão e tente novamente.' : (err.message || 'Erro ao criar cadastro.'));
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };

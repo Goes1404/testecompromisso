@@ -128,11 +128,13 @@ export default function FirstAccessPage() {
     if (!step1OK) { setError("Verifique os requisitos de senha antes de continuar."); return; }
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.updateUser({
-        password: newPassword,
-        data: { must_change_password: false },
-      });
-      if (err) throw err;
+      const result = await Promise.race([
+        supabase.auth.updateUser({ password: newPassword, data: { must_change_password: false } }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 15_000)
+        ),
+      ]);
+      if (result.error) throw result.error;
       setStep(2);
     } catch (err: any) {
       setError(err.message || "Não foi possível salvar a senha. Tente novamente.");
@@ -157,11 +159,13 @@ export default function FirstAccessPage() {
         updateData.turno = turno;
       }
       
-      const { error: err } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-      if (err) throw err;
+      const profileResult = await Promise.race([
+        supabase.from('profiles').update(updateData).eq('id', user.id),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 15_000)
+        ),
+      ]);
+      if (profileResult.error) throw profileResult.error;
       toast({ title: "Perfil salvo!", description: "Seja bem-vindo ao Compromisso!" });
       setStep(3);
       setTimeout(() => window.location.assign("/dashboard"), 2000);
