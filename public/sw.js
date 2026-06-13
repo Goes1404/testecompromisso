@@ -9,11 +9,6 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Network passthrough — não interceptar fetches (preserva uploads/POST grandes).
-self.addEventListener("fetch", (event) => {
-  event.respondWith(fetch(event.request));
-});
-
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
