@@ -92,25 +92,77 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Dados inválidos ou senha curta.' }, { status: 400 });
       }
 
-      const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
-      if (getUserError || !userData?.user) {
-        return NextResponse.json({ error: 'Usuário de autenticação não localizado.' }, { status: 404 });
+      const authAdminUrl = `${supabaseUrl}/auth/v1/admin/users/${userId}`;
+      const authHeaders: Record<string, string> = {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'apikey': supabaseServiceKey,
+        'Content-Type': 'application/json',
+      };
+
+      // Per-call timeout helper — avoids a shared AbortController expiring
+      // between sequential calls and silently killing the second request.
+      const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
+        Promise.race([
+          p,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Supabase não respondeu em ${ms / 1000}s. Tente novamente.`)), ms)
+          ),
+        ]);
+
+      // 1. Buscar metadata atual para preservar campos existentes (não-crítico)
+      let existingMeta: Record<string, unknown> = {};
+      try {
+        const getRes = await withTimeout(
+          fetch(authAdminUrl, { method: 'GET', headers: authHeaders }),
+          7_000
+        );
+        if (getRes.ok) {
+          const u = await getRes.json();
+          existingMeta = u.user_metadata ?? {};
+        } else {
+          console.warn('[PRIMEIRO_ACESSO] getUserById status:', getRes.status);
+        }
+      } catch (e) {
+        console.warn('[PRIMEIRO_ACESSO] getUserById falhou (não-crítico):', e);
       }
 
-      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-        password: newPassword,
-        email_confirm: true,
-        user_metadata: {
-          full_name: userData.user.user_metadata?.full_name,
-          must_change_password: false,
-        },
-      });
-      if (updateError) {
-        return NextResponse.json({ error: 'Falha ao gravar nova senha.' }, { status: 500 });
+      // 2. Atualizar senha e desativar must_change_password via REST admin direto
+      let putRes: Response;
+      try {
+        putRes = await withTimeout(
+          fetch(authAdminUrl, {
+            method: 'PUT',
+            headers: authHeaders,
+            body: JSON.stringify({
+              password: newPassword,
+              email_confirm: true,
+              user_metadata: { ...existingMeta, must_change_password: false },
+            }),
+          }),
+          8_000
+        );
+      } catch (e: any) {
+        console.error('[PRIMEIRO_ACESSO] updateUserById timeout/falhou:', e);
+        return NextResponse.json({ error: e.message || 'Tempo esgotado ao gravar senha.' }, { status: 503 });
       }
 
+      if (!putRes.ok) {
+        const errBody = await putRes.json().catch(() => ({}));
+        const errMsg = errBody.msg ?? errBody.message ?? errBody.error_description ?? `HTTP ${putRes.status}`;
+        console.error('[PRIMEIRO_ACESSO] updateUserById failed:', putRes.status, errBody);
+        return NextResponse.json({ error: `Falha ao gravar senha: ${errMsg}` }, { status: 500 });
+      }
+
+      // 3. Atualizar telefone (não-crítico — falha não cancela o reset)
       if (phone) {
-        await supabaseAdmin.from('profiles').update({ phone }).eq('id', userId);
+        try {
+          await withTimeout(
+            Promise.resolve().then(() => supabaseAdmin.from('profiles').update({ phone }).eq('id', userId)),
+            5_000
+          );
+        } catch (e) {
+          console.warn('[PRIMEIRO_ACESSO] Phone update falhou (não-crítico):', e);
+        }
       }
 
       return NextResponse.json({ success: true });

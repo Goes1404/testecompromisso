@@ -133,7 +133,7 @@ export default function FirstAccessPage() {
       const result = await Promise.race([
         supabase.auth.updateUser({ password: newPassword }),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 15_000)
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 10_000)
         ),
       ]);
       if (result.error) throw result.error;
@@ -164,7 +164,7 @@ export default function FirstAccessPage() {
       const profileResult = await Promise.race([
         supabase.from('profiles').update(updateData).eq('id', user.id),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 15_000)
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 10_000)
         ),
       ]);
       if (profileResult.error) throw profileResult.error;
@@ -174,7 +174,7 @@ export default function FirstAccessPage() {
       const metaResult = await Promise.race([
         supabase.auth.updateUser({ data: { must_change_password: false } }),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 15_000)
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 10_000)
         ),
       ]);
       if (metaResult.error) throw metaResult.error;
