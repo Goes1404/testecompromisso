@@ -55,10 +55,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // REDIRECIONAMENTO PARA PRIMEIRO ACESSO (MUDANÇA DE SENHA FORÇADA) - DESATIVADO
-    const isFirstAccessPage = request.nextUrl.pathname === '/dashboard/first-access';
-    
-    if (isFirstAccessPage) {
+    if (request.nextUrl.pathname === '/dashboard/first-access') {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/dashboard/home'
       return NextResponse.redirect(redirectUrl)

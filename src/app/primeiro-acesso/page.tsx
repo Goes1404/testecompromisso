@@ -1,12 +1,12 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Loader2, Search, CheckCircle2, AlertCircle,
-  GraduationCap, ArrowRight, Phone, School,
-  Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, Sparkles,
+  GraduationCap, ArrowRight, School,
+  Eye, EyeOff, ArrowLeft, Sparkles, KeyRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,25 +15,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
-type Step = 'search' | 'reset' | 'register' | 'success';
-
-function maskPhone(raw: string) {
-  const d = raw.replace(/\D/g, '').slice(0, 11);
-  if (!d) return '';
-  if (d.length <= 2) return `(${d}`;
-  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-}
+type Step = 'search' | 'found' | 'register' | 'success';
 
 const HEADER: Record<Step, { label: string; sub: string; color: string }> = {
-  search:   { label: 'Primeiro Acesso', sub: 'Identificação',       color: 'from-indigo-600 to-indigo-700'  },
-  reset:    { label: 'Primeiro Acesso', sub: 'Configurar Acesso',    color: 'from-emerald-600 to-emerald-700' },
-  register: { label: 'Primeiro Acesso', sub: 'Criar Conta',          color: 'from-orange-500 to-orange-600'  },
-  success:  { label: 'Primeiro Acesso', sub: 'Pronto!',              color: 'from-emerald-600 to-emerald-700' },
+  search:   { label: 'Primeiro Acesso', sub: 'Identificação',   color: 'from-indigo-600 to-indigo-700'  },
+  found:    { label: 'Primeiro Acesso', sub: 'Conta Localizada', color: 'from-emerald-600 to-emerald-700' },
+  register: { label: 'Primeiro Acesso', sub: 'Criar Conta',     color: 'from-orange-500 to-orange-600'  },
+  success:  { label: 'Primeiro Acesso', sub: 'Pronto!',         color: 'from-emerald-600 to-emerald-700' },
 };
 
 function PrimeiroAcessoContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite');
 
@@ -44,19 +35,15 @@ function PrimeiroAcessoContent() {
   const [fullName, setFullName] = useState('');
   const [userFound, setUserFound] = useState<{ id: string; email: string; name: string } | null>(null);
 
-  // Reset fields
-  const [phone, setPhone] = useState('');
+  // Register fields
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  // Register fields
   const [examTarget, setExamTarget] = useState('ENEM');
   const [institution, setInstitution] = useState('');
   const [sala, setSala] = useState('');
 
-  // ── ACTIONS ──────────────────────────────────────────────────
   const apiPost = (body: object) =>
     Promise.race([
       fetch('/api/student/primeiro-acesso', {
@@ -78,31 +65,10 @@ function PrimeiroAcessoContent() {
       const res = await apiPost({ action: 'search', fullName });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      if (data.found && data.user) { setUserFound(data.user); setStep('reset'); }
+      if (data.found && data.user) { setUserFound(data.user); setStep('found'); }
       else setStep('register');
     } catch (err: any) {
       setError(err.message || 'Erro ao buscar aluno.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userFound) return;
-    if (!phone.replace(/\D/g, '')) { setError('Informe seu número de celular.'); return; }
-    if (password.length < 8) { setError('A senha deve ter pelo menos 8 caracteres.'); return; }
-    if (password !== confirmPassword) { setError('As senhas não coincidem.'); return; }
-    setError('');
-    setIsLoading(true);
-    try {
-      const res = await apiPost({ action: 'reset', userId: userFound.id, newPassword: password, phone: phone.replace(/\D/g, '') });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setStep('success');
-      setTimeout(() => router.push('/login'), 4000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao redefinir senha.');
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +86,6 @@ function PrimeiroAcessoContent() {
       if (!res.ok) throw new Error(data.error);
       setUserFound({ id: '', email: data.email, name: fullName });
       setStep('success');
-      setTimeout(() => router.push('/login'), 4000);
     } catch (err: any) {
       setError(err.message || 'Erro ao criar cadastro.');
     } finally {
@@ -132,10 +97,8 @@ function PrimeiroAcessoContent() {
 
   return (
     <div className="min-h-screen w-full bg-gray-950 flex items-start sm:items-center justify-center p-4 py-10 relative overflow-x-hidden">
-
-      {/* glows */}
       <div className="absolute top-[-15%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/25 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-5%]  w-[400px] h-[400px] bg-orange-600/15 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-orange-600/15 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
@@ -156,7 +119,6 @@ function PrimeiroAcessoContent() {
           </Link>
         </div>
 
-        {/* card */}
         <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
 
           {/* colored header strip */}
@@ -174,9 +136,7 @@ function PrimeiroAcessoContent() {
           {step === 'search' && (
             <form onSubmit={handleSearch} className="p-7 space-y-6">
               <div className="space-y-1.5">
-                <h1 className="text-3xl font-black text-gray-900 italic tracking-tighter leading-tight">
-                  Quem é você?
-                </h1>
+                <h1 className="text-3xl font-black text-gray-900 italic tracking-tighter leading-tight">Quem é você?</h1>
                 <p className="text-sm text-gray-400 font-medium leading-relaxed">
                   Digite seu nome completo para localizar seu perfil ou criar sua conta.
                 </p>
@@ -189,9 +149,7 @@ function PrimeiroAcessoContent() {
               )}
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                  Nome Completo
-                </Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nome Completo</Label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 pointer-events-none" />
                   <Input
@@ -212,123 +170,62 @@ function PrimeiroAcessoContent() {
                 className="w-full h-14 bg-gray-900 hover:bg-gray-800 text-white font-black rounded-2xl text-xs uppercase tracking-widest border-none shadow-lg active:scale-95 transition-all"
               >
                 {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                  <span className="flex items-center gap-2">
-                    Localizar meu Acesso <ArrowRight className="h-4 w-4" />
-                  </span>
+                  <span className="flex items-center gap-2">Localizar meu Acesso <ArrowRight className="h-4 w-4" /></span>
                 )}
               </Button>
 
               <p className="text-center text-xs text-gray-300 font-medium">
                 Já tem senha?{' '}
-                <Link href="/login" className="text-indigo-500 font-bold hover:underline">
-                  Faça login aqui
-                </Link>
+                <Link href="/login" className="text-indigo-500 font-bold hover:underline">Faça login aqui</Link>
               </p>
             </form>
           )}
 
-          {/* ── STEP: RESET ── */}
-          {step === 'reset' && userFound && (
-            <form onSubmit={handleReset} className="p-7 space-y-5">
+          {/* ── STEP: FOUND (conta existe → mostrar credenciais) ── */}
+          {step === 'found' && userFound && (
+            <div className="p-7 space-y-5">
               <div className="space-y-1.5">
                 <h1 className="text-3xl font-black text-gray-900 italic tracking-tighter leading-tight">
                   Olá, {userFound.name.split(' ')[0]}!
                 </h1>
-                <p className="text-sm text-gray-400 font-medium">
-                  Encontramos seu perfil. Configure sua senha abaixo.
+                <p className="text-sm text-gray-400 font-medium">Encontramos sua conta. Use as credenciais abaixo para entrar.</p>
+              </div>
+
+              <div className="bg-emerald-50 rounded-2xl px-5 py-4 border border-emerald-100 space-y-3">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Seu e-mail de login</p>
+                  <p className="text-sm font-black text-emerald-900 break-all">{userFound.email}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Senha padrão</p>
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <p className="text-sm font-black text-emerald-900 tracking-wider">compromisso2026</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
+                <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
+                  Se não conseguir entrar, fale com a secretaria para verificar seu cadastro.
                 </p>
               </div>
 
-              <div className="bg-emerald-50 rounded-2xl px-4 py-3.5 border border-emerald-100">
-                <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Seu e-mail de login</p>
-                <p className="text-sm font-black text-emerald-900 break-all">{userFound.email}</p>
-              </div>
-
-              {error && (
-                <div className="flex items-start gap-2.5 bg-red-50 text-red-600 rounded-2xl px-4 py-3 text-xs font-bold border border-red-100">
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {error}
-                </div>
-              )}
-
-              {/* phone */}
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 flex items-center gap-1.5">
-                  <Phone className="h-3 w-3" /> Celular / WhatsApp <span className="text-red-400">*</span>
-                </Label>
-                <Input
-                  type="tel"
-                  inputMode="numeric"
-                  autoFocus
-                  value={phone}
-                  onChange={e => setPhone(maskPhone(e.target.value))}
-                  placeholder="(11) 99999-9999"
-                  className="h-14 bg-gray-50 border-gray-100 rounded-2xl font-bold text-base focus-visible:ring-emerald-400"
-                  required
-                />
-              </div>
-
-              {/* password */}
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 flex items-center gap-1.5">
-                  <Lock className="h-3 w-3" /> Nova Senha
-                </Label>
-                <div className="relative">
-                  <Input
-                    type={showPass ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Mín. 8 caracteres"
-                    className="h-14 bg-gray-50 border-gray-100 rounded-2xl font-bold text-base pr-12 focus-visible:ring-emerald-400"
-                    required
-                  />
-                  <button type="button" onClick={() => setShowPass(p => !p)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
-                    {showPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* confirm password */}
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                  Confirmar Senha
-                </Label>
-                <div className="relative">
-                  <Input
-                    type={showConfirm ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="Repita a senha"
-                    className="h-14 bg-gray-50 border-gray-100 rounded-2xl font-bold text-base pr-12 focus-visible:ring-emerald-400"
-                    required
-                  />
-                  <button type="button" onClick={() => setShowConfirm(p => !p)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
-                    {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* password match indicator */}
-              {confirmPassword && (
-                <div className={`flex items-center gap-2 text-xs font-bold ml-1 ${password === confirmPassword ? 'text-emerald-600' : 'text-red-500'}`}>
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  {password === confirmPassword ? 'Senhas coincidem' : 'Senhas não coincidem'}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest border-none shadow-lg shadow-emerald-200 active:scale-95 transition-all"
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-2 w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-100 active:scale-95 transition-all"
               >
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                  <span className="flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5" /> Salvar e Entrar
-                  </span>
-                )}
-              </Button>
-            </form>
+                <CheckCircle2 className="h-5 w-5" /> Ir para o Login
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => { setStep('search'); setError(''); setFullName(''); setUserFound(null); }}
+                className="w-full text-[10px] font-black uppercase text-gray-300 hover:text-gray-500 transition-colors"
+              >
+                Não sou eu — buscar outro nome
+              </button>
+            </div>
           )}
 
           {/* ── STEP: REGISTER ── */}
@@ -339,9 +236,7 @@ function PrimeiroAcessoContent() {
                   Vamos criar<br />sua conta!
                 </h1>
                 <p className="text-sm text-gray-400 font-medium">
-                  Não encontramos{' '}
-                  <strong className="text-orange-600">{fullName}</strong>.
-                  Preencha os dados abaixo.
+                  Não encontramos <strong className="text-orange-600">{fullName}</strong>. Preencha os dados abaixo.
                 </p>
               </div>
 
@@ -358,9 +253,7 @@ function PrimeiroAcessoContent() {
               )}
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                  Escola / Instituição
-                </Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Escola / Instituição</Label>
                 <div className="relative">
                   <School className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 pointer-events-none" />
                   <Input
@@ -470,23 +363,32 @@ function PrimeiroAcessoContent() {
 
               <div className="space-y-1.5">
                 <h2 className="text-3xl font-black text-gray-900 italic tracking-tighter">Bem-vindo(a)!</h2>
-                <p className="text-sm text-gray-400 font-medium">Acesso configurado. Sua jornada começa agora.</p>
+                <p className="text-sm text-gray-400 font-medium">Conta criada com sucesso. Agora é só entrar!</p>
               </div>
 
-              <div className="w-full bg-indigo-50 rounded-2xl px-5 py-4 border border-indigo-100">
-                <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">Seu e-mail de login</p>
-                <p className="text-base font-black text-indigo-900 break-all">{userFound?.email}</p>
-              </div>
+              {userFound && (
+                <div className="w-full bg-indigo-50 rounded-2xl px-5 py-4 border border-indigo-100 space-y-2 text-left">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-0.5">Seu e-mail de login</p>
+                    <p className="text-base font-black text-indigo-900 break-all">{userFound.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-0.5">Senha escolhida</p>
+                    <p className="text-sm font-bold text-indigo-700">A senha que você definiu acima</p>
+                  </div>
+                </div>
+              )}
 
-              <div className="flex items-center justify-center gap-2 text-indigo-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Entrando no sistema...</span>
-              </div>
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-2 w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+              >
+                Ir para o Login <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           )}
         </div>
 
-        {/* footer */}
         <p className="text-center text-[9px] font-black text-white/15 uppercase tracking-[0.3em]">
           © 1997–2026 Colégio Compromisso
         </p>

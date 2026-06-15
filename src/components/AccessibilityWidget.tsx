@@ -9,7 +9,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useToast } from "@/hooks/use-toast";
 import { Virtuoso } from 'react-virtuoso';
 import { usePathname } from "next/navigation";
-import { createClient } from "@/utils/supabase/client"; // Cliente Supabase para Frontend
 
 interface Message {
   role: "assistant" | "user";
@@ -26,7 +25,6 @@ export function AccessibilityWidget() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const pathname = usePathname();
-  const supabase = createClient(); // Instancia o cliente
 
   const isInputHeavyPage = 
     pathname.includes('/chat/') || 
