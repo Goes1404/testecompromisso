@@ -117,6 +117,9 @@ export default function StudentEssayPage() {
   const [loadingTopic, setLoadingTopic] = useState(false);
   const [loadingGrading, setLoadingGrading] = useState(false);
   const [loadingOcr, setLoadingOcr] = useState(false);
+  // Sinaliza que o texto atual veio (ao menos em parte) de transcrição por foto,
+  // para a IA não punir C1 por ruído de OCR.
+  const [fromPhoto, setFromPhoto] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [charCount, setCharCount] = useState(0);
   const [chartData, setChartData] = useState<{ date: string; score: number; theme?: string }[]>([]);
@@ -213,6 +216,7 @@ export default function StudentEssayPage() {
       if (!res.ok || !data.success) throw new Error(data.error || "Falha ao digitalizar a imagem.");
 
       setText((prev) => (prev.trim() ? `${prev.trim()}\n\n${data.text}` : data.text));
+      setFromPhoto(true);
       toast({ title: "Redação digitalizada! 📸", description: "Revise o texto transcrito antes de enviar." });
     } catch (err: any) {
       toast({ title: "Erro ao digitalizar", description: err.message, variant: "destructive" });
@@ -287,7 +291,12 @@ export default function StudentEssayPage() {
       const res = await fetch("/api/essay-evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme, text }),
+        body: JSON.stringify({
+          theme,
+          text,
+          supporting_texts: supportingTexts,
+          origin: fromPhoto ? "ocr" : "typed",
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -356,7 +365,7 @@ export default function StudentEssayPage() {
           </div>
           <div className="grid grid-cols-2 gap-2 mt-4">
             <Button
-              onClick={() => { setCustomTheme(!customTheme); setTheme(""); setSupportingTexts([]); setResult(null); }}
+              onClick={() => { setCustomTheme(!customTheme); setTheme(""); setSupportingTexts([]); setResult(null); setFromPhoto(false); }}
               className={`h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${
                 customTheme ? "bg-white/20 border-white/30 text-white" : "bg-transparent border-white/20 text-white/70 hover:text-white hover:bg-white/10"
               }`}
