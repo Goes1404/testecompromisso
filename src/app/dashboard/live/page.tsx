@@ -18,17 +18,29 @@ export default function LiveClassesPage() {
     async function fetchLives() {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        // Promise.race garante que o loading sempre resolva, mesmo que o fetch
+        // fique pendurado (ex.: service worker antigo interceptando a request),
+        // o que travava a tela em "Sintonizando Estúdio Master..." para sempre.
+        const query = supabase
           .from('lives')
           .select('*')
           .in('status', ['live', 'scheduled'])
           .gte('start_time', new Date(Date.now() - 3600000).toISOString())
           .order('start_time', { ascending: true });
 
+        const { data, error } = await Promise.race([
+          query,
+          new Promise<any>((_, reject) =>
+            setTimeout(() => reject(new Error('Tempo esgotado ao sintonizar o estúdio.')), 12_000)
+          ),
+        ]);
+
         if (error) throw error;
         setLives(data || []);
       } catch (err) {
         console.error("Erro ao buscar lives:", err);
+        // Em caso de erro/timeout, mostramos a tela vazia em vez de travar.
+        setLives([]);
       } finally {
         setLoading(false);
       }
