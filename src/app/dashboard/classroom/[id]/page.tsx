@@ -461,77 +461,117 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                 </div>
               ) : (
                 <Tabs defaultValue="summary" className={`flex flex-col flex-1 ${showSimultaneousWorkbook ? 'overflow-hidden' : ''}`}>
-                  <TabsList className="grid w-full grid-cols-3 h-12 bg-white p-0 gap-0 shadow-sm border-b border-muted/20 shrink-0">
+                  {/* ── Tab bar: 4 colunas, labels sempre visíveis ── */}
+                  <TabsList className="grid w-full grid-cols-4 h-14 bg-white p-0 shadow-sm border-b border-slate-100 shrink-0 rounded-none">
                     {[
-                      { id: "summary", label: "Roteiro", icon: BookOpen },
-                      { id: "quiz", label: "Apoio", icon: BrainCircuit },
-                      { id: "aurora", label: "Dúvidas (IA)", icon: Sparkles },
-                      { id: "attachments", label: "Anexos", icon: Paperclip }
+                      { id: "summary", label: "Roteiro", short: "Roteiro", icon: BookOpen },
+                      { id: "quiz",    label: "Apostila", short: "Apostila", icon: BrainCircuit },
+                      { id: "aurora",  label: "IA", short: "IA", icon: Sparkles },
+                      { id: "attachments", label: "Anexos", short: "Anexos", icon: Paperclip }
                     ].map((tab) => (
-                      <TabsTrigger key={tab.id} value={tab.id} className="data-[state=active]:bg-slate-50/80 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary h-full rounded-none font-bold text-[10px] uppercase tracking-widest gap-2 text-muted-foreground border-none transition-all">
+                      <TabsTrigger
+                        key={tab.id}
+                        value={tab.id}
+                        className="flex flex-col items-center justify-center gap-1 h-full rounded-none border-none transition-all
+                          text-slate-400 font-bold text-[9px] uppercase tracking-wider
+                          data-[state=active]:text-primary data-[state=active]:bg-slate-50
+                          data-[state=active]:border-b-[3px] data-[state=active]:border-accent
+                          data-[state=active]:shadow-none"
+                      >
                         <tab.icon className="h-4 w-4" />
-                        <span className="hidden md:inline">{tab.label}</span>
+                        <span>{tab.short}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
-                  
-                  <div className={`flex-1 bg-slate-50 p-4 md:p-6 ${showSimultaneousWorkbook ? 'overflow-y-auto' : ''}`}>
-                    <TabsContent value="summary" className="mt-0 outline-none animate-in fade-in">
-                        <div className="max-w-4xl mx-auto space-y-8">
-                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div className="lg:col-span-2 space-y-4">
-                              <div className="space-y-2">
-                                <h2 className="text-[10px] font-black uppercase tracking-widest text-primary/40 flex items-center gap-2"><Target className="h-3 w-3" /> Unidade Atual</h2>
-                                <h3 className="text-xl md:text-3xl font-black text-primary italic leading-tight">{activeContent?.title}</h3>
-                                <p className="text-sm md:text-base font-medium text-primary/70 leading-relaxed italic border-l-[3px] border-accent pl-5 bg-white py-3 pr-4 rounded-r-xl shadow-sm">
-                                  {activeContent?.description || "Acompanhe este material técnico focado na sua aprovação."}
-                                </p>
-                              </div>
+
+                  <div className={`flex-1 bg-slate-50 ${showSimultaneousWorkbook ? 'overflow-y-auto' : ''}`}>
+                    <TabsContent value="summary" className="mt-0 outline-none animate-in fade-in duration-300">
+                      <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-4">
+
+                        {/* Cabeçalho da aula */}
+                        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                              <PlayCircle className="h-4 w-4 text-accent" />
                             </div>
-                            <div className="space-y-6">
-                              <Card className="p-6 border-none shadow-xl bg-primary text-white rounded-3xl relative overflow-hidden">
-                                <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-accent/20 rounded-full blur-xl" />
-                                <div className="relative z-10 space-y-3">
-                                  <div className="flex items-center gap-2">
-                                    <Lightbulb className="h-4 w-4 text-accent animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Dica do Mentor</span>
-                                  </div>
-                                  <p className="text-xs font-medium italic opacity-90 leading-relaxed">
-                                    "A revisão imediata fixa até 3x mais o conhecimento. Utilize as apostilas vinculadas."
-                                  </p>
-                                </div>
-                              </Card>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{trail?.category} · Unidade atual</p>
+                              <h3 className="text-base font-black text-primary italic leading-snug truncate">{activeContent?.title}</h3>
                             </div>
+                            <Badge className={`shrink-0 text-[8px] font-black uppercase border-none ${activeContent?.type === 'video' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
+                              {activeContent?.type === 'video' ? '▶ Vídeo' : '📄 Texto'}
+                            </Badge>
                           </div>
 
-                          {/* Botão Próxima Aula */}
-                          <div className="flex justify-end pt-4 border-t border-muted/20">
-                            {nextContent ? (
-                              <Button
-                                onClick={goToNextContent}
-                                className="bg-primary text-white font-black text-xs uppercase h-12 px-6 rounded-2xl shadow-xl active:scale-95 transition-all gap-3 group/next"
-                              >
-                                <div className="text-left">
-                                  <div className="text-[8px] text-white/60 uppercase tracking-widest leading-none mb-0.5">
-                                    {nextContent.isNewModule ? `Módulo: ${nextContent.moduleName}` : 'Próxima aula'}
-                                  </div>
-                                  <div className="truncate max-w-[160px]">{nextContent.title}</div>
-                                </div>
-                                <ChevronRight className="h-5 w-5 text-accent shrink-0 group-hover/next:translate-x-1 transition-transform" />
-                              </Button>
-                            ) : (
-                              <Badge className="bg-accent/10 text-accent border-accent/20 font-black text-[10px] uppercase px-4 h-10">
-                                ✅ Última aula da trilha
-                              </Badge>
-                            )}
+                          {activeContent?.description && (
+                            <p className="text-sm text-slate-600 leading-relaxed font-medium border-l-2 border-accent pl-4">
+                              {activeContent.description}
+                            </p>
+                          )}
+
+                          {/* Barra de progresso da aula */}
+                          <div className="space-y-1.5 pt-1">
+                            <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                              <span className="flex items-center gap-1"><Zap className="h-2.5 w-2.5 text-accent" /> Progresso</span>
+                              <span className="text-accent">{Math.round(videoProgress)}%</span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                              <div className="h-full bg-accent rounded-full transition-all duration-700 shadow-[0_0_8px_rgba(245,158,11,0.4)]" style={{ width: `${videoProgress}%` }} />
+                            </div>
                           </div>
                         </div>
+
+                        {/* Dica do Mentor */}
+                        <div className="bg-primary rounded-3xl p-5 relative overflow-hidden">
+                          <div className="absolute -top-4 -right-4 w-20 h-20 bg-accent/20 rounded-full blur-2xl" />
+                          <div className="relative z-10 flex items-start gap-3">
+                            <div className="h-9 w-9 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
+                              <Lightbulb className="h-4 w-4 text-accent" />
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1">Dica do Mentor</p>
+                              <p className="text-xs text-white/90 italic leading-relaxed font-medium">
+                                "A revisão imediata fixa até 3× mais o conteúdo. Use as apostilas vinculadas logo após assistir."
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Próxima Aula */}
+                        {nextContent ? (
+                          <button
+                            onClick={goToNextContent}
+                            className="w-full bg-white border border-slate-100 hover:border-accent/30 hover:shadow-md rounded-3xl p-4 flex items-center gap-4 transition-all active:scale-[0.98] group shadow-sm"
+                          >
+                            <div className="h-12 w-12 rounded-2xl bg-accent flex items-center justify-center shrink-0 shadow group-hover:scale-105 transition-transform">
+                              <ChevronRight className="h-6 w-6 text-white" />
+                            </div>
+                            <div className="flex-1 text-left min-w-0">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                                {nextContent.isNewModule ? `Próximo módulo · ${nextContent.moduleName}` : 'Próxima aula'}
+                              </p>
+                              <p className="text-sm font-black text-primary italic truncate">{nextContent.title}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-accent transition-colors shrink-0" />
+                          </button>
+                        ) : (
+                          <div className="w-full bg-emerald-50 border border-emerald-100 rounded-3xl p-4 flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0">
+                              <Zap className="h-6 w-6 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Concluído</p>
+                              <p className="text-sm font-black text-emerald-700 italic">Você terminou todos os materiais! 🎉</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </TabsContent>
 
                     <TabsContent value="quiz" className="mt-0 outline-none">
-                        <div className="max-w-3xl mx-auto space-y-6">
+                      <div className="max-w-2xl mx-auto p-4 md:p-6">
                             {activeContent?.workbook_id ? (
-                              <Card className="p-6 md:p-8 border border-muted/20 shadow-lg bg-white rounded-3xl group hover:shadow-primary/5 transition-all overflow-hidden relative">
+                              <Card className="p-6 border border-slate-100 shadow-sm bg-white rounded-3xl group hover:shadow-md transition-all overflow-hidden relative">
                                 <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
                                   <div className="h-16 w-16 rounded-2xl bg-accent/10 flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform">
                                     <BookOpen className="h-8 w-8 text-accent" />
@@ -542,8 +582,8 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                                     <p className="text-xs font-medium italic text-muted-foreground mt-1">Estude simultaneamente com o vídeo usando o modo split-screen.</p>
                                   </div>
                                   <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto">
-                                    <Button onClick={() => setShowSimultaneousWorkbook(true)} className="bg-primary text-white h-12 rounded-xl font-bold text-[10px] uppercase shadow-md hover:scale-105 transition-all gap-2 px-6">
-                                      <Maximize2 className="h-4 w-4 text-accent" /> ESTUDO SIMULTÂNEO
+                                    <Button onClick={() => setShowSimultaneousWorkbook(true)} className="bg-primary text-white h-12 rounded-2xl font-bold text-[10px] uppercase shadow-md hover:scale-105 transition-all gap-2 px-6">
+                                      <Maximize2 className="h-4 w-4 text-accent" /> Estudo Simultâneo
                                     </Button>
                                   </div>
                                 </div>
@@ -551,10 +591,10 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                             ) : (
                               <div className="text-center py-16 opacity-30 border-2 border-dashed rounded-3xl flex flex-col items-center gap-3">
                                 <BrainCircuit className="h-8 w-8" />
-                                <p className="text-[10px] font-bold uppercase italic tracking-[0.2em]">Sem atividades vinculadas</p>
+                                <p className="text-[10px] font-bold uppercase italic tracking-[0.2em]">Sem apostila vinculada</p>
                               </div>
                             )}
-                        </div>
+                      </div>
                     </TabsContent>
 
                     <TabsContent value="aurora" className="mt-0 outline-none">
