@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { DashboardLoader } from "@/components/DashboardLoader";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, MotionConfig } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -417,15 +418,7 @@ export default function DashboardHome() {
   }, [user, profile, userRole, fetchData, checkActiveSession]);
 
   if (isUserLoading || (userRole === 'student' && loadingData && !dataFetchedRef.current)) return (
-    <div className="flex flex-col h-[70vh] items-center justify-center gap-5">
-      <div className="relative">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-        <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
-      </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Carregando seu ambiente...</p>
-    </div>
+    <DashboardLoader />
   );
 
   const nameToUse = profile?.name || user?.user_metadata?.full_name || '';
