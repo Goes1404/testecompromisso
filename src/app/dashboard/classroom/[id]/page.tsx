@@ -3,14 +3,15 @@
 
 export const runtime = 'edge';
 
-import { useState, useEffect, useRef, useCallback, use } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ChevronLeft, 
+  ChevronLeft,
+  ChevronRight,
   FileText, 
   BookOpen, 
   PlayCircle, 
@@ -85,9 +86,10 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
   const [videoProgress, setVideoProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isApiReady, setIsApiReady] = useState(false);
-  
+
   const playerRef = useRef<any>(null);
   const progressInterval = useRef<any>(null);
+  const goToNextRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (isMobile) {
@@ -175,6 +177,30 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
     loadTrailData();
   }, [loadTrailData]);
 
+  const goToNextContent = useCallback(() => {
+    const moduleContents = contents[activeModuleId || ""] || [];
+    const idx = moduleContents.findIndex(c => c.id === activeContentId);
+
+    if (idx >= 0 && idx < moduleContents.length - 1) {
+      setActiveContentId(moduleContents[idx + 1].id);
+      setShowSimultaneousWorkbook(false);
+      return;
+    }
+
+    const modIdx = modules.findIndex(m => m.id === activeModuleId);
+    if (modIdx >= 0 && modIdx < modules.length - 1) {
+      const next = modules[modIdx + 1];
+      setActiveModuleId(next.id);
+      if (contents[next.id]?.length > 0) setActiveContentId(contents[next.id][0].id);
+      setShowSimultaneousWorkbook(false);
+      return;
+    }
+
+    toast({ title: "Trilha concluída! 🎉", description: "Você finalizou todos os materiais desta trilha." });
+  }, [activeContentId, activeModuleId, contents, modules, toast]);
+
+  useEffect(() => { goToNextRef.current = goToNextContent; }, [goToNextContent]);
+
   const updateServerProgress = useCallback(async (percentage: number) => {
     const completed = percentage >= 85;
     if (completed && !isCompleted && user && trailId) {
@@ -205,9 +231,12 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         } catch (e) {
           console.warn("Erro tracking player", e);
         }
-      }, 5000); 
-    } else if (progressInterval.current) {
-      clearInterval(progressInterval.current);
+      }, 5000);
+    } else {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      if (event.data === 0) { // ENDED — avança automaticamente
+        setTimeout(() => goToNextRef.current(), 1200);
+      }
     }
   }, [updateServerProgress]);
 
@@ -297,6 +326,18 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
   }, [isDragging, handleDragMove, handleDragEnd]);
 
   const activeContent = contents[activeModuleId || ""]?.find(c => c.id === activeContentId);
+
+  const nextContent = useMemo(() => {
+    const mc = contents[activeModuleId || ""] || [];
+    const idx = mc.findIndex(c => c.id === activeContentId);
+    if (idx >= 0 && idx < mc.length - 1) return { title: mc[idx + 1].title, isNewModule: false };
+    const mi = modules.findIndex(m => m.id === activeModuleId);
+    if (mi >= 0 && mi < modules.length - 1) {
+      const nm = modules[mi + 1];
+      return { title: contents[nm.id]?.[0]?.title || nm.title, isNewModule: true, moduleName: nm.title };
+    }
+    return null;
+  }, [activeContentId, activeModuleId, contents, modules]);
 
   if (loading) {
     return (
@@ -462,6 +503,28 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                               </Card>
                             </div>
                           </div>
+
+                          {/* Botão Próxima Aula */}
+                          <div className="flex justify-end pt-4 border-t border-muted/20">
+                            {nextContent ? (
+                              <Button
+                                onClick={goToNextContent}
+                                className="bg-primary text-white font-black text-xs uppercase h-12 px-6 rounded-2xl shadow-xl active:scale-95 transition-all gap-3 group/next"
+                              >
+                                <div className="text-left">
+                                  <div className="text-[8px] text-white/60 uppercase tracking-widest leading-none mb-0.5">
+                                    {nextContent.isNewModule ? `Módulo: ${nextContent.moduleName}` : 'Próxima aula'}
+                                  </div>
+                                  <div className="truncate max-w-[160px]">{nextContent.title}</div>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-accent shrink-0 group-hover/next:translate-x-1 transition-transform" />
+                              </Button>
+                            ) : (
+                              <Badge className="bg-accent/10 text-accent border-accent/20 font-black text-[10px] uppercase px-4 h-10">
+                                ✅ Última aula da trilha
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                     </TabsContent>
 
@@ -512,6 +575,20 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
             </>
           )}
         </main>
+
+        {/* Botão flutuante mobile "Próxima Aula" — aparece quando sidebar está fechada */}
+        {!sidebarOpen && nextContent && (
+          <button
+            onClick={goToNextContent}
+            className="lg:hidden fixed bottom-6 right-4 z-50 flex items-center gap-3 bg-primary text-white font-black text-xs uppercase h-14 pl-5 pr-4 rounded-2xl shadow-2xl active:scale-95 transition-all border border-white/10"
+          >
+            <div className="text-left">
+              <div className="text-[8px] text-white/60 uppercase tracking-widest leading-none mb-0.5">Próxima</div>
+              <div className="truncate max-w-[120px]">{nextContent.title}</div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-accent shrink-0" />
+          </button>
+        )}
 
         {sidebarOpen && (
           <aside className="lg:w-[350px] w-full border-l border-muted/20 bg-slate-50/50 sticky top-16 self-start h-[calc(100vh-64px)] overflow-y-auto shrink-0 transition-all duration-500 z-40">
