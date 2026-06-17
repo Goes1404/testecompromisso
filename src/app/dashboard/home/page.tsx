@@ -691,7 +691,7 @@ export default function DashboardHome() {
           </div>
 
           {/* Stats strip — contadores animados em vidro */}
-          <div className="flex gap-3 overflow-x-auto pb-0.5 scrollbar-hide -mx-1 px-1">
+          <div className="grid grid-cols-3 gap-3">
             {[
               { label: "Acertos", value: examStats?.averageScore || 0, suffix: "%",    icon: BrainCircuit },
               { label: "Redação", value: essayStats?.average || 0,     suffix: " pts", icon: FilePenLine  },
@@ -699,7 +699,7 @@ export default function DashboardHome() {
             ].map((stat, i) => (
               <motion.div key={stat.label}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 + i * 0.08 }}
-                className="gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 shrink-0 min-w-[128px]">
+                className="gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-3 py-3">
                 <div className="h-8 w-8 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
                   <stat.icon className="h-4 w-4 text-accent" />
                 </div>
