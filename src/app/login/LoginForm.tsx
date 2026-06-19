@@ -188,7 +188,15 @@ export function LoginForm() {
               )}
             </motion.button>
 
-
+            {/* Esqueci minha senha */}
+            <div className="text-center pt-1">
+              <Link
+                href="/forgot-password"
+                className="text-[11px] font-bold text-white/40 hover:text-orange-400 transition-colors"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
           </motion.form>
 
           {/* ── Trust badge ── */}

@@ -1,8 +1,60 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { verifyRegistrationToken } from '@/lib/registration-token';
+import crypto from 'crypto';
 
 const SUPABASE_TIMEOUT_MS = 10_000;
+
+// ── Rate limit do reset self-service ──────────────────────────────────────
+// Por ALVO (hash do nome): trava o chute de data de nascimento num aluno.
+// Por IP: bem alto, pois na escola muitos alunos dividem o mesmo Wi-Fi.
+const RECOVER_IDENTITY_MAX_PER_HOUR = 8;
+const RECOVER_IP_MAX_PER_HOUR = 30;
+
+function getClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for') || '';
+  return xff.split(',')[0].trim() || req.headers.get('x-real-ip') || 'unknown';
+}
+
+// Hash do nome normalizado — evita gravar PII no log de tentativas.
+function hashIdentifier(name: string): string {
+  const norm = name.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+  return crypto.createHash('sha256').update(norm).digest('hex');
+}
+
+// Telefone como dígitos puros, sem DDI 55, para comparar formatos diferentes.
+function normalizePhone(p: string): string {
+  let d = (p || '').replace(/\D/g, '');
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+  return d;
+}
+
+async function checkRecoverRateLimit(admin: any, ip: string, idHash: string): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - 3_600_000).toISOString();
+    const [byId, byIp] = await Promise.all([
+      admin.from('password_reset_attempts').select('id', { count: 'exact', head: true })
+        .eq('identifier', idHash).eq('success', false).gte('created_at', since),
+      admin.from('password_reset_attempts').select('id', { count: 'exact', head: true })
+        .eq('ip', ip).gte('created_at', since),
+    ]);
+    return (byId.count ?? 0) >= RECOVER_IDENTITY_MAX_PER_HOUR
+        || (byIp.count ?? 0) >= RECOVER_IP_MAX_PER_HOUR;
+  } catch (e) {
+    // Tabela ausente / indisponível → degrada sem travar o reset legítimo.
+    console.warn('[RECOVER] rate-limit indisponível (degradando):', e);
+    return false;
+  }
+}
+
+async function recordRecoverAttempt(admin: any, ip: string, idHash: string, success: boolean) {
+  try {
+    await admin.from('password_reset_attempts').insert({ ip, identifier: idHash, success });
+  } catch {
+    /* degrada silenciosamente */
+  }
+}
 
 function generateEmail(fullName: string): string {
   const normalize = (s: string) =>
@@ -84,23 +136,70 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. AÇÃO: RESETAR SENHA
-    if (action === 'reset') {
-      const { userId, newPassword, phone } = body;
+    // 2. AÇÃO: RECUPERAR SENHA (self-service, com prova de identidade)
+    // Segurança: NÃO confia em userId vindo do cliente. Verifica no servidor
+    // que nome + telefone + data de nascimento batem com o cadastro, com
+    // rate-limit por alvo e por IP. Mensagens genéricas (anti-enumeração).
+    if (action === 'recover') {
+      const { fullName, phone, birthDate, newPassword } = body;
 
-      if (!userId || !newPassword || newPassword.length < 8) {
-        return NextResponse.json({ error: 'Dados inválidos ou senha curta.' }, { status: 400 });
+      if (!fullName?.trim() || !phone?.trim() || !birthDate?.trim() || !newPassword || newPassword.length < 8) {
+        return NextResponse.json(
+          { error: 'Preencha todos os campos. A senha precisa de pelo menos 8 caracteres.' },
+          { status: 400 }
+        );
       }
 
-      const authAdminUrl = `${supabaseUrl}/auth/v1/admin/users/${userId}`;
+      const ip = getClientIp(request);
+      const idHash = hashIdentifier(fullName);
+
+      // Rate-limit ANTES de qualquer verificação
+      if (await checkRecoverRateLimit(supabaseAdmin, ip, idHash)) {
+        return NextResponse.json(
+          { error: 'Muitas tentativas. Por segurança, aguarde 1 hora ou procure a secretaria.' },
+          { status: 429 }
+        );
+      }
+
+      // Buscar candidatos pelo e-mail gerado (exato) ou pelo nome
+      const generatedEmail = generateEmail(fullName.trim());
+      const safeName = fullName.trim().replace(/[,()*\\]/g, ' ').replace(/\s+/g, ' ').trim();
+      const { data: candidates, error: searchErr } = await supabaseAdmin
+        .from('profiles')
+        .select('id, phone, birth_date')
+        .or(`email.eq.${generatedEmail},name.ilike.%${safeName}%`)
+        .limit(10);
+
+      if (searchErr) {
+        console.error('[RECOVER] erro na busca:', searchErr);
+        throw searchErr;
+      }
+
+      // Encontrar o cadastro que bate telefone E data de nascimento
+      const inputPhone = normalizePhone(phone);
+      const inputBirth = String(birthDate).slice(0, 10);
+      const match = (candidates || []).find((c: any) =>
+        c.phone && normalizePhone(c.phone) === inputPhone && inputPhone.length >= 10 &&
+        c.birth_date && String(c.birth_date).slice(0, 10) === inputBirth
+      );
+
+      if (!match) {
+        await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
+        // Genérico: não revela qual campo errou nem se o nome existe.
+        return NextResponse.json(
+          { error: 'Os dados não conferem com nenhum cadastro. Confira nome, telefone e data de nascimento — ou procure a secretaria.' },
+          { status: 401 }
+        );
+      }
+
+      // Verificação OK → resetar a senha via REST admin
+      const authAdminUrl = `${supabaseUrl}/auth/v1/admin/users/${match.id}`;
       const authHeaders: Record<string, string> = {
         'Authorization': `Bearer ${supabaseServiceKey}`,
         'apikey': supabaseServiceKey,
         'Content-Type': 'application/json',
       };
 
-      // Per-call timeout helper — avoids a shared AbortController expiring
-      // between sequential calls and silently killing the second request.
       const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
         Promise.race([
           p,
@@ -109,24 +208,14 @@ export async function POST(request: Request) {
           ),
         ]);
 
-      // 1. Buscar metadata atual para preservar campos existentes (não-crítico)
       let existingMeta: Record<string, unknown> = {};
       try {
-        const getRes = await withTimeout(
-          fetch(authAdminUrl, { method: 'GET', headers: authHeaders }),
-          7_000
-        );
-        if (getRes.ok) {
-          const u = await getRes.json();
-          existingMeta = u.user_metadata ?? {};
-        } else {
-          console.warn('[PRIMEIRO_ACESSO] getUserById status:', getRes.status);
-        }
+        const getRes = await withTimeout(fetch(authAdminUrl, { method: 'GET', headers: authHeaders }), 7_000);
+        if (getRes.ok) existingMeta = (await getRes.json()).user_metadata ?? {};
       } catch (e) {
-        console.warn('[PRIMEIRO_ACESSO] getUserById falhou (não-crítico):', e);
+        console.warn('[RECOVER] getUserById falhou (não-crítico):', e);
       }
 
-      // 2. Atualizar senha e desativar must_change_password via REST admin direto
       let putRes: Response;
       try {
         putRes = await withTimeout(
@@ -142,29 +231,18 @@ export async function POST(request: Request) {
           8_000
         );
       } catch (e: any) {
-        console.error('[PRIMEIRO_ACESSO] updateUserById timeout/falhou:', e);
+        console.error('[RECOVER] updateUserById timeout/falhou:', e);
         return NextResponse.json({ error: e.message || 'Tempo esgotado ao gravar senha.' }, { status: 503 });
       }
 
       if (!putRes.ok) {
         const errBody = await putRes.json().catch(() => ({}));
         const errMsg = errBody.msg ?? errBody.message ?? errBody.error_description ?? `HTTP ${putRes.status}`;
-        console.error('[PRIMEIRO_ACESSO] updateUserById failed:', putRes.status, errBody);
+        console.error('[RECOVER] updateUserById failed:', putRes.status, errBody);
         return NextResponse.json({ error: `Falha ao gravar senha: ${errMsg}` }, { status: 500 });
       }
 
-      // 3. Atualizar telefone (não-crítico — falha não cancela o reset)
-      if (phone) {
-        try {
-          await withTimeout(
-            Promise.resolve().then(() => supabaseAdmin.from('profiles').update({ phone }).eq('id', userId)),
-            5_000
-          );
-        } catch (e) {
-          console.warn('[PRIMEIRO_ACESSO] Phone update falhou (não-crítico):', e);
-        }
-      }
-
+      await recordRecoverAttempt(supabaseAdmin, ip, idHash, true);
       return NextResponse.json({ success: true });
     }
 
