@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Bell,
   Megaphone,
@@ -73,6 +74,16 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedAnn, setSelectedAnn] = useState<any | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Trava o scroll do body enquanto o modal está aberto
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = selectedAnn ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [selectedAnn]);
 
   useEffect(() => {
     if (!user) return;
@@ -237,8 +248,8 @@ export function NotificationBell() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* ── Modal do comunicado ────────────────────────────────────────── */}
-      {selectedAnn && (() => {
+      {/* ── Modal do comunicado (via portal p/ escapar do header) ──────── */}
+      {mounted && selectedAnn && createPortal((() => {
         const cfg = getPriority(selectedAnn.priority);
         const Icon = cfg.icon;
         return (
@@ -308,7 +319,7 @@ export function NotificationBell() {
             </div>
           </div>
         );
-      })()}
+      })(), document.body)}
     </>
   );
 }

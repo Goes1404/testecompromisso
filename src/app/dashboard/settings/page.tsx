@@ -21,11 +21,15 @@ import {
   RefreshCw,
   School,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Bell,
+  BellRing,
+  BellOff
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 const PRESET_AVATARS = [
   "https://picsum.photos/seed/user1/400/400",
@@ -47,6 +51,7 @@ export default function SettingsPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -401,6 +406,76 @@ export default function SettingsPage() {
             </Card>
           </div>
         </div>
+
+        {/* ── Notificações Push ─────────────────────────────────────────── */}
+        <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden">
+          <CardHeader className="bg-muted/10 p-8 md:p-10 border-b border-dashed border-muted/20">
+            <CardTitle className="text-2xl font-black text-primary italic uppercase tracking-tighter flex items-center gap-3">
+              <BellRing className="h-6 w-6 text-accent" /> Notificações
+            </CardTitle>
+            <CardDescription className="font-medium italic text-base md:text-lg mt-2">
+              Receba comunicados, mensagens e novos materiais direto no celular, como no WhatsApp.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 md:p-10">
+            {permission === "unsupported" ? (
+              <div className="flex items-center gap-4 p-5 rounded-2xl bg-muted/20">
+                <BellOff className="h-6 w-6 text-muted-foreground shrink-0" />
+                <p className="text-sm font-medium text-muted-foreground italic">
+                  Este navegador não suporta notificações. Tente abrir pelo app instalado na tela inicial.
+                </p>
+              </div>
+            ) : permission === "denied" ? (
+              <div className="flex items-start gap-4 p-5 rounded-2xl bg-red-50 border border-red-100">
+                <BellOff className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-black text-red-700">Notificações bloqueadas</p>
+                  <p className="text-xs font-medium text-red-600/80 mt-1 leading-relaxed">
+                    Você bloqueou as notificações. Para reativar, abra as configurações do navegador,
+                    localize este site e permita notificações.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${subscribed ? 'bg-green-100' : 'bg-accent/10'}`}>
+                    {subscribed ? <BellRing className="h-7 w-7 text-green-600" /> : <Bell className="h-7 w-7 text-accent" />}
+                  </div>
+                  <div>
+                    <p className="text-base font-black text-primary italic">
+                      {subscribed ? "Notificações ativadas" : "Notificações desativadas"}
+                    </p>
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                      {subscribed
+                        ? "Você está recebendo avisos neste dispositivo."
+                        : "Ative para não perder nenhum comunicado importante."}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={subscribed ? unsubscribe : subscribe}
+                  disabled={pushLoading}
+                  className={`h-12 px-8 rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all shrink-0 ${
+                    subscribed
+                      ? 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      : 'bg-accent text-accent-foreground hover:bg-accent/90'
+                  }`}
+                >
+                  {pushLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : subscribed ? (
+                    <BellOff className="h-4 w-4 mr-2" />
+                  ) : (
+                    <BellRing className="h-4 w-4 mr-2" />
+                  )}
+                  {subscribed ? "Desativar" : "Ativar notificações"}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
   );
 }

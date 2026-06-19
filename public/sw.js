@@ -22,8 +22,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Compromisso";
   const options = {
     body: payload.body || "",
-    icon: payload.icon || "/icons/icon-192.png",
-    badge: payload.badge || "/icons/icon-72.png",
+    icon: payload.icon || "/icons/icon-192x192.png",
+    badge: payload.badge || "/icons/icon-192x192.png",
     image: payload.image,
     tag: payload.tag || payload.type || "compromisso",
     renotify: true,
