@@ -416,21 +416,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-white/10 via-white/5 to-transparent z-20"
         />
 
-        <SidebarHeader className="p-5 pb-4">
-          <div id="sidebar-logo" className="flex items-center gap-3">
-            <div className="relative h-9 w-36 overflow-hidden rounded-xl shrink-0">
+        <SidebarHeader className="p-4 pb-3">
+          <div id="sidebar-logo" className="flex items-center gap-2.5">
+            <div className="relative h-10 w-10 shrink-0 flex items-center justify-center">
               <Image
                 src="/images/logocompromisso.png"
                 alt="Logo Compromisso"
-                fill
+                width={40}
+                height={40}
                 className="object-contain"
-                sizes="144px"
                 priority
               />
             </div>
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="text-base font-black text-white italic leading-none">Compromisso</span>
-              <span className="text-[9px] text-white/60 uppercase tracking-widest font-black">Sistema de Ensino</span>
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden gap-0.5">
+              <span className="text-sm font-black text-white italic leading-tight">Compromisso</span>
+              <span className="text-[8px] text-white/50 uppercase tracking-wide font-black">Ensino</span>
             </div>
           </div>
         </SidebarHeader>
