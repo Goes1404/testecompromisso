@@ -7,6 +7,7 @@ import { Suspense } from 'react';
 import { LoadingShell } from '@/components/LoadingShell';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
+import { GoogleAnalytics } from "@/components/GoogleAnalytics"
 
 const inter = Inter({
   subsets: ['latin'],
@@ -92,6 +93,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Toaster />
           <SpeedInsights />
           <Analytics />
+          <Suspense fallback={null}>
+            <GoogleAnalytics />
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

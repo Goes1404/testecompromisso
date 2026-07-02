@@ -4,11 +4,11 @@
 import { useState, useEffect } from "react";
 import {
   TrendingUp, Users, Loader2, ClipboardCheck, BrainCircuit,
-  Activity, FileDown, BarChart3, Sparkles,
+  Activity, FileDown, BarChart3, Sparkles, FilePenLine, FileText,
 } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { BarChartPremium, LineChartPremium } from "@/components/charts/premium";
+import { BarChartPremium, LineChartPremium, AreaChartPremium } from "@/components/charts/premium";
 
 export default function TeacherAnalyticsDashboard({ userId }: { userId?: string }) {
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,11 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
     completionRate: 0,
     performanceBySubject: [] as { name: string; performance: number }[],
     engagementTrend: [] as { day: string; acessos: number }[],
+    totalEssays: 0,
+    avgEssayScore: 0,
+    totalExamAttempts: 0,
+    essaysTrend: [] as { week: string; total: number }[],
+    examsTrend: [] as { week: string; total: number }[],
   });
 
   useEffect(() => {
@@ -45,8 +50,15 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
         let trendQuery = supabase.from("student_question_answers").select("answered_at").gte("answered_at", weekAgo);
         if (userId) trendQuery = trendQuery.eq("student_id", userId);
 
-        const [{ count }, { data: subAnswers }, { data: progress }, { data: trendData }] = await Promise.all([
-          countQuery, subQuery, progressQuery, trendQuery,
+        // Últimas 8 semanas de redações e simulados, para os gráficos de tendência.
+        const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000).toISOString();
+        let essayQuery = supabase.from("essay_submissions").select("score, created_at").gte("created_at", eightWeeksAgo);
+        if (userId) essayQuery = essayQuery.eq("user_id", userId);
+        let examAttemptsQuery = supabase.from("exam_attempts").select("completed_at").gte("completed_at", eightWeeksAgo);
+        if (userId) examAttemptsQuery = examAttemptsQuery.eq("user_id", userId);
+
+        const [{ count }, { data: subAnswers }, { data: progress }, { data: trendData }, { data: essayRows }, { data: examAttemptRows }] = await Promise.all([
+          countQuery, subQuery, progressQuery, trendQuery, essayQuery, examAttemptsQuery,
         ]);
 
         const realTotalStudents = count || 0;
@@ -85,6 +97,29 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
         });
         const realEngagementTrend = Object.entries(dayMap).map(([day, acessos]) => ({ day, acessos }));
 
+        // Bucket genérico por semana (8 semanas, rótulo "S1"..."S8" da mais antiga
+        // para a mais recente) — usado tanto para redações quanto simulados.
+        const bucketByWeek = (rows: { date: string }[]): { week: string; total: number }[] => {
+          const buckets = Array.from({ length: 8 }, () => 0);
+          const now = Date.now();
+          rows.forEach(({ date }) => {
+            const ageMs = now - new Date(date).getTime();
+            const weekIdx = 7 - Math.min(7, Math.floor(ageMs / (7 * 24 * 60 * 60 * 1000)));
+            if (weekIdx >= 0 && weekIdx < 8) buckets[weekIdx]++;
+          });
+          return buckets.map((total, i) => ({ week: `S${i + 1}`, total }));
+        };
+
+        const essayRowsSafe = essayRows ?? [];
+        const realEssaysTrend = bucketByWeek(essayRowsSafe.map((e: any) => ({ date: e.created_at })));
+        const scoredEssaysForAvg = essayRowsSafe.filter((e: any) => e.score !== null && e.score > 0);
+        const realAvgEssayScore = scoredEssaysForAvg.length > 0
+          ? Math.round(scoredEssaysForAvg.reduce((acc: number, e: any) => acc + Number(e.score), 0) / scoredEssaysForAvg.length)
+          : 0;
+
+        const examAttemptRowsSafe = examAttemptRows ?? [];
+        const realExamsTrend = bucketByWeek(examAttemptRowsSafe.map((e: any) => ({ date: e.completed_at })));
+
         const hasNoData = realTotalStudents === 0 && (answers?.length ?? 0) === 0;
         setIsDemo(hasNoData && !userId);
 
@@ -106,6 +141,11 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
               { day: "Sex", acessos: 130 }, { day: "Sáb", acessos: 95 },
               { day: "Dom", acessos: 70 },
             ],
+            totalEssays: 47,
+            avgEssayScore: 812,
+            totalExamAttempts: 63,
+            essaysTrend: [4, 6, 5, 8, 7, 9, 6, 2].map((total, i) => ({ week: `S${i + 1}`, total })),
+            examsTrend: [6, 8, 7, 10, 9, 11, 8, 4].map((total, i) => ({ week: `S${i + 1}`, total })),
           });
         } else {
           setData({
@@ -114,6 +154,11 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
             completionRate: realAvgProg,
             performanceBySubject: realPerformanceBySubject.length > 0 ? realPerformanceBySubject : [{ name: "Geral", performance: 0 }],
             engagementTrend: realEngagementTrend,
+            totalEssays: essayRowsSafe.length,
+            avgEssayScore: realAvgEssayScore,
+            totalExamAttempts: examAttemptRowsSafe.length,
+            essaysTrend: realEssaysTrend,
+            examsTrend: realExamsTrend,
           });
         }
       } catch (e) {
@@ -226,6 +271,54 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
         <div className="p-4">
           <div className="h-[200px] w-full">
             <LineChartPremium data={data.engagementTrend} xKey="day" yKey="acessos" color="#ff6b00" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── KPIs de Redação e Simulados ── */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="flex flex-col items-center bg-white shadow-sm border border-slate-200 rounded-2xl py-3 px-2">
+          <span className="text-xl font-black text-slate-800 leading-none">{data.totalEssays}</span>
+          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 text-center">Redações (8sem)</span>
+        </div>
+        <div className="flex flex-col items-center bg-white shadow-sm border border-slate-200 rounded-2xl py-3 px-2">
+          <span className="text-xl font-black text-slate-800 leading-none">{data.avgEssayScore}</span>
+          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 text-center">Média Redação</span>
+        </div>
+        <div className="flex flex-col items-center bg-white shadow-sm border border-slate-200 rounded-2xl py-3 px-2">
+          <span className="text-xl font-black text-slate-800 leading-none">{data.totalExamAttempts}</span>
+          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 text-center">Simulados (8sem)</span>
+        </div>
+      </div>
+
+      {/* ── Redações ao Longo do Tempo ── */}
+      <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FilePenLine className="h-4 w-4 text-orange-400/85" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">Redações Enviadas</p>
+          </div>
+          <span className="text-[8px] font-black uppercase tracking-wider text-slate-600 bg-white shadow-sm border border-slate-200 rounded-full px-2 py-0.5">8 semanas</span>
+        </div>
+        <div className="p-4">
+          <div className="h-[180px] w-full">
+            <AreaChartPremium data={data.essaysTrend} xKey="week" yKey="total" color="#10b981" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Simulados ao Longo do Tempo ── */}
+      <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-white shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-orange-400/85" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">Simulados Realizados</p>
+          </div>
+          <span className="text-[8px] font-black uppercase tracking-wider text-slate-600 bg-white shadow-sm border border-slate-200 rounded-full px-2 py-0.5">8 semanas</span>
+        </div>
+        <div className="p-4">
+          <div className="h-[180px] w-full">
+            <AreaChartPremium data={data.examsTrend} xKey="week" yKey="total" color="#6366f1" />
           </div>
         </div>
       </div>
