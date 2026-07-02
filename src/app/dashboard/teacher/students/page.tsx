@@ -1,7 +1,7 @@
 ﻿
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,29 +69,30 @@ export default function TeacherStudentsPage() {
       if (!user) return;
       setLoading(true);
       try {
-        const { data: profiles, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("role", "student")
-          .order("name")
-          .limit(5000);
+        // Performance: as duas leituras rodam em paralelo (antes eram sequenciais)
+        // e o join progresso→aluno usa um Map (antes era O(alunos × progressos),
+        // um filter completo por aluno).
+        const [profilesRes, progressRes] = await Promise.all([
+          supabase.from("profiles").select("*").eq("role", "student").order("name").limit(5000),
+          supabase.from("user_progress").select("user_id, percentage"),
+        ]);
 
-        if (error) throw error;
+        if (profilesRes.error) throw profilesRes.error;
 
-        const studentProfiles = profiles || [];
+        const studentProfiles = profilesRes.data || [];
 
-        const { data: progressData } = await supabase
-          .from("user_progress")
-          .select("user_id, percentage");
+        const progByUser = new Map<string, number[]>();
+        for (const p of progressRes.data || []) {
+          const arr = progByUser.get(p.user_id);
+          if (arr) arr.push(p.percentage);
+          else progByUser.set(p.user_id, [p.percentage]);
+        }
 
         const mapped = studentProfiles.map((s) => {
-          const userProg = progressData?.filter((p) => p.user_id === s.id) || [];
-          const avg =
-            userProg.length > 0
-              ? Math.round(
-                  userProg.reduce((acc, curr) => acc + curr.percentage, 0) / userProg.length
-                )
-              : 0;
+          const arr = progByUser.get(s.id) || [];
+          const avg = arr.length > 0
+            ? Math.round(arr.reduce((acc, curr) => acc + (Number(curr) || 0), 0) / arr.length)
+            : 0;
           return { ...s, progress: avg };
         });
 
@@ -105,46 +106,53 @@ export default function TeacherStudentsPage() {
     fetchStudents();
   }, [user, toast]);
 
-  const filteredStudents = students.filter((student) => {
+  // Performance: memoiza as listas derivadas. Antes, filteredStudents +
+  // institutions + courses + atRiskCount + aidCount + os 5 counts de FILTERS
+  // faziam ~9 varreduras completas do array a CADA tecla digitada / re-render.
+  const filteredStudents = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch =
-      (student.name || "").toLowerCase().includes(searchLower) ||
-      (student.email || "").toLowerCase().includes(searchLower) ||
-      (student.institution || "").toLowerCase().includes(searchLower);
-
-    const matchesInstitution =
-      filterInstitution === "all" || student.institution === filterInstitution;
-    const matchesCourse = filterCourse === "all" || student.course === filterCourse;
-
-    const baseMatches = matchesSearch && matchesInstitution && matchesCourse;
-
-    if (activeFilter === "at_risk") {
-      const sevenDaysAgo = subDays(new Date(), 7);
-      const isInactive =
-        !student.last_access || new Date(student.last_access) < sevenDaysAgo;
-      return baseMatches && isInactive;
-    }
-    if (activeFilter === "financial_aid") {
-      return baseMatches && student.is_financial_aid_eligible === true;
-    }
-    if (activeFilter === "etec") {
-      return baseMatches && (student.exam_target || "").toLowerCase().includes("etec");
-    }
-    if (activeFilter === "enem") {
-      return baseMatches && (student.exam_target || "").toLowerCase().includes("enem");
-    }
-    return baseMatches;
-  });
-
-  const institutions = Array.from(new Set(students.map((s) => s.institution).filter(Boolean)));
-  const courses = Array.from(new Set(students.map((s) => s.course).filter(Boolean)));
-
-  const atRiskCount = students.filter((s) => {
     const sevenDaysAgo = subDays(new Date(), 7);
-    return !s.last_access || new Date(s.last_access) < sevenDaysAgo;
-  }).length;
+    return students.filter((student) => {
+      const matchesSearch =
+        (student.name || "").toLowerCase().includes(searchLower) ||
+        (student.email || "").toLowerCase().includes(searchLower) ||
+        (student.institution || "").toLowerCase().includes(searchLower);
 
-  const aidCount = students.filter((s) => s.is_financial_aid_eligible === true).length;
+      const matchesInstitution =
+        filterInstitution === "all" || student.institution === filterInstitution;
+      const matchesCourse = filterCourse === "all" || student.course === filterCourse;
+
+      const baseMatches = matchesSearch && matchesInstitution && matchesCourse;
+
+      if (activeFilter === "at_risk") {
+        const isInactive =
+          !student.last_access || new Date(student.last_access) < sevenDaysAgo;
+        return baseMatches && isInactive;
+      }
+      if (activeFilter === "financial_aid") {
+        return baseMatches && student.is_financial_aid_eligible === true;
+      }
+      if (activeFilter === "etec") {
+        return baseMatches && (student.exam_target || "").toLowerCase().includes("etec");
+      }
+      if (activeFilter === "enem") {
+        return baseMatches && (student.exam_target || "").toLowerCase().includes("enem");
+      }
+      return baseMatches;
+    });
+  }, [students, searchTerm, filterInstitution, filterCourse, activeFilter]);
+
+  const { institutions, courses, atRiskCount, aidCount, etecCount, enemCount } = useMemo(() => {
+    const sevenDaysAgo = subDays(new Date(), 7);
+    return {
+      institutions: Array.from(new Set(students.map((s) => s.institution).filter(Boolean))),
+      courses: Array.from(new Set(students.map((s) => s.course).filter(Boolean))),
+      atRiskCount: students.filter((s) => !s.last_access || new Date(s.last_access) < sevenDaysAgo).length,
+      aidCount: students.filter((s) => s.is_financial_aid_eligible === true).length,
+      etecCount: students.filter((s) => (s.exam_target || "").toLowerCase().includes("etec")).length,
+      enemCount: students.filter((s) => (s.exam_target || "").toLowerCase().includes("enem")).length,
+    };
+  }, [students]);
 
   const formatTime = (seconds: number) => {
     if (!seconds) return "0h";
@@ -156,8 +164,8 @@ export default function TeacherStudentsPage() {
 
   const FILTERS = [
     { key: "all", label: "Todos", count: students.length, color: "bg-orange-500" },
-    { key: "etec", label: "ETEC", count: students.filter((s) => (s.exam_target || "").toLowerCase().includes("etec")).length, color: "bg-indigo-500" },
-    { key: "enem", label: "ENEM", count: students.filter((s) => (s.exam_target || "").toLowerCase().includes("enem")).length, color: "bg-purple-500" },
+    { key: "etec", label: "ETEC", count: etecCount, color: "bg-indigo-500" },
+    { key: "enem", label: "ENEM", count: enemCount, color: "bg-purple-500" },
     { key: "at_risk", label: "Em Risco", count: atRiskCount, color: "bg-red-500" },
     { key: "financial_aid", label: "Isenção", count: aidCount, color: "bg-emerald-500" },
   ] as const;

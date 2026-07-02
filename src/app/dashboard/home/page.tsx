@@ -347,7 +347,10 @@ export default function DashboardHome() {
         supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3),
         supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id),
-        supabase.from('exam_attempts').select('score, completed_at, answers, exam:exams!inner(title, exam_type)').eq('user_id', user.id).order('completed_at', { ascending: false }),
+        // Performance: NÃO trazemos o blob JSONB `answers` de todas as tentativas.
+        // Buscamos só os metadados; o `answers` do simulado é carregado depois,
+        // em uma consulta pontual (apenas quando existe simulado importado).
+        supabase.from('exam_attempts').select('id, score, completed_at, exam:exams!inner(title, exam_type)').eq('user_id', user.id).order('completed_at', { ascending: false }),
       ]);
       let essayData = essayRes?.data || [];
       let examData = examRes?.data || [];
@@ -386,20 +389,30 @@ export default function DashboardHome() {
       const simOficialData = (simOficialRes?.data || []).find(
         (a: any) => a.exam?.exam_type === 'simulado_importado'
       ) as any;
+      let newSimuladoOficial: typeof simuladoOficial = null;
       if (simOficialData) {
         const examObj = Array.isArray(simOficialData.exam) ? simOficialData.exam[0] : simOficialData.exam;
-        const rawAnswers = Array.isArray(simOficialData.answers) ? simOficialData.answers : [];
-        setSimuladoOficial({
+        // Carrega o blob de respostas SÓ da linha do simulado (consulta pontual).
+        const { data: answersRow } = await supabase
+          .from('exam_attempts')
+          .select('answers')
+          .eq('id', simOficialData.id)
+          .maybeSingle();
+        const rawAnswers = Array.isArray(answersRow?.answers) ? answersRow!.answers : [];
+        newSimuladoOficial = {
           title: examObj?.title ?? 'Simulado ENEM',
           score: Number(simOficialData.score),
           total: 60,
           completed_at: simOficialData.completed_at,
           answers: rawAnswers,
-        });
+        };
+        setSimuladoOficial(newSimuladoOficial);
       }
 
       const cacheData = {
-        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial },
+        // Cacheia o objeto recém-montado (não a variável de state, que ainda
+        // guarda o valor antigo neste ponto por causa do setState assíncrono).
+        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial: newSimuladoOficial },
         timestamp: Date.now()
       };
       if (typeof window !== 'undefined') localStorage.setItem(`dash_cache_${user.id}`, JSON.stringify(cacheData));

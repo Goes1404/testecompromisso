@@ -330,14 +330,30 @@ export default function QuestionBankPage() {
                 return item;
             });
 
+            // Performance: grava as questões em LOTES (antes era 1 INSERT por
+            // questão — 60 round-trips numa prova típica). Em caso de erro no lote,
+            // cai para item-a-item só naquele lote, preservando a granularidade de
+            // erro e a barra de progresso.
             const inserted: { id: string }[] = [];
             const failed: { index: number; error: string }[] = [];
+            const CHUNK = 25;
             setSaveProgress({ current: 0, total: itemsToInsert.length });
-            for (let idx = 0; idx < itemsToInsert.length; idx++) {
-                const { data, error: insertErr } = await supabase.from('questions').insert([itemsToInsert[idx]]).select('id').single();
-                if (insertErr) failed.push({ index: idx, error: insertErr.message });
-                else if (data) inserted.push(data);
-                setSaveProgress({ current: idx + 1, total: itemsToInsert.length });
+
+            for (let start = 0; start < itemsToInsert.length; start += CHUNK) {
+                const slice = itemsToInsert.slice(start, start + CHUNK);
+                const { data, error: chunkErr } = await supabase.from('questions').insert(slice).select('id');
+
+                if (!chunkErr && data) {
+                    inserted.push(...data);
+                } else {
+                    // Fallback: identifica quais itens do lote falharam.
+                    for (let j = 0; j < slice.length; j++) {
+                        const { data: one, error: oneErr } = await supabase.from('questions').insert([slice[j]]).select('id').single();
+                        if (oneErr) failed.push({ index: start + j, error: oneErr.message });
+                        else if (one) inserted.push(one);
+                    }
+                }
+                setSaveProgress({ current: Math.min(start + CHUNK, itemsToInsert.length), total: itemsToInsert.length });
             }
 
             if (failed.length > 0 && inserted.length === 0)
@@ -348,14 +364,13 @@ export default function QuestionBankPage() {
                 toast({ title: `${inserted.length} salvas, ${failed.length} com erro`, description: sample, variant: 'destructive' });
             }
 
-            if (createExam && examTitle.trim() && inserted.length > 0) {
-                const { data: examData, error: examErr } = await supabase
-                    .from('exams').insert({ title: examTitle.trim(), year: examYear, exam_type: examType, teacher_id: user.id })
-                    .select('id').single();
-                if (examErr) throw examErr;
-                const examQs = inserted.map((q, i) => ({ exam_id: examData.id, question_id: q.id, order_index: i }));
+            // Correção: reutiliza a prova já criada acima (finalExamId) em vez de
+            // inserir uma SEGUNDA prova. Antes, com createExam=true, duas linhas
+            // eram gravadas em `exams` (a segunda sem o PDF).
+            if (createExam && finalExamId && inserted.length > 0) {
+                const examQs = inserted.map((q, i) => ({ exam_id: finalExamId, question_id: q.id, order_index: i }));
                 await supabase.from('exam_questions').insert(examQs);
-                toast({ title: 'Prova criada!', description: `"${examTitle}" com ${inserted.length} questões.` });
+                toast({ title: 'Prova criada!', description: `"${examTitle || 'Prova'}" com ${inserted.length} questões.` });
             } else if (failed.length === 0) {
                 toast({ title: 'Banco Atualizado!', description: `${inserted.length} questões gravadas.` });
             }

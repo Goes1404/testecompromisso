@@ -119,14 +119,18 @@ export default function DirectChatPage() {
     if (!isAurora && user) {
       const channel = supabase
         .channel(`chat_realtime_${contactId}`)
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'direct_messages'
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_messages',
+          // Performance/segurança: filtra no servidor apenas mensagens destinadas
+          // a mim. Antes, todo chat aberto recebia TODO INSERT da plataforma e
+          // filtrava no cliente. As mensagens que EU envio já entram de forma
+          // otimista no handleSend, então só preciso ouvir as que chegam pra mim.
+          filter: `receiver_id=eq.${user.id}`,
         }, (payload) => {
-          const isFromCurrentChat = 
-            (payload.new.sender_id === user.id && payload.new.receiver_id === contactId) ||
-            (payload.new.sender_id === contactId && payload.new.receiver_id === user.id);
+          const isFromCurrentChat =
+            payload.new.sender_id === contactId && payload.new.receiver_id === user.id;
 
           if (isFromCurrentChat) {
             setMessages((prev: ChatMessage[]) => {

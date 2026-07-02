@@ -60,7 +60,10 @@ export default function ChatListPage() {
         .from('direct_messages')
         .select('id, sender_id, receiver_id, content, created_at')
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        // Performance: as 300 mensagens mais recentes já cobrem a "última por
+        // contato" de qualquer conversa ativa, sem baixar o histórico inteiro.
+        .limit(300);
 
       if (lastMsgsError) throw lastMsgsError;
 
@@ -95,7 +98,9 @@ export default function ChatListPage() {
       const { data: chatHistory, error: historyError } = await supabase
         .from('direct_messages')
         .select('sender_id, receiver_id')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false })
+        .limit(500);
 
       const historyIds = new Set<string>();
       if (!historyError && chatHistory) {
@@ -106,9 +111,11 @@ export default function ChatListPage() {
       }
       
       // 2. Query para buscar contatos (professores, secretaria ou quem tem histórico de chat)
+      // Performance/privacidade: seleciona só as colunas usadas nos cards — evita
+      // trafegar PII (telefone, cpf, nascimento) de todo o diretório de usuários.
       let query = supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, username, institution, course, sala, exam_target, profile_type, role, avatar_url')
         .neq('id', user.id);
 
       if (['teacher', 'staff', 'admin'].includes(userType)) {

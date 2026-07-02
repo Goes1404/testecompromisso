@@ -144,10 +144,9 @@ export default function TeacherTrailsPage() {
 
       if (serieErr || !serie) throw new Error(serieErr?.message || "Falha ao criar série");
 
-      for (const trailId of ids) {
-        const { error: modErr } = await supabase.from("modules").update({ trail_id: serie.id }).eq("trail_id", trailId);
-        if (modErr) throw new Error(`Módulos de ${trailId}: ${modErr.message}`);
-      }
+      // Performance: um único UPDATE com .in() em vez de um por trilha.
+      const { error: modErr } = await supabase.from("modules").update({ trail_id: serie.id }).in("trail_id", ids);
+      if (modErr) throw new Error(`Falha ao reatribuir módulos: ${modErr.message}`);
 
       const { error: delErr } = await supabase.from("trails").delete().in("id", ids);
       if (delErr) throw new Error(delErr.message);

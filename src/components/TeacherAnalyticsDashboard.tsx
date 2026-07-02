@@ -26,27 +26,37 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
     async function fetchAnalytics() {
       setLoading(true);
       try {
-        let realTotalStudents = 0;
-        if (userId) {
-          realTotalStudents = 1;
-        } else {
-          const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("profile_type", "student");
-          realTotalStudents = count || 0;
-        }
+        // Performance: todas as leituras rodam em paralelo (antes eram 5 awaits
+        // em série). A query com matéria (subAnswers) já traz is_correct, então
+        // ela serve TAMBÉM para a média geral — eliminamos a query de tabela
+        // cheia duplicada que existia só para calcular avgScore.
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-        let answerQuery = supabase.from("student_question_answers").select("is_correct");
-        if (userId) answerQuery = answerQuery.eq("student_id", userId);
-        const { data: answers } = await answerQuery;
+        const countQuery = userId
+          ? Promise.resolve({ count: 1 })
+          : supabase.from("profiles").select("*", { count: "exact", head: true }).eq("profile_type", "student");
 
-        let realAvgScore = 0;
-        if (answers && answers.length > 0) {
-          const correct = answers.filter((a) => a.is_correct).length;
-          realAvgScore = Math.round((correct / answers.length) * 1000);
-        }
+        let subQuery = supabase.from("student_question_answers").select("is_correct, question:questions!question_id(subject:subjects!subject_id(name))");
+        if (userId) subQuery = subQuery.eq("student_id", userId);
 
         let progressQuery = supabase.from("user_progress").select("percentage");
         if (userId) progressQuery = progressQuery.eq("user_id", userId);
-        const { data: progress } = await progressQuery;
+
+        let trendQuery = supabase.from("student_question_answers").select("answered_at").gte("answered_at", weekAgo);
+        if (userId) trendQuery = trendQuery.eq("student_id", userId);
+
+        const [{ count }, { data: subAnswers }, { data: progress }, { data: trendData }] = await Promise.all([
+          countQuery, subQuery, progressQuery, trendQuery,
+        ]);
+
+        const realTotalStudents = count || 0;
+
+        const answers = subAnswers ?? [];
+        let realAvgScore = 0;
+        if (answers.length > 0) {
+          const correct = (answers as any[]).filter((a) => a.is_correct).length;
+          realAvgScore = Math.round((correct / answers.length) * 1000);
+        }
 
         let realAvgProg = 0;
         if (progress && progress.length > 0) {
@@ -54,12 +64,8 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
           realAvgProg = Math.round(total / progress.length);
         }
 
-        let subQuery = supabase.from("student_question_answers").select("is_correct, question:questions!question_id(subject:subjects!subject_id(name))");
-        if (userId) subQuery = subQuery.eq("student_id", userId);
-        const { data: subAnswers } = await subQuery;
-
         const subjectMap: Record<string, { correct: number; total: number }> = {};
-        (subAnswers as any[] ?? []).forEach((a) => {
+        (answers as any[]).forEach((a) => {
           const name = a.question?.subject?.name || "Geral";
           if (!subjectMap[name]) subjectMap[name] = { correct: 0, total: 0 };
           subjectMap[name].total += 1;
@@ -70,11 +76,6 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
           .map(([name, s]) => ({ name, performance: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0 }))
           .sort((a, b) => b.performance - a.performance)
           .slice(0, 5);
-
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        let trendQuery = supabase.from("student_question_answers").select("answered_at").gte("answered_at", weekAgo);
-        if (userId) trendQuery = trendQuery.eq("student_id", userId);
-        const { data: trendData } = await trendQuery;
 
         const daysShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
         const dayMap: Record<string, number> = { Seg: 0, Ter: 0, Qua: 0, Qui: 0, Sex: 0, Sáb: 0, Dom: 0 };
