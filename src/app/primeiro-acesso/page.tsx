@@ -33,7 +33,7 @@ function PrimeiroAcessoContent() {
   const [error, setError] = useState('');
 
   const [fullName, setFullName] = useState('');
-  const [userFound, setUserFound] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [userFound, setUserFound] = useState<{ id?: string; email: string; name: string } | null>(null);
 
   // Register fields
   const [password, setPassword] = useState('');

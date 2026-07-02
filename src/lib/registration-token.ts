@@ -6,14 +6,31 @@
  *   "<expiry_ms>:<nonce_hex>:<hmac_hex_24>"
  */
 
-import { createHmac, randomBytes } from 'crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
 const DEFAULT_EXPIRY_DAYS = 7;
 
+/**
+ * Segredo de assinatura dos tokens de cadastro.
+ * Preferimos REGISTRATION_TOKEN_SECRET (dedicado). Se ainda não estiver
+ * configurado em produção, caímos para a SERVICE_ROLE_KEY para NÃO invalidar
+ * links já emitidos — assim a migração para o segredo dedicado é gradual e sem
+ * downtime (basta setar a env var; tokens novos passam a usar o segredo dedicado).
+ */
 function secret(): string {
-  const s = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!s) throw new Error('SUPABASE_SERVICE_ROLE_KEY não definida');
-  return s;
+  const dedicated = process.env.REGISTRATION_TOKEN_SECRET;
+  if (dedicated) return dedicated;
+  const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!fallback) throw new Error('REGISTRATION_TOKEN_SECRET (ou SUPABASE_SERVICE_ROLE_KEY) não definida');
+  return fallback;
+}
+
+/** Comparação de assinatura em tempo constante (evita timing attack). */
+function safeEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ba.length !== bb.length) return false;
+  return timingSafeEqual(ba, bb);
 }
 
 export function generateRegistrationToken(expiryDays = DEFAULT_EXPIRY_DAYS): string {
@@ -45,7 +62,7 @@ export function verifyRegistrationToken(token: string): TokenStatus {
     const payload = `${expiryStr}:${nonce}`;
     const expectedSig = createHmac('sha256', secret()).update(payload).digest('hex').substring(0, 24);
 
-    if (sig !== expectedSig) return 'invalid';
+    if (!safeEqual(sig, expectedSig)) return 'invalid';
     if (Date.now() > expiry) return 'expired';
 
     return 'valid';

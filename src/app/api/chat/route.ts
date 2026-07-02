@@ -1,5 +1,6 @@
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
+import { getAuthUser } from '@/lib/server-auth';
 
 // 300s no Pro / 60s no Hobby — a Vercel usa o máximo permitido pelo plano
 export const maxDuration = 300;
@@ -7,6 +8,12 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // Segurança: sem auth, esta rota é um proxy aberto ao modelo (16k tokens/req).
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return Response.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+
     const { messages } = await req.json();
 
     const { text } = await generateText({

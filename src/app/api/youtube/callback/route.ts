@@ -1,5 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createHmac, timingSafeEqual } from 'crypto';
+import { getAuthUser } from '@/lib/server-auth';
+
+// Valida a assinatura HMAC do state emitido por /api/youtube/auth-url.
+// Retorna o payload cru (base64url) se válido, ou null.
+function verifyState(signed: string): string | null {
+  const dot = signed.lastIndexOf('.');
+  if (dot === -1) return null;
+  const payload = signed.slice(0, dot);
+  const sig = signed.slice(dot + 1);
+  const secret = process.env.YOUTUBE_STATE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const expected = createHmac('sha256', secret).update(payload).digest('hex').slice(0, 32);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  return payload;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,8 +31,20 @@ export async function GET(request: Request) {
   }
 
   try {
-    const state = JSON.parse(Buffer.from(stateRaw, 'base64url').toString('utf8'));
+    // Segurança: só aceita state assinado por nós E confere que o usuário logado
+    // na sessão é o mesmo do state. Sem isso, um atacante forjaria o vínculo do
+    // canal YouTube a outro professor (ou o próprio canal ao alvo).
+    const verifiedPayload = verifyState(stateRaw);
+    if (!verifiedPayload) {
+      return NextResponse.redirect(`${appUrl}/dashboard/teacher/trails?youtube=error`);
+    }
+    const state = JSON.parse(Buffer.from(verifiedPayload, 'base64url').toString('utf8'));
     const { userId, trailId } = state as { userId: string; trailId: string };
+
+    const sessionUser = await getAuthUser();
+    if (!sessionUser || sessionUser.id !== userId) {
+      return NextResponse.redirect(`${appUrl}/dashboard/teacher/trails?youtube=error`);
+    }
 
     const redirectUri = `${appUrl}/api/youtube/callback`;
 

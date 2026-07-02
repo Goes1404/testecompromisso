@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { log } from '@/lib/logger';
+import { getAuthUser } from '@/lib/server-auth';
 
 const PIXABAY_KEY = process.env.PIXABAY_API_KEY;
 
@@ -33,6 +34,11 @@ function buildQuery(title: string, category: string): string {
 }
 
 export async function GET(request: Request) {
+  const authUser = await getAuthUser();
+  if (!authUser) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const title = searchParams.get('title') ?? '';
   const category = searchParams.get('category') ?? '';

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
+import { getAuthUser } from "@/lib/server-auth";
 
 export const dynamic = 'force-dynamic';
 // 3 correções paralelas + raciocínio longo podem levar alguns segundos.
@@ -177,6 +178,13 @@ function normalizeRun(parsed: any): ParsedRun {
 const SELF_CONSISTENCY_RUNS = 3;
 
 export async function POST(req: Request) {
+  // Segurança: rota cara (3× gpt-4o por request). Só para usuários autenticados,
+  // evitando queima de crédito OpenAI por chamadas anônimas.
+  const authUser = await getAuthUser();
+  if (!authUser) {
+    return NextResponse.json({ success: false, error: "Não autenticado" }, { status: 401 });
+  }
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   try {
     const { theme, text, supporting_texts, origin } = await req.json();

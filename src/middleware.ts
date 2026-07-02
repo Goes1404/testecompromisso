@@ -56,6 +56,12 @@ export async function middleware(request: NextRequest) {
     }
 
     if (request.nextUrl.pathname === '/dashboard/first-access') {
+      // Só libera o first-access para quem PRECISA trocar a senha. Caso contrário
+      // manda pra home. Antes redirecionava incondicionalmente, o que (a) criava
+      // loop com o layout e (b) permitia pular a troca obrigatória de senha.
+      if (session.user?.user_metadata?.must_change_password) {
+        return response
+      }
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/dashboard/home'
       return NextResponse.redirect(redirectUrl)

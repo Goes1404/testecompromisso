@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { getAuthUser } from '@/lib/server-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,10 +19,13 @@ function getWeekStart(): string {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await request.json();
-    if (!userId) {
-      return NextResponse.json({ error: 'userId obrigatório' }, { status: 400 });
+    // Segurança: o resumo é SEMPRE do usuário autenticado. Ignora qualquer
+    // userId do body (evita IDOR / dump de PID de outro aluno + custo OpenAI).
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
+    const userId = authUser.id;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -185,7 +189,7 @@ Retorne um JSON com:
   } catch (error: any) {
     console.error('[WEEKLY_SUMMARY]', error);
     return NextResponse.json(
-      { error: error.message ?? 'Erro ao gerar resumo semanal' },
+      { error: 'Erro ao gerar resumo semanal' },
       { status: 500 }
     );
   }

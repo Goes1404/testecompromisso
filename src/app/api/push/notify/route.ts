@@ -39,10 +39,31 @@ export async function POST(req: NextRequest) {
 
     // ── Caso 1: Mensagem direta no chat ──────────────────────
     if (body.type === "chat") {
-      if (!body.receiverId || !body.content) {
-        return NextResponse.json({ error: "receiverId e content obrigatórios" }, { status: 400 });
+      if (!body.receiverId) {
+        return NextResponse.json({ error: "receiverId obrigatório" }, { status: 400 });
       }
-      const preview = body.content.length > 140 ? body.content.slice(0, 140) + "…" : body.content;
+
+      // Segurança: só permite push de chat se o emissor REALMENTE enviou uma
+      // mensagem ao destinatário há pouco (a mensagem é inserida antes deste
+      // fetch). Isso impede spoofing de push com conteúdo arbitrário a qualquer
+      // usuário. Usamos o conteúdo gravado no banco, não o body do cliente.
+      const since = new Date(Date.now() - 120_000).toISOString(); // 2 min
+      const { data: lastMsg } = await admin
+        .from("direct_messages")
+        .select("content")
+        .eq("sender_id", user.id)
+        .eq("receiver_id", body.receiverId)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!lastMsg) {
+        return NextResponse.json({ error: "Nenhuma mensagem recente para notificar." }, { status: 403 });
+      }
+
+      const realContent = lastMsg.content || "Nova mensagem";
+      const preview = realContent.length > 140 ? realContent.slice(0, 140) + "…" : realContent;
       const result = await sendPushToUser(body.receiverId, {
         title: senderName,
         body: preview,

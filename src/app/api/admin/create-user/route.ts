@@ -83,7 +83,10 @@ export async function POST(request: Request) {
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
-        must_change_password: false,
+        // Segurança: força a troca da senha padrão no primeiro login (o middleware
+        // + first-access garantem o fluxo). Sem isso, a senha padrão permanece
+        // válida indefinidamente e é a mesma para todos os novos usuários.
+        must_change_password: true,
         profile_type: profileType || role,
         institution: institution || '',
         exam_target: examTarget || 'ENEM',

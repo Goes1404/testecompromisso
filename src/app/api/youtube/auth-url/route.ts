@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { log } from '@/lib/logger';
+import { createHmac } from 'crypto';
+
+// Assina o state do OAuth para impedir que um atacante forje um state com o
+// userId de outra pessoa (sequestro de vínculo de canal YouTube).
+function signState(payload: string): string {
+  const secret = process.env.YOUTUBE_STATE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const sig = createHmac('sha256', secret).update(payload).digest('hex').slice(0, 32);
+  return `${payload}.${sig}`;
+}
 
 export async function GET(request: Request) {
   try {
@@ -28,7 +37,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Google OAuth não configurado (GOOGLE_CLIENT_ID ausente)' }, { status: 500 });
     }
 
-    const state = Buffer.from(JSON.stringify({ userId: user.id, trailId })).toString('base64url');
+    const rawState = Buffer.from(JSON.stringify({ userId: user.id, trailId })).toString('base64url');
+    const state = signState(rawState);
 
     const params = new URLSearchParams({
       client_id: clientId,

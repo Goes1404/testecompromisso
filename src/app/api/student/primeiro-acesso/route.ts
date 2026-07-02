@@ -108,7 +108,17 @@ export async function POST(request: Request) {
       const { fullName } = body;
       if (!fullName?.trim()) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 });
 
-      console.log('[PRIMEIRO_ACESSO] Busca de aluno recebida');
+      // Segurança: rate-limit por IP também na busca, para dificultar enumeração
+      // em massa de alunos (varredura de nomes). Degrada sem travar se a tabela
+      // de tentativas estiver indisponível.
+      const ip = getClientIp(request);
+      const idHash = hashIdentifier(fullName);
+      if (await checkRecoverRateLimit(supabaseAdmin, ip, idHash)) {
+        return NextResponse.json(
+          { error: 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' },
+          { status: 429 }
+        );
+      }
 
       const generatedEmail = generateEmail(fullName.trim());
       // Segurança: remove caracteres de controle do PostgREST (vírgula/parênteses/*) antes
@@ -117,19 +127,23 @@ export async function POST(request: Request) {
 
       const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
-        .select('id, email, name')
+        .select('email, name')
         .or(`email.eq.${generatedEmail},name.ilike.%${safeName}%`)
         .limit(1);
 
       if (error) {
-        console.error('[PRIMEIRO_ACESSO] Erro na query:', error);
+        console.error('[PRIMEIRO_ACESSO] Erro na busca');
         throw error;
       }
 
+      await recordRecoverAttempt(supabaseAdmin, ip, idHash, !!(profiles && profiles.length));
+
       if (profiles && profiles.length > 0) {
+        // Não retorna o id interno (UUID) — o cliente só precisa de nome + e-mail
+        // de login. Reduz o vazamento de identificadores por enumeração.
         return NextResponse.json({
           found: true,
-          user: { id: profiles[0].id, email: profiles[0].email, name: profiles[0].name }
+          user: { email: profiles[0].email, name: profiles[0].name }
         });
       } else {
         return NextResponse.json({ found: false });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
+import { getAuthUser } from "@/lib/server-auth";
 
 export const dynamic = 'force-dynamic';
 // Transcrição de foto pode levar alguns segundos.
@@ -13,6 +14,11 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // ~8MB
  * apenas digitaliza, preservando parágrafos.
  */
 export async function POST(req: Request) {
+  const authUser = await getAuthUser();
+  if (!authUser) {
+    return NextResponse.json({ success: false, error: "Não autenticado" }, { status: 401 });
+  }
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   try {
     const { image } = await req.json();
