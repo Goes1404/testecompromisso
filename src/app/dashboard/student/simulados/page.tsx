@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -25,15 +24,6 @@ import {
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ALL_TOPICS = '_all';
-
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06, delayChildren: 0.03 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.25, 0.1, 0.25, 1] } },
-};
 
 type Mode = 'especifico' | 'materia' | 'completo';
 type Subject     = { id: string; name: string; question_count: number };
@@ -345,15 +335,7 @@ export default function SimuladoPage() {
         </div>
 
         {/* question card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-            style={{ willChange: 'transform' }}
-          >
+        <div key={currentIndex} className="animate-in fade-in slide-in-from-right-8 duration-300">
             <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden mb-4">
               {/* question body */}
               <div className="p-6 sm:p-8 space-y-5 border-b border-slate-50">
@@ -375,16 +357,20 @@ export default function SimuladoPage() {
 
               {/* options */}
               <div className="p-6 sm:p-8">
-                <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-2.5">
+                <div className="space-y-2.5">
                   <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer}>
                     {(currentQuestion.options || []).map((o: any, i: number) => {
                       const key = opt(o, i);
                       const isSelected = selectedAnswer === key;
                       return (
-                        <motion.div key={key} variants={fadeUp} whileTap={{ scale: 0.985 }} style={{ willChange: 'transform' }}>
+                        <div
+                          key={key}
+                          className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+                          style={{ animationDelay: `${i * 60}ms`, animationDuration: '260ms' }}
+                        >
                           <div
                             onClick={() => setSelectedAnswer(key)}
-                            className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer select-none
+                            className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-2xl border-2 transition-transform active:scale-[0.985] cursor-pointer select-none
                               ${isSelected
                                 ? 'border-primary bg-primary/5 shadow-[0_0_0_2px_rgba(255,107,0,0.1)]'
                                 : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 active:border-primary/40'}`}
@@ -398,15 +384,14 @@ export default function SimuladoPage() {
                               <span className="font-medium text-slate-700 text-sm sm:text-base whitespace-pre-wrap break-words">{o.text}</span>
                             </div>
                           </div>
-                        </motion.div>
+                        </div>
                       );
                     })}
                   </RadioGroup>
-                </motion.div>
+                </div>
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
 
         {/* bottom CTA */}
         <div className="fixed bottom-16 left-0 right-0 z-50 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
@@ -609,15 +594,13 @@ export default function SimuladoPage() {
       {/* ── mode selector ── */}
       <div className="mb-5">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 px-1">Modo de Treino</p>
-        <motion.div className="grid grid-cols-1 sm:grid-cols-3 gap-3" variants={stagger} initial="hidden" animate="show">
-          {MODES.map(m => (
-            <motion.button
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {MODES.map((m, i) => (
+            <button
               key={m.id}
-              variants={fadeUp}
-              whileTap={{ scale: 0.97 }}
-              style={{ willChange: 'transform' }}
+              style={{ animationDelay: `${i * 60}ms`, animationDuration: '260ms' }}
               onClick={() => { setMode(m.id); setSelectedSubjectId(''); setSelectedMicroTopicId(ALL_TOPICS); }}
-              className={`p-4 rounded-[1.75rem] border-2 text-left transition-all duration-200
+              className={`animate-in fade-in slide-in-from-bottom-2 fill-mode-both p-4 rounded-[1.75rem] border-2 text-left transition-transform active:scale-[0.97] duration-200
                 ${mode === m.id
                   ? 'border-primary bg-primary/5 shadow-lg'
                   : 'border-slate-100 bg-white hover:border-slate-200'}`}
@@ -627,20 +610,15 @@ export default function SimuladoPage() {
               </div>
               <p className={`font-black text-sm leading-tight mb-1 ${mode === m.id ? 'text-primary' : 'text-slate-600'}`}>{m.label}</p>
               <p className="text-[11px] text-slate-400 font-medium leading-snug">{m.desc}</p>
-            </motion.button>
+            </button>
           ))}
-        </motion.div>
+        </div>
       </div>
 
       {/* ── subject / topic filters ── */}
-      <AnimatePresence>
-        {(mode === 'materia' || mode === 'especifico') && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-[2rem] shadow-lg border border-slate-100 p-6 space-y-4 mb-5"
+      {(mode === 'materia' || mode === 'especifico') && (
+          <div
+            className="animate-in fade-in slide-in-from-top-2 duration-200 bg-white rounded-[2rem] shadow-lg border border-slate-100 p-6 space-y-4 mb-5"
           >
             <div className="space-y-1.5">
               <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Disciplina</Label>
@@ -659,7 +637,7 @@ export default function SimuladoPage() {
             </div>
 
             {mode === 'especifico' && selectedSubjectId && (
-              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="space-y-1.5">
+              <div className="animate-in fade-in slide-in-from-top-1 duration-200 space-y-1.5">
                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Micro-tópico (opcional)</Label>
                 <Select value={selectedMicroTopicId} onValueChange={setSelectedMicroTopicId}>
                   <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-200 font-bold text-sm focus:ring-accent">
@@ -672,21 +650,15 @@ export default function SimuladoPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </motion.div>
+              </div>
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* ── completo settings ── */}
-      <AnimatePresence>
-        {mode === 'completo' && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-[2rem] shadow-lg border border-slate-100 p-6 space-y-5 mb-5"
+      {mode === 'completo' && (
+          <div
+            className="animate-in fade-in slide-in-from-top-2 duration-200 bg-white rounded-[2rem] shadow-lg border border-slate-100 p-6 space-y-5 mb-5"
           >
             <div>
               <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Quantidade de Questões</p>
@@ -715,9 +687,8 @@ export default function SimuladoPage() {
                 <p className="text-[10px] text-slate-400 font-medium">3,5 min por questão (padrão ENEM)</p>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* ── quick size picker for non-completo ── */}
       {mode !== 'completo' && (

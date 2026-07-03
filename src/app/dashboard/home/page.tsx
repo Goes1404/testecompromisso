@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardLoader } from "@/components/DashboardLoader";
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, MotionConfig } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -84,29 +83,40 @@ function getSafeImageUrl(url: string | null | undefined, index: number) {
   return url;
 }
 
-// 3D Tilt Card component
+// 3D Tilt Card — rastreio de mouse via CSS custom properties (sem framer).
 function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useTransform(y, [-0.5, 0.5], [8, -8]);
-  const rotateY = useTransform(x, [-0.5, 0.5], [-8, 8]);
-  const springX = useSpring(rotateX, { stiffness: 300, damping: 30 });
-  const springY = useSpring(rotateY, { stiffness: 300, damping: 30 });
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.setProperty("--rx", `${-py * 8}deg`);
+    el.style.setProperty("--ry", `${px * 8}deg`);
+  };
+
+  const reset = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.setProperty("--rx", "0deg");
+    el.style.setProperty("--ry", "0deg");
+  };
 
   return (
-    <motion.div
-      style={{ rotateX: springX, rotateY: springY, transformStyle: "preserve-3d" }}
-      onMouseMove={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        x.set((e.clientX - rect.left) / rect.width - 0.5);
-        y.set((e.clientY - rect.top) / rect.height - 0.5);
+    <div
+      ref={ref}
+      onMouseMove={handleMove}
+      onMouseLeave={reset}
+      className={`${className ?? ""} transition-transform duration-200 ease-out active:scale-[0.97]`}
+      style={{
+        transform: "perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))",
+        transformStyle: "preserve-3d",
       }}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      whileTap={{ scale: 0.97 }}
-      className={className}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -482,27 +492,29 @@ export default function DashboardHome() {
     { icon: BarChart3,    label: "Meu Desempenho",     desc: "estatísticas para o seu progresso", href: "/dashboard/student/performance", gradient: "from-orange-500 to-red-500",  glow: "shadow-orange-500/30" },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } }
-  };
-
+  // Cascata de entrada: cada filho direto anima com um pequeno atraso incremental,
+  // reproduzindo o staggerChildren do framer via CSS puro. Respeita prefers-reduced-motion.
   return (
-    <MotionConfig reducedMotion="user">
-    <motion.div
-      className="space-y-4 md:space-y-6 pb-10"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
+    <>
+    <style>{`
+      @media (prefers-reduced-motion: no-preference) {
+        .home-stagger > * { opacity: 0; animation: home-rise .5s cubic-bezier(.25,.46,.45,.94) forwards; }
+        .home-stagger > *:nth-child(1) { animation-delay: .04s; }
+        .home-stagger > *:nth-child(2) { animation-delay: .12s; }
+        .home-stagger > *:nth-child(3) { animation-delay: .20s; }
+        .home-stagger > *:nth-child(4) { animation-delay: .28s; }
+        .home-stagger > *:nth-child(5) { animation-delay: .36s; }
+        .home-stagger > *:nth-child(6) { animation-delay: .44s; }
+        .home-stagger > *:nth-child(n+7) { animation-delay: .52s; }
+      }
+      @keyframes home-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+      @keyframes ring-draw { from { stroke-dashoffset: var(--ring-from); } }
+    `}</style>
+    <div className="home-stagger space-y-4 md:space-y-6 pb-10">
 
       {/* ── CARD DE TELEFONE PENDENTE ── */}
       {profile && !profile.phone && (
-        <motion.div variants={itemVariants}
+        <div
           className="gradient-border relative overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 p-5 md:p-8 shadow-2xl text-white">
           <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2rem]" />
           <div className="flex flex-col gap-4 relative z-10">
@@ -524,12 +536,12 @@ export default function DashboardHome() {
               </Button>
             </form>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* ── CARD DE TURMA/EXAME PENDENTE ── */}
       {profile && userRole === 'student' && (!profile.sala || !profile.exam_target || !profile.turno) && (
-        <motion.div variants={itemVariants}
+        <div
           className="relative overflow-hidden rounded-[2rem] border border-blue-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-5 md:p-8 shadow-2xl text-white">
           <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2rem]" />
           <div className="flex flex-col gap-4 relative z-10">
@@ -582,12 +594,12 @@ export default function DashboardHome() {
               </div>
             </form>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* ── CHAMADA ATIVA ── */}
       {activeSession && (
-        <motion.div variants={itemVariants}
+        <div
           className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-violet-200 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 md:p-8 shadow-2xl glow-purple text-white flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 relative z-10 w-full md:w-auto">
@@ -606,13 +618,13 @@ export default function DashboardHome() {
             className="bg-white text-violet-600 hover:bg-violet-50 font-black rounded-xl shadow-lg border-none h-12 px-6 text-xs uppercase tracking-widest active:scale-[0.98] flex items-center gap-2 relative z-10 shrink-0">
             <KeyRound className="h-4 w-4" /> Responder Chamada
           </Button>
-        </motion.div>
+        </div>
       )}
 
       {/* ══════════════════════════════════════════════════
            HERO "ARENA" — fundo vivo de brasas + tipografia editorial
           ══════════════════════════════════════════════════ */}
-      <motion.section variants={itemVariants}
+      <section
         className="relative rounded-[2.5rem] overflow-hidden hero-arena-bg noise shadow-2xl">
 
         {/* camadas de atmosfera (de trás pra frente) */}
@@ -626,49 +638,49 @@ export default function DashboardHome() {
 
           {/* topo: status ao vivo + alvo do aluno */}
           <div className="flex items-center justify-between gap-3">
-            <motion.div
-              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
-              className="flex items-center gap-2 bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-full pl-2.5 pr-3.5 py-1.5">
+            <div
+              style={{ animationDelay: "0.15s" }}
+              className="animate-in fade-in slide-in-from-left-2 fill-mode-both duration-500 flex items-center gap-2 bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-full pl-2.5 pr-3.5 py-1.5">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
               </span>
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/80">Área do Aluno</span>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-              className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-md border border-primary/30 rounded-full px-3.5 py-1.5">
+            </div>
+            <div
+              style={{ animationDelay: "0.2s" }}
+              className="animate-in fade-in slide-in-from-right-2 fill-mode-both duration-500 flex items-center gap-1.5 bg-primary/15 backdrop-blur-md border border-primary/30 rounded-full px-3.5 py-1.5">
               <GraduationCap className="h-3 w-3 text-accent" />
               <span className="text-[9px] font-black uppercase tracking-[0.25em] text-accent">
                 Foco · {(profile?.exam_target || 'ENEM').toUpperCase()}
               </span>
-            </motion.div>
+            </div>
           </div>
 
           {/* headline editorial + ring de score */}
           <div className="flex items-end justify-between gap-5">
             <div className="min-w-0">
-              <motion.p
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                className="text-[10px] md:text-xs font-black uppercase tracking-[0.35em] text-white/50">
+              <p
+                style={{ animationDelay: "0.3s" }}
+                className="animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-500 text-[10px] md:text-xs font-black uppercase tracking-[0.35em] text-white/50">
                 {greeting},
-              </motion.p>
-              <motion.h1
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.7rem] leading-[0.92] sm:text-6xl md:text-7xl font-black italic tracking-tighter text-white truncate">
+              </p>
+              <h1
+                style={{ animationDelay: "0.38s" }}
+                className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-700 text-[2.7rem] leading-[0.92] sm:text-6xl md:text-7xl font-black italic tracking-tighter text-white truncate">
                 {firstName}<span className="text-gradient-fire not-italic">.</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
-                className="mt-2 md:mt-3 text-sm md:text-base font-bold italic text-white/70">
+              </h1>
+              <p
+                style={{ animationDelay: "0.55s" }}
+                className="animate-in fade-in fill-mode-both duration-500 mt-2 md:mt-3 text-sm md:text-base font-bold italic text-white/70">
                 Cada questão te deixa mais perto da <span className="text-gradient-fire font-black">aprovação</span>.
-              </motion.p>
+              </p>
             </div>
 
             {/* Score ring — ticks de relógio + arco com gradiente de fogo */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.45, type: "spring", stiffness: 200, damping: 18 }}
-              className="shrink-0 flex flex-col items-center gap-1.5">
+            <div
+              style={{ animationDelay: "0.45s" }}
+              className="animate-in fade-in zoom-in-75 fill-mode-both duration-500 shrink-0 flex flex-col items-center gap-1.5">
               <div className="relative w-[88px] h-[88px] md:w-28 md:h-28">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 96 96">
                   <defs>
@@ -684,15 +696,17 @@ export default function DashboardHome() {
                       transform={`rotate(${i * 7.5} 48 48)`} />
                   ))}
                   <circle cx="48" cy="48" r={ringR} stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none" />
-                  <motion.circle
+                  <circle
                     cx="48" cy="48" r={ringR}
                     stroke="url(#scoreGrad)"
                     strokeWidth="5" fill="none" strokeLinecap="round"
                     strokeDasharray={ringC}
-                    initial={{ strokeDashoffset: ringC }}
-                    animate={{ strokeDashoffset: ringC - (score / 100) * ringC }}
-                    transition={{ duration: 1.8, ease: "easeOut", delay: 0.7 }}
-                    style={{ filter: "drop-shadow(0 0 6px rgba(255,107,0,0.8))" }}
+                    strokeDashoffset={ringC - (score / 100) * ringC}
+                    style={{
+                      filter: "drop-shadow(0 0 6px rgba(255,107,0,0.8))",
+                      ["--ring-from" as string]: ringC,
+                      animation: "ring-draw 1.8s ease-out 0.7s both",
+                    }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -700,7 +714,7 @@ export default function DashboardHome() {
                   <span className="text-[7px] md:text-[8px] text-accent font-black uppercase tracking-widest mt-0.5">% acertos</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* Stats strip — contadores animados em vidro */}
@@ -710,9 +724,9 @@ export default function DashboardHome() {
               { label: "Redação", value: essayStats?.average || 0,     suffix: " pts", icon: FilePenLine  },
               { label: "Trilhas", value: recentProgress.length,        suffix: "",     icon: PlayCircle   },
             ].map((stat, i) => (
-              <motion.div key={stat.label}
-                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 + i * 0.08 }}
-                className="gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-3 py-3">
+              <div key={stat.label}
+                style={{ animationDelay: `${0.55 + i * 0.08}s` }}
+                className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500 gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-3 py-3">
                 <div className="h-8 w-8 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
                   <stat.icon className="h-4 w-4 text-accent" />
                 </div>
@@ -720,7 +734,7 @@ export default function DashboardHome() {
                   <p className="font-black text-white text-lg leading-none tabular-nums"><CountUp value={stat.value} suffix={stat.suffix} /></p>
                   <p className="text-[8px] text-white/50 font-black uppercase tracking-[0.25em] mt-1">{stat.label}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -742,20 +756,18 @@ export default function DashboardHome() {
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* ══════════════════════════════════
            QUICK ACTIONS — 3D tilt cards
           ══════════════════════════════════ */}
-      <motion.div variants={itemVariants} className="flex gap-3 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-hide">
         {quickActions.map((action, i) => (
           <TiltCard key={action.label} className="shrink-0">
             <Link href={action.href}>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.06 }}
-                className={`btn-shimmer flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${action.color} rounded-2xl w-[84px] h-[84px] shadow-lg hover:shadow-xl transition-all [touch-action:manipulation]`}
-                style={{ transformStyle: "preserve-3d" }}>
+              <div
+                style={{ transformStyle: "preserve-3d", animationDelay: `${0.3 + i * 0.06}s` }}
+                className={`animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500 btn-shimmer flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${action.color} rounded-2xl w-[84px] h-[84px] shadow-lg hover:shadow-xl transition-all [touch-action:manipulation]`}>
                 <div style={{ transform: "translateZ(8px)" }}>
                   <action.icon className="h-5 w-5 text-white" strokeWidth={1.5} />
                 </div>
@@ -763,17 +775,17 @@ export default function DashboardHome() {
                    style={{ transform: "translateZ(4px)" }}>
                   {action.label}
                 </p>
-              </motion.div>
+              </div>
             </Link>
           </TiltCard>
         ))}
-      </motion.div>
+      </div>
 
       {/* ══════════════════════════════════
            GABARITO COMENTADO — card fixo na home
            (toque abre o gabarito comentado do simulado)
           ══════════════════════════════════ */}
-      <motion.div variants={itemVariants}>
+      <div>
         <button
           onClick={() => { setExpandedQ(null); setOnlyErrors(false); setGabaritoOpen(true); }}
           className="w-full text-left relative bg-[#0d0d0f] rounded-[2rem] overflow-hidden p-5 group cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform [touch-action:manipulation]"
@@ -821,31 +833,30 @@ export default function DashboardHome() {
             <ChevronRight className="h-5 w-5 text-white/20 group-hover:text-primary transition-colors shrink-0" />
           </div>
         </button>
-      </motion.div>
+      </div>
 
       {/* ══════════════════════════════════════════
            PLATFORM FEATURES — bento 3D cards
           ══════════════════════════════════════════ */}
-      <motion.section variants={itemVariants}>
+      <section>
         <SectionHeader index="01 · Plataforma" title="Tudo em Um Só Lugar" icon={Sparkles} iconClass="bg-primary/10 text-primary" />
 
         <div className="grid grid-cols-2 gap-3">
           {platformFeatures.map((feat, i) => (
-            <motion.div key={feat.label} className={feat.wide ? "col-span-2" : "col-span-1"}
-              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+            <div key={feat.label}
+              style={{ animationDelay: `${i * 0.06}s` }}
+              className={`animate-in fade-in slide-in-from-bottom-3 fill-mode-both duration-500 ${feat.wide ? "col-span-2" : "col-span-1"}`}>
               <TiltCard>
                 <Link href={feat.href}>
                   <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${feat.gradient} p-4 md:p-5 shadow-xl ${feat.glow} shadow-lg flex items-center gap-4 [touch-action:manipulation]`}
                        style={{ transformStyle: "preserve-3d" }}>
                     {/* Orb glow bg */}
                     <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-                    <motion.div
+                    <div
                       className="h-12 w-12 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0"
-                      animate={{ y: [0, -4, 0] }} transition={{ duration: 4, ease: "easeInOut" }}
                       style={{ transform: "translateZ(12px)" }}>
                       <feat.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
-                    </motion.div>
+                    </div>
                     <div className="relative z-10 flex-1" style={{ transform: "translateZ(6px)" }}>
                       <p className="font-black text-white text-base italic leading-tight">{feat.label}</p>
                       <p className="text-white/60 text-xs font-semibold mt-0.5">{feat.desc}</p>
@@ -858,30 +869,28 @@ export default function DashboardHome() {
                   </div>
                 </Link>
               </TiltCard>
-            </motion.div>
+            </div>
           ))}
         </div>
-      </motion.section>
+      </section>
 
       {/* ══════════════════════════════════════
            AURORA AI — full-width CTA banner
           ══════════════════════════════════════ */}
-      <motion.div variants={itemVariants}
+      <div
         className="gradient-border relative overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-blue-50 via-indigo-50/20 to-white p-5 md:p-8 shadow-2xl group">
         <div className="absolute inset-0 dot-grid-dark opacity-40 pointer-events-none rounded-[2.5rem]" />
-        <motion.div
+        <div
           className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none"
-          animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 5, ease: "easeInOut" }}
         />
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 relative z-10">
           <div className="flex items-center gap-4 sm:gap-0">
-            <motion.div className="relative h-12 w-12 md:h-16 md:w-16 shrink-0"
-              whileHover={{ scale: 1.1, rotateY: 15 }} style={{ transformStyle: "preserve-3d" }}>
+            <div className="relative h-12 w-12 md:h-16 md:w-16 shrink-0 transition-transform duration-300 hover:scale-110" style={{ transformStyle: "preserve-3d" }}>
               <div className="h-full w-full rounded-2xl bg-white shadow-xl flex items-center justify-center border border-accent/10">
                 <Bot className="h-6 w-6 md:h-8 md:w-8 text-accent animate-pulse-subtle" />
               </div>
               <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
-            </motion.div>
+            </div>
             <div className="flex items-center gap-2 sm:hidden">
               <Sparkles className="h-3 w-3 text-accent" />
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Aurora IA</span>
@@ -902,7 +911,7 @@ export default function DashboardHome() {
             </Link>
           </Button>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── SUGESTÃO DE ESTUDO ── */}
       {user && <StudySuggestionWidget userId={user.id} />}
@@ -911,7 +920,7 @@ export default function DashboardHome() {
       {user && <WeeklySummaryWidget userId={user.id} />}
 
       {/* ── WIDGETS MÓVEL RÁPIDOS ── */}
-      <motion.div variants={itemVariants} className="lg:hidden grid grid-cols-2 gap-4">
+      <div className="lg:hidden grid grid-cols-2 gap-4">
         <div className="gradient-border bg-white rounded-[1.5rem] shadow-xl border border-muted/20 p-4 space-y-3 relative overflow-hidden">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-xl bg-violet-100 flex items-center justify-center">
@@ -942,10 +951,10 @@ export default function DashboardHome() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── MAIN CONTENT GRID ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* LEFT — 2/3 */}
         <div className="lg:col-span-2 space-y-6">
@@ -982,9 +991,8 @@ export default function DashboardHome() {
                 {recentProgress.map((prog, i) => {
                   const trailData = prog.trail;
                   return (
-                    <motion.div key={prog.id}
-                      whileHover={{ y: -4, scale: 1.01 }} whileTap={{ scale: 0.98 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}>
+                    <div key={prog.id}
+                      className="transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01] active:scale-[0.98]">
                       <Link href={`/dashboard/classroom/${prog.trail_id}`}>
                         <div className="group overflow-hidden rounded-3xl shadow-xl bg-white hover:shadow-2xl transition-all duration-500 border border-muted/10">
                           <div className="relative aspect-[16/7] overflow-hidden bg-slate-100">
@@ -1007,15 +1015,14 @@ export default function DashboardHome() {
                                 <span className="text-[9px] font-black text-primary">{prog.percentage || 0}%</span>
                               </div>
                               <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
-                                <motion.div className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-                                  initial={{ width: 0 }} animate={{ width: `${prog.percentage || 0}%` }}
-                                  transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 + i * 0.1 }} />
+                                <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-[width] duration-1000 ease-out"
+                                  style={{ width: `${prog.percentage || 0}%` }} />
                               </div>
                             </div>
                           </div>
                         </div>
                       </Link>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
@@ -1032,8 +1039,8 @@ export default function DashboardHome() {
                     const styles = priorityStyles[ann.priority as keyof typeof priorityStyles] || priorityStyles.low;
                     const Icon = styles.icon;
                     return (
-                      <motion.div key={ann.id} whileHover={{ x: 2 }} transition={{ type: "spring", stiffness: 400 }}
-                        className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} shadow-sm hover:shadow-md transition-all group relative overflow-hidden cursor-pointer`}>
+                      <div key={ann.id}
+                        className={`p-4 rounded-2xl flex items-start gap-4 ${styles.bgColor} border ${styles.border} shadow-sm hover:shadow-md hover:translate-x-0.5 transition-all group relative overflow-hidden cursor-pointer`}>
                         {ann.priority === 'high' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />}
                         <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-white shadow-sm border border-gray-100">
                           <Icon className={`h-5 w-5 ${styles.color}`} />
@@ -1046,7 +1053,7 @@ export default function DashboardHome() {
                           <p className="font-black text-sm text-slate-900 truncate">{ann.title}</p>
                           <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium mt-0.5 italic">{ann.message}</p>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })
                 )}
@@ -1162,7 +1169,7 @@ export default function DashboardHome() {
           {user && <GamificationWidget userId={user.id} />}
           <UpcomingEventsWidget />
         </div>
-      </motion.div>
+      </div>
 
       {/* FOOTER */}
       <footer className="mt-12 py-8 border-t border-slate-100">
@@ -1354,7 +1361,7 @@ export default function DashboardHome() {
           </div>
         </DialogContent>
       </Dialog>
-    </motion.div>
-    </MotionConfig>
+    </div>
+    </>
   );
 }
