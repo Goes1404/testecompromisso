@@ -842,7 +842,7 @@ export default function DashboardHome() {
                     <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
                     <motion.div
                       className="h-12 w-12 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0"
-                      animate={{ y: [0, -4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      animate={{ y: [0, -4, 0] }} transition={{ duration: 4, ease: "easeInOut" }}
                       style={{ transform: "translateZ(12px)" }}>
                       <feat.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
                     </motion.div>
@@ -871,7 +871,7 @@ export default function DashboardHome() {
         <div className="absolute inset-0 dot-grid-dark opacity-40 pointer-events-none rounded-[2.5rem]" />
         <motion.div
           className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none"
-          animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 5, ease: "easeInOut" }}
         />
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 relative z-10">
           <div className="flex items-center gap-4 sm:gap-0">
