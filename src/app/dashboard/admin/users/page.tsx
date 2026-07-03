@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -529,7 +529,10 @@ export default function AdminUserDirectoryPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('profiles').select('*').order('name');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, username, email, role, profile_type, status, institution, course, sala, turno, exam_target')
+        .order('name');
       if (error) throw error;
       setUsers(data || []);
     } catch (err) {
@@ -634,7 +637,7 @@ export default function AdminUserDirectoryPage() {
     }
   };
 
-  const filtered = users.filter(u => {
+  const filtered = useMemo(() => users.filter(u => {
     const norm = (s: string) =>
       (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const terms = norm(searchTerm).trim().split(/\s+/).filter(Boolean);
@@ -659,7 +662,7 @@ export default function AdminUserDirectoryPage() {
       (statusFilter === 'suspended' && u.status === 'suspended');
 
     return matchesSearch && matchesRole && matchesStatus;
-  });
+  }), [users, searchTerm, roleFilter, statusFilter]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">

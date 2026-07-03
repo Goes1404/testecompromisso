@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 
 const logoUrl = "/images/logocompromisso.png";
 
@@ -30,7 +28,7 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
       if (error) {
         setLoading(false);
@@ -46,12 +44,7 @@ export function LoginForm() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full max-w-[420px]"
-    >
+    <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-500">
       {/* ── Outer glow ring ── */}
       <div className="border-prism rounded-[2rem]">
         <div className="glass-login rounded-[2rem] p-8 md:p-10 relative overflow-hidden">
@@ -69,20 +62,14 @@ export function LoginForm() {
           />
 
           {/* ── Logo ── */}
-          <motion.div
-            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.5 }}
-            className="flex justify-center mb-6"
-          >
+          <div className="flex justify-center mb-6 animate-in fade-in slide-in-from-top-2 duration-500 [animation-delay:120ms] fill-mode-both">
             <div className="relative w-44 h-14">
-              <Image src={logoUrl} alt="Logo Compromisso" fill unoptimized className="object-contain drop-shadow-[0_0_12px_rgba(255,107,0,0.5)]" />
+              <Image src={logoUrl} alt="Logo Compromisso" fill unoptimized priority className="object-contain drop-shadow-[0_0_12px_rgba(255,107,0,0.5)]" />
             </div>
-          </motion.div>
+          </div>
 
           {/* ── Heading ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.5 }}
-            className="text-center mb-8 space-y-2"
-          >
+          <div className="text-center mb-8 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:200ms] fill-mode-both">
             <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full mb-1">
               <Sparkles className="h-3 w-3 text-orange-400" />
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-orange-400">Plataforma Educacional</span>
@@ -93,13 +80,12 @@ export function LoginForm() {
             <p className="text-xs text-white/40 font-semibold">
               Acesse sua jornada de alto desempenho.
             </p>
-          </motion.div>
+          </div>
 
           {/* ── Form ── */}
-          <motion.form
+          <form
             onSubmit={handleLogin}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.5 }}
-            className="space-y-4"
+            className="space-y-4 animate-in fade-in duration-500 [animation-delay:280ms] fill-mode-both"
           >
             {/* Email */}
             <div className="space-y-1.5">
@@ -145,6 +131,7 @@ export function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-orange-400 transition-colors p-1"
                   tabIndex={-1}
                 >
@@ -154,26 +141,18 @@ export function LoginForm() {
             </div>
 
             {/* Error */}
-            <AnimatePresence>
-              {authError && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  className="flex items-center gap-3 bg-red-500/10 border border-red-500/25 p-3.5 rounded-xl"
-                >
-                  <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-                  <p className="text-red-300 text-xs font-bold">{authError}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {authError && (
+              <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/25 p-3.5 rounded-xl animate-in fade-in slide-in-from-top-1 duration-300">
+                <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                <p className="text-red-300 text-xs font-bold">{authError}</p>
+              </div>
+            )}
 
             {/* CTA Button */}
-            <motion.button
+            <button
               type="submit"
               disabled={loading}
-              whileTap={{ scale: 0.975 }}
-              className="btn-orange-neon w-full h-14 rounded-xl text-white font-black text-sm uppercase tracking-wider italic mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-orange-neon w-full h-14 rounded-xl text-white font-black text-sm uppercase tracking-wider italic mt-2 transition-transform active:scale-[0.975] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -186,7 +165,7 @@ export function LoginForm() {
                   <span className="text-white/60">→</span>
                 </span>
               )}
-            </motion.button>
+            </button>
 
             {/* Esqueci minha senha */}
             <div className="text-center pt-1">
@@ -197,23 +176,20 @@ export function LoginForm() {
                 Esqueci minha senha
               </Link>
             </div>
-          </motion.form>
+          </form>
 
           {/* ── Trust badge ── */}
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-            className="mt-8 pt-5 border-t border-white/5 flex items-center justify-center gap-2"
-          >
+          <div className="mt-8 pt-5 border-t border-white/5 flex items-center justify-center gap-2 animate-in fade-in duration-500 [animation-delay:450ms] fill-mode-both">
             <ShieldCheck className="h-3.5 w-3.5 text-white/20" />
             <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
               Acesso seguro · Dados criptografados
             </span>
-          </motion.div>
+          </div>
 
           {/* Bottom shimmer line */}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-400/20 to-transparent pointer-events-none" />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
