@@ -69,6 +69,8 @@ import {
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { exportToCsv } from "@/lib/export-csv";
+import { Download } from "lucide-react";
 
 // ────────────────────────────────────────────────
 // Modal de Convite (Cadastro de Aluno)
@@ -458,7 +460,7 @@ function NewStudentModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ex: Maria Silva Santos" className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">CPF (opcional)</Label>
                   <Input value={cpf} onChange={e => setCpf(e.target.value)} placeholder="000.000.000-00" className="h-12 bg-muted/30 border-none rounded-xl font-mono text-sm" />
@@ -503,7 +505,7 @@ function NewStudentModal({ open, onClose, onCreated }: { open: boolean; onClose:
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Turma</Label>
                   <Select value={course} onValueChange={setCourse}>
@@ -622,10 +624,7 @@ export default function SecretaryEnrollmentDirectory() {
       const res = await fetch('/api/admin/delete-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          masterPassword: 'compromisso2026',
-          userId: id,
-        }),
+        body: JSON.stringify({ userId: id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -693,6 +692,27 @@ export default function SecretaryEnrollmentDirectory() {
     return matchesSearch && matchesStatus;
   });
 
+  const handleExportCsv = () => {
+    if (filtered.length === 0) {
+      toast({ title: "Nada para exportar", description: "A lista filtrada está vazia.", variant: "destructive" });
+      return;
+    }
+    exportToCsv("matriculas", filtered, [
+      { header: "Nome", accessor: (u) => u.name },
+      { header: "Email", accessor: (u) => u.email },
+      { header: "Telefone", accessor: (u) => u.phone },
+      { header: "CPF", accessor: (u) => u.cpf },
+      { header: "Turma", accessor: (u) => u.course },
+      { header: "Escola/Polo", accessor: (u) => u.institution },
+      { header: "Foco", accessor: (u) => u.exam_target },
+      { header: "Status", accessor: (u) => (u.status === "suspended" ? "Suspenso" : "Ativo") },
+      { header: "Renda Familiar", accessor: (u) => (u.family_income ? Number(u.family_income) : "") },
+      { header: "Renda per capita", accessor: (u) => (u.income_per_capita ? Number(u.income_per_capita) : "") },
+      { header: "Elegivel Isencao", accessor: (u) => (u.is_financial_aid_eligible ? "Sim" : "Nao") },
+    ]);
+    toast({ title: "CSV exportado! 📄", description: `${filtered.length} matrículas baixadas.` });
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
       {/* Cabeçalho */}
@@ -708,20 +728,28 @@ export default function SecretaryEnrollmentDirectory() {
             Gere links de convite, suspenda acessos, gerencie turmas e controle isenções sociais.
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
           <Button
             onClick={() => setNewStudentOpen(true)}
-            className="bg-blue-600 text-white border-none font-black rounded-2xl shadow-md h-12 px-6 gap-2 hover:bg-blue-700 transition-all"
+            className="bg-blue-600 text-white border-none font-black rounded-2xl shadow-md h-12 px-4 md:px-6 gap-2 hover:bg-blue-700 transition-all text-xs md:text-sm"
           >
             <UserPlus className="h-4 w-4" />
             Novo Aluno
           </Button>
           <Button
             onClick={() => setInviteOpen(true)}
-            className="bg-white text-orange-600 border border-orange-100 font-black rounded-2xl shadow-md h-12 px-6 gap-2 hover:bg-orange-50 transition-all"
+            className="bg-white text-orange-600 border border-orange-100 font-black rounded-2xl shadow-md h-12 px-4 md:px-6 gap-2 hover:bg-orange-50 transition-all text-xs md:text-sm"
           >
             <Link2 className="h-4 w-4" />
-            Link de Convite
+            Convite
+          </Button>
+          <Button
+            onClick={handleExportCsv}
+            variant="outline"
+            className="bg-white text-slate-600 border-slate-200 font-black rounded-2xl shadow-md h-12 px-4 md:px-6 gap-2 hover:bg-slate-50 transition-all text-xs md:text-sm"
+          >
+            <Download className="h-4 w-4" />
+            Exportar CSV
           </Button>
         </div>
       </div>
@@ -803,6 +831,10 @@ export default function SecretaryEnrollmentDirectory() {
                                   📞 {u.phone}
                                 </p>
                               )}
+                              {/* Turma/Polo inline no mobile (coluna dedicada fica oculta < sm) */}
+                              <p className="sm:hidden text-[9px] font-black uppercase tracking-wider text-slate-400 truncate mt-0.5">
+                                {u.course || 'Sem turma'} · {u.institution || 'Sem polo'}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -1003,7 +1035,7 @@ export default function SecretaryEnrollmentDirectory() {
 
       {/* Modal de Edição de Matrícula */}
       <Dialog open={!!editingUser} onOpenChange={v => { if (!v) setEditingUser(null); }}>
-        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md">
+        <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-y-auto max-h-[92vh] w-[95vw] sm:max-w-md">
           <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center font-black text-white text-lg shadow shrink-0">
@@ -1036,7 +1068,7 @@ export default function SecretaryEnrollmentDirectory() {
               <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm" placeholder="Ex: (11) 99999-9999" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Escola / Polo</Label>
                 <Input value={editInstitution} onChange={e => setEditInstitution(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-medium text-sm" />

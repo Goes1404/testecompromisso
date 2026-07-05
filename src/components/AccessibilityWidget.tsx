@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useState } from "react";
@@ -9,7 +9,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useToast } from "@/hooks/use-toast";
 import { Virtuoso } from 'react-virtuoso';
 import { usePathname } from "next/navigation";
-import { createClient } from "@/utils/supabase/client"; // Cliente Supabase para Frontend
 
 interface Message {
   role: "assistant" | "user";
@@ -26,7 +25,6 @@ export function AccessibilityWidget() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const pathname = usePathname();
-  const supabase = createClient(); // Instancia o cliente
 
   const isInputHeavyPage = 
     pathname.includes('/chat/') || 
@@ -98,7 +96,7 @@ export function AccessibilityWidget() {
   
   return (
     <div 
-      className={`fixed ${isInputHeavyPage ? 'bottom-28 md:bottom-10' : 'bottom-6'} right-6 z-40 flex flex-col gap-3 items-end transition-all duration-500`}
+      className={`fixed ${isInputHeavyPage ? 'bottom-28 lg:bottom-10' : 'bottom-24 lg:bottom-6'} right-6 z-40 flex flex-col gap-3 items-end transition-all duration-500`}
     >
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>

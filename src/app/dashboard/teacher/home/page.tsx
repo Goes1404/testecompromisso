@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -175,27 +175,30 @@ export default function TeacherHomePage() {
     <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500 pb-6 px-0.5">
 
       {/* ── HERO ── */}
-      <div className="aurora-dark dot-grid rounded-2xl md:rounded-[2.5rem] p-5 md:p-10 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-56 h-56 bg-accent/20 rounded-full blur-[80px] pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+      <div className="relative aurora-dark rounded-[2rem] p-5 md:p-8 shadow-xl overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[90px] pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end gap-4 md:gap-8">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse block" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Painel do Professor</span>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse block" />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/45">Professor</span>
             </div>
-            <h1 className="text-2xl md:text-4xl font-black text-white italic tracking-tighter leading-tight">
-              Olá, {firstName}! 👋
+            <h1 className="text-[2.6rem] md:text-[3.5rem] font-black text-white italic tracking-tighter leading-none">
+              {firstName}<span className="text-primary">.</span>
             </h1>
-            <p className="text-white/65 text-xs font-semibold mt-1 capitalize">{today}</p>
+            <p className="text-white/45 text-[10px] font-bold mt-2 capitalize tracking-wide">{today}</p>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button asChild className="btn-shimmer rounded-xl h-11 bg-accent text-accent-foreground font-black border-none px-5 text-xs uppercase tracking-wide active:scale-95 transition-all [touch-action:manipulation] shadow-lg shadow-accent/30">
+          <div className="flex gap-2.5 flex-wrap">
+            <Button asChild className="rounded-2xl h-11 bg-primary text-white font-black border-none px-5 text-xs uppercase tracking-wide active:scale-95 transition-all [touch-action:manipulation] shadow-lg shadow-primary/30">
               <Link href="/dashboard/teacher/attendance/new">
                 <ClipboardCheck className="h-4 w-4 mr-1.5" />
                 Iniciar Chamada
               </Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-xl h-11 border-white/10 bg-white/5 text-white font-black px-5 text-xs uppercase hover:bg-white/10 active:scale-95 transition-all [touch-action:manipulation]">
+            <Button asChild variant="outline" className="rounded-2xl h-11 border-white/15 bg-white/5 text-white font-black px-5 text-xs uppercase hover:bg-white/10 active:scale-95 transition-all [touch-action:manipulation]">
               <Link href="/dashboard/teacher/live">
                 <MonitorPlay className="h-4 w-4 mr-1.5" />
                 Lives
@@ -205,26 +208,24 @@ export default function TeacherHomePage() {
         </div>
       </div>
 
-      {/* ── KPI CARDS — 2×2 on mobile ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      {/* ── KPI CARDS — numbers as heroes ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Alunos",       value: stats.totalStudents,   sub: "Total ativo",   icon: Users,      color: "text-blue-600",   bg: "bg-blue-50",   href: "/dashboard/teacher/students" },
-          { label: "Apoio Social", value: stats.eligibleStudents, sub: "Elegíveis",     icon: HandHeart,  color: "text-green-600",  bg: "bg-green-50",  href: "/dashboard/teacher/students" },
-          { label: "Em Risco",     value: stats.atRisk,           sub: "Inativos >7d",  icon: AlertCircle,color: "text-red-500",    bg: "bg-red-50",    href: "/dashboard/teacher/students" },
-          { label: "Acerto Médio", value: `${stats.avgScore}%`,   sub: "Taxa global",   icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", href: "/dashboard/teacher/analytics" },
+          { label: "Alunos",       value: stats.totalStudents,   sub: "Total ativo",   icon: Users,      accent: "text-primary",    href: "/dashboard/teacher/students" },
+          { label: "Apoio Social", value: stats.eligibleStudents, sub: "Elegíveis",     icon: HandHeart,  accent: "text-emerald-600", href: "/dashboard/teacher/students" },
+          { label: "Em Risco",     value: stats.atRisk,           sub: "Inativos >7d",  icon: AlertCircle,accent: "text-red-500",     href: "/dashboard/teacher/students" },
+          { label: "Acerto Médio", value: `${stats.avgScore}%`,   sub: "Taxa global",   icon: TrendingUp, accent: "text-violet-600",  href: "/dashboard/teacher/analytics" },
         ].map((stat, i) => (
           <Link key={i} href={stat.href} className="block">
             <div className="gradient-border bg-white rounded-2xl p-4 md:p-5 shadow-md border-none hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all [touch-action:manipulation] cursor-pointer">
-              <div className={`h-9 w-9 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </div>
+              <stat.icon className={`h-4 w-4 ${stat.accent} mb-3`} strokeWidth={1.5} />
               {dataLoading ? (
-                <div className="h-7 w-14 bg-slate-100 animate-pulse rounded-lg mb-1" />
+                <div className="h-8 w-16 bg-slate-100 animate-pulse rounded-lg mb-1" />
               ) : (
-                <p className="text-2xl md:text-3xl font-black text-slate-900 italic leading-none">{stat.value}</p>
+                <p className={`text-3xl md:text-4xl font-black italic leading-none tabular-nums ${stat.accent}`}>{stat.value}</p>
               )}
-              <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-1.5">{stat.label}</p>
-              <p className="text-[9px] text-slate-400 italic">{stat.sub}</p>
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-2">{stat.label}</p>
+              <p className="text-[9px] text-slate-400 mt-0.5">{stat.sub}</p>
             </div>
           </Link>
         ))}

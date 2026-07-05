@@ -52,6 +52,50 @@
     --sidebar-ring: 25 100% 50%;
   }
 
+  .dark {
+    --background: 240 10% 4%;        /* Muito escuro, quase preto #0a0a0c */
+    --foreground: 0 0% 98%;           /* Branco fosco */
+    
+    --card: 240 10% 6%;               /* Um pouco mais claro que o bg #0f0f12 */
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 25 100% 50%;           /* Laranja fluorescente mantido */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 10% 12%;         /* Fundo escuro secundário */
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 10% 12%;
+    --muted-foreground: 240 5% 65%;    /* Cinza médio */
+    
+    --accent: 25 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 240 10% 12%;            /* Borda sutil escurecida */
+    --input: 240 10% 15%;
+    --ring: 25 100% 50%;
+    
+    --success: 160 84% 39%;
+    --text-body: 240 5% 80%;           /* Corpo do texto claro */
+    --brand-dark: 25 100% 60%;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 25 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 10% 12%;
+    --sidebar-ring: 25 100% 50%;
+  }
+
   * {
     @apply border-border;
   }
@@ -379,6 +423,11 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  /* Prevent italic character clipping on layout boundaries */
+  padding-left: 0.05em;
+  padding-right: 0.15em;
+  margin-left: -0.05em;
+  margin-right: -0.15em;
 }
 
 /* Noise overlay — textura sutil em cards dark */
@@ -615,4 +664,92 @@
   z-index: 99;
   opacity: 0.030;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────────────────────────
+   AUTOFILL STYLING & CONTRAST SOLUTIONS
+   ───────────────────────────────────────────────────────────── */
+
+/* For standard theme inputs: force theme-compliant background & text color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* For dark credentials fields specifically (Login / Register pages) */
+.input-dark:-webkit-autofill,
+.input-dark:-webkit-autofill:hover, 
+.input-dark:-webkit-autofill:focus, 
+.input-dark:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0e0e11 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBAL DARK MODE UTILITY OVERRIDES
+   ───────────────────────────────────────────────────────────── */
+
+.dark body {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Base surface overlays */
+.dark .bg-white {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
+  background-color: hsl(var(--secondary)) !important;
+}
+
+/* Border overlays */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Primary text color overlays */
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-slate-950,
+.dark .text-gray-950 {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Secondary/muted text color overlays */
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-400,
+.dark .text-gray-400 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Input backgrounds */
+.dark input:not(.input-dark),
+.dark textarea:not(.input-dark),
+.dark select {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Shadow styles for dark surfaces */
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7) !important;
 }

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import {
   FileText,
   ArrowLeft,
   Inbox,
+  Scale,
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
@@ -23,6 +24,24 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+const VALID_SCORES = [0, 40, 80, 120, 160, 200];
+const COMP_KEYS = ["c1", "c2", "c3", "c4", "c5"] as const;
+const COMP_SHORT: Record<string, string> = {
+  c1: "C1 · Norma",
+  c2: "C2 · Tema",
+  c3: "C3 · Argum.",
+  c4: "C4 · Coesão",
+  c5: "C5 · Interv.",
+};
+
+/** Extrai as notas por competência que a IA atribuiu a uma submissão. */
+function aiComps(essay: any): Record<string, number> {
+  const src = essay?.result_data?.competencies || essay?.competencies || {};
+  const out: Record<string, number> = {};
+  for (const k of COMP_KEYS) out[k] = Number(src?.[k]?.score ?? src?.[k] ?? 0) || 0;
+  return out;
+}
 
 export default function AssessmentsGraderPage() {
   const { user, profile } = useAuth();
@@ -33,6 +52,37 @@ export default function AssessmentsGraderPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [mentorFeedback, setMentorFeedback] = useState("");
+  // Notas humanas por competência para o aluno selecionado (calibração da IA).
+  const [teacherComps, setTeacherComps] = useState<Record<string, number>>({});
+
+  const teacherTotal = useMemo(
+    () => COMP_KEYS.reduce((sum, k) => sum + (teacherComps[k] || 0), 0),
+    [teacherComps]
+  );
+
+  // ── Estatística de calibração: viés médio da IA vs. correção humana ──
+  const calibration = useMemo(() => {
+    const reviewed = submissions.filter(
+      (s) => s.teacher_score !== null && s.teacher_score !== undefined
+    );
+    if (reviewed.length === 0) return null;
+    let totalBias = 0;
+    const compBias: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+    reviewed.forEach((s) => {
+      totalBias += Number(s.score || 0) - Number(s.teacher_score || 0);
+      const ai = aiComps(s);
+      const human = s.teacher_competencies || {};
+      for (const k of COMP_KEYS) {
+        compBias[k] += (ai[k] || 0) - (Number(human?.[k] ?? ai[k]) || 0);
+      }
+    });
+    const n = reviewed.length;
+    return {
+      n,
+      avgBias: Math.round(totalBias / n),
+      compBias: Object.fromEntries(COMP_KEYS.map((k) => [k, Math.round(compBias[k] / n)])),
+    };
+  }, [submissions]);
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
@@ -82,27 +132,46 @@ export default function AssessmentsGraderPage() {
   const handleSelectEssay = (essay: any) => {
     setSelectedEssay(essay);
     setMentorFeedback(essay.mentor_notes || "");
+    // Pré-preenche com a correção humana anterior, ou com a nota da IA como ponto de partida.
+    const existing = essay.teacher_competencies;
+    setTeacherComps(existing && Object.keys(existing).length ? { ...existing } : aiComps(essay));
   };
 
   const handleSaveFeedback = async () => {
     if (!selectedEssay || isSaving) return;
     setIsSaving(true);
     try {
+      const teacher_competencies = { ...teacherComps };
+      const teacher_score = teacherTotal;
+
       const { error } = await supabase
         .from("essay_submissions")
         .update({
           mentor_notes: mentorFeedback,
           status: "reviewed",
+          teacher_competencies,
+          teacher_score,
+          teacher_reviewed_at: new Date().toISOString(),
+          teacher_reviewed_by: user?.id ?? null,
         })
         .eq("id", selectedEssay.id);
 
       if (error) throw error;
 
-      toast({ title: "Avaliação Registrada!", description: "O aluno foi notificado." });
+      toast({ title: "Avaliação Registrada!", description: "Nota humana salva para calibrar a Aurora." });
 
       setSubmissions((prev) =>
         prev.map((s) =>
-          s.id === selectedEssay.id ? { ...s, mentor_notes: mentorFeedback, status: "reviewed" } : s
+          s.id === selectedEssay.id
+            ? {
+                ...s,
+                mentor_notes: mentorFeedback,
+                status: "reviewed",
+                teacher_competencies,
+                teacher_score,
+                teacher_reviewed_at: new Date().toISOString(),
+              }
+            : s
         )
       );
     } catch (e: any) {
@@ -158,6 +227,57 @@ export default function AssessmentsGraderPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Calibração da IA (viés médio vs. correção humana) ── */}
+      {calibration && (
+        <div className={`${selectedEssay ? "hidden lg:block" : "block"}`}>
+          <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Scale className="h-4 w-4 text-orange-500" />
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
+                Calibração da Aurora · {calibration.n} corrigidas
+              </p>
+              <Badge
+                className={`ml-auto border-none font-black text-[9px] uppercase px-2 ${
+                  Math.abs(calibration.avgBias) <= 40
+                    ? "bg-emerald-100 text-emerald-700"
+                    : calibration.avgBias > 0
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-blue-100 text-blue-700"
+                }`}
+              >
+                {calibration.avgBias > 0
+                  ? `+${calibration.avgBias} generosa`
+                  : calibration.avgBias < 0
+                  ? `${calibration.avgBias} rígida`
+                  : "calibrada"}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {COMP_KEYS.map((k) => {
+                const b = (calibration.compBias as any)[k] as number;
+                return (
+                  <div key={k} className="text-center bg-slate-50 border border-slate-100 rounded-xl py-2">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-none">
+                      {COMP_SHORT[k]}
+                    </p>
+                    <p
+                      className={`text-sm font-black italic leading-none mt-1 ${
+                        Math.abs(b) <= 8 ? "text-emerald-600" : b > 0 ? "text-amber-600" : "text-blue-600"
+                      }`}
+                    >
+                      {b > 0 ? `+${b}` : b}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[9px] font-medium text-slate-400 italic mt-2 leading-tight">
+              Diferença média (IA − professor). Positivo = IA generosa demais; negativo = rígida demais.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Search (hidden on mobile when essay selected) ── */}
       <div className={`${selectedEssay ? "hidden lg:block" : "block"} relative`}>
@@ -328,6 +448,59 @@ export default function AssessmentsGraderPage() {
                       "{selectedEssay.feedback}"
                     </p>
                   )}
+                </div>
+
+                {/* Correção humana por competência (calibra a IA) */}
+                <div className="space-y-3 bg-white shadow-sm border border-slate-100 rounded-2xl p-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-2">
+                      <Scale className="h-3 w-3 text-orange-400" /> Sua Correção Oficial
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">IA: {selectedEssay.score}</span>
+                      <Badge className="bg-orange-500/15 text-orange-500 border-none font-black text-[10px] px-2">
+                        {teacherTotal} pts
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {COMP_KEYS.map((k) => {
+                      const ai = aiComps(selectedEssay)[k];
+                      return (
+                        <div key={k} className="flex items-center gap-2">
+                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider w-[68px] shrink-0">
+                            {COMP_SHORT[k]}
+                          </span>
+                          <div className="flex gap-1 flex-1">
+                            {VALID_SCORES.map((v) => {
+                              const active = teacherComps[k] === v;
+                              return (
+                                <button
+                                  key={v}
+                                  type="button"
+                                  onClick={() => setTeacherComps((prev) => ({ ...prev, [k]: v }))}
+                                  className={`flex-1 h-8 rounded-lg text-[10px] font-black transition-all relative ${
+                                    active
+                                      ? "bg-orange-500 text-white shadow-sm"
+                                      : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                                  }`}
+                                  title={ai === v ? "Nota original da IA" : undefined}
+                                >
+                                  {v}
+                                  {ai === v && !active && (
+                                    <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-orange-400" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[9px] font-medium text-slate-400 italic leading-tight">
+                    O ponto laranja marca a nota que a IA deu. Ajuste onde discordar — isso treina a calibração da Aurora.
+                  </p>
                 </div>
 
                 {/* Mentor feedback */}

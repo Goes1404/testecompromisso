@@ -128,10 +128,15 @@ export default function FirstAccessPage() {
     if (!step1OK) { setError("Verifique os requisitos de senha antes de continuar."); return; }
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (err) throw err;
+      // Não setamos must_change_password aqui — isso é feito ao final do passo 2
+      // (após salvar o perfil) para evitar redirect-loop no middleware.
+      const result = await Promise.race([
+        supabase.auth.updateUser({ password: newPassword }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 10_000)
+        ),
+      ]);
+      if (result.error) throw result.error;
       setStep(2);
     } catch (err: any) {
       setError(err.message || "Não foi possível salvar a senha. Tente novamente.");
@@ -156,17 +161,23 @@ export default function FirstAccessPage() {
         updateData.turno = turno;
       }
       
-      const { error: err } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-      if (err) throw err;
+      const profileResult = await Promise.race([
+        supabase.from('profiles').update(updateData).eq('id', user.id),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 10_000)
+        ),
+      ]);
+      if (profileResult.error) throw profileResult.error;
 
       // Atualiza o metadata para indicar que o primeiro acesso foi concluído com sucesso
-      const { error: metaErr } = await supabase.auth.updateUser({
-        data: { must_change_password: false },
-      });
-      if (metaErr) throw metaErr;
+      // (feito só agora, ao final, para evitar redirect-loop no middleware).
+      const metaResult = await Promise.race([
+        supabase.auth.updateUser({ data: { must_change_password: false } }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 10_000)
+        ),
+      ]);
+      if (metaResult.error) throw metaResult.error;
 
       toast({ title: "Perfil salvo!", description: "Seja bem-vindo ao Compromisso!" });
       setStep(3);

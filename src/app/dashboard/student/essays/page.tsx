@@ -26,6 +26,7 @@ import {
   Calendar,
   CheckSquare2,
   Square,
+  Camera,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import dynamic from "next/dynamic";
@@ -118,6 +119,10 @@ export default function StudentEssayPage() {
   const [text, setText] = useState("");
   const [loadingTopic, setLoadingTopic] = useState(false);
   const [loadingGrading, setLoadingGrading] = useState(false);
+  const [loadingOcr, setLoadingOcr] = useState(false);
+  // Sinaliza que o texto atual veio (ao menos em parte) de transcrição por foto,
+  // para a IA não punir C1 por ruído de OCR.
+  const [fromPhoto, setFromPhoto] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [charCount, setCharCount] = useState(0);
   const [chartData, setChartData] = useState<{ date: string; score: number; theme?: string }[]>([]);
@@ -211,6 +216,53 @@ export default function StudentEssayPage() {
     fetchWeeklyTheme();
   }, [profile]);
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite reenviar o mesmo arquivo
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Arquivo inválido", description: "Envie uma foto (JPEG, PNG ou WEBP).", variant: "destructive" });
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast({ title: "Imagem muito grande", description: "Use uma foto de até 8MB.", variant: "destructive" });
+      return;
+    }
+
+    setLoadingOcr(true);
+    try {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Falha ao ler o arquivo."));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await Promise.race([
+        fetch("/api/essay-ocr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: dataUrl }),
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Tempo esgotado ao digitalizar. Tente novamente.")), 60_000)
+        ),
+      ]);
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Falha ao digitalizar a imagem.");
+
+      setText((prev) => (prev.trim() ? `${prev.trim()}\n\n${data.text}` : data.text));
+      setFromPhoto(true);
+      toast({ title: "Redação digitalizada! 📸", description: "Revise o texto transcrito antes de enviar." });
+    } catch (err: any) {
+      toast({ title: "Erro ao digitalizar", description: err.message, variant: "destructive" });
+    } finally {
+      setLoadingOcr(false);
+    }
+  };
+
   const handleGenerateTopic = async () => {
     setLoadingTopic(true);
     setResult(null);
@@ -277,7 +329,12 @@ export default function StudentEssayPage() {
       const res = await fetch("/api/essay-evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme, text }),
+        body: JSON.stringify({
+          theme,
+          text,
+          supporting_texts: supportingTexts,
+          origin: fromPhoto ? "ocr" : "typed",
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -350,7 +407,7 @@ export default function StudentEssayPage() {
           </div>
           <div className="grid grid-cols-2 gap-2 mt-4">
             <Button
-              onClick={() => { setCustomTheme(!customTheme); setTheme(""); setSupportingTexts([]); setResult(null); }}
+              onClick={() => { setCustomTheme(!customTheme); setTheme(""); setSupportingTexts([]); setResult(null); setFromPhoto(false); }}
               className={`h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${
                 customTheme ? "bg-white/20 border-white/30 text-white" : "bg-transparent border-white/20 text-white/70 hover:text-white hover:bg-white/10"
               }`}
@@ -423,11 +480,37 @@ export default function StudentEssayPage() {
             </>
           )}
         </div>
+        <div className="flex items-center justify-between gap-2 px-4 pt-3 pb-1">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+            Digite ou envie uma foto da redação à mão
+          </p>
+          <label
+            className={`flex items-center gap-1.5 cursor-pointer text-[10px] font-black uppercase tracking-widest px-3 h-8 rounded-xl border transition-all ${
+              loadingOcr || loadingGrading
+                ? "opacity-50 pointer-events-none border-slate-200 text-slate-400"
+                : "border-orange-200 text-orange-600 hover:bg-orange-50 active:scale-95"
+            }`}
+          >
+            {loadingOcr ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Digitalizando...</>
+            ) : (
+              <><Camera className="h-3.5 w-3.5" /> Foto da redação</>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoUpload}
+              disabled={loadingOcr || loadingGrading}
+              className="hidden"
+            />
+          </label>
+        </div>
         <Textarea
           placeholder="Inicie seu texto aqui... Desenvolva sua tese com clareza."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          disabled={loadingGrading}
+          disabled={loadingGrading || loadingOcr}
           className="min-h-[280px] sm:min-h-[400px] border-none p-5 font-medium text-sm leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary placeholder:text-slate-400 scrollbar-hide rounded-none"
         />
         {/* ── Checklist pré-envio ── */}

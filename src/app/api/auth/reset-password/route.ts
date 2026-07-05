@@ -52,14 +52,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Resetar senha via Admin API (Sem deletar/reproducir o usuário)
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      profile.id,
-      {
+    // 4. Resetar senha via Admin API (Sem deletar/reproducir o usuário).
+    // Promise.race evita que a rota fique pendurada se a Admin API não responder.
+    const { error: updateError } = await Promise.race([
+      supabaseAdmin.auth.admin.updateUserById(profile.id, {
         password: newPassword,
-        user_metadata: { must_change_password: true },
-      }
-    );
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Tempo esgotado ao contatar o servidor de autenticação')),
+          12_000
+        )
+      ),
+    ]) as { error: any };
 
     if (updateError) {
       throw updateError;

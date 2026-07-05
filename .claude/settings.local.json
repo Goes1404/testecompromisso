@@ -51,7 +51,12 @@
       "mcp__claude_ai_Supabase__get_publishable_keys",
       "Bash(xargs head -200)",
       "Bash(NODE_TLS_REJECT_UNAUTHORIZED=0 node -e ' *)",
-      "mcp__39817711-cb1c-4831-a72f-1874e8fee768__get_deployment_build_logs"
+      "mcp__39817711-cb1c-4831-a72f-1874e8fee768__get_deployment_build_logs",
+      "mcp__f0a88a09-86f3-4950-bbfd-7b7f5dce74dc__list_projects",
+      "mcp__f0a88a09-86f3-4950-bbfd-7b7f5dce74dc__execute_sql",
+      "mcp__f0a88a09-86f3-4950-bbfd-7b7f5dce74dc__get_logs",
+      "mcp__f0a88a09-86f3-4950-bbfd-7b7f5dce74dc__get_project_url",
+      "mcp__39817711-cb1c-4831-a72f-1874e8fee768__list_projects"
     ]
   }
 }

@@ -363,7 +363,7 @@ export default function StudentDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Telefone</Label>
                 <div className="relative">
@@ -385,7 +385,7 @@ export default function StudentDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Turma / Sala</Label>
                 <Select value={editCourse} onValueChange={setEditCourse}>
@@ -535,7 +535,7 @@ export default function StudentDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   {[
                     { label: "Renda Familiar", value: Number(profile.family_income) > 0 ? `R$ ${Number(profile.family_income).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—" },
                     { label: "Moradores", value: profile.family_size || "—" },

@@ -78,7 +78,18 @@ export default function ResetPasswordForm() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      // Promise.race garante que a chamada nunca trave indefinidamente
+      // (ex.: service worker antigo interceptando o fetch ou rede lenta),
+      // o que deixava a tela "salvando" para sempre.
+      const { error } = await Promise.race([
+        supabase.auth.updateUser({ password }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Tempo esgotado. Verifique sua conexão e tente novamente.")),
+            12_000
+          )
+        ),
+      ]);
       if (error) throw error;
       setSuccess(true);
       setTimeout(() => router.push("/login?message=password-reset-success"), 2500);

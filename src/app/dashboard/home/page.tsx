@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { DashboardLoader } from "@/components/DashboardLoader";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, MotionConfig } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,8 @@ import {
   Calculator, BrainCircuit, Sparkles, Zap, FilePenLine,
   ArrowRight, ChevronRight, ChevronDown, BookOpen, Phone, Check,
   ClipboardCheck, KeyRound, CheckCircle2, ShieldAlert,
-  AlertTriangle, GraduationCap, Scroll, BarChart3, Star
+  AlertTriangle, GraduationCap, Scroll, BarChart3, Star,
+  XCircle, ListChecks
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -25,6 +27,12 @@ import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 import { AreaChartPremium } from "@/components/charts/premium";
 import { EmberCanvas } from "@/components/EmberCanvas";
+import {
+  SIMULADO_GABARITO,
+  SIMULADO_GABARITO_CHAVE,
+  SIMULADO_GABARITO_TITULO,
+  SIMULADO_GABARITO_TOTAL,
+} from "@/lib/gabarito-simulado";
 
 const GamificationWidget = dynamic(
   () => import('@/components/GamificationWidget').then(m => ({ default: m.GamificationWidget })),
@@ -193,7 +201,13 @@ export default function DashboardHome() {
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
   const [essayStats, setEssayStats] = useState<{ count: number; average: number; latest: any } | null>(null);
   const [examStats, setExamStats] = useState<{ totalAssessed: number; averageScore: number; history?: any[] } | null>(null);
+  const [simuladoOficial, setSimuladoOficial] = useState<{ title: string; score: number; total: number; completed_at: string; answers: { q: number; selected: string }[] } | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+
+  // Gabarito comentado (modal)
+  const [gabaritoOpen, setGabaritoOpen] = useState(false);
+  const [expandedQ, setExpandedQ] = useState<number | null>(null);
+  const [onlyErrors, setOnlyErrors] = useState(false);
 
   const [activeSession, setActiveSession] = useState<any>(null);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
@@ -325,6 +339,7 @@ export default function DashboardHome() {
           setLibraryResources(parsed.data.libraryResources);
           setEssayStats(parsed.data.essayStats);
           setExamStats(parsed.data.examStats);
+          if (parsed.data.simuladoOficial) setSimuladoOficial(parsed.data.simuladoOficial);
           setLoadingData(false);
           if (Date.now() - parsed.timestamp < 60000) { dataFetchedRef.current = true; return; }
         }
@@ -333,13 +348,14 @@ export default function DashboardHome() {
     setLoadingData(true);
     dataFetchedRef.current = true;
     try {
-      const [annRes, trailRes, progressRes, libRes, essayRes, examRes] = await Promise.all([
+      const [annRes, trailRes, progressRes, libRes, essayRes, examRes, simOficialRes] = await Promise.all([
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
         supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
         supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3),
         supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id),
+        supabase.from('exam_attempts').select('score, completed_at, answers, exam:exams!inner(title, exam_type)').eq('user_id', user.id).order('completed_at', { ascending: false }),
       ]);
       let essayData = essayRes?.data || [];
       let examData = examRes?.data || [];
@@ -373,8 +389,25 @@ export default function DashboardHome() {
         newExamStats = { totalAssessed: 0, averageScore: 0, history: [{ name: "Jan", score: 40 }, { name: "Fev", score: 55 }, { name: "Mar", score: 85 }] };
       }
       setExamStats(newExamStats);
+
+      // Simulado oficial importado pela secretaria
+      const simOficialData = (simOficialRes?.data || []).find(
+        (a: any) => a.exam?.exam_type === 'simulado_importado'
+      ) as any;
+      if (simOficialData) {
+        const examObj = Array.isArray(simOficialData.exam) ? simOficialData.exam[0] : simOficialData.exam;
+        const rawAnswers = Array.isArray(simOficialData.answers) ? simOficialData.answers : [];
+        setSimuladoOficial({
+          title: examObj?.title ?? 'Simulado ENEM',
+          score: Number(simOficialData.score),
+          total: 60,
+          completed_at: simOficialData.completed_at,
+          answers: rawAnswers,
+        });
+      }
+
       const cacheData = {
-        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats },
+        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial },
         timestamp: Date.now()
       };
       if (typeof window !== 'undefined') localStorage.setItem(`dash_cache_${user.id}`, JSON.stringify(cacheData));
@@ -393,15 +426,7 @@ export default function DashboardHome() {
   }, [user, profile, userRole, fetchData, checkActiveSession]);
 
   if (isUserLoading || (userRole === 'student' && loadingData && !dataFetchedRef.current)) return (
-    <div className="flex flex-col h-[70vh] items-center justify-center gap-5">
-      <div className="relative">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-        <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
-      </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Carregando seu ambiente...</p>
-    </div>
+    <DashboardLoader />
   );
 
   const nameToUse = profile?.name || user?.user_metadata?.full_name || '';
@@ -411,6 +436,29 @@ export default function DashboardHome() {
   const score = examStats?.averageScore || 0;
   const ringR = 38;
   const ringC = 2 * Math.PI * ringR;
+
+  // ── Gabarito comentado: dados derivados ──
+  const studentAnswerByQ: Record<number, string> = {};
+  (simuladoOficial?.answers || []).forEach((a) => {
+    if (a && typeof a.q === 'number' && a.selected) {
+      studentAnswerByQ[a.q] = String(a.selected).toUpperCase();
+    }
+  });
+  const hasStudentAnswers = Object.keys(studentAnswerByQ).length > 0;
+  const gabAcertos = hasStudentAnswers
+    ? SIMULADO_GABARITO_CHAVE.filter((g, i) => studentAnswerByQ[i + 1] === g.toUpperCase()).length
+    : (simuladoOficial?.score ?? 0);
+  const gabErros = hasStudentAnswers ? Object.keys(studentAnswerByQ).length - gabAcertos : 0;
+  const visibleGabarito = onlyErrors && hasStudentAnswers
+    ? SIMULADO_GABARITO.filter((q) => {
+        const sel = studentAnswerByQ[q.numero];
+        return sel && sel !== q.resposta.toUpperCase();
+      })
+    : SIMULADO_GABARITO;
+  const gabaritoPorArea = visibleGabarito.reduce((acc, q) => {
+    (acc[q.area] = acc[q.area] || []).push(q);
+    return acc;
+  }, {} as Record<string, typeof SIMULADO_GABARITO>);
 
   const quickActions = [
     { label: "Simulado",   icon: BrainCircuit, href: "/dashboard/student/simulados",           color: "from-violet-500 to-purple-600" },
@@ -651,7 +699,7 @@ export default function DashboardHome() {
           </div>
 
           {/* Stats strip — contadores animados em vidro */}
-          <div className="flex gap-3 overflow-x-auto pb-0.5 scrollbar-hide -mx-1 px-1">
+          <div className="grid grid-cols-3 gap-3">
             {[
               { label: "Acertos", value: examStats?.averageScore || 0, suffix: "%",    icon: BrainCircuit },
               { label: "Redação", value: essayStats?.average || 0,     suffix: " pts", icon: FilePenLine  },
@@ -659,7 +707,7 @@ export default function DashboardHome() {
             ].map((stat, i) => (
               <motion.div key={stat.label}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 + i * 0.08 }}
-                className="gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 shrink-0 min-w-[128px]">
+                className="gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-3 py-3">
                 <div className="h-8 w-8 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
                   <stat.icon className="h-4 w-4 text-accent" />
                 </div>
@@ -714,6 +762,60 @@ export default function DashboardHome() {
             </Link>
           </TiltCard>
         ))}
+      </motion.div>
+
+      {/* ══════════════════════════════════
+           GABARITO COMENTADO — card fixo na home
+           (toque abre o gabarito comentado do simulado)
+          ══════════════════════════════════ */}
+      <motion.div variants={itemVariants}>
+        <button
+          onClick={() => { setExpandedQ(null); setOnlyErrors(false); setGabaritoOpen(true); }}
+          className="w-full text-left relative bg-[#0d0d0f] rounded-[2rem] overflow-hidden p-5 group cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform [touch-action:manipulation]"
+        >
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(255,107,0,0.3) 0%, transparent 60%)" }} />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="relative shrink-0">
+              {simuladoOficial ? (
+                <>
+                  {(() => {
+                    const pct = Math.round((simuladoOficial.score / simuladoOficial.total) * 100);
+                    const r = 24, circ = 2 * Math.PI * r;
+                    const color = pct >= 70 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                    return (
+                      <svg width="60" height="60" className="-rotate-90">
+                        <circle cx="30" cy="30" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" />
+                        <circle cx="30" cy="30" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round"
+                          strokeDasharray={circ} strokeDashoffset={circ - (pct / 100) * circ} />
+                      </svg>
+                    );
+                  })()}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-black text-white leading-none italic">
+                      {Math.round((simuladoOficial.score / simuladoOficial.total) * 100)}%
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="h-[60px] w-[60px] rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                  <ListChecks className="h-7 w-7 text-primary" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/40 mb-0.5">Gabarito Comentado</p>
+              <p className="font-black italic text-white leading-tight truncate">{simuladoOficial?.title || SIMULADO_GABARITO_TITULO}</p>
+              {simuladoOficial ? (
+                <p className="text-xl font-black text-primary leading-none mt-1 italic">
+                  {simuladoOficial.score}<span className="text-sm text-white/40 font-bold">/{simuladoOficial.total} acertos</span>
+                </p>
+              ) : (
+                <p className="text-[11px] font-bold text-white/50 mt-1 italic">Toque para ver as respostas comentadas</p>
+              )}
+            </div>
+            <ChevronRight className="h-5 w-5 text-white/20 group-hover:text-primary transition-colors shrink-0" />
+          </div>
+        </button>
       </motion.div>
 
       {/* ══════════════════════════════════════════
@@ -1150,6 +1252,103 @@ export default function DashboardHome() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── DIALOG GABARITO COMENTADO ── */}
+      <Dialog open={gabaritoOpen} onOpenChange={setGabaritoOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[88vh] rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="p-6 pb-4 bg-[#0d0d0f] relative shrink-0 text-left">
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 90% 0%, rgba(255,107,0,0.25) 0%, transparent 60%)" }} />
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                <ClipboardCheck className="h-6 w-6 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black italic text-white leading-tight tracking-tighter truncate">
+                  {SIMULADO_GABARITO_TITULO}
+                </DialogTitle>
+                <DialogDescription className="text-[11px] font-bold text-white/50 mt-0.5">
+                  Gabarito comentado · {SIMULADO_GABARITO_TOTAL} questões
+                </DialogDescription>
+              </div>
+            </div>
+            {hasStudentAnswers && (
+              <div className="relative z-10 flex items-center gap-2 mt-4 flex-wrap">
+                <div className="flex items-center gap-1.5 bg-green-500/15 border border-green-500/30 rounded-full px-3 py-1">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+                  <span className="text-[11px] font-black text-green-400 tabular-nums">{gabAcertos} acertos</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-red-500/15 border border-red-500/30 rounded-full px-3 py-1">
+                  <XCircle className="h-3.5 w-3.5 text-red-400" />
+                  <span className="text-[11px] font-black text-red-400 tabular-nums">{gabErros} erros</span>
+                </div>
+                <button
+                  onClick={() => setOnlyErrors((v) => !v)}
+                  className={`ml-auto text-[10px] font-black uppercase tracking-wider rounded-full px-3 py-1.5 transition-colors [touch-action:manipulation] ${onlyErrors ? 'bg-primary text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'}`}
+                >
+                  {onlyErrors ? 'Mostrar tudo' : 'Só meus erros'}
+                </button>
+              </div>
+            )}
+          </DialogHeader>
+
+          <div className="overflow-y-auto px-4 py-4 space-y-5 bg-slate-50">
+            {Object.keys(gabaritoPorArea).length === 0 ? (
+              <div className="py-14 text-center">
+                <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-2" />
+                <p className="font-black italic text-slate-700">Nenhum erro! Mandou bem 🎉</p>
+              </div>
+            ) : (
+              Object.entries(gabaritoPorArea).map(([area, questoes]) => (
+                <div key={area}>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary px-2 mb-2">{area}</h3>
+                  <div className="space-y-2">
+                    {questoes.map((q) => {
+                      const sel = studentAnswerByQ[q.numero];
+                      const acertou = sel ? sel === q.resposta.toUpperCase() : null;
+                      const isOpen = expandedQ === q.numero;
+                      return (
+                        <div key={q.numero} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                          <button
+                            onClick={() => setExpandedQ(isOpen ? null : q.numero)}
+                            className="w-full flex items-center gap-3 p-3.5 text-left [touch-action:manipulation] active:bg-slate-50"
+                          >
+                            <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                              <span className="text-xs font-black text-slate-700 tabular-nums">{q.numero}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1 truncate">{q.topico}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-green-700 bg-green-100 rounded-full px-2 py-0.5">
+                                  Gabarito {q.resposta}
+                                </span>
+                                {sel && (
+                                  <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider rounded-full px-2 py-0.5 ${acertou ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'}`}>
+                                    {acertou ? <Check className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                    Você {sel}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <ChevronDown className={`h-4 w-4 text-slate-300 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isOpen && (
+                            <div className="px-3.5 pb-4 pt-0">
+                              <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-1.5">Comentário</p>
+                                <p className="text-[13px] text-slate-700 leading-relaxed font-medium whitespace-pre-line">{q.comentario}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </motion.div>

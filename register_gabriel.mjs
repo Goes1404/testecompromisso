@@ -24,7 +24,7 @@ async function registerGabriel() {
     const institution = 'Ulysses Silveira Guimarães';
     const sala = 'sala 1';
     const periodo = 'manhã';
-    const password = 'Compromisso2026!';
+    const password = 'compromisso2026';
 
     console.log(`Registering Gabriel: ${email}`);
 
@@ -35,7 +35,7 @@ async function registerGabriel() {
         email_confirm: true,
         user_metadata: { 
             full_name: name,
-            must_change_password: true
+            must_change_password: false
         }
     });
 

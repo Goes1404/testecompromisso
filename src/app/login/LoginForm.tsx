@@ -38,10 +38,6 @@ export function LoginForm() {
         return;
       }
 
-      if (data.user.user_metadata?.must_change_password) {
-        window.location.assign("/dashboard/first-access");
-        return;
-      }
       window.location.assign("/dashboard");
     } catch {
       setLoading(false);
@@ -192,13 +188,13 @@ export function LoginForm() {
               )}
             </motion.button>
 
-            {/* Forgot password */}
-            <div className="flex justify-center pt-2">
+            {/* Esqueci minha senha */}
+            <div className="text-center pt-1">
               <Link
                 href="/forgot-password"
-                className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-orange-400 transition-colors"
+                className="text-[11px] font-bold text-white/40 hover:text-orange-400 transition-colors"
               >
-                Esqueceu seus dados de acesso?
+                Esqueci minha senha
               </Link>
             </div>
           </motion.form>

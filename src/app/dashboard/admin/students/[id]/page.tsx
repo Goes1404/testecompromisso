@@ -84,7 +84,7 @@ export default function AdminStudentProfilePage() {
           supabase
             .from("student_question_answers")
             .select("*, questions(subject_id, subjects(name))")
-            .eq("user_id", studentId),
+            .eq("student_id", studentId),
           supabase
             .from("exam_attempts")
             .select("*, exams(title, year, exam_type)")

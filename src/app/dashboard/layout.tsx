@@ -15,6 +15,7 @@ import Image from "next/image";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { LoadingShell } from "@/components/LoadingShell";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { UrgentNotice } from "@/components/UrgentNotice";
 import { PushPermissionBanner } from "@/components/push-permission-banner";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
@@ -109,8 +110,9 @@ const teacherItems: NavItem[] = [
   {
     icon: Database, label: "Avaliação", id: "nav-teacher-avaliacao",
     children: [
-      { icon: Database,    label: "Banco de Questões",    href: "/dashboard/teacher/questions", id: "nav-teacher-questions" },
-      { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays",    id: "nav-teacher-essays" },
+      { icon: Database,    label: "Banco de Questões",    href: "/dashboard/teacher/questions",           id: "nav-teacher-questions" },
+      { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays",              id: "nav-teacher-essays" },
+      { icon: ClipboardList, label: "Correção de Simulado", href: "/dashboard/teacher/simulado-correcao", id: "nav-teacher-simulado-correcao" },
     ],
   },
   {
@@ -197,16 +199,17 @@ const secretaryItems: NavItem[] = [
   {
     icon: ClipboardCheck, label: "Operações", id: "nav-secretary-operacoes",
     children: [
-      { icon: ClipboardCheck, label: "Frequência / Chamada",    href: "/dashboard/secretary/attendance", id: "nav-secretary-attendance" },
-      { icon: FileCheck,      label: "Emissão de Documentos",  href: "/dashboard/secretary/documents",  id: "nav-secretary-documents" },
-      { icon: FolderOpen,     label: "Docs dos Alunos",        href: "/dashboard/secretary/uploads",    id: "nav-secretary-uploads",   badge: true },
-      { icon: ClipboardList,  label: "Checklist de Docs",      href: "/dashboard/admin/checklists",     id: "nav-secretary-checklists" },
+      { icon: ClipboardCheck, label: "Frequência / Chamada",    href: "/dashboard/secretary/attendance",       id: "nav-secretary-attendance" },
+      { icon: FileCheck,      label: "Emissão de Documentos",  href: "/dashboard/secretary/documents",        id: "nav-secretary-documents" },
+      { icon: FolderOpen,     label: "Docs dos Alunos",        href: "/dashboard/secretary/uploads",          id: "nav-secretary-uploads",   badge: true },
+      { icon: ClipboardList,  label: "Checklist de Docs",      href: "/dashboard/admin/checklists",           id: "nav-secretary-checklists" },
+      { icon: Trophy,         label: "Importar Simulado",      href: "/dashboard/secretary/simulado-import", id: "nav-secretary-simulado" },
     ],
   },
   {
     icon: Bell, label: "Comunicação", id: "nav-secretary-comunicacao",
     children: [
-      { icon: Bell,         label: "Comunicados Globais", href: "/dashboard/teacher/communication", id: "nav-secretary-communication" },
+      { icon: Bell,         label: "Comunicados Globais", href: "/dashboard/secretary/communication", id: "nav-secretary-communication" },
       { icon: CalendarDays, label: "Calendário Escolar",   href: "/dashboard/admin/calendar",        id: "nav-secretary-calendar" },
     ],
   },
@@ -376,8 +379,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (hasHydrated && !isUserLoading) {
       if (!user) {
         router.replace("/login");
-      } else if (user.user_metadata?.must_change_password && pathname !== "/dashboard/first-access") {
-        window.location.assign("/dashboard/first-access");
       }
     }
   }, [user, isUserLoading, router, hasHydrated, pathname]);
@@ -418,21 +419,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-white/10 via-white/5 to-transparent z-20"
         />
 
-        <SidebarHeader className="p-5 pb-4">
-          <div id="sidebar-logo" className="flex items-center gap-3">
-            <div className="relative h-9 w-36 overflow-hidden rounded-xl shrink-0">
+        <SidebarHeader className="p-4 pb-3">
+          <div id="sidebar-logo" className="flex items-center gap-2.5">
+            <div className="relative h-10 w-10 shrink-0 flex items-center justify-center">
               <Image
                 src="/images/logocompromisso.png"
                 alt="Logo Compromisso"
-                fill
+                width={40}
+                height={40}
                 className="object-contain"
-                sizes="144px"
                 priority
               />
             </div>
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="text-base font-black text-white italic leading-none">Compromisso</span>
-              <span className="text-[9px] text-white/60 uppercase tracking-widest font-black">Sistema de Ensino</span>
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden gap-0.5">
+              <span className="text-sm font-black text-white italic leading-tight">Compromisso</span>
+              <span className="text-[8px] text-white/50 uppercase tracking-wide font-black">Ensino</span>
             </div>
           </div>
         </SidebarHeader>

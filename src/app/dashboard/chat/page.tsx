@@ -396,6 +396,30 @@ export default function ChatListPage() {
         </div>
       )}
 
+      {/* ── AURORA IA (fixa, sempre disponível, não vem da tabela profiles) ── */}
+      {!isStaffUser && (
+        <Card className="relative overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-gradient-to-br from-primary via-primary to-slate-900">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-[80px] pointer-events-none" />
+          <CardContent className="p-6 md:p-8 flex flex-col sm:flex-row items-center gap-5 relative z-10">
+            <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shrink-0 shadow-xl">
+              <Bot className="h-9 w-9 md:h-10 md:w-10" />
+            </div>
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <CardTitle className="text-lg md:text-xl font-black text-white italic leading-none">Aurora IA</CardTitle>
+                <Badge className="bg-white/15 text-white border-none font-black text-[8px] uppercase px-2">24/7</Badge>
+              </div>
+              <p className="text-white/65 text-xs font-medium mt-1.5 leading-relaxed max-w-md">
+                Sua mentora de inteligência artificial. Tire dúvidas pedagógicas a qualquer hora.
+              </p>
+            </div>
+            <Button className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90 font-black h-12 px-8 rounded-xl shadow-xl active:scale-95 transition-all shrink-0" asChild>
+              <Link href="/dashboard/chat/aurora-ai">Abrir Mentoria</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── SEÇÕES DE CONTATOS ESTILO WHATSAPP ── */}
       <div className="space-y-12 pt-2">
         {loading ? (

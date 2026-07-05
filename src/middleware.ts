@@ -55,20 +55,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // REDIRECIONAMENTO PARA PRIMEIRO ACESSO (MUDANÇA DE SENHA FORÇADA)
-    const mustChangePassword = session.user.user_metadata?.must_change_password;
-    const isFirstAccessPage = request.nextUrl.pathname === '/dashboard/first-access';
-
-    if (mustChangePassword && !isFirstAccessPage) {
+    if (request.nextUrl.pathname === '/dashboard/first-access') {
       const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/dashboard/first-access'
+      redirectUrl.pathname = '/dashboard/home'
       return NextResponse.redirect(redirectUrl)
-    }
-    
-    if (!mustChangePassword && isFirstAccessPage) {
-        const redirectUrl = request.nextUrl.clone()
-        redirectUrl.pathname = '/dashboard/home'
-        return NextResponse.redirect(redirectUrl)
     }
   }
 

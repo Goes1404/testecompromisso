@@ -9,11 +9,6 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Network passthrough — não interceptar fetches (preserva uploads/POST grandes).
-self.addEventListener("fetch", (event) => {
-  event.respondWith(fetch(event.request));
-});
-
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -27,8 +22,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Compromisso";
   const options = {
     body: payload.body || "",
-    icon: payload.icon || "/icons/icon-192.png",
-    badge: payload.badge || "/icons/icon-72.png",
+    icon: payload.icon || "/icons/icon-192x192.png",
+    badge: payload.badge || "/icons/icon-192x192.png",
     image: payload.image,
     tag: payload.tag || payload.type || "compromisso",
     renotify: true,
