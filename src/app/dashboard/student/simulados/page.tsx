@@ -200,18 +200,20 @@ export default function SimuladoPage() {
       .then(({ data }) => setMicroTopics(data ?? []));
   }, [selectedSubjectId, mode]);
 
-  const buildQuery = () => {
+  const buildQuery = (ignoreAudience = false) => {
     let q = supabase.from('questions').select('*, subjects(name)');
     if ((mode === 'materia' || mode === 'especifico') && selectedSubjectId)
       q = q.eq('subject_id', selectedSubjectId) as any;
     if (mode === 'especifico' && selectedMicroTopicId && selectedMicroTopicId !== ALL_TOPICS)
       q = q.eq('micro_topic_id', selectedMicroTopicId) as any;
-    const audience = (
-      profile?.exam_target || user?.user_metadata?.exam_target ||
-      profile?.profile_type || user?.user_metadata?.profile_type || 'enem'
-    ).toLowerCase().trim();
-    const ua = audience.includes('etec') ? 'etec' : 'enem';
-    q = q.or(`target_audience.eq.all,target_audience.eq.${ua},target_audience.is.null`) as any;
+    if (!ignoreAudience) {
+      const audience = (
+        profile?.exam_target || user?.user_metadata?.exam_target ||
+        profile?.profile_type || user?.user_metadata?.profile_type || 'enem'
+      ).toLowerCase().trim();
+      const ua = audience.includes('etec') ? 'etec' : 'enem';
+      q = q.or(`target_audience.eq.all,target_audience.eq.${ua},target_audience.is.null`) as any;
+    }
     return q.limit(200);
   };
 
@@ -219,25 +221,19 @@ export default function SimuladoPage() {
     if (mode !== 'completo' && !selectedSubjectId) return;
     setGameState('loading_questions');
     try {
-      const { data: raw, error } = await buildQuery();
-      // Determina o público do aluno para usar no fallback também
-      const audienceRaw = (
-        profile?.exam_target || user?.user_metadata?.exam_target ||
-        profile?.profile_type || user?.user_metadata?.profile_type || 'enem'
-      ).toLowerCase().trim();
-      const ua = audienceRaw.includes('etec') ? 'etec' : 'enem';
-      let items: any[] = [];
-      if (error) {
-        let fb = supabase.from('questions').select('*, subjects(name)');
-        if (selectedSubjectId) fb = fb.eq('subject_id', selectedSubjectId) as any;
-        // Aplica filtro de público também no fallback
-        fb = fb.or(`target_audience.eq.all,target_audience.eq.${ua},target_audience.is.null`) as any;
-        const { data: f, error: e2 } = await fb.limit(200);
-        if (e2) throw e2;
-        items = f ?? [];
-      } else {
-        items = raw ?? [];
+      let { data: raw, error } = await buildQuery(false);
+      
+      // Fallback se retornar vazio ou der erro
+      if (error || !raw || raw.length === 0) {
+        const { data: fallbackRaw, error: fallbackError } = await buildQuery(true);
+        if (!fallbackError && fallbackRaw && fallbackRaw.length > 0) {
+          raw = fallbackRaw;
+        } else if (error) {
+          throw error;
+        }
       }
+
+      const items = raw ?? [];
       const shuffled = items.sort(() => 0.5 - Math.random()).slice(0, simSize);
       if (shuffled.length === 0) {
         toast({ title: 'Sem questões', description: 'Não há questões para este filtro.', variant: 'destructive' });
@@ -290,10 +286,11 @@ export default function SimuladoPage() {
   const currentQuestion = questions[currentIndex];
 
   const handleNext = async () => {
-    if (selectedAnswer === null || !currentQuestion) return;
+    if (!currentQuestion) return;
     const q = currentQuestion;
+    const isSkipped = selectedAnswer === null;
     const newAnswer: Answer = {
-      questionId: q.id, selected: selectedAnswer, correct: q.correct_answer,
+      questionId: q.id, selected: selectedAnswer || 'PULADO', correct: q.correct_answer,
       explanation: q.explanation, question_text: q.question_text, options: q.options,
       subject: q.subjects?.name ?? null,
     };
@@ -305,7 +302,7 @@ export default function SimuladoPage() {
       supabase.from('student_question_answers').insert({
         student_id: user.id, question_id: q.id,
         selected_option: selectedAnswer,
-        is_correct: norm(selectedAnswer) === norm(q.correct_answer),
+        is_correct: isSkipped ? false : norm(selectedAnswer) === norm(q.correct_answer),
       }).then(() => {});
     }
 
@@ -584,19 +581,32 @@ export default function SimuladoPage() {
               ${isDark ? 'bg-[#0a0a0d]/90 backdrop-blur-xl border-white/5' : 'bg-white/90 backdrop-blur-xl border-slate-200'}`}>
               <Button
                 onClick={handleNext}
-                disabled={selectedAnswer === null}
-                className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest bg-orange-500 text-slate-950 hover:bg-orange-600 shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 touch-manipulation disabled:opacity-30 border-none disabled:pointer-events-none"
+                className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest bg-orange-500 text-slate-950 hover:bg-orange-600 shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 touch-manipulation border-none"
               >
-                {currentIndex < questions.length - 1 ? (
-                  <>
-                    <span>Confirmar e Próxima</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </>
+                {selectedAnswer === null ? (
+                  currentIndex < questions.length - 1 ? (
+                    <>
+                      <span>Pular Questão</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="h-4 w-4" />
+                      <span>Finalizar Simulado (Pular)</span>
+                    </>
+                  )
                 ) : (
-                  <>
-                    <Trophy className="h-4 w-4" />
-                    <span>Finalizar Simulado</span>
-                  </>
+                  currentIndex < questions.length - 1 ? (
+                    <>
+                      <span>Confirmar e Próxima</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="h-4 w-4" />
+                      <span>Finalizar Simulado</span>
+                    </>
+                  )
                 )}
               </Button>
             </div>

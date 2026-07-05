@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────
-type Option = { key: string; value: string };
+type Option = { key: string; value?: string; text?: string };
 
 type DailyQuestion = {
   daily_id:    string;
@@ -165,7 +165,7 @@ export default function DailyQuestionPage() {
     setSubmitting(true);
     try {
       const today     = new Date().toISOString().slice(0, 10);
-      const isCorrect = selected === daily.correct_answer;
+      const isCorrect = selected.toUpperCase() === daily.correct_answer.toUpperCase();
 
       // Salva a resposta
       await supabase.from('daily_question_answers').insert({
@@ -309,7 +309,7 @@ export default function DailyQuestionPage() {
             {daily.options.map((opt, idx) => {
               const label     = optionLabels[idx] ?? String.fromCharCode(65 + idx);
               const isSelected = selected === opt.key;
-              const isCorrect  = opt.key === daily.correct_answer;
+              const isCorrect  = opt.key.toUpperCase() === daily.correct_answer.toUpperCase();
               const revealed   = alreadyDone;
 
               let cardStyle = 'border-slate-100 bg-slate-50/50 hover:border-primary/30 hover:bg-primary/5';
@@ -347,7 +347,7 @@ export default function DailyQuestionPage() {
                     isSelected && !revealed ? 'text-primary font-semibold' :
                     'text-slate-700'
                   }`}>
-                    {opt.value}
+                    {opt.text || opt.value}
                   </span>
                 </button>
               );
@@ -407,7 +407,7 @@ export default function DailyQuestionPage() {
                 <p className={`text-xs font-semibold text-red-600`}>
                   Resposta correta:{' '}
                   <span className="font-black">
-                    {optionLabels[daily.options.findIndex(o => o.key === daily.correct_answer)] ?? daily.correct_answer}
+                    {optionLabels[daily.options.findIndex(o => o.key.toUpperCase() === daily.correct_answer.toUpperCase())] ?? daily.correct_answer}
                   </span>
                 </p>
               )}

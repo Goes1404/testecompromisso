@@ -9,6 +9,8 @@
 --   admin@compromisso.com    / compromisso2026@  (admin)
 --   staff@compromisso.com    / compromisso2026@  (staff)
 -- ============================================================
+CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA extensions;
+SET search_path TO public, extensions, auth;
 
 -- 1. Coluna is_demo
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT false;

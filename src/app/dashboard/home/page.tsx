@@ -70,6 +70,10 @@ const WeeklyMissionsWidget = dynamic(
   () => import('@/components/WeeklyMissionsWidget').then(m => ({ default: m.WeeklyMissionsWidget })),
   { ssr: false, loading: () => <div className="h-48 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
 );
+const WeeklyRankingWidget = dynamic(
+  () => import('@/components/WeeklyRankingWidget').then(m => ({ default: m.WeeklyRankingWidget })),
+  { ssr: false, loading: () => <div className="h-48 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
+);
 function DashboardChart({ data }: { data: { name: string; score: number }[] }) {
   return <AreaChartPremium data={data} xKey="name" yKey="score" color="#7c3aed" showAxis={false} domainMax={100} />;
 }
@@ -1152,6 +1156,7 @@ export default function DashboardHome() {
           </div>
 
           {user && <WeeklyMissionsWidget userId={user.id} examTarget={profile?.exam_target} />}
+          {user && <WeeklyRankingWidget userId={user.id} examTarget={profile?.exam_target} />}
           {user && profile && <DailyQuestionCard userId={user.id} profile={profile} />}
           {user && <StreakWidget userId={user.id} />}
           {user && <GoalsWidget userId={user.id} />}

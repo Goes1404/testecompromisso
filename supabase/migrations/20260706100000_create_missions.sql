@@ -41,16 +41,20 @@ ALTER TABLE public.weekly_missions   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mission_progress  ENABLE ROW LEVEL SECURITY;
 
 -- Missões: todos os autenticados leem
+DROP POLICY IF EXISTS "auth read missions" ON public.weekly_missions;
 CREATE POLICY "auth read missions" ON public.weekly_missions
   FOR SELECT USING (auth.role() = 'authenticated');
 
 -- Progresso: aluno lê e insere/atualiza os próprios
+DROP POLICY IF EXISTS "student read own progress" ON public.mission_progress;
 CREATE POLICY "student read own progress" ON public.mission_progress
   FOR SELECT USING (auth.uid() = student_id);
 
+DROP POLICY IF EXISTS "student upsert own progress" ON public.mission_progress;
 CREATE POLICY "student upsert own progress" ON public.mission_progress
   FOR INSERT WITH CHECK (auth.uid() = student_id);
 
+DROP POLICY IF EXISTS "student update own progress" ON public.mission_progress;
 CREATE POLICY "student update own progress" ON public.mission_progress
   FOR UPDATE USING (auth.uid() = student_id);
 

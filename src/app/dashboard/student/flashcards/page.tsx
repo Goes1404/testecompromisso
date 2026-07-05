@@ -83,25 +83,37 @@ function FlipCard({
   return (
     <div
       className="relative w-full"
-      style={{ perspective: '1200px', minHeight: '340px' }}
+      style={{ perspective: '1200px', minHeight: '480px' }}
     >
       {/* Front */}
       <motion.div
-        className="absolute inset-0 w-full rounded-[2rem] bg-white border border-slate-200 shadow-xl flex flex-col items-center justify-center p-8 gap-4 cursor-pointer select-none"
+        className="absolute inset-0 w-full rounded-[2rem] bg-white border border-slate-200 shadow-xl flex flex-col items-center p-6 md:p-8 gap-4 cursor-pointer select-none overflow-y-auto"
         style={{ backfaceVisibility: 'hidden' }}
         animate={{ rotateY: revealed ? 180 : 0 }}
         transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
         onClick={!revealed ? onReveal : undefined}
       >
         {card.subject && (
-          <Badge className="bg-violet-100 text-violet-700 border-none font-black text-[9px] uppercase tracking-widest">
+          <Badge className="bg-violet-100 text-violet-700 border-none font-black text-[9px] uppercase tracking-widest shrink-0">
             {card.subject}
           </Badge>
         )}
-        <p className="text-base md:text-lg font-bold text-primary italic text-center leading-relaxed max-w-lg">
+        <p className="text-base md:text-lg font-bold text-primary italic text-center leading-relaxed max-w-lg shrink-0">
           {card.question_text.replace('[IMAGEM_PENDENTE]', '')}
         </p>
-        <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground font-medium">
+
+        {card.options && card.options.length > 0 && (
+          <div className="w-full max-w-md space-y-1.5 my-2 shrink-0">
+            {card.options.map((opt) => (
+              <div key={opt.key} className="flex items-start gap-2.5 text-xs text-slate-700 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 font-medium">
+                <span className="shrink-0 font-black text-primary uppercase">{opt.key})</span>
+                <span className="flex-1 leading-normal">{opt.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-auto pt-2 flex items-center gap-2 text-xs text-muted-foreground font-medium shrink-0">
           <Brain className="h-3.5 w-3.5" />
           <span>Toque para revelar a resposta</span>
         </div>
