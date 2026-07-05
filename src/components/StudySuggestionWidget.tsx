@@ -59,8 +59,7 @@ export function StudySuggestionWidget({ userId }: Props) {
               .select('id, title')
               .ilike('title', `%${s.name}%`)
               .eq('status', 'published')
-              .limit(1)
-              .single();
+              .maybeSingle();
 
             setSuggestion({
               subjectId: worstId,
@@ -80,8 +79,7 @@ export function StudySuggestionWidget({ userId }: Props) {
           .select('trail_id, trails(id, title, category)')
           .eq('user_id', userId)
           .eq('percentage', 0)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         if (zeroProgress) {
           const trail = (zeroProgress as any).trails;
