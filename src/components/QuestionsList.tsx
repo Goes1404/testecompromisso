@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, Pencil, Trash2, Loader2, Search, Filter } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Loader2, Search, Filter, Upload, ImageIcon, X } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -54,6 +55,8 @@ type FullQuestion = {
     options: any; 
     correct_answer: string;
     subject_id: string;
+    supporting_text?: string | null;
+    image_url?: string | null;
     subject: { name: string } | null;
 };
 
@@ -62,6 +65,8 @@ const initialEditState = {
     year: new Date().getFullYear(),
     correct_answer: '',
     subject_id: '',
+    supporting_text: '',
+    image_url: '',
     options: { A: '', B: '', C: '', D: '', E: '' },
 };
 
@@ -70,6 +75,7 @@ export function QuestionsList() {
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
     
     const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
     const [questionToEdit, setQuestionToEdit] = useState<FullQuestion | null>(null);
@@ -124,6 +130,8 @@ export function QuestionsList() {
                 year: questionToEdit.year,
                 correct_answer: questionToEdit.correct_answer,
                 subject_id: questionToEdit.subject_id,
+                supporting_text: questionToEdit.supporting_text || '',
+                image_url: questionToEdit.image_url || '',
                 options: { ...initialEditState.options, ...optionsMap },
             });
         } else {
@@ -147,6 +155,48 @@ export function QuestionsList() {
         setIsProcessing(false);
     };
 
+    const deleteImageFromStorage = async (url: string) => {
+        try {
+            const marker = '/question-images/';
+            const markerIndex = url.indexOf(marker);
+            if (markerIndex === -1) return;
+            const path = decodeURIComponent(url.slice(markerIndex + marker.length).split('?')[0]);
+            if (path) await supabase.storage.from('question-images').remove([path]);
+        } catch {
+            // Best-effort cleanup; database state remains authoritative.
+        }
+    };
+
+    const handleEditImageUpload = async (file: File) => {
+        if (!questionToEdit) return;
+        setIsUploadingImage(true);
+        try {
+            if (editForm.image_url) await deleteImageFromStorage(editForm.image_url);
+            const ext = file.name.split('.').pop() || 'png';
+            const path = `questions/${questionToEdit.id}-${Date.now()}.${ext}`;
+            const { error } = await supabase.storage
+                .from('question-images')
+                .upload(path, file, { upsert: true, contentType: file.type });
+
+            if (error) throw error;
+
+            const { data } = supabase.storage.from('question-images').getPublicUrl(path);
+            setEditForm(prev => ({ ...prev, image_url: data.publicUrl }));
+            toast({ title: 'Imagem anexada', description: 'Ela será salva junto com a questão.' });
+        } catch (error: any) {
+            toast({ title: 'Erro no upload', description: error.message, variant: 'destructive' });
+        } finally {
+            setIsUploadingImage(false);
+        }
+    };
+
+    const handleRemoveEditImage = async () => {
+        if (!editForm.image_url) return;
+        const url = editForm.image_url;
+        setEditForm(prev => ({ ...prev, image_url: '' }));
+        await deleteImageFromStorage(url);
+    };
+
     const handleUpdate = async () => {
         if (!questionToEdit) return;
         setIsProcessing(true);
@@ -168,6 +218,8 @@ export function QuestionsList() {
                 year: editForm.year,
                 correct_answer: editForm.correct_answer,
                 subject_id: editForm.subject_id,
+                supporting_text: editForm.supporting_text || null,
+                image_url: editForm.image_url || null,
                 options: updatedOptions,
             })
             .match({ id: questionToEdit.id })
@@ -195,6 +247,7 @@ export function QuestionsList() {
             const matchesSubject = subjectFilter === 'all' || q.subject_id === subjectFilter;
             const matchesSearch = !searchTerm || 
                 q.question_text.toLowerCase().includes(lowerSearch) ||
+                (q.supporting_text?.toLowerCase() || '').includes(lowerSearch) ||
                 (q.subject?.name?.toLowerCase() || '').includes(lowerSearch) ||
                 q.year.toString().includes(lowerSearch) ||
                 (Array.isArray(q.options) && q.options.some((opt: any) => opt.text.toLowerCase().includes(lowerSearch)));
@@ -244,6 +297,17 @@ export function QuestionsList() {
                                             {question.subject?.name || 'Geral'}
                                         </Badge>
                                         <span className="text-[10px] font-bold text-muted-foreground italic opacity-60">• Ano {question.year}</span>
+                                        {question.image_url && (
+                                            <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] uppercase px-2 h-5 tracking-widest">
+                                                <ImageIcon className="h-3 w-3 mr-1" />
+                                                Imagem
+                                            </Badge>
+                                        )}
+                                        {!question.image_url && (question.question_text.includes('[IMAGEM_PENDENTE]') || question.supporting_text?.includes('[IMAGEM_PENDENTE]')) && (
+                                            <Badge className="bg-amber-50 text-amber-700 border-none font-black text-[8px] uppercase px-2 h-5 tracking-widest">
+                                                Pendente
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                                 <DropdownMenu>
@@ -314,6 +378,56 @@ export function QuestionsList() {
                                 onChange={e => handleFormChange('question_text', e.target.value)} 
                                 className="min-h-[120px] rounded-2xl bg-muted/30 border-none font-medium italic p-4"
                             />
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Texto de apoio</Label>
+                                <Textarea
+                                    placeholder="Texto, charge, gráfico ou contexto usado pela questão..."
+                                    value={editForm.supporting_text}
+                                    onChange={e => handleFormChange('supporting_text', e.target.value)}
+                                    className="min-h-[160px] rounded-2xl bg-muted/30 border-none font-medium italic p-4"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase opacity-40 ml-2">Imagem da questão</Label>
+                                {editForm.image_url ? (
+                                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted/30 border border-emerald-100">
+                                        <Image src={editForm.image_url} alt="Imagem da questão" fill className="object-contain" />
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            onClick={handleRemoveEditImage}
+                                            className="absolute top-3 right-3 h-8 w-8 rounded-full shadow-lg"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <label className="min-h-[160px] rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/50 text-amber-700 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-amber-50 transition-colors">
+                                        {isUploadingImage ? (
+                                            <Loader2 className="h-6 w-6 animate-spin" />
+                                        ) : (
+                                            <Upload className="h-6 w-6" />
+                                        )}
+                                        <span className="text-[10px] font-black uppercase tracking-widest">
+                                            {isUploadingImage ? 'Enviando...' : 'Anexar imagem'}
+                                        </span>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            disabled={isUploadingImage}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) handleEditImageUpload(file);
+                                                e.target.value = '';
+                                            }}
+                                        />
+                                    </label>
+                                )}
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {Object.entries(editForm.options).map(([key, text]) => (

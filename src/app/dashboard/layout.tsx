@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,9 +40,11 @@ const studentItems: NavItem[] = [
   {
     icon: BrainCircuit, label: "Provas & Estudo", id: "nav-provas-estudo",
     children: [
+      { icon: Zap,         label: "Desafio Diário 🎯",        href: "/dashboard/student/daily",      id: "nav-daily" },
       { icon: FileText,    label: "Simulados por Matéria", href: "/dashboard/student/simulados",   id: "nav-simulados" },
       { icon: Scroll,      label: "Provas Completas",      href: "/dashboard/student/provas",      id: "nav-provas" },
       { icon: FilePenLine, label: "Treinar Redação",       href: "/dashboard/student/essays",      id: "nav-essays" },
+      { icon: Layers,      label: "Flash Cards 🧠",         href: "/dashboard/student/flashcards",  id: "nav-flashcards" },
       { icon: BarChart3,   label: "Meu Desempenho",        href: "/dashboard/student/performance", id: "nav-performance" },
     ],
   },
@@ -58,6 +60,7 @@ const studentItems: NavItem[] = [
     children: [
       { icon: Target,     label: "Metas",   href: "/dashboard/student/goals",   id: "nav-student-goals" },
       { icon: BookHeart,  label: "Diário",  href: "/dashboard/student/journal", id: "nav-student-journal" },
+      { icon: Trophy,     label: "Ranking Semanal", href: "/dashboard/student/ranking", id: "nav-student-ranking" },
     ],
   },
   { icon: Video, label: "Aulas ao Vivo", href: "/dashboard/live", id: "nav-live" },

@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { trackMissionProgress } from "@/lib/missions";
 
 export default function StudentAttendancePage() {
   const { user, profile } = useAuth();
@@ -143,6 +144,9 @@ export default function StudentAttendancePage() {
         toast({ title: "Erro no check-in", description: data.error || "Código inválido ou expirado.", variant: "destructive" });
       } else {
         toast({ title: "Presença registrada!", description: `Aula: ${data.session_title}` });
+        if (user) {
+          trackMissionProgress(supabase, user.id, 'checkin', 1).then(() => {});
+        }
         setCheckinCode("");
         setImpactOpen(false);
         setConfirmoInput("");

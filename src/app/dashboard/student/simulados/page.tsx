@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import {
   Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle,
-  Target, Shuffle, ClipboardList, CheckCircle2, XCircle, BookOpen,
-  Timer, ChevronRight, Zap, Trophy, TrendingUp, Flame,
+  ClipboardList, CheckCircle2, XCircle, BookOpen,
+  Timer, ChevronRight, Zap, Trophy, Play, Pause, LogOut, ChevronDown,
+  Target, Shuffle, Sun, Moon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -22,18 +22,10 @@ import {
   awardXP, checkAndAwardBadges, getTotalAnswered,
   XP_PER_CORRECT_QUESTION, XP_PER_SIMULADO_COMPLETE, BADGE_META,
 } from '@/lib/gamification';
+import { trackMissionProgress } from '@/lib/missions';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ALL_TOPICS = '_all';
-
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06, delayChildren: 0.03 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.25, 0.1, 0.25, 1] } },
-};
 
 type Mode = 'especifico' | 'materia' | 'completo';
 type Subject     = { id: string; name: string; question_count: number };
@@ -52,14 +44,14 @@ type Answer = {
 type GameState = 'loading_subjects' | 'idle' | 'loading_questions' | 'active' | 'finished' | 'error';
 
 // ─── SVG score ring ───────────────────────────────────────────────────────────
-function ScoreRing({ pct, size = 120 }: { pct: number; size?: number }) {
+function ScoreRing({ pct, size = 110 }: { pct: number; size?: number }) {
   const r = (size - 12) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
-  const color = pct >= 70 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+  const color = pct >= 70 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
   return (
     <svg width={size} height={size} className="-rotate-90" aria-hidden>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f1f5f9" strokeWidth={8} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={8} />
       <circle
         cx={size / 2} cy={size / 2} r={r} fill="none"
         stroke={color} strokeWidth={8} strokeLinecap="round"
@@ -69,6 +61,75 @@ function ScoreRing({ pct, size = 120 }: { pct: number; size?: number }) {
     </svg>
   );
 }
+
+// ─── Canvas Confetti Effect ───────────────────────────────────────────────────
+const triggerConfetti = () => {
+  const canvas = document.getElementById("confetti-canvas") as HTMLCanvasElement | null;
+  if (!canvas) return () => {};
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return () => {};
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  const colors = ["#ff6b00", "#6366f1", "#10b981", "#ec4899", "#f59e0b"];
+  const particles: any[] = [];
+  
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      r: Math.random() * 5 + 3,
+      d: Math.random() * canvas.height,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      tilt: Math.random() * 8 - 4,
+      tiltAngleIncremental: Math.random() * 0.05 + 0.02,
+      tiltAngle: 0
+    });
+  }
+  
+  let animationFrameId: number;
+  const draw = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let active = false;
+    
+    particles.forEach((p) => {
+      p.tiltAngle += p.tiltAngleIncremental;
+      p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2.5;
+      p.x += Math.sin(p.tiltAngle);
+      p.tilt = Math.sin(p.tiltAngle - p.r / 2) * 12;
+      
+      if (p.y < canvas.height) {
+        active = true;
+      }
+      
+      ctx.beginPath();
+      ctx.lineWidth = p.r;
+      ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+      ctx.stroke();
+    });
+    
+    if (active) {
+      animationFrameId = requestAnimationFrame(draw);
+    }
+  };
+  
+  draw();
+  return () => cancelAnimationFrame(animationFrameId);
+};
+
+// ─── Haptic vibration helper ───────────────────────────────────────────────────
+const triggerHaptic = (ms: number | number[] = 15) => {
+  if (typeof window !== "undefined" && navigator.vibrate) {
+    try {
+      navigator.vibrate(ms);
+    } catch (e) {
+      // Ignora erro se haptics falhar
+    }
+  }
+};
 
 // ─── main page ────────────────────────────────────────────────────────────────
 export default function SimuladoPage() {
@@ -90,6 +151,12 @@ export default function SimuladoPage() {
   const [simSize, setSimSize]       = useState<number>(10);
   const [timeLeft, setTimeLeft]     = useState<number | null>(null);
   const [isPaused, setIsPaused]     = useState(false);
+
+  // Active theme (dark or light)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Accordion index for finished screen gabarito
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   // ── data fetching ──
   const fetchSubjects = useCallback(async () => {
@@ -136,10 +203,18 @@ export default function SimuladoPage() {
     setGameState('loading_questions');
     try {
       const { data: raw, error } = await buildQuery();
+      // Determina o público do aluno para usar no fallback também
+      const audienceRaw = (
+        profile?.exam_target || user?.user_metadata?.exam_target ||
+        profile?.profile_type || user?.user_metadata?.profile_type || 'enem'
+      ).toLowerCase().trim();
+      const ua = audienceRaw.includes('etec') ? 'etec' : 'enem';
       let items: any[] = [];
       if (error) {
         let fb = supabase.from('questions').select('*, subjects(name)');
         if (selectedSubjectId) fb = fb.eq('subject_id', selectedSubjectId) as any;
+        // Aplica filtro de público também no fallback
+        fb = fb.or(`target_audience.eq.all,target_audience.eq.${ua},target_audience.is.null`) as any;
         const { data: f, error: e2 } = await fb.limit(200);
         if (e2) throw e2;
         items = f ?? [];
@@ -158,12 +233,12 @@ export default function SimuladoPage() {
       });
       setQuestions(formatted); setCurrentIndex(0); setAnswers([]); setSelectedAnswer(null);
       setTimeLeft(formatted.length * 3.5 * 60); setIsPaused(false);
+      setExpandedIndex(null);
       setGameState('active');
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       setGameState('error');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, selectedSubjectId, selectedMicroTopicId, profile, toast, simSize]);
 
   // ── timer ──
@@ -177,6 +252,15 @@ export default function SimuladoPage() {
     return () => clearInterval(t);
   }, [gameState, timeLeft, isPaused, toast]);
 
+  // Confetti trigger on game finish
+  useEffect(() => {
+    if (gameState === 'finished') {
+      triggerHaptic([40, 80, 40]);
+      const cleanup = triggerConfetti();
+      return cleanup;
+    }
+  }, [gameState]);
+
   const formatTime = (s: number) => {
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
     return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
@@ -185,7 +269,7 @@ export default function SimuladoPage() {
   const norm = (v: string | undefined | null) => (v ?? '').trim().toUpperCase();
   const score = answers.filter(a => norm(a.selected) === norm(a.correct)).length;
   const pct   = answers.length > 0 ? Math.round((score / answers.length) * 100) : 0;
-  const progress = questions.length > 0 ? ((currentIndex) / questions.length) * 100 : 0;
+  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
   const currentQuestion = questions[currentIndex];
 
   const handleNext = async () => {
@@ -210,11 +294,14 @@ export default function SimuladoPage() {
 
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(i => i + 1);
+      triggerHaptic(15);
     } else {
       const s = newAnswers.filter(a => norm(a.selected) === norm(a.correct)).length;
       if (user) {
         const xp = s * XP_PER_CORRECT_QUESTION + XP_PER_SIMULADO_COMPLETE;
         awardXP(user.id, xp).then(() => {});
+        trackMissionProgress(supabase, user.id, 'answer_questions', newAnswers.length).then(() => {});
+        trackMissionProgress(supabase, user.id, 'complete_simulados', 1).then(() => {});
         const total = await getTotalAnswered(user.id);
         const badges = await checkAndAwardBadges(user.id, {
           totalAnswered: total + newAnswers.length,
@@ -233,19 +320,19 @@ export default function SimuladoPage() {
   // ════════════════════════════════════════════════════════════════════════════
   if (gameState === 'loading_subjects' || gameState === 'loading_questions') {
     return (
-      <div className="flex h-[70vh] w-full items-center justify-center flex-col gap-5">
+      <div className="flex h-[75vh] w-full items-center justify-center flex-col gap-5">
         <div className="relative">
-          <div className="h-20 w-20 rounded-3xl aurora-dark flex items-center justify-center">
+          <div className="h-20 w-20 rounded-3xl aurora-dark flex items-center justify-center shadow-2xl">
             <BrainCircuit className="h-9 w-9 text-white animate-pulse" />
           </div>
-          <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-accent flex items-center justify-center">
+          <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-orange-500 flex items-center justify-center shadow-lg">
             <Loader2 className="h-3.5 w-3.5 text-white animate-spin" />
           </div>
         </div>
-        <p className="text-sm font-black text-primary italic animate-pulse">
+        <p className="text-sm font-black text-slate-800 italic animate-pulse">
           {gameState === 'loading_subjects' ? 'Carregando matérias...' : 'Montando seu simulado personalizado...'}
         </p>
-        <p className="text-xs text-slate-400 font-medium">Aguarde um momento</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguarde um momento</p>
       </div>
     );
   }
@@ -271,266 +358,456 @@ export default function SimuladoPage() {
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // ACTIVE — question view
+  // ACTIVE — FULLSCREEN DISTRACTION-FREE SIMULATOR
   // ════════════════════════════════════════════════════════════════════════════
   if (gameState === 'active' && currentQuestion) {
     const opt = (o: any, i: number) => o.key || o.letter || String.fromCharCode(65 + i).toLowerCase();
-    const urgentTime = timeLeft !== null && timeLeft < 300;
+    const urgentTime = timeLeft !== null && timeLeft < 180; // 3 min
+    const isDark = theme === 'dark';
+
+    // Theme responsive class mappings
+    const containerTheme = isDark ? 'bg-[#070709] text-slate-100' : 'bg-[#f8fafc] text-slate-900';
+    const headerTheme = isDark ? 'bg-[#0c0c0f] border-white/5' : 'bg-white border-slate-200 shadow-sm';
+    const titleTextTheme = isDark ? 'text-white' : 'text-slate-800';
+    const subTextTheme = isDark ? 'text-white/40' : 'text-slate-500';
+    const colLeftTheme = isDark ? 'border-white/5' : 'border-slate-200/80';
+    const colRightTheme = isDark ? 'bg-[#0b0b0e] border-white/5' : 'bg-white border-slate-200/80';
+    const supportTextTheme = isDark ? 'bg-[#0b0b0d] border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700';
+    const bodyTextTheme = isDark ? 'text-white/90' : 'text-slate-800';
 
     return (
-      <div className="max-w-3xl mx-auto pb-36 sm:pb-24 px-2 sm:px-4">
+      <div className={`fixed inset-0 z-[9999] ${containerTheme} flex flex-col h-screen select-none overflow-hidden font-sans transition-colors duration-300`}>
+        
+        {/* Confetti canvas placeholder */}
+        <canvas id="confetti-canvas" className="fixed inset-0 pointer-events-none z-[10000]" />
 
-        {/* sticky progress header */}
-        <div className="sticky top-2 z-30 mb-6">
-          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 p-3 sm:p-4">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-xl aurora-dark flex items-center justify-center shrink-0">
-                  <BrainCircuit className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <p className="font-black text-primary text-xs uppercase tracking-widest leading-none">
-                    Questão {currentIndex + 1} <span className="text-slate-300">/</span> {questions.length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-medium mt-0.5">
-                    {currentQuestion.subjects?.name || 'Geral'} · {currentQuestion.year}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* score so far */}
-                <div className="hidden sm:flex items-center gap-1.5 bg-green-50 text-green-600 rounded-xl px-3 py-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  <span className="text-xs font-black">{answers.filter(a => norm(a.selected) === norm(a.correct)).length}</span>
-                </div>
-
-                {timeLeft !== null && (
-                  <div className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-colors
-                    ${urgentTime ? 'bg-red-50 text-red-500 animate-pulse' : 'bg-slate-50 text-slate-500'}`}
-                  >
-                    <Timer className="h-3.5 w-3.5" />
-                    <span className="text-xs font-black tabular-nums">{formatTime(timeLeft)}</span>
-                  </div>
-                )}
-              </div>
+        {/* ── Pause Overlay ── */}
+        {isPaused && (
+          <div className={`absolute inset-0 z-[10001] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300 backdrop-blur-md
+            ${isDark ? 'bg-[#070709]/95 text-white' : 'bg-white/95 text-slate-900 border border-slate-200 shadow-2xl'}`}>
+            <div className="h-16 w-16 rounded-3xl bg-orange-500/10 border border-orange-500/25 flex items-center justify-center mb-6">
+              <Timer className="h-8 w-8 text-orange-500 animate-pulse" />
             </div>
-
-            {/* progress bar */}
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* question card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-            style={{ willChange: 'transform' }}
-          >
-            <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden mb-4">
-              {/* question body */}
-              <div className="p-6 sm:p-8 space-y-5 border-b border-slate-50">
-                {currentQuestion.image_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={currentQuestion.image_url}
-                    alt="Imagem da questão"
-                    className="w-full rounded-2xl object-contain max-h-64 border border-slate-100"
-                  />
-                )}
-                {currentQuestion.supporting_text && (
-                  <SupportingTextBlock text={currentQuestion.supporting_text} />
-                )}
-                <p className="text-sm sm:text-base font-medium text-slate-800 leading-[1.8] italic whitespace-pre-wrap break-words">
-                  {currentQuestion.question_text}
-                </p>
-              </div>
-
-              {/* options */}
-              <div className="p-6 sm:p-8">
-                <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-2.5">
-                  <RadioGroup value={selectedAnswer ?? ''} onValueChange={setSelectedAnswer}>
-                    {(currentQuestion.options || []).map((o: any, i: number) => {
-                      const key = opt(o, i);
-                      const isSelected = selectedAnswer === key;
-                      return (
-                        <motion.div key={key} variants={fadeUp} whileTap={{ scale: 0.985 }} style={{ willChange: 'transform' }}>
-                          <div
-                            onClick={() => setSelectedAnswer(key)}
-                            className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer select-none
-                              ${isSelected
-                                ? 'border-primary bg-primary/5 shadow-[0_0_0_2px_rgba(255,107,0,0.1)]'
-                                : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 active:border-primary/40'}`}
-                          >
-                            <RadioGroupItem value={key} id={`opt-${key}`} className="mt-0.5 shrink-0" onClick={(e) => e.stopPropagation()} />
-                            <div className="flex gap-2 sm:gap-3 min-w-0">
-                              <span className={`font-black italic shrink-0 text-sm sm:text-base
-                                ${isSelected ? 'text-primary' : 'text-slate-300'}`}>
-                                {key.toUpperCase()}.
-                              </span>
-                              <span className="font-medium text-slate-700 text-sm sm:text-base whitespace-pre-wrap break-words">{o.text}</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </RadioGroup>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* bottom CTA */}
-        <div className="fixed bottom-16 left-0 right-0 z-50 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 sm:relative sm:bottom-auto sm:p-0 sm:bg-transparent sm:border-0 sm:backdrop-blur-none">
-          <div className="max-w-3xl mx-auto flex items-center gap-3">
-            <p className="hidden sm:block text-[10px] font-black uppercase text-slate-300 italic flex-1">Analise com calma.</p>
-            <Button
-              onClick={handleNext}
-              disabled={selectedAnswer === null}
-              className="w-full sm:w-auto h-12 sm:h-14 rounded-2xl font-black text-sm sm:text-base px-8 bg-primary shadow-xl active:scale-95 transition-transform flex items-center gap-2 touch-manipulation disabled:opacity-50 disabled:pointer-events-none"
+            <h2 className={`text-2xl font-black italic mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Simulado Pausado</h2>
+            <p className={`text-xs font-semibold mb-6 max-w-xs leading-relaxed ${isDark ? 'text-white/60' : 'text-slate-500'}`}>
+              O cronômetro está congelado. Faça uma pausa rápida para respirar e retome quando estiver pronto para focar.
+            </p>
+            <Button 
+              onClick={() => {
+                triggerHaptic(20);
+                setIsPaused(false);
+              }} 
+              className="btn-orange-neon rounded-2xl h-14 px-8 text-slate-800 font-black text-sm uppercase tracking-wider glow-orange border-none"
             >
-              {currentIndex < questions.length - 1
-                ? <><span>Próxima Questão</span><ChevronRight className="h-4 w-4" /></>
-                : <><Trophy className="h-4 w-4" /><span>Finalizar Simulado</span></>}
+              <Play className="h-4 w-4 mr-2" />
+              Retomar Simulado
             </Button>
           </div>
+        )}
+
+        {/* ── Sticky HUD Header ── */}
+        <header className={`h-20 ${headerTheme} px-4 sm:px-6 flex items-center justify-between shrink-0 z-50 transition-colors duration-300`}>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0">
+              <BrainCircuit className="h-5 w-5 text-orange-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className={`font-black text-xs uppercase tracking-widest leading-none ${titleTextTheme}`}>
+                  Questão {currentIndex + 1} de {questions.length}
+                </p>
+                <Badge className={`${isDark ? 'bg-white/5 text-white/50 border-white/10' : 'bg-slate-100 text-slate-500 border-slate-200'} font-bold text-[7px] uppercase tracking-wider px-1.5 h-4.5 rounded-md`}>
+                  {currentQuestion.subjects?.name || 'Geral'}
+                </Badge>
+              </div>
+              <p className={`text-[9px] font-bold uppercase tracking-wider mt-1 ${subTextTheme}`}>
+                ENEM / ETEC · {currentQuestion.year}
+              </p>
+            </div>
+          </div>
+
+          {/* Central Controls (Timer, Theme Toggle, Exit) */}
+          <div className="flex items-center gap-2">
+            {/* Timer */}
+            {timeLeft !== null && (
+              <div 
+                onClick={() => {
+                  triggerHaptic(20);
+                  setIsPaused(true);
+                }}
+                className={`flex items-center gap-2 rounded-2xl px-4 py-2 border cursor-pointer active:scale-95 transition-all
+                  ${urgentTime 
+                    ? 'bg-red-500/10 border-red-500/30 text-red-400 animate-pulse' 
+                    : isDark 
+                      ? 'bg-white/5 border-white/10 text-white/70 hover:bg-white/8' 
+                      : 'bg-slate-100 border-slate-250 text-slate-700 hover:bg-slate-200'}`}
+              >
+                <Timer className={`h-4 w-4 ${urgentTime ? 'text-red-400' : 'text-orange-400'}`} />
+                <span className="text-xs font-black tabular-nums tracking-widest">{formatTime(timeLeft)}</span>
+                <Pause className="h-3 w-3 opacity-40 ml-1.5" />
+              </div>
+            )}
+
+            {/* Theme Selector Toggle (Sol/Lua) */}
+            <button
+              onClick={() => {
+                triggerHaptic(15);
+                setTheme(isDark ? 'light' : 'dark');
+              }}
+              className={`h-10 w-10 rounded-xl flex items-center justify-center border transition-all active:scale-95
+                ${isDark 
+                  ? 'bg-white/5 border-white/10 text-amber-400 hover:bg-white/10' 
+                  : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-250'}`}
+              title={isDark ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+
+            {/* Exit button */}
+            <button
+              onClick={() => {
+                triggerHaptic(30);
+                if (confirm("Deseja sair do simulado? Seu progresso atual nesta sessão será perdido.")) {
+                  setGameState("idle");
+                }
+              }}
+              className={`h-10 px-3.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 text-[10px] font-black uppercase tracking-wider
+                ${isDark 
+                  ? 'bg-white/5 border-white/10 text-white/60 hover:border-red-500/30 hover:text-red-400' 
+                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:border-red-500/30 hover:text-red-500'}`}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Global Progress Bar */}
+        <div className="h-1 bg-white/5 w-full shrink-0 relative overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-emerald-400 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
         </div>
+
+        {/* ── Main Panel (Two Columns on Desktop) ── */}
+        <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden min-h-0 transition-colors duration-300">
+          
+          {/* LEFT COLUMN: Question Content */}
+          <div className={`flex-1 md:overflow-y-auto p-5 sm:p-8 space-y-6 md:border-r ${colLeftTheme} transition-colors duration-300`}>
+            {currentQuestion.image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={currentQuestion.image_url}
+                alt="Imagem de apoio à questão"
+                className={`w-full rounded-2xl object-contain max-h-64 border ${isDark ? 'border-white/5 bg-[#0d0d10]' : 'border-slate-200 bg-white'}`}
+              />
+            )}
+            
+            {currentQuestion.supporting_text && (
+              <div className={`border rounded-2xl p-4 sm:p-5 transition-colors duration-300 ${supportTextTheme}`}>
+                <SupportingTextBlock text={currentQuestion.supporting_text} />
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-orange-500 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">Enunciado</span>
+              <p className={`text-sm sm:text-base font-bold leading-[1.8] whitespace-pre-wrap break-words italic pr-2 transition-colors duration-300 ${bodyTextTheme}`}>
+                {currentQuestion.question_text.replace(/\[IMAGEM_PENDENTE\]/g, '').trim()}
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Alternatives Gabarito & Action */}
+          <div className={`w-full md:w-[400px] shrink-0 p-5 sm:p-8 flex flex-col justify-between ${colRightTheme} md:overflow-y-auto md:h-full pb-28 md:pb-8 border-t md:border-t-0 transition-colors duration-300`}>
+            <div className="space-y-5">
+              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-orange-400/80 mb-2">
+                Selecione a alternativa correta:
+              </p>
+
+              <div className="space-y-3">
+                {(currentQuestion.options || []).map((o: any, i: number) => {
+                  const key = opt(o, i);
+                  const isSelected = selectedAnswer === key;
+                  return (
+                    <motion.div
+                      key={key}
+                      whileTap={{ scale: 0.985 }}
+                      onClick={() => {
+                        triggerHaptic(15);
+                        setSelectedAnswer(key);
+                      }}
+                      className={`group flex items-start gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer select-none active:scale-[0.99]
+                        ${isSelected
+                          ? isDark
+                            ? 'border-orange-500 bg-orange-500/15 shadow-[0_0_25px_rgba(255,107,0,0.18)] text-white'
+                            : 'border-orange-500 bg-orange-500/5 shadow-[0_0_20px_rgba(255,107,0,0.08)] text-orange-600 font-bold'
+                          : isDark
+                            ? 'border-white/5 bg-[#121215]/80 text-white/80 hover:border-white/10'
+                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'}`}
+                    >
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center font-black text-sm italic transition-all shrink-0
+                        ${isSelected
+                          ? 'bg-orange-500 text-slate-950 shadow-[0_0_10px_rgba(255,107,0,0.5)]'
+                          : isDark
+                            ? 'bg-white/5 border border-white/10 text-white/40 group-hover:border-white/20 group-hover:text-white/60'
+                            : 'bg-slate-200 border border-slate-350 text-slate-500 group-hover:border-slate-400 group-hover:text-slate-700'}`}
+                      >
+                        {key.toUpperCase()}
+                      </div>
+                      <span className="font-bold text-xs sm:text-sm leading-relaxed break-words pt-1">{o.text}</span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bottom floating button on mobile / normal in column for desktop */}
+            <div className={`fixed bottom-0 left-0 right-0 z-50 p-4 border-t transition-all duration-300 md:relative md:bottom-auto md:p-0 md:bg-transparent md:border-0 md:mt-8
+              ${isDark ? 'bg-[#0a0a0d]/90 backdrop-blur-xl border-white/5' : 'bg-white/90 backdrop-blur-xl border-slate-200'}`}>
+              <Button
+                onClick={handleNext}
+                disabled={selectedAnswer === null}
+                className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest bg-orange-500 text-slate-950 hover:bg-orange-600 shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 touch-manipulation disabled:opacity-30 border-none disabled:pointer-events-none"
+              >
+                {currentIndex < questions.length - 1 ? (
+                  <>
+                    <span>Confirmar e Próxima</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="h-4 w-4" />
+                    <span>Finalizar Simulado</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // FINISHED
+  // FINISHED — SCORECARD GAMER & REVIEW ACCORDIONS
   // ════════════════════════════════════════════════════════════════════════════
   if (gameState === 'finished') {
-    const resultColor = pct >= 70 ? 'text-green-500' : pct >= 50 ? 'text-amber-500' : 'text-red-400';
-    const resultLabel = pct >= 70 ? 'Excelente!' : pct >= 50 ? 'Bom desempenho!' : 'Continue praticando!';
-    const resultBg    = pct >= 70 ? 'from-green-500 to-emerald-600' : pct >= 50 ? 'from-amber-500 to-orange-500' : 'from-red-400 to-rose-600';
+    const resultColor = pct >= 70 ? 'text-green-400' : pct >= 50 ? 'text-amber-400' : 'text-red-400';
+    const resultLabel = pct >= 70 ? 'Desempenho de Elite!' : pct >= 50 ? 'Bom progresso!' : 'Continue praticando!';
+    const resultBg    = pct >= 70 ? 'from-[#0d2e1b] to-[#070709]' : pct >= 50 ? 'from-[#3a2007] to-[#070709]' : 'from-[#380e14] to-[#070709]';
+    const xpGained = score * XP_PER_CORRECT_QUESTION + XP_PER_SIMULADO_COMPLETE;
 
     return (
       <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-700 pb-28 px-2 sm:px-4">
+        
+        {/* Confetti canvas */}
+        <canvas id="confetti-canvas" className="fixed inset-0 pointer-events-none z-[10000]" />
 
-        {/* score card */}
-        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
-          {/* hero strip */}
-          <div className={`bg-gradient-to-r ${resultBg} p-6 flex items-center justify-between gap-4`}>
-            <div>
-              <p className="text-white/70 font-black text-[10px] uppercase tracking-widest mb-1">Simulado Concluído</p>
-              <h2 className="text-2xl sm:text-3xl font-black text-white italic leading-tight">{resultLabel}</h2>
+        {/* Premium Gamer Scorecard */}
+        <div className={`rounded-[2.5rem] bg-gradient-to-b ${resultBg} border border-white/5 overflow-hidden shadow-2xl p-6 sm:p-8 space-y-6 text-center relative`}>
+          <div className="absolute top-3 right-3 shrink-0">
+            <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/25 font-black text-[9px] uppercase tracking-widest px-2.5 h-6">
+              <Trophy className="h-3 w-3 mr-1" />
+              Simulado Concluído
+            </Badge>
+          </div>
+
+          <div className="flex flex-col items-center">
+            {/* Circular Ring Gauge */}
+            <div className="relative shrink-0 flex items-center justify-center h-28 w-28 mb-3 mt-4">
+              <ScoreRing pct={pct} size={110} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className="font-black text-white text-2xl leading-none">{pct}<span className="text-xs text-white/50">%</span></p>
+                <p className="text-[7px] font-black uppercase tracking-widest text-white/40 mt-1">Acertos</p>
+              </div>
             </div>
-            <div className="relative shrink-0">
-              <ScoreRing pct={pct} size={96} />
-              <div className="absolute inset-0 flex items-center justify-center rotate-90">
-                <p className="font-black text-white text-xl leading-none">{pct}<span className="text-sm">%</span></p>
+
+            <h2 className="text-2xl sm:text-3xl font-black italic tracking-tighter text-white leading-none mb-1">
+              {resultLabel}
+            </h2>
+            <p className="text-white/60 text-xs font-semibold max-w-sm">
+              Você concluiu o teste personalizado e seus pontos foram computados.
+            </p>
+          </div>
+
+          {/* Gamified Reward Banner */}
+          <div className="bg-white/5 border border-white/8 rounded-2xl p-4 flex items-center justify-center gap-6 max-w-md mx-auto">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-orange-500/20 flex items-center justify-center shadow-md">
+                <Zap className="h-4.5 w-4.5 text-orange-400 fill-orange-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black text-white">+{xpGained} XP</p>
+                <p className="text-[8px] font-black text-white/40 uppercase tracking-widest">Experiência</p>
+              </div>
+            </div>
+            <div className="h-8 w-[1px] bg-white/10" />
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-indigo-500/20 flex items-center justify-center shadow-md">
+                <Award className="h-4.5 w-4.5 text-indigo-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black text-white">Salvo</p>
+                <p className="text-[8px] font-black text-white/40 uppercase tracking-widest">Histórico</p>
               </div>
             </div>
           </div>
 
-          {/* stats grid */}
-          <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100">
+          {/* Stats breakdown */}
+          <div className="grid grid-cols-3 divide-x divide-white/5 border-t border-white/5 pt-5">
             {[
-              { label: 'Acertos', value: score, color: 'text-green-500', icon: CheckCircle2 },
+              { label: 'Acertos', value: score, color: 'text-emerald-400', icon: CheckCircle2 },
               { label: 'Erros',   value: answers.length - score, color: 'text-red-400', icon: XCircle },
-              { label: 'Total',   value: answers.length, color: 'text-primary', icon: ClipboardList },
+              { label: 'Total',   value: answers.length, color: 'text-orange-400', icon: ClipboardList },
             ].map(s => (
-              <div key={s.label} className="p-5 text-center">
-                <s.icon className={`h-5 w-5 mx-auto mb-1 ${s.color}`} />
-                <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">{s.label}</p>
+              <div key={s.label} className="text-center px-1">
+                <s.icon className={`h-4 w-4 mx-auto mb-1 ${s.color}`} />
+                <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
 
-          <div className="p-6 border-t border-slate-100">
+          <div className="pt-4">
             <Button
-              onClick={() => { setGameState('idle'); setAnswers([]); }}
-              className="w-full h-12 rounded-2xl bg-primary text-white font-black shadow-lg active:scale-95 transition-transform"
+              onClick={() => {
+                triggerHaptic(20);
+                setAnswers([]);
+                setGameState('idle');
+              }}
+              className="w-full h-12 rounded-2xl bg-orange-500 text-slate-950 hover:bg-orange-600 font-black text-sm uppercase tracking-wider active:scale-95 transition-transform border-none"
             >
-              <RotateCw className="h-4 w-4 mr-2" /> Novo Simulado
+              <RotateCw className="h-4 w-4 mr-2" />
+              Iniciar Novo Simulado
             </Button>
           </div>
         </div>
 
-        {/* gabarito */}
-        <div>
-          <h3 className="text-lg font-black text-primary italic px-1 mb-4 flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-accent" /> Gabarito Comentado
+        {/* Gabarito Comentado Accordion */}
+        <div className="space-y-4">
+          <h3 className="text-base font-black text-slate-800 italic px-1 mb-2 flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-orange-500" />
+            Revisão & Gabarito Comentado
           </h3>
 
           <div className="space-y-3">
             {answers.map((ans, i) => {
               const isCorrect = norm(ans.selected) === norm(ans.correct);
+              const isExpanded = expandedIndex === i;
               const getKey = (o: any) => o.key || o.letter || '';
+              
               return (
-                <div key={ans.questionId} className={`bg-white rounded-[1.75rem] shadow-sm border overflow-hidden
-                  ${isCorrect ? 'border-green-100' : 'border-red-100'}`}>
-                  {/* top bar */}
-                  <div className={`h-1 w-full ${isCorrect ? 'bg-green-400' : 'bg-red-400'}`} />
-
-                  <div className="p-5 space-y-3">
-                    {/* header */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {isCorrect
-                        ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        : <XCircle     className="h-4 w-4 text-red-400   shrink-0" />}
-                      <span className={`text-[10px] font-black uppercase tracking-widest
-                        ${isCorrect ? 'text-green-600' : 'text-red-400'}`}>
-                        Questão {i + 1} — {isCorrect ? 'Acerto' : 'Erro'}
-                      </span>
-                      {ans.subject && (
-                        <span className="ml-auto text-[9px] font-black uppercase bg-accent/10 text-accent px-2 py-0.5 rounded-lg">
-                          {ans.subject}
-                        </span>
+                <div 
+                  key={`${ans.questionId}-${i}`} 
+                  className={`bg-white rounded-[1.5rem] shadow-sm border overflow-hidden transition-all duration-300
+                    ${isCorrect ? 'border-emerald-100 hover:border-emerald-200' : 'border-red-100 hover:border-red-200'}`}
+                >
+                  {/* Collapsible Accordion Header */}
+                  <div 
+                    onClick={() => {
+                      triggerHaptic(10);
+                      setExpandedIndex(isExpanded ? null : i);
+                    }}
+                    className="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {isCorrect ? (
+                        <div className="h-6 w-6 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        </div>
+                      ) : (
+                        <div className="h-6 w-6 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                          <XCircle className="h-4 w-4 text-red-400" />
+                        </div>
                       )}
-                    </div>
-
-                    {/* question text */}
-                    <p className="text-xs font-bold text-slate-600 italic leading-relaxed line-clamp-3">
-                      {ans.question_text}
-                    </p>
-
-                    {/* options */}
-                    <div className="space-y-1.5">
-                      {(ans.options || []).map((opt: any) => {
-                        const k = getKey(opt);
-                        const isCorrectOpt  = norm(k) === norm(ans.correct);
-                        const isSelectedOpt = norm(k) === norm(ans.selected);
-                        const wasWrong = isSelectedOpt && !isCorrect;
-                        return (
-                          <div
-                            key={k || opt.text}
-                            className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs border transition-all
-                              ${isCorrectOpt ? 'bg-green-50 border-green-200 text-green-700 font-bold' : ''}
-                              ${wasWrong     ? 'bg-red-50   border-red-200   text-red-500   line-through' : ''}
-                              ${!isCorrectOpt && !wasWrong ? 'bg-slate-50 border-transparent text-slate-500' : ''}`}
-                          >
-                            <span className="font-black italic w-4 shrink-0">{(k || '?').toUpperCase()})</span>
-                            <span className="flex-1">{opt.text}</span>
-                            {isCorrectOpt && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />}
-                            {wasWrong     && <XCircle      className="h-3.5 w-3.5 text-red-400   shrink-0" />}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* explanation */}
-                    {ans.explanation && (
-                      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex gap-2">
-                        <BookOpen className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                        <p className="text-xs font-bold text-amber-700 italic leading-relaxed">{ans.explanation}</p>
+                      <div className="min-w-0">
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${
+                          isCorrect ? 'text-emerald-500' : 'text-red-400'
+                        }`}>
+                          Questão {i + 1} — {isCorrect ? 'Acerto' : 'Erro'}
+                        </span>
+                        <p className="text-xs font-bold text-slate-600 truncate max-w-[200px] sm:max-w-md mt-0.5 leading-none">
+                          {ans.question_text}
+                        </p>
                       </div>
-                    )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 shrink-0">
+                      {ans.subject && (
+                        <Badge className="bg-slate-100 text-slate-500 border border-slate-200 font-bold text-[8px] uppercase tracking-wider px-1.5 h-4.5 rounded">
+                          {ans.subject}
+                        </Badge>
+                      )}
+                      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${
+                        isExpanded ? 'rotate-180 text-orange-500' : ''
+                      }`} />
+                    </div>
                   </div>
+
+                  {/* Expanded Content Drawer */}
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: "auto" }}
+                        exit={{ height: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="overflow-hidden bg-slate-50/50 border-t border-slate-100"
+                      >
+                        <div className="p-4 sm:p-5 space-y-4 text-sm text-slate-600">
+                          
+                          {/* Question body */}
+                          <div className="space-y-1.5">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Texto da Questão</span>
+                            <p className="text-xs font-bold text-slate-700 italic leading-relaxed whitespace-pre-wrap">
+                              {ans.question_text}
+                            </p>
+                          </div>
+
+                          {/* Options display with custom validation states */}
+                          <div className="space-y-2">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Opções da Questão</span>
+                            <div className="space-y-1.5">
+                              {(ans.options || []).map((opt: any) => {
+                                const k = getKey(opt);
+                                const isCorrectOpt  = norm(k) === norm(ans.correct);
+                                const isSelectedOpt = norm(k) === norm(ans.selected);
+                                const wasWrong = isSelectedOpt && !isCorrect;
+                                return (
+                                  <div
+                                    key={k || opt.text}
+                                    className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs border transition-all
+                                      ${isCorrectOpt ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' : ''}
+                                      ${wasWrong     ? 'bg-red-50 border-red-200 text-red-600 line-through' : ''}
+                                      ${!isCorrectOpt && !wasWrong ? 'bg-white border-slate-100 text-slate-500' : ''}`}
+                                  >
+                                    <span className="font-black italic w-4 shrink-0">{(k || '?').toUpperCase()})</span>
+                                    <span className="flex-1">{opt.text}</span>
+                                    {isCorrectOpt && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />}
+                                    {wasWrong     && <XCircle      className="h-3.5 w-3.5 text-red-500 shrink-0" />}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Detailed comment block */}
+                          {ans.explanation && (
+                            <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-3.5 flex gap-3">
+                              <BookOpen className="h-4.5 w-4.5 text-orange-500 shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-[8px] font-black text-orange-500 uppercase tracking-widest mb-1 leading-none">Explicação Pedagógica</p>
+                                <p className="text-xs font-semibold text-amber-900/90 leading-relaxed italic">
+                                  {ans.explanation}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -541,46 +818,46 @@ export default function SimuladoPage() {
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // IDLE — setup screen
+  // IDLE — SIMULATOR GENERATION & MODE SELECTOR SCREEN
   // ════════════════════════════════════════════════════════════════════════════
   const canStart = mode === 'completo' || !!selectedSubjectId;
 
   const MODES = [
     { id: 'materia'   as Mode, label: 'Por Matéria',      icon: Library,     desc: 'Escolha uma disciplina e pratique.',     color: 'text-blue-500',   bg: 'bg-blue-50' },
     { id: 'especifico'as Mode, label: 'Treino Específico', icon: Target,      desc: 'Filtre por micro-tópico com precisão.',  color: 'text-violet-500', bg: 'bg-violet-50' },
-    { id: 'completo'  as Mode, label: 'Simulado Completo', icon: Shuffle,     desc: 'Questões de todas as matérias.',         color: 'text-accent',     bg: 'bg-accent/10' },
+    { id: 'completo'  as Mode, label: 'Simulado Completo', icon: Shuffle,     desc: 'Questões de todas as matérias.',         color: 'text-amber-500',  bg: 'bg-amber-55/10' },
   ];
 
   return (
     <div className="max-w-2xl mx-auto pb-24 px-2 sm:px-4 animate-in fade-in duration-500">
 
-      {/* ── hero ── */}
-      <div className="aurora-dark rounded-[2.5rem] p-7 md:p-10 mb-8 relative overflow-hidden">
+      {/* ── Hero Banner ── */}
+      <div className="aurora-dark rounded-[2.5rem] p-7 md:p-10 mb-8 relative overflow-hidden shadow-2xl">
         <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-3">
-            <ClipboardList className="h-5 w-5 text-accent" />
+            <ClipboardList className="h-5 w-5 text-orange-400" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Prática Inteligente</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black italic text-white leading-none tracking-tight mb-2">
             Gerador de Listas
           </h1>
-          <p className="text-white/60 font-medium text-sm leading-relaxed max-w-sm mb-6">
-            Simulados personalizados para o seu ritmo de estudo.
+          <p className="text-white/60 font-semibold text-xs leading-relaxed max-w-sm mb-6">
+            Simulados personalizados gerados sob demanda de acordo com sua necessidade de foco.
           </p>
 
-          {/* stats */}
+          {/* Setup stats pills */}
           <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
             {[
-              { label: 'Matérias',  value: subjects.length, icon: Library },
+              { label: 'Disciplinas',  value: subjects.length, icon: Library },
               { label: 'Tamanho',   value: `${simSize}q`,   icon: ClipboardList },
               { label: 'Tempo est.', value: `~${Math.round(simSize * 3.5)}m`, icon: Timer },
             ].map(s => (
-              <div key={s.label} className="gradient-border flex items-center gap-2 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-3.5 py-2.5 shrink-0 min-w-[100px]">
-                <s.icon className="h-3.5 w-3.5 text-accent shrink-0" />
+              <div key={s.label} className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-2.5 shrink-0 min-w-[110px]">
+                <s.icon className="h-4 w-4 text-orange-400 shrink-0" />
                 <div>
-                  <p className="text-white font-black text-base leading-none">{s.value}</p>
-                  <p className="text-white/50 text-[9px] font-black uppercase tracking-wider mt-0.5">{s.label}</p>
+                  <p className="text-white font-black text-sm leading-none">{s.value}</p>
+                  <p className="text-white/50 text-[8px] font-black uppercase tracking-wider mt-0.5">{s.label}</p>
                 </div>
               </div>
             ))}
@@ -588,154 +865,161 @@ export default function SimuladoPage() {
         </div>
       </div>
 
-      {/* ── mode selector ── */}
-      <div className="mb-5">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 px-1">Modo de Treino</p>
-        <motion.div className="grid grid-cols-1 sm:grid-cols-3 gap-3" variants={stagger} initial="hidden" animate="show">
+      {/* ── Mode selector buttons ── */}
+      <div className="mb-6">
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 px-1">Selecione o Modo de Simulado</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {MODES.map(m => (
             <motion.button
               key={m.id}
-              variants={fadeUp}
               whileTap={{ scale: 0.97 }}
-              style={{ willChange: 'transform' }}
-              onClick={() => { setMode(m.id); setSelectedSubjectId(''); setSelectedMicroTopicId(ALL_TOPICS); }}
-              className={`p-4 rounded-[1.75rem] border-2 text-left transition-all duration-200
+              onClick={() => {
+                triggerHaptic(10);
+                setMode(m.id); 
+                setSelectedSubjectId(''); 
+                setSelectedMicroTopicId(ALL_TOPICS); 
+              }}
+              className={`p-4 rounded-[1.75rem] border-2 text-left transition-all duration-200 active:scale-[0.99] [touch-action:manipulation]
                 ${mode === m.id
-                  ? 'border-primary bg-primary/5 shadow-lg'
+                  ? 'border-orange-500 bg-orange-500/5 shadow-md'
                   : 'border-slate-100 bg-white hover:border-slate-200'}`}
             >
-              <div className={`h-10 w-10 rounded-2xl ${mode === m.id ? 'aurora-dark' : m.bg} flex items-center justify-center mb-3`}>
-                <m.icon className={`h-5 w-5 ${mode === m.id ? 'text-white' : m.color}`} />
+              <div className={`h-10 w-10 rounded-2xl ${mode === m.id ? 'aurora-dark text-white' : m.bg + ' ' + m.color} flex items-center justify-center mb-3 shadow-inner`}>
+                <m.icon className="h-5 w-5" />
               </div>
-              <p className={`font-black text-sm leading-tight mb-1 ${mode === m.id ? 'text-primary' : 'text-slate-600'}`}>{m.label}</p>
-              <p className="text-[11px] text-slate-400 font-medium leading-snug">{m.desc}</p>
+              <p className={`font-black text-xs uppercase tracking-wide leading-tight mb-1 ${mode === m.id ? 'text-orange-500' : 'text-slate-700'}`}>{m.label}</p>
+              <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">{m.desc}</p>
             </motion.button>
           ))}
-        </motion.div>
+        </div>
       </div>
 
-      {/* ── subject / topic filters ── */}
-      <AnimatePresence>
-        {(mode === 'materia' || mode === 'especifico') && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-[2rem] shadow-lg border border-slate-100 p-6 space-y-4 mb-5"
-          >
-            <div className="space-y-1.5">
-              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Disciplina</Label>
-              <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
-                <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-200 font-bold text-sm focus:ring-accent">
-                  <SelectValue placeholder="Selecione uma matéria..." />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-none shadow-2xl">
-                  {subjects.map(s => (
-                    <SelectItem key={s.id} value={s.id} className="font-bold">
-                      {s.name} {s.question_count > 0 ? `· ${s.question_count} questões` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {mode === 'especifico' && selectedSubjectId && (
-              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Micro-tópico (opcional)</Label>
-                <Select value={selectedMicroTopicId} onValueChange={setSelectedMicroTopicId}>
-                  <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-200 font-bold text-sm focus:ring-accent">
-                    <SelectValue placeholder={microTopics.length === 0 ? 'Sem micro-tópicos' : 'Todos os tópicos'} />
+      {/* ── Dynamic filters dropdowns ── */}
+      <div className="mb-6">
+        <AnimatePresence mode="wait">
+          {(mode === 'materia' || mode === 'especifico') && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-[2rem] shadow-md border border-slate-200 p-6 space-y-4"
+            >
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Disciplina Principal</Label>
+                <Select value={selectedSubjectId} onValueChange={(v) => { triggerHaptic(10); setSelectedSubjectId(v); }}>
+                  <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-200 font-bold text-sm focus:ring-orange-500/25">
+                    <SelectValue placeholder="Escolha a matéria..." />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    <SelectItem value={ALL_TOPICS} className="font-bold">Todos os tópicos</SelectItem>
-                    {microTopics.map(mt => (
-                      <SelectItem key={mt.id} value={mt.id} className="font-bold">{mt.name}</SelectItem>
+                  <SelectContent className="rounded-2xl border-slate-200 bg-white">
+                    {subjects.map(s => (
+                      <SelectItem key={s.id} value={s.id} className="font-bold text-slate-700 text-xs">
+                        {s.name} {s.question_count > 0 ? `· ${s.question_count} questões` : ''}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </div>
 
-      {/* ── completo settings ── */}
-      <AnimatePresence>
-        {mode === 'completo' && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-[2rem] shadow-lg border border-slate-100 p-6 space-y-5 mb-5"
-          >
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Quantidade de Questões</p>
-              <div className="grid grid-cols-4 gap-2">
-                {[10, 20, 45, 90].map(n => (
+              {mode === 'especifico' && selectedSubjectId && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Micro-tópico de Foco</Label>
+                  <Select value={selectedMicroTopicId} onValueChange={(v) => { triggerHaptic(10); setSelectedMicroTopicId(v); }}>
+                    <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-200 font-bold text-sm focus:ring-orange-500/25">
+                      <SelectValue placeholder={microTopics.length === 0 ? 'Sem micro-tópicos cadastrados' : 'Todos os tópicos'} />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-slate-200 bg-white">
+                      <SelectItem value={ALL_TOPICS} className="font-bold text-slate-700 text-xs">Todos os tópicos</SelectItem>
+                      {microTopics.map(mt => (
+                        <SelectItem key={mt.id} value={mt.id} className="font-bold text-slate-700 text-xs">{mt.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ── Question size slider/pills ── */}
+      <div className="mb-6">
+        <AnimatePresence mode="wait">
+          {mode === 'completo' ? (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-[2rem] shadow-md border border-slate-200 p-6 space-y-4"
+            >
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Tamanho do Simulado Completo</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {[10, 20, 45, 90].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => { triggerHaptic(10); setSimSize(n); }}
+                      className={`h-11 rounded-xl font-black text-xs transition-all active:scale-95 [touch-action:manipulation]
+                        ${simSize === n
+                          ? 'bg-orange-500 text-slate-950 shadow-md font-black'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                    >
+                      {n === 90 ? <span className="text-[9px]">ENEM<br/>Oficial</span> : `${n} questões`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-orange-500/5 to-amber-500/5 rounded-2xl border border-orange-500/10">
+                <div className="h-9 w-9 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
+                  <Timer className="h-4.5 w-4.5 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-800">{simSize} questões · ~{Math.round(simSize * 3.5)} minutos estimados</p>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">3,5 minutos por questão (ritmo ENEM INEP)</p>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="bg-white rounded-[1.75rem] shadow-sm border border-slate-200 p-5">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Tamanho da Lista de Exercícios</p>
+              <div className="flex gap-2">
+                {[5, 10, 20, 30].map(n => (
                   <button
                     key={n}
-                    onClick={() => setSimSize(n)}
-                    className={`h-11 rounded-xl font-black text-sm transition-all
+                    onClick={() => { triggerHaptic(10); setSimSize(n); }}
+                    className={`flex-1 h-10 rounded-xl font-black text-xs transition-all active:scale-95 [touch-action:manipulation]
                       ${simSize === n
-                        ? 'bg-primary text-white shadow-md'
+                        ? 'bg-orange-500 text-slate-950 shadow-sm font-black'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                   >
-                    {n === 90 ? <span className="text-[10px]">ENEM<br/>Real</span> : n}
+                    {n} q
                   </button>
                 ))}
               </div>
             </div>
+          )}
+        </AnimatePresence>
+      </div>
 
-            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-accent/5 to-primary/5 rounded-2xl border border-accent/10">
-              <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                <Timer className="h-4 w-4 text-accent" />
-              </div>
-              <div>
-                <p className="text-xs font-black text-primary">{simSize} questões · ~{Math.round(simSize * 3.5)} minutos</p>
-                <p className="text-[10px] text-slate-400 font-medium">3,5 min por questão (padrão ENEM)</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── quick size picker for non-completo ── */}
-      {mode !== 'completo' && (
-        <div className="bg-white rounded-[1.75rem] shadow-sm border border-slate-100 p-5 mb-5">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Questões por sessão</p>
-          <div className="flex gap-2">
-            {[5, 10, 20, 30].map(n => (
-              <button
-                key={n}
-                onClick={() => setSimSize(n)}
-                className={`flex-1 h-10 rounded-xl font-black text-sm transition-all
-                  ${simSize === n
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── start CTA ── */}
+      {/* ── Start simulation CTA ── */}
       <Button
-        onClick={startSimulado}
+        onClick={() => {
+          triggerHaptic([30, 50]);
+          startSimulado();
+        }}
         disabled={!canStart}
-        className="btn-shimmer w-full h-14 rounded-2xl bg-primary text-white font-black text-base shadow-2xl glow-orange hover:scale-[1.02] active:scale-95 transition-transform [touch-action:manipulation] flex items-center justify-center gap-2"
+        className="btn-orange-neon w-full h-14 rounded-2xl bg-orange-500 text-slate-950 font-black text-base hover:scale-[1.01] active:scale-95 transition-transform [touch-action:manipulation] flex items-center justify-center gap-2 border-none shadow-xl glow-orange"
       >
         <BrainCircuit className="h-5 w-5" />
         Iniciar Simulado
-        <ChevronRight className="h-4 w-4 ml-1" />
+        <ChevronRight className="h-4.5 w-4.5" />
       </Button>
 
       {!canStart && (
-        <p className="text-center text-xs text-slate-400 font-medium mt-2">
-          Selecione uma matéria para começar.
+        <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-wide mt-3.5">
+          Selecione uma matéria ou tópico para ativar o simulador.
         </p>
       )}
     </div>

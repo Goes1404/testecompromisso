@@ -1,15 +1,21 @@
 import { BookOpen } from 'lucide-react';
 
 const MD_IMAGE_RE = /!\[.*?\]\((https?:\/\/[^)]+)\)/g;
+const PENDING_IMAGE_RE = /\[IMAGEM_PENDENTE\]/g;
 
 function parse(raw: string): { images: string[]; text: string } {
   const images: string[] = [];
-  const text = raw.replace(MD_IMAGE_RE, (_, url: string) => { images.push(url); return ''; }).trim();
+  const text = raw
+    .replace(MD_IMAGE_RE, (_, url: string) => { images.push(url); return ''; })
+    .replace(PENDING_IMAGE_RE, '')
+    .trim();
   return { images, text };
 }
 
 export function SupportingTextBlock({ text }: { text: string }) {
   const { images, text: body } = parse(text);
+  if (images.length === 0 && !body) return null;
+
   return (
     <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 space-y-3">
       <div className="flex items-center gap-2">

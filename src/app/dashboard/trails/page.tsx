@@ -189,7 +189,7 @@ export default function LearningTrailsPage() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1 md:px-4">
       {/* Hero Banner */}
       <section className="aurora-dark relative overflow-hidden rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl text-center border border-white/5">
-        <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
+        <div className="absolute inset-0 dot-grid-dark opacity-20 pointer-events-none rounded-[2.5rem]" />
         <div className="absolute top-[-20%] right-[-10%] w-64 h-64 md:w-96 md:h-96 bg-primary/20 rounded-full blur-[80px] hidden md:block" />
         <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-primary/10 rounded-full blur-[60px] hidden md:block" />
         <div className="relative z-10 space-y-6 max-w-3xl mx-auto">

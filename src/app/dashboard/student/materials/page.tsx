@@ -1,4 +1,4 @@
-﻿
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -142,7 +142,7 @@ function CardSkeleton() {
 }
 
 export default function StudentMaterialsPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [materials, setMaterials] = useState<ClassMaterial[]>([]);
@@ -159,18 +159,30 @@ export default function StudentMaterialsPage() {
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+
+    // Determina o grupo do aluno: etec ou enem
+    const rawTarget = (
+      profile?.exam_target ||
+      user?.user_metadata?.exam_target ||
+      profile?.profile_type ||
+      user?.user_metadata?.profile_type ||
+      'enem'
+    ).toLowerCase();
+    const tg = rawTarget.includes('etec') ? 'etec' : 'enem';
+
     const [matRes, viewRes] = await Promise.all([
       supabase
         .from('class_materials')
         .select('id, title, description, subject, file_url, file_type, target_group, teacher_name, created_at')
         .eq('is_published', true)
+        .or(`target_group.eq.all,target_group.eq.${tg}`)
         .order('created_at', { ascending: false }),
       supabase.from('material_views').select('material_id').eq('student_id', user.id),
     ]);
     setMaterials(matRes.data ?? []);
     setViewedIds(new Set((viewRes.data ?? []).map(v => v.material_id)));
     setLoading(false);
-  }, [user]);
+  }, [user, profile]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

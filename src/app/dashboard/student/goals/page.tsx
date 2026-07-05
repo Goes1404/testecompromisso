@@ -41,13 +41,17 @@ const PERIOD_LABEL: Record<Goal['period'], string> = {
 };
 
 export default function GoalsPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [streak, setStreak] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [totalXp, setTotalXp] = useState(0);
 
   const [form, setForm] = useState({
     title: '',
@@ -56,6 +60,125 @@ export default function GoalsPage() {
     period: 'daily' as Goal['period'],
     deadline: '',
   });
+
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+    async function fetchStats() {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('current_streak')
+        .eq('id', userId)
+        .maybeSingle();
+      if (prof) setStreak(prof.current_streak ?? 0);
+
+      const { data: xpData } = await supabase
+        .from('student_xp_log')
+        .select('xp_earned')
+        .eq('student_id', userId);
+      
+      if (xpData) {
+        const total = xpData.reduce((acc, curr) => acc + curr.xp_earned, 0);
+        setTotalXp(total);
+        let calculatedLevel = 1;
+        if (total >= 7000) calculatedLevel = 5;
+        else if (total >= 3500) calculatedLevel = 4;
+        else if (total >= 1500) calculatedLevel = 3;
+        else if (total >= 500) calculatedLevel = 2;
+        setLevel(calculatedLevel);
+      }
+    }
+    fetchStats();
+  }, [user]);
+
+  const downloadCertificate = () => {
+    if (!user) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1600;
+    canvas.height = 1130;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const grad = ctx.createLinearGradient(0, 0, 1600, 1130);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1600, 1130);
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 15;
+    ctx.strokeRect(40, 40, 1520, 1050);
+
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(55, 55, 1490, 1020);
+
+    ctx.fillStyle = 'rgba(217, 119, 6, 0.05)';
+    ctx.beginPath();
+    ctx.arc(800, 565, 400, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = 'bold italic 40px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('COMPROMISSO', 800, 180);
+    ctx.font = '900 14px Arial';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('SISTEMA DE ENSINO', 800, 210);
+
+    ctx.font = 'italic 900 65px Georgia';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('CERTIFICADO DE ENGAJAMENTO', 800, 360);
+
+    ctx.fillStyle = '#d97706';
+    ctx.fillRect(650, 400, 300, 3);
+
+    const studentName = (profile?.name || user.user_metadata?.full_name || 'Estudante').toUpperCase();
+    
+    ctx.font = 'normal 24px Arial';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('Certificamos com honra que o estudante', 800, 480);
+
+    ctx.font = 'bold italic 50px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(studentName, 800, 560);
+
+    ctx.font = 'normal 24px Arial';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('demonstrou excelente dedicação e compromisso acadêmico, alcançando a marca de', 800, 640);
+
+    ctx.font = 'bold 30px Arial';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`${streak} dias consecutivos de estudos (Streak 🔥) e acumulando um total de ${totalXp} XP.`, 800, 700);
+
+    const dateStr = new Date().toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+    ctx.font = 'italic 20px Arial';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`Emitido em ${dateStr} • Plataforma Compromisso`, 800, 840);
+
+    ctx.font = 'italic 28px Georgia';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('Equipe Compromisso', 800, 930);
+    ctx.fillRect(700, 950, 200, 1);
+    ctx.font = 'normal 16px Arial';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('Direção Pedagógica', 800, 975);
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `Certificado-Engajamento-${studentName.replace(/\s+/g, '-')}.png`;
+    link.href = dataUrl;
+    link.click();
+
+    toast({
+      title: "Certificado Emitido! 🏆",
+      description: "O arquivo PNG de alta resolução foi baixado com sucesso."
+    });
+  };
 
   const loadGoals = async () => {
     if (!user) return;
@@ -277,6 +400,40 @@ export default function GoalsPage() {
           </div>
         </section>
       )}
+
+      {/* CERTIFICADO DE ENGAJAMENTO */}
+      <section className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-[2rem] p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between mt-8 shadow-xl">
+        <div className="space-y-2 text-left">
+          <span className="text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-600 px-3 py-1 rounded-full border border-amber-500/30">
+            Recompensa de Prestígio 🏆
+          </span>
+          <h3 className="text-xl md:text-2xl font-black italic text-primary leading-none uppercase tracking-tighter">
+            Certificado de Engajamento
+          </h3>
+          <p className="text-xs md:text-sm text-slate-600 font-medium leading-relaxed">
+            Desbloqueie e baixe seu certificado oficial de engajamento ao atingir <span className="font-black text-amber-600">7 dias consecutivos de estudos</span> ou <span className="font-black text-amber-600">Nível 3</span>.
+          </p>
+          <div className="flex gap-4 text-xs font-bold text-slate-500 pt-1">
+            <span className={streak >= 7 ? 'text-emerald-600' : ''}>
+              Seu streak: {streak}/7 dias {streak >= 7 ? '✅' : ''}
+            </span>
+            <span className={level >= 3 ? 'text-emerald-600' : ''}>
+              Seu nível: Nível {level}/3 {level >= 3 ? '✅' : ''}
+            </span>
+          </div>
+        </div>
+        <Button
+          onClick={downloadCertificate}
+          disabled={streak < 7 && level < 3}
+          className={`h-13 px-8 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg transition-all border-none ${
+            streak >= 7 || level >= 3 
+              ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white hover:scale-105 active:scale-95' 
+              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+          }`}
+        >
+          {streak >= 7 || level >= 3 ? 'Emitir Certificado' : 'Bloqueado 🔒'}
+        </Button>
+      </section>
 
       {/* CREATE DIALOG */}
       <Dialog open={openCreate} onOpenChange={setOpenCreate}>

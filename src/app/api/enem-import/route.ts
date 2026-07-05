@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { requireTeacherOrAdmin } from '@/lib/server-auth';
-
-const ENEM_API = 'https://api.enem.dev/v1';
-
-const DISCIPLINE_TO_SUBJECT: Record<string, string> = {
-  'linguagens':       'Linguagens e Códigos',
-  'ciencias-humanas': 'Ciências Humanas',
-  'ciencias-natureza':'Ciências da Natureza',
-  'matematica':       'Matemática',
-};
+import {
+  fetchAllQuestions,
+  ENEM_DISCIPLINE_TO_SUBJECT,
+  EnemApiError,
+} from '@/services/enem-api';
 
 async function ensureSubject(supabaseAdmin: SupabaseClient, name: string): Promise<string> {
   const { data: existing } = await supabaseAdmin
@@ -50,17 +46,16 @@ export async function POST(request: Request) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // 1. Buscar questões da API ENEM
-    const url = `${ENEM_API}/exams/${year}/questions?limit=200&offset=0`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
-
-    if (!res.ok) {
-      if (res.status === 404) return NextResponse.json({ error: `Prova de ${year} não encontrada na API.` }, { status: 404 });
-      throw new Error(`API ENEM retornou ${res.status}`);
+    // 1. Buscar TODAS as questões da API ENEM (o serviço pagina sozinho — o teto real é 50/página)
+    let apiQuestions: Awaited<ReturnType<typeof fetchAllQuestions>> = [];
+    try {
+      apiQuestions = await fetchAllQuestions({ year });
+    } catch (err) {
+      if (err instanceof EnemApiError && err.kind === 'not_found') {
+        return NextResponse.json({ error: `Prova de ${year} não encontrada na API.` }, { status: 404 });
+      }
+      throw err;
     }
-
-    const json = await res.json();
-    const apiQuestions: any[] = json.questions ?? [];
 
     if (apiQuestions.length === 0) {
       return NextResponse.json({ error: 'Nenhuma questão retornada pela API.', inserted: 0 }, { status: 200 });
@@ -68,8 +63,8 @@ export async function POST(request: Request) {
 
     // 2. Cache de subject_ids por discipline
     const subjectCache: Record<string, string> = {};
-    for (const disc of Object.keys(DISCIPLINE_TO_SUBJECT)) {
-      subjectCache[disc] = await ensureSubject(supabaseAdmin, DISCIPLINE_TO_SUBJECT[disc]);
+    for (const [disc, subjectName] of Object.entries(ENEM_DISCIPLINE_TO_SUBJECT)) {
+      subjectCache[disc] = await ensureSubject(supabaseAdmin, subjectName);
     }
 
     // 3. Verificar se já existe prova ENEM para o ano

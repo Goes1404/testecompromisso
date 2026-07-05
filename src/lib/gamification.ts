@@ -45,7 +45,12 @@ export function getLevel(xp: number) {
   return { current, next, progressPct, xp };
 }
 
-export async function awardXP(userId: string, points: number): Promise<number> {
+export async function awardXP(
+  userId: string,
+  points: number,
+  action = 'generic',
+  referenceId?: string,
+): Promise<number> {
   const { data: profile } = await supabase
     .from('profiles')
     .select('xp_points')
@@ -55,13 +60,21 @@ export async function awardXP(userId: string, points: number): Promise<number> {
   const currentXP = (profile?.xp_points as number) ?? 0;
   const newXP = currentXP + points;
 
+  // 1. Atualiza xp_points no perfil (sistema legado — mantido)
   await supabase
     .from('profiles')
     .update({ xp_points: newXP })
     .eq('id', userId);
 
-  // Cada ganho de XP conta uma atividade de estudo do dia.
-  // Falha silenciosa: streak é melhoria, não pode quebrar o fluxo de XP.
+  // 2. Insere no log histórico (para ranking semanal). Falha silenciosa.
+  void Promise.resolve(supabase.from('student_xp_log').insert({
+    student_id:   userId,
+    action,
+    xp_earned:    points,
+    reference_id: referenceId ?? null,
+  })).catch(() => undefined);
+
+  // 3. Atualiza streak
   bumpStreak(userId).catch(() => undefined);
 
   return newXP;

@@ -24,6 +24,8 @@ import {
   FileSearch,
   MessageSquareQuote,
   Calendar,
+  CheckSquare2,
+  Square,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import dynamic from "next/dynamic";
@@ -31,6 +33,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { trackMissionProgress } from "@/lib/missions";
 
 const EssayChart = dynamic(
   () =>
@@ -121,6 +124,13 @@ export default function StudentEssayPage() {
   const [fullHistory, setFullHistory] = useState<FullEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState<FullEntry | null>(null);
+  const [weeklyTheme, setWeeklyTheme] = useState<{ title: string; description: string | null; source: string | null } | null>(null);
+  const [checklist, setChecklist] = useState({
+    hasIntro: false,
+    hasDev:   false,
+    hasConclusion: false,
+    hasMinLines: false,
+  });
 
   const fetchHistory = useCallback(async () => {
     if (!user) return;
@@ -172,6 +182,34 @@ export default function StudentEssayPage() {
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+
+  // Buscar tema da semana
+  useEffect(() => {
+    const fetchWeeklyTheme = async () => {
+      try {
+        const weekStart = (() => {
+          const d = new Date();
+          const day = d.getDay();
+          const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+          const mon = new Date(d);
+          mon.setDate(diff);
+          return mon.toISOString().slice(0, 10);
+        })();
+        const rawTarget = (profile?.exam_target || 'enem').toLowerCase();
+        const audience  = rawTarget.includes('etec') ? 'etec' : 'enem';
+        const { data } = await supabase
+          .from('essay_weekly_themes')
+          .select('title, description, source')
+          .eq('week_start', weekStart)
+          .or(`target.eq.all,target.eq.${audience}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) setWeeklyTheme(data);
+      } catch {}
+    };
+    fetchWeeklyTheme();
+  }, [profile]);
 
   const handleGenerateTopic = async () => {
     setLoadingTopic(true);
@@ -254,6 +292,10 @@ export default function StudentEssayPage() {
             });
             const saveData = await saveRes.json();
             if (!saveRes.ok || !saveData.success) throw new Error(saveData.error || "Erro ao salvar");
+            
+            // Incrementa missão de redação
+            trackMissionProgress(supabase, user.id, 'submit_essay', 1).then(() => {});
+
             fetchHistory();
           } catch (insertError) {
             console.error("Erro insert", insertError);
@@ -327,8 +369,36 @@ export default function StudentEssayPage() {
         </div>
       </div>
 
+      {/* ── Banner Tema da Semana ── */}
+      {weeklyTheme && (
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 shadow-sm">
+          <div className="absolute -top-6 -right-6 w-24 h-24 bg-amber-200/30 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative z-10 flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+              <Calendar className="h-4 w-4 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-amber-700">Tema da Semana</p>
+              <p className="text-sm font-black italic text-amber-900 leading-snug mt-0.5">{weeklyTheme.title}</p>
+              {weeklyTheme.description && (
+                <p className="text-[11px] text-amber-700/70 font-medium mt-1 leading-snug">{weeklyTheme.description}</p>
+              )}
+              {weeklyTheme.source && (
+                <p className="text-[10px] text-amber-600 font-bold mt-1">Fonte: {weeklyTheme.source}</p>
+              )}
+              <button
+                onClick={() => { setTheme(weeklyTheme.title); setCustomTheme(false); }}
+                className="mt-2 h-7 px-3 rounded-xl bg-amber-600 text-white font-black text-[9px] uppercase tracking-widest hover:bg-amber-700 transition-colors"
+              >
+                Usar este tema
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Theme + Editor ── */}
-      <div className="bg-white border border-slate-100 shadow-sm rounded-[1.5rem] overflow-hidden">
+      <div className="glow-orange bg-white border border-slate-100 shadow-sm rounded-[1.5rem] overflow-hidden">
         <div className="p-5 border-b border-slate-100 bg-slate-50">
           {customTheme ? (
             <div className="space-y-2">
@@ -360,11 +430,49 @@ export default function StudentEssayPage() {
           disabled={loadingGrading}
           className="min-h-[280px] sm:min-h-[400px] border-none p-5 font-medium text-sm leading-relaxed italic resize-none focus-visible:ring-0 bg-transparent text-primary placeholder:text-slate-400 scrollbar-hide rounded-none"
         />
+        {/* ── Checklist pré-envio ── */}
+        <div className="px-5 pb-4 space-y-3 border-t border-slate-100 pt-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+            <CheckSquare2 className="h-3.5 w-3.5 text-orange-500" />
+            Checklist antes de enviar
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { key: 'hasIntro',      label: 'Introdução com tese?' },
+              { key: 'hasDev',        label: '2 parágrafos de desenvolvimento?' },
+              { key: 'hasConclusion', label: 'Proposta de intervenção?' },
+              { key: 'hasMinLines',   label: 'Acima de 25 linhas?' },
+            ].map(item => {
+              const checked = checklist[item.key as keyof typeof checklist];
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setChecklist(prev => ({ ...prev, [item.key]: !prev[item.key as keyof typeof checklist] }))}
+                  className={`flex items-start gap-2 p-3 rounded-xl border text-left transition-all ${
+                    checked
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  {checked
+                    ? <CheckSquare2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    : <Square className="h-4 w-4 text-slate-300 shrink-0 mt-0.5" />}
+                  <span className="text-[11px] font-bold leading-tight">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {Object.values(checklist).every(Boolean) && (
+            <p className="text-center text-[10px] font-black text-emerald-600 animate-in fade-in duration-500">
+              ✅ Tudo certo! Sua redação está pronta para avaliação.
+            </p>
+          )}
+        </div>
         <div className="border-t border-slate-100 p-4 space-y-3">
           <Button
             onClick={handleSubmitEssay}
             disabled={loadingGrading || !text || !theme}
-            className="w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 group"
+            className="btn-shimmer w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 group"
           >
             {loadingGrading ? (
               <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Sincronizando Auditoria...</span>
@@ -569,7 +677,7 @@ export default function StudentEssayPage() {
               return (
                 <div
                   key={entry.id}
-                  className="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 md:p-5 animate-in fade-in slide-in-from-bottom-2 fill-mode-both cursor-pointer hover:border-orange-200 hover:shadow-md transition-all group active:scale-[0.99] touch-manipulation"
+                  className="gradient-border bg-white border-none shadow-sm rounded-2xl p-4 md:p-5 animate-in fade-in slide-in-from-bottom-2 fill-mode-both cursor-pointer hover:shadow-md transition-all group active:scale-[0.99] touch-manipulation"
                   style={{ animationDelay: `${Math.min(idx * 50, 300)}ms` }}
                   onClick={() => setSelectedEntry(entry)}
                 >

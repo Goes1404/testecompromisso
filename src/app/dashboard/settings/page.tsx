@@ -21,7 +21,8 @@ import {
   RefreshCw,
   School,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Users
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +59,65 @@ export default function SettingsPage() {
     avatar_url: "",
     favorite_subject: ""
   });
+
+  const [guardianToken, setGuardianToken] = useState<string | null>(null);
+  const [generatingToken, setGeneratingToken] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+    async function fetchGuardianToken() {
+      const { data, error } = await supabase
+        .from('guardian_tokens')
+        .select('token')
+        .eq('student_id', userId)
+        .maybeSingle();
+      if (!error && data) {
+        setGuardianToken(data.token);
+      }
+    }
+    fetchGuardianToken();
+  }, [user]);
+
+  const handleGenerateGuardianToken = async () => {
+    const userId = user?.id;
+    if (!userId || generatingToken) return;
+    setGeneratingToken(true);
+    try {
+      const arr = new Uint8Array(32);
+      window.crypto.getRandomValues(arr);
+      const token = Array.from(arr, dec => dec.toString(16).padStart(2, '0')).join('');
+
+      // Deleta tokens antigos se existirem para este aluno
+      await supabase.from('guardian_tokens').delete().eq('student_id', userId);
+
+      const { error } = await supabase
+        .from('guardian_tokens')
+        .insert({ student_id: userId, token });
+
+      if (error) throw error;
+
+      setGuardianToken(token);
+      toast({
+        title: "Link Gerado! 🔗",
+        description: "Agora você pode compartilhar este link com seus responsáveis."
+      });
+    } catch (err: any) {
+      toast({ title: "Erro ao gerar link", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingToken(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!guardianToken) return;
+    const url = `${window.location.origin}/guardian/${guardianToken}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast({ title: "Copiado! 📋", description: "Link copiado para a área de transferência." });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     // ✅ FIX 2: se Supabase não está configurado, usa fallback local imediatamente
@@ -399,6 +459,64 @@ export default function SettingsPage() {
                 </form>
               </CardContent>
             </Card>
+
+            {isStudent && (
+              <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden mt-8">
+                <CardHeader className="bg-muted/10 p-10 border-b border-dashed border-muted/20">
+                  <CardTitle className="text-2xl font-black text-primary italic uppercase tracking-tighter flex items-center gap-3">
+                    <Users className="h-6 w-6 text-accent" /> Acompanhamento dos Responsáveis
+                  </CardTitle>
+                  <CardDescription className="font-medium italic text-lg mt-2">
+                    Gere um link exclusivo e seguro para que seus pais ou responsáveis acompanhem seu desempenho sem precisar de login.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-10 space-y-6">
+                  {guardianToken ? (
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 px-2">
+                        Seu Link de Acompanhamento
+                      </Label>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1 bg-muted/40 p-4 rounded-2xl font-bold text-xs sm:text-sm text-slate-700 select-all truncate border border-slate-100 flex items-center">
+                          {`${typeof window !== 'undefined' ? window.location.origin : ''}/guardian/${guardianToken}`}
+                        </div>
+                        <Button 
+                          onClick={handleCopyLink}
+                          className="h-14 px-6 rounded-2xl bg-accent text-accent-foreground font-black text-xs uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all border-none"
+                        >
+                          {copied ? 'Copiado!' : 'Copiar Link'}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground italic px-2">
+                        ⚠️ Atenção: Quem tiver acesso a este link poderá ver suas estatísticas gerais de estudo (XP, Streak e quantidade de questões resolvidas). Você pode gerar um novo link a qualquer momento para invalidar o anterior.
+                      </p>
+                      <Button 
+                        variant="ghost" 
+                        onClick={handleGenerateGuardianToken}
+                        disabled={generatingToken}
+                        className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 font-bold underline p-0 h-auto"
+                      >
+                        {generatingToken ? 'Gerando novo link...' : 'Resetar / Gerar Novo Link'}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 space-y-4">
+                      <p className="text-slate-600 font-semibold text-sm">
+                        Nenhum link ativo gerado. Compartilhe seu progresso para ter mais apoio nos estudos!
+                      </p>
+                      <Button 
+                        onClick={handleGenerateGuardianToken}
+                        disabled={generatingToken}
+                        className="bg-primary text-white font-black h-13 px-8 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
+                      >
+                        {generatingToken ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                        GERAR LINK DE ACOMPANHAMENTO
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

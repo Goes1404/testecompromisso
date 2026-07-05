@@ -3,7 +3,7 @@
 
 export const runtime = 'edge';
 
-import { useState, useEffect, useRef, useCallback, use } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -297,6 +297,34 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
   }, [isDragging, handleDragMove, handleDragEnd]);
 
   const activeContent = contents[activeModuleId || ""]?.find(c => c.id === activeContentId);
+  const nextLesson = useMemo(() => {
+    if (!activeModuleId || !activeContentId) return null;
+
+    const currentModuleIndex = modules.findIndex((module) => module.id === activeModuleId);
+    const currentContents = contents[activeModuleId] || [];
+    const currentContentIndex = currentContents.findIndex((content) => content.id === activeContentId);
+    const nextContent = currentContents[currentContentIndex + 1];
+
+    if (nextContent) {
+      return { moduleId: activeModuleId, content: nextContent };
+    }
+
+    for (let index = currentModuleIndex + 1; index < modules.length; index += 1) {
+      const moduleContents = contents[modules[index].id] || [];
+      if (moduleContents.length > 0) {
+        return { moduleId: modules[index].id, content: moduleContents[0] };
+      }
+    }
+
+    return null;
+  }, [activeContentId, activeModuleId, contents, modules]);
+
+  const goToNextLesson = () => {
+    if (!nextLesson) return;
+    setActiveModuleId(nextLesson.moduleId);
+    setActiveContentId(nextLesson.content.id);
+    setShowSimultaneousWorkbook(false);
+  };
 
   if (loading) {
     return (
@@ -348,7 +376,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
               <span className="text-accent">{Math.round(videoProgress)}%</span>
             </div>
             <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-               <div className="h-full bg-accent transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${videoProgress}%` }} />
+               <div className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${videoProgress}%` }} />
             </div>
           </div>
           <Button variant="ghost" size="icon" className="rounded-xl text-white h-10 w-10 hover:bg-white/10" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -373,7 +401,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                 className={`transition-all duration-300 ease-in-out ${
                   showSimultaneousWorkbook 
                     ? 'fixed z-[70] shadow-[0_30px_80px_rgba(0,0,0,0.6)] rounded-[2rem] border-4 border-white overflow-hidden bg-black'
-                    : 'aspect-video bg-black relative shadow-2xl overflow-hidden shrink-0 ring-1 ring-white/10'
+                    : 'gradient-border aspect-video bg-black relative shadow-2xl overflow-hidden shrink-0 ring-1 ring-white/10'
                 }`}
                 style={showSimultaneousWorkbook ? {
                   bottom: `${miniPlayerPos.y}px`,
@@ -458,6 +486,15 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
                                   <p className="text-xs font-medium italic opacity-90 leading-relaxed">
                                     "A revisão imediata fixa até 3x mais o conhecimento. Utilize as apostilas vinculadas."
                                   </p>
+                                  {nextLesson && (
+                                    <Button
+                                      onClick={goToNextLesson}
+                                      className="glow-orange btn-shimmer mt-4 w-full h-11 rounded-xl bg-accent text-accent-foreground font-black text-[10px] uppercase tracking-widest border-none"
+                                    >
+                                      Próxima aula
+                                      <ChevronLeft className="h-4 w-4 rotate-180" />
+                                    </Button>
+                                  )}
                                 </div>
                               </Card>
                             </div>

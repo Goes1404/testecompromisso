@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -26,6 +26,8 @@ import {
   Play,
   LayoutGrid,
   ArrowRight,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
@@ -40,6 +42,9 @@ type Exam = {
   exam_type: string;
   pdf_url: string | null;
   question_count: number;
+  gabarito_url: string | null;
+  gabarito_comentado_url: string | null;
+  difficulty_level: string | null;
 };
 
 type Question = {
@@ -96,8 +101,17 @@ function examTypeStyles(type: string) {
   };
 }
 
+const norm = (v: string | undefined | null) => (v ?? "").trim().toUpperCase();
+const triggerHaptic = (ms = 15) => {
+  if (typeof window !== "undefined" && navigator.vibrate) {
+    try {
+      navigator.vibrate(ms);
+    } catch {}
+  }
+};
+
 export default function ProvasCompletasPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [pageState, setPageState] = useState<PageState>("loading");
@@ -106,21 +120,76 @@ export default function ProvasCompletasPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
+  const [answers, setAnswers]       = useState<Answer[]>([]);
+  const [errorMsg, setErrorMsg]     = useState("");
+  const [timeLeft, setTimeLeft]     = useState<number | null>(null);
+  const [isPaused, setIsPaused]     = useState(false);
   const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
-  const [showGrid, setShowGrid] = useState(false);
+  const [showGrid, setShowGrid]     = useState(false);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  // Group exams by type and year
+  const groupedExams = useMemo(() => {
+    const groups: Record<string, Exam[]> = {};
+    exams.forEach((exam) => {
+      const key = `${exam.exam_type}-${exam.year}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(exam);
+    });
+
+    return Object.entries(groups).map(([key, list]) => {
+      // Sort variants: Day 1 before Day 2
+      const sorted = [...list].sort((a, b) => {
+        const titleA = (a.title || "").toLowerCase();
+        const titleB = (b.title || "").toLowerCase();
+        if (titleA.includes("dia 1") || titleA.includes("-1")) return -1;
+        if (titleB.includes("dia 1") || titleB.includes("-1")) return 1;
+        return a.title.localeCompare(b.title);
+      });
+      return {
+        key,
+        exam_type: sorted[0].exam_type,
+        year: sorted[0].year,
+        variants: sorted,
+      };
+    }).sort((a, b) => (b.year || 0) - (a.year || 0));
+  }, [exams]);
+
+  // Set default selected variant for each group
+  useEffect(() => {
+    const defaults: Record<string, string> = {};
+    groupedExams.forEach((group) => {
+      if (group.variants.length > 0 && !selectedVariants[group.key]) {
+        defaults[group.key] = group.variants[0].id;
+      }
+    });
+    if (Object.keys(defaults).length > 0) {
+      setSelectedVariants((prev) => ({ ...defaults, ...prev }));
+    }
+  }, [groupedExams, selectedVariants]);
 
   const fetchExams = useCallback(async () => {
+    if (!user) return;
     setPageState("loading");
     try {
-      const { data, error } = await supabase
+      // Determina o foco do aluno: ETEC ou ENEM
+      const rawTarget = (
+        profile?.exam_target ||
+        user?.user_metadata?.exam_target ||
+        profile?.profile_type ||
+        user?.user_metadata?.profile_type ||
+        'enem'
+      ).toLowerCase();
+      const isEtec = rawTarget.includes('etec');
+      const allowedType = isEtec ? 'etec' : 'enem';
+
+      let query = supabase
         .from("exams")
-        .select("id, title, description, year, exam_type, pdf_url, exam_questions(count)")
+        .select("id, title, description, year, exam_type, pdf_url, gabarito_url, gabarito_comentado_url, difficulty_level, exam_questions(count)")
+        .eq("exam_type", allowedType)
         .order("year", { ascending: false });
 
+      const { data, error } = await query;
       if (error) throw error;
 
       const mapped: Exam[] = (data || []).map((e: any) => ({
@@ -130,6 +199,9 @@ export default function ProvasCompletasPage() {
         year: e.year,
         exam_type: e.exam_type,
         pdf_url: e.pdf_url,
+        gabarito_url: e.gabarito_url ?? null,
+        gabarito_comentado_url: e.gabarito_comentado_url ?? null,
+        difficulty_level: e.difficulty_level ?? null,
         question_count: e.exam_questions?.[0]?.count ?? 0,
       }));
 
@@ -139,11 +211,11 @@ export default function ProvasCompletasPage() {
       setErrorMsg(e.message || "Erro ao carregar provas.");
       setPageState("error");
     }
-  }, []);
+  }, [user, profile]);
 
   useEffect(() => {
-    fetchExams();
-  }, [fetchExams]);
+    if (user) fetchExams();
+  }, [fetchExams, user]);
 
   const startExam = async (exam: Exam) => {
     setPageState("loading");
@@ -249,7 +321,7 @@ export default function ProvasCompletasPage() {
   };
 
   const finishExam = async (finalAnswers: Answer[]) => {
-    const score = finalAnswers.filter((a) => a.selected === a.correct).length;
+    const score = finalAnswers.filter((a) => norm(a.selected) === norm(a.correct)).length;
     setAnswers(finalAnswers);
     setPageState("finished");
 
@@ -267,7 +339,7 @@ export default function ProvasCompletasPage() {
     }
   };
 
-  const correctCount = answers.filter((a) => a.selected === a.correct).length;
+  const correctCount = answers.filter((a) => norm(a.selected) === norm(a.correct)).length;
   const pct = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0;
   const currentQuestion = questions[currentIndex];
   const answeredCount = answers.length + (selectedAnswer && !answers.find((a) => a.questionId === currentQuestion?.id) ? 1 : 0);
@@ -349,74 +421,148 @@ export default function ProvasCompletasPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {exams.map((exam) => {
-              const s = examTypeStyles(exam.exam_type);
-              const hasContent = exam.question_count > 0 || exam.pdf_url;
+            {groupedExams.map((group) => {
+              const selectedId = selectedVariants[group.key] || group.variants[0]?.id;
+              const selectedExam = group.variants.find((v) => v.id === selectedId) || group.variants[0];
+              if (!selectedExam) return null;
+
+              const s = examTypeStyles(selectedExam.exam_type);
+              const hasContent = selectedExam.question_count > 0 || selectedExam.pdf_url;
+
               return (
                 <div
-                  key={exam.id}
-                  className="relative bg-white border border-slate-100 hover:border-slate-200 shadow-sm rounded-[1.5rem] overflow-hidden transition-all group"
+                  key={group.key}
+                  className="relative bg-white border border-slate-100 hover:border-slate-200 shadow-sm rounded-[1.5rem] overflow-hidden transition-all group flex flex-col justify-between"
                 >
-                  <div className={`h-1 w-full bg-gradient-to-r ${s.ring}`} />
+                  <div>
+                    <div className={`h-1 w-full bg-gradient-to-r ${s.ring}`} />
 
-                  <div className="p-5 space-y-4">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="p-5 pb-2 space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          {selectedExam.year && (
+                            <p className="text-4xl font-black italic text-primary leading-none tracking-tighter">
+                              {selectedExam.year}
+                            </p>
+                          )}
+                          <Badge className={`${s.chip} border font-black text-[9px] uppercase tracking-widest px-1.5 h-4 mt-1.5`}>
+                            {s.label}
+                          </Badge>
+                        </div>
+
+                        {/* Variant Selector Dots */}
+                        {group.variants.length > 1 && (
+                          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2 py-1 rounded-2xl">
+                            {group.variants.map((variant, idx) => {
+                              const isCurrent = variant.id === selectedExam.id;
+                              const titleLower = variant.title.toLowerCase();
+
+                              // Determine dot color
+                              let dotColor = "bg-orange-500 ring-orange-300 text-white";
+                              if (titleLower.includes("azul")) dotColor = "bg-blue-500 ring-blue-300 text-white";
+                              else if (titleLower.includes("amarelo")) dotColor = "bg-yellow-500 ring-yellow-250 text-slate-800";
+                              else if (titleLower.includes("rosa")) dotColor = "bg-pink-500 ring-pink-300 text-white";
+                              else if (titleLower.includes("branco")) dotColor = "bg-white border border-slate-250 ring-slate-200 text-slate-650";
+                              else if (titleLower.includes("cinza")) dotColor = "bg-zinc-400 ring-zinc-200 text-white";
+
+                              // Determine label
+                              let label = String(idx + 1);
+                              if (titleLower.includes("dia 1") || titleLower.includes("-1")) label = "1";
+                              else if (titleLower.includes("dia 2") || titleLower.includes("-2")) label = "2";
+
+                              return (
+                                <button
+                                  key={variant.id}
+                                  onClick={() => {
+                                    triggerHaptic(10);
+                                    setSelectedVariants((prev) => ({ ...prev, [group.key]: variant.id }));
+                                  }}
+                                  className={`h-6 w-6 rounded-full flex items-center justify-center font-black text-[9px] transition-all active:scale-90
+                                    ${dotColor}
+                                    ${isCurrent
+                                      ? "ring-2 ring-offset-2 ring-offset-white scale-110 shadow-sm"
+                                      : "opacity-40 hover:opacity-80"}`}
+                                  title={variant.title}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {selectedExam.pdf_url && (
+                            <div className="h-7 w-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center" title="PDF disponível">
+                              <FileText className="h-3 w-3 text-emerald-600" />
+                            </div>
+                          )}
+                          {selectedExam.question_count > 0 && (
+                            <div className="h-7 px-2 rounded-lg bg-orange-100 border border-orange-200 flex items-center gap-1" title="Questões cadastradas">
+                              <BookOpen className="h-3 w-3 text-orange-600" />
+                              <span className="text-[10px] font-black text-orange-700">{selectedExam.question_count}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       <div>
-                        {exam.year && (
-                          <p className="text-4xl font-black italic text-primary leading-none tracking-tighter">
-                            {exam.year}
+                        <h3 className="text-sm font-black text-primary italic leading-snug line-clamp-2">
+                          {selectedExam.title}
+                        </h3>
+                        {selectedExam.description && (
+                          <p className="text-[11px] text-slate-500 font-medium italic line-clamp-2 leading-snug mt-1.5">
+                            {selectedExam.description}
                           </p>
                         )}
-                        <Badge className={`${s.chip} border font-black text-[9px] uppercase tracking-widest px-1.5 h-4 mt-1.5`}>
-                          {s.label}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {exam.pdf_url && (
-                          <div className="h-7 w-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center" title="PDF disponível">
-                            <FileText className="h-3 w-3 text-emerald-600" />
-                          </div>
-                        )}
-                        {exam.question_count > 0 && (
-                          <div className="h-7 px-2 rounded-lg bg-orange-100 border border-orange-200 flex items-center gap-1" title="Questões cadastradas">
-                            <BookOpen className="h-3 w-3 text-orange-600" />
-                            <span className="text-[10px] font-black text-orange-700">{exam.question_count}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
+                  </div>
 
-                    <div>
-                      <h3 className="text-sm font-black text-primary italic leading-snug line-clamp-2">
-                        {exam.title}
-                      </h3>
-                      {exam.description && (
-                        <p className="text-[11px] text-slate-500 font-medium italic line-clamp-2 leading-snug mt-1.5">
-                          {exam.description}
-                        </p>
-                      )}
-                    </div>
-
+                  <div className="p-5 pt-0 space-y-2">
                     <div className="space-y-2 pt-1 border-t border-slate-100">
-                      {exam.pdf_url && (
-                        <Link href={`/dashboard/student/provas/${exam.id}`} className="block">
-                          <button className={`w-full h-11 rounded-xl bg-gradient-to-r ${s.ring} text-white font-black text-[10px] uppercase tracking-widest shadow-lg ${s.glow} transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2`}>
-                            <FileText className="h-3.5 w-3.5" />
-                            PDF Interativo
-                            <ArrowRight className="h-3 w-3" />
-                          </button>
-                        </Link>
+                      {selectedExam.pdf_url && (
+                        <div className="flex gap-2">
+                          <Link href={`/dashboard/student/provas/${selectedExam.id}`} className="flex-1">
+                            <button className={`w-full h-11 rounded-xl bg-gradient-to-r ${s.ring} text-white font-black text-[10px] uppercase tracking-widest shadow-lg ${s.glow} transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2`}>
+                              <FileText className="h-3.5 w-3.5" />
+                              PDF Interativo
+                            </button>
+                          </Link>
+                          <a href={selectedExam.pdf_url} target="_blank" rel="noopener noreferrer">
+                            <button className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-350 text-slate-650 transition-all active:scale-95 flex items-center justify-center" title="Baixar PDF Original">
+                              <Download className="h-4.5 w-4.5" />
+                            </button>
+                          </a>
+                        </div>
                       )}
-                      {exam.question_count > 0 && (
+                      {selectedExam.question_count > 0 && (
                         <button
-                          onClick={() => startExam(exam)}
+                          onClick={() => startExam(selectedExam)}
                           className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-700 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
                         >
                           <Timer className="h-3.5 w-3.5" />
                           Simulado na Tela
                         </button>
                       )}
-                      {!hasContent && (
+                      {/* Gabarito Comentado */}
+                      {selectedExam.gabarito_comentado_url && (
+                        <a href={selectedExam.gabarito_comentado_url} target="_blank" rel="noopener noreferrer" className="block">
+                          <button className="w-full h-10 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2">
+                            <ExternalLink className="h-3 w-3" />
+                            📄 Gabarito Comentado
+                          </button>
+                        </a>
+                      )}
+                      {selectedExam.gabarito_url && !selectedExam.gabarito_comentado_url && (
+                        <a href={selectedExam.gabarito_url} target="_blank" rel="noopener noreferrer" className="block">
+                          <button className="w-full h-10 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2">
+                            <ExternalLink className="h-3 w-3" />
+                            Ver Gabarito
+                          </button>
+                        </a>
+                      )}
+                      {!hasContent && !selectedExam.gabarito_url && (
                         <p className="text-center text-[10px] text-slate-400 font-medium italic py-2">
                           Material em preparação
                         </p>
@@ -770,7 +916,7 @@ export default function ProvasCompletasPage() {
             </p>
           </div>
           {answers.map((ans, i) => {
-            const isCorrect = ans.selected === ans.correct;
+            const isCorrect = norm(ans.selected) === norm(ans.correct);
             return (
               <div
                 key={ans.questionId}
@@ -803,8 +949,8 @@ export default function ProvasCompletasPage() {
 
                 <div className="space-y-1.5">
                   {ans.options.map((opt) => {
-                    const isCorrectOpt = opt.key === ans.correct;
-                    const isSelectedOpt = opt.key === ans.selected;
+                    const isCorrectOpt = norm(opt.key) === norm(ans.correct);
+                    const isSelectedOpt = norm(opt.key) === norm(ans.selected);
                     return (
                       <div
                         key={opt.key}

@@ -57,6 +57,8 @@ type QuestionData = {
   };
 };
 
+const norm = (v: string | undefined | null) => (v ?? "").trim().toUpperCase();
+
 export default function InteractiveExamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user, profile, loading: authLoading } = useAuth();
@@ -165,7 +167,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     const formattedAnswers = questions.map((q) => {
       const selected = answers[q.question.id] || null;
       const correct = q.question.correct_answer;
-      if (selected === correct) correctCount++;
+      if (norm(selected) === norm(correct)) correctCount++;
       return { question_id: q.question.id, selected, correct };
     });
 
@@ -355,7 +357,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                 {questions.map((q, idx) => {
                   const selected = answers[q.question.id];
                   const correct = q.question.correct_answer;
-                  const isRight = selected === correct;
+                  const isRight = norm(selected) === norm(correct);
                   return (
                     <div
                       key={q.id}

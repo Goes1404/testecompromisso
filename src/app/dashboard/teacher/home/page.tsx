@@ -214,7 +214,7 @@ export default function TeacherHomePage() {
           { label: "Acerto Médio", value: `${stats.avgScore}%`,   sub: "Taxa global",   icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", href: "/dashboard/teacher/analytics" },
         ].map((stat, i) => (
           <Link key={i} href={stat.href} className="block">
-            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all [touch-action:manipulation] cursor-pointer">
+            <div className="gradient-border bg-white rounded-2xl p-4 md:p-5 shadow-md border-none hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all [touch-action:manipulation] cursor-pointer">
               <div className={`h-9 w-9 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
@@ -357,7 +357,7 @@ export default function TeacherHomePage() {
             variant="outline"
             onClick={runDiagnostic}
             disabled={diagLoading}
-            className="w-full rounded-xl h-11 border-slate-200 font-black text-xs uppercase tracking-wide active:scale-95 transition-all [touch-action:manipulation]"
+            className="btn-shimmer glow-orange-strong w-full rounded-xl h-11 border-accent/20 bg-accent/10 text-primary font-black text-xs uppercase tracking-wide active:scale-95 transition-all [touch-action:manipulation]"
           >
             {diagLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Activity className="h-4 w-4 mr-2 text-accent" />}
             Diagnóstico de Rede

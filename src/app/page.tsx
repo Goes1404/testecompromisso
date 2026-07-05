@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   CheckCircle2,
   ArrowRight,
@@ -10,27 +9,17 @@ import {
   Zap,
   Star,
   Users,
-  BookOpen,
   Target,
-  TrendingUp,
   ChevronRight,
   Menu,
   X,
   Play,
   GraduationCap,
   School,
-  Globe,
-  Shield,
-  MapPin,
-  Mail,
   Award,
   BookMarked,
   Lightbulb,
   Loader2,
-  BrainCircuit,
-  LineChart,
-  MessageSquare,
-  PlayCircle
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -51,7 +40,7 @@ export default function LandingPage() {
   useEffect(() => {
     // Prefetch principais rotas para acelerar navegação
     router.prefetch('/login');
-    
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -64,8 +53,6 @@ export default function LandingPage() {
     e.preventDefault();
     if (isRedirecting) return;
     setIsRedirecting(true);
-    
-    // Removendo o delay para transição instantânea
     router.push(path);
   };
 
@@ -75,13 +62,6 @@ export default function LandingPage() {
     document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const galleryItems = [
-    { title: "Labs", img: "/images/carrosel1.jpeg" },
-    { title: "Ensino", img: "/images/carrosel2.jpeg" },
-    { title: "Apoio", img: "/images/carrosel3.jpeg" },
-    { title: "Foco", img: "/images/carrosel4.jpeg" },
-  ];
-
   const stats = [
     { value: "500+", label: "Aprovações Reais", icon: GraduationCap },
     { value: "98%", label: "Índice de Sucesso", icon: Star },
@@ -89,11 +69,9 @@ export default function LandingPage() {
     { value: "24/7", label: "Suporte com IA", icon: Zap },
   ];
 
-  const mapsUrl = "https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010";
-
   return (
     <div className="flex min-h-screen flex-col bg-white text-gray-950 selection:bg-primary/20 selection:text-primary scroll-smooth relative">
-      
+
       {/* Transição de Tela de Carregamento */}
       {isRedirecting && (
         <div className="fixed inset-0 z-[200] bg-gray-950 animate-in fade-in duration-500 flex flex-col items-center justify-center gap-4">
@@ -104,7 +82,7 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* HEADER PREMIUM - Mais imponente e sempre visível */}
+      {/* HEADER PREMIUM */}
       <header
         className={`fixed top-0 w-full z-[60] transition-all duration-500 border-b ${scrolled
           ? 'bg-white/95 md:bg-white/95 backdrop-blur-xl py-2 shadow-lg border-gray-100'
@@ -116,10 +94,10 @@ export default function LandingPage() {
           <div className="flex items-center">
             <Link href="/" onClick={(e) => handleScrollTo(e, '#home')} className="flex items-center group">
               <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-xl shadow-lg bg-white p-1.5 transition-transform group-hover:rotate-6 duration-500">
-                <Image 
-                  src="/images/logocompromisso.png" 
-                  alt="Logo Compromisso" 
-                  fill 
+                <Image
+                  src="/images/logocompromisso.png"
+                  alt="Logo Compromisso"
+                  fill
                   className="object-contain p-1"
                   sizes="(max-width: 768px) 40px, 48px"
                   priority
@@ -145,10 +123,10 @@ export default function LandingPage() {
             </div>
           </nav>
 
-          <button 
+          <button
             className={`md:hidden flex items-center gap-2 py-2 px-4 rounded-full transition-all active:scale-95 shadow-lg ${
               scrolled ? 'bg-primary text-white shadow-primary/30 border-none' : 'bg-white/10 text-white backdrop-blur-md border border-white/20'
-            }`} 
+            }`}
             onClick={() => setMobileMenuOpen(true)}
           >
             <span className="text-[11px] font-black uppercase tracking-widest pt-0.5">Menu</span>
@@ -162,8 +140,8 @@ export default function LandingPage() {
         <div className="fixed inset-0 z-[110] bg-white animate-in slide-in-from-right duration-500 md:hidden">
           <div className="p-8 flex justify-between items-center border-b border-gray-100">
             <span className="text-2xl font-black text-primary italic uppercase tracking-tighter">Compromisso</span>
-            <button 
-              onClick={() => setMobileMenuOpen(false)} 
+            <button
+              onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2 py-2 px-4 bg-gray-50 text-gray-400 rounded-full active:scale-95 transition-all text-[11px] font-black uppercase tracking-widest border border-gray-100"
             >
               <span>Fechar</span>
@@ -184,10 +162,9 @@ export default function LandingPage() {
       )}
 
       <main className="flex-1">
-        {/* HERO SECTION - REINVENTADA E COMPACTA (100vh) */}
+        {/* HERO SECTION */}
         <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-gray-950 pt-20 md:pt-0">
           <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-black pointer-events-none" />
-          {/* 21st.dev dot-grid + noise */}
           <div className="absolute inset-0 dot-grid opacity-70 pointer-events-none" />
           <div className="absolute inset-0 noise pointer-events-none" />
 
@@ -225,9 +202,9 @@ export default function LandingPage() {
                 </Button>
               </div>
 
-              {/* Stats aprimorados e mais compactos */}
+              {/* Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-white/5">
-                {stats.map((stat, i) => (
+                {stats.map((stat) => (
                   <div key={stat.label} className="group">
                     <p className="text-2xl font-black text-white leading-none group-hover:text-primary transition-colors">{stat.value}</p>
                     <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1.5">{stat.label}</p>
@@ -237,7 +214,6 @@ export default function LandingPage() {
             </div>
 
             <div className="relative hidden lg:block h-[65vh] animate-in fade-in zoom-in duration-1000 max-h-[500px]">
-              {/* Gradient border wrapper — stitch style */}
               <div className="gradient-border relative h-full aspect-[4/5] rounded-[2rem] mx-auto">
                 <div className="relative h-full w-full rounded-[2rem] overflow-hidden shadow-[0_0_60px_-10px_rgba(255,107,0,0.4)]">
                   <Image
@@ -265,9 +241,8 @@ export default function LandingPage() {
         </section>
 
 
-        {/* MISSÃO E VALORES - Mistura de Temas (Dark nas pontas, Light no centro) */}
+        {/* MISSÃO E VALORES */}
         <section className="py-24 bg-gray-50 relative overflow-hidden border-t border-gray-200/50">
-          {/* Blobs de luz flutuantes */}
           <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none hidden md:block" />
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[80px] pointer-events-none hidden md:block" />
 
@@ -292,39 +267,35 @@ export default function LandingPage() {
                 theme: "dark"
               }
             ].map((card, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`p-10 rounded-[2.5rem] border transition-[transform,box-shadow,border-color] duration-300 group hover:-translate-y-2 flex flex-col gap-6 relative overflow-hidden ${
-                  card.theme === 'dark' 
-                    ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white' 
+                  card.theme === 'dark'
+                    ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white'
                     : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
                 }`}
               >
-                {/* Linha Guia Lateral - Efeitos Intensificados */}
                 <div className={`absolute left-0 top-1/4 bottom-1/4 w-[3px] transition-all duration-700 ease-out group-hover:h-full group-hover:top-0 group-hover:bottom-0 ${
                   card.theme === 'dark'
                     ? 'bg-primary/30 group-hover:bg-primary group-hover:shadow-[0_0_20px_rgba(255,107,0,0.8)]'
                     : 'bg-primary/10 group-hover:bg-primary group-hover:shadow-[0_0_15px_rgba(255,107,0,0.5)]'
                 }`} />
 
-                {/* GLOW DE FUNDO - Azul Dinâmico */}
                 <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-transform duration-500 group-hover:scale-150 hidden md:block ${
                   card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
                 }`} />
-                
-                {/* ÍCONE COM MODO PULSO */}
+
                 <div className={`relative h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-inner group-hover:rotate-6 z-10 ${
-                  card.theme === 'dark' 
-                    ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]' 
+                  card.theme === 'dark'
+                    ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]'
                     : 'bg-gray-50 text-gray-800 border border-gray-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/30'
                 }`}>
                   <card.icon className="h-8 w-8 relative z-10" />
-                  {/* Círculo animado em volta do ícone no Dark Mode */}
                   {card.theme === 'dark' && (
                      <div className="absolute inset-0 rounded-2xl border-2 border-primary/0 group-hover:border-primary/50 group-hover:scale-125 transition-all duration-700 opacity-0 group-hover:opacity-100" />
                   )}
                 </div>
-                
+
                 <div className="space-y-4 relative z-10">
                   <h3 className={`text-2xl font-black tracking-tighter uppercase italic transition-colors duration-500 ${
                     card.theme === 'dark' ? 'text-white group-hover:text-primary' : 'text-gray-900 group-hover:text-primary'
@@ -338,11 +309,10 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                {/* Seta Decorativa */}
                 <div className="pt-4 flex justify-end opacity-0 group-hover:opacity-100 transition-all duration-700 translate-x-4 group-hover:translate-x-0">
                    <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                     card.theme === 'dark' 
-                       ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]' 
+                     card.theme === 'dark'
+                       ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]'
                        : 'bg-blue-50 text-blue-600 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]'
                    }`}>
                       <ChevronRight className="h-5 w-5" />
@@ -394,32 +364,29 @@ export default function LandingPage() {
                   theme: "dark"
                 }
               ].map((card, i) => (
-                <div 
-                  key={card.title} 
+                <div
+                  key={card.title}
                   className={`p-10 rounded-[2.5rem] border transition-[transform,box-shadow,border-color] duration-300 group hover:-translate-y-2 flex flex-col gap-6 relative overflow-hidden ${
-                    card.theme === 'dark' 
-                      ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white' 
+                    card.theme === 'dark'
+                      ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white'
                       : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
                   }`}
                 >
-                  {/* Linha Guia Lateral */}
                   <div className={`absolute left-0 top-1/4 bottom-1/4 w-[3px] transition-all duration-700 ease-out group-hover:h-full group-hover:top-0 group-hover:bottom-0 ${
                     card.theme === 'dark'
                       ? 'bg-primary/30 group-hover:bg-primary group-hover:shadow-[0_0_20px_rgba(255,107,0,0.8)]'
                       : 'bg-primary/10 group-hover:bg-primary group-hover:shadow-[0_0_15px_rgba(255,107,0,0.5)]'
                   }`} />
 
-                  {/* GLOW DE FUNDO */}
                   <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-transform duration-500 group-hover:scale-150 hidden md:block ${
                     card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
                   }`} />
-                  
-                  {/* TAG HIGHLIGHT */}
+
                   <div className="relative z-10 flex justify-between items-center w-full">
                     <span className="text-[10px] font-black uppercase tracking-widest text-primary opacity-80">{card.highlight}</span>
                     <div className={`relative h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-inner group-hover:rotate-6 z-10 ${
-                      card.theme === 'dark' 
-                        ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]' 
+                      card.theme === 'dark'
+                        ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]'
                         : 'bg-gray-50 text-gray-800 border border-gray-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/30'
                     }`}>
                       <card.icon className="h-6 w-6 relative z-10" />

@@ -9,59 +9,28 @@
  * Requer no .env.local:
  *   NEXT_PUBLIC_SUPABASE_URL
  *   SUPABASE_SERVICE_ROLE_KEY   ← bypass RLS, nunca expor no frontend
+ *
+ * O acesso à API do ENEM (fetch, paginação, tipos e mapa de disciplinas) vive em
+ * src/services/enem-api.ts — este script só cuida da persistência no Supabase.
  */
 
 import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import * as path from "path";
+import {
+  fetchAllQuestions,
+  ENEM_DISCIPLINE_TO_SUBJECT,
+  type EnemDiscipline,
+  type EnemQuestion,
+  type EnemAlternative,
+} from "../src/services/enem-api";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 // ─── Config ────────────────────────────────────────────────────────────────
 
-const ENEM_API = "https://api.enem.dev/v1";
-const PAGE_SIZE = 50;
+const BATCH_SIZE = 50;
 const ALL_YEARS = [2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023];
-
-// Mapeamento área API → subject name no nosso banco
-const DISCIPLINE_MAP: Record<string, string> = {
-  linguagens: "Linguagens e Códigos",
-  matematica: "Matemática",
-  natureza:   "Ciências da Natureza",
-  humanas:    "Ciências Humanas",
-};
-
-// ─── Types ─────────────────────────────────────────────────────────────────
-
-interface EnemAlternative {
-  letter: string;
-  text: string;
-  file: string | null;
-  isCorrect: boolean;
-}
-
-interface EnemQuestion {
-  title: string;
-  index: number;
-  discipline: string;
-  language: string | null;
-  year: number;
-  context: string | null;
-  files: string[];
-  correctAlternative: string;
-  alternativesIntroduction: string | null;
-  alternatives: EnemAlternative[];
-}
-
-interface EnemResponse {
-  questions: EnemQuestion[];
-  metadata: {
-    total: number;
-    limit: number;
-    offset: number;
-    hasMore: boolean;
-  };
-}
 
 // ─── Supabase ───────────────────────────────────────────────────────────────
 
@@ -77,13 +46,6 @@ async function fetchSubjectMap(): Promise<Record<string, string>> {
   const { data, error } = await supabase.from("subjects").select("id, name");
   if (error) throw new Error(`Erro ao buscar subjects: ${error.message}`);
   return Object.fromEntries((data ?? []).map((s) => [s.name, s.id]));
-}
-
-async function fetchPage(year: number, offset: number): Promise<EnemResponse> {
-  const url = `${ENEM_API}/exams/${year}/questions?limit=${PAGE_SIZE}&offset=${offset}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error ${res.status} em ${url}`);
-  return res.json();
 }
 
 function buildOptions(alternatives: EnemAlternative[]): Record<string, string> {
@@ -104,73 +66,68 @@ function buildQuestionText(q: EnemQuestion): string {
 async function importYear(year: number, subjectMap: Record<string, string>) {
   console.log(`\n📥 Importando ENEM ${year}...`);
 
-  let offset = 0;
-  let total = 0;
+  // 1. Baixa todas as questões do ano (o serviço pagina automaticamente).
+  const questions = await fetchAllQuestions({
+    year,
+    onProgress: ({ fetched, total }) =>
+      process.stdout.write(`\r  baixando questões... ${fetched}/${total}`),
+  });
+  process.stdout.write("\n");
+
+  // 2. Mapeia para o formato do banco.
+  //    Ignora variantes de idioma (espanhol/inglês) — mantém só português (language === null).
+  const rows = questions
+    .filter((q) => q.language === null)
+    .map((q) => {
+      const disciplineName =
+        ENEM_DISCIPLINE_TO_SUBJECT[q.discipline as EnemDiscipline] ?? "Não Categorizado";
+      const subject_id = subjectMap[disciplineName] ?? subjectMap["Não Categorizado"];
+
+      return {
+        question_text: buildQuestionText(q),
+        options: buildOptions(q.alternatives),
+        correct_answer: q.correctAlternative,
+        subject_id,
+        supporting_text: q.context ?? null,
+        image_url: q.files?.[0] ?? null,
+        target_audience: "enem",
+        explanation: null,
+        // campos de rastreabilidade (Opção C)
+        enem_discipline: q.discipline,
+        enem_year: q.year,
+        enem_index: q.index,
+      };
+    });
+
+  // 3. Insere em lotes.
+  //    Upsert: question_hash é gerado pelo trigger do banco no INSERT.
+  //    ON CONFLICT no índice único idx_questions_hash faz skip automático (código 23505).
   let inserted = 0;
   let skipped = 0;
   let errors = 0;
 
-  do {
-    const page = await fetchPage(year, offset);
-    total = page.metadata.total;
-
-    const rows = page.questions
-      // Ignora variantes de idioma (espanhol/inglês) — mantém só português
-      .filter((q) => q.language === null || q.language === "portugues")
-      .map((q) => {
-        const disciplineName = DISCIPLINE_MAP[q.discipline] ?? "Não Categorizado";
-        const subject_id = subjectMap[disciplineName] ?? subjectMap["Não Categorizado"];
-        const options = buildOptions(q.alternatives);
-        const question_text = buildQuestionText(q);
-
-        return {
-          question_text,
-          options,
-          correct_answer: q.correctAlternative,
-          subject_id,
-          supporting_text: q.context ?? null,
-          image_url: q.files?.[0] ?? null,
-          target_audience: "enem",
-          explanation: null,
-          // campos de rastreabilidade (Opção C)
-          enem_discipline: q.discipline,
-          enem_year: q.year,
-          enem_index: q.index,
-        };
-      });
-
-    if (rows.length === 0) {
-      offset += PAGE_SIZE;
-      continue;
-    }
-
-    // Upsert: question_hash é gerado pelo trigger do banco no INSERT.
-    // ON CONFLICT no índice único idx_questions_hash faz skip automático.
-    const { data, error } = await supabase
-      .from("questions")
-      .insert(rows)
-      .select("id");
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    const { data, error } = await supabase.from("questions").insert(batch).select("id");
 
     if (error) {
       // Erro de duplicata (código 23505) é esperado — conta como skip
       if (error.code === "23505") {
-        skipped += rows.length;
+        skipped += batch.length;
       } else {
-        console.error(`  ⚠️  Erro no batch offset=${offset}:`, error.message);
-        errors += rows.length;
+        console.error(`\n  ⚠️  Erro no batch ${i}:`, error.message);
+        errors += batch.length;
       }
     } else {
       inserted += data?.length ?? 0;
       // Rows que não vieram no select foram ignoradas pelo ON CONFLICT
-      skipped += rows.length - (data?.length ?? 0);
+      skipped += batch.length - (data?.length ?? 0);
     }
 
     process.stdout.write(
-      `\r  offset=${offset + PAGE_SIZE}/${total} | ✅ ${inserted} inseridas | ⏭  ${skipped} duplicatas | ❌ ${errors} erros`
+      `\r  inserindo... ✅ ${inserted} inseridas | ⏭  ${skipped} duplicatas | ❌ ${errors} erros`
     );
-
-    offset += PAGE_SIZE;
-  } while (offset < total);
+  }
 
   console.log(`\n  ✔ ENEM ${year} concluído: ${inserted} novas, ${skipped} duplicatas, ${errors} erros`);
   return { inserted, skipped, errors };
