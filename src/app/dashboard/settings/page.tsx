@@ -561,8 +561,11 @@ export default function SettingsPage() {
                     {subscribed ? <BellRing className="h-7 w-7 text-green-600" /> : <Bell className="h-7 w-7 text-accent" />}
                   </div>
                   <div>
-                    <p className="text-base font-black text-primary italic">
+                    <p className="text-base font-black text-primary italic flex items-center gap-2 flex-wrap">
                       {subscribed ? "Notificações ativadas" : "Notificações desativadas"}
+                      <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-wider h-4 px-1.5 border-slate-200 bg-slate-50 text-slate-500">
+                        Navegador: {permission}
+                      </Badge>
                     </p>
                     <p className="text-xs font-medium text-muted-foreground mt-0.5">
                       {subscribed

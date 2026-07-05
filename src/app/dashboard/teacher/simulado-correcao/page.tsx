@@ -14,7 +14,7 @@ const TOTAL_Q = 60;
 const OPTS = ['A', 'B', 'C', 'D', 'E'];
 
 type Exam = { id: string; title: string; year: number; answer_key: string[] | null };
-type Attempt = { id: string; user_id: string; score: number; answers: { q: number; selected: string }[]; completed_at: string; profile: { full_name: string } | null };
+type Attempt = { id: string; user_id: string; score: number; answers: { q: number; selected: string }[]; completed_at: string; profile: { name: string } | null };
 type ExcelRow = { name: string; userId: string | null; matchedName: string | null; confidence: 'high' | 'low' | 'none'; score: number | null; answers: string[] | null; isDetailed: boolean };
 
 export default function SimuladoCorrecaoPage() {
@@ -71,7 +71,7 @@ export default function SimuladoCorrecaoPage() {
     setAttempts(d.attempts || []);
     setGabarito(d.exam?.answer_key || Array(TOTAL_Q).fill(''));
     // Build student list from attempts
-    const students = (d.attempts || []).map((a: Attempt) => ({ id: a.user_id, name: a.profile?.full_name || 'Aluno' }));
+    const students = (d.attempts || []).map((a: Attempt) => ({ id: a.user_id, name: a.profile?.name || 'Aluno' }));
     setAllStudents(students);
     setLoading(false);
   }, []);
@@ -144,11 +144,11 @@ export default function SimuladoCorrecaoPage() {
     const ab = await file.arrayBuffer();
     const wb = XLSX.read(ab);
     const rows: string[][] = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }) as string[][];
-    const data = rows.slice(1).filter(r => r[0]);
+    const nonAttrRows = rows.filter(r => r && r.length > 0);
 
     const r = await fetch('/api/teacher/simulado-correcao', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'excel_preview', rows: data }),
+      body: JSON.stringify({ action: 'excel_preview', rows: nonAttrRows }),
     });
     const d = await r.json();
     setExcelRows(d.results || []);
@@ -539,7 +539,7 @@ export default function SimuladoCorrecaoPage() {
                             {p !== null ? `${p}%` : '?'}
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-sm text-primary">{a.profile?.full_name || 'Aluno'}</p>
+                            <p className="font-bold text-sm text-primary">{a.profile?.name || 'Aluno'}</p>
                             <p className="text-[10px] text-slate-400 font-medium">{a.score} acertos {hasCard ? '· cartão completo' : '· só total'}</p>
                           </div>
                         </div>

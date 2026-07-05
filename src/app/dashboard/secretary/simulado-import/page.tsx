@@ -42,15 +42,31 @@ export default function SimuladoImportPage() {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const raw: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
-        // Detecta header e pula linha 0
+        const headerRow = raw[0] || [];
+        const normalizeHeader = (h: any) =>
+          String(h ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const getColIndex = (keywords: string[], defaultIdx: number) => {
+          const idx = headerRow.findIndex((h) => {
+            const nh = normalizeHeader(h);
+            return keywords.some((kw) => nh.includes(kw));
+          });
+          return idx !== -1 ? idx : defaultIdx;
+        };
+
+        const nameIdx = getColIndex(["nome", "estudante", "aluno", "student", "name"], 0);
+        const instIdx = getColIndex(["colegio", "escola", "instituicao", "institution", "school"], 1);
+        const salaIdx = getColIndex(["sala", "turma", "class", "room"], 2);
+        const notaIdx = getColIndex(["nota", "acertos", "pontos", "score", "points", "grade"], 3);
+
         const parsed: ImportRow[] = raw
           .slice(1)
-          .filter((r) => r[0] && r[3] !== undefined && r[3] !== "")
+          .filter((r) => r[nameIdx] && r[notaIdx] !== undefined && r[notaIdx] !== "")
           .map((r) => ({
-            name: String(r[0]).trim(),
-            institution: String(r[1] ?? "").trim(),
-            sala: String(r[2] ?? "").trim(),
-            nota: Number(r[3]) || 0,
+            name: String(r[nameIdx]).trim(),
+            institution: String(r[instIdx] ?? "").trim(),
+            sala: String(r[salaIdx] ?? "").trim(),
+            nota: Number(r[notaIdx]) || 0,
           }));
 
         if (parsed.length === 0) {
