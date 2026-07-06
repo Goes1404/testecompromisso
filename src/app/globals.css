@@ -424,10 +424,10 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   /* Prevent italic character clipping on layout boundaries */
-  padding-left: 0.05em;
-  padding-right: 0.15em;
-  margin-left: -0.05em;
-  margin-right: -0.15em;
+  padding-left: 0.1em;
+  padding-right: 0.25em;
+  margin-left: -0.1em;
+  margin-right: -0.25em;
 }
 
 /* Noise overlay — textura sutil em cards dark */
@@ -497,6 +497,11 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: gradient-shift 4s ease infinite;
+  /* Prevent clipping */
+  padding-left: 0.1em;
+  padding-right: 0.25em;
+  margin-left: -0.1em;
+  margin-right: -0.25em;
 }
 @keyframes gradient-shift {
   0%   { background-position: 0% center; }

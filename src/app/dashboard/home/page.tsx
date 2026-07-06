@@ -156,7 +156,7 @@ function SectionHeader({ index, title, icon: Icon, iconClass, children }: {
             <span className="text-[8px] font-black uppercase tracking-[0.4em] text-accent leading-none">{index}</span>
             <span className="h-px w-8 bg-gradient-to-r from-accent/50 to-transparent" />
           </div>
-          <h2 className="text-lg font-black text-slate-900 italic tracking-tighter uppercase leading-tight truncate mt-1">{title}</h2>
+          <h2 className="text-lg font-black text-slate-900 italic tracking-tighter uppercase leading-tight truncate mt-1 px-1 -ml-1">{title}</h2>
         </div>
       </div>
       {children}
@@ -481,6 +481,26 @@ export default function DashboardHome() {
   const ringR = 38;
   const ringC = 2 * Math.PI * ringR;
 
+  // Utilitário para corrigir problemas de codificação (ex: "Ã£" -> "ã") vindos do banco de dados
+  const fixEncoding = (str: string) => {
+    if (!str) return str;
+    return str
+      .replace(/Ã£/g, 'ã')
+      .replace(/Ã¡/g, 'á')
+      .replace(/Ã©/g, 'é')
+      .replace(/Ã­/g, 'í')
+      .replace(/Ã³/g, 'ó')
+      .replace(/Ãº/g, 'ú')
+      .replace(/Ã§/g, 'ç')
+      .replace(/Ãµ/g, 'õ')
+      .replace(/Ã¢/g, 'â')
+      .replace(/Ãª/g, 'ê')
+      .replace(/Ã/g, 'Á')
+      .replace(/Á£/g, 'ã')
+      .replace(/Á¡/g, 'á')
+      .replace(/Á§/g, 'ç');
+  };
+
   // ── Gabarito comentado: dados derivados ──
   const studentAnswerByQ: Record<number, string> = {};
   (simuladoOficial?.answers || []).forEach((a) => {
@@ -582,7 +602,7 @@ export default function DashboardHome() {
               </div>
             </div>
             <form onSubmit={handleClassSubmit} className="flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="relative">
                   <select value={salaValue} onChange={(e) => setSalaValue(e.target.value)}
                     className="h-12 w-full bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 pr-10 cursor-pointer appearance-none">
@@ -603,7 +623,7 @@ export default function DashboardHome() {
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white pointer-events-none" />
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <select value={turnoValue} onChange={(e) => setTurnoValue(e.target.value)}
                     className="h-12 w-full bg-white/10 text-white border border-white/20 focus:border-white rounded-xl font-bold text-sm focus-visible:outline-none px-3 pr-10 cursor-pointer appearance-none">
@@ -755,9 +775,9 @@ export default function DashboardHome() {
                 <div className="h-8 w-8 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
                   <stat.icon className="h-4 w-4 text-accent" />
                 </div>
-                <div>
-                  <p className="font-black text-white text-lg leading-none tabular-nums"><CountUp value={stat.value} suffix={stat.suffix} /></p>
-                  <p className="text-[8px] text-white/50 font-black uppercase tracking-[0.25em] mt-1">{stat.label}</p>
+                <div className="min-w-0">
+                  <p className="font-black text-white text-base md:text-lg leading-none tabular-nums whitespace-nowrap"><CountUp value={stat.value} suffix={stat.suffix} /></p>
+                  <p className="text-[8px] text-white/50 font-black uppercase tracking-[0.25em] mt-1 whitespace-nowrap truncate">{stat.label}</p>
                 </div>
               </motion.div>
             ))}
@@ -1150,8 +1170,8 @@ export default function DashboardHome() {
                             <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.color}`}>{styles.label}</span>
                             <span className="text-[10px] font-bold text-slate-400">Público Geral</span>
                           </div>
-                          <p className="font-black text-sm text-slate-900 truncate">{ann.title}</p>
-                          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium mt-0.5 italic">{ann.message}</p>
+                          <p className="font-black text-sm text-slate-900 truncate">{fixEncoding(ann.title)}</p>
+                          <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed font-medium mt-0.5 pr-1">{fixEncoding(ann.message)}</p>
                         </div>
                       </motion.div>
                     );

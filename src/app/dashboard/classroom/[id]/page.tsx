@@ -173,9 +173,13 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
     }
   }, [trailId, user, toast, router]);
 
+  const hasLoaded = useRef(false);
   useEffect(() => {
-    loadTrailData();
-  }, [loadTrailData]);
+    if (!hasLoaded.current && trailId && user) {
+      hasLoaded.current = true;
+      loadTrailData();
+    }
+  }, [trailId, user, loadTrailData]);
 
   const goToNextContent = useCallback(() => {
     const moduleContents = contents[activeModuleId || ""] || [];
@@ -377,7 +381,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <div className={`flex flex-col bg-slate-50 animate-in fade-in duration-500 min-h-screen ${showSimultaneousWorkbook ? 'overflow-hidden' : ''}`}>
+    <div className={`flex flex-col bg-slate-50 animate-in fade-in duration-500 min-h-screen max-w-[100vw] overflow-x-hidden ${showSimultaneousWorkbook ? 'overflow-hidden' : ''}`}>
       <Script 
         src="https://www.youtube.com/iframe_api" 
         strategy="afterInteractive"

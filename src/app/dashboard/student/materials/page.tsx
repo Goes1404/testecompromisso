@@ -330,7 +330,7 @@ export default function StudentMaterialsPage() {
 
       {/* ── BARRA DE FILTROS STICKY ── */}
       {!loading && materials.length > 0 && (
-        <div className="sticky top-2 z-20">
+        <div className="relative md:sticky md:top-2 z-20">
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100/80 p-2.5 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
 
             {/* Busca */}

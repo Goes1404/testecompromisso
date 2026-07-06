@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
 import { Input } from "@/components/ui/input";
@@ -171,7 +171,7 @@ export default function BooksPage() {
       </div>
 
       {/* ── STICKY FILTER BAR ── */}
-      <div className="sticky top-2 z-20 space-y-3 mb-6">
+      <div className="relative md:sticky md:top-2 z-20 space-y-3 mb-6">
         <div className="flex flex-col sm:flex-row gap-2 bg-white/80 backdrop-blur-xl rounded-2xl p-3 shadow-xl border border-slate-100">
           {/* search */}
           <div className="relative flex-1 group">

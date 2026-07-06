@@ -22,6 +22,7 @@ import { useTimeTracker } from "@/hooks/useTimeTracker";
 import { ExtractionProvider } from "@/lib/ExtractionContext";
 import { FloatingExtractionBubble } from "@/components/FloatingExtractionBubble";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 type NavChild = { icon: any; label: string; href: string; id: string; badge?: boolean };
 type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: boolean; initialOpen?: boolean; children?: NavChild[] };
@@ -518,8 +519,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <UrgentNotice />
         <PushPermissionBanner />
         <FloatingExtractionBubble />
-        {!isFullBleedPage && <MobileBottomNav />}
+        <FeedbackWidget />
       </SidebarInset>
+      {!isFullBleedPage && <MobileBottomNav />}
     </SidebarProvider>
     </ExtractionProvider>
   );

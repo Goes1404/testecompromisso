@@ -334,7 +334,7 @@ export default function LearningTrailsPage() {
       </section>
 
       {/* Barra de Filtros Unificada */}
-      <div className="sticky top-2 z-20 space-y-3">
+      <div className="relative md:sticky md:top-2 z-20 space-y-3">
         <div className="flex flex-col sm:flex-row gap-3 bg-white/80 backdrop-blur-xl rounded-2xl p-3 shadow-xl border border-slate-100">
           {/* Busca */}
           <div className="relative flex-1 group">
