@@ -771,13 +771,13 @@ export default function DashboardHome() {
             ].map((stat, i) => (
               <motion.div key={stat.label}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 + i * 0.08 }}
-                className="gradient-border flex items-center gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-3 py-3">
-                <div className="h-8 w-8 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
-                  <stat.icon className="h-4 w-4 text-accent" />
+                className="gradient-border flex items-center gap-2 md:gap-3 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-2xl px-2 py-2.5 md:px-3 md:py-3">
+                <div className="h-7 w-7 md:h-8 md:w-8 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                  <stat.icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-accent" />
                 </div>
-                <div className="min-w-0">
-                  <p className="font-black text-white text-base md:text-lg leading-none tabular-nums whitespace-nowrap"><CountUp value={stat.value} suffix={stat.suffix} /></p>
-                  <p className="text-[8px] text-white/50 font-black uppercase tracking-[0.25em] mt-1 whitespace-nowrap truncate">{stat.label}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-black text-white text-sm md:text-lg leading-none tabular-nums whitespace-nowrap"><CountUp value={stat.value} suffix={stat.suffix} /></p>
+                  <p className="text-[7px] md:text-[8px] text-white/50 font-black uppercase tracking-[0.15em] md:tracking-[0.25em] mt-1 leading-tight">{stat.label}</p>
                 </div>
               </motion.div>
             ))}

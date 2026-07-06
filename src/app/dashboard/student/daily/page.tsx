@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
 import { grantXP, XP_VALUES } from '@/lib/xp';
+import { fixEncoding } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { trackMissionProgress } from '@/lib/missions';
@@ -301,7 +302,7 @@ export default function DailyQuestionPage() {
         <div className="p-6 md:p-8 space-y-6">
           {/* Texto da questão */}
           <p className="text-slate-800 font-semibold text-base leading-relaxed whitespace-pre-line">
-            {daily.question_text}
+            {fixEncoding(daily.question_text)}
           </p>
 
           {/* Alternativas */}
@@ -347,7 +348,7 @@ export default function DailyQuestionPage() {
                     isSelected && !revealed ? 'text-primary font-semibold' :
                     'text-slate-700'
                   }`}>
-                    {opt.text || opt.value}
+                    {fixEncoding(opt.text || opt.value)}
                   </span>
                 </button>
               );
@@ -398,7 +399,7 @@ export default function DailyQuestionPage() {
                   <p className={`text-sm leading-relaxed font-medium ${
                     answerState === 'correct' ? 'text-emerald-900' : 'text-red-900'
                   }`}>
-                    {daily.explanation}
+                    {fixEncoding(daily.explanation)}
                   </p>
                 </div>
               )}

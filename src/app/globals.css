@@ -116,10 +116,10 @@
     line-height: 1.6;
   }
 
-  /* Rede de segurança: nenhuma palavra/URL longa deve quebrar o layout ou ser cortada */
-  p, span, h1, h2, h3, h4, h5, h6, a, li, td, th, label, button {
+  /* Rede de segurança: só quebra palavra quando realmente não há outro jeito de caber
+     (não força quebra no meio de palavras curtas como "Questões"/"Redação") */
+  p, span, h1, h2, h3, h4, h5, h6, a, li, td, th, label {
     overflow-wrap: break-word;
-    word-break: break-word;
   }
 
   img, video, canvas, svg {
@@ -127,15 +127,6 @@
     height: auto;
   }
 
-  /* Corrige o bug clássico de flexbox: filhos de flex container têm min-width:auto
-     por padrão, o que impede o texto de quebrar e faz o conteúdo vazar do card.
-     Elementos com largura fixa (w-10, shrink-0 etc.) não são afetados. */
-  .flex > * {
-    min-width: 0;
-  }
-  .flex-col > * {
-    min-height: 0;
-  }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sora, sans-serif);

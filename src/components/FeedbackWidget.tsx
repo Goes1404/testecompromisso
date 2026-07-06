@@ -86,11 +86,11 @@ export function FeedbackWidget() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-[90] h-14 w-14 bg-primary text-white rounded-full shadow-[0_10px_25px_-5px_rgba(255,107,0,0.5)] flex items-center justify-center border-2 border-white/20 glow-orange group overflow-hidden"
+            className="fixed bottom-44 right-6 md:bottom-28 md:right-8 z-[90] h-11 w-11 bg-primary text-white rounded-full shadow-[0_10px_25px_-5px_rgba(255,107,0,0.5)] flex items-center justify-center border-2 border-white/20 glow-orange group overflow-hidden"
             aria-label="Deixe seu feedback"
           >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <MessageSquarePlus className="h-6 w-6 relative z-10" />
+            <MessageSquarePlus className="h-5 w-5 relative z-10" />
           </motion.button>
         )}
       </AnimatePresence>
