@@ -233,24 +233,24 @@ export default function DailyQuestionPage() {
     <div className="max-w-2xl mx-auto px-4 space-y-6 pb-24 animate-in fade-in duration-700">
 
       {/* ── HERO ── */}
-      <section className="aurora-dark relative overflow-hidden rounded-[2.5rem] p-8 text-white shadow-2xl border border-white/5">
+      <section className="aurora-dark relative overflow-hidden rounded-[2.5rem] p-6 md:p-8 text-white shadow-2xl border border-white/5">
         <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2.5rem]" />
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/20 rounded-full blur-[80px]" />
 
-        <div className="relative z-10 flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30">
+        <div className="relative z-10 flex items-start justify-between gap-3">
+          <div className="space-y-2 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30 whitespace-nowrap">
                 <Zap className="inline h-2.5 w-2.5 mr-1" />
                 Desafio Diário
               </span>
               {daily.subject_name && (
-                <span className="text-[9px] font-black uppercase tracking-widest bg-white/10 text-white/70 px-3 py-1 rounded-full">
+                <span className="text-[9px] font-black uppercase tracking-widest bg-white/10 text-white/70 px-3 py-1 rounded-full whitespace-nowrap">
                   {daily.subject_name}
                 </span>
               )}
             </div>
-            <h1 className="text-3xl font-black italic tracking-tighter leading-tight">
+            <h1 className="text-2xl md:text-3xl font-black italic tracking-tighter leading-tight">
               Questão do<br />
               <span className="text-gradient-brand">Dia 🎯</span>
             </h1>
@@ -262,17 +262,17 @@ export default function DailyQuestionPage() {
           </div>
 
           {/* Stats */}
-          <div className="flex flex-col items-end gap-3 shrink-0">
+          <div className="flex flex-col items-end gap-2 shrink-0">
             {/* Streak */}
-            <div className="flex items-center gap-1.5 bg-white/10 px-3 py-2 rounded-2xl">
-              <Flame className="h-4 w-4 text-orange-400" />
-              <span className="text-lg font-black leading-none">{streakCount}</span>
-              <span className="text-[9px] font-black opacity-50 uppercase">dias</span>
+            <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 md:px-3 md:py-2 rounded-2xl">
+              <Flame className="h-3.5 w-3.5 md:h-4 md:w-4 text-orange-400" />
+              <span className="text-base md:text-lg font-black leading-none">{streakCount}</span>
+              <span className="text-[8px] md:text-[9px] font-black opacity-50 uppercase">dias</span>
             </div>
             {/* Countdown */}
             <div className="text-right">
-              <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Nova em</p>
-              <p className="text-sm font-black font-mono text-white/70">{countdown}</p>
+              <p className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-white/30 whitespace-nowrap">Nova em</p>
+              <p className="text-xs md:text-sm font-black font-mono text-white/70 whitespace-nowrap">{countdown}</p>
             </div>
           </div>
         </div>

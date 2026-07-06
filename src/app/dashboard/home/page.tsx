@@ -777,7 +777,7 @@ export default function DashboardHome() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-black text-white text-sm md:text-lg leading-none tabular-nums whitespace-nowrap"><CountUp value={stat.value} suffix={stat.suffix} /></p>
-                  <p className="text-[7px] md:text-[8px] text-white/50 font-black uppercase tracking-[0.15em] md:tracking-[0.25em] mt-1 leading-tight">{stat.label}</p>
+                  <p className="text-[7px] md:text-[8px] text-white/50 font-black uppercase tracking-normal md:tracking-[0.25em] mt-1 leading-tight whitespace-nowrap">{stat.label}</p>
                 </div>
               </motion.div>
             ))}
@@ -973,9 +973,9 @@ export default function DashboardHome() {
                       style={{ transform: "translateZ(12px)" }}>
                       <feat.icon className="h-6 w-6 text-white" strokeWidth={1.5} />
                     </motion.div>
-                    <div className="relative z-10 flex-1" style={{ transform: "translateZ(6px)" }}>
-                      <p className="font-black text-white text-base italic leading-tight">{feat.label}</p>
-                      <p className="text-white/60 text-xs font-semibold mt-0.5">{feat.desc}</p>
+                    <div className="relative z-10 flex-1 min-w-0" style={{ transform: "translateZ(6px)" }}>
+                      <p className="font-black text-white text-sm md:text-base italic leading-tight break-words">{feat.label}</p>
+                      <p className="text-white/60 text-[10px] md:text-xs font-semibold mt-0.5 break-words">{feat.desc}</p>
                     </div>
                     {feat.wide && (
                       <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/20">

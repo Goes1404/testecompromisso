@@ -324,7 +324,7 @@ export default function LearningTrailsPage() {
         <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-primary/10 rounded-full blur-[60px] hidden md:block" />
         <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
           <Badge className="bg-primary/10 text-primary border border-primary/20 font-black text-[9px] px-4 py-1.5 uppercase tracking-wider shadow-xl">COMPROMISSO 360</Badge>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.95] uppercase break-words px-2">
             Sua Rota de <br /><span className="text-gradient-brand italic">Alta Performance</span>
           </h1>
           <p className="text-sm md:text-xl text-gray-400 font-medium italic leading-relaxed max-w-xl mx-auto">
