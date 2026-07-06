@@ -54,13 +54,18 @@ export default function ForumPage() {
 
   const fetchForums = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('forums')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error) setForums(data || []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('forums')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error) setForums(data || []);
+    } catch (e) {
+      console.error('Erro ao carregar fóruns:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

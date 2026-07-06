@@ -72,17 +72,22 @@ export default function SecretaryIncomePage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, name, email, course, institution, family_income, family_size, income_per_capita, family_members, is_financial_aid_eligible, status")
-        .eq("profile_type", "student")
-        .order("name");
-      if (error) {
-        toast({ title: "Erro ao carregar dados", description: error.message, variant: "destructive" });
-      } else {
-        setStudents(data || []);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, name, email, course, institution, family_income, family_size, income_per_capita, family_members, is_financial_aid_eligible, status")
+          .eq("profile_type", "student")
+          .order("name");
+        if (error) {
+          toast({ title: "Erro ao carregar dados", description: error.message, variant: "destructive" });
+        } else {
+          setStudents(data || []);
+        }
+      } catch (e) {
+        console.error('Erro ao carregar renda per capita:', e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
 

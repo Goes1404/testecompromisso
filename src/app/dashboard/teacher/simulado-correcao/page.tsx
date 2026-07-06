@@ -65,15 +65,20 @@ export default function SimuladoCorrecaoPage() {
   const loadExam = useCallback(async (id: string) => {
     if (!id) return;
     setLoading(true);
-    const r = await fetch(`/api/teacher/simulado-correcao?examId=${id}`);
-    const d = await r.json();
-    setExam(d.exam);
-    setAttempts(d.attempts || []);
-    setGabarito(d.exam?.answer_key || Array(TOTAL_Q).fill(''));
-    // Build student list from attempts
-    const students = (d.attempts || []).map((a: Attempt) => ({ id: a.user_id, name: a.profile?.name || 'Aluno' }));
-    setAllStudents(students);
-    setLoading(false);
+    try {
+      const r = await fetch(`/api/teacher/simulado-correcao?examId=${id}`);
+      const d = await r.json();
+      setExam(d.exam);
+      setAttempts(d.attempts || []);
+      setGabarito(d.exam?.answer_key || Array(TOTAL_Q).fill(''));
+      // Build student list from attempts
+      const students = (d.attempts || []).map((a: Attempt) => ({ id: a.user_id, name: a.profile?.name || 'Aluno' }));
+      setAllStudents(students);
+    } catch (e) {
+      console.error('Erro ao carregar simulado:', e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { if (selectedExamId) loadExam(selectedExamId); }, [selectedExamId, loadExam]);

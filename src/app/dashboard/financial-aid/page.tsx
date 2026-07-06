@@ -129,54 +129,57 @@ export default function FinancialAidPage() {
     
     setLoading(true);
 
-    // Simulação de processamento de IA/Cálculo
-    await new Promise(r => setTimeout(r, 1200));
+    try {
+      // Simulação de processamento de IA/Cálculo
+      await new Promise(r => setTimeout(r, 1200));
 
-    const familySize = members.length;
-    // Se a renda estiver vazia, Number() retorna 0, o que é o comportamento desejado
-    const perCapita = totalFamilyIncome / familySize;
-    const eligible = perCapita <= THRESHOLD;
+      const familySize = members.length;
+      // Se a renda estiver vazia, Number() retorna 0, o que é o comportamento desejado
+      const perCapita = totalFamilyIncome / familySize;
+      const eligible = perCapita <= THRESHOLD;
 
-    setResult({
-      eligible,
-      perCapita,
-      totalFamilyIncome,
-      familySize,
-      threshold: THRESHOLD,
-      minWage: MIN_WAGE
-    });
+      setResult({
+        eligible,
+        perCapita,
+        totalFamilyIncome,
+        familySize,
+        threshold: THRESHOLD,
+        minWage: MIN_WAGE
+      });
 
-    if (user) {
-      try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ 
-            is_financial_aid_eligible: eligible,
-            family_members: members,
-            family_income: totalFamilyIncome,
-            family_size: familySize,
-            income_per_capita: perCapita
-          })
-          .eq('id', user.id);
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ 
+              is_financial_aid_eligible: eligible,
+              family_members: members,
+              family_income: totalFamilyIncome,
+              family_size: familySize,
+              income_per_capita: perCapita
+            })
+            .eq('id', user.id);
+            
+          if (error) {
+            console.error("Erro ao atualizar perfil:", error);
+            throw error;
+          }
           
-        if (error) {
-          console.error("Erro ao atualizar perfil:", error);
-          throw error;
+          if (refreshProfile) {
+            await refreshProfile();
+          }
+        } catch (e) {
+          console.error("Erro ao salvar elegibilidade:", e);
         }
-        
-        if (refreshProfile) {
-          await refreshProfile();
-        }
-      } catch (e) {
-        console.error("Erro ao salvar elegibilidade:", e);
       }
-    }
 
-    setLoading(false);
-    toast({
-      title: "Cálculo Concluído ✅",
-      description: "Seu perfil foi atualizado com o status de elegibilidade social.",
-    });
+      toast({
+        title: "Cálculo Concluído ✅",
+        description: "Seu perfil foi atualizado com o status de elegibilidade social.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -353,9 +353,9 @@ export default function LearningTrailsPage() {
           </div>
 
           {/* Filtros inline */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar max-w-full pb-0.5">
             {/* Tipo */}
-            <div className="flex items-center bg-slate-50 rounded-xl p-1 gap-1">
+            <div className="flex items-center bg-slate-50 rounded-xl p-1 gap-1 shrink-0 whitespace-nowrap">
               {([
                 { id: 'all' as const, label: 'Todos', icon: null as typeof Film | null },
                 { id: 'standalone' as const, label: 'Aulas', icon: Film as typeof Film | null },
@@ -381,7 +381,7 @@ export default function LearningTrailsPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`h-11 px-4 rounded-xl font-black text-[10px] uppercase gap-2 border-none shadow-none transition-all
+                  className={`h-11 px-4 rounded-xl font-black text-[10px] uppercase gap-2 border-none shadow-none transition-all shrink-0 whitespace-nowrap
                     ${activeAudience !== 'all' ? 'bg-primary text-white hover:bg-primary/90' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
