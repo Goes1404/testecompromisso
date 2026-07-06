@@ -86,7 +86,7 @@ export function FeedbackWidget() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-44 right-[30px] lg:bottom-24 lg:right-[30px] z-[90] h-11 w-11 bg-primary text-white rounded-full shadow-[0_10px_25px_-5px_rgba(255,107,0,0.5)] flex items-center justify-center border-2 border-white/20 glow-orange group overflow-hidden"
+            className="fixed bottom-[164px] right-[30px] lg:bottom-[92px] lg:right-[30px] z-[90] h-11 w-11 bg-primary text-white rounded-full shadow-[0_10px_25px_-5px_rgba(255,107,0,0.5)] flex items-center justify-center border-2 border-white/20 glow-orange group overflow-hidden"
             aria-label="Deixe seu feedback"
           >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
