@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import Script from "next/script";
 import { supabase } from "@/app/lib/supabase";
+import { estimateThetaEAP, mapThetaToEnemScore } from "@/lib/tri-solver";
 import {
   Loader2,
   ChevronLeft,
@@ -44,6 +45,8 @@ type ExamData = {
   title: string;
   exam_type: string;
   pdf_url: string;
+  is_special_cursinho?: boolean;
+  tri_score_calculated?: boolean;
 };
 
 type QuestionData = {
@@ -54,6 +57,9 @@ type QuestionData = {
     id: string;
     correct_answer: string;
     subjects: { name: string } | null;
+    tri_a?: number;
+    tri_b?: number;
+    tri_c?: number;
   };
 };
 
@@ -82,7 +88,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
       try {
         const { data: examData, error: examError } = await supabase
           .from("exams")
-          .select("id, title, exam_type, pdf_url")
+          .select("id, title, exam_type, pdf_url, is_special_cursinho, tri_score_calculated")
           .eq("id", id)
           .single();
 
@@ -95,7 +101,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
 
         const { data: qData, error: qError } = await supabase
           .from("exam_questions")
-          .select("id, question_id, order_index, question:questions(id, correct_answer, subjects(name))")
+          .select("id, question_id, order_index, question:questions(id, correct_answer, tri_a, tri_b, tri_c, subjects(name))")
           .eq("exam_id", id)
           .order("order_index", { ascending: true });
 
@@ -171,14 +177,28 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
       return { question_id: q.question.id, selected, correct };
     });
 
+    let triScore: number | null = null;
     let triRange = "";
-    if (exam.exam_type.toLowerCase() === "enem") {
-      const percentage = correctCount / questions.length;
-      if (percentage < 0.2) triRange = "300 - 450";
-      else if (percentage < 0.4) triRange = "450 - 550";
-      else if (percentage < 0.6) triRange = "550 - 650";
-      else if (percentage < 0.8) triRange = "650 - 750";
-      else triRange = "750 - 850+";
+
+    const shouldCalcTri = exam.tri_score_calculated || exam.exam_type.toLowerCase() === "enem";
+
+    if (shouldCalcTri) {
+      const triResponses = questions.map((q) => {
+        const selected = answers[q.question.id] || null;
+        const correct = q.question.correct_answer;
+        const isRight = norm(selected) === norm(correct);
+        return {
+          correct: isRight,
+          triParams: {
+            a: Number(q.question.tri_a ?? 1.2),
+            b: Number(q.question.tri_b ?? 0.2),
+            c: Number(q.question.tri_c ?? 0.20),
+          }
+        };
+      });
+      const theta = estimateThetaEAP(triResponses);
+      triScore = mapThetaToEnemScore(theta);
+      triRange = `${triScore} pts`;
     } else {
       triRange = "N/A";
     }
@@ -190,6 +210,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         score: correctCount,
         total_questions: questions.length,
         answers: formattedAnswers,
+        tri_score: triScore,
       });
 
       setResult({ score: correctCount, total: questions.length, triRange });
@@ -340,10 +361,10 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                 </div>
               </div>
 
-              {exam?.exam_type.toLowerCase() === "enem" && (
+              {(exam?.tri_score_calculated || exam?.exam_type.toLowerCase() === "enem") && (
                 <div className="bg-white/3 border border-orange-500/20 rounded-2xl p-3 text-center">
                   <p className="text-[8px] font-black uppercase tracking-widest text-white/65 mb-1">
-                    Simulação TRI INEP
+                    Nota TRI Estimada
                   </p>
                   <p className="text-lg font-black text-orange-400 italic">{result.triRange}</p>
                 </div>

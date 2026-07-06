@@ -16,7 +16,7 @@ import {
   ArrowRight, ChevronRight, ChevronDown, BookOpen, Phone, Check,
   ClipboardCheck, KeyRound, CheckCircle2, ShieldAlert,
   AlertTriangle, GraduationCap, Scroll, BarChart3, Star,
-  XCircle, ListChecks
+  XCircle, ListChecks, Flame
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -27,6 +27,8 @@ import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 import { AreaChartPremium } from "@/components/charts/premium";
 import { EmberCanvas } from "@/components/EmberCanvas";
+import { FlameEmberCanvas } from "@/components/FlameEmberCanvas";
+
 import {
   SIMULADO_GABARITO,
   SIMULADO_GABARITO_CHAVE,
@@ -206,6 +208,16 @@ export default function DashboardHome() {
   const [essayStats, setEssayStats] = useState<{ count: number; average: number; latest: any } | null>(null);
   const [examStats, setExamStats] = useState<{ totalAssessed: number; averageScore: number; history?: any[] } | null>(null);
   const [simuladoOficial, setSimuladoOficial] = useState<{ title: string; score: number; total: number; completed_at: string; answers: { q: number; selected: string }[] } | null>(null);
+  const [simuladoEspecial, setSimuladoEspecial] = useState<{
+    id: string;
+    title: string;
+    description: string;
+    pdf_url: string;
+    hasAttempt: boolean;
+    score?: number;
+    triScore?: number;
+    completedAt?: string;
+  } | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   // Gabarito comentado (modal)
@@ -344,6 +356,7 @@ export default function DashboardHome() {
           setEssayStats(parsed.data.essayStats);
           setExamStats(parsed.data.examStats);
           if (parsed.data.simuladoOficial) setSimuladoOficial(parsed.data.simuladoOficial);
+          if (parsed.data.simuladoEspecial) setSimuladoEspecial(parsed.data.simuladoEspecial);
           setLoadingData(false);
           if (Date.now() - parsed.timestamp < 60000) { dataFetchedRef.current = true; return; }
         }
@@ -352,14 +365,15 @@ export default function DashboardHome() {
     setLoadingData(true);
     dataFetchedRef.current = true;
     try {
-      const [annRes, trailRes, progressRes, libRes, essayRes, examRes, simOficialRes] = await Promise.all([
+      const [annRes, trailRes, progressRes, libRes, essayRes, examRes, simOficialRes, specialExamRes] = await Promise.all([
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
         supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
         supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3),
         supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id),
-        supabase.from('exam_attempts').select('score, completed_at, answers, exam:exams!inner(title, exam_type)').eq('user_id', user.id).order('completed_at', { ascending: false }),
+        supabase.from('exam_attempts').select('score, completed_at, answers, tri_score, exam:exams!inner(id, title, exam_type, is_special_cursinho, tri_score_calculated)').eq('user_id', user.id).order('completed_at', { ascending: false }),
+        supabase.from('exams').select('id, title, description, pdf_url').eq('is_special_cursinho', true).maybeSingle(),
       ]);
       let essayData = essayRes?.data || [];
       let examData = examRes?.data || [];
@@ -396,7 +410,10 @@ export default function DashboardHome() {
 
       // Simulado oficial importado pela secretaria
       const simOficialData = (simOficialRes?.data || []).find(
-        (a: any) => a.exam?.exam_type === 'simulado_importado'
+        (a: any) => {
+          const examObj = Array.isArray(a.exam) ? a.exam[0] : a.exam;
+          return examObj?.exam_type === 'simulado_importado';
+        }
       ) as any;
       if (simOficialData) {
         const examObj = Array.isArray(simOficialData.exam) ? simOficialData.exam[0] : simOficialData.exam;
@@ -410,8 +427,31 @@ export default function DashboardHome() {
         });
       }
 
+      // Simulado especial dos professores (com TRI)
+      const specialExam = specialExamRes?.data || null;
+      if (specialExam) {
+        const attempt = (simOficialRes?.data || []).find(
+          (a: any) => {
+            const examObj = Array.isArray(a.exam) ? a.exam[0] : a.exam;
+            return examObj?.id === specialExam.id;
+          }
+        );
+        setSimuladoEspecial({
+          id: specialExam.id,
+          title: specialExam.title,
+          description: specialExam.description || '',
+          pdf_url: specialExam.pdf_url || '',
+          hasAttempt: !!attempt,
+          score: attempt ? Number(attempt.score) : undefined,
+          triScore: attempt ? (attempt.tri_score ?? undefined) : undefined,
+          completedAt: attempt ? attempt.completed_at : undefined,
+        });
+      } else {
+        setSimuladoEspecial(null);
+      }
+
       const cacheData = {
-        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial },
+        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial, simuladoEspecial },
         timestamp: Date.now()
       };
       if (typeof window !== 'undefined') localStorage.setItem(`dash_cache_${user.id}`, JSON.stringify(cacheData));
@@ -767,6 +807,74 @@ export default function DashboardHome() {
           </TiltCard>
         ))}
       </motion.div>
+
+      {/* ── CARD DO SIMULADO DOS PROFESSORES (PEGANDO FOGO) ── */}
+      {simuladoEspecial && (
+        <motion.div variants={itemVariants}>
+          {simuladoEspecial.hasAttempt ? (
+            // Card de resultado concluído com TRI
+            <div className="w-full relative card-on-fire rounded-[2rem] overflow-hidden p-6 text-white group shadow-2xl">
+              <div className="absolute inset-0 pointer-events-none z-0" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(255,90,0,0.2) 0%, transparent 60%)" }} />
+              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/35 flex items-center justify-center shrink-0 shadow-lg">
+                    <Flame className="h-6 w-6 text-orange-500 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[8px] font-black uppercase tracking-[0.25em] text-orange-400">Simulado Especial Concluído</span>
+                      <Badge className="bg-orange-500/25 text-orange-400 border border-orange-500/30 text-[7px] font-black px-1 rounded">TRI ATIVA</Badge>
+                    </div>
+                    <h3 className="font-black italic text-lg leading-tight text-white mt-0.5">{simuladoEspecial.title}</h3>
+                    <p className="text-[10px] text-white/60 mt-1">Sua nota oficial estimada pela Teoria de Resposta ao Item.</p>
+                  </div>
+                </div>
+                <div className="text-center sm:text-right shrink-0">
+                  <p className="text-[8px] font-black uppercase tracking-widest text-white/50">Média TRI Estimada</p>
+                  <p className="text-3xl font-black italic text-orange-400 text-glow-orange leading-none mt-1">
+                    {simuladoEspecial.triScore ?? 0}
+                    <span className="text-xs text-white/50 font-bold not-italic ml-1">pts</span>
+                  </p>
+                  <p className="text-[9px] font-bold text-white/40 mt-1">({simuladoEspecial.score}/45 acertos)</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Card para iniciar o simulado
+            <Link href={`/dashboard/student/provas/${simuladoEspecial.id}`} className="block">
+              <div className="w-full text-left relative card-on-fire rounded-[2rem] overflow-hidden p-6 group cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform [touch-action:manipulation] shadow-2xl">
+                {/* Canvas de partículas de fogo */}
+                <FlameEmberCanvas className="absolute inset-0 h-full w-full pointer-events-none z-0 opacity-70" />
+                <div className="absolute inset-0 pointer-events-none z-10" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(255,90,0,0.15) 0%, transparent 60%)" }} />
+                
+                <div className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex items-start gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0 shadow-lg animate-float">
+                      <Flame className="h-7 w-7 text-orange-500 fill-orange-500" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-orange-400">Simulado Especial dos Professores</span>
+                        <Badge className="bg-red-500 text-white border-none text-[8px] font-black tracking-widest px-2 animate-pulse">INÉDITO</Badge>
+                      </div>
+                      <h3 className="font-black italic text-xl leading-tight text-white mt-1 group-hover:text-orange-400 transition-colors">
+                        {simuladoEspecial.title}
+                      </h3>
+                      <p className="text-xs font-semibold text-white/70 mt-1.5 leading-relaxed max-w-md">
+                        {simuladoEspecial.description || "Elaborado exclusivamente pela equipe de professores. Teste seu desempenho com a nota TRI real do ENEM!"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button className="w-full sm:w-auto h-12 px-6 rounded-xl bg-orange-500 hover:bg-orange-600 text-slate-950 font-black text-xs uppercase tracking-widest shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 border-none shrink-0">
+                    <span>Iniciar Simulado</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </Link>
+          )}
+        </motion.div>
+      )}
 
       {/* ══════════════════════════════════
            GABARITO COMENTADO — card fixo na home

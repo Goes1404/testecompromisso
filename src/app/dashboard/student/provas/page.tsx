@@ -33,6 +33,8 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
+import { FlameEmberCanvas } from "@/components/FlameEmberCanvas";
+import { estimateThetaEAP, mapThetaToEnemScore } from "@/lib/tri-solver";
 
 type Exam = {
   id: string;
@@ -45,6 +47,8 @@ type Exam = {
   gabarito_url: string | null;
   gabarito_comentado_url: string | null;
   difficulty_level: string | null;
+  is_special_cursinho?: boolean;
+  tri_score_calculated?: boolean;
 };
 
 type Question = {
@@ -56,6 +60,9 @@ type Question = {
   correct_answer: string;
   explanation: string | null;
   subjects: { name: string } | null;
+  tri_a?: number;
+  tri_b?: number;
+  tri_c?: number;
 };
 
 type Answer = {
@@ -185,7 +192,7 @@ export default function ProvasCompletasPage() {
 
       let query = supabase
         .from("exams")
-        .select("id, title, description, year, exam_type, pdf_url, gabarito_url, gabarito_comentado_url, difficulty_level, exam_questions(count)")
+        .select("id, title, description, year, exam_type, pdf_url, gabarito_url, gabarito_comentado_url, difficulty_level, is_special_cursinho, tri_score_calculated, exam_questions(count)")
         .eq("exam_type", allowedType)
         .order("year", { ascending: false });
 
@@ -202,6 +209,8 @@ export default function ProvasCompletasPage() {
         gabarito_url: e.gabarito_url ?? null,
         gabarito_comentado_url: e.gabarito_comentado_url ?? null,
         difficulty_level: e.difficulty_level ?? null,
+        is_special_cursinho: e.is_special_cursinho ?? false,
+        tri_score_calculated: e.tri_score_calculated ?? false,
         question_count: e.exam_questions?.[0]?.count ?? 0,
       }));
 
@@ -223,7 +232,7 @@ export default function ProvasCompletasPage() {
       const { data, error } = await supabase
         .from("exam_questions")
         .select(
-          "order_index, questions(id, question_text, supporting_text, image_url, options, correct_answer, explanation, subjects(name))"
+          "order_index, questions(id, question_text, supporting_text, image_url, options, correct_answer, explanation, tri_a, tri_b, tri_c, subjects(name))"
         )
         .eq("exam_id", exam.id)
         .order("order_index");
@@ -326,6 +335,27 @@ export default function ProvasCompletasPage() {
     setPageState("finished");
 
     if (!user || !activeExam) return;
+
+    let triScore: number | null = null;
+    const shouldCalcTri = activeExam.tri_score_calculated || activeExam.exam_type.toLowerCase() === "enem";
+
+    if (shouldCalcTri) {
+      const triResponses = finalAnswers.map((ans) => {
+        const q = questions.find((q) => q.id === ans.questionId);
+        const isRight = norm(ans.selected) === norm(ans.correct);
+        return {
+          correct: isRight,
+          triParams: {
+            a: Number(q?.tri_a ?? 1.2),
+            b: Number(q?.tri_b ?? 0.2),
+            c: Number(q?.tri_c ?? 0.20),
+          }
+        };
+      });
+      const theta = estimateThetaEAP(triResponses);
+      triScore = mapThetaToEnemScore(theta);
+    }
+
     try {
       await supabase.from("exam_attempts").insert({
         user_id: user.id,
@@ -333,6 +363,7 @@ export default function ProvasCompletasPage() {
         score,
         total_questions: finalAnswers.length,
         answers: finalAnswers.map((a) => ({ questionId: a.questionId, selected: a.selected, correct: a.correct })),
+        tri_score: triScore,
       });
     } catch {
       // silent
@@ -429,15 +460,21 @@ export default function ProvasCompletasPage() {
               const s = examTypeStyles(selectedExam.exam_type);
               const hasContent = selectedExam.question_count > 0 || selectedExam.pdf_url;
 
+              const isSpecial = selectedExam.is_special_cursinho;
+              const cardBgClass = isSpecial 
+                ? "relative card-on-fire text-white border-orange-500/30 shadow-2xl rounded-[1.5rem] overflow-hidden transition-all group flex flex-col justify-between"
+                : "relative bg-white border border-slate-100 hover:border-slate-200 shadow-sm rounded-[1.5rem] overflow-hidden transition-all group flex flex-col justify-between";
+
               return (
                 <div
                   key={group.key}
-                  className="relative bg-white border border-slate-100 hover:border-slate-200 shadow-sm rounded-[1.5rem] overflow-hidden transition-all group flex flex-col justify-between"
+                  className={cardBgClass}
                 >
+                  {isSpecial && <FlameEmberCanvas className="absolute inset-0 h-full w-full pointer-events-none z-0 opacity-45" />}
                   <div>
                     <div className={`h-1 w-full bg-gradient-to-r ${s.ring}`} />
 
-                    <div className="p-5 pb-2 space-y-4">
+                    <div className="p-5 pb-2 space-y-4 relative z-10">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           {selectedExam.year && (
@@ -507,11 +544,11 @@ export default function ProvasCompletasPage() {
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-black text-primary italic leading-snug line-clamp-2">
+                        <h3 className={`text-sm font-black italic leading-snug line-clamp-2 ${isSpecial ? "text-orange-400 group-hover:text-orange-300" : "text-primary"}`}>
                           {selectedExam.title}
                         </h3>
                         {selectedExam.description && (
-                          <p className="text-[11px] text-slate-500 font-medium italic line-clamp-2 leading-snug mt-1.5">
+                          <p className={`text-[11px] font-medium italic line-clamp-2 leading-snug mt-1.5 ${isSpecial ? "text-white/70" : "text-slate-500"}`}>
                             {selectedExam.description}
                           </p>
                         )}
@@ -519,8 +556,8 @@ export default function ProvasCompletasPage() {
                     </div>
                   </div>
 
-                  <div className="p-5 pt-0 space-y-2">
-                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                  <div className="p-5 pt-0 space-y-2 relative z-10">
+                    <div className="space-y-2 pt-1 border-t border-slate-100/10">
                       {selectedExam.pdf_url && (
                         <div className="flex gap-2">
                           <Link href={`/dashboard/student/provas/${selectedExam.id}`} className="flex-1">
@@ -530,7 +567,7 @@ export default function ProvasCompletasPage() {
                             </button>
                           </Link>
                           <a href={selectedExam.pdf_url} target="_blank" rel="noopener noreferrer">
-                            <button className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-350 text-slate-650 transition-all active:scale-95 flex items-center justify-center" title="Baixar PDF Original">
+                            <button className={`h-11 w-11 rounded-xl border transition-all active:scale-95 flex items-center justify-center ${isSpecial ? "bg-white/10 border-white/20 text-white hover:bg-white/20" : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-650"}`} title="Baixar PDF Original">
                               <Download className="h-4.5 w-4.5" />
                             </button>
                           </a>
@@ -539,7 +576,7 @@ export default function ProvasCompletasPage() {
                       {selectedExam.question_count > 0 && (
                         <button
                           onClick={() => startExam(selectedExam)}
-                          className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-700 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
+                          className={`w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 ${isSpecial ? "bg-white/10 border-white/20 text-white hover:bg-white/20" : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700"}`}
                         >
                           <Timer className="h-3.5 w-3.5" />
                           Simulado na Tela

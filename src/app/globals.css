@@ -753,3 +753,61 @@ input:-webkit-autofill:active {
 .dark .shadow-2xl {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7) !important;
 }
+
+/* ══════════════════════════════════════════════════════
+   ESTILO CARD PEGANDO FOGO (SIMULADO DOS PROFESSORES)
+   ══════════════════════════════════════════════════════ */
+
+@keyframes fire-glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(255, 61, 0, 0.35), 
+      0 0 45px rgba(255, 107, 0, 0.20),
+      inset 0 0 12px rgba(255, 61, 0, 0.20);
+    border-color: rgba(255, 107, 0, 0.45);
+  }
+  50% {
+    box-shadow: 
+      0 0 35px rgba(255, 107, 0, 0.60), 
+      0 0 80px rgba(255, 61, 0, 0.35),
+      inset 0 0 24px rgba(255, 107, 0, 0.30);
+    border-color: rgba(255, 61, 0, 0.85);
+  }
+}
+
+.card-on-fire {
+  background: linear-gradient(165deg, #090301 0%, #150601 50%, #090301 100%) !important;
+  position: relative;
+  border: 1px solid rgba(255, 107, 0, 0.35) !important;
+  animation: fire-glow-pulse 3s ease-in-out infinite;
+}
+
+.card-on-fire::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 61, 0, 0.6) 0%,
+    rgba(255, 107, 0, 0.2) 40%,
+    rgba(255, 61, 0, 0.1) 80%,
+    rgba(255, 200, 0, 0.5) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glow ring neon para botões e elementos de destaque do simulado especial */
+.glow-orange-neon {
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 0, 0.50),
+    0 0 16px rgba(255, 107, 0, 0.40),
+    0 0 48px rgba(255, 107, 0, 0.20),
+    0 8px 32px rgba(0, 0, 0, 0.40);
+}
+
