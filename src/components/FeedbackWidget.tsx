@@ -16,8 +16,16 @@ export function FeedbackWidget() {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [category, setCategory] = useState('equipe_tecnica');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const CATEGORIES = [
+    { value: 'equipe_tecnica', label: 'Equipe Técnica' },
+    { value: 'professores', label: 'Professores' },
+    { value: 'material', label: 'Material Didático' },
+    { value: 'outro', label: 'Outro' },
+  ];
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -35,6 +43,7 @@ export function FeedbackWidget() {
     try {
       const { error } = await supabase.from('system_feedbacks').insert({
         user_id: user.id,
+        category,
         rating,
         comment: comment.trim() || null,
       });
@@ -50,6 +59,7 @@ export function FeedbackWidget() {
           setSubmitted(false);
           setRating(0);
           setComment('');
+          setCategory('equipe_tecnica');
         }, 500);
       }, 2500);
 
@@ -138,6 +148,19 @@ export function FeedbackWidget() {
                   </motion.div>
                 ) : (
                   <div className="space-y-6">
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-gray-500">Para quem é o feedback?</label>
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 focus:border-primary/50 focus:outline-none"
+                      >
+                        {CATEGORIES.map((c) => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div className="space-y-3">
                       <label className="text-[11px] font-black uppercase tracking-widest text-gray-500">Como você avalia o portal?</label>
                       <div className="flex gap-2">
