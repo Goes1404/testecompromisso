@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { Loader2, GraduationCap, TrendingUp, Calendar, School } from "lucide-react";
+import Image from "next/image";
 
 type ReportCard = {
   id: string;
@@ -95,9 +96,20 @@ export default function ReportCardPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-10 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-[2rem] aurora-dark p-6 md:p-8 text-white shadow-xl">
-        <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
-        <div className="relative z-10">
+      <div className="relative overflow-hidden rounded-[2rem] aurora-dark text-white shadow-xl">
+        <div className="relative w-full h-36 md:h-44">
+          <Image
+            src="/images/updates/boletim_update.png"
+            alt="Meu Boletim"
+            fill
+            sizes="(max-width: 768px) 100vw, 672px"
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        </div>
+        <div className="absolute inset-0 dot-grid opacity-10 pointer-events-none" />
+        <div className="relative z-10 p-6 md:p-8 -mt-4">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30">
             <GraduationCap className="h-3 w-3" />
             {trackLabel}
