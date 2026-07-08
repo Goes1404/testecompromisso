@@ -30,7 +30,6 @@ type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: b
 /* ─── ALUNO ─────────────────────────────────────────────────── */
 const studentItems: NavItem[] = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
-  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-updates" },
   {
     icon: BookOpen, label: "Conteúdos", id: "nav-conteudos",
     children: [
@@ -90,6 +89,7 @@ const studentItems: NavItem[] = [
       { icon: Calculator, label: "Simulador de Isenção", href: "/dashboard/student/documents/exemption", id: "nav-student-exemption" },
     ],
   },
+  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-updates" },
   {
     icon: Settings, label: "Conta", id: "nav-conta",
     children: [
@@ -101,7 +101,6 @@ const studentItems: NavItem[] = [
 /* ─── PROFESSOR ─────────────────────────────────────────────── */
 const teacherItems: NavItem[] = [
   { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home", id: "nav-teacher-home" },
-  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-teacher-updates" },
   {
     icon: BookOpen, label: "Conteúdo", id: "nav-teacher-conteudo",
     children: [
@@ -136,6 +135,7 @@ const teacherItems: NavItem[] = [
       { icon: MessageSquare,  label: "Chats com Alunos", href: "/dashboard/chat",  id: "nav-teacher-chat", badge: true },
     ],
   },
+  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-teacher-updates" },
   {
     icon: Settings, label: "Conta", id: "nav-teacher-conta",
     children: [
@@ -148,7 +148,6 @@ const teacherItems: NavItem[] = [
 /* ─── ADMIN ─────────────────────────────────────────────────── */
 const adminItems: NavItem[] = [
   { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home", id: "nav-admin-home" },
-  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-admin-updates" },
   {
     icon: Users, label: "Usuários", id: "nav-admin-usuarios",
     children: [
@@ -186,13 +185,13 @@ const adminItems: NavItem[] = [
       { icon: CalendarDays, label: "Calendário",          href: "/dashboard/admin/calendar",        id: "nav-admin-calendar" },
     ],
   },
+  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-admin-updates" },
   { icon: Settings, label: "Configurações", href: "/dashboard/settings", id: "nav-admin-settings" },
 ];
 
 /* ─── SECRETARIA ────────────────────────────────────────────── */
 const secretaryItems: NavItem[] = [
   { icon: ShieldCheck, label: "Painel Secretaria", href: "/dashboard/secretary/home", id: "nav-secretary-home" },
-  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-secretary-updates" },
   { icon: BarChart3,   label: "Painel de KPIs",   href: "/dashboard/secretary/kpi",  id: "nav-secretary-kpi" },
   {
     icon: Users, label: "Matrículas", id: "nav-secretary-matriculas",
@@ -226,6 +225,7 @@ const secretaryItems: NavItem[] = [
       { icon: MessageSquare,  label: "Chats com Alunos", href: "/dashboard/chat",  id: "nav-secretary-chat", badge: true },
     ],
   },
+  { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-secretary-updates" },
   {
     icon: Settings, label: "Conta", id: "nav-secretary-conta",
     children: [
