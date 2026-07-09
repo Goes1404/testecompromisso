@@ -123,7 +123,7 @@ servidor+cliente e rotação de segredo (decisão do time):
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
 novos usuários) e migrar as rotas acima para `requireAdminUser()`.
 
-### 📱 Plano: reset de senha & primeiro acesso (telefone + SMS) — NÃO IMPLEMENTADO
+### 📱 Plano: reset de senha & primeiro acesso (telefone + SMS) — FASE 2 IMPLEMENTADA
 
 Decisão de produto: **não armazenar CPF**; usar **telefone** como base da recuperação
 (minimização de dados / LGPD). Observação importante: os e-mails `@compromisso.com` são
@@ -132,17 +132,16 @@ sintéticos (login interno, sem caixa de e-mail real), então recuperação por 
 **Princípio de segurança:** o telefone NÃO é segredo. Nunca validar "digitando o número".
 A prova de identidade é **posse do aparelho** → enviar **OTP via SMS para o número já cadastrado**.
 
-Fases (nenhuma implementada ainda):
+Fases:
 1. **Telefone obrigatório (gate):** transformar o card "Cadastre seu Telefone" da home num
    bloqueio igual ao `must_change_password` — sem telefone, não acessa o dashboard. Grátis,
-   não depende de SMS, faz a cobertura de telefone tender a 100% com o tempo.
-2. **Reset self-service por SMS OTP:** aluno informa o nome → servidor acha a conta → envia
-   OTP ao telefone cadastrado → valida OTP → permite trocar a senha. Requer provedor SMS
-   (Twilio/Zenvia). Ao implementar, **blindar `api/student/primeiro-acesso`**: a action `search`
-   deve parar de devolver `userId`/`email` (enumeração); responder só "OTP enviado para ***-1234".
+   não depende de SMS, faz a cobertura de telefone tender a 100% com o tempo. *(Pendente)*
+2. **Reset self-service por SMS OTP:** ✅ **IMPLEMENTADO** — aluno informa o nome → servidor acha a conta → envia
+   OTP ao telefone cadastrado → valida OTP → permite trocar a senha. Integração com provedor SMS
+   (Twilio). Detalhes da implementação em `docs/superpowers/plans/2026-07-08-forgot-password-sms-otp.md`.
 3. **Fallback permanente (os dois):** quem não tem telefone → a **secretaria reseta direto**
    pelo painel **ou** **gera link de recuperação** (`generate-link`), à escolha dela. Adequado
-   para cursinho presencial (prova de identidade offline).
+   para cursinho presencial (prova de identidade offline). *(Pendente)*
 
 ### Já corrigido nesta auditoria (mudanças seguras, sem quebrar fluxo)
 - Open-redirect em `auth/callback` (valida `next` interno).
@@ -173,6 +172,10 @@ Fases (nenhuma implementada ainda):
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 OPENAI_API_KEY  (server-side only)
+PASSWORD_RESET_TOKEN_SECRET  (server-side only — secret dedicado do wizard de recuperação por SMS)
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_PHONE_NUMBER
 ```
 
 ## 📌 Pastas Importantes
