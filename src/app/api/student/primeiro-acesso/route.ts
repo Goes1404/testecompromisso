@@ -56,12 +56,6 @@ function hashIdentifier(name: string): string {
   return crypto.createHash('sha256').update(norm).digest('hex');
 }
 
-// Telefone como dígitos puros, sem DDI 55, para comparar formatos diferentes.
-function normalizePhone(p: string): string {
-  let d = (p || '').replace(/\D/g, '');
-  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
-  return d;
-}
 
 async function checkRecoverRateLimit(admin: any, ip: string, idHash: string): Promise<boolean> {
   try {
