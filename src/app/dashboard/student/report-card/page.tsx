@@ -1,77 +1,373 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
-import { Loader2, GraduationCap, TrendingUp, Calendar, School } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Calendar,
+  FileText,
+  GraduationCap,
+  Loader2,
+  School,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
+import {
+  ENEM_SUBJECTS,
+  LABELS,
+  avg,
+  pct,
+  subjectScores,
+  type EnemReportCard,
+  type EtecReportCard,
+} from "./report-card-lib";
 
-type ReportCard = {
-  id: string;
-  track: "enem" | "etec";
-  semester: number;
-  classificatoria_score: number | null;
-  classificatoria_max: number | null;
-  simulado_score: number | null;
-  simulado_max: number | null;
-  redacao_score: number | null;
-  redacao_max: number | null;
-  absences_1sem: number | null;
-  absences_2sem: number | null;
-  sala: string | null;
-  turno: string | null;
-  colegio: string | null;
-};
+// Recharts (~100 kB gzip) só é necessário no modo "completo" — carrega sob
+// demanda pra não pesar o primeiro paint no celular (regra da casa: recharts
+// sempre via dynamic ssr:false).
+const EnemInsights = dynamic(() => import("./enem-insights"), {
+  ssr: false,
+  loading: () => (
+    <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="h-96 animate-pulse rounded-[1.75rem] border border-slate-100 bg-white shadow-sm" />
+      <div className="h-96 animate-pulse rounded-[1.75rem] border border-slate-100 bg-white shadow-sm" />
+    </div>
+  ),
+});
+
+function formatTurno(turno?: string | null) {
+  if (!turno) return null;
+  const map: Record<string, string> = { manha: LABELS.manha, tarde: "Tarde", integral: "Integral" };
+  return map[turno] ?? turno;
+}
+
+function statusFromPct(value: number | null) {
+  if (value === null) return { title: "Sem dados suficientes", tone: "slate", text: "Assim que houver notas, o resumo aparece aqui." };
+  if (value >= 80) return { title: "Muito bom", tone: "emerald", text: "O desempenho atual esta forte. Vale manter a rotina." };
+  if (value >= 60) return { title: "Em desenvolvimento", tone: "amber", text: "Ha uma boa base, com espaco claro para crescer." };
+  return { title: "Precisa de apoio", tone: "red", text: "Este ponto merece acompanhamento mais proximo." };
+}
 
 function ScoreCard({ label, score, max, icon: Icon }: { label: string; score: number | null; max: number | null; icon: any }) {
-  const hasScore = score !== null && score !== undefined;
-  const pct = hasScore && max ? Math.round((score! / max) * 100) : null;
+  const percentage = pct(score, max);
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-3 min-w-0">
-      <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5 text-primary" />
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+            {percentage !== null && <span className="text-xs font-black text-primary">{percentage}%</span>}
+          </div>
+          {score !== null && score !== undefined ? (
+            <p className="mt-1 text-xl font-black text-slate-950 tabular-nums">
+              {score}
+              {max !== null && max !== undefined && <span className="text-sm font-bold text-slate-400">/{max}</span>}
+            </p>
+          ) : (
+            <p className="mt-2 text-sm font-bold text-slate-300">{LABELS.naoRealizado}</p>
+          )}
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
-        {hasScore ? (
-          <p className="font-black text-lg text-slate-900 tabular-nums">
-            {score}<span className="text-slate-400 text-sm font-bold">/{max}</span>
-            {pct !== null && <span className="ml-2 text-xs font-bold text-emerald-600">{pct}%</span>}
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400" style={{ width: `${percentage ?? 0}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, hint, icon: Icon }: { label: string; value: string; hint: string; icon: any }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+      <div className="flex items-center gap-2 text-white/55">
+        <Icon className="h-4 w-4" />
+        <p className="text-[10px] font-black uppercase tracking-wider">{label}</p>
+      </div>
+      <p className="mt-2 text-2xl font-black text-white tabular-nums">{value}</p>
+      <p className="text-xs font-semibold text-white/50">{hint}</p>
+    </div>
+  );
+}
+
+function SimuladoCard({ score1, score2, score3, max }: { score1: number | null; score2: number | null; score3: number | null; max: number | null }) {
+  const simulados = [
+    { label: "Simulado 1", score: score1 },
+    { label: "Simulado 2", score: score2 },
+    { label: "Simulado 3", score: score3 },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:col-span-2">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Simulados ENEM</p>
+          <p className="text-xs font-semibold text-slate-500">Evolucao dentro do semestre</p>
+        </div>
+        <Trophy className="h-5 w-5 text-primary" />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {simulados.map((sim) => {
+          const percentage = pct(sim.score, max);
+          return (
+            <div key={sim.label} className="rounded-xl bg-slate-50 p-3 text-center">
+              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{sim.label}</span>
+              {sim.score !== null ? (
+                <span className="mt-1 block text-base font-black text-slate-950 tabular-nums">
+                  {sim.score}
+                  <span className="text-[10px] text-slate-400">/{max}</span>
+                </span>
+              ) : (
+                <span className="mt-1 block text-[10px] font-bold text-slate-300">Pendente</span>
+              )}
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${percentage ?? 0}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, detail, icon: Icon }: { label: string; value: number; detail?: string; icon: any }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+          <p className="text-xl font-black text-slate-950 tabular-nums">
+            {value}
+            {detail && <span className="ml-2 text-xs font-bold text-slate-400">{detail}</span>}
           </p>
-        ) : (
-          <p className="font-bold text-sm text-slate-300">Ainda não realizado</p>
-        )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SimplifiedEnemReport({ entries }: { entries: EnemReportCard[] }) {
+  const first = entries[0];
+  const latest = entries[entries.length - 1];
+  const latestClassPct = pct(latest?.classificatoria_score, latest?.classificatoria_max);
+  const latestSimAvg = avg([latest?.simulado_1_score, latest?.simulado_2_score, latest?.simulado_3_score]);
+  const latestSimPct = pct(latestSimAvg, latest?.simulado_max);
+  const redacaoPct = pct(latest?.redacao_score, latest?.redacao_max);
+  const firstClassPct = pct(first?.classificatoria_score, first?.classificatoria_max);
+  const delta = latestClassPct !== null && firstClassPct !== null ? latestClassPct - firstClassPct : null;
+  const status = statusFromPct(latestClassPct);
+  const rankedSubjects = subjectScores(latest).sort((a, b) => b.score - a.score);
+  const strengths = rankedSubjects.slice(0, 3);
+  const attention = rankedSubjects.slice(-3).reverse();
+  const faltas = (latest?.absences_1sem ?? 0) + (latest?.absences_2sem ?? 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-[1.75rem] border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Resumo simples</p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{status.title}</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">{status.text}</p>
+            </div>
+            <div className={`rounded-2xl px-5 py-4 text-center ${status.tone === "emerald" ? "bg-emerald-50 text-emerald-700" : status.tone === "amber" ? "bg-amber-50 text-amber-700" : status.tone === "red" ? "bg-red-50 text-red-600" : "bg-slate-50 text-slate-600"}`}>
+              <p className="text-[10px] font-black uppercase tracking-wider">Nota geral</p>
+              <p className="text-3xl font-black tabular-nums">{latestClassPct ?? "--"}%</p>
+            </div>
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <SimpleMiniCard label="Prova" value={`${latestClassPct ?? "--"}%`} detail={delta !== null ? `${delta >= 0 ? "+" : ""}${delta} pontos desde o inicio` : "Sem comparativo"} />
+            <SimpleMiniCard label="Simulados" value={`${latestSimPct ?? "--"}%`} detail={latestSimAvg !== null ? `Media ${latestSimAvg}` : "Sem simulados"} />
+            <SimpleMiniCard label={LABELS.redacao} value={latest?.redacao_score !== null ? `${latest.redacao_score}` : "--"} detail={redacaoPct !== null ? `${redacaoPct}% do total` : "Sem redacao"} />
+          </div>
+        </div>
+
+        <div className="rounded-[1.75rem] border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">Frequencia</h3>
+          </div>
+          <p className="text-4xl font-black text-slate-950 tabular-nums">{faltas}</p>
+          <p className="mt-1 text-sm font-semibold text-slate-500">faltas registradas no boletim atual.</p>
+          <div className="mt-4 rounded-2xl bg-slate-50 p-3 text-sm font-bold text-slate-600">
+            {faltas <= 2 ? "Frequencia boa. Continue assim." : "Vale acompanhar as faltas para nao prejudicar a rotina."}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <SimpleSubjectList title="Maiores afinidades" description="Materias em que o aluno esta mais forte." subjects={strengths} tone="good" />
+        <SimpleSubjectList title="Pontos de atencao" description="Materias que merecem mais estudo." subjects={attention} tone="attention" />
+      </div>
+    </div>
+  );
+}
+
+function SimpleMiniCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="mt-1 text-2xl font-black text-slate-950 tabular-nums">{value}</p>
+      <p className="text-xs font-semibold text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function SimpleSubjectList({
+  title,
+  description,
+  subjects,
+  tone,
+}: {
+  title: string;
+  description: string;
+  subjects: Array<(typeof ENEM_SUBJECTS)[number] & { score: number }>;
+  tone: "good" | "attention";
+}) {
+  return (
+    <div className="rounded-[1.75rem] border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="mb-4">
+        <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">{title}</h3>
+        <p className="text-xs font-semibold text-slate-500">{description}</p>
+      </div>
+      <div className="space-y-2">
+        {subjects.map((subject, index) => {
+          const Icon = subject.icon;
+          return (
+            <div key={subject.key} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone === "good" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-black text-slate-900">{index + 1}. {subject.label}</p>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white">
+                  <div className={`h-full rounded-full ${tone === "good" ? "bg-emerald-500" : "bg-amber-500"}`} style={{ width: `${Math.min(100, subject.score * 10)}%` }} />
+                </div>
+              </div>
+              <span className="text-sm font-black text-slate-950 tabular-nums">{subject.score}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SimpleEtecReport({ entries }: { entries: EtecReportCard[] }) {
+  const first = entries[0];
+  const latest = entries[entries.length - 1];
+  const classPct = pct(latest?.classificatoria_score, latest?.classificatoria_max);
+  const simPct = pct(latest?.simulado_score, latest?.simulado_max);
+  const firstPct = pct(first?.classificatoria_score, first?.classificatoria_max);
+  const delta = classPct !== null && firstPct !== null ? classPct - firstPct : null;
+  const status = statusFromPct(classPct);
+
+  return (
+    <div className="rounded-[1.75rem] border border-slate-100 bg-white p-5 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Resumo simples</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <SimpleMiniCard label="Situacao" value={status.title} detail={status.text} />
+        <SimpleMiniCard label={LABELS.classificatoria} value={`${classPct ?? "--"}%`} detail={delta !== null ? `${delta >= 0 ? "+" : ""}${delta} pontos desde o inicio` : "Sem comparativo"} />
+        <SimpleMiniCard label="Simulado" value={`${simPct ?? "--"}%`} detail="Resultado mais recente" />
+      </div>
+    </div>
+  );
+}
+
+function SubjectGrid({ enem }: { enem: EnemReportCard }) {
+  return (
+    <div className="rounded-[1.75rem] border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">Desempenho por materia</h3>
+          <p className="text-xs font-semibold text-slate-500">Notas do semestre selecionado.</p>
+        </div>
+        <Sparkles className="h-5 w-5 text-primary" />
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {ENEM_SUBJECTS.map((subject) => {
+          const score = enem[subject.key] as number | null;
+          const Icon = subject.icon;
+          const width = typeof score === "number" ? Math.min(100, score * 10) : 0;
+
+          return (
+            <div key={subject.key} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-primary shadow-sm">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className="truncate text-xs font-bold text-slate-700">{subject.label}</span>
+                </div>
+                {score !== null && score !== undefined ? (
+                  <span className="text-sm font-black text-slate-950 tabular-nums">{score}</span>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-300">Pendente</span>
+                )}
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white">
+                <div className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400" style={{ width: `${width}%` }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 export default function ReportCardPage() {
-  const { user } = useAuth();
-  const [entries, setEntries] = useState<ReportCard[]>([]);
+  const { user, profile, loading: authLoading } = useAuth();
+  const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [track, setTrack] = useState<"enem" | "etec">("enem");
+  const [mode, setMode] = useState<"simple" | "complete">("simple");
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || authLoading) return;
     let active = true;
     (async () => {
       setLoading(true);
       try {
+        const rawTarget = (profile?.exam_target || user?.user_metadata?.exam_target || "enem").toLowerCase();
+        const currentTrack = rawTarget.includes("etec") ? "etec" : "enem";
+        setTrack(currentTrack);
+
+        const table = currentTrack === "etec" ? "report_card_entries" : "report_card_entries_enem";
         const { data, error } = await supabase
-          .from("report_card_entries")
+          .from(table)
           .select("*")
           .eq("student_id", user.id)
           .order("semester", { ascending: true });
-        if (!error && active) setEntries((data as ReportCard[]) ?? []);
+
+        if (!error && active) {
+          setEntries(data ?? []);
+        }
       } catch (e) {
         console.error("Erro ao carregar boletim:", e);
       } finally {
         if (active) setLoading(false);
       }
     })();
-    return () => { active = false; };
-  }, [user]);
+    return () => {
+      active = false;
+    };
+  }, [user, profile, authLoading]);
 
-  if (loading) {
+  const enemEntries = useMemo(() => (track === "enem" ? (entries as EnemReportCard[]) : []), [entries, track]);
+  const latestEnem = enemEntries[enemEntries.length - 1];
+
+  if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -79,64 +375,155 @@ export default function ReportCardPage() {
     );
   }
 
-  if (entries.length === 0) {
+  const hasPdf1 = !!profile?.report_card_pdf_url_1sem;
+  const hasPdf2 = !!profile?.report_card_pdf_url_2sem;
+  const hasPdfs = hasPdf1 || hasPdf2;
+
+  if (entries.length === 0 && !hasPdfs) {
     return (
-      <div className="max-w-2xl mx-auto text-center py-20 px-4">
-        <GraduationCap className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-        <p className="text-slate-500 font-semibold text-sm">
-          Seu boletim ainda não foi lançado. Assim que a secretaria publicar, ele aparece aqui automaticamente.
+      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+        <GraduationCap className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+        <p className="text-sm font-semibold text-slate-500">
+          Seu boletim ainda nao foi lancado. Assim que a secretaria publicar, ele aparece aqui automaticamente.
         </p>
       </div>
     );
   }
 
-  const entry = entries[0];
-  const trackLabel = entry.track === "enem" ? "Vestibulinho ENEM" : "Vestibulinho ETEC";
+  const trackLabel = track === "enem" ? "Vestibulinho ENEM" : "Vestibulinho ETEC";
+  const colegio = entries[0]?.colegio || profile?.institution;
+  const sala = entries[0]?.sala || profile?.sala;
+  const turno = formatTurno(entries[0]?.turno || profile?.turno);
+  const latestClassPct = latestEnem ? pct(latestEnem.classificatoria_score, latestEnem.classificatoria_max) : null;
+  const latestSimAvg = latestEnem ? avg([latestEnem.simulado_1_score, latestEnem.simulado_2_score, latestEnem.simulado_3_score]) : null;
+  const latestSimPct = latestEnem ? pct(latestSimAvg, latestEnem.simulado_max) : null;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-10 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-[2rem] aurora-dark p-6 md:p-8 text-white shadow-xl">
-        <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
-        <div className="relative z-10">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30">
-            <GraduationCap className="h-3 w-3" />
-            {trackLabel}
-          </span>
-          <h1 className="font-black italic text-2xl md:text-3xl tracking-tighter mt-3">Meu Boletim</h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-white/60 text-xs font-medium">
-            {entry.colegio && <span className="flex items-center gap-1"><School className="h-3 w-3" />{entry.colegio}</span>}
-            {entry.sala && <span>Sala {entry.sala}</span>}
-            {entry.turno && <span>{entry.turno}</span>}
+    <div className="mx-auto max-w-5xl space-y-6 pb-10 animate-in fade-in duration-500">
+      <div className="relative overflow-hidden rounded-[2rem] aurora-dark p-6 text-white shadow-xl md:p-8">
+        <div className="absolute inset-0 dot-grid opacity-20" />
+        <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300">
+              <GraduationCap className="h-3 w-3" />
+              {trackLabel}
+            </span>
+            <h1 className="mt-3 text-3xl font-black italic tracking-tighter md:text-4xl">Meu Boletim</h1>
+            <p className="mt-2 max-w-xl text-sm font-semibold text-white/60">
+              Escolha uma leitura simples ou uma visao completa do desempenho.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-white/65">
+              {colegio && (
+                <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5">
+                  <School className="h-3 w-3" />
+                  {colegio}
+                </span>
+              )}
+              {sala && <span className="rounded-full bg-white/10 px-3 py-1.5">Sala {sala}</span>}
+              {turno && <span className="rounded-full bg-white/10 px-3 py-1.5">{turno}</span>}
+            </div>
           </div>
+          {track === "enem" && latestEnem && (
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard label={LABELS.classificatoria} value={`${latestClassPct ?? 0}%`} hint={LABELS.ultimo} icon={TrendingUp} />
+              <MetricCard label="Simulados" value={`${latestSimPct ?? 0}%`} hint={LABELS.media} icon={Trophy} />
+            </div>
+          )}
         </div>
       </div>
 
-      {entries.map((e) => (
-        <div key={e.id} className="space-y-3">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">
-            {e.semester}º Semestre
+      <div className="flex rounded-2xl border border-slate-100 bg-white p-1 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setMode("simple")}
+          className={`flex-1 rounded-xl px-4 py-3 text-sm font-black transition-all ${mode === "simple" ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
+        >
+          Boletim simplificado
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("complete")}
+          className={`flex-1 rounded-xl px-4 py-3 text-sm font-black transition-all ${mode === "complete" ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
+        >
+          Boletim completo
+        </button>
+      </div>
+
+      {hasPdfs && (
+        <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-md">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Boletins oficiais em PDF</h3>
+          </div>
+          <p className="mt-2 text-xs font-semibold text-slate-500">
+            Baixe a versao oficial em PDF assinada e disponibilizada pela secretaria.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <ScoreCard label="Classificatória" score={e.classificatoria_score} max={e.classificatoria_max} icon={TrendingUp} />
-            <ScoreCard label="Simulado" score={e.simulado_score} max={e.simulado_max} icon={TrendingUp} />
-            {e.track === "enem" && (
-              <ScoreCard label="Redação" score={e.redacao_score} max={e.redacao_max} icon={GraduationCap} />
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            {hasPdf1 && (
+              <a href={profile.report_card_pdf_url_1sem} target="_blank" rel="noopener noreferrer" className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 text-sm font-bold text-slate-700 transition-all hover:bg-slate-100">
+                <FileText className="h-4 w-4 text-red-500" />
+                Baixar boletim - 1o semestre
+              </a>
             )}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Calendar className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Faltas</p>
-                <p className="font-black text-lg text-slate-900 tabular-nums">
-                  {e.absences_1sem ?? 0}
-                  {e.absences_2sem !== null && <span className="text-slate-400 text-sm"> · {e.absences_2sem} (2º sem)</span>}
-                </p>
-              </div>
-            </div>
+            {hasPdf2 && (
+              <a href={profile.report_card_pdf_url_2sem} target="_blank" rel="noopener noreferrer" className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 text-sm font-bold text-slate-700 transition-all hover:bg-slate-100">
+                <FileText className="h-4 w-4 text-red-500" />
+                Baixar boletim - 2o semestre
+              </a>
+            )}
           </div>
         </div>
-      ))}
+      )}
+
+      {mode === "simple" ? (
+        track === "enem" && enemEntries.length > 0 ? (
+          <SimplifiedEnemReport entries={enemEntries} />
+        ) : (
+          <SimpleEtecReport entries={entries as EtecReportCard[]} />
+        )
+      ) : (
+        <>
+          {track === "enem" && enemEntries.length > 0 && <EnemInsights entries={enemEntries} />}
+
+          {entries.map((entry) => {
+            if (track === "enem") {
+              const enem = entry as EnemReportCard;
+              return (
+                <section key={enem.id} className="space-y-4">
+                  <p className="px-1 text-xs font-black uppercase tracking-widest text-slate-400">
+                    {enem.semester}o semestre
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <ScoreCard label={LABELS.classificatoria} score={enem.classificatoria_score} max={enem.classificatoria_max} icon={TrendingUp} />
+                    <ScoreCard label={LABELS.redacao} score={enem.redacao_score} max={enem.redacao_max} icon={GraduationCap} />
+                    <SimuladoCard score1={enem.simulado_1_score} score2={enem.simulado_2_score} score3={enem.simulado_3_score} max={enem.simulado_max} />
+                    <StatCard label="Faltas" value={enem.absences_1sem ?? 0} detail={enem.absences_2sem !== null ? `${enem.absences_2sem} no 2o sem` : undefined} icon={Calendar} />
+                    <StatCard label={LABELS.saidas} value={enem.early_departures_1sem ?? 0} detail={enem.early_departures_2sem !== null ? `${enem.early_departures_2sem} no 2o sem` : undefined} icon={ArrowLeftRight} />
+                  </div>
+
+                  <SubjectGrid enem={enem} />
+                </section>
+              );
+            }
+
+            const etec = entry as EtecReportCard;
+            return (
+              <section key={etec.id} className="space-y-4">
+                <p className="px-1 text-xs font-black uppercase tracking-widest text-slate-400">
+                  {etec.semester}o semestre
+                </p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <ScoreCard label={LABELS.classificatoria} score={etec.classificatoria_score} max={etec.classificatoria_max} icon={TrendingUp} />
+                  <ScoreCard label="Simulado" score={etec.simulado_score} max={etec.simulado_max} icon={TrendingUp} />
+                  {etec.track === "enem" && <ScoreCard label={LABELS.redacao} score={etec.redacao_score} max={etec.redacao_max} icon={GraduationCap} />}
+                  <StatCard label="Faltas" value={etec.absences_1sem ?? 0} detail={etec.absences_2sem !== null ? `${etec.absences_2sem} no 2o sem` : undefined} icon={Calendar} />
+                </div>
+              </section>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }
