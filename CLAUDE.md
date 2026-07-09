@@ -139,6 +139,9 @@ Fases:
 2. **Reset self-service por SMS OTP:** ✅ **IMPLEMENTADO** — aluno informa o nome → servidor acha a conta → envia
    OTP ao telefone cadastrado → valida OTP → permite trocar a senha. Integração com provedor SMS
    (Twilio). Detalhes da implementação em `docs/superpowers/plans/2026-07-08-forgot-password-sms-otp.md`.
+   ⚠️ Pendente: a action `search` (usada pelo fluxo de primeiro acesso, separada da recuperação por
+   SMS) ainda devolve `userId`/`email` e permite enumeração de usuários — blindar antes de expor
+   publicamente.
 3. **Fallback permanente (os dois):** quem não tem telefone → a **secretaria reseta direto**
    pelo painel **ou** **gera link de recuperação** (`generate-link`), à escolha dela. Adequado
    para cursinho presencial (prova de identidade offline). *(Pendente)*
