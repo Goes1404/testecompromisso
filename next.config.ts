@@ -32,21 +32,13 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: false, // Performance boost
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons', 'clsx', 'tailwind-merge'],
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons', 'clsx', 'tailwind-merge', 'recharts', 'date-fns'],
   },
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      config.optimization.splitChunks.cacheGroups = {
-        ...config.optimization.splitChunks.cacheGroups,
-        commons: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
-        },
-      };
-    }
-    return config;
-  },
+  // Sem override de splitChunks: o cacheGroup "vendors" com chunks:'all' que
+  // existia aqui fundia TODOS os node_modules num chunk único de ~515 kB pago
+  // por todas as rotas (recharts entrava até em página sem gráfico). O
+  // chunking padrão do Next divide vendor por página, que é o comportamento
+  // que queremos no mobile.
 };
 
 export default nextConfig;

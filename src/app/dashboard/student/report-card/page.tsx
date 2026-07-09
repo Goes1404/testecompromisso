@@ -401,20 +401,18 @@ export default function ReportCardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-10 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-[2rem] aurora-dark text-white shadow-xl">
-        <div className="relative w-full h-36 md:h-44">
-          <Image
-            src="/images/updates/boletim_update.png"
-            alt="Meu Boletim"
-            fill
-            sizes="(max-width: 768px) 100vw, 1024px"
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-        </div>
-        <div className="absolute inset-0 dot-grid opacity-10 pointer-events-none" />
-        <div className="relative z-10 p-6 md:p-8 -mt-4 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
+      <div className="relative overflow-hidden rounded-[2rem] aurora-dark p-6 text-white shadow-xl md:p-8">
+        <Image
+          src="/images/updates/boletim_update.png"
+          alt="Meu Boletim"
+          fill
+          sizes="(max-width: 768px) 100vw, 1024px"
+          className="object-cover opacity-25"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/35" />
+        <div className="absolute inset-0 dot-grid opacity-20" />
+        <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300">
               <GraduationCap className="h-3 w-3" />

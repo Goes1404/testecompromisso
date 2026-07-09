@@ -161,6 +161,8 @@ const adminItems: NavItem[] = [
     children: [
       { icon: BookMarked,    label: "Provas PDF",         href: "/dashboard/admin/exams",  id: "nav-admin-exams" },
       { icon: ClipboardList, label: "Aprovação de Trilhas", href: "/dashboard/admin/trails", id: "nav-admin-trails" },
+      { icon: Upload,        label: "Importar Boletim",     href: "/dashboard/admin/report-card-import",    id: "nav-admin-report-card-import" },
+      { icon: FileCheck,     label: "Boletins Pendentes",   href: "/dashboard/admin/report-card-approvals", id: "nav-admin-report-card-approvals" },
     ],
   },
   {
@@ -209,6 +211,8 @@ const secretaryItems: NavItem[] = [
       { icon: FolderOpen,     label: "Docs dos Alunos",        href: "/dashboard/secretary/uploads",          id: "nav-secretary-uploads",   badge: true },
       { icon: ClipboardList,  label: "Checklist de Docs",      href: "/dashboard/admin/checklists",           id: "nav-secretary-checklists" },
       { icon: Trophy,         label: "Importar Simulado",      href: "/dashboard/secretary/simulado-import", id: "nav-secretary-simulado" },
+      { icon: Upload,         label: "Importar Boletim",       href: "/dashboard/admin/report-card-import",  id: "nav-secretary-report-card-import" },
+      { icon: FileCheck,      label: "Boletins Pendentes",     href: "/dashboard/secretary/report-card-approvals", id: "nav-secretary-report-card-approvals" },
     ],
   },
   {

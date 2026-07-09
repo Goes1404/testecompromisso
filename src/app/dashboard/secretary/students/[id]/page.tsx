@@ -36,6 +36,7 @@ import {
   ExternalLink,
   Users,
   BarChart3,
+  FileText
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
@@ -107,6 +108,97 @@ export default function StudentDetailPage() {
   const [attTrend, setAttTrend] = useState<{ week: string; pct: number }[]>([]);
   const [uploads, setUploads] = useState<any[]>([]);
   const [checklistCount, setChecklistCount] = useState(0);
+  const [uploading1, setUploading1] = useState(false);
+  const [uploading2, setUploading2] = useState(false);
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>, semester: 1 | 2) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      alert("Selecione um arquivo PDF válido.");
+      return;
+    }
+
+    const setUploading = semester === 1 ? setUploading1 : setUploading2;
+    setUploading(true);
+
+    const path = `${id}/boletim_${semester}sem.pdf`;
+
+    try {
+      const { data, error: uploadError } = await supabase.storage
+        .from("report-cards")
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("report-cards")
+        .getPublicUrl(path);
+
+      const publicUrl = urlData.publicUrl;
+
+      const fieldUrl = semester === 1 ? "report_card_pdf_url_1sem" : "report_card_pdf_url_2sem";
+      const fieldPath = semester === 1 ? "report_card_pdf_path_1sem" : "report_card_pdf_path_2sem";
+
+      const { error: dbError } = await supabase
+        .from("profiles")
+        .update({
+          [fieldUrl]: publicUrl,
+          [fieldPath]: path
+        })
+        .eq("id", id);
+
+      if (dbError) throw dbError;
+
+      setProfile((s: any) => ({
+        ...s,
+        [fieldUrl]: publicUrl,
+        [fieldPath]: path
+      }));
+
+      alert("Boletim em PDF enviado com sucesso!");
+    } catch (err: any) {
+      console.error(err);
+      alert(`Falha ao enviar boletim: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handlePdfDelete = async (semester: 1 | 2) => {
+    if (!confirm("Tem certeza que deseja remover este boletim em PDF?")) return;
+
+    const fieldUrl = semester === 1 ? "report_card_pdf_url_1sem" : "report_card_pdf_url_2sem";
+    const fieldPath = semester === 1 ? "report_card_pdf_path_1sem" : "report_card_pdf_path_2sem";
+    const path = profile[fieldPath];
+
+    try {
+      if (path) {
+        await supabase.storage.from("report-cards").remove([path]);
+      }
+
+      const { error: dbError } = await supabase
+        .from("profiles")
+        .update({
+          [fieldUrl]: null,
+          [fieldPath]: null
+        })
+        .eq("id", id);
+
+      if (dbError) throw dbError;
+
+      setProfile((s: any) => ({
+        ...s,
+        [fieldUrl]: null,
+        [fieldPath]: null
+      }));
+
+      alert("Boletim removido com sucesso!");
+    } catch (err: any) {
+      console.error(err);
+      alert(`Falha ao remover boletim: ${err.message}`);
+    }
+  };
 
   useEffect(() => {
     if (!isUserLoading && userRole !== "staff" && userRole !== "admin") {
@@ -583,6 +675,121 @@ export default function StudentDetailPage() {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Boletins em PDF */}
+          {profile && (
+            <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
+              <CardHeader className="p-6 pb-2">
+                <CardTitle className="text-base font-black text-primary italic flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-indigo-500" />
+                  Boletins Oficiais em PDF
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-2 grid grid-cols-1 gap-4">
+                {/* 1º Semestre */}
+                <div className="border border-slate-100 rounded-2xl p-4 space-y-3 bg-slate-50/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1º Semestre</span>
+                    {profile.report_card_pdf_url_1sem && (
+                      <Badge className="bg-emerald-500 text-white font-black text-[8px] uppercase border-none">Disponível</Badge>
+                    )}
+                  </div>
+                  
+                  {profile.report_card_pdf_url_1sem ? (
+                    <div className="flex flex-col gap-2">
+                      <a
+                        href={profile.report_card_pdf_url_1sem}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-red-500" />
+                        Visualizar Boletim PDF
+                      </a>
+                      <Button
+                        variant="outline"
+                        onClick={() => handlePdfDelete(1)}
+                        className="h-8 w-full rounded-lg text-red-500 border-red-200 hover:bg-red-50 font-bold text-[10px]"
+                      >
+                        Remover Boletim
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="flex flex-col items-center justify-center border border-dashed border-slate-200 rounded-lg h-16 cursor-pointer hover:border-primary/50 transition-colors">
+                        {uploading1 ? (
+                          <Loader2 className="h-4 w-4 text-slate-400 animate-spin" />
+                        ) : (
+                          <>
+                            <FileText className="h-4 w-4 text-slate-400 mb-0.5" />
+                            <span className="text-[10px] font-bold text-slate-500">Enviar PDF</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          className="hidden"
+                          disabled={uploading1}
+                          onChange={(e) => handlePdfUpload(e, 1)}
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2º Semestre */}
+                <div className="border border-slate-100 rounded-2xl p-4 space-y-3 bg-slate-50/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2º Semestre</span>
+                    {profile.report_card_pdf_url_2sem && (
+                      <Badge className="bg-emerald-500 text-white font-black text-[8px] uppercase border-none">Disponível</Badge>
+                    )}
+                  </div>
+                  
+                  {profile.report_card_pdf_url_2sem ? (
+                    <div className="flex flex-col gap-2">
+                      <a
+                        href={profile.report_card_pdf_url_2sem}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-red-500" />
+                        Visualizar Boletim PDF
+                      </a>
+                      <Button
+                        variant="outline"
+                        onClick={() => handlePdfDelete(2)}
+                        className="h-8 w-full rounded-lg text-red-500 border-red-200 hover:bg-red-50 font-bold text-[10px]"
+                      >
+                        Remover Boletim
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="flex flex-col items-center justify-center border border-dashed border-slate-200 rounded-lg h-16 cursor-pointer hover:border-primary/50 transition-colors">
+                        {uploading2 ? (
+                          <Loader2 className="h-4 w-4 text-slate-400 animate-spin" />
+                        ) : (
+                          <>
+                            <FileText className="h-4 w-4 text-slate-400 mb-0.5" />
+                            <span className="text-[10px] font-bold text-slate-500">Enviar PDF</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          className="hidden"
+                          disabled={uploading2}
+                          onChange={(e) => handlePdfUpload(e, 2)}
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )}
