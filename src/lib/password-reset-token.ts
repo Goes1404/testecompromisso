@@ -6,7 +6,7 @@
  *   "<expiry_ms>:<userId>:<hmac_hex_24>"
  */
 
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 function secret(): string {
   const s = process.env.PASSWORD_RESET_TOKEN_SECRET;
@@ -42,7 +42,11 @@ export function verifyResetToken(token: string): ResetTokenResult {
     const payload = `${expiryStr}:${userId}`;
     const expectedSig = createHmac('sha256', secret()).update(payload).digest('hex').substring(0, 24);
 
-    if (sig !== expectedSig) return { status: 'invalid' };
+    const sigBuf = Buffer.from(sig, 'hex');
+    const expectedBuf = Buffer.from(expectedSig, 'hex');
+    if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
+      return { status: 'invalid' };
+    }
     if (Date.now() > expiry) return { status: 'expired' };
 
     return { status: 'valid', userId };
