@@ -224,8 +224,8 @@ export async function POST(request: Request) {
 
       try {
         await createAndSendOtp(supabaseAdmin, match.id, match.phone);
-      } catch (e) {
-        console.error('[IDENTIFY] falha ao enviar SMS:', e);
+      } catch (e: any) {
+        console.error('[IDENTIFY] falha ao enviar SMS (code):', e?.code ?? 'unknown');
         return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
       }
 
@@ -239,6 +239,16 @@ export async function POST(request: Request) {
       if (verified.status !== 'valid') {
         return NextResponse.json({ error: 'Sessão de recuperação expirada. Reinicie o processo.' }, { status: 401 });
       }
+
+      // Anti-takeover: só permite cadastrar telefone se a conta ainda não tiver um.
+      // Caso contrário, um atacante que soubesse nome+data de nascimento da vítima
+      // poderia sobrescrever o telefone dela com o próprio e assumir a conta.
+      const { data: currentProfile } = await supabaseAdmin
+        .from('profiles').select('phone').eq('id', verified.userId).maybeSingle();
+      if (currentProfile?.phone) {
+        return NextResponse.json({ error: 'Sessão de recuperação expirada. Reinicie o processo.' }, { status: 401 });
+      }
+
       if (!phone?.trim() || phone.replace(/\D/g, '').length < 10) {
         return NextResponse.json({ error: 'Informe um telefone válido com DDD.' }, { status: 400 });
       }
@@ -254,8 +264,8 @@ export async function POST(request: Request) {
 
       try {
         await createAndSendOtp(supabaseAdmin, verified.userId, phone.trim());
-      } catch (e) {
-        console.error('[SET_PHONE] falha ao enviar SMS:', e);
+      } catch (e: any) {
+        console.error('[SET_PHONE] falha ao enviar SMS (code):', e?.code ?? 'unknown');
         return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
       }
 
@@ -289,8 +299,8 @@ export async function POST(request: Request) {
 
       try {
         await createAndSendOtp(supabaseAdmin, verified.userId, profile.phone);
-      } catch (e) {
-        console.error('[RESEND] falha ao enviar SMS:', e);
+      } catch (e: any) {
+        console.error('[RESEND] falha ao enviar SMS (code):', e?.code ?? 'unknown');
         return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
       }
 
@@ -318,7 +328,7 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (!otp) {
-        return NextResponse.json({ error: 'Código não encontrado. Reinicie o processo.' }, { status: 400 });
+        return NextResponse.json({ error: 'Código incorreto.' }, { status: 401 });
       }
       if (new Date(otp.expires_at).getTime() < Date.now()) {
         return NextResponse.json({ error: 'Código expirado. Solicite um novo.' }, { status: 400 });
