@@ -51,7 +51,24 @@ Nada bloqueante no código. Falta, fora do escopo de código:
 - Countdown de reenviar código no wizard não limpa o interval ao desmontar o componente — cosmético.
 
 ### Push
-**Nada foi enviado ao remoto ainda.** Branch só existe localmente neste worktree. Decisão de PR vs. merge direto fica com você.
+Branch pushada pro remoto: `worktree-forgot-password-sms-otp` (https://github.com/Goes1404/testecompromisso.git). PR ainda não aberto — decisão de abrir PR vs. merge direto fica com você.
+
+## Amendment pós-push: fluxo reordenado (telefone primeiro)
+
+Depois do push inicial, pedido do dono do produto: telefone vira a chave primária de busca (não nome+nascimento). Fluxo novo:
+
+1. **Tela telefone** (nova, primeira): aluno digita só o telefone → ação `lookup-phone`.
+   - Bate com exatamente 1 conta → manda OTP, vai pra tela de código.
+   - Bate com 0 contas → vai pra tela de fallback (nome+nascimento).
+   - Bate com 2+ contas (telefone compartilhado, ex: responsável de irmãos) → mensagem específica mandando pra secretaria (decisão deliberada do dono do produto, não é bug de anti-enumeração).
+2. **Tela fallback** (só se telefone não achou nada): nome completo + data de nascimento → ação `register-phone`. Mesma trava anti-sequestro de antes: resposta genérica idêntica tanto pra "não achou" quanto pra "achou mas já tem telefone" — evita reintroduzir o bug que já foi corrigido antes nesse branch.
+3. **Tela código+senha**: inalterada.
+
+Ações `identify`/`set-phone` foram REMOVIDAS da rota, substituídas por `lookup-phone`/`register-phone`. Ações `search`/`resend`/`confirm`/`register` não foram tocadas.
+
+Commit: `dc9c94b` — revisado e aprovado (checagens de segurança específicas: trava anti-sequestro com resposta única, caso de telefone ambíguo não vaza detalhe de conta, rate limit por hash do telefone normalizado).
+
+**Ainda não pushado** este commit de amendment — fazer `git push` de novo quando for continuar.
 
 ## Achados críticos corrigidos na Task 4
 
