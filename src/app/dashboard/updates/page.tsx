@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
 import { fixEncoding } from "@/lib/utils";
-import { Loader2, Sparkles, Wrench, TrendingUp, ImageIcon } from "lucide-react";
+import { Loader2, Sparkles, Wrench, TrendingUp, ImageIcon, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 type UpdateEntry = {
   id: string;
@@ -13,6 +14,8 @@ type UpdateEntry = {
   image_url: string | null;
   tag: "feature" | "improvement" | "bugfix";
   created_at: string;
+  link_url: string | null;
+  link_label: string | null;
 };
 
 const TAG_META: Record<UpdateEntry["tag"], { label: string; className: string; icon: any }> = {
@@ -30,7 +33,7 @@ export default function UpdatesPage() {
     (async () => {
       const { data, error } = await supabase
         .from("product_updates")
-        .select("id, title, description, image_url, tag, created_at")
+        .select("id, title, description, image_url, tag, created_at, link_url, link_label")
         .eq("published", true)
         .order("created_at", { ascending: false });
 
@@ -115,6 +118,16 @@ export default function UpdatesPage() {
                   <p className="text-slate-600 text-sm leading-relaxed break-words">
                     {fixEncoding(entry.description)}
                   </p>
+
+                  {entry.link_url && (
+                    <Link
+                      href={entry.link_url}
+                      className="inline-flex items-center gap-1.5 mt-1 text-xs font-black uppercase tracking-wide text-primary hover:gap-2.5 transition-all"
+                    >
+                      {entry.link_label ? fixEncoding(entry.link_label) : "Ver agora"}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  )}
                 </div>
               </article>
             );
