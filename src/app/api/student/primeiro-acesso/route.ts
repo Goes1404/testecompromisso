@@ -24,6 +24,13 @@ function maskPhone(phone: string): string {
   return `***-${digits.slice(-4)}`;
 }
 
+// Telefone em dígitos puros, sem DDI 55, para comparar formatos diferentes.
+function normalizePhoneDigits(p: string): string {
+  let d = (p || '').replace(/\D/g, '');
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+  return d;
+}
+
 async function createAndSendOtp(admin: any, userId: string, phone: string) {
   const code = generateOtpCode();
   const codeHash = hashOtpCode(code);
@@ -163,14 +170,86 @@ export async function POST(request: Request) {
       }
     }
 
-    // AÇÃO: IDENTIFICAR (passo 1 do wizard de recuperação por SMS)
-    // Verifica nome+data de nascimento contra o cadastro (mesmo rate-limit de antes).
-    // Se achar telefone cadastrado, já dispara o OTP. Senão, sinaliza needsPhone.
-    if (action === 'identify') {
-      const { fullName, birthDate } = body;
+    // AÇÃO: BUSCAR POR TELEFONE (passo 1 do wizard de recuperação por SMS)
+    // O telefone é a chave primária: quem tem o aparelho prova posse via OTP.
+    // Nome+nascimento só entra como fallback (action register-phone) quando o
+    // telefone não bate com nenhuma conta, permitindo cadastrar telefone novo.
+    if (action === 'lookup-phone') {
+      const { phone } = body;
+      if (!phone?.trim() || phone.replace(/\D/g, '').length < 10) {
+        return NextResponse.json({ error: 'Informe um telefone válido com DDD.' }, { status: 400 });
+      }
 
-      if (!fullName?.trim() || !birthDate?.trim()) {
-        return NextResponse.json({ error: 'Preencha nome e data de nascimento.' }, { status: 400 });
+      const ip = getClientIp(request);
+      const inputDigits = normalizePhoneDigits(phone);
+      const idHash = hashIdentifier(inputDigits);
+
+      if (await checkRecoverRateLimit(supabaseAdmin, ip, idHash)) {
+        return NextResponse.json(
+          { error: 'Muitas tentativas. Por segurança, aguarde 1 hora ou procure a secretaria.' },
+          { status: 429 }
+        );
+      }
+
+      // Estreita candidatos pelos últimos 8 dígitos antes de comparar exato em JS
+      // (telefone não é normalizado no banco, então formatos variam).
+      const last8 = inputDigits.slice(-8);
+      const { data: candidates, error: searchErr } = await supabaseAdmin
+        .from('profiles')
+        .select('id, phone')
+        .ilike('phone', `%${last8}%`)
+        .limit(10);
+
+      if (searchErr) {
+        console.error('[LOOKUP_PHONE] erro na busca:', searchErr);
+        throw searchErr;
+      }
+
+      const matches = (candidates || []).filter((c: any) =>
+        c.phone && normalizePhoneDigits(c.phone) === inputDigits
+      );
+
+      if (matches.length === 0) {
+        await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
+        return NextResponse.json({ found: false });
+      }
+
+      if (matches.length > 1) {
+        // Telefone compartilhado entre contas (ex: responsável de dois irmãos) —
+        // não dá pra saber qual conta resetar. Manda pra secretaria.
+        await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
+        return NextResponse.json(
+          { error: 'Este telefone está associado a mais de uma conta. Procure a secretaria para redefinir.' },
+          { status: 409 }
+        );
+      }
+
+      await recordRecoverAttempt(supabaseAdmin, ip, idHash, true);
+      const match = matches[0];
+      const resetToken = generateResetToken(match.id);
+
+      try {
+        await createAndSendOtp(supabaseAdmin, match.id, match.phone);
+      } catch (e: any) {
+        console.error('[LOOKUP_PHONE] falha ao enviar SMS (code):', e?.code ?? 'unknown');
+        return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
+      }
+
+      return NextResponse.json({ resetToken, maskedPhone: maskPhone(match.phone) });
+    }
+
+    // AÇÃO: CADASTRAR TELEFONE (fallback, só quando lookup-phone não achou nada)
+    // Prova de identidade por nome+data de nascimento (mesmo padrão já usado em
+    // outros fluxos), só permite cadastrar se a conta ainda não tiver telefone.
+    if (action === 'register-phone') {
+      const { fullName, birthDate, phone } = body;
+
+      if (!fullName?.trim() || !birthDate?.trim() || !phone?.trim()) {
+        return NextResponse.json({ error: 'Preencha nome, data de nascimento e telefone.' }, { status: 400 });
+      }
+      const inputDigits = normalizePhoneDigits(phone);
+      if (inputDigits.length < 10) {
+        return NextResponse.json({ error: 'Informe um telefone válido com DDD.' }, { status: 400 });
       }
 
       const ip = getClientIp(request);
@@ -192,7 +271,7 @@ export async function POST(request: Request) {
         .limit(10);
 
       if (searchErr) {
-        console.error('[IDENTIFY] erro na busca:', searchErr);
+        console.error('[REGISTER_PHONE] erro na busca:', searchErr);
         throw searchErr;
       }
 
@@ -201,7 +280,9 @@ export async function POST(request: Request) {
         c.birth_date && String(c.birth_date).slice(0, 10) === inputBirth
       );
 
-      if (!match) {
+      // Anti-takeover: mesma mensagem genérica tanto pra "não achou" quanto pra
+      // "achou mas a conta já tem telefone" — não revela qual dos dois aconteceu.
+      if (!match || match.phone) {
         await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
         return NextResponse.json(
           { error: 'Os dados não conferem com nenhum cadastro. Confira nome e data de nascimento — ou procure a secretaria.' },
@@ -210,60 +291,26 @@ export async function POST(request: Request) {
       }
 
       await recordRecoverAttempt(supabaseAdmin, ip, idHash, true);
-      const resetToken = generateResetToken(match.id);
-
-      if (!match.phone) {
-        return NextResponse.json({ resetToken, needsPhone: true });
-      }
-
-      try {
-        await createAndSendOtp(supabaseAdmin, match.id, match.phone);
-      } catch (e: any) {
-        console.error('[IDENTIFY] falha ao enviar SMS (code):', e?.code ?? 'unknown');
-        return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
-      }
-
-      return NextResponse.json({ resetToken, maskedPhone: maskPhone(match.phone) });
-    }
-
-    // AÇÃO: CADASTRAR TELEFONE (passo 1b, só quando needsPhone)
-    if (action === 'set-phone') {
-      const { resetToken, phone } = body;
-      const verified = verifyResetToken(resetToken);
-      if (verified.status !== 'valid') {
-        return NextResponse.json({ error: 'Sessão de recuperação expirada. Reinicie o processo.' }, { status: 401 });
-      }
-
-      // Anti-takeover: só permite cadastrar telefone se a conta ainda não tiver um.
-      // Caso contrário, um atacante que soubesse nome+data de nascimento da vítima
-      // poderia sobrescrever o telefone dela com o próprio e assumir a conta.
-      const { data: currentProfile } = await supabaseAdmin
-        .from('profiles').select('phone').eq('id', verified.userId).maybeSingle();
-      if (currentProfile?.phone) {
-        return NextResponse.json({ error: 'Sessão de recuperação expirada. Reinicie o processo.' }, { status: 401 });
-      }
-
-      if (!phone?.trim() || phone.replace(/\D/g, '').length < 10) {
-        return NextResponse.json({ error: 'Informe um telefone válido com DDD.' }, { status: 400 });
-      }
 
       const { error: updateErr } = await supabaseAdmin
         .from('profiles')
         .update({ phone: phone.trim() })
-        .eq('id', verified.userId);
+        .eq('id', match.id);
       if (updateErr) {
-        console.error('[SET_PHONE] erro ao salvar telefone:', updateErr);
+        console.error('[REGISTER_PHONE] erro ao salvar telefone:', updateErr);
         throw updateErr;
       }
 
+      const resetToken = generateResetToken(match.id);
+
       try {
-        await createAndSendOtp(supabaseAdmin, verified.userId, phone.trim());
+        await createAndSendOtp(supabaseAdmin, match.id, phone.trim());
       } catch (e: any) {
-        console.error('[SET_PHONE] falha ao enviar SMS (code):', e?.code ?? 'unknown');
+        console.error('[REGISTER_PHONE] falha ao enviar SMS (code):', e?.code ?? 'unknown');
         return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
       }
 
-      return NextResponse.json({ maskedPhone: maskPhone(phone.trim()) });
+      return NextResponse.json({ resetToken, maskedPhone: maskPhone(phone.trim()) });
     }
 
     // AÇÃO: REENVIAR CÓDIGO
