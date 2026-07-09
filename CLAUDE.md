@@ -113,7 +113,7 @@ servidor+cliente e rotação de segredo (decisão do time):
 | Sev | Local | Problema |
 |-----|-------|----------|
 | ✅ CORRIGIDO | `api/auth/reset-password`, `api/admin/{create-user,delete-user,generate-link,generate-registration-link}` | Antes protegidas só pela string fixa `'compromisso2026'`. **Agora exigem sessão de admin/staff via `requireAdminUser()`.** ⚠️ Ainda falta: rotacionar a senha `'compromisso2026'` (é também `DEFAULT_PASSWORD` de novos usuários) e limpar os literais inertes `masterPassword` nos clientes. |
-| 🔴 CRÍTICO | `api/student/primeiro-acesso` (action `reset` + `search`) | Reset de senha de **qualquer** usuário sem autenticação nem prova de identidade (CPF/nascimento); `search` enumera usuários. **Fix:** exigir prova de identidade + rate limit. |
+| 🟡 MÉDIO | `api/student/primeiro-acesso` (action `search`) | `search` (usada pelo fluxo de primeiro acesso) ainda devolve `userId`/`email` e permite enumeração de usuários. O reset de senha (`identify`/`confirm`) já exige prova de identidade + SMS OTP + rate limit (ver Fase 2 do plano de recuperação). **Fix:** blindar `search` para não devolver dados identificáveis. |
 | 🟠 ALTO | `lib/registration-token.ts` | HMAC dos tokens de cadastro usa a própria `SUPABASE_SERVICE_ROLE_KEY` como chave. Usar segredo dedicado (`REGISTRATION_TOKEN_SECRET`). |
 | 🟠 ALTO | `api/student/weekly-summary` | IDOR: lê dados de qualquer `userId` do body com service role. |
 | 🟡 MÉDIO | `api/push/notify` (branch `chat`) | Usuário autenticado pode enviar push com conteúdo arbitrário a qualquer `receiverId`. |
@@ -123,7 +123,7 @@ servidor+cliente e rotação de segredo (decisão do time):
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
 novos usuários) e migrar as rotas acima para `requireAdminUser()`.
 
-### 📱 Plano: reset de senha & primeiro acesso (telefone + SMS) — NÃO IMPLEMENTADO
+### 📱 Plano: reset de senha & primeiro acesso (telefone + SMS) — FASE 2 IMPLEMENTADA
 
 Decisão de produto: **não armazenar CPF**; usar **telefone** como base da recuperação
 (minimização de dados / LGPD). Observação importante: os e-mails `@compromisso.com` são
@@ -132,17 +132,19 @@ sintéticos (login interno, sem caixa de e-mail real), então recuperação por 
 **Princípio de segurança:** o telefone NÃO é segredo. Nunca validar "digitando o número".
 A prova de identidade é **posse do aparelho** → enviar **OTP via SMS para o número já cadastrado**.
 
-Fases (nenhuma implementada ainda):
+Fases:
 1. **Telefone obrigatório (gate):** transformar o card "Cadastre seu Telefone" da home num
    bloqueio igual ao `must_change_password` — sem telefone, não acessa o dashboard. Grátis,
-   não depende de SMS, faz a cobertura de telefone tender a 100% com o tempo.
-2. **Reset self-service por SMS OTP:** aluno informa o nome → servidor acha a conta → envia
-   OTP ao telefone cadastrado → valida OTP → permite trocar a senha. Requer provedor SMS
-   (Twilio/Zenvia). Ao implementar, **blindar `api/student/primeiro-acesso`**: a action `search`
-   deve parar de devolver `userId`/`email` (enumeração); responder só "OTP enviado para ***-1234".
+   não depende de SMS, faz a cobertura de telefone tender a 100% com o tempo. *(Pendente)*
+2. **Reset self-service por SMS OTP:** ✅ **IMPLEMENTADO** — aluno informa o nome → servidor acha a conta → envia
+   OTP ao telefone cadastrado → valida OTP → permite trocar a senha. Integração com provedor SMS
+   (Twilio). Detalhes da implementação em `docs/superpowers/plans/2026-07-08-forgot-password-sms-otp.md`.
+   ⚠️ Pendente: a action `search` (usada pelo fluxo de primeiro acesso, separada da recuperação por
+   SMS) ainda devolve `userId`/`email` e permite enumeração de usuários — blindar antes de expor
+   publicamente.
 3. **Fallback permanente (os dois):** quem não tem telefone → a **secretaria reseta direto**
    pelo painel **ou** **gera link de recuperação** (`generate-link`), à escolha dela. Adequado
-   para cursinho presencial (prova de identidade offline).
+   para cursinho presencial (prova de identidade offline). *(Pendente)*
 
 ### Já corrigido nesta auditoria (mudanças seguras, sem quebrar fluxo)
 - Open-redirect em `auth/callback` (valida `next` interno).
@@ -173,6 +175,10 @@ Fases (nenhuma implementada ainda):
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 OPENAI_API_KEY  (server-side only)
+PASSWORD_RESET_TOKEN_SECRET  (server-side only — secret dedicado do wizard de recuperação por SMS)
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_PHONE_NUMBER
 ```
 
 ## 📌 Pastas Importantes

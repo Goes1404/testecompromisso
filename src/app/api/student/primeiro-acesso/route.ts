@@ -2,8 +2,48 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { verifyRegistrationToken } from '@/lib/registration-token';
 import crypto from 'crypto';
+import { generateResetToken, verifyResetToken } from '@/lib/password-reset-token';
+import { sendOtpSms } from '@/lib/sms';
 
 const SUPABASE_TIMEOUT_MS = 10_000;
+
+const OTP_EXPIRY_MINUTES = 5;
+const OTP_MAX_ATTEMPTS = 5;
+const OTP_RESEND_COOLDOWN_MS = 60_000;
+
+function generateOtpCode(): string {
+  return String(crypto.randomInt(100000, 1000000));
+}
+
+function hashOtpCode(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex');
+}
+
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  return `***-${digits.slice(-4)}`;
+}
+
+// Telefone em dígitos puros, sem DDI 55, para comparar formatos diferentes.
+function normalizePhoneDigits(p: string): string {
+  let d = (p || '').replace(/\D/g, '');
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+  return d;
+}
+
+async function createAndSendOtp(admin: any, userId: string, phone: string) {
+  const code = generateOtpCode();
+  const codeHash = hashOtpCode(code);
+  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
+
+  await admin.from('password_reset_otps').insert({
+    user_id: userId,
+    code_hash: codeHash,
+    expires_at: expiresAt,
+  });
+
+  await sendOtpSms(phone, code);
+}
 
 // ── Rate limit do reset self-service ──────────────────────────────────────
 // Por ALVO (hash do nome): trava o chute de data de nascimento num aluno.
@@ -23,12 +63,6 @@ function hashIdentifier(name: string): string {
   return crypto.createHash('sha256').update(norm).digest('hex');
 }
 
-// Telefone como dígitos puros, sem DDI 55, para comparar formatos diferentes.
-function normalizePhone(p: string): string {
-  let d = (p || '').replace(/\D/g, '');
-  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
-  return d;
-}
 
 async function checkRecoverRateLimit(admin: any, ip: string, idHash: string): Promise<boolean> {
   try {
@@ -136,24 +170,20 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. AÇÃO: RECUPERAR SENHA (self-service, com prova de identidade)
-    // Segurança: NÃO confia em userId vindo do cliente. Verifica no servidor
-    // que nome + telefone + data de nascimento batem com o cadastro, com
-    // rate-limit por alvo e por IP. Mensagens genéricas (anti-enumeração).
-    if (action === 'recover') {
-      const { fullName, phone, birthDate, newPassword } = body;
-
-      if (!fullName?.trim() || !phone?.trim() || !birthDate?.trim() || !newPassword || newPassword.length < 8) {
-        return NextResponse.json(
-          { error: 'Preencha todos os campos. A senha precisa de pelo menos 8 caracteres.' },
-          { status: 400 }
-        );
+    // AÇÃO: BUSCAR POR TELEFONE (passo 1 do wizard de recuperação por SMS)
+    // O telefone é a chave primária: quem tem o aparelho prova posse via OTP.
+    // Nome+nascimento só entra como fallback (action register-phone) quando o
+    // telefone não bate com nenhuma conta, permitindo cadastrar telefone novo.
+    if (action === 'lookup-phone') {
+      const { phone } = body;
+      if (!phone?.trim() || phone.replace(/\D/g, '').length < 10) {
+        return NextResponse.json({ error: 'Informe um telefone válido com DDD.' }, { status: 400 });
       }
 
       const ip = getClientIp(request);
-      const idHash = hashIdentifier(fullName);
+      const inputDigits = normalizePhoneDigits(phone);
+      const idHash = hashIdentifier(inputDigits);
 
-      // Rate-limit ANTES de qualquer verificação
       if (await checkRecoverRateLimit(supabaseAdmin, ip, idHash)) {
         return NextResponse.json(
           { error: 'Muitas tentativas. Por segurança, aguarde 1 hora ou procure a secretaria.' },
@@ -161,7 +191,77 @@ export async function POST(request: Request) {
         );
       }
 
-      // Buscar candidatos pelo e-mail gerado (exato) ou pelo nome
+      // Estreita candidatos pelos últimos 8 dígitos antes de comparar exato em JS
+      // (telefone não é normalizado no banco, então formatos variam).
+      const last8 = inputDigits.slice(-8);
+      const { data: candidates, error: searchErr } = await supabaseAdmin
+        .from('profiles')
+        .select('id, phone')
+        .ilike('phone', `%${last8}%`)
+        .limit(10);
+
+      if (searchErr) {
+        console.error('[LOOKUP_PHONE] erro na busca:', searchErr);
+        throw searchErr;
+      }
+
+      const matches = (candidates || []).filter((c: any) =>
+        c.phone && normalizePhoneDigits(c.phone) === inputDigits
+      );
+
+      if (matches.length === 0) {
+        await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
+        return NextResponse.json({ found: false });
+      }
+
+      if (matches.length > 1) {
+        // Telefone compartilhado entre contas (ex: responsável de dois irmãos) —
+        // não dá pra saber qual conta resetar. Manda pra secretaria.
+        await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
+        return NextResponse.json(
+          { error: 'Este telefone está associado a mais de uma conta. Procure a secretaria para redefinir.' },
+          { status: 409 }
+        );
+      }
+
+      await recordRecoverAttempt(supabaseAdmin, ip, idHash, true);
+      const match = matches[0];
+      const resetToken = generateResetToken(match.id);
+
+      try {
+        await createAndSendOtp(supabaseAdmin, match.id, match.phone);
+      } catch (e: any) {
+        console.error('[LOOKUP_PHONE] falha ao enviar SMS (code):', e?.code ?? 'unknown');
+        return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
+      }
+
+      return NextResponse.json({ resetToken, maskedPhone: maskPhone(match.phone) });
+    }
+
+    // AÇÃO: CADASTRAR TELEFONE (fallback, só quando lookup-phone não achou nada)
+    // Prova de identidade por nome+data de nascimento (mesmo padrão já usado em
+    // outros fluxos), só permite cadastrar se a conta ainda não tiver telefone.
+    if (action === 'register-phone') {
+      const { fullName, birthDate, phone } = body;
+
+      if (!fullName?.trim() || !birthDate?.trim() || !phone?.trim()) {
+        return NextResponse.json({ error: 'Preencha nome, data de nascimento e telefone.' }, { status: 400 });
+      }
+      const inputDigits = normalizePhoneDigits(phone);
+      if (inputDigits.length < 10) {
+        return NextResponse.json({ error: 'Informe um telefone válido com DDD.' }, { status: 400 });
+      }
+
+      const ip = getClientIp(request);
+      const idHash = hashIdentifier(fullName);
+
+      if (await checkRecoverRateLimit(supabaseAdmin, ip, idHash)) {
+        return NextResponse.json(
+          { error: 'Muitas tentativas. Por segurança, aguarde 1 hora ou procure a secretaria.' },
+          { status: 429 }
+        );
+      }
+
       const generatedEmail = generateEmail(fullName.trim());
       const safeName = fullName.trim().replace(/[,()*\\]/g, ' ').replace(/\s+/g, ' ').trim();
       const { data: candidates, error: searchErr } = await supabaseAdmin
@@ -171,35 +271,125 @@ export async function POST(request: Request) {
         .limit(10);
 
       if (searchErr) {
-        console.error('[RECOVER] erro na busca:', searchErr);
+        console.error('[REGISTER_PHONE] erro na busca:', searchErr);
         throw searchErr;
       }
 
-      // Encontrar o cadastro que bate telefone E data de nascimento
-      const inputPhone = normalizePhone(phone);
       const inputBirth = String(birthDate).slice(0, 10);
       const match = (candidates || []).find((c: any) =>
-        c.phone && normalizePhone(c.phone) === inputPhone && inputPhone.length >= 10 &&
         c.birth_date && String(c.birth_date).slice(0, 10) === inputBirth
       );
 
-      if (!match) {
+      // Anti-takeover: mesma mensagem genérica tanto pra "não achou" quanto pra
+      // "achou mas a conta já tem telefone" — não revela qual dos dois aconteceu.
+      if (!match || match.phone) {
         await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
-        // Genérico: não revela qual campo errou nem se o nome existe.
         return NextResponse.json(
-          { error: 'Os dados não conferem com nenhum cadastro. Confira nome, telefone e data de nascimento — ou procure a secretaria.' },
+          { error: 'Os dados não conferem com nenhum cadastro. Confira nome e data de nascimento — ou procure a secretaria.' },
           { status: 401 }
         );
       }
 
-      // Verificação OK → resetar a senha via REST admin
-      const authAdminUrl = `${supabaseUrl}/auth/v1/admin/users/${match.id}`;
+      await recordRecoverAttempt(supabaseAdmin, ip, idHash, true);
+
+      const { error: updateErr } = await supabaseAdmin
+        .from('profiles')
+        .update({ phone: phone.trim() })
+        .eq('id', match.id);
+      if (updateErr) {
+        console.error('[REGISTER_PHONE] erro ao salvar telefone:', updateErr);
+        throw updateErr;
+      }
+
+      const resetToken = generateResetToken(match.id);
+
+      try {
+        await createAndSendOtp(supabaseAdmin, match.id, phone.trim());
+      } catch (e: any) {
+        console.error('[REGISTER_PHONE] falha ao enviar SMS (code):', e?.code ?? 'unknown');
+        return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
+      }
+
+      return NextResponse.json({ resetToken, maskedPhone: maskPhone(phone.trim()) });
+    }
+
+    // AÇÃO: REENVIAR CÓDIGO
+    if (action === 'resend') {
+      const { resetToken } = body;
+      const verified = verifyResetToken(resetToken);
+      if (verified.status !== 'valid') {
+        return NextResponse.json({ error: 'Sessão de recuperação expirada. Reinicie o processo.' }, { status: 401 });
+      }
+
+      const { data: profile } = await supabaseAdmin
+        .from('profiles').select('phone').eq('id', verified.userId).maybeSingle();
+      if (!profile?.phone) {
+        return NextResponse.json({ error: 'Telefone não encontrado. Reinicie o processo.' }, { status: 400 });
+      }
+
+      const { data: lastOtp } = await supabaseAdmin
+        .from('password_reset_otps')
+        .select('created_at')
+        .eq('user_id', verified.userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastOtp && Date.now() - new Date(lastOtp.created_at).getTime() < OTP_RESEND_COOLDOWN_MS) {
+        return NextResponse.json({ error: 'Aguarde um pouco antes de reenviar o código.' }, { status: 429 });
+      }
+
+      try {
+        await createAndSendOtp(supabaseAdmin, verified.userId, profile.phone);
+      } catch (e: any) {
+        console.error('[RESEND] falha ao enviar SMS (code):', e?.code ?? 'unknown');
+        return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
+      }
+
+      return NextResponse.json({ maskedPhone: maskPhone(profile.phone) });
+    }
+
+    // AÇÃO: CONFIRMAR CÓDIGO E TROCAR SENHA (passo final)
+    if (action === 'confirm') {
+      const { resetToken, code, newPassword } = body;
+      const verified = verifyResetToken(resetToken);
+      if (verified.status !== 'valid') {
+        return NextResponse.json({ error: 'Sessão de recuperação expirada. Reinicie o processo.' }, { status: 401 });
+      }
+      if (!code?.trim() || !newPassword || newPassword.length < 8) {
+        return NextResponse.json({ error: 'Informe o código e uma senha com pelo menos 8 caracteres.' }, { status: 400 });
+      }
+
+      const { data: otp } = await supabaseAdmin
+        .from('password_reset_otps')
+        .select('id, code_hash, expires_at, attempts, consumed')
+        .eq('user_id', verified.userId)
+        .eq('consumed', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!otp) {
+        return NextResponse.json({ error: 'Código incorreto.' }, { status: 401 });
+      }
+      if (new Date(otp.expires_at).getTime() < Date.now()) {
+        return NextResponse.json({ error: 'Código expirado. Solicite um novo.' }, { status: 400 });
+      }
+      if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+        return NextResponse.json({ error: 'Muitas tentativas erradas. Reinicie o processo.' }, { status: 429 });
+      }
+
+      const inputHash = hashOtpCode(code.trim());
+      if (inputHash !== otp.code_hash) {
+        await supabaseAdmin.from('password_reset_otps').update({ attempts: otp.attempts + 1 }).eq('id', otp.id);
+        return NextResponse.json({ error: 'Código incorreto.' }, { status: 401 });
+      }
+
+      const authAdminUrl = `${supabaseUrl}/auth/v1/admin/users/${verified.userId}`;
       const authHeaders: Record<string, string> = {
         'Authorization': `Bearer ${supabaseServiceKey}`,
         'apikey': supabaseServiceKey,
         'Content-Type': 'application/json',
       };
-
       const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
         Promise.race([
           p,
@@ -213,7 +403,7 @@ export async function POST(request: Request) {
         const getRes = await withTimeout(fetch(authAdminUrl, { method: 'GET', headers: authHeaders }), 7_000);
         if (getRes.ok) existingMeta = (await getRes.json()).user_metadata ?? {};
       } catch (e) {
-        console.warn('[RECOVER] getUserById falhou (não-crítico):', e);
+        console.warn('[CONFIRM] getUserById falhou (não-crítico):', e);
       }
 
       let putRes: Response;
@@ -231,18 +421,18 @@ export async function POST(request: Request) {
           8_000
         );
       } catch (e: any) {
-        console.error('[RECOVER] updateUserById timeout/falhou:', e);
+        console.error('[CONFIRM] updateUserById timeout/falhou:', e);
         return NextResponse.json({ error: e.message || 'Tempo esgotado ao gravar senha.' }, { status: 503 });
       }
 
       if (!putRes.ok) {
         const errBody = await putRes.json().catch(() => ({}));
         const errMsg = errBody.msg ?? errBody.message ?? errBody.error_description ?? `HTTP ${putRes.status}`;
-        console.error('[RECOVER] updateUserById failed:', putRes.status, errBody);
+        console.error('[CONFIRM] updateUserById failed:', putRes.status, errBody);
         return NextResponse.json({ error: `Falha ao gravar senha: ${errMsg}` }, { status: 500 });
       }
 
-      await recordRecoverAttempt(supabaseAdmin, ip, idHash, true);
+      await supabaseAdmin.from('password_reset_otps').update({ consumed: true }).eq('id', otp.id);
       return NextResponse.json({ success: true });
     }
 

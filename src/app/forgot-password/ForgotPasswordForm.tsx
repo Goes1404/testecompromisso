@@ -7,28 +7,120 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2, AlertCircle, CheckCircle2, Lock, User, Phone, Calendar,
-  Eye, EyeOff, ArrowLeft, KeyRound,
+  Eye, EyeOff, ArrowLeft, KeyRound, MessageSquare,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+type Step = "phone" | "fallback" | "otp";
+
+async function callApi(action: string, payload: Record<string, unknown>) {
+  const res = await Promise.race([
+    fetch("/api/student/primeiro-acesso", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...payload }),
+    }),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Tempo esgotado. Verifique sua conexão e tente novamente.")), 15_000)
+    ),
+  ]);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Não foi possível completar a operação.");
+  return data;
+}
+
 export function ForgotPasswordForm() {
+  const [step, setStep] = useState<Step>("phone");
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [maskedPhone, setMaskedPhone] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const startCooldown = () => {
+    setResendCooldown(60);
+    const id = setInterval(() => {
+      setResendCooldown((s) => {
+        if (s <= 1) { clearInterval(id); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  const handlePhoneLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!phone.trim()) {
+      setError("Informe seu telefone com DDD.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await callApi("lookup-phone", { phone });
+      if (data.found === false) {
+        setStep("fallback");
+      } else {
+        setResetToken(data.resetToken);
+        setMaskedPhone(data.maskedPhone);
+        setStep("otp");
+        startCooldown();
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (!fullName.trim() || !phone.trim() || !birthDate) {
-      setError("Preencha nome, telefone e data de nascimento.");
+  const handleRegisterPhone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!fullName.trim() || !birthDate) {
+      setError("Preencha nome e data de nascimento.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await callApi("register-phone", { fullName, birthDate, phone });
+      setResetToken(data.resetToken);
+      setMaskedPhone(data.maskedPhone);
+      setStep("otp");
+      startCooldown();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await callApi("resend", { resetToken });
+      startCooldown();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!code.trim()) {
+      setError("Informe o código recebido por SMS.");
       return;
     }
     if (newPassword.length < 8) {
@@ -39,24 +131,12 @@ export function ForgotPasswordForm() {
       setError("As senhas não coincidem.");
       return;
     }
-
     setLoading(true);
     try {
-      const res = await Promise.race([
-        fetch("/api/student/primeiro-acesso", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "recover", fullName, phone, birthDate, newPassword }),
-        }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Tempo esgotado. Verifique sua conexão e tente novamente.")), 15_000)
-        ),
-      ]);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Não foi possível redefinir a senha.");
+      await callApi("confirm", { resetToken, code, newPassword });
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || "Erro ao redefinir a senha.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -85,7 +165,7 @@ export function ForgotPasswordForm() {
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-primary italic uppercase tracking-tighter">Senha Redefinida!</h2>
           <p className="text-sm text-primary/60 font-medium leading-relaxed italic">
-            Tudo certo, <strong>{fullName.split(" ")[0]}</strong>. Sua nova senha já está ativa. É só entrar.
+            Tudo certo{fullName ? `, ${fullName.split(" ")[0]}` : ""}. Sua nova senha já está ativa. É só entrar.
           </p>
         </div>
         <Button asChild className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 rounded-2xl shadow-xl border-none text-sm uppercase tracking-widest">
@@ -105,7 +185,9 @@ export function ForgotPasswordForm() {
         </div>
         <CardTitle className="text-xl font-black text-primary italic uppercase">Recuperar Acesso</CardTitle>
         <CardDescription className="text-xs font-medium italic px-4">
-          Confirme seus dados de cadastro para criar uma nova senha — sem precisar falar com ninguém.
+          {step === "phone" && "Informe o telefone cadastrado pra receber o código."}
+          {step === "fallback" && "Não encontramos esse telefone no seu cadastro — confirme seus dados pra cadastrá-lo."}
+          {step === "otp" && `Enviamos um código pro telefone ${maskedPhone}.`}
         </CardDescription>
       </CardHeader>
       <CardContent className="px-8 pt-8 space-y-5 pb-8">
@@ -116,23 +198,8 @@ export function ForgotPasswordForm() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nome Completo</Label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Como foi cadastrado pela escola"
-                className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
-                required
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        {step === "phone" && (
+          <form onSubmit={handlePhoneLookup} className="space-y-4">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Telefone</Label>
               <div className="relative">
@@ -142,6 +209,28 @@ export function ForgotPasswordForm() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="(11) 90000-0000"
+                  className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none uppercase tracking-widest">
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Continuar"}
+            </Button>
+          </form>
+        )}
+
+        {step === "fallback" && (
+          <form onSubmit={handleRegisterPhone} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nome Completo</Label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Como foi cadastrado pela escola"
                   className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
                   required
                   disabled={loading}
@@ -162,74 +251,113 @@ export function ForgotPasswordForm() {
                 />
               </div>
             </div>
-          </div>
+            <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none uppercase tracking-widest">
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Cadastrar e Enviar Código"}
+            </Button>
+            <button
+              type="button"
+              onClick={() => { setError(null); setStep("phone"); }}
+              disabled={loading}
+              className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary flex items-center justify-center gap-2 h-8"
+            >
+              <ArrowLeft className="h-3 w-3" /> Usar outro telefone
+            </button>
+          </form>
+        )}
 
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nova Senha</Label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type={showPass ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
-                className="pl-11 pr-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
-                required
-                disabled={loading}
-              />
-              <button type="button" onClick={() => setShowPass((p) => !p)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
-                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        {step === "otp" && (
+          <form onSubmit={handleConfirm} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Código Recebido</Label>
+              <div className="relative">
+                <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="000000"
+                  inputMode="numeric"
+                  className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold tracking-[0.3em]"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={loading || resendCooldown > 0}
+                className="text-[10px] font-black uppercase text-accent/70 hover:text-accent disabled:text-muted-foreground/50 px-2"
+              >
+                {resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : "Reenviar código"}
               </button>
             </div>
-            {newPassword && (
-              <div className="px-2 space-y-1.5 animate-in slide-in-from-top-2 duration-300">
-                <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest">
-                  <span className="text-primary/40">Segurança</span>
-                  <span className={strength > 2 ? "text-emerald-500" : "text-orange-500"}>{strengthText}</span>
-                </div>
-                <div className="h-1 w-full bg-muted/50 rounded-full overflow-hidden">
-                  <div className={`h-full ${strengthColor} transition-all duration-500`} style={{ width: `${(strength / 4) * 100}%` }} />
-                </div>
-              </div>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Confirmar Nova Senha</Label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type={showPass ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repita a senha"
-                className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
-                required
-                disabled={loading}
-              />
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nova Senha</Label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type={showPass ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                  className="pl-11 pr-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
+                  required
+                  disabled={loading}
+                />
+                <button type="button" onClick={() => setShowPass((p) => !p)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
+                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {newPassword && (
+                <div className="px-2 space-y-1.5 animate-in slide-in-from-top-2 duration-300">
+                  <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest">
+                    <span className="text-primary/40">Segurança</span>
+                    <span className={strength > 2 ? "text-emerald-500" : "text-orange-500"}>{strengthText}</span>
+                  </div>
+                  <div className="h-1 w-full bg-muted/50 rounded-full overflow-hidden">
+                    <div className={`h-full ${strengthColor} transition-all duration-500`} style={{ width: `${(strength / 4) * 100}%` }} />
+                  </div>
+                </div>
+              )}
             </div>
-            {confirmPassword && (
-              <div className={`flex items-center gap-2 text-[11px] font-bold ml-2 ${newPassword === confirmPassword ? "text-emerald-600" : "text-red-500"}`}>
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                {newPassword === confirmPassword ? "Senhas coincidem" : "Senhas não coincidem"}
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Confirmar Nova Senha</Label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type={showPass ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repita a senha"
+                  className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
+                  required
+                  disabled={loading}
+                />
               </div>
-            )}
-          </div>
+              {confirmPassword && (
+                <div className={`flex items-center gap-2 text-[11px] font-bold ml-2 ${newPassword === confirmPassword ? "text-emerald-600" : "text-red-500"}`}>
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {newPassword === confirmPassword ? "Senhas coincidem" : "Senhas não coincidem"}
+                </div>
+              )}
+            </div>
 
-          <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none uppercase tracking-widest">
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Redefinir Senha"}
-          </Button>
-
-          <div className="pt-1 space-y-3">
-            <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-primary/40 h-10 rounded-xl">
-              <a href="/login" className="flex items-center justify-center gap-2"><ArrowLeft className="h-3 w-3" /> Lembrei minha senha / Voltar</a>
+            <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none uppercase tracking-widest">
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Redefinir Senha"}
             </Button>
-            <p className="text-center text-[10px] text-muted-foreground/70 font-medium leading-relaxed px-2">
-              Não tem telefone ou data de nascimento no cadastro? Procure a secretaria para redefinir.
-            </p>
-          </div>
-        </form>
+          </form>
+        )}
+
+        <div className="pt-1 space-y-3">
+          <Button asChild variant="ghost" className="w-full text-[10px] font-black uppercase text-primary/40 h-10 rounded-xl">
+            <a href="/login" className="flex items-center justify-center gap-2"><ArrowLeft className="h-3 w-3" /> Lembrei minha senha / Voltar</a>
+          </Button>
+          <p className="text-center text-[10px] text-muted-foreground/70 font-medium leading-relaxed px-2">
+            Não conseguiu recuperar? Procure a secretaria para redefinir.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
