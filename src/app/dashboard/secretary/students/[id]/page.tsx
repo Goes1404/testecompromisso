@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GuardiansCard } from "@/components/student/GuardiansCard";
 import {
   ArrowLeft,
   Loader2,
@@ -594,6 +595,9 @@ export default function StudentDetailPage() {
               </Card>
             ))}
           </div>
+
+          {/* Responsáveis legais */}
+          {profile?.id && <GuardiansCard studentId={profile.id} />}
 
           {/* Attendance trend chart */}
           <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white">
