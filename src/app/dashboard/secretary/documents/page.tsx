@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { distinctOptions } from "@/components/secretary/StudentFilterBar";
 
 export default function SecretaryDocumentsPage() {
   const { toast } = useToast();
@@ -39,6 +40,7 @@ export default function SecretaryDocumentsPage() {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [docType, setDocType] = useState("declaracao");
   const [searchQuery, setSearchQuery] = useState("");
+  const [courseFilter, setCourseFilter] = useState("");
   
   // Campos adicionais
   const [studentCpf, setStudentCpf] = useState("");
@@ -278,8 +280,11 @@ export default function SecretaryDocumentsPage() {
     printWindow.document.close();
   };
 
-  const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const courseOptions = useMemo(() => distinctOptions(students, "course"), [students]);
+
+  const filteredStudents = students.filter(s =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (!courseFilter || (s.course || "") === courseFilter)
   );
 
   return (
@@ -320,14 +325,31 @@ export default function SecretaryDocumentsPage() {
               <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Buscar Aluno</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                <Input 
-                  placeholder="Pesquisar..." 
+                <Input
+                  placeholder="Pesquisar..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="h-10 pl-9 pr-3 rounded-xl bg-slate-50 border-none text-xs" 
+                  className="h-10 pl-9 pr-3 rounded-xl bg-slate-50 border-none text-xs"
                 />
               </div>
             </div>
+
+            {courseOptions.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Turma</Label>
+                <Select value={courseFilter || "__all__"} onValueChange={(v) => setCourseFilter(v === "__all__" ? "" : v)}>
+                  <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none font-bold text-xs">
+                    <SelectValue placeholder="Todas as turmas" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-none shadow-2xl">
+                    <SelectItem value="__all__" className="font-bold text-xs">Todas as turmas</SelectItem>
+                    {courseOptions.map((c) => (
+                      <SelectItem key={c} value={c} className="font-bold text-xs">{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Estudante *</Label>

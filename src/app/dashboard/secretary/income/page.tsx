@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, Fragment } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,7 +21,6 @@ import {
 } from "@/components/ui/table";
 import {
   Loader2,
-  Search,
   TrendingUp,
   TrendingDown,
   Users,
@@ -38,6 +36,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { StudentFilterBar, distinctOptions } from "@/components/secretary/StudentFilterBar";
 
 // Limite de renda per capita vigente (1,5 salário mínimo ≈ R$ 2.431,50)
 const THRESHOLD = 2431.50;
@@ -66,6 +65,8 @@ export default function SecretaryIncomePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [courseFilter, setCourseFilter] = useState("");
+  const [institutionFilter, setInstitutionFilter] = useState("");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -98,6 +99,9 @@ export default function SecretaryIncomePage() {
     return { total: students.length, ok, exceeded, pending };
   }, [students]);
 
+  const courseOptions = useMemo(() => distinctOptions(students, "course"), [students]);
+  const institutionOptions = useMemo(() => distinctOptions(students, "institution"), [students]);
+
   const filtered = useMemo(() => {
     const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const terms = norm(search).trim().split(/\s+/).filter(Boolean);
@@ -107,7 +111,9 @@ export default function SecretaryIncomePage() {
         const matchesSearch = terms.length === 0 ||
           terms.every(t => norm(u.name).includes(t) || norm(u.email || "").includes(t));
         const matchesStatus = statusFilter === "all" || incomeStatus(u) === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesCourse = !courseFilter || (u.course || "") === courseFilter;
+        const matchesInstitution = !institutionFilter || (u.institution || "") === institutionFilter;
+        return matchesSearch && matchesStatus && matchesCourse && matchesInstitution;
       })
       .sort((a, b) => {
         const av = Number(a.income_per_capita) || 0;
@@ -117,7 +123,7 @@ export default function SecretaryIncomePage() {
         if (bv === 0) return -1;
         return sortDir === "desc" ? bv - av : av - bv;
       });
-  }, [students, search, statusFilter, sortDir]);
+  }, [students, search, statusFilter, courseFilter, institutionFilter, sortDir]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
@@ -176,40 +182,44 @@ export default function SecretaryIncomePage() {
       )}
 
       {/* Barra de Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Buscar aluno por nome ou e-mail..."
-            className="pl-11 h-12 bg-white border-none shadow-md rounded-2xl font-medium"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-
-        <Select value={statusFilter} onValueChange={v => setStatusFilter(v as StatusFilter)}>
-          <SelectTrigger className="h-12 w-full sm:w-56 rounded-2xl bg-white border-none shadow-md font-bold">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl border-none shadow-2xl">
-            <SelectItem value="all"      className="font-bold text-xs">Todos os Alunos</SelectItem>
-            <SelectItem value="ok"       className="font-bold text-xs">Dentro do Limite</SelectItem>
-            <SelectItem value="exceeded" className="font-bold text-xs">Excedeu Limite</SelectItem>
-            <SelectItem value="pending"  className="font-bold text-xs">Pendente (sem dados)</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Button
-          variant="outline"
-          onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}
-          className="h-12 px-5 rounded-2xl font-black text-xs border-slate-200 shadow-md bg-white gap-2 shrink-0"
-        >
-          {sortDir === "desc"
-            ? <><TrendingDown className="h-4 w-4" /> Maior → Menor</>
-            : <><TrendingUp   className="h-4 w-4" /> Menor → Maior</>
-          }
-        </Button>
-      </div>
+      <StudentFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar aluno por nome ou e-mail..."
+        course={courseFilter}
+        onCourseChange={setCourseFilter}
+        courseOptions={courseOptions}
+        institution={institutionFilter}
+        onInstitutionChange={setInstitutionFilter}
+        institutionOptions={institutionOptions}
+        resultCount={filtered.length}
+        totalCount={students.length}
+        extra={
+          <>
+            <Select value={statusFilter} onValueChange={v => setStatusFilter(v as StatusFilter)}>
+              <SelectTrigger className="h-11 w-full lg:w-52 bg-muted/30 border-none rounded-xl font-bold text-sm shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-none shadow-2xl">
+                <SelectItem value="all"      className="font-bold text-xs">Todos os Alunos</SelectItem>
+                <SelectItem value="ok"       className="font-bold text-xs">Dentro do Limite</SelectItem>
+                <SelectItem value="exceeded" className="font-bold text-xs">Excedeu Limite</SelectItem>
+                <SelectItem value="pending"  className="font-bold text-xs">Pendente (sem dados)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}
+              className="h-11 px-5 rounded-xl font-black text-xs border-slate-200 bg-white gap-2 shrink-0"
+            >
+              {sortDir === "desc"
+                ? <><TrendingDown className="h-4 w-4" /> Maior → Menor</>
+                : <><TrendingUp   className="h-4 w-4" /> Menor → Maior</>
+              }
+            </Button>
+          </>
+        }
+      />
 
       {/* Tabela */}
       <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">

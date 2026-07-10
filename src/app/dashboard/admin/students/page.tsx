@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Search,
   Send,
   Loader2,
   Users,
@@ -42,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
+import { StudentFilterBar, distinctOptions } from "@/components/secretary/StudentFilterBar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +58,8 @@ export default function AdminStudentsPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [courseFilter, setCourseFilter] = useState("");
+  const [examTargetFilter, setExamTargetFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
@@ -172,13 +174,18 @@ export default function AdminStudentsPage() {
     return { total, etec, enem };
   }, [students]);
 
+  const courseOptions = useMemo(() => distinctOptions(students, "course"), [students]);
+  const institutionOptions = useMemo(() => distinctOptions(students, "institution"), [students]);
+
   const filteredStudents = students.filter(s => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      (s.name || '').toLowerCase().includes(searchLower) || 
+    const matchesSearch =
+      (s.name || '').toLowerCase().includes(searchLower) ||
       (s.email || '').toLowerCase().includes(searchLower);
     const matchesPolo = !selectedPoloName || (s.institution || '').toLowerCase().includes(selectedPoloName.toLowerCase());
-    return matchesSearch && matchesPolo;
+    const matchesCourse = !courseFilter || (s.course || '') === courseFilter;
+    const matchesExamTarget = !examTargetFilter || (s.exam_target || '').toUpperCase().includes(examTargetFilter);
+    return matchesSearch && matchesPolo && matchesCourse && matchesExamTarget;
   });
 
   const pagedStudents = filteredStudents.slice(0, displayCount);
@@ -275,12 +282,22 @@ export default function AdminStudentsPage() {
       </div>
 
       <Card className="border-none shadow-2xl rounded-3xl bg-white overflow-hidden">
-        <CardHeader className="p-4 md:p-8 border-b border-muted/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <CardHeader className="p-4 md:p-8 border-b border-muted/10 space-y-4">
           <CardTitle className="text-xl font-black text-primary italic">Lista Mestra de Alunos ({filteredStudents.length})</CardTitle>
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Pesquisar por nome ou email..." className="pl-10 h-11 bg-muted/30 border-none rounded-xl font-medium italic" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
+          <StudentFilterBar
+            search={searchTerm}
+            onSearchChange={setSearchTerm}
+            course={courseFilter}
+            onCourseChange={setCourseFilter}
+            courseOptions={courseOptions}
+            institution={selectedPoloName || ""}
+            onInstitutionChange={(v) => setSelectedPoloName(v || null)}
+            institutionOptions={institutionOptions}
+            examTarget={examTargetFilter}
+            onExamTargetChange={setExamTargetFilter}
+            resultCount={filteredStudents.length}
+            totalCount={students.length}
+          />
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
