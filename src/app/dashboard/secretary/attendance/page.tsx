@@ -26,6 +26,7 @@ import {
   ImageIcon,
   FileSpreadsheet,
   Link2,
+  LogOut,
 } from "lucide-react";
 import {
   Select,
@@ -49,7 +50,13 @@ import { ptBR } from "date-fns/locale";
 
 type AttendanceStatus = "presente" | "ausente" | "justificado";
 type AttendanceMethod = "app" | "manual" | "override";
-interface AttendanceCell { status: AttendanceStatus; justification: string; method: AttendanceMethod; }
+interface AttendanceCell {
+  status: AttendanceStatus;
+  justification: string;
+  method: AttendanceMethod;
+  leftEarly: boolean;
+  leftEarlyTime: string;
+}
 interface ImportRow {
   rawName: string;
   matchedStudent: any | null;
@@ -201,7 +208,7 @@ export default function SecretaryAttendancePage() {
     try {
       const { data, error } = await supabase
         .from("attendance_records")
-        .select("student_id, status, justification, method")
+        .select("student_id, status, justification, method, left_early, left_early_time")
         .eq("session_id", sessionItem.id);
 
       if (error) throw error;
@@ -215,6 +222,8 @@ export default function SecretaryAttendancePage() {
           status: r.status,
           justification: r.justification || "",
           method: (r.method as AttendanceMethod) || "manual",
+          leftEarly: !!r.left_early,
+          leftEarlyTime: r.left_early_time || "",
         };
         initial[r.student_id] = cell;
         snap[r.student_id] = { status: cell.status, method: cell.method };
@@ -228,7 +237,7 @@ export default function SecretaryAttendancePage() {
 
       rosterPool.forEach(s => {
         if (!initial[s.id]) {
-          initial[s.id] = { status: "ausente", justification: "", method: "manual" };
+          initial[s.id] = { status: "ausente", justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" };
         }
       });
 
@@ -243,7 +252,27 @@ export default function SecretaryAttendancePage() {
 
   // Atualiza presença localmente
   const setStatus = (studentId: string, status: AttendanceStatus) => {
-    setRecords(prev => ({ ...prev, [studentId]: { ...prev[studentId], status } }));
+    setRecords(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        status,
+        // "Saiu antes" só faz sentido se o aluno esteve presente.
+        ...(status !== "presente" ? { leftEarly: false, leftEarlyTime: "" } : {}),
+      },
+    }));
+  };
+
+  const toggleLeftEarly = (studentId: string) => {
+    setRecords(prev => {
+      const current = prev[studentId];
+      const next = !current.leftEarly;
+      return { ...prev, [studentId]: { ...current, leftEarly: next, leftEarlyTime: next ? current.leftEarlyTime : "" } };
+    });
+  };
+
+  const setLeftEarlyTime = (studentId: string, time: string) => {
+    setRecords(prev => ({ ...prev, [studentId]: { ...prev[studentId], leftEarlyTime: time } }));
   };
 
   const setJustification = (studentId: string, text: string) => {
@@ -264,7 +293,7 @@ export default function SecretaryAttendancePage() {
       if (error) throw error;
       setRecords(prev => ({
         ...prev,
-        [studentId]: { status: "ausente", justification: "", method: "manual" }
+        [studentId]: { status: "ausente", justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" }
       }));
       toast({ title: "Aluno adicionado à lista" });
     } catch (err: any) {
@@ -327,7 +356,7 @@ export default function SecretaryAttendancePage() {
       setRecords(prev => {
         const next = { ...prev };
         toAdd.forEach(s => {
-          next[s.id] = { status: "ausente", justification: "", method: "manual" };
+          next[s.id] = { status: "ausente", justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" };
         });
         return next;
       });
@@ -390,6 +419,8 @@ export default function SecretaryAttendancePage() {
           status: rec.status,
           justification: rec.justification || null,
           method,
+          left_early: rec.status === "presente" && rec.leftEarly,
+          left_early_time: rec.status === "presente" && rec.leftEarly ? (rec.leftEarlyTime || null) : null,
         };
       });
 
@@ -591,7 +622,7 @@ export default function SecretaryAttendancePage() {
       setRecords(prev => {
         const next = { ...prev };
         for (const item of toInsert) {
-          next[item.student_id!] = { status: item.status as AttendanceStatus, justification: "", method: "manual" };
+          next[item.student_id!] = { status: item.status as AttendanceStatus, justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" };
         }
         return next;
       });
@@ -944,6 +975,7 @@ export default function SecretaryAttendancePage() {
                               <p className="text-[9px] font-black uppercase text-slate-400 mt-0.5">{student.course || 'Sem Turma'}</p>
                             </div>
 
+                            <div className="flex flex-col items-end gap-1.5 w-full sm:w-auto">
                             <div className="flex items-center gap-2 w-full sm:w-auto">
                               {rec.status === 'justificado' && (
                                 <Input
@@ -987,14 +1019,41 @@ export default function SecretaryAttendancePage() {
                                 )}
                               </Button>
                             </div>
+
+                            {rec.status === 'presente' && (
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleLeftEarly(student.id)}
+                                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide transition-colors ${
+                                    rec.leftEarly
+                                      ? "bg-orange-100 text-orange-700"
+                                      : "bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:border-orange-200"
+                                  }`}
+                                  title="Marcar saída antecipada"
+                                >
+                                  <LogOut className="h-3 w-3" />
+                                  Saiu antes
+                                </button>
+                                {rec.leftEarly && (
+                                  <input
+                                    type="time"
+                                    value={rec.leftEarlyTime}
+                                    onChange={e => setLeftEarlyTime(student.id, e.target.value)}
+                                    className="h-6 text-[10px] font-bold rounded-lg border border-orange-200 bg-white px-1.5 text-slate-700 outline-none focus:border-orange-400"
+                                  />
+                                )}
+                              </div>
+                            )}
+                            </div>
                           </div>
                         );
                       })
                     )}
                   </div>
 
-                  <Button 
-                    onClick={handleSaveAttendance} 
+                  <Button
+                    onClick={handleSaveAttendance}
                     disabled={savingAttendance}
                     className="w-full h-12 bg-primary text-white font-black text-xs uppercase shadow-lg border-none mt-auto"
                   >
