@@ -118,8 +118,8 @@ export default function SecretaryAttendancePage() {
     try {
       const [sessionsRes, teachersRes, studentsRes] = await Promise.all([
         supabase.from("class_sessions").select("*").order("session_date", { ascending: false }),
-        supabase.from("profiles").select("id, name").in("profile_type", ["teacher", "admin"]),
-        supabase.from("profiles").select("id, name, course, institution").eq("profile_type", "student").order("name"),
+        supabase.from("profiles").select("id, name").in("role", ["teacher", "admin"]),
+        supabase.from("profiles").select("id, name, course, institution").eq("role", "student").order("name"),
       ]);
 
       setSessions(sessionsRes.data || []);

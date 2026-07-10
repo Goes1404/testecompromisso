@@ -85,7 +85,7 @@ export default function AdminStudentsPage() {
       const { data: studentProfiles, error: pError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('profile_type', 'student')
+        .eq('role', 'student')
         .order('name')
         .limit(500);
 

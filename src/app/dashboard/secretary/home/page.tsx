@@ -57,8 +57,8 @@ export default function SecretaryDashboard() {
       // 1. Estatísticas de Estudantes
       const { data: profiles, error: pErr } = await supabase
         .from('profiles')
-        .select('status, profile_type')
-        .eq('profile_type', 'student');
+        .select('status, role')
+        .eq('role', 'student');
 
       let active = 0;
       let suspended = 0;
@@ -84,7 +84,7 @@ export default function SecretaryDashboard() {
       const { count: newThisMonth } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('profile_type', 'student')
+        .eq('role', 'student')
         .gte('created_at', startOfMonth.toISOString());
 
       setStats({

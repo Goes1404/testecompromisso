@@ -590,7 +590,7 @@ export default function SecretaryEnrollmentDirectory() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('profile_type', 'student')
+        .eq('role', 'student')
         .order('name');
       if (error) throw error;
       setUsers(data || []);

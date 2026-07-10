@@ -55,7 +55,7 @@ export function StudentQuickSearch() {
     const { data } = await supabase
       .from("profiles")
       .select("id, name, email, course, institution")
-      .eq("profile_type", "student")
+      .eq("role", "student")
       .ilike("name", `%${safe}%`)
       .order("name")
       .limit(8);

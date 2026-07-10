@@ -103,19 +103,21 @@ export default function CoordinatorDashboard() {
       // 1. BUSCA DE PERFIS (ESTATÍSTICAS GERAIS) - Busca simplificada para performance
       const { data: allProfiles, error: pErr } = await supabase
         .from('profiles')
-        .select('profile_type, is_financial_aid_eligible');
-      
+        .select('role, is_financial_aid_eligible');
+
       let studentCount = 0;
       let teacherCount = 0;
       let eligibleCount = 0;
 
       if (!pErr && allProfiles) {
         allProfiles.forEach(p => {
-          const type = (p.profile_type || '').toLowerCase();
-          if (type === 'student') {
+          // role é o enum confiável (student/teacher/staff/admin); profile_type
+          // é texto livre (etec/enem/"Prof. Matemática") e subcontaria os papéis.
+          const role = (p.role || '').toLowerCase();
+          if (role === 'student') {
             studentCount++;
             if (p.is_financial_aid_eligible) eligibleCount++;
-          } else if (type === 'teacher' || type === 'admin' || type === 'staff') {
+          } else if (role === 'teacher' || role === 'admin' || role === 'staff') {
             teacherCount++;
           }
         });

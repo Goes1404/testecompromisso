@@ -77,15 +77,12 @@ export default function AdminChecklistAuditPage() {
         const { data: allProfiles, error: pError } = await supabase
           .from('profiles')
           .select('id, name, profile_type')
+          .eq('role', 'student')
           .order('name');
 
         if (pError) throw pError;
 
-        const staffKeywords = ['teacher', 'admin', 'mentor', 'coordenador'];
-        const studentProfiles = allProfiles?.filter(p => {
-          const type = (p.profile_type || '').toLowerCase().trim();
-          return !staffKeywords.some(key => type.includes(key)) || type === '';
-        }) || [];
+        const studentProfiles = allProfiles || [];
 
         const { data: checklistData, error: cError } = await supabase
           .from('student_checklists')

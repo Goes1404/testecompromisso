@@ -70,15 +70,12 @@ export default function TeacherHomePage() {
       // 1. Buscar Alunos e Filtrar
       const { data: allProfiles } = await supabase
         .from('profiles')
-        .select('id, name, profile_type, last_access, is_financial_aid_eligible');
+        .select('id, name, role, last_access, is_financial_aid_eligible')
+        .eq('role', 'student');
 
-      const studentKeywords = ['etec', 'uni', 'enem', 'cpop', 'student', 'aluno'];
       const sevenDaysAgo = subDays(new Date(), 7);
 
-      const students = allProfiles?.filter(p => {
-        const type = (p.profile_type || '').toLowerCase();
-        return studentKeywords.some(key => type.includes(key)) || type === '';
-      }) || [];
+      const students = allProfiles || [];
 
       const atRisk = students.filter(s => 
         !s.last_access || new Date(s.last_access) < sevenDaysAgo

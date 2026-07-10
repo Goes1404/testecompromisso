@@ -87,7 +87,7 @@ export default function SecretaryKPIPage() {
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, name, course, status, income_per_capita")
-        .eq("profile_type", "student");
+        .eq("role", "student");
 
       const students = profiles || [];
       const totalStudents = students.length;

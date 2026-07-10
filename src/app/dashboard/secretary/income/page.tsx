@@ -76,7 +76,7 @@ export default function SecretaryIncomePage() {
         const { data, error } = await supabase
           .from("profiles")
           .select("id, name, email, course, institution, family_income, family_size, income_per_capita, family_members, is_financial_aid_eligible, status")
-          .eq("profile_type", "student")
+          .eq("role", "student")
           .order("name");
         if (error) {
           toast({ title: "Erro ao carregar dados", description: error.message, variant: "destructive" });

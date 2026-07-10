@@ -52,7 +52,7 @@ export default function SecretaryDocumentsPage() {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, name, course, institution, birth_date")
-        .eq("profile_type", "student")
+        .eq("role", "student")
         .order("name");
 
       if (error) throw error;
