@@ -68,7 +68,9 @@ export async function POST(req: NextRequest) {
       }
 
       // Audience: 'all' | 'enem' | 'etec' (best-effort por exam_target)
-      let q = admin.from("profiles").select("id").eq("profile_type", "student");
+      // profile_type é texto livre (ex.: "etec", "Estudante ETEC") — usar role,
+      // que é o enum confiável para identificar alunos.
+      let q = admin.from("profiles").select("id").eq("role", "student");
       if (ann.target_audience === "enem" || ann.target_audience === "etec") {
         q = q.eq("exam_target", ann.target_audience.toUpperCase());
       }
@@ -98,7 +100,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
       }
 
-      let q = admin.from("profiles").select("id").eq("profile_type", "student");
+      let q = admin.from("profiles").select("id").eq("role", "student");
       if (mat.target_group === "enem" || mat.target_group === "etec") {
         q = q.eq("exam_target", mat.target_group.toUpperCase());
       }
