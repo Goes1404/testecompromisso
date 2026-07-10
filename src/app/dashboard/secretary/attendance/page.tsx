@@ -85,6 +85,7 @@ export default function SecretaryAttendancePage() {
   const [newDate, setNewDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [newType, setNewType] = useState("presencial");
   const [newTeacherId, setNewTeacherId] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
 
   // Estado da Chamada
   const [records, setRecords] = useState<Record<string, AttendanceCell>>({});
@@ -111,6 +112,25 @@ export default function SecretaryAttendancePage() {
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
   const [pendingOverrides, setPendingOverrides] = useState<string[]>([]); // student ids
+
+  // Título gerado a partir da data + turma + matéria (ex.: "10/07 · Sala 05 · Matemática"),
+  // pra deixar o Histórico de Aulas legível sem depender de digitação manual.
+  // Some enquanto o campo não for editado à mão (titleTouched).
+  const generateSessionTitle = useCallback((dateStr: string, classLabel: string, subject: string) => {
+    const parts: string[] = [];
+    if (dateStr) {
+      const [y, m, d] = dateStr.split("-");
+      if (y && m && d) parts.push(`${d}/${m}`);
+    }
+    if (classLabel) parts.push(classLabel.startsWith("Sala") ? classLabel : `Sala ${classLabel}`);
+    if (subject.trim()) parts.push(subject.trim());
+    return parts.join(" · ");
+  }, []);
+
+  useEffect(() => {
+    if (!createOpen || titleTouched) return;
+    setNewTitle(generateSessionTitle(newDate, newClassLabel, newSubject));
+  }, [createOpen, titleTouched, newDate, newClassLabel, newSubject, generateSessionTitle]);
 
   // Busca inicial: sessões, professores e alunos
   const fetchData = useCallback(async () => {
@@ -630,6 +650,7 @@ export default function SecretaryAttendancePage() {
             setNewDesc("");
             setNewSubject("");
             setNewTeacherId("");
+            setTitleTouched(false);
             setCreateOpen(true);
           }}
           className="bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 gap-2 hover:scale-[1.02] active:scale-95 transition-all border-none shrink-0"
@@ -1124,13 +1145,29 @@ export default function SecretaryAttendancePage() {
 
           <div className="p-8 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Título da Aula *</Label>
-              <Input 
-                value={newTitle} 
-                onChange={e => setNewTitle(e.target.value)} 
-                placeholder="Ex: Revisão - Funções Quadráticas" 
-                className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm" 
+              <div className="flex items-center justify-between ml-1">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Título da Aula *</Label>
+                {titleTouched && (
+                  <button
+                    type="button"
+                    onClick={() => { setTitleTouched(false); setNewTitle(generateSessionTitle(newDate, newClassLabel, newSubject)); }}
+                    className="text-[9px] font-black uppercase tracking-widest text-primary/50 hover:text-primary transition-colors"
+                  >
+                    Gerar automaticamente
+                  </button>
+                )}
+              </div>
+              <Input
+                value={newTitle}
+                onChange={e => { setNewTitle(e.target.value); setTitleTouched(true); }}
+                placeholder="Ex: Revisão - Funções Quadráticas"
+                className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm"
               />
+              {!titleTouched && newTitle && (
+                <p className="text-[9px] font-semibold text-slate-400 ml-1">
+                  Gerado automaticamente pela data, turma e matéria — edite se quiser.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
