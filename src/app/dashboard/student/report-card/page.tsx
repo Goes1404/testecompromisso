@@ -349,6 +349,7 @@ export default function ReportCardPage() {
           .from(table)
           .select("*")
           .eq("student_id", user.id)
+          .eq("status", "approved")
           .order("semester", { ascending: true });
 
         if (!error && active) {
