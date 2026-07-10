@@ -161,11 +161,15 @@ function SimplifiedEnemReport({ entries }: { entries: EnemReportCard[] }) {
   const latest = entries[entries.length - 1];
   const latestClassPct = pct(latest?.classificatoria_score, latest?.classificatoria_max);
   const latestSimAvg = avg([latest?.simulado_1_score, latest?.simulado_2_score, latest?.simulado_3_score]);
-  const latestSimPct = pct(latestSimAvg, latest?.simulado_max);
-  const redacaoPct = pct(latest?.redacao_score, latest?.redacao_max);
-  const firstClassPct = pct(first?.classificatoria_score, first?.classificatoria_max);
-  const delta = latestClassPct !== null && firstClassPct !== null ? latestClassPct - firstClassPct : null;
   const status = statusFromPct(latestClassPct);
+  const acertos = latest?.classificatoria_score ?? null;
+  const acertosMax = latest?.classificatoria_max ?? null;
+  const acertosLabel = acertos !== null ? `${acertos}${acertosMax !== null ? `/${acertosMax}` : ""}` : "--";
+  const scoreDelta =
+    latest?.classificatoria_score !== null && latest?.classificatoria_score !== undefined &&
+    first?.classificatoria_score !== null && first?.classificatoria_score !== undefined
+      ? latest.classificatoria_score - first.classificatoria_score
+      : null;
   const rankedSubjects = subjectScores(latest).sort((a, b) => b.score - a.score);
   const strengths = rankedSubjects.slice(0, 3);
   const attention = rankedSubjects.slice(-3).reverse();
@@ -182,14 +186,14 @@ function SimplifiedEnemReport({ entries }: { entries: EnemReportCard[] }) {
               <p className="mt-1 text-sm font-semibold text-slate-500">{status.text}</p>
             </div>
             <div className={`rounded-2xl px-5 py-4 text-center ${status.tone === "emerald" ? "bg-emerald-50 text-emerald-700" : status.tone === "amber" ? "bg-amber-50 text-amber-700" : status.tone === "red" ? "bg-red-50 text-red-600" : "bg-slate-50 text-slate-600"}`}>
-              <p className="text-[10px] font-black uppercase tracking-wider">Nota geral</p>
-              <p className="text-3xl font-black tabular-nums">{latestClassPct ?? "--"}%</p>
+              <p className="text-[10px] font-black uppercase tracking-wider">Acertos</p>
+              <p className="text-3xl font-black tabular-nums">{acertosLabel}</p>
             </div>
           </div>
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <SimpleMiniCard label="Prova" value={`${latestClassPct ?? "--"}%`} detail={delta !== null ? `${delta >= 0 ? "+" : ""}${delta} pontos desde o inicio` : "Sem comparativo"} />
-            <SimpleMiniCard label="Simulados" value={`${latestSimPct ?? "--"}%`} detail={latestSimAvg !== null ? `Media ${latestSimAvg}` : "Sem simulados"} />
-            <SimpleMiniCard label={LABELS.redacao} value={latest?.redacao_score !== null ? `${latest.redacao_score}` : "--"} detail={redacaoPct !== null ? `${redacaoPct}% do total` : "Sem redacao"} />
+            <SimpleMiniCard label="Prova" value={acertosLabel} detail={scoreDelta !== null ? `${scoreDelta >= 0 ? "+" : ""}${scoreDelta} acertos desde o inicio` : "Sem comparativo"} />
+            <SimpleMiniCard label="Simulados" value={latestSimAvg !== null ? `${latestSimAvg}${latest?.simulado_max ? `/${latest.simulado_max}` : ""}` : "--"} detail="Media dos simulados" />
+            <SimpleMiniCard label={LABELS.redacao} value={latest?.redacao_score !== null && latest?.redacao_score !== undefined ? `${latest.redacao_score}` : "--"} detail={latest?.redacao_max !== null && latest?.redacao_max !== undefined ? `de ${latest.redacao_max}` : "Sem redacao"} />
           </div>
         </div>
 
@@ -396,9 +400,9 @@ export default function ReportCardPage() {
   const colegio = entries[0]?.colegio || profile?.institution;
   const sala = entries[0]?.sala || profile?.sala;
   const turno = formatTurno(entries[0]?.turno || profile?.turno);
-  const latestClassPct = latestEnem ? pct(latestEnem.classificatoria_score, latestEnem.classificatoria_max) : null;
+  const latestAcertos = latestEnem?.classificatoria_score ?? null;
+  const latestAcertosMax = latestEnem?.classificatoria_max ?? null;
   const latestSimAvg = latestEnem ? avg([latestEnem.simulado_1_score, latestEnem.simulado_2_score, latestEnem.simulado_3_score]) : null;
-  const latestSimPct = latestEnem ? pct(latestSimAvg, latestEnem.simulado_max) : null;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-10 animate-in fade-in duration-500">
@@ -436,8 +440,8 @@ export default function ReportCardPage() {
           </div>
           {track === "enem" && latestEnem && (
             <div className="grid grid-cols-2 gap-3">
-              <MetricCard label={LABELS.classificatoria} value={`${latestClassPct ?? 0}%`} hint={LABELS.ultimo} icon={TrendingUp} />
-              <MetricCard label="Simulados" value={`${latestSimPct ?? 0}%`} hint={LABELS.media} icon={Trophy} />
+              <MetricCard label={LABELS.classificatoria} value={latestAcertos !== null ? `${latestAcertos}${latestAcertosMax !== null ? `/${latestAcertosMax}` : ""}` : "--"} hint={LABELS.ultimo} icon={TrendingUp} />
+              <MetricCard label="Simulados" value={latestSimAvg !== null ? `${latestSimAvg}${latestEnem?.simulado_max ? `/${latestEnem.simulado_max}` : ""}` : "--"} hint={LABELS.media} icon={Trophy} />
             </div>
           )}
         </div>
