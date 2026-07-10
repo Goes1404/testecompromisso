@@ -2,38 +2,33 @@
 
 import { useCallback, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle,
-  Loader2, ArrowRight, RotateCcw, Users, GraduationCap, ChevronRight, FileCheck,
+  Upload, FileSpreadsheet, CheckCircle2, Loader2, ArrowRight, RotateCcw, Users, GraduationCap, FileCheck,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 import Link from "next/link";
-import type { ReportCardImportRow, ReportCardMatchResult, ReportCardPreviewResponse, ReportCardApplyResponse, ReportCardTrack } from "@/app/api/admin/report-card-import/route";
+import type { ReportCardImportRow, ReportCardImportResponse, ReportCardTrack } from "@/app/api/admin/report-card-import/route";
 import { parseReportCardSheet, templateColumns } from "./report-card-import-lib";
 
-type Step = "upload" | "preview" | "done";
+type Step = "upload" | "done";
 
 export default function ReportCardImportPage() {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [track, setTrack] = useState<ReportCardTrack>("enem");
-  const [subtrack, setSubtrack] = useState<ReportCardTrack>("etec");
   const [semester, setSemester] = useState<1 | 2>(1);
 
   const [step, setStep] = useState<Step>("upload");
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ReportCardImportRow[]>([]);
-  const [matches, setMatches] = useState<ReportCardMatchResult[]>([]);
-  const [result, setResult] = useState<ReportCardApplyResponse | null>(null);
+  const [result, setResult] = useState<ReportCardImportResponse | null>(null);
 
   const reset = () => {
     setStep("upload");
     setRows([]);
-    setMatches([]);
     setResult(null);
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -52,7 +47,7 @@ export default function ReportCardImportPage() {
           return;
         }
         setRows(parsed);
-        toast({ title: `${parsed.length} alunos carregados da planilha`, description: "Clique em Verificar para continuar." });
+        toast({ title: `${parsed.length} alunos carregados da planilha` });
       } catch {
         toast({ title: "Erro ao ler planilha", variant: "destructive" });
       }
@@ -66,38 +61,19 @@ export default function ReportCardImportPage() {
     if (file) parseExcel(file);
   }, [parseExcel]);
 
-  const handlePreview = async () => {
+  const handleImport = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/report-card-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "preview", rows, track }),
+        body: JSON.stringify({ rows, track, semester }),
       });
       if (!res.ok) throw new Error(await res.text());
-      const data: ReportCardPreviewResponse = await res.json();
-      setMatches(data.matches);
-      setStep("preview");
-    } catch (err: any) {
-      toast({ title: "Erro ao verificar", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApply = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/report-card-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "apply", matches, track, subtrack, semester }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data: ReportCardApplyResponse = await res.json();
+      const data: ReportCardImportResponse = await res.json();
       setResult(data);
       setStep("done");
-      toast({ title: `✅ ${data.imported + data.updated} boletins enviados para aprovação!` });
+      toast({ title: `✅ ${data.inserted} boletins enviados para aprovação!` });
     } catch (err: any) {
       toast({ title: "Erro na importação", description: err.message, variant: "destructive" });
     } finally {
@@ -105,18 +81,14 @@ export default function ReportCardImportPage() {
     }
   };
 
-  const highCount = matches.filter((m) => m.confidence === "high").length;
-  const lowCount = matches.filter((m) => m.confidence === "low").length;
-  const noneCount = matches.filter((m) => m.confidence === "none").length;
-
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-primary italic leading-none">Importar Boletim</h1>
           <p className="text-muted-foreground font-medium italic text-sm">
-            Carregue a planilha de notas. Os boletins entram como <strong>pendentes</strong> e só
-            ficam visíveis ao aluno depois de aprovados em Boletins Pendentes.
+            Carregue a planilha de notas. Os boletins entram como <strong>pendentes</strong> — o
+            casamento com o aluno e a publicação acontecem em Boletins Pendentes.
           </p>
         </div>
         <Button variant="outline" asChild className="rounded-xl font-black text-xs uppercase border-slate-200 shrink-0">
@@ -128,9 +100,8 @@ export default function ReportCardImportPage() {
 
       {step === "upload" && (
         <div className="space-y-6">
-          {/* Configuração do lote */}
           <Card className="border-none shadow-sm rounded-2xl bg-slate-50">
-            <CardContent className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <CardContent className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vestibulinho</p>
                 <div className="flex rounded-xl border border-slate-200 bg-white p-1">
@@ -146,24 +117,6 @@ export default function ReportCardImportPage() {
                   ))}
                 </div>
               </div>
-
-              {track === "etec" && (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Formato da Redação</p>
-                  <div className="flex rounded-xl border border-slate-200 bg-white p-1">
-                    {(["etec", "enem"] as const).map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setSubtrack(t)}
-                        className={`flex-1 rounded-lg px-3 py-2 text-[11px] font-black uppercase transition-all ${subtrack === t ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
-                      >
-                        {t === "enem" ? "Com redação" : "Sem redação"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Semestre</p>
@@ -183,7 +136,6 @@ export default function ReportCardImportPage() {
             </CardContent>
           </Card>
 
-          {/* Drop zone */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
@@ -208,7 +160,6 @@ export default function ReportCardImportPage() {
             />
           </div>
 
-          {/* Formato esperado */}
           <Card className="border-none shadow-sm rounded-2xl bg-slate-50">
             <CardContent className="p-5">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Colunas Reconhecidas ({track === "enem" ? "ENEM" : "ETEC"})</p>
@@ -231,118 +182,19 @@ export default function ReportCardImportPage() {
                 </div>
                 <div>
                   <p className="font-black text-primary italic">{rows.length} alunos carregados</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Prontos para verificação</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Prontos para envio</p>
                 </div>
               </div>
               <Button
-                onClick={handlePreview}
+                onClick={handleImport}
                 disabled={loading}
                 className="h-11 px-6 bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase rounded-xl shadow-lg shadow-primary/30"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ChevronRight className="h-4 w-4 mr-2" />}
-                Verificar Correspondências
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowRight className="h-4 w-4 mr-2" />}
+                Enviar para Aprovação
               </Button>
             </div>
           )}
-        </div>
-      )}
-
-      {step === "preview" && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-              <div>
-                <p className="text-2xl font-black text-emerald-700 leading-none">{highCount}</p>
-                <p className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wide mt-0.5">Match certeiro</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-              <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
-              <div>
-                <p className="text-2xl font-black text-amber-700 leading-none">{lowCount}</p>
-                <p className="text-[10px] font-bold text-amber-600/70 uppercase tracking-wide mt-0.5">Match parcial</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl">
-              <XCircle className="h-5 w-5 text-red-600 shrink-0" />
-              <div>
-                <p className="text-2xl font-black text-red-700 leading-none">{noneCount}</p>
-                <p className="text-[10px] font-bold text-red-600/70 uppercase tracking-wide mt-0.5">Não encontrado</p>
-              </div>
-            </div>
-          </div>
-
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-[50vh] overflow-y-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-50 sticky top-0 z-10">
-                    <tr className="h-11">
-                      {["Planilha", "Aluno no Sistema", "Classificatória", "Redação", "Status"].map((h) => (
-                        <th key={h} className="px-4 text-left font-black text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matches.map((m, i) => (
-                      <tr key={i} className={`h-14 border-b border-slate-50 last:border-0 ${
-                        m.confidence === "none" ? "bg-red-50/40" :
-                        m.confidence === "low" ? "bg-amber-50/40" : ""
-                      }`}>
-                        <td className="px-4">
-                          <p className="font-bold text-sm text-slate-800 truncate max-w-[200px]">{m.row.name}</p>
-                        </td>
-                        <td className="px-4">
-                          {m.profileName ? (
-                            <p className="font-semibold text-sm text-slate-600 truncate max-w-[200px] italic">{m.profileName}</p>
-                          ) : (
-                            <span className="text-xs font-bold text-red-400 italic">Não encontrado</span>
-                          )}
-                        </td>
-                        <td className="px-4">
-                          <Badge className="font-black bg-primary/10 text-primary border-none text-xs">
-                            {m.row.classificatoria_score ?? "--"}{m.row.classificatoria_max ? `/${m.row.classificatoria_max}` : ""}
-                          </Badge>
-                        </td>
-                        <td className="px-4">
-                          <span className="text-xs font-bold text-slate-500">{m.row.redacao_score ?? "--"}</span>
-                        </td>
-                        <td className="px-4">
-                          {m.confidence === "high" && <Badge className="bg-emerald-100 text-emerald-700 border-none font-bold text-[9px] uppercase">✓ Confirmado</Badge>}
-                          {m.confidence === "low" && <Badge className="bg-amber-100 text-amber-700 border-none font-bold text-[9px] uppercase">⚠ Parcial</Badge>}
-                          {m.confidence === "none" && <Badge className="bg-red-100 text-red-700 border-none font-bold text-[9px] uppercase">✗ Ignorado</Badge>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {noneCount > 0 && (
-            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700">
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-              <p className="text-xs font-bold">
-                {noneCount} aluno(s) não foram encontrados no sistema e serão ignorados.
-              </p>
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="outline" onClick={reset} className="h-12 px-6 rounded-xl font-black text-xs uppercase border-slate-200">
-              <RotateCcw className="h-4 w-4 mr-2" /> Recomeçar
-            </Button>
-            <Button
-              onClick={handleApply}
-              disabled={loading || highCount + lowCount === 0}
-              className="flex-1 h-12 bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase rounded-xl shadow-lg shadow-primary/30"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowRight className="h-4 w-4 mr-2" />}
-              Enviar {highCount + lowCount} Boletins para Aprovação
-            </Button>
-          </div>
         </div>
       )}
 
@@ -357,10 +209,10 @@ export default function ReportCardImportPage() {
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Importação Concluída</p>
                 <h2 className="text-3xl font-black italic text-white leading-none">
-                  {result.imported + result.updated} <span className="text-primary">boletins</span> pendentes
+                  {result.inserted} <span className="text-primary">boletins</span> pendentes
                 </h2>
                 <p className="text-sm font-medium text-white/60 mt-1">
-                  {result.imported} novos · {result.updated} atualizados · {result.skipped} ignorados · {result.errors.length} erros
+                  {result.errors.length > 0 ? `${result.errors.length} linha(s) ignorada(s)` : "Todas as linhas foram importadas"}
                 </p>
               </div>
             </div>
@@ -369,7 +221,7 @@ export default function ReportCardImportPage() {
           {result.errors.length > 0 && (
             <Card className="border-none shadow-sm rounded-2xl bg-red-50 border border-red-100">
               <CardContent className="p-5 space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-red-400">Erros</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-400">Avisos</p>
                 {result.errors.map((e, i) => (
                   <p key={i} className="text-xs font-medium text-red-700">{e}</p>
                 ))}
@@ -383,9 +235,8 @@ export default function ReportCardImportPage() {
               <p className="font-black text-emerald-700">Próximo passo</p>
             </div>
             <p className="ml-7 text-xs text-emerald-700 font-medium">
-              Os boletins ficam pendentes até serem revisados. Acesse{" "}
-              <Link href="/dashboard/admin/report-card-approvals" className="underline font-bold">Boletins Pendentes</Link>{" "}
-              para aprovar ou rejeitar antes que fiquem visíveis aos alunos.
+              Acesse <Link href="/dashboard/admin/report-card-approvals" className="underline font-bold">Boletins Pendentes</Link> para
+              confirmar o aluno de cada linha importada e aprovar antes que fiquem visíveis para os alunos.
             </p>
           </div>
 

@@ -114,7 +114,7 @@ export function parseReportCardSheet(raw: unknown[][], track: ReportCardTrack): 
     .filter((row) => nameIdx !== -1 && row[nameIdx])
     .map((row) => {
       const out: ReportCardImportRow = {
-        name: String(row[nameIdx]).trim(),
+        full_name: String(row[nameIdx]).trim(),
         colegio: readText(row, colIndex.colegio),
         sala: readText(row, colIndex.sala),
         turno: readText(row, colIndex.turno),
