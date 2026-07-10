@@ -392,7 +392,7 @@ export default function ReportCardPage() {
     );
   }
 
-  const trackLabel = track === "enem" ? "Vestibulinho ENEM" : "Vestibulinho ETEC";
+  const trackLabel = track === "enem" ? "Vestibular ENEM" : "Vestibulinho ETEC";
   const colegio = entries[0]?.colegio || profile?.institution;
   const sala = entries[0]?.sala || profile?.sala;
   const turno = formatTurno(entries[0]?.turno || profile?.turno);
