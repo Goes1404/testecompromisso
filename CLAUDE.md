@@ -144,6 +144,28 @@ já **aplicadas em produção** e versionadas em `/supabase/migrations` e `/supa
 
 **⚠️ Rotacionar a `SUPABASE_SERVICE_ROLE_KEY`:** foi exposta em texto puro num chat durante a auditoria.
 
+#### 🐛 Causa-raiz descoberta: claim `user_role` do JWT é sempre `null`
+
+Não existe *custom access token hook* configurado no Auth, então **`auth.jwt() ->> 'user_role'`
+(e `get_my_claim('user_role')`) retornam `null` para os 1622 usuários**. Toda policy que
+gateia por esse claim **nunca concede acesso** — era mascarado pelas policies abertas.
+Ao removê-las, operações legítimas quebraram. **Regra:** para papel em RLS, use sempre
+`EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text IN (...))` —
+**nunca** `auth.jwt()->>'user_role'`. (Fix definitivo de longo prazo: criar o hook de
+access token OU migrar as poucas policies mortas restantes.)
+
+Regressões corrigidas na revisão completa de RLS (migrations `050000`/`060000`, verificadas
+por simulação de RLS `set role authenticated` + `request.jwt.claims`):
+- `forums`/`forum_bans` (moderação de fórum: criar/apagar tópico, banir/desbanir) → `profiles.role` admin/staff.
+- `modules`/`learning_contents`/`library_resources` (gestão de conteúdo) → `profiles.role` admin/staff/teacher.
+- `student_question_answers` (admin/professor viam desempenho do aluno vazio) → SELECT por `profiles.role`.
+
+Policies mortas remanescentes **sem impacto** (feature não usada client-side ou coberta por
+outra policy): `subjects`, `live_messages` (moderador), `classes` (admin gerencia de outros),
+`announcements` (admin edita de outros), `questions` (redundante). Nota menor de exposição:
+`forums.open_select_for_authenticated_forums` (true) deixa fóruns `is_teacher_only` visíveis a
+alunos — revisar se a confidencialidade importa.
+
 ### 📱 Plano: reset de senha & primeiro acesso (telefone + SMS) — FASE 2 IMPLEMENTADA
 
 Decisão de produto: **não armazenar CPF**; usar **telefone** como base da recuperação
