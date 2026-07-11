@@ -240,7 +240,9 @@ export default function SecretaryKPIPage() {
     if (userRole === "staff" || userRole === "admin") fetchKpi();
   }, [fetchKpi, userRole]);
 
-  if (isUserLoading || loading) {
+  // Só auth/role travam a tela cheia — cabeçalho pinta no primeiro paint;
+  // stat cards e gráficos ganham skeleton próprio abaixo.
+  if (isUserLoading) {
     return (
       <div className="h-96 flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -326,11 +328,15 @@ export default function SecretaryKPIPage() {
               >
                 <s.icon className="h-4 w-4" />
               </div>
-              <p className="text-3xl font-black text-primary leading-none italic">{s.value}</p>
+              {loading ? (
+                <div className="h-8 w-14 rounded-lg bg-slate-100 animate-pulse" />
+              ) : (
+                <p className="text-3xl font-black text-primary leading-none italic">{s.value}</p>
+              )}
               <p className="text-[10px] text-primary/70 font-black uppercase tracking-wider mt-2">
                 {s.label}
               </p>
-              <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{s.sub}</p>
+              <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{loading ? '' : s.sub}</p>
             </CardContent>
           </Card>
         ))}
@@ -350,7 +356,9 @@ export default function SecretaryKPIPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-0">
-            {kpi.attendanceTrend.length === 0 ? (
+            {loading ? (
+              <div className="h-52 rounded-2xl bg-slate-50 animate-pulse" />
+            ) : kpi.attendanceTrend.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-muted-foreground text-sm italic opacity-50">
                 Sem dados de frequência ainda.
               </div>
@@ -382,7 +390,9 @@ export default function SecretaryKPIPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-0">
-            {kpi.byClass.length === 0 ? (
+            {loading ? (
+              <div className="h-52 rounded-2xl bg-slate-50 animate-pulse" />
+            ) : kpi.byClass.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-muted-foreground text-sm italic opacity-50">
                 Nenhuma turma encontrada.
               </div>

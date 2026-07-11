@@ -205,7 +205,7 @@ export default function SecretaryFinancePage() {
     w.document.close();
   };
 
-  if (isUserLoading || loading) {
+  if (isUserLoading) {
     return (
       <div className="h-96 flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -261,7 +261,9 @@ export default function SecretaryFinancePage() {
             />
           </div>
           <div className="space-y-1.5 max-h-[60vh] overflow-y-auto pr-1">
-            {filteredTeachers.length === 0 ? (
+            {loading ? (
+              Array(4).fill(0).map((_, i) => <div key={i} className="h-[60px] rounded-2xl bg-slate-50 animate-pulse" />)
+            ) : filteredTeachers.length === 0 ? (
               <p className="py-8 text-center text-xs text-slate-400 italic">Nenhum professor encontrado.</p>
             ) : filteredTeachers.map((t) => {
               const r = rates[t.id];
