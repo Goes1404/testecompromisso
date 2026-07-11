@@ -7,7 +7,7 @@ import {
   Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle,
   Target, Shuffle, ClipboardList, CheckCircle2, XCircle, BookOpen,
   Timer, ChevronRight, ChevronDown, ChevronUp, Zap, Trophy, Play, Pause, LogOut,
-  Sun, Moon, TrendingUp, Flame
+  Sun, Moon, TrendingUp, Flame, Clock
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -151,6 +151,7 @@ export default function SimuladoPage() {
   const [simSize, setSimSize]       = useState<number>(10);
   const [timeLeft, setTimeLeft]     = useState<number | null>(null);
   const [isPaused, setIsPaused]     = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0); // cronômetro crescente (tempo gasto)
   // Active theme (dark or light)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
@@ -246,6 +247,7 @@ export default function SimuladoPage() {
       });
       setQuestions(formatted); setCurrentIndex(0); setAnswers([]); setSelectedAnswer(null);
       setTimeLeft(formatted.length * 3.5 * 60); setIsPaused(false);
+      setElapsedSeconds(0);
       setExpandedIndex(null);
       setGameState('active');
     } catch (e: any) {
@@ -264,6 +266,13 @@ export default function SimuladoPage() {
     const t = setInterval(() => setTimeLeft(p => (p !== null ? p - 1 : null)), 1000);
     return () => clearInterval(t);
   }, [gameState, timeLeft, isPaused, toast]);
+
+  // ── cronômetro crescente (tempo gasto) — congela ao pausar e ao finalizar ──
+  useEffect(() => {
+    if (gameState !== 'active' || isPaused) return;
+    const t = setInterval(() => setElapsedSeconds(p => p + 1), 1000);
+    return () => clearInterval(t);
+  }, [gameState, isPaused]);
 
   // Confetti trigger on game finish
   useEffect(() => {
@@ -442,6 +451,16 @@ export default function SimuladoPage() {
 
           {/* Central Controls (Timer, Theme Toggle, Exit) */}
           <div className="flex items-center gap-2">
+            {/* Cronômetro — tempo decorrido */}
+            <div
+              title="Tempo decorrido"
+              className={`hidden sm:flex items-center gap-1.5 rounded-2xl px-3 py-2 border tabular-nums
+                ${isDark ? 'bg-white/5 border-white/10 text-white/55' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
+            >
+              <Clock className="h-3.5 w-3.5 opacity-70" />
+              <span className="text-xs font-black tracking-widest">{formatTime(elapsedSeconds)}</span>
+            </div>
+
             {/* Timer */}
             {timeLeft !== null && (
               <div 
@@ -656,6 +675,13 @@ export default function SimuladoPage() {
             <p className="text-white/60 text-xs font-semibold max-w-sm">
               Você concluiu o teste personalizado e seus pontos foram computados.
             </p>
+
+            {/* Tempo total gasto */}
+            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-4 py-2">
+              <Clock className="h-4 w-4 text-orange-400" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/40">Tempo total</span>
+              <span className="text-sm font-black text-white tabular-nums tracking-wider">{formatTime(elapsedSeconds)}</span>
+            </div>
           </div>
 
           {/* Gamified Reward Banner */}
