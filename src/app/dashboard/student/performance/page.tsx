@@ -25,6 +25,23 @@ import { format, subDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { RadarChartPremium, AreaChartPremium } from "@/components/charts/premium";
 
+// Tempo em h/min a partir de segundos (ex.: 4520 -> "1h 15min", 435 -> "7min", 40 -> "40s")
+function fmtDurationLong(seconds: number) {
+  if (!seconds || seconds <= 0) return "0min";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return m > 0 ? `${h}h ${m}min` : `${h}h`;
+  if (m > 0) return `${m}min`;
+  return `${seconds}s`;
+}
+
+// Cronômetro MM:SS (ou H:MM:SS) para a coluna de tempo por tentativa
+function fmtClock(seconds: number) {
+  if (!seconds || seconds <= 0) return "—";
+  const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = seconds % 60;
+  return `${h > 0 ? h + ":" : ""}${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
 export default function StudentPerformancePage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -38,6 +55,7 @@ export default function StudentPerformancePage() {
   
   const [subjectData, setSubjectData] = useState<any[]>([]);
   const [historyData, setHistoryData] = useState<any[]>([]);
+  const [attempts, setAttempts] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -58,6 +76,16 @@ export default function StudentPerformancePage() {
           .eq('student_id', user.id);
 
         if (error) throw error;
+
+        // Tentativas de simulado (com o tempo gasto persistido)
+        const { data: attemptRows } = await supabase
+          .from('simulation_attempts')
+          .select('id, score, total_questions, duration_seconds, created_at, subjects(name)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(30);
+        setAttempts(attemptRows || []);
+        const realTimeSpent = (attemptRows || []).reduce((acc, a) => acc + (a.duration_seconds || 0), 0);
 
         if (answers && answers.length > 0) {
           const total = answers.length;
@@ -97,7 +125,8 @@ export default function StudentPerformancePage() {
             totalAnswered: total,
             correctCount: corrects,
             accuracy: Math.round((corrects / total) * 100),
-            timeSpent: total * 45, // Simulado: 45s por questão
+            // Tempo real gasto em simulados; fallback pro estimado se ainda não houver dados de duração.
+            timeSpent: realTimeSpent > 0 ? realTimeSpent : total * 45,
             streak: 5 // Mock
           });
           setSubjectData(radar);
@@ -160,7 +189,7 @@ export default function StudentPerformancePage() {
         {[
           { label: "Questões",     value: stats.totalAnswered,                      icon: BrainCircuit, color: "text-blue-500",   bg: "bg-blue-50" },
           { label: "Taxa de Acerto", value: `${stats.accuracy}%`,                   icon: Target,       color: "text-orange-500", bg: "bg-orange-50" },
-          { label: "Tempo Estudo", value: `${Math.round(stats.timeSpent / 3600)}h`, icon: Clock,        color: "text-purple-500", bg: "bg-purple-50" },
+          { label: "Tempo em Simulados", value: fmtDurationLong(stats.timeSpent), icon: Clock,        color: "text-purple-500", bg: "bg-purple-50" },
           { label: "Sequência",    value: `${stats.streak}d`,                       icon: Zap,          color: "text-amber-500",  bg: "bg-amber-50" },
         ].map((stat, i) => (
           <div key={i} className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 transition-all">
@@ -245,6 +274,61 @@ export default function StudentPerformancePage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ── HISTÓRICO DE SIMULADOS (com tempo gasto) ── */}
+      <div className="space-y-3">
+        <h3 className="text-base font-black text-slate-900 italic px-1 uppercase tracking-tighter flex items-center gap-2">
+          <Clock className="h-4 w-4 text-purple-500" />
+          Histórico de Simulados
+        </h3>
+        <div className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
+          {attempts.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 italic text-sm">
+              Nenhum simulado finalizado ainda. Ao concluir um simulado, o tempo aparece aqui.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/60">
+                    <th className="text-left px-4 md:px-6 py-3 font-black uppercase text-[9px] tracking-widest text-slate-400">Data</th>
+                    <th className="text-left px-2 py-3 font-black uppercase text-[9px] tracking-widest text-slate-400">Matéria</th>
+                    <th className="text-center px-2 py-3 font-black uppercase text-[9px] tracking-widest text-slate-400">Acertos</th>
+                    <th className="text-center px-2 py-3 font-black uppercase text-[9px] tracking-widest text-slate-400">%</th>
+                    <th className="text-right px-4 md:px-6 py-3 font-black uppercase text-[9px] tracking-widest text-slate-400">Tempo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attempts.map((a) => {
+                    const pct = a.total_questions > 0 ? Math.round((a.score / a.total_questions) * 100) : 0;
+                    return (
+                      <tr key={a.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 md:px-6 py-3 font-bold text-slate-600 whitespace-nowrap">
+                          {format(new Date(a.created_at), "dd/MM/yy", { locale: ptBR })}
+                        </td>
+                        <td className="px-2 py-3 font-semibold text-slate-500">
+                          {a.subjects?.name || "Geral / Misto"}
+                        </td>
+                        <td className="px-2 py-3 text-center font-black text-slate-800 tabular-nums">
+                          {a.score}<span className="text-slate-300">/{a.total_questions}</span>
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          <span className={`text-xs font-black px-2 py-0.5 rounded-full ${pct >= 70 ? 'bg-green-50 text-green-600' : pct >= 50 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'}`}>
+                            {pct}%
+                          </span>
+                        </td>
+                        <td className="px-4 md:px-6 py-3 text-right font-black text-purple-600 tabular-nums whitespace-nowrap">
+                          {fmtClock(a.duration_seconds)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
