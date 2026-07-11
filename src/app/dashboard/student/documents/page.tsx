@@ -81,7 +81,9 @@ export default function StudentAdmissionCentral() {
   }, [user]);
 
   const toggleItem = async (itemId: string) => {
-    if (!user || savingDoc) return;
+    // trava clique até o fetch inicial chegar — clicar antes disso seria
+    // sobrescrito pelo setCheckedItems(data) quando a query resolvesse
+    if (!user || savingDoc || loadingDocs) return;
     const isChecked = checkedItems.includes(itemId);
     const newItems = isChecked ? checkedItems.filter(i => i !== itemId) : [...checkedItems, itemId];
     setCheckedItems(newItems);
@@ -102,13 +104,9 @@ export default function StudentAdmissionCentral() {
   const totalDocs = DOCUMENT_GROUPS.reduce((acc, group) => acc + group.items.length, 0);
   const progressPercent = Math.round((checkedItems.length / totalDocs) * 100);
 
-  if (loadingDocs) return (
-    <div className="h-96 flex flex-col items-center justify-center gap-4">
-      <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">Sincronizando Checklist...</p>
-    </div>
-  );
-
+  // Hero + as 5 dicas fixas abaixo não dependem de dado nenhum — só os
+  // checkboxes do checklist esperam a query. Gate cheio aqui prendia
+  // conteúdo 100% estático atrás de uma query de 1 linha.
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 px-1">
       <section className="bg-primary p-8 md:p-12 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl">
@@ -147,16 +145,16 @@ export default function StudentAdmissionCentral() {
               </CardHeader>
               <CardContent className="p-8 space-y-4">
                 {group.items.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                      checkedItems.includes(item.id) 
-                        ? 'bg-green-50/50 border-green-200' 
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${loadingDocs ? 'opacity-50 cursor-default' : 'cursor-pointer'} ${
+                      checkedItems.includes(item.id)
+                        ? 'bg-green-50/50 border-green-200'
                         : 'bg-white border-transparent hover:border-muted/20'
                     }`}
                     onClick={() => toggleItem(item.id)}
                   >
-                    <Checkbox checked={checkedItems.includes(item.id)} onCheckedChange={() => toggleItem(item.id)} className="h-6 w-6 rounded-lg border-2" />
+                    <Checkbox checked={checkedItems.includes(item.id)} disabled={loadingDocs} onCheckedChange={() => toggleItem(item.id)} className="h-6 w-6 rounded-lg border-2" />
                     <span className={`text-sm font-bold italic transition-colors ${checkedItems.includes(item.id) ? 'text-green-700' : 'text-primary'}`}>{item.label}</span>
                     {checkedItems.includes(item.id) && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto" />}
                   </div>

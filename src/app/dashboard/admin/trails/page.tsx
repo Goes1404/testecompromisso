@@ -70,13 +70,8 @@ export default function TrailApprovalPage() {
 
   const filteredTrails = trails.filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  if (loading) return (
-    <div className="h-96 flex flex-col items-center justify-center gap-4">
-      <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Carregando Controle de Qualidade...</p>
-    </div>
-  );
-
+  // Cabeçalho + busca não dependem de dado nenhum — só a tabela espera a
+  // query. Gate cheio aqui prendia UI estática atrás do fetch de trilhas.
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-1">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -117,7 +112,16 @@ export default function TrailApprovalPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTrails.map((trail) => (
+                {loading && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="p-0">
+                      <div className="space-y-2 p-4">
+                        {Array(4).fill(0).map((_, i) => <div key={i} className="h-20 rounded-2xl bg-slate-50 animate-pulse" />)}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!loading && filteredTrails.map((trail) => (
                   <TableRow key={trail.id} className="border-b last:border-0 hover:bg-accent/5 transition-colors group h-24">
                     <TableCell className="px-8">
                       <div>

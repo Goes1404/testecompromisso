@@ -95,14 +95,19 @@ export default function DirectChatPage() {
             setContact({ name: "Mentor da Rede", institution: "Compromisso 360" });
           }
 
-          const { data: msgs, error: msgsError } = await supabase
+          // Teto defensivo: sem limite, uma conversa longa reenviaria o
+          // histórico inteiro a cada abertura do chat. 300 mais recentes
+          // (desc, depois reordenadas) cobre qualquer thread real de hoje
+          // sem herdar meses de mensagens pra sempre conforme o uso cresce.
+          const { data: msgsDesc, error: msgsError } = await supabase
             .from('direct_messages')
             .select('*')
             .or(`and(sender_id.eq.${user.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${user.id})`)
-            .order('created_at', { ascending: true });
-          
+            .order('created_at', { ascending: false })
+            .limit(300);
+
           if (!msgsError) {
-            setMessages(msgs || []);
+            setMessages((msgsDesc || []).slice().reverse());
           } else {
             toast({ title: "Falha ao carregar mensagens", description: "Verifique sua conexão.", variant: "destructive" });
           }
