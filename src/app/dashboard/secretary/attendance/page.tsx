@@ -27,6 +27,7 @@ import {
   FileSpreadsheet,
   Link2,
   LogOut,
+  MapPin,
 } from "lucide-react";
 import {
   Select,
@@ -47,6 +48,7 @@ import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { StudentRoomTracker } from "@/components/secretary/StudentRoomTracker";
 
 type AttendanceStatus = "presente" | "ausente" | "justificado";
 type AttendanceMethod = "app" | "manual" | "override";
@@ -81,6 +83,7 @@ export default function SecretaryAttendancePage() {
 
   // Diálogos / Estados
   const [createOpen, setCreateOpen] = useState(false);
+  const [trackerOpen, setTrackerOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [classFilter, setClassFilter] = useState("all");
 
@@ -421,6 +424,7 @@ export default function SecretaryAttendancePage() {
           method,
           left_early: rec.status === "presente" && rec.leftEarly,
           left_early_time: rec.status === "presente" && rec.leftEarly ? (rec.leftEarlyTime || null) : null,
+          recorded_by: user.id, // auditoria: quem lançou/atualizou a chamada
         };
       });
 
@@ -675,20 +679,31 @@ export default function SecretaryAttendancePage() {
             Agende aulas, defina professores responsáveis e gerencie o histórico de faltas/presenças.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setNewTitle("");
-            setNewDesc("");
-            setNewSubject("");
-            setNewTeacherId("");
-            setTitleTouched(false);
-            setCreateOpen(true);
-          }}
-          className="bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 gap-2 hover:scale-[1.02] active:scale-95 transition-all border-none shrink-0"
-        >
-          <PlusCircle className="h-4 w-4" /> Nova Aula / Sessão
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            onClick={() => setTrackerOpen(true)}
+            variant="outline"
+            className="bg-white text-primary border-slate-200 font-black rounded-2xl shadow-sm h-12 px-5 gap-2 hover:bg-slate-50 transition-all"
+          >
+            <MapPin className="h-4 w-4" /> Rastrear Sala
+          </Button>
+          <Button
+            onClick={() => {
+              setNewTitle("");
+              setNewDesc("");
+              setNewSubject("");
+              setNewTeacherId("");
+              setTitleTouched(false);
+              setCreateOpen(true);
+            }}
+            className="bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 gap-2 hover:scale-[1.02] active:scale-95 transition-all border-none"
+          >
+            <PlusCircle className="h-4 w-4" /> Nova Aula / Sessão
+          </Button>
+        </div>
       </div>
+
+      <StudentRoomTracker open={trackerOpen} onClose={() => setTrackerOpen(false)} />
 
       {/* Lista de Sessões */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1252,6 +1267,12 @@ export default function SecretaryAttendancePage() {
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Data da Aula</Label>
                 <Input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm" />
+                {newDate && newDate < format(new Date(), "yyyy-MM-dd") && (
+                  <p className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600 ml-1 mt-1">
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    Aula retroativa — o lançamento fica registrado no seu nome.
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Mentor / Professor *</Label>
