@@ -321,6 +321,15 @@ export default function SimuladoPage() {
     } else {
       const s = newAnswers.filter(a => norm(a.selected) === norm(a.correct)).length;
       if (user) {
+        // Registra a tentativa (inclui o tempo gasto). subject_id só no modo matéria.
+        supabase.from('simulation_attempts').insert({
+          user_id: user.id,
+          subject_id: mode === 'materia' && selectedSubjectId ? selectedSubjectId : null,
+          score: s,
+          total_questions: newAnswers.length,
+          duration_seconds: elapsedSeconds,
+        }).then(() => {});
+
         const xp = s * XP_PER_CORRECT_QUESTION + XP_PER_SIMULADO_COMPLETE;
         awardXP(user.id, xp).then(() => {});
         trackMissionProgress(supabase, user.id, 'answer_questions', newAnswers.length).then(() => {});
