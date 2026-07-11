@@ -100,31 +100,20 @@ export default function CoordinatorDashboard() {
     setLoading(true);
     
     try {
-      // 1. BUSCA DE PERFIS (ESTATÍSTICAS GERAIS) - Busca simplificada para performance
-      const { data: allProfiles, error: pErr } = await supabase
-        .from('profiles')
-        .select('role, is_financial_aid_eligible');
-
-      let studentCount = 0;
-      let teacherCount = 0;
-      let eligibleCount = 0;
-
-      if (!pErr && allProfiles) {
-        allProfiles.forEach(p => {
-          // role é o enum confiável (student/teacher/staff/admin); profile_type
-          // é texto livre (etec/enem/"Prof. Matemática") e subcontaria os papéis.
-          const role = (p.role || '').toLowerCase();
-          if (role === 'student') {
-            studentCount++;
-            if (p.is_financial_aid_eligible) eligibleCount++;
-          } else if (role === 'teacher' || role === 'admin' || role === 'staff') {
-            teacherCount++;
-          }
-        });
-      }
-
-      // 2. PROGRESSO: engajados (qualquer %) e concluídos (percentage >= 100)
-      const [{ count: engagedCount }, { count: finishedCount }] = await Promise.all([
+      // 1. BUSCA DE PERFIS — head:true: banco devolve só a contagem, nunca as
+      // 723+ linhas (antes vinham role+is_financial_aid_eligible de TODO
+      // profile só pra somar em memória — puro desperdício de payload/CPU).
+      const [
+        { count: studentCount },
+        { count: teacherCount },
+        { count: eligibleCount },
+        { count: engagedCount },
+        { count: finishedCount },
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).in('role', ['teacher', 'admin', 'staff']),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student').eq('is_financial_aid_eligible', true),
+        // 2. PROGRESSO: engajados (qualquer %) e concluídos (percentage >= 100)
         supabase.from('user_progress').select('*', { count: 'exact', head: true }),
         supabase.from('user_progress').select('*', { count: 'exact', head: true }).gte('percentage', 100),
       ]);
@@ -151,15 +140,16 @@ export default function CoordinatorDashboard() {
       }
 
       const finished = finishedCount ?? 0;
+      const students = studentCount ?? 0;
       setStats({
-        totalStudents: studentCount,
-        totalTeachers: teacherCount,
+        totalStudents: students,
+        totalTeachers: teacherCount ?? 0,
         startedTrails: engagedCount ?? 0,
         finishedTrails: finished,
-        avgFinishedPerStudent: studentCount > 0
-          ? Math.round((finished / studentCount) * 100) / 100
+        avgFinishedPerStudent: students > 0
+          ? Math.round((finished / students) * 100) / 100
           : 0,
-        eligibleStudents: eligibleCount,
+        eligibleStudents: eligibleCount ?? 0,
       });
 
     } catch (err) {
@@ -173,7 +163,9 @@ export default function CoordinatorDashboard() {
     if (userRole === 'admin' || userRole === 'staff') fetchDashboardData();
   }, [fetchDashboardData, userRole]);
 
-  if (isUserLoading || loading || (userRole !== 'admin' && userRole !== 'staff')) return (
+  // Só auth/role travam a tela cheia — herói e cards pintam no primeiro
+  // paint com skeleton próprio; antes ficavam atrás das 5 queries de `loading`.
+  if (isUserLoading || (userRole !== 'admin' && userRole !== 'staff')) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-accent" />
       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Auditoria Global...</p>
@@ -263,7 +255,11 @@ export default function CoordinatorDashboard() {
           <Card key={i} className="border-none shadow-sm rounded-2xl bg-white overflow-hidden border border-slate-100 hover:shadow-md transition-shadow">
             <CardContent className="p-4 md:p-5">
               <stat.icon className={`h-4 w-4 ${stat.accent} mb-3`} strokeWidth={1.5} />
-              <p className={`text-3xl md:text-4xl font-black italic leading-none tabular-nums ${stat.accent}`}>{stat.value}</p>
+              {loading ? (
+                <div className="h-8 w-14 rounded-lg bg-slate-100 animate-pulse" />
+              ) : (
+                <p className={`text-3xl md:text-4xl font-black italic leading-none tabular-nums ${stat.accent}`}>{stat.value}</p>
+              )}
               <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-2">{stat.label}</p>
               <p className="text-[9px] text-slate-400 mt-0.5">{stat.sub}</p>
             </CardContent>
@@ -278,7 +274,9 @@ export default function CoordinatorDashboard() {
             <CardDescription className="text-sm">Últimas respostas de simulados na plataforma.</CardDescription>
           </CardHeader>
           <CardContent className="p-5 md:p-8 space-y-2.5">
-            {logs.length === 0 ? (
+            {loading ? (
+              Array(5).fill(0).map((_, i) => <div key={i} className="h-[76px] rounded-[2rem] bg-slate-50 animate-pulse" />)
+            ) : logs.length === 0 ? (
               <div className="py-16 text-center opacity-30 italic font-medium border-2 border-dashed rounded-[2rem]">Nenhuma atividade recente registrada.</div>
             ) : (
               logs.map((log) => (
