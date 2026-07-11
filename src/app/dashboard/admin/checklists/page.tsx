@@ -88,8 +88,17 @@ export default function AdminChecklistAuditPage() {
           .from('student_checklists')
           .select('user_id');
 
+        // Conta por aluno em uma passada (Map) — antes era um .filter() por
+        // aluno dentro do .map(), ou seja O(alunos × itens de checklist) rodando
+        // no navegador; com ~700 alunos × múltiplos itens isso trava a thread
+        // principal no celular.
+        const countByStudent = new Map<string, number>();
+        for (const c of checklistData || []) {
+          countByStudent.set(c.user_id, (countByStudent.get(c.user_id) ?? 0) + 1);
+        }
+
         const progressMap = studentProfiles.map(p => {
-          const count = (checklistData || []).filter(c => c.user_id === p.id).length;
+          const count = countByStudent.get(p.id) ?? 0;
           const percent = (count / TOTAL_REQUIRED_DOCS) * 100;
           
           return {

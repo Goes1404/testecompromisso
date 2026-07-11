@@ -52,10 +52,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ user1: user1 ?? null, user2: user2 ?? null, messages: messages ?? [] } satisfies ThreadDetail);
   }
 
+  // Teto defensivo: hoje ~700 mensagens no total, mas a query não tinha limite
+  // algum — cada mensagem histórica do app inteiro seria reenviada a cada
+  // carregamento da auditoria. 5000 (desc) garante a última mensagem de cada
+  // thread mesmo com uso bem maior, sem herdar o histórico inteiro pra sempre.
   const { data: messages, error } = await supabase
     .from("direct_messages")
     .select("sender_id, receiver_id, content, created_at")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(5000);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
