@@ -173,7 +173,7 @@ export default function CoordinatorDashboard() {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-20 px-1">
+    <div className="space-y-6 pb-20 px-1">
       {/* HERO */}
       <div className="relative aurora-dark rounded-[2rem] p-5 md:p-8 shadow-xl overflow-hidden">
         <div className="absolute top-0 right-0 w-60 h-60 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />

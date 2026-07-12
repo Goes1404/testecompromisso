@@ -1,31 +1,30 @@
 import { AuthProvider } from '@/lib/AuthProvider';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { Inter, Sora } from 'next/font/google';
+import { Sora } from 'next/font/google';
 import { ClientWrapper } from '@/components/ClientWrapper';
 import { Suspense } from 'react';
 import { LoadingShell } from '@/components/LoadingShell';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
-
+// Sora é a única fonte de fato renderizada (sempre 1ª no stack `sans`). Inter
+// era carregada mas nunca pintava — removida (4 woff2 a menos). Pesos alinhados
+// ao uso: 300 (light) tinha 0 usos e saiu. 800 é o mais pesado que o Sora
+// oferece (não existe 900), então `font-black` sintetiza a partir dele.
 const sora = Sora({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-sora',
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const metadata = {
   title: 'Compromisso | Curso Preparatório ENEM e ETEC em Santana de Parnaíba',
   description: 'O cursinho preparatório de elite em Santana de Parnaíba. Metodologia focada, simulados, correção de redação com IA e mentoria para aprovação no ENEM, ETEC, FATEC e USP.',
   keywords: 'curso preparatório, cursinho enem, pre vestibulinho etec, santana de parnaíba, aprovação, redação enem',
-  manifest: '/manifest.json',
+  // manifest gerado por src/app/manifest.ts (/manifest.webmanifest). Não
+  // declarar aqui também — evita <link rel="manifest"> duplicado.
   appleWebApp: {
     capable: true,
     title: "Compromisso",
@@ -41,7 +40,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${sora.variable} ${inter.variable} font-sans`}>
+    <html lang="pt-BR" className={`${sora.variable} font-sans`}>
       <head>
         <script
           dangerouslySetInnerHTML={{

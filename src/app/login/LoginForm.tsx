@@ -44,7 +44,10 @@ export function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-6 zoom-in-95 duration-700 ease-out">
+    // Entrada só por transform (slide/zoom) — SEM fade de opacity: o H1 é o
+    // elemento LCP e um fade a partir de opacity:0 adia o LCP até o fim da
+    // animação (~720ms). Transform é compositor-only e não atrasa o LCP.
+    <div className="w-full max-w-[420px] animate-in slide-in-from-bottom-4 zoom-in-95 duration-500 ease-out">
       {/* ── Outer glow ring ── */}
       <div className="border-prism rounded-[2rem]">
         <div className="glass-login rounded-[2rem] p-8 md:p-10 relative overflow-hidden">
@@ -62,14 +65,14 @@ export function LoginForm() {
           />
 
           {/* ── Logo ── */}
-          <div className="flex justify-center mb-6 animate-in fade-in slide-in-from-top-2 duration-500 [animation-delay:150ms] fill-mode-both">
+          <div className="flex justify-center mb-6">
             <div className="relative w-44 h-14">
               <Image src={logoUrl} alt="Logo Compromisso" fill unoptimized priority className="object-contain drop-shadow-[0_0_12px_rgba(255,107,0,0.5)]" />
             </div>
           </div>
 
-          {/* ── Heading ── */}
-          <div className="text-center mb-8 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500 [animation-delay:220ms] fill-mode-both">
+          {/* ── Heading (contém o H1 = elemento LCP; sem fade pra pintar já) ── */}
+          <div className="text-center mb-8 space-y-2">
             <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full mb-1">
               <Sparkles className="h-3 w-3 text-orange-400" />
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-orange-400">Plataforma Educacional</span>
@@ -85,7 +88,7 @@ export function LoginForm() {
           {/* ── Form ── */}
           <form
             onSubmit={handleLogin}
-            className="space-y-4 animate-in fade-in duration-500 [animation-delay:300ms] fill-mode-both"
+            className="space-y-4"
           >
             {/* Email */}
             <div className="space-y-1.5">
@@ -178,7 +181,7 @@ export function LoginForm() {
           </form>
 
           {/* ── Trust badge ── */}
-          <div className="mt-8 pt-5 border-t border-white/5 flex items-center justify-center gap-2 animate-in fade-in duration-500 [animation-delay:500ms] fill-mode-both">
+          <div className="mt-8 pt-5 border-t border-white/5 flex items-center justify-center gap-2">
             <ShieldCheck className="h-3.5 w-3.5 text-white/20" />
             <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
               Acesso seguro · Dados criptografados
