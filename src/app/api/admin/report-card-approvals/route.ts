@@ -45,6 +45,7 @@ export type PendingEntry = {
   imported_at: string;
   created_by_name: string | null;
   suggested_match: SuggestedMatch;
+  suggested_has_report: boolean; // o aluno sugerido já tem boletim deste track+semestre?
 };
 
 // GET /api/admin/report-card-approvals → fila report_card_pending (status='pending')
@@ -55,17 +56,29 @@ export async function GET() {
 
   const supabase = serviceClient();
 
-  const [{ data: pending, error: pendingErr }, { data: students, error: studentsErr }] = await Promise.all([
+  const [
+    { data: pending, error: pendingErr },
+    { data: students, error: studentsErr },
+    { data: etecDone },
+    { data: enemDone },
+  ] = await Promise.all([
     supabase
       .from("report_card_pending")
       .select("id, track, full_name, sala, turno, colegio, semester, payload, created_at, created_by")
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
     supabase.from("profiles").select("id, name").eq("role", "student"),
+    supabase.from("report_card_entries").select("student_id, semester"),
+    supabase.from("report_card_entries_enem").select("student_id, semester"),
   ]);
 
   if (pendingErr) return NextResponse.json({ error: pendingErr.message }, { status: 500 });
   if (studentsErr) return NextResponse.json({ error: studentsErr.message }, { status: 500 });
+
+  // Chaves "aluno já tem boletim publicado" por track+semestre (mesma tabela usada na aprovação).
+  const existingKeys = new Set<string>();
+  (etecDone || []).forEach((r: any) => existingKeys.add(`etec:${r.student_id}:${r.semester}`));
+  (enemDone || []).forEach((r: any) => existingKeys.add(`enem:${r.student_id}:${r.semester}`));
 
   const studentList = (students || []).map((p) => ({ id: p.id, name: p.name ?? "", norm: normalizeName(p.name ?? "") }));
 
@@ -108,10 +121,15 @@ export async function GET() {
       imported_at: row.created_at,
       created_by_name: row.created_by ? importerMap.get(row.created_by) || null : null,
       suggested_match: match,
+      suggested_has_report: !!match.profileId && existingKeys.has(`${row.track}:${match.profileId}:${row.semester}`),
     };
   });
 
-  return NextResponse.json({ entries, students: studentList.map(({ id, name }) => ({ id, name })) });
+  return NextResponse.json({
+    entries,
+    students: studentList.map(({ id, name }) => ({ id, name })),
+    existing_report_keys: Array.from(existingKeys),
+  });
 }
 
 // POST { action: 'approve', id, student_id } | { action: 'reject', id, reason? }

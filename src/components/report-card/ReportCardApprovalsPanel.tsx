@@ -80,9 +80,23 @@ export default function ReportCardApprovalsPanel() {
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<PendingEntry[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
+  const [existingKeys, setExistingKeys] = useState<Set<string>>(new Set());
   const [selections, setSelections] = useState<Record<string, { id: string; name: string }>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+
+  // Filtros de localização
+  const [search, setSearch] = useState("");
+  const [trackFilter, setTrackFilter] = useState<"all" | "enem" | "etec">("all");
+  const [semesterFilter, setSemesterFilter] = useState<"all" | "1" | "2">("all");
+
+  // O aluno atualmente vinculado a uma entry já tem boletim deste track+semestre?
+  const hasReport = (entry: PendingEntry) => {
+    const chosen = selections[entry.id];
+    const sid = chosen?.id ?? entry.suggested_match.profileId;
+    if (!sid) return false;
+    return existingKeys.has(`${entry.track}:${sid}:${entry.semester}`);
+  };
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -93,6 +107,7 @@ export default function ReportCardApprovalsPanel() {
       const fetchedEntries: PendingEntry[] = data.entries || [];
       setEntries(fetchedEntries);
       setStudents(data.students || []);
+      setExistingKeys(new Set<string>(data.existing_report_keys || []));
 
       const initial: Record<string, { id: string; name: string }> = {};
       for (const e of fetchedEntries) {
@@ -155,6 +170,21 @@ export default function ReportCardApprovalsPanel() {
     }
   };
 
+  const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const visibleEntries = useMemo(() => {
+    const terms = norm(search).trim().split(/\s+/).filter(Boolean);
+    return entries.filter((e) => {
+      const matchesSearch = terms.length === 0 || terms.every((t) =>
+        norm(e.full_name).includes(t) || norm(e.suggested_match.profileName || "").includes(t)
+      );
+      const matchesTrack = trackFilter === "all" || e.track === trackFilter;
+      const matchesSemester = semesterFilter === "all" || String(e.semester) === semesterFilter;
+      return matchesSearch && matchesTrack && matchesSemester;
+    });
+  }, [entries, search, trackFilter, semesterFilter]);
+
+  const hasActiveFilter = !!search || trackFilter !== "all" || semesterFilter !== "all";
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
       <div className="space-y-1">
@@ -166,6 +196,50 @@ export default function ReportCardApprovalsPanel() {
           Boletins importados aguardando revisão. Confirme o aluno correspondente antes de aprovar.
         </p>
       </div>
+
+      {/* Filtros de localização */}
+      {!loading && entries.length > 0 && (
+        <div className="flex flex-col lg:flex-row gap-2.5">
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar aluno na fila..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-11 bg-muted/30 border-none rounded-xl font-medium text-sm"
+            />
+          </div>
+          <div className="flex rounded-xl border border-slate-200 bg-white p-1">
+            {(["all", "enem", "etec"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTrackFilter(t)}
+                className={`flex-1 lg:flex-none rounded-lg px-4 py-2 text-xs font-black uppercase transition-all ${trackFilter === t ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
+              >
+                {t === "all" ? "Todos" : t.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <div className="flex rounded-xl border border-slate-200 bg-white p-1">
+            {(["all", "1", "2"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSemesterFilter(s)}
+                className={`flex-1 lg:flex-none rounded-lg px-4 py-2 text-xs font-black uppercase transition-all ${semesterFilter === s ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
+              >
+                {s === "all" ? "Semestre" : `${s}º`}
+              </button>
+            ))}
+          </div>
+          {hasActiveFilter && (
+            <Button variant="ghost" onClick={() => { setSearch(""); setTrackFilter("all"); setSemesterFilter("all"); }} className="h-11 rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-100 shrink-0">
+              Limpar
+            </Button>
+          )}
+        </div>
+      )}
 
       <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
         <CardContent className="p-0">
@@ -180,11 +254,23 @@ export default function ReportCardApprovalsPanel() {
               <p className="font-black italic text-xl text-primary/40 uppercase tracking-widest">Nenhum boletim pendente</p>
               <p className="text-sm text-muted-foreground font-medium">Tudo revisado. Novas importações aparecem aqui.</p>
             </div>
+          ) : visibleEntries.length === 0 ? (
+            <div className="py-20 flex flex-col items-center justify-center gap-3 text-center px-6">
+              <Search className="h-10 w-10 text-slate-200" />
+              <p className="font-black italic text-lg text-primary/40 uppercase tracking-widest">Nenhum resultado</p>
+              <p className="text-sm text-muted-foreground font-medium">Nenhum boletim na fila corresponde aos filtros.</p>
+            </div>
           ) : (
             <div className="divide-y divide-slate-50">
-              {entries.map((entry) => {
+              {hasActiveFilter && (
+                <p className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {visibleEntries.length} de {entries.length} na fila
+                </p>
+              )}
+              {visibleEntries.map((entry) => {
                 const chosen = selections[entry.id];
                 const match = entry.suggested_match;
+                const alreadyHas = hasReport(entry);
                 return (
                   <div key={entry.id} className="flex flex-col lg:flex-row lg:items-center gap-4 p-6 hover:bg-accent/5 transition-colors">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -197,6 +283,11 @@ export default function ReportCardApprovalsPanel() {
                           <Badge className="bg-primary/10 text-primary border-none font-black text-[9px] uppercase gap-1">
                             <GraduationCap className="h-2.5 w-2.5" /> {entry.track === "enem" ? "ENEM" : "ETEC"} · {entry.semester}º sem
                           </Badge>
+                          {alreadyHas && (
+                            <Badge className="bg-amber-100 text-amber-700 border-none font-black text-[9px] uppercase gap-1">
+                              <CheckCircle2 className="h-2.5 w-2.5" /> Já tem boletim
+                            </Badge>
+                          )}
                           {entry.colegio && (
                             <span className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
                               <School className="h-2.5 w-2.5" /> {entry.colegio}{entry.sala ? ` · Sala ${entry.sala}` : ""}
@@ -224,6 +315,11 @@ export default function ReportCardApprovalsPanel() {
                       )}
                       {chosen && match.confidence === "low" && chosen.id === match.profileId && (
                         <p className="text-[9px] font-bold text-amber-600">Match parcial — confira antes de aprovar</p>
+                      )}
+                      {alreadyHas && (
+                        <p className="text-[9px] font-bold text-amber-600 flex items-center gap-1">
+                          <AlertTriangle className="h-2.5 w-2.5" /> Este aluno já tem boletim {entry.semester}º sem — aprovar vai atualizá-lo
+                        </p>
                       )}
                     </div>
 
