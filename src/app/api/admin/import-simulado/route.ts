@@ -83,7 +83,7 @@ async function handlePreview(rows: ImportRow[], supabase: ReturnType<typeof serv
   const { data: profiles, error } = await supabase
     .from("profiles")
     .select("id, name")
-    .eq("profile_type", "student");
+    .eq("role", "student");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

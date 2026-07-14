@@ -16,7 +16,6 @@ import {
   Calendar,
   AlertTriangle
 } from "lucide-react";
-import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 
 function ChatAuditContent() {
@@ -36,21 +35,13 @@ function ChatAuditContent() {
       if (!u1 || !u2) return;
       setLoading(true);
       try {
-        const [{ data: prof1 }, { data: prof2 }] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', u1).single(),
-          supabase.from('profiles').select('*').eq('id', u2).single()
-        ]);
-        
-        setUser1(prof1);
-        setUser2(prof2);
+        const res = await fetch(`/api/admin/chat-audit?u1=${u1}&u2=${u2}`);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
 
-        const { data: msgs, error } = await supabase
-          .from('direct_messages')
-          .select('*')
-          .or(`and(sender_id.eq.${u1},receiver_id.eq.${u2}),and(sender_id.eq.${u2},receiver_id.eq.${u1})`)
-          .order('created_at', { ascending: true });
-
-        if (!error) setMessages(msgs || []);
+        setUser1(data.user1);
+        setUser2(data.user2);
+        setMessages(data.messages || []);
       } catch (err) {
         console.error("Erro ao carregar log de chat:", err);
       } finally {

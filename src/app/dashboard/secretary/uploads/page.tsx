@@ -93,10 +93,14 @@ export default function SecretaryUploadsPage() {
 
   const fetchUploads = useCallback(async () => {
     setLoading(true);
+    // Teto defensivo: fila de revisão sem limite reenviaria o histórico
+    // inteiro de documentos da plataforma a cada carregamento; 3000 (desc)
+    // cobre qualquer fila de aprovação real sem herdar anos de uploads.
     const { data, error } = await supabase
       .from("student_uploads")
       .select("id,student_id,student_name,doc_type,title,file_url,status,notes,uploaded_at,reviewed_at")
-      .order("uploaded_at", { ascending: false });
+      .order("uploaded_at", { ascending: false })
+      .limit(3000);
     if (!error) setUploads(data || []);
     setLoading(false);
   }, []);
@@ -148,7 +152,7 @@ export default function SecretaryUploadsPage() {
   const approvedCount = uploads.filter(u => u.status === "aprovado").length;
   const rejectedCount = uploads.filter(u => u.status === "rejeitado").length;
 
-  if (isUserLoading || loading) {
+  if (isUserLoading) {
     return (
       <div className="h-96 flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -235,7 +239,11 @@ export default function SecretaryUploadsPage() {
       </div>
 
       {/* Lista */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="space-y-3">
+          {Array(4).fill(0).map((_, i) => <div key={i} className="h-24 rounded-[2rem] bg-white shadow-sm animate-pulse" />)}
+        </div>
+      ) : filtered.length === 0 ? (
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
           <CardContent className="py-20 flex flex-col items-center text-center gap-3">
             <div className="h-16 w-16 rounded-3xl bg-primary/5 flex items-center justify-center">

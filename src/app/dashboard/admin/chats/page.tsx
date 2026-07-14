@@ -39,21 +39,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { supabase } from "@/app/lib/supabase";
 import { format, isToday, isWithinInterval, subDays, subMonths } from "date-fns";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import type { ThreadSummary } from "@/app/api/admin/chat-audit/route";
 
-interface Conversation {
-  u1_id: string;
-  u2_id: string;
-  u1_name: string;
-  u2_name: string;
-  u1_type: string;
-  u2_type: string;
-  last_message: string;
-  last_date: string;
-}
+type Conversation = ThreadSummary;
 
 export default function AdminChatAuditPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,52 +58,10 @@ export default function AdminChatAuditPage() {
   const fetchThreads = async () => {
     setLoading(true);
     try {
-      const { data: messages, error: mError } = await supabase
-        .from('direct_messages')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (mError) throw mError;
-
-      if (!messages || messages.length === 0) {
-        setThreads([]);
-        return;
-      }
-
-      const userIds = Array.from(new Set(messages.flatMap(m => [m.sender_id, m.receiver_id])));
-
-      const { data: profiles, error: pError } = await supabase
-        .from('profiles')
-        .select('id, name, profile_type')
-        .in('id', userIds);
-
-      if (pError) throw pError;
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p]));
-      const threadMap = new Map();
-      
-      messages.forEach(msg => {
-        const ids = [msg.sender_id, msg.receiver_id].sort();
-        const key = ids.join(':');
-        
-        if (!threadMap.has(key)) {
-          const u1 = profileMap.get(ids[0]);
-          const u2 = profileMap.get(ids[1]);
-
-          threadMap.set(key, {
-            u1_id: ids[0],
-            u2_id: ids[1],
-            u1_name: u1?.name || 'Usuário Externo',
-            u2_name: u2?.name || 'Usuário Externo',
-            u1_type: u1?.profile_type || 'student',
-            u2_type: u2?.profile_type || 'student',
-            last_message: msg.content,
-            last_date: msg.created_at
-          });
-        }
-      });
-
-      setThreads(Array.from(threadMap.values()));
+      const res = await fetch('/api/admin/chat-audit');
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      setThreads(data.threads || []);
     } catch (err: any) {
       console.error("Erro detalhado ao auditar chats:", err);
       toast({
@@ -132,12 +81,12 @@ export default function AdminChatAuditPage() {
   const handleClearChat = async (u1: string, u2: string) => {
     setClearingId(`${u1}:${u2}`);
     try {
-      const { error } = await supabase
-        .from('direct_messages')
-        .delete()
-        .or(`and(sender_id.eq.${u1},receiver_id.eq.${u2}),and(sender_id.eq.${u2},receiver_id.eq.${u1})`);
-
-      if (error) throw error;
+      const res = await fetch('/api/admin/chat-audit', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ u1, u2 }),
+      });
+      if (!res.ok) throw new Error(await res.text());
 
       toast({
         title: "Histórico Limpo",

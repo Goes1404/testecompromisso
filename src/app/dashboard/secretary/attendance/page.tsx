@@ -26,6 +26,8 @@ import {
   ImageIcon,
   FileSpreadsheet,
   Link2,
+  LogOut,
+  MapPin,
 } from "lucide-react";
 import {
   Select,
@@ -46,10 +48,17 @@ import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { StudentRoomTracker } from "@/components/secretary/StudentRoomTracker";
 
 type AttendanceStatus = "presente" | "ausente" | "justificado";
 type AttendanceMethod = "app" | "manual" | "override";
-interface AttendanceCell { status: AttendanceStatus; justification: string; method: AttendanceMethod; }
+interface AttendanceCell {
+  status: AttendanceStatus;
+  justification: string;
+  method: AttendanceMethod;
+  leftEarly: boolean;
+  leftEarlyTime: string;
+}
 interface ImportRow {
   rawName: string;
   matchedStudent: any | null;
@@ -74,6 +83,7 @@ export default function SecretaryAttendancePage() {
 
   // Diálogos / Estados
   const [createOpen, setCreateOpen] = useState(false);
+  const [trackerOpen, setTrackerOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [classFilter, setClassFilter] = useState("all");
 
@@ -85,6 +95,7 @@ export default function SecretaryAttendancePage() {
   const [newDate, setNewDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [newType, setNewType] = useState("presencial");
   const [newTeacherId, setNewTeacherId] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
 
   // Estado da Chamada
   const [records, setRecords] = useState<Record<string, AttendanceCell>>({});
@@ -112,14 +123,33 @@ export default function SecretaryAttendancePage() {
   const [overrideReason, setOverrideReason] = useState("");
   const [pendingOverrides, setPendingOverrides] = useState<string[]>([]); // student ids
 
+  // Título gerado a partir da data + turma + matéria (ex.: "10/07 · Sala 05 · Matemática"),
+  // pra deixar o Histórico de Aulas legível sem depender de digitação manual.
+  // Some enquanto o campo não for editado à mão (titleTouched).
+  const generateSessionTitle = useCallback((dateStr: string, classLabel: string, subject: string) => {
+    const parts: string[] = [];
+    if (dateStr) {
+      const [y, m, d] = dateStr.split("-");
+      if (y && m && d) parts.push(`${d}/${m}`);
+    }
+    if (classLabel) parts.push(classLabel.startsWith("Sala") ? classLabel : `Sala ${classLabel}`);
+    if (subject.trim()) parts.push(subject.trim());
+    return parts.join(" · ");
+  }, []);
+
+  useEffect(() => {
+    if (!createOpen || titleTouched) return;
+    setNewTitle(generateSessionTitle(newDate, newClassLabel, newSubject));
+  }, [createOpen, titleTouched, newDate, newClassLabel, newSubject, generateSessionTitle]);
+
   // Busca inicial: sessões, professores e alunos
   const fetchData = useCallback(async () => {
     setLoadingSessions(true);
     try {
       const [sessionsRes, teachersRes, studentsRes] = await Promise.all([
         supabase.from("class_sessions").select("*").order("session_date", { ascending: false }),
-        supabase.from("profiles").select("id, name").in("profile_type", ["teacher", "admin"]),
-        supabase.from("profiles").select("id, name, course, institution").eq("profile_type", "student").order("name"),
+        supabase.from("profiles").select("id, name").in("role", ["teacher", "admin"]),
+        supabase.from("profiles").select("id, name, course, institution").eq("role", "student").order("name"),
       ]);
 
       setSessions(sessionsRes.data || []);
@@ -181,7 +211,7 @@ export default function SecretaryAttendancePage() {
     try {
       const { data, error } = await supabase
         .from("attendance_records")
-        .select("student_id, status, justification, method")
+        .select("student_id, status, justification, method, left_early, left_early_time")
         .eq("session_id", sessionItem.id);
 
       if (error) throw error;
@@ -195,6 +225,8 @@ export default function SecretaryAttendancePage() {
           status: r.status,
           justification: r.justification || "",
           method: (r.method as AttendanceMethod) || "manual",
+          leftEarly: !!r.left_early,
+          leftEarlyTime: r.left_early_time || "",
         };
         initial[r.student_id] = cell;
         snap[r.student_id] = { status: cell.status, method: cell.method };
@@ -208,7 +240,7 @@ export default function SecretaryAttendancePage() {
 
       rosterPool.forEach(s => {
         if (!initial[s.id]) {
-          initial[s.id] = { status: "ausente", justification: "", method: "manual" };
+          initial[s.id] = { status: "ausente", justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" };
         }
       });
 
@@ -223,7 +255,27 @@ export default function SecretaryAttendancePage() {
 
   // Atualiza presença localmente
   const setStatus = (studentId: string, status: AttendanceStatus) => {
-    setRecords(prev => ({ ...prev, [studentId]: { ...prev[studentId], status } }));
+    setRecords(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        status,
+        // "Saiu antes" só faz sentido se o aluno esteve presente.
+        ...(status !== "presente" ? { leftEarly: false, leftEarlyTime: "" } : {}),
+      },
+    }));
+  };
+
+  const toggleLeftEarly = (studentId: string) => {
+    setRecords(prev => {
+      const current = prev[studentId];
+      const next = !current.leftEarly;
+      return { ...prev, [studentId]: { ...current, leftEarly: next, leftEarlyTime: next ? current.leftEarlyTime : "" } };
+    });
+  };
+
+  const setLeftEarlyTime = (studentId: string, time: string) => {
+    setRecords(prev => ({ ...prev, [studentId]: { ...prev[studentId], leftEarlyTime: time } }));
   };
 
   const setJustification = (studentId: string, text: string) => {
@@ -244,7 +296,7 @@ export default function SecretaryAttendancePage() {
       if (error) throw error;
       setRecords(prev => ({
         ...prev,
-        [studentId]: { status: "ausente", justification: "", method: "manual" }
+        [studentId]: { status: "ausente", justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" }
       }));
       toast({ title: "Aluno adicionado à lista" });
     } catch (err: any) {
@@ -307,7 +359,7 @@ export default function SecretaryAttendancePage() {
       setRecords(prev => {
         const next = { ...prev };
         toAdd.forEach(s => {
-          next[s.id] = { status: "ausente", justification: "", method: "manual" };
+          next[s.id] = { status: "ausente", justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" };
         });
         return next;
       });
@@ -370,6 +422,9 @@ export default function SecretaryAttendancePage() {
           status: rec.status,
           justification: rec.justification || null,
           method,
+          left_early: rec.status === "presente" && rec.leftEarly,
+          left_early_time: rec.status === "presente" && rec.leftEarly ? (rec.leftEarlyTime || null) : null,
+          recorded_by: user.id, // auditoria: quem lançou/atualizou a chamada
         };
       });
 
@@ -571,7 +626,7 @@ export default function SecretaryAttendancePage() {
       setRecords(prev => {
         const next = { ...prev };
         for (const item of toInsert) {
-          next[item.student_id!] = { status: item.status as AttendanceStatus, justification: "", method: "manual" };
+          next[item.student_id!] = { status: item.status as AttendanceStatus, justification: "", method: "manual", leftEarly: false, leftEarlyTime: "" };
         }
         return next;
       });
@@ -624,19 +679,31 @@ export default function SecretaryAttendancePage() {
             Agende aulas, defina professores responsáveis e gerencie o histórico de faltas/presenças.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setNewTitle("");
-            setNewDesc("");
-            setNewSubject("");
-            setNewTeacherId("");
-            setCreateOpen(true);
-          }}
-          className="bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 gap-2 hover:scale-[1.02] active:scale-95 transition-all border-none shrink-0"
-        >
-          <PlusCircle className="h-4 w-4" /> Nova Aula / Sessão
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            onClick={() => setTrackerOpen(true)}
+            variant="outline"
+            className="bg-white text-primary border-slate-200 font-black rounded-2xl shadow-sm h-12 px-5 gap-2 hover:bg-slate-50 transition-all"
+          >
+            <MapPin className="h-4 w-4" /> Rastrear Sala
+          </Button>
+          <Button
+            onClick={() => {
+              setNewTitle("");
+              setNewDesc("");
+              setNewSubject("");
+              setNewTeacherId("");
+              setTitleTouched(false);
+              setCreateOpen(true);
+            }}
+            className="bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 gap-2 hover:scale-[1.02] active:scale-95 transition-all border-none"
+          >
+            <PlusCircle className="h-4 w-4" /> Nova Aula / Sessão
+          </Button>
+        </div>
       </div>
+
+      <StudentRoomTracker open={trackerOpen} onClose={() => setTrackerOpen(false)} />
 
       {/* Lista de Sessões */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -923,6 +990,7 @@ export default function SecretaryAttendancePage() {
                               <p className="text-[9px] font-black uppercase text-slate-400 mt-0.5">{student.course || 'Sem Turma'}</p>
                             </div>
 
+                            <div className="flex flex-col items-end gap-1.5 w-full sm:w-auto">
                             <div className="flex items-center gap-2 w-full sm:w-auto">
                               {rec.status === 'justificado' && (
                                 <Input
@@ -966,14 +1034,41 @@ export default function SecretaryAttendancePage() {
                                 )}
                               </Button>
                             </div>
+
+                            {rec.status === 'presente' && (
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleLeftEarly(student.id)}
+                                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide transition-colors ${
+                                    rec.leftEarly
+                                      ? "bg-orange-100 text-orange-700"
+                                      : "bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:border-orange-200"
+                                  }`}
+                                  title="Marcar saída antecipada"
+                                >
+                                  <LogOut className="h-3 w-3" />
+                                  Saiu antes
+                                </button>
+                                {rec.leftEarly && (
+                                  <input
+                                    type="time"
+                                    value={rec.leftEarlyTime}
+                                    onChange={e => setLeftEarlyTime(student.id, e.target.value)}
+                                    className="h-6 text-[10px] font-bold rounded-lg border border-orange-200 bg-white px-1.5 text-slate-700 outline-none focus:border-orange-400"
+                                  />
+                                )}
+                              </div>
+                            )}
+                            </div>
                           </div>
                         );
                       })
                     )}
                   </div>
 
-                  <Button 
-                    onClick={handleSaveAttendance} 
+                  <Button
+                    onClick={handleSaveAttendance}
                     disabled={savingAttendance}
                     className="w-full h-12 bg-primary text-white font-black text-xs uppercase shadow-lg border-none mt-auto"
                   >
@@ -1124,13 +1219,29 @@ export default function SecretaryAttendancePage() {
 
           <div className="p-8 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Título da Aula *</Label>
-              <Input 
-                value={newTitle} 
-                onChange={e => setNewTitle(e.target.value)} 
-                placeholder="Ex: Revisão - Funções Quadráticas" 
-                className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm" 
+              <div className="flex items-center justify-between ml-1">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Título da Aula *</Label>
+                {titleTouched && (
+                  <button
+                    type="button"
+                    onClick={() => { setTitleTouched(false); setNewTitle(generateSessionTitle(newDate, newClassLabel, newSubject)); }}
+                    className="text-[9px] font-black uppercase tracking-widest text-primary/50 hover:text-primary transition-colors"
+                  >
+                    Gerar automaticamente
+                  </button>
+                )}
+              </div>
+              <Input
+                value={newTitle}
+                onChange={e => { setNewTitle(e.target.value); setTitleTouched(true); }}
+                placeholder="Ex: Revisão - Funções Quadráticas"
+                className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm"
               />
+              {!titleTouched && newTitle && (
+                <p className="text-[9px] font-semibold text-slate-400 ml-1">
+                  Gerado automaticamente pela data, turma e matéria — edite se quiser.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1156,6 +1267,12 @@ export default function SecretaryAttendancePage() {
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Data da Aula</Label>
                 <Input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="h-12 bg-muted/30 border-none rounded-xl font-bold text-sm" />
+                {newDate && newDate < format(new Date(), "yyyy-MM-dd") && (
+                  <p className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600 ml-1 mt-1">
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    Aula retroativa — o lançamento fica registrado no seu nome.
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Mentor / Professor *</Label>

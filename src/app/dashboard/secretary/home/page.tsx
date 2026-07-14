@@ -54,52 +54,45 @@ export default function SecretaryDashboard() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Estatísticas de Estudantes
-      const { data: profiles, error: pErr } = await supabase
-        .from('profiles')
-        .select('status, profile_type')
-        .eq('profile_type', 'student');
-
-      let active = 0;
-      let suspended = 0;
-      let total = 0;
-
-      if (!pErr && profiles) {
-        total = profiles.length;
-        profiles.forEach(p => {
-          if (p.status === 'suspended') suspended++;
-          else active++;
-        });
-      }
-
-      // 2. Total de Aulas/Sessões
-      const { count: sessionsCount } = await supabase
-        .from('class_sessions')
-        .select('*', { count: 'exact', head: true });
-
-      // 3. Cadastros Este Mês
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
-      const { count: newThisMonth } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('profile_type', 'student')
-        .gte('created_at', startOfMonth.toISOString());
+      // Faltômetro olha só os últimos 60 dias: risco de evasão é sobre
+      // comportamento recente, e evita herdar o ano letivo inteiro de faltas
+      // conforme a tabela cresce (hoje é pequena, mas isso não vai durar).
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+      // 1+2+3. Contagens via head:true — banco devolve só o número, nunca as
+      // linhas (antes baixava status+role de TODO aluno só pra somar em JS).
+      const [
+        { count: total },
+        { count: active },
+        { count: suspended },
+        { count: sessionsCount },
+        { count: newThisMonth },
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student').neq('status', 'suspended'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student').eq('status', 'suspended'),
+        supabase.from('class_sessions').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student').gte('created_at', startOfMonth.toISOString()),
+      ]);
 
       setStats({
-        totalStudents: total,
-        activeStudents: active,
-        suspendedStudents: suspended,
-        totalSessions: sessionsCount || 0,
-        newThisMonth: newThisMonth || 0,
+        totalStudents: total ?? 0,
+        activeStudents: active ?? 0,
+        suspendedStudents: suspended ?? 0,
+        totalSessions: sessionsCount ?? 0,
+        newThisMonth: newThisMonth ?? 0,
       });
 
-      // 3. Faltômetro (Alunos com mais faltas)
+      // 4. Faltômetro (Alunos com mais faltas nos últimos 60 dias)
       const { data: records, error: rErr } = await supabase
         .from('attendance_records')
         .select('student_id, status, profiles(name, course)')
-        .eq('status', 'ausente');
+        .eq('status', 'ausente')
+        .gte('recorded_at', sixtyDaysAgo.toISOString());
 
       if (!rErr && records) {
         const counts: Record<string, { name: string; course: string; count: number }> = {};
@@ -140,7 +133,9 @@ export default function SecretaryDashboard() {
     if (userRole === 'staff' || userRole === 'admin') fetchDashboardData();
   }, [fetchDashboardData, userRole]);
 
-  if (isUserLoading || loading) return (
+  // Só auth/role travam a tela cheia — hero, hubs e busca pintam no primeiro
+  // paint; estatísticas e faltômetro ganham skeleton próprio abaixo.
+  if (isUserLoading) return (
     <div className="h-96 flex flex-col items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-primary" />
       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">
@@ -150,7 +145,7 @@ export default function SecretaryDashboard() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-1">
+    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20 px-1">
       {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
@@ -251,7 +246,11 @@ export default function SecretaryDashboard() {
               <div className={`h-9 w-9 rounded-xl ${s.color} flex items-center justify-center shrink-0 mb-4 font-black`}>
                 <TrendingUp className="h-4 w-4" />
               </div>
-              <p className="text-3xl font-black text-primary leading-none italic">{s.value}</p>
+              {loading ? (
+                <div className="h-8 w-14 rounded-lg bg-slate-100 animate-pulse" />
+              ) : (
+                <p className="text-3xl font-black text-primary leading-none italic">{s.value}</p>
+              )}
               <p className="text-[10px] text-primary/70 font-black uppercase tracking-wider mt-2">{s.label}</p>
               <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{s.desc}</p>
             </CardContent>
@@ -273,7 +272,11 @@ export default function SecretaryDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 md:p-8 space-y-4">
-            {absentees.length === 0 ? (
+            {loading ? (
+              <div className="space-y-3">
+                {Array(3).fill(0).map((_, i) => <div key={i} className="h-[68px] rounded-2xl bg-amber-50/50 animate-pulse" />)}
+              </div>
+            ) : absentees.length === 0 ? (
               <div className="py-12 text-center opacity-40 italic font-bold border-2 border-dashed rounded-[2rem] text-slate-500">
                 Nenhum aluno com faltas críticas no momento. Excelente!
               </div>

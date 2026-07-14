@@ -20,6 +20,26 @@ export async function middleware(request: NextRequest) {
       return response;
   }
 
+  // ── Curto-circuito sem sessão (corrige TTFB) ────────────────────────────
+  // O Supabase SSR guarda o token em cookie `sb-<ref>-auth-token` (às vezes
+  // fatiado em `.0`/`.1`). Se NENHUM cookie de auth existe, não há sessão a
+  // validar — e `getUser()` faria mesmo assim uma chamada de rede à API do
+  // Supabase (~3s no visitante frio, além das tentativas de refresh que
+  // falham no log). Sem cookie: decide na hora, sem tocar a rede.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith('sb-') && c.name.includes('auth-token'));
+
+  if (!hasAuthCookie) {
+    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = '/login';
+      return NextResponse.redirect(redirectUrl);
+    }
+    // /login (ou qualquer rota pública casada): serve direto, sem rede.
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

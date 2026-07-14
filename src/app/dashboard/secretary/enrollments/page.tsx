@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import {
   Users,
   Loader2,
-  Search,
   Link2,
   UserCheck,
   UserX,
@@ -70,6 +69,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { exportToCsv } from "@/lib/export-csv";
+import { StudentFilterBar, distinctOptions } from "@/components/secretary/StudentFilterBar";
 import { Download } from "lucide-react";
 
 // ────────────────────────────────────────────────
@@ -564,6 +564,8 @@ export default function SecretaryEnrollmentDirectory() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [courseFilter, setCourseFilter] = useState("");
+  const [institutionFilter, setInstitutionFilter] = useState("");
   const [users, setUsers] = useState<any[]>([]);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -590,7 +592,7 @@ export default function SecretaryEnrollmentDirectory() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('profile_type', 'student')
+        .eq('role', 'student')
         .order('name');
       if (error) throw error;
       setUsers(data || []);
@@ -675,6 +677,9 @@ export default function SecretaryEnrollmentDirectory() {
     }
   };
 
+  const courseOptions = useMemo(() => distinctOptions(users, "course"), [users]);
+  const institutionOptions = useMemo(() => distinctOptions(users, "institution"), [users]);
+
   const filtered = users.filter(u => {
     const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const terms = norm(searchTerm).trim().split(/\s+/).filter(Boolean);
@@ -689,7 +694,10 @@ export default function SecretaryEnrollmentDirectory() {
       (statusFilter === 'income_exceeded' && Number(u.family_income) > 0 && !u.is_financial_aid_eligible) ||
       (statusFilter === 'income_pending' && !u.is_financial_aid_eligible && (!u.family_income || Number(u.family_income) === 0));
 
-    return matchesSearch && matchesStatus;
+    const matchesCourse = !courseFilter || (u.course || '') === courseFilter;
+    const matchesInstitution = !institutionFilter || (u.institution || '') === institutionFilter;
+
+    return matchesSearch && matchesStatus && matchesCourse && matchesInstitution;
   });
 
   const handleExportCsv = () => {
@@ -755,20 +763,20 @@ export default function SecretaryEnrollmentDirectory() {
       </div>
 
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="relative w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Buscar por nome ou email..."
-            className="pl-11 h-12 bg-white border-none shadow-md rounded-2xl font-medium w-full"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-1">
+      <StudentFilterBar
+        search={searchTerm}
+        onSearchChange={setSearchTerm}
+        course={courseFilter}
+        onCourseChange={setCourseFilter}
+        courseOptions={courseOptions}
+        institution={institutionFilter}
+        onInstitutionChange={setInstitutionFilter}
+        institutionOptions={institutionOptions}
+        resultCount={filtered.length}
+        totalCount={users.length}
+        extra={
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-12 rounded-2xl bg-white border-none shadow-md font-bold">
+            <SelectTrigger className="h-11 w-full lg:w-56 bg-muted/30 border-none rounded-xl font-bold text-sm shrink-0">
               <SelectValue placeholder="Filtrar por Status" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -781,8 +789,8 @@ export default function SecretaryEnrollmentDirectory() {
               <SelectItem value="income_pending" className="font-bold text-xs">Pendente (Não Simularam)</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-      </div>
+        }
+      />
 
       {/* Tabela de Alunos */}
       <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">

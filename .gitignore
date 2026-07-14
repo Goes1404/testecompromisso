@@ -47,3 +47,10 @@ firestore-debug.log
 
 # supabase
 supabase/.temp/
+
+# Artefatos de sessao/analise (contem PII de alunos em logs)
+scratch/
+remote_schema.sql
+supabase/.branches/
+# Boletins reais (nome+nota de aluno = PII; nao versionar no GitHub)
+supabase/seed-data/

@@ -60,7 +60,7 @@ export default function AttendanceSessionPage() {
     try {
       const [sessionRes, studentsRes, recordsRes] = await Promise.all([
         supabase.from("class_sessions").select("*").eq("id", id).single(),
-        supabase.from("profiles").select("id, name, institution, exam_target").eq("profile_type", "student").order("name"),
+        supabase.from("profiles").select("id, name, institution, exam_target").eq("role", "student").order("name"),
         supabase.from("attendance_records").select("*").eq("session_id", id),
       ]);
 

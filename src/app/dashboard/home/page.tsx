@@ -26,8 +26,11 @@ import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 import { AreaChartPremium } from "@/components/charts/premium";
-import { EmberCanvas } from "@/components/EmberCanvas";
-import { FlameEmberCanvas } from "@/components/FlameEmberCanvas";
+
+// Canvases decorativos (pointer-events-none) fora do bundle inicial: no 3G/
+// celular fraco eles não podem competir com o conteúdo pelo primeiro paint.
+const EmberCanvas = dynamic(() => import("@/components/EmberCanvas").then(m => m.EmberCanvas), { ssr: false });
+const FlameEmberCanvas = dynamic(() => import("@/components/FlameEmberCanvas").then(m => m.FlameEmberCanvas), { ssr: false });
 
 import {
   SIMULADO_GABARITO,
@@ -372,7 +375,10 @@ export default function DashboardHome() {
         supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3),
         supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id),
-        supabase.from('exam_attempts').select('score, completed_at, answers, tri_score, exam:exams!inner(id, title, exam_type, is_special_cursinho, tri_score_calculated)').eq('user_id', user.id).order('completed_at', { ascending: false }),
+        // sem `answers` aqui: o JSONB de 60+ respostas de CADA tentativa pesava
+        // o payload no celular — só a tentativa do simulado oficial usa answers,
+        // buscado pontualmente logo abaixo.
+        supabase.from('exam_attempts').select('id, score, completed_at, tri_score, exam:exams!inner(id, title, exam_type, is_special_cursinho, tri_score_calculated)').eq('user_id', user.id).order('completed_at', { ascending: false }),
         supabase.from('exams').select('id, title, description, pdf_url').eq('is_special_cursinho', true).maybeSingle(),
       ]);
       let essayData = essayRes?.data || [];
@@ -415,20 +421,29 @@ export default function DashboardHome() {
           return examObj?.exam_type === 'simulado_importado';
         }
       ) as any;
+      let newSimOficial: typeof simuladoOficial = null;
       if (simOficialData) {
         const examObj = Array.isArray(simOficialData.exam) ? simOficialData.exam[0] : simOficialData.exam;
-        const rawAnswers = Array.isArray(simOficialData.answers) ? simOficialData.answers : [];
-        setSimuladoOficial({
+        // answers só da tentativa que interessa (gabarito comentado)
+        const { data: ansRow } = await supabase
+          .from('exam_attempts')
+          .select('answers')
+          .eq('id', simOficialData.id)
+          .maybeSingle();
+        const rawAnswers = Array.isArray(ansRow?.answers) ? ansRow.answers : [];
+        newSimOficial = {
           title: examObj?.title ?? 'Simulado ENEM',
           score: Number(simOficialData.score),
           total: 60,
           completed_at: simOficialData.completed_at,
           answers: rawAnswers,
-        });
+        };
+        setSimuladoOficial(newSimOficial);
       }
 
       // Simulado especial dos professores (com TRI)
       const specialExam = specialExamRes?.data || null;
+      let newSimEspecial: typeof simuladoEspecial = null;
       if (specialExam) {
         const attempt = (simOficialRes?.data || []).find(
           (a: any) => {
@@ -436,7 +451,7 @@ export default function DashboardHome() {
             return examObj?.id === specialExam.id;
           }
         );
-        setSimuladoEspecial({
+        newSimEspecial = {
           id: specialExam.id,
           title: specialExam.title,
           description: specialExam.description || '',
@@ -445,13 +460,16 @@ export default function DashboardHome() {
           score: attempt ? Number(attempt.score) : undefined,
           triScore: attempt ? (attempt.tri_score ?? undefined) : undefined,
           completedAt: attempt ? attempt.completed_at : undefined,
-        });
+        };
+        setSimuladoEspecial(newSimEspecial);
       } else {
         setSimuladoEspecial(null);
       }
 
       const cacheData = {
-        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial, simuladoEspecial },
+        // valores recém-calculados, não o estado da render anterior — o cache
+        // gravava simulado velho e o widget "pulava" na visita seguinte
+        data: { announcements: newAnn, recommendedTrails: trailRes?.data || [], recentProgress: progressRes?.data, libraryResources: libRes?.data, essayStats: newEssayStats, examStats: newExamStats, simuladoOficial: newSimOficial, simuladoEspecial: newSimEspecial },
         timestamp: Date.now()
       };
       if (typeof window !== 'undefined') localStorage.setItem(`dash_cache_${user.id}`, JSON.stringify(cacheData));
@@ -469,7 +487,10 @@ export default function DashboardHome() {
     }
   }, [user, profile, userRole, fetchData, checkActiveSession]);
 
-  if (isUserLoading || (userRole === 'student' && loadingData && !dataFetchedRef.current)) return (
+  // Só o auth segura a tela cheia. Os dados chegam com a página já pintada:
+  // cada widget tem skeleton próprio, então o herói (LCP) aparece no primeiro
+  // paint em vez de esperar as 8 queries — antes o celular ficava 4-6s no loader.
+  if (isUserLoading) return (
     <DashboardLoader />
   );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { distinctOptions } from "@/components/secretary/StudentFilterBar";
 
 export default function SecretaryDocumentsPage() {
   const { toast } = useToast();
@@ -39,6 +40,7 @@ export default function SecretaryDocumentsPage() {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [docType, setDocType] = useState("declaracao");
   const [searchQuery, setSearchQuery] = useState("");
+  const [courseFilter, setCourseFilter] = useState("");
   
   // Campos adicionais
   const [studentCpf, setStudentCpf] = useState("");
@@ -52,7 +54,7 @@ export default function SecretaryDocumentsPage() {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, name, course, institution, birth_date")
-        .eq("profile_type", "student")
+        .eq("role", "student")
         .order("name");
 
       if (error) throw error;
@@ -80,10 +82,37 @@ export default function SecretaryDocumentsPage() {
   }, [selectedStudentId]);
 
   // Função para abrir o layout de impressão A4 em outra aba
-  const handleGeneratePrint = () => {
+  const handleGeneratePrint = async () => {
     if (!selectedStudent) {
       toast({ title: "Erro", description: "Selecione um estudante primeiro.", variant: "destructive" });
       return;
+    }
+
+    // Dados extras conforme o tipo de documento
+    let attendanceInfo: { present: number; total: number; pct: number } | null = null;
+    if (docType === "frequencia") {
+      const { data: recs } = await supabase
+        .from("attendance_records")
+        .select("status")
+        .eq("student_id", selectedStudent.id);
+      const total = recs?.length || 0;
+      const present = (recs || []).filter((r: any) => r.status === "presente").length;
+      attendanceInfo = { present, total, pct: total > 0 ? Math.round((present / total) * 100) : 0 };
+    }
+
+    let guardian: { name: string; relationship: string | null; cpf: string | null } | null = null;
+    if (docType === "responsavel") {
+      const { data: gs } = await supabase
+        .from("student_guardians")
+        .select("name, relationship, cpf, is_primary")
+        .eq("student_id", selectedStudent.id)
+        .order("is_primary", { ascending: false })
+        .limit(1);
+      if (gs && gs.length > 0) guardian = gs[0] as any;
+      if (!guardian) {
+        toast({ title: "Sem responsável cadastrado", description: "Cadastre um responsável no perfil do aluno antes de emitir esta declaração.", variant: "destructive" });
+        return;
+      }
     }
 
     const todayStr = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -114,6 +143,36 @@ export default function SecretaryDocumentsPage() {
         no polo <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>.</p>
 
         <p>Por ser verdade, firmamos o presente documento para que surta seus devidos efeitos legais.</p>
+      `;
+    } else if (docType === "frequencia") {
+      title = "Declaração de Frequência";
+      const freqLine = attendanceInfo && attendanceInfo.total > 0
+        ? `Até a presente data, o(a) estudante registra <strong>${attendanceInfo.present}</strong> presença(s) em
+           <strong>${attendanceInfo.total}</strong> aula(s) computada(s), correspondendo a uma frequência de
+           <strong>${attendanceInfo.pct}%</strong>.`
+        : `A frequência do(a) estudante encontra-se em acompanhamento pela secretaria.`;
+      contentHtml = `
+        <p>Declaramos, para os devidos fins, que o(a) estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong>,
+        matriculado(a) no curso preparatório de <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong>
+        no polo <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>, frequenta regularmente as
+        atividades letivas.</p>
+
+        <p>${freqLine}</p>
+
+        <p>Por ser expressão da verdade, firmamos a presente declaração.</p>
+      `;
+    } else if (docType === "responsavel") {
+      title = "Declaração para o Responsável";
+      contentHtml = `
+        <p>Declaramos, a pedido e para os devidos fins, que o(a) estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong>,
+        nascido(a) em <strong>${esc(birthStr)}</strong>, encontra-se regularmente matriculado(a) no curso preparatório de
+        <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong> no polo
+        <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>.</p>
+
+        <p>Fica esta declaração aos cuidados de seu(sua) responsável legal
+        <strong>${esc(guardian?.name).toUpperCase()}</strong>${guardian?.relationship ? ` (${esc(guardian.relationship)})` : ""}${guardian?.cpf ? `, CPF nº <strong>${esc(guardian.cpf)}</strong>` : ""}.</p>
+
+        <p>Por ser verdade, firmamos o presente documento para que surta seus devidos efeitos.</p>
       `;
     } else if (docType === "certificado") {
       title = "Certificado de Conclusão";
@@ -278,8 +337,11 @@ export default function SecretaryDocumentsPage() {
     printWindow.document.close();
   };
 
-  const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const courseOptions = useMemo(() => distinctOptions(students, "course"), [students]);
+
+  const filteredStudents = students.filter(s =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (!courseFilter || (s.course || "") === courseFilter)
   );
 
   return (
@@ -310,6 +372,8 @@ export default function SecretaryDocumentsPage() {
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-none shadow-2xl">
                   <SelectItem value="declaracao" className="font-bold text-xs">Declaração de Matrícula</SelectItem>
+                  <SelectItem value="frequencia" className="font-bold text-xs">Declaração de Frequência</SelectItem>
+                  <SelectItem value="responsavel" className="font-bold text-xs">Declaração para Responsável</SelectItem>
                   <SelectItem value="certificado" className="font-bold text-xs">Certificado de Conclusão</SelectItem>
                   <SelectItem value="historico" className="font-bold text-xs">Ficha / Ocorrência</SelectItem>
                 </SelectContent>
@@ -320,14 +384,31 @@ export default function SecretaryDocumentsPage() {
               <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Buscar Aluno</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                <Input 
-                  placeholder="Pesquisar..." 
+                <Input
+                  placeholder="Pesquisar..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="h-10 pl-9 pr-3 rounded-xl bg-slate-50 border-none text-xs" 
+                  className="h-10 pl-9 pr-3 rounded-xl bg-slate-50 border-none text-xs"
                 />
               </div>
             </div>
+
+            {courseOptions.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Turma</Label>
+                <Select value={courseFilter || "__all__"} onValueChange={(v) => setCourseFilter(v === "__all__" ? "" : v)}>
+                  <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none font-bold text-xs">
+                    <SelectValue placeholder="Todas as turmas" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-none shadow-2xl">
+                    <SelectItem value="__all__" className="font-bold text-xs">Todas as turmas</SelectItem>
+                    {courseOptions.map((c) => (
+                      <SelectItem key={c} value={c} className="font-bold text-xs">{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Estudante *</Label>
@@ -368,7 +449,7 @@ export default function SecretaryDocumentsPage() {
                     </p>
                   </div>
                   <Badge className="bg-primary/5 text-primary border-none font-bold text-xs uppercase px-3 py-1">
-                    {docType === 'declaracao' ? 'Declaração' : docType === 'certificado' ? 'Certificado' : 'Histórico'}
+                    {docType === 'declaracao' ? 'Declaração' : docType === 'frequencia' ? 'Frequência' : docType === 'responsavel' ? 'Responsável' : docType === 'certificado' ? 'Certificado' : 'Histórico'}
                   </Badge>
                 </div>
 
@@ -406,6 +487,24 @@ export default function SecretaryDocumentsPage() {
                         onChange={e => setWorkload(e.target.value)}
                         className="h-12 bg-slate-50 border-none rounded-xl font-bold text-sm" 
                       />
+                    </div>
+                  )}
+
+                  {docType === "responsavel" && (
+                    <div className="md:col-span-2 flex items-center gap-2 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                      <HelpCircle className="h-4 w-4 text-blue-500 shrink-0" />
+                      <p className="text-[11px] font-semibold text-blue-700">
+                        Os dados do responsável (nome, parentesco, CPF) são puxados do perfil do aluno. Cadastre-os lá se ainda não houver.
+                      </p>
+                    </div>
+                  )}
+
+                  {docType === "frequencia" && (
+                    <div className="md:col-span-2 flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <p className="text-[11px] font-semibold text-emerald-700">
+                        A frequência (presenças / total de aulas) é calculada automaticamente a partir do diário de classe.
+                      </p>
                     </div>
                   )}
 

@@ -123,6 +123,49 @@ servidor+cliente e rotação de segredo (decisão do time):
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
 novos usuários) e migrar as rotas acima para `requireAdminUser()`.
 
+### 🔒 Auditoria de RLS + Edge Functions (2026-07-10) — aplicado em produção
+
+Auditoria completa do banco (Supabase security advisor) + edge functions. Correções
+já **aplicadas em produção** e versionadas em `/supabase/migrations` e `/supabase/functions`:
+
+| Sev | Local | Correção |
+|-----|-------|----------|
+| ✅ CRÍTICO | `direct_messages` e ~30 tabelas (`profiles`, `essay_submissions`, `student_question_answers`, `material_annotations`, `simulation_attempts`, `invitations`, fóruns, lives, trilhas, materiais…) | Policies residuais de "modo demo" (`Acesso Demo`, `open_*`) com `USING/WITH CHECK true` anulavam as restritas via OR. Em `profiles` permitia escalada de privilégio (qualquer autenticado alterava o próprio `role`). **Removidas; mantidas/criadas policies por dono ou papel.** Migrations `20260710010000`/`020000`/`030000`. |
+| ✅ CRÍTICO | 8 tabelas com RLS **desligada** (`trails`, `classes`, `user_progress`, `student_checklists`, `activity_logs`, `forum_bans`, `library_items`, `subjects`) + `learning_trails`/`learning_modules`/`notices`/`quiz_submissions` | **RLS religada** com policies mínimas corretas. |
+| ✅ CRÍTICO | edge function `learning-trails-crud` | SQL injection (concatenação de string com `id` da URL) + JWT sem verificar assinatura, rodando com service role. **Reescrita** para usar supabase-js com o JWT do chamador (RLS + query builder parametrizado). |
+| ✅ CRÍTICO | edge functions `delete-all-students-only`, `reset-students-only`, `reset-user-password-next-login`, `create-auth-users`, `backfill-teachers-auth` | Rodavam com service role gateadas só por `verify_jwt` (qualquer sessão, até de aluno) — permitiam apagar todos os alunos, resetar/assumir a conta admin, escalar privilégio. **Adicionado guard `requireAdmin` (checa `profiles.role='admin'`).** Não são usadas pelo app (scripts one-off). |
+
+**Pendências desta auditoria (backlog):**
+| Sev | Local | Problema |
+|-----|-------|----------|
+| 🟡 MÉDIO | edge functions `request-password-reset`, `invite-send-magiclink` | Ainda gateadas só por `verify_jwt`. Podem fazer parte de fluxos deslogados (reset/convite) — revisar se são usadas antes de blindar. Enumeração de e-mail em `request-password-reset`. |
+| 🟡 MÉDIO | Views `SECURITY DEFINER` (`profile_public`, `profiles_public`, `weekly_ranking`) e ~14 funções `SECURITY DEFINER` executáveis por `anon`/`authenticated` | Revisar se o `SECURITY DEFINER` é intencional; senão trocar por `SECURITY INVOKER` ou revogar `EXECUTE`. |
+| 🟢 BAIXO | Buckets públicos `avatars`/`exam_pdfs`/`learning-contents` com SELECT amplo (listagem) + proteção de senha vazada (HaveIBeenPwned) desligada no Auth + `function_search_path` mutável em ~15 funções | Hardening de menor prioridade. |
+
+**⚠️ Rotacionar a `SUPABASE_SERVICE_ROLE_KEY`:** foi exposta em texto puro num chat durante a auditoria.
+
+#### 🐛 Causa-raiz descoberta: claim `user_role` do JWT é sempre `null`
+
+Não existe *custom access token hook* configurado no Auth, então **`auth.jwt() ->> 'user_role'`
+(e `get_my_claim('user_role')`) retornam `null` para os 1622 usuários**. Toda policy que
+gateia por esse claim **nunca concede acesso** — era mascarado pelas policies abertas.
+Ao removê-las, operações legítimas quebraram. **Regra:** para papel em RLS, use sempre
+`EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text IN (...))` —
+**nunca** `auth.jwt()->>'user_role'`. (Fix definitivo de longo prazo: criar o hook de
+access token OU migrar as poucas policies mortas restantes.)
+
+Regressões corrigidas na revisão completa de RLS (migrations `050000`/`060000`, verificadas
+por simulação de RLS `set role authenticated` + `request.jwt.claims`):
+- `forums`/`forum_bans` (moderação de fórum: criar/apagar tópico, banir/desbanir) → `profiles.role` admin/staff.
+- `modules`/`learning_contents`/`library_resources` (gestão de conteúdo) → `profiles.role` admin/staff/teacher.
+- `student_question_answers` (admin/professor viam desempenho do aluno vazio) → SELECT por `profiles.role`.
+
+Policies mortas remanescentes **sem impacto** (feature não usada client-side ou coberta por
+outra policy): `subjects`, `live_messages` (moderador), `classes` (admin gerencia de outros),
+`announcements` (admin edita de outros), `questions` (redundante). Nota menor de exposição:
+`forums.open_select_for_authenticated_forums` (true) deixa fóruns `is_teacher_only` visíveis a
+alunos — revisar se a confidencialidade importa.
+
 ### 📱 Plano: reset de senha & primeiro acesso (telefone + SMS) — FASE 2 IMPLEMENTADA
 
 Decisão de produto: **não armazenar CPF**; usar **telefone** como base da recuperação

@@ -48,7 +48,7 @@ export default function NewAttendanceSessionPage() {
     supabase
       .from("profiles")
       .select("course")
-      .eq("profile_type", "student")
+      .eq("role", "student")
       .not("course", "is", null)
       .then(({ data }) => {
         if (!data) return;

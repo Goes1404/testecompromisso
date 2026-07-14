@@ -35,7 +35,7 @@ export function PushPermissionBanner() {
   if (dismissed) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-50 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-40 animate-in slide-in-from-bottom-4 duration-500">
       <div className="bg-primary text-white rounded-[2rem] shadow-2xl p-5 border border-white/10">
         {/* Cabeçalho com ícone e fechar */}
         <div className="flex items-start gap-3">
