@@ -1,8 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-// GUARD: roda com SERVICE ROLE e cria contas de auth (com senhas previsíveis
-// derivadas do primeiro nome). Antes só gateada por verify_jwt. Agora exige
-// que o chamador seja admin. Ver requireAdmin().
+// GUARD: roda com SERVICE ROLE e cria contas de auth com senha temporária
+// aleatória (forçando troca no primeiro login). Antes só gateada por
+// verify_jwt. Agora exige que o chamador seja admin. Ver requireAdmin().
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -45,17 +45,7 @@ Deno.serve(async (req: Request) => {
     for (const prof of profiles || []) {
       const email = prof.email;
       const raw = prof.raw_user_meta_data || {};
-      let firstName = "usuario";
-      try {
-        if (raw && typeof raw === "object") {
-          const nome = raw.nome_completo || raw.full_name || raw.name || "";
-          if (nome && typeof nome === "string" && nome.trim().length > 0) {
-            firstName = nome.trim().split(" ")[0];
-          }
-        }
-      } catch (_e) { /* ignore */ }
-
-      const password = `${firstName}2026@`;
+      const password = crypto.randomUUID() + crypto.randomUUID();
 
       // check if auth user exists
       const { data: existing, error: exErr } = await supabase.auth.admin.listUsers();
@@ -70,13 +60,13 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await supabase.auth.admin.createUser({
         email: email,
         password: password,
-        user_metadata: raw || {},
+        user_metadata: { ...(raw || {}), must_reset_password_next_login: true },
       });
 
       if (error) {
         results.push({ email, status: "error", message: error.message });
       } else {
-        results.push({ email, status: "created", id: data?.user?.id });
+        results.push({ email, status: "created", id: data?.user?.id, temp_password: password });
       }
     }
 
