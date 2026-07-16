@@ -2,34 +2,50 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  CheckCircle2,
-  ArrowRight,
-  BarChart3,
-  Zap,
-  Star,
-  Users,
-  Target,
-  ChevronRight,
-  Menu,
-  X,
-  Play,
-  GraduationCap,
-  School,
-  Award,
-  BookMarked,
-  Lightbulb,
-  Loader2,
-} from "lucide-react";
+import { Loader2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { HeroShowcase } from "@/components/home/HeroShowcase";
 
-const DynamicBottomSections = dynamic(() => import("@/components/home/BottomSections").then(mod => mod.BottomSections), {
-  ssr: false,
-  loading: () => <div className="min-h-[40vh] py-32 flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" /></div>
-});
+const sectionFallback = (
+  <div className="min-h-[40vh] py-32 flex justify-center items-center bg-gray-950">
+    <Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" />
+  </div>
+);
+
+const DynamicFeatureBentoGrid = dynamic(
+  () => import("@/components/home/FeatureBentoGrid").then((mod) => mod.FeatureBentoGrid),
+  { ssr: false, loading: () => sectionFallback }
+);
+
+const DynamicFlowSection = dynamic(
+  () => import("@/components/home/FlowSection").then((mod) => mod.FlowSection),
+  { ssr: false, loading: () => sectionFallback }
+);
+
+const DynamicFluidAccessSection = dynamic(
+  () => import("@/components/home/FluidAccessSection").then((mod) => mod.FluidAccessSection),
+  { ssr: false, loading: () => sectionFallback }
+);
+
+const DynamicBottomSections = dynamic(
+  () => import("@/components/home/BottomSections").then((mod) => mod.BottomSections),
+  { ssr: false, loading: () => sectionFallback }
+);
+
+interface NavLink {
+  label: string;
+  anchor: string;
+}
+
+const NAV_LINKS: readonly NavLink[] = [
+  { label: "Funcionalidades", anchor: "#funcionalidades" },
+  { label: "Metodologia", anchor: "#metodologia" },
+  { label: "Resultados", anchor: "#resultados" },
+  { label: "Dúvidas", anchor: "#faq" },
+];
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -49,28 +65,19 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [router]);
 
-  const handleRedirect = (e: React.MouseEvent, path: string) => {
-    e.preventDefault();
+  const handleRedirect = (path: string): void => {
     if (isRedirecting) return;
     setIsRedirecting(true);
     router.push(path);
   };
 
-  const handleScrollTo = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
+  const handleScrollTo = (anchorId: string): void => {
     setMobileMenuOpen(false);
-    document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
+    document.querySelector(anchorId)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const stats = [
-    { value: "500+", label: "Aprovações Reais", icon: GraduationCap },
-    { value: "98%", label: "Índice de Sucesso", icon: Star },
-    { value: "50+", label: "Professores Elite", icon: Users },
-    { value: "24/7", label: "Suporte com IA", icon: Zap },
-  ];
-
   return (
-    <div className="flex min-h-screen flex-col bg-white text-gray-950 selection:bg-primary/20 selection:text-primary scroll-smooth relative">
+    <div className="flex min-h-screen flex-col bg-gray-950 text-gray-950 selection:bg-primary/20 selection:text-primary scroll-smooth relative">
 
       {/* Transição de Tela de Carregamento */}
       {isRedirecting && (
@@ -92,7 +99,7 @@ export default function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
-            <Link href="/" onClick={(e) => handleScrollTo(e, '#home')} className="flex items-center group">
+            <Link href="/" onClick={(e) => { e.preventDefault(); handleScrollTo('#home'); }} className="flex items-center group">
               <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-xl shadow-lg bg-white p-1.5 transition-transform group-hover:rotate-6 duration-500">
                 <Image
                   src="/images/logocompromisso.png"
@@ -107,17 +114,18 @@ export default function LandingPage() {
           </div>
 
           <nav className="hidden md:flex items-center gap-10">
-            <a href="#metodologia" onClick={(e) => handleScrollTo(e, '#metodologia')} className={`text-sm font-black transition-all flex items-center group cursor-pointer ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>
-              <span className="group-hover:translate-x-1 transition-transform">Metodologia</span>
-            </a>
-            <a href="#resultados" onClick={(e) => handleScrollTo(e, '#resultados')} className={`text-sm font-black transition-all flex items-center group cursor-pointer ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>
-              <span className="group-hover:translate-x-1 transition-transform">Resultados</span>
-            </a>
-            <a href="#faq" onClick={(e) => handleScrollTo(e, '#faq')} className={`text-sm font-black transition-all flex items-center group cursor-pointer ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}>
-              <span className="group-hover:translate-x-1 transition-transform">Dúvidas</span>
-            </a>
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.anchor}
+                href={link.anchor}
+                onClick={(e) => { e.preventDefault(); handleScrollTo(link.anchor); }}
+                className={`text-sm font-black transition-all flex items-center group cursor-pointer ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}
+              >
+                <span className="group-hover:translate-x-1 transition-transform">{link.label}</span>
+              </a>
+            ))}
             <div className="flex items-center gap-3">
-              <Button onClick={(e) => handleRedirect(e, '/login')} className="bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
+              <Button onClick={() => handleRedirect('/login')} className="bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
                 Entrar
               </Button>
             </div>
@@ -149,11 +157,18 @@ export default function LandingPage() {
             </button>
           </div>
           <div className="p-10 space-y-6">
-            <a href="#metodologia" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#metodologia')}>Metodologia</a>
-            <a href="#resultados" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#resultados')}>Resultados</a>
-            <a href="#faq" className="block text-xl font-black text-gray-800" onClick={(e) => handleScrollTo(e, '#faq')}>Dúvidas FAQ</a>
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.anchor}
+                href={link.anchor}
+                className="block text-xl font-black text-gray-800"
+                onClick={(e) => { e.preventDefault(); handleScrollTo(link.anchor); }}
+              >
+                {link.label}
+              </a>
+            ))}
             <div className="pt-8 space-y-3">
-              <Button onClick={(e) => handleRedirect(e, '/login')} disabled={isRedirecting} className="w-full bg-primary h-14 text-white rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
+              <Button onClick={() => handleRedirect('/login')} disabled={isRedirecting} className="w-full bg-primary h-14 text-white rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
                 Entrar no Portal
               </Button>
             </div>
@@ -162,271 +177,19 @@ export default function LandingPage() {
       )}
 
       <main className="flex-1">
-        {/* HERO SECTION */}
-        <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-gray-950 pt-20 md:pt-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-black pointer-events-none" />
-          <div className="absolute inset-0 dot-grid opacity-70 pointer-events-none" />
-          <div className="absolute inset-0 noise pointer-events-none" />
+        {/* HERO — vitrine com mockup 3D do dashboard */}
+        <HeroShowcase onNavigate={handleRedirect} onScrollTo={handleScrollTo} />
 
-          {/* Efeitos de Luz Premium */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 hidden md:block">
-            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px]" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[80px]" />
-          </div>
+        {/* BENTO GRID — funcionalidades da plataforma */}
+        <DynamicFeatureBentoGrid />
 
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center relative z-10 w-full pt-6 md:pt-10">
-            <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-left duration-1000">
-              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary font-black px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] rounded-full">
-                <Award className="h-3 w-3" /> Ensino de Alta Performance
-              </div>
+        {/* FLUXO DO ALUNO — timeline scroll-driven (#metodologia) */}
+        <DynamicFlowSection />
 
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tighter">
-                Sua Aprovação é o<br />
-                <span className="text-gradient-brand italic">nosso Compromisso.</span>
-              </h1>
+        {/* ACESSO FLUIDO — CTA de login polido */}
+        <DynamicFluidAccessSection onNavigate={handleRedirect} />
 
-              <p className="text-sm md:text-base text-gray-400 leading-relaxed max-w-md">
-                Preparamos você com excelência para <strong className="text-white">ENEM e ETEC</strong> aliando ensino tradicional à <strong className="text-white hover:text-primary transition-colors">Tecnologia IA de ponta</strong>. Foco total nos seus resultados!
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button onClick={(e) => handleRedirect(e, '/login')} className="btn-shimmer h-11 px-8 bg-primary hover:bg-[#e06000] text-white font-black text-sm rounded-full glow-orange-strong border-none transition-[transform,box-shadow] active:scale-95 group">
-                  <div className="flex items-center gap-2">
-                    Entrar na Plataforma <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </Button>
-                <Button asChild variant="outline" className="h-11 px-8 bg-transparent text-white font-black text-sm rounded-full border border-white/20 hover:bg-white/5 transition-all">
-                  <a href="#metodologia" onClick={(e) => handleScrollTo(e, '#metodologia')} className="flex items-center gap-2">
-                    <Play className="h-4 w-4 text-primary fill-primary" /> Conheça o Método
-                  </a>
-                </Button>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-white/5">
-                {stats.map((stat) => (
-                  <div key={stat.label} className="group">
-                    <p className="text-2xl font-black text-white leading-none group-hover:text-primary transition-colors">{stat.value}</p>
-                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1.5">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative hidden lg:block h-[65vh] animate-in fade-in zoom-in duration-1000 max-h-[500px]">
-              <div className="gradient-border relative h-full aspect-[4/5] rounded-[2rem] mx-auto">
-                <div className="relative h-full w-full rounded-[2rem] overflow-hidden shadow-[0_0_60px_-10px_rgba(255,107,0,0.4)]">
-                  <Image
-                    src="/images/hero_study.png"
-                    alt="Estudantes focados no sucesso"
-                    fill
-                    className="object-cover"
-                    priority
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    quality={85}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  {/* Aurora insight card flutuante */}
-                  <div className="absolute inset-x-5 bottom-6 p-5 bg-white/8 backdrop-blur-xl rounded-2xl border border-white/15 animate-float noise">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                      <span className="text-[9px] font-black uppercase tracking-widest text-gradient-brand">Inteligência Aurora</span>
-                    </div>
-                    <p className="text-xs font-bold text-white/90 leading-relaxed">"Otimizamos cada minuto com diagnósticos preditivos e mentoria individualizada."</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-
-        {/* MISSÃO E VALORES */}
-        <section className="py-24 bg-gray-50 relative overflow-hidden border-t border-gray-200/50">
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none hidden md:block" />
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[80px] pointer-events-none hidden md:block" />
-
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
-            {[
-              {
-                title: "Nossa Missão",
-                icon: Target,
-                desc: "Democratizar o acesso ao ensino de elite em Santana de Parnaíba, transformando esforço em aprovação através da inovação e do acompanhamento próximo.",
-                theme: "dark"
-              },
-              {
-                title: "Tradição & IA",
-                icon: BookMarked,
-                desc: "Combinamos o melhor da pedagogia clássica com a agilidade da Inteligência Artificial Aurora para criar trilhas de aprendizagem únicas e infalíveis.",
-                theme: "light"
-              },
-              {
-                title: "Foco no Futuro",
-                icon: Lightbulb,
-                desc: "No Compromisso, você não apenas estuda para uma prova; você desenvolve a mentalidade de alta performance necessária para a vida universitária.",
-                theme: "dark"
-              }
-            ].map((card, i) => (
-              <div
-                key={i}
-                className={`p-10 rounded-[2.5rem] border transition-[transform,box-shadow,border-color] duration-300 group hover:-translate-y-2 flex flex-col gap-6 relative overflow-hidden ${
-                  card.theme === 'dark'
-                    ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white'
-                    : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
-                }`}
-              >
-                <div className={`absolute left-0 top-1/4 bottom-1/4 w-[3px] transition-all duration-700 ease-out group-hover:h-full group-hover:top-0 group-hover:bottom-0 ${
-                  card.theme === 'dark'
-                    ? 'bg-primary/30 group-hover:bg-primary group-hover:shadow-[0_0_20px_rgba(255,107,0,0.8)]'
-                    : 'bg-primary/10 group-hover:bg-primary group-hover:shadow-[0_0_15px_rgba(255,107,0,0.5)]'
-                }`} />
-
-                <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-transform duration-500 group-hover:scale-150 hidden md:block ${
-                  card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
-                }`} />
-
-                <div className={`relative h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-inner group-hover:rotate-6 z-10 ${
-                  card.theme === 'dark'
-                    ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]'
-                    : 'bg-gray-50 text-gray-800 border border-gray-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/30'
-                }`}>
-                  <card.icon className="h-8 w-8 relative z-10" />
-                  {card.theme === 'dark' && (
-                     <div className="absolute inset-0 rounded-2xl border-2 border-primary/0 group-hover:border-primary/50 group-hover:scale-125 transition-all duration-700 opacity-0 group-hover:opacity-100" />
-                  )}
-                </div>
-
-                <div className="space-y-4 relative z-10">
-                  <h3 className={`text-2xl font-black tracking-tighter uppercase italic transition-colors duration-500 ${
-                    card.theme === 'dark' ? 'text-white group-hover:text-primary' : 'text-gray-900 group-hover:text-primary'
-                  }`}>
-                    {card.title}
-                  </h3>
-                  <p className={`leading-relaxed font-medium text-sm transition-colors duration-500 ${
-                    card.theme === 'dark' ? 'text-gray-400 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-900'
-                  }`}>
-                    {card.desc}
-                  </p>
-                </div>
-
-                <div className="pt-4 flex justify-end opacity-0 group-hover:opacity-100 transition-all duration-700 translate-x-4 group-hover:translate-x-0">
-                   <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                     card.theme === 'dark'
-                       ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]'
-                       : 'bg-blue-50 text-blue-600 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                   }`}>
-                      <ChevronRight className="h-5 w-5" />
-                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* METODOLOGIA - Os Pilares do Seu Sucesso */}
-        <section id="metodologia" className="min-h-screen py-24 flex flex-col justify-center bg-white scroll-mt-20 overflow-hidden relative border-t border-gray-100">
-          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-primary/5 blur-[100px] rounded-full pointer-events-none hidden md:block" />
-          <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[80px] rounded-full pointer-events-none hidden md:block" />
-
-          <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-            <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
-              <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px] bg-primary/5 px-4 py-1.5 rounded-full border border-primary/20">
-                <Target className="h-4 w-4" /> Ecossistema Pedagógico
-              </div>
-              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter leading-tight italic">Os Pilares do Seu Sucesso</h2>
-              <p className="text-gray-500 font-medium leading-relaxed">Desenvolvemos uma estrutura 360º para garantir que nenhum aluno seja deixado para trás, unindo tecnologia humana e algoritmos de aprovação.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  title: "Jornada Personalizada",
-                  icon: GraduationCap,
-                  highlight: "Estratégico",
-                  desc: "Mapeamos suas dificuldades em tempo real e criamos listas de exercícios focadas no seu gap de conhecimento.",
-                  features: ["Suporte 24/7 Aurora IA", "Correção Redação Instantânea", "Mentoria Semanal"],
-                  theme: "dark"
-                },
-                {
-                  title: "Corpo Docente Elite",
-                  icon: School,
-                  highlight: "Experiência",
-                  desc: "Professores especialistas nas bancas mais difíceis do país, com didática simplificada e conteúdo de altíssimo nível.",
-                  features: ["Videoaulas Cinematográficas", "Material Didático Exclusivo", "Aulas Presenciais"],
-                  theme: "light"
-                },
-                {
-                  title: "Inteligência de Dados",
-                  icon: BarChart3,
-                  highlight: "Resultados",
-                  desc: "Dashboards precisos que mostram exatamente sua evolução e probabilidade de aprovação nos cursos desejados.",
-                  features: ["Simulados Padrão Vunesp/ENEM", "Auditoria de Erros Recorrentes", "Gestão de Progresso"],
-                  theme: "dark"
-                }
-              ].map((card, i) => (
-                <div
-                  key={card.title}
-                  className={`p-10 rounded-[2.5rem] border transition-[transform,box-shadow,border-color] duration-300 group hover:-translate-y-2 flex flex-col gap-6 relative overflow-hidden ${
-                    card.theme === 'dark'
-                      ? 'bg-gray-950 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/50 text-white'
-                      : 'bg-white border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_60px_rgba(255,107,0,0.15)] hover:border-primary/30 text-gray-900'
-                  }`}
-                >
-                  <div className={`absolute left-0 top-1/4 bottom-1/4 w-[3px] transition-all duration-700 ease-out group-hover:h-full group-hover:top-0 group-hover:bottom-0 ${
-                    card.theme === 'dark'
-                      ? 'bg-primary/30 group-hover:bg-primary group-hover:shadow-[0_0_20px_rgba(255,107,0,0.8)]'
-                      : 'bg-primary/10 group-hover:bg-primary group-hover:shadow-[0_0_15px_rgba(255,107,0,0.5)]'
-                  }`} />
-
-                  <div className={`absolute -right-16 -top-16 w-56 h-56 rounded-full blur-[80px] transition-transform duration-500 group-hover:scale-150 hidden md:block ${
-                    card.theme === 'dark' ? 'bg-blue-600/20 group-hover:bg-blue-500/40' : 'bg-blue-600/5 group-hover:bg-blue-500/15'
-                  }`} />
-
-                  <div className="relative z-10 flex justify-between items-center w-full">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary opacity-80">{card.highlight}</span>
-                    <div className={`relative h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-inner group-hover:rotate-6 z-10 ${
-                      card.theme === 'dark'
-                        ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-black group-hover:border-primary group-hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]'
-                        : 'bg-gray-50 text-gray-800 border border-gray-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/30'
-                    }`}>
-                      <card.icon className="h-6 w-6 relative z-10" />
-                      {card.theme === 'dark' && (
-                         <div className="absolute inset-0 rounded-2xl border-2 border-primary/0 group-hover:border-primary/50 group-hover:scale-125 transition-all duration-700 opacity-0 group-hover:opacity-100" />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 relative z-10">
-                    <h3 className={`text-2xl font-black tracking-tighter transition-colors duration-500 ${
-                      card.theme === 'dark' ? 'text-white group-hover:text-primary' : 'text-gray-900 group-hover:text-primary'
-                    }`}>
-                      {card.title}
-                    </h3>
-                    <p className={`leading-relaxed font-medium text-sm transition-colors duration-500 ${
-                      card.theme === 'dark' ? 'text-gray-400 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-900'
-                    }`}>
-                      {card.desc}
-                    </p>
-                  </div>
-
-                  <div className="pt-6 space-y-3 relative z-10 mt-auto">
-                    {card.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-center gap-3">
-                        <CheckCircle2 className={`h-4 w-4 shrink-0 transition-colors duration-500 ${
-                          card.theme === 'dark' ? 'text-primary/70 group-hover:text-primary' : 'text-primary'
-                        }`} />
-                        <span className={`text-[11px] font-bold uppercase tracking-tight transition-colors duration-500 ${
-                          card.theme === 'dark' ? 'text-gray-400 group-hover:text-white' : 'text-gray-600 group-hover:text-gray-900'
-                        }`}>{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
+        {/* RESULTADOS + FAQ + CTA final */}
         <DynamicBottomSections />
       </main>
     </div>
