@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import {
   BarChart3,
@@ -13,6 +13,7 @@ import {
   Trophy,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useRef } from "react";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
 
 /* ────────────────────────────────────────────────────────────── */
@@ -41,7 +42,12 @@ interface BentoCardProps {
   children?: ReactNode;
 }
 
-/** Card de vidro com spotlight radial que segue o cursor (CSS vars --spot-x/--spot-y). */
+/**
+ * Card de vidro com spotlight radial que segue o cursor (CSS vars --spot-x/--spot-y).
+ * O mesmo estado visual do hover também ativa sozinho quando o card cruza a
+ * faixa central da viewport durante o scroll — essencial no touch, onde não
+ * existe hover de mouse.
+ */
 function BentoCard({
   icon: Icon,
   tagline,
@@ -50,6 +56,13 @@ function BentoCard({
   className = "",
   children,
 }: BentoCardProps): ReactElement {
+  const reduceMotion = useReducedMotion();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isScrollActive = useInView(cardRef, {
+    amount: 0.5,
+    margin: "-15% 0px -15% 0px",
+  });
+
   const handleMouseMove = (event: MouseEvent<HTMLDivElement>): void => {
     const rect = event.currentTarget.getBoundingClientRect();
     event.currentTarget.style.setProperty("--spot-x", `${event.clientX - rect.left}px`);
@@ -58,14 +71,17 @@ function BentoCard({
 
   return (
     <motion.div
+      ref={cardRef}
       variants={cardVariants}
       onMouseMove={handleMouseMove}
-      className={`group relative flex flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl p-7 md:p-8 shadow-2xl transition-[border-color,transform] duration-300 hover:border-primary/40 hover:-translate-y-1 noise ${className}`}
+      className={`group relative flex flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl p-7 md:p-8 shadow-2xl transition-[border-color,transform] duration-300 hover:border-primary/40 hover:-translate-y-1 noise ${
+        isScrollActive ? `is-active border-primary/40 ${reduceMotion ? "" : "-translate-y-1"}` : ""
+      } ${className}`}
     >
       {/* Spotlight que segue o mouse */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 group-[.is-active]:opacity-100 transition-opacity duration-500"
         style={{
           background:
             "radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255,107,0,0.12), transparent 65%)",
@@ -74,23 +90,23 @@ function BentoCard({
       {/* Brilho na borda superior */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 group-[.is-active]:opacity-100 transition-opacity duration-500"
       />
 
       <div className="relative z-10 flex items-center justify-between">
         <span className="text-[9px] font-black uppercase tracking-[0.25em] text-primary/80">
           {tagline}
         </span>
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary transition-all duration-500 group-hover:bg-primary group-hover:text-white group-hover:rotate-6 group-hover:shadow-[0_0_25px_rgba(255,107,0,0.5)]">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary transition-all duration-500 group-hover:bg-primary group-[.is-active]:bg-primary group-hover:text-white group-[.is-active]:text-white group-hover:rotate-6 group-[.is-active]:rotate-6 group-hover:shadow-[0_0_25px_rgba(255,107,0,0.5)] group-[.is-active]:shadow-[0_0_25px_rgba(255,107,0,0.5)]">
           <Icon className="h-5 w-5" />
         </span>
       </div>
 
       <div className="relative z-10 mt-4 space-y-2">
-        <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white group-hover:text-primary transition-colors duration-500">
+        <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white group-hover:text-primary group-[.is-active]:text-primary transition-colors duration-500">
           {title}
         </h3>
-        <p className="text-sm font-medium leading-relaxed text-gray-400 group-hover:text-gray-200 transition-colors duration-500">
+        <p className="text-sm font-medium leading-relaxed text-gray-400 group-hover:text-gray-200 group-[.is-active]:text-gray-200 transition-colors duration-500">
           {description}
         </p>
       </div>
@@ -114,7 +130,7 @@ function PortalDemo(): ReactElement {
       {widgets.map((w, i) => (
         <div
           key={w.label}
-          className="rounded-2xl bg-white/[0.04] border border-white/10 p-4 transition-colors duration-500 group-hover:border-primary/25"
+          className="rounded-2xl bg-white/[0.04] border border-white/10 p-4 transition-colors duration-500 group-hover:border-primary/25 group-[.is-active]:border-primary/25"
         >
           <p className="text-[9px] font-black uppercase tracking-widest text-gray-500">
             {w.label}
@@ -122,7 +138,7 @@ function PortalDemo(): ReactElement {
           <p className="mt-1 text-lg font-black text-white">{w.pct}%</p>
           <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 origin-left scale-x-50 group-hover:scale-x-100 transition-transform duration-700 ease-out"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 origin-left scale-x-50 group-hover:scale-x-100 group-[.is-active]:scale-x-100 transition-transform duration-700 ease-out"
               style={{ width: `${w.pct}%`, transitionDelay: `${i * 90}ms` }}
             />
           </div>
@@ -170,7 +186,7 @@ function SimuladosDemo(): ReactElement {
             key={i}
             className={`aspect-square rounded-md border text-center transition-colors duration-500 ${
               i < 7
-                ? "bg-primary/20 border-primary/40 group-hover:bg-primary group-hover:border-primary"
+                ? "bg-primary/20 border-primary/40 group-hover:bg-primary group-[.is-active]:bg-primary group-hover:border-primary group-[.is-active]:border-primary"
                 : "bg-white/[0.04] border-white/10"
             }`}
             style={{ transitionDelay: `${i * 60}ms` }}
@@ -192,7 +208,7 @@ function TrilhasDemo(): ReactElement {
         <div key={step} className="flex items-center flex-1 last:flex-none">
           <div className="flex flex-col items-center gap-1.5">
             <span
-              className="h-3.5 w-3.5 rounded-full border-2 border-primary/40 bg-primary/15 transition-all duration-500 group-hover:bg-primary group-hover:border-primary group-hover:shadow-[0_0_12px_rgba(255,107,0,0.7)]"
+              className="h-3.5 w-3.5 rounded-full border-2 border-primary/40 bg-primary/15 transition-all duration-500 group-hover:bg-primary group-[.is-active]:bg-primary group-hover:border-primary group-[.is-active]:border-primary group-hover:shadow-[0_0_12px_rgba(255,107,0,0.7)] group-[.is-active]:shadow-[0_0_12px_rgba(255,107,0,0.7)]"
               style={{ transitionDelay: `${i * 120}ms` }}
             />
             <span className="text-[8px] font-black uppercase tracking-wider text-gray-500">
@@ -202,7 +218,7 @@ function TrilhasDemo(): ReactElement {
           {i < steps.length - 1 ? (
             <span className="mx-1 mb-4 h-px flex-1 bg-white/10 relative overflow-hidden">
               <span
-                className="absolute inset-y-0 left-0 w-full bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
+                className="absolute inset-y-0 left-0 w-full bg-primary origin-left scale-x-0 group-hover:scale-x-100 group-[.is-active]:scale-x-100 transition-transform duration-500"
                 style={{ transitionDelay: `${i * 120 + 60}ms` }}
               />
             </span>
@@ -220,7 +236,7 @@ function DesempenhoDemo(): ReactElement {
       {bars.map((height, i) => (
         <div
           key={i}
-          className="flex-1 rounded-t-lg bg-gradient-to-t from-primary/40 to-primary origin-bottom scale-y-[0.45] group-hover:scale-y-100 transition-transform duration-700 ease-out"
+          className="flex-1 rounded-t-lg bg-gradient-to-t from-primary/40 to-primary origin-bottom scale-y-[0.45] group-hover:scale-y-100 group-[.is-active]:scale-y-100 transition-transform duration-700 ease-out"
           style={{ height: `${height}%`, transitionDelay: `${i * 80}ms` }}
         />
       ))}
@@ -231,12 +247,12 @@ function DesempenhoDemo(): ReactElement {
 function GamificacaoDemo(): ReactElement {
   return (
     <div className="flex items-center gap-4">
-      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400/10 border border-amber-400/25 text-amber-400 transition-transform duration-700 group-hover:rotate-[360deg] group-hover:scale-110">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400/10 border border-amber-400/25 text-amber-400 transition-transform duration-700 group-hover:rotate-[360deg] group-[.is-active]:rotate-[360deg] group-hover:scale-110 group-[.is-active]:scale-110">
         <Trophy className="h-6 w-6" />
       </span>
       <div>
         <div className="flex items-center gap-1.5">
-          <Flame className="h-4 w-4 text-primary motion-safe:group-hover:animate-pulse" />
+          <Flame className="h-4 w-4 text-primary motion-safe:group-hover:animate-pulse motion-safe:group-[.is-active]:animate-pulse" />
           <span className="text-lg font-black text-white leading-none">12 dias</span>
         </div>
         <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mt-1">
@@ -257,7 +273,7 @@ function GraphDemo(): ReactElement {
   ];
   return (
     <svg viewBox="0 0 300 80" className="w-full h-16" aria-hidden="true">
-      <g stroke="rgba(255,107,0,0.3)" strokeWidth="1.5" className="transition-all duration-500 group-hover:stroke-[rgba(255,107,0,0.7)]">
+      <g stroke="rgba(255,107,0,0.3)" strokeWidth="1.5" className="transition-all duration-500 group-hover:stroke-[rgba(255,107,0,0.7)] group-[.is-active]:stroke-[rgba(255,107,0,0.7)]">
         <line x1="40" y1="40" x2="120" y2="18" />
         <line x1="40" y1="40" x2="150" y2="58" />
         <line x1="120" y1="18" x2="230" y2="30" />
@@ -270,7 +286,7 @@ function GraphDemo(): ReactElement {
           cx={node.cx}
           cy={node.cy}
           r={node.r}
-          className="fill-primary/50 transition-all duration-500 group-hover:fill-primary"
+          className="fill-primary/50 transition-all duration-500 group-hover:fill-primary group-[.is-active]:fill-primary"
           style={{ transitionDelay: `${i * 100}ms` }}
         />
       ))}
