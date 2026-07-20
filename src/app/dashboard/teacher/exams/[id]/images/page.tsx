@@ -133,7 +133,12 @@ export default function RepairExamImagesPage() {
       for (const q of questions) {
         if (q.image_url) { proposal[q.id] = null; continue; }
         const targetNumber = q.printedNumber ?? q.order_index;
-        const match = extracted.find(img => img.questionNumber === targetNumber && !usedImages.has(img.id));
+        // Quando mais de uma imagem cai na mesma questão (ex.: alternativas em
+        // fórmula que viraram imagem + a figura real), prefere a MAIOR — a figura
+        // de apoio é sempre bem maior que um recorte incidental.
+        const match = extracted
+          .filter(img => img.questionNumber === targetNumber && !usedImages.has(img.id))
+          .sort((a, b) => b.file.size - a.file.size)[0];
         if (match) {
           usedImages.add(match.id);
           proposal[q.id] = match.id;

@@ -196,7 +196,7 @@ export async function extractPdfContent(file: File, fileLabel: string): Promise<
   let fullText = `\n\n--- ARQUIVO: ${fileLabel} ---\n\n`;
   const markers: QuestionMarker[] = [];
   const rawImages: Array<{
-    blob: Blob; page: number; yTop: number; centerX: number; column: 0 | 1;
+    blob: Blob; page: number; yTop: number; yBase: number; centerX: number; column: 0 | 1;
   }> = [];
   const seenFingerprints = new Map<string, number>();
 
@@ -297,25 +297,50 @@ export async function extractPdfContent(file: File, fileLabel: string): Promise<
         blob,
         page: pageNum,
         yTop: p.maxY,
+        yBase: p.minY,
         centerX,
         column: twoCols && centerX >= pageWidth * 0.5 ? 1 : 0,
       });
     }
   }
 
-  // ---- Atribuição: questão impressa mais próxima ACIMA de cada imagem ----
+  // ---- Atribuição da imagem à questão ----
+  // Provas usam duas convenções, e a geometria distingue as duas:
+  //   • exatas: "12." → enunciado → figura ABAIXO do número (às vezes a figura
+  //     transborda para o topo da 2ª coluna / página seguinte);
+  //   • literatura/humanas: texto ou imagem de APOIO logo ACIMA do "12.".
+  // Regra: por padrão, a última questão na ORDEM DE LEITURA antes da imagem
+  // (respeita transbordo de coluna/página). Exceção: se houver um "NN." na
+  // mesma coluna colado logo abaixo da imagem (gap pequeno), é apoio-antes —
+  // a imagem pertence a essa questão de baixo.
   const orderedMarkers = [...markers].sort((a, b) =>
     a.page - b.page || a.column - b.column || b.y - a.y
   );
 
-  const findQuestionFor = (img: { page: number; yTop: number; column: 0 | 1 }): number | null => {
+  // Gap máximo (pt) entre a base da imagem e o número logo abaixo para tratar
+  // como apoio-antes-do-número. Enunciados de exatas separam figura e próximo
+  // número pelas alternativas (gap >> este valor), então não há colisão.
+  const SUPPORT_GAP = 45;
+
+  const findQuestionFor = (
+    img: { page: number; yTop: number; yBase: number; column: 0 | 1 }
+  ): number | null => {
+    // (1) apoio-antes-do-número: "NN." na mesma coluna, coladinho abaixo da imagem.
+    const below = markers
+      .filter(m =>
+        m.page === img.page && m.column === img.column &&
+        m.y < img.yBase && img.yBase - m.y <= SUPPORT_GAP)
+      .sort((a, b) => b.y - a.y);
+    if (below.length > 0) return below[0].number;
+
+    // (2) padrão: última questão na ordem de leitura em/ acima da imagem.
     let best: QuestionMarker | null = null;
     for (const m of orderedMarkers) {
-      const precedes =
+      const before =
         m.page < img.page ||
         (m.page === img.page && (m.column < img.column ||
           (m.column === img.column && m.y >= img.yTop - 4)));
-      if (precedes) best = m;
+      if (before) best = m;
       else if (m.page > img.page) break;
     }
     return best?.number ?? null;

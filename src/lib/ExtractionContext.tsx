@@ -298,7 +298,11 @@ export function ExtractionProvider({ children }: { children: ReactNode }) {
         // preferindo imagens sem número para não "roubar" a imagem de outra questão.
         const takeImageByNumber = (n: number | null): ImgItem | undefined => {
             if (n === null) return undefined;
-            return imageQueue.find(img => img.questionNumber === n && !usedImageIds.has(img.id));
+            // Se mais de uma imagem cair na mesma questão (ex.: alternativas em
+            // fórmula viradas imagem + a figura real), prefere a MAIOR.
+            return imageQueue
+                .filter(img => img.questionNumber === n && !usedImageIds.has(img.id))
+                .sort((a, b) => b.file.size - a.file.size)[0];
         };
         const takeImageSequential = (): ImgItem | undefined =>
             imageQueue.find(img => img.questionNumber == null && !usedImageIds.has(img.id))
