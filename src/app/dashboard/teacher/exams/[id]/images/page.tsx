@@ -123,15 +123,17 @@ export default function RepairExamImagesPage() {
       }
       setImages(extracted);
 
-      // Pareamento automático: número impresso da questão ↔ número detectado no PDF.
-      // Só propõe para questões SEM imagem; cada imagem é usada uma vez.
+      // Pareamento automático: número da questão ↔ número detectado no PDF.
+      // O número da questão vem do texto impresso ("QUESTÃO 12"); quando o banco
+      // não guarda isso (provas importadas guardam só "(ENEM ...)"), usamos o
+      // order_index — que, para provas geradas a partir de PDF, é a mesma ordem
+      // do documento. Só propõe para questões SEM imagem; cada imagem é usada uma vez.
       const usedImages = new Set<string>();
       const proposal: Record<string, string | null> = {};
       for (const q of questions) {
         if (q.image_url) { proposal[q.id] = null; continue; }
-        const match = q.printedNumber !== null
-          ? extracted.find(img => img.questionNumber === q.printedNumber && !usedImages.has(img.id))
-          : undefined;
+        const targetNumber = q.printedNumber ?? q.order_index;
+        const match = extracted.find(img => img.questionNumber === targetNumber && !usedImages.has(img.id));
         if (match) {
           usedImages.add(match.id);
           proposal[q.id] = match.id;
@@ -336,7 +338,7 @@ export default function RepairExamImagesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
                         <Badge className="bg-primary/10 text-primary border-none font-black text-[10px]">
-                          #{q.order_index}{q.printedNumber !== null ? ` · Questão ${q.printedNumber}` : ''}
+                          Questão {q.printedNumber ?? q.order_index}
                         </Badge>
                         {!assigned && <Badge className="bg-amber-100 text-amber-700 border-none font-black text-[9px] uppercase">Sem proposta</Badge>}
                       </div>
