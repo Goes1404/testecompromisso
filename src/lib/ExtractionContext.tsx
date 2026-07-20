@@ -18,6 +18,8 @@ export type ParsedQuestion = {
     micro_topic_id?: string;
     supporting_text?: string;
     image_url?: string;
+    /** Número impresso da questão no documento original (ex.: "QUESTÃO 15" → 15). */
+    question_number?: number | null;
     _uploadingImage?: boolean;
     _autoFileToUpload?: File;
 };
@@ -28,7 +30,15 @@ export type ExtractionProgress = {
     questionsFound: number;
     elapsedSeconds: number;
 };
-export type ImgItem = { id: string; file: File; url: string };
+export type ImgItem = {
+    id: string;
+    file: File;
+    url: string;
+    /** Página do PDF de origem, quando a imagem veio da extração automática. */
+    page?: number;
+    /** Número da questão detectada acima da imagem no PDF (pareamento determinístico). */
+    questionNumber?: number | null;
+};
 export type UploadRecord = {
     id: string;
     timestamp: string;
@@ -267,8 +277,32 @@ export function ExtractionProvider({ children }: { children: ReactNode }) {
         };
 
         const seenTexts = new Set<string>();
-        let imageIndex = 0;
+        const usedImageIds = new Set<string>();
         let totalFound = 0;
+
+        // Número impresso da questão: prioridade para o campo da IA, senão regex no enunciado.
+        const parseQuestionNumber = (q: any): number | null => {
+            const fromAi = Number(q.question_number);
+            if (Number.isInteger(fromAi) && fromAi >= 1 && fromAi <= 200) return fromAi;
+            const text: string = `${q.question_text || ''}`;
+            const m = text.match(/quest[ãa]o\s*(\d{1,3})/i) || text.match(/^\s*(\d{1,3})\s*[.)-]\s/);
+            if (m) {
+                const n = parseInt(m[1], 10);
+                if (n >= 1 && n <= 200) return n;
+            }
+            return null;
+        };
+
+        // Pareamento determinístico: imagem cujo questionNumber (posição no PDF) bate
+        // com o número da questão. Fallback sequencial preserva o comportamento antigo,
+        // preferindo imagens sem número para não "roubar" a imagem de outra questão.
+        const takeImageByNumber = (n: number | null): ImgItem | undefined => {
+            if (n === null) return undefined;
+            return imageQueue.find(img => img.questionNumber === n && !usedImageIds.has(img.id));
+        };
+        const takeImageSequential = (): ImgItem | undefined =>
+            imageQueue.find(img => img.questionNumber == null && !usedImageIds.has(img.id))
+            ?? imageQueue.find(img => !usedImageIds.has(img.id));
 
         const saveHistory = (status: UploadRecord['status'], count: number) => {
             const record: UploadRecord = {
@@ -307,6 +341,7 @@ REGRAS DE OURO PARA CONTEXTO COMPARTILHADO:
 3. MARCADORES DE IMAGEM: Sempre que houver menção a "Figura", "Imagem", "Fotografia", "Gráfico", "Charge", "Mapa", "Tabela Visual", "Quadro", "Esquema", "Tirinha" ou "Ilustração" que não possa ser transcrita em texto, insira [IMAGEM_PENDENTE] no campo "supporting_text" (ou no início de "question_text" se não houver supporting_text).
 4. NÃO RESUMA: Mantenha o enunciado e o texto de apoio exatamente como estão no original.
 5. GABARITO AUSENTE: Se o gabarito não estiver explícito neste trecho, defina "correct_answer" como null. NUNCA invente ou adivinhe a resposta correta.
+6. NÚMERO ORIGINAL: Sempre que a questão tiver numeração impressa no documento (ex: "QUESTÃO 15", "15.", "Questão 15 (ENEM)"), preencha "question_number" com esse número inteiro. Se não houver numeração visível, use null. NUNCA renumere por conta própria.
 
 ESTRUTURA JSON EXIGIDA:
 {
@@ -316,6 +351,7 @@ ESTRUTURA JSON EXIGIDA:
       "supporting_text": "Texto de base (se houver).",
       "options": [{"key": "A", "text": "..."}, {"key": "B", "text": "..."}, {"key": "C", "text": "..."}, {"key": "D", "text": "..."}, {"key": "E", "text": "..."}],
       "correct_answer": "LETRA_DA_CORRETA ou null se o gabarito NÃO estiver visível neste trecho",
+      "question_number": 15,
       "year": 2024,
       "subject_name": "Matéria"
     }
@@ -365,6 +401,7 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`,
                         let q = rawQ;
                         const combinedText = (q.question_text + ' ' + (q.supporting_text || '')).toUpperCase();
                         const needsImage = IMAGE_TRIGGERS.some(t => combinedText.includes(t));
+                        const questionNumber = parseQuestionNumber(q);
 
                         if (needsImage && !combinedText.includes('[IMAGEM_PENDENTE]')) {
                             if (q.supporting_text && q.supporting_text.trim().length > 0) {
@@ -376,13 +413,18 @@ TEXTO PARA ANÁLISE (Trecho ${i + 1}/${chunks.length}):\n${chunks[i]}`,
 
                         const base = {
                             ...q,
+                            question_number: questionNumber,
                             _tempId: Math.random().toString(36).substring(2, 9),
                             subject_id: resolveSubjectId(q.subject_name, subjects) || bulkSubjectId,
                         };
-                        if (needsImage && imageIndex < imageQueue.length) {
-                            const f = imageQueue[imageIndex].file;
-                            imageIndex++;
-                            return { ...base, _autoFileToUpload: f, _uploadingImage: true };
+
+                        // Match por número vale mesmo sem palavra-gatilho — a posição
+                        // da imagem no PDF é evidência mais forte que o texto da IA.
+                        const matched = takeImageByNumber(questionNumber)
+                            ?? (needsImage ? takeImageSequential() : undefined);
+                        if (matched) {
+                            usedImageIds.add(matched.id);
+                            return { ...base, _autoFileToUpload: matched.file, _uploadingImage: true };
                         }
                         return base;
                     });

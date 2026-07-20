@@ -28,6 +28,7 @@ import { useAuth } from '@/lib/AuthProvider';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExtraction, ParsedQuestion, Subject, ImgItem, UploadRecord } from '@/lib/ExtractionContext';
+import { extractPdfContent } from '@/lib/pdf-extract';
 
 type MicroTopic = { id: string; name: string };
 type QuestionOption = { key: string; text: string };
@@ -156,64 +157,11 @@ export default function QuestionBankPage() {
                 }
 
                 try {
-                    const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => resolve(ev.target?.result as ArrayBuffer);
-                        reader.onerror = reject;
-                        reader.readAsArrayBuffer(file);
-                    });
-                    const typedarray = new Uint8Array(arrayBuffer);
-
-                    if (!(window as any).pdfjsLib) {
-                        const script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
-                        script.type = 'module';
-                        document.head.appendChild(script);
-                        await new Promise(resolve => { script.onload = resolve; });
-                    }
-                    const pdfjsLib = (window as any).pdfjsLib;
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
-                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                    let fullText = `\n\n--- ARQUIVO: ${file.name} ---\n\n`;
-
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        try {
-                            const ops = await page.getOperatorList();
-                            for (let j = 0; j < ops.fnArray.length; j++) {
-                                if (ops.fnArray[j] === pdfjsLib.OPS.paintImageXObject || ops.fnArray[j] === pdfjsLib.OPS.paintJpegXObject) {
-                                    const imgKey = ops.argsArray[j][0];
-                                    page.objs.get(imgKey, (imgObj: any) => {
-                                        if (!imgObj || imgObj.width < 100 || imgObj.height < 100) return;
-                                        const canvas = document.createElement('canvas');
-                                        canvas.width = imgObj.width; canvas.height = imgObj.height;
-                                        const ctx = canvas.getContext('2d');
-                                        if (!ctx) return;
-                                        if (imgObj instanceof ImageBitmap || imgObj.tagName === 'IMG') {
-                                            ctx.drawImage(imgObj, 0, 0, imgObj.width, imgObj.height);
-                                        } else if (imgObj.data) {
-                                            try { ctx.putImageData(new ImageData(new Uint8ClampedArray(imgObj.data), imgObj.width, imgObj.height), 0, 0); } catch { return; }
-                                        }
-                                        canvas.toBlob(blob => {
-                                            if (blob) {
-                                                const f = new File([blob], `auto_img_f${idx}_p${i}_${j}.png`, { type: 'image/png' });
-                                                tempImages.push({ id: Math.random().toString(36).substr(2, 9), file: f, url: URL.createObjectURL(blob) });
-                                            }
-                                        }, 'image/png');
-                                    });
-                                }
-                            }
-                        } catch { }
-                        const tc = await page.getTextContent();
-                        const items = tc.items as any[];
-                        let lastY = -1; let pageText = '';
-                        for (const item of items) {
-                            if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) pageText += '\n';
-                            pageText += item.str + ' '; lastY = item.transform[5];
-                        }
-                        fullText += `--- PÁGINA ${i} ---\n${pageText}\n\n`;
-                    }
-                    combinedText += fullText;
+                    // Extração posicional: texto + imagens recortadas da página renderizada,
+                    // cada uma anotada com o número da questão detectada acima dela.
+                    const { text, images } = await extractPdfContent(file, file.name);
+                    combinedText += text;
+                    tempImages.push(...images);
                 } catch (err) {
                     toast({ title: `Erro no arquivo ${file.name}`, variant: 'destructive' });
                 }
@@ -222,11 +170,9 @@ export default function QuestionBankPage() {
 
         if (combinedText.trim().length > 50) {
             setRawText((prev: string) => prev ? prev + '\n' + combinedText.trim() : combinedText.trim());
-            setTimeout(() => {
-                setAutoImageQueue((prev: ImgItem[]) => [...prev, ...tempImages]);
-                const imgMsg = tempImages.length > 0 ? ` ${tempImages.length} imagens detectadas.` : '';
-                toast({ title: 'Upload concluído!', description: `${files.length} arquivo(s) lido(s).${imgMsg}` });
-            }, 1000);
+            setAutoImageQueue((prev: ImgItem[]) => [...prev, ...tempImages]);
+            const imgMsg = tempImages.length > 0 ? ` ${tempImages.length} imagens detectadas.` : '';
+            toast({ title: 'Upload concluído!', description: `${files.length} arquivo(s) lido(s).${imgMsg}` });
         } else {
             toast({ title: 'Aviso', description: 'Texto insuficiente extraído dos arquivos.', variant: 'destructive' });
         }
@@ -634,7 +580,9 @@ export default function QuestionBankPage() {
                                                     setAutoImageQueue(q); setDraggedImgIndex(null);
                                                 }}
                                                 className="relative w-32 h-32 shrink-0 rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary cursor-grab active:cursor-grabbing group shadow-sm bg-white">
-                                                <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-lg z-10 shadow-md">#{idx + 1}</div>
+                                                <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-lg z-10 shadow-md">
+                                                    {img.questionNumber != null ? `Q${img.questionNumber}` : `#${idx + 1}`}
+                                                </div>
                                                 <button onClick={() => setAutoImageQueue(prev => prev.filter((_, i) => i !== idx))}
                                                     className="absolute top-2 right-2 bg-red-500/90 hover:bg-red-600 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                                     <Trash2 className="h-3 w-3" />
