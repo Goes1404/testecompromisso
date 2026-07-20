@@ -15,8 +15,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Scroll, Plus, Upload, FileText, Trash2, Pencil, ExternalLink, Loader2,
-  BookOpen, AlertCircle, RotateCw, CheckCircle2, Search, Download, Lock
+  BookOpen, AlertCircle, RotateCw, CheckCircle2, Search, Download, Lock, ScanSearch
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const EXAM_TYPES = ['enem', 'etec', 'fuvest', 'unicamp', 'usp', 'outro'] as const;
@@ -54,6 +55,7 @@ const EMPTY_FORM: FormState = { title: '', description: '', year: String(new Dat
 export default function TeacherExamsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -298,6 +300,12 @@ export default function TeacherExamsPage() {
                         className="flex-1 h-9 rounded-xl text-xs font-black text-primary hover:bg-primary/5">
                         <Pencil className="h-3.5 w-3.5 mr-1.5" /> Editar
                       </Button>
+                      {exam.pdf_url && (
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/teacher/exams/${exam.id}/images`)}
+                          className="flex-1 h-9 rounded-xl text-xs font-black text-blue-600 hover:bg-blue-50">
+                          <ScanSearch className="h-3.5 w-3.5 mr-1.5" /> Imagens
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(exam)}
                         className="flex-1 h-9 rounded-xl text-xs font-black text-red-400 hover:bg-red-50">
                         <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Deletar
