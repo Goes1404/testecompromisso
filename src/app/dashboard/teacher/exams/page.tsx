@@ -294,18 +294,21 @@ export default function TeacherExamsPage() {
                     onChange={e => { const f = e.target.files?.[0]; if (f) handlePdfUpload(exam, f); e.target.value = ''; }}
                   />
 
+                  {/* Reparar imagens: disponível para qualquer professor/admin em provas
+                      com PDF, mesmo que a prova seja de outro (ação segura, validada no servidor). */}
+                  {exam.pdf_url && (
+                    <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/teacher/exams/${exam.id}/images`)}
+                      className="w-full h-9 rounded-xl text-xs font-black text-blue-600 bg-blue-50/50 hover:bg-blue-50">
+                      <ScanSearch className="h-3.5 w-3.5 mr-1.5" /> Extrair imagens do PDF
+                    </Button>
+                  )}
+
                   {canEdit && (
                     <div className="flex gap-2 pt-1 border-t border-slate-100">
                       <Button variant="ghost" size="sm" onClick={() => openEdit(exam)}
                         className="flex-1 h-9 rounded-xl text-xs font-black text-primary hover:bg-primary/5">
                         <Pencil className="h-3.5 w-3.5 mr-1.5" /> Editar
                       </Button>
-                      {exam.pdf_url && (
-                        <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/teacher/exams/${exam.id}/images`)}
-                          className="flex-1 h-9 rounded-xl text-xs font-black text-blue-600 hover:bg-blue-50">
-                          <ScanSearch className="h-3.5 w-3.5 mr-1.5" /> Imagens
-                        </Button>
-                      )}
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(exam)}
                         className="flex-1 h-9 rounded-xl text-xs font-black text-red-400 hover:bg-red-50">
                         <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Deletar

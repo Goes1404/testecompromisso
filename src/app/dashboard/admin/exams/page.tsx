@@ -14,8 +14,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Scroll, Plus, Upload, FileText, Trash2, Pencil, ExternalLink, Loader2,
-  BookOpen, AlertCircle, RotateCw, CheckCircle2, Search, Filter
+  BookOpen, AlertCircle, RotateCw, CheckCircle2, Search, Filter, ScanSearch
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const EXAM_TYPES = ['enem', 'etec', 'fuvest', 'unicamp', 'usp', 'outro'] as const;
 type ExamType = typeof EXAM_TYPES[number];
@@ -50,6 +51,7 @@ const EMPTY_FORM: FormState = { title: '', description: '', year: String(new Dat
 
 export default function AdminExamsPage() {
   const { toast } = useToast();
+  const router = useRouter();
 
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -389,6 +391,18 @@ export default function AdminExamsPage() {
                       e.target.value = '';
                     }}
                   />
+
+                  {/* Extrair/reparar imagens do PDF */}
+                  {exam.pdf_url && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/dashboard/teacher/exams/${exam.id}/images`)}
+                      className="w-full h-9 rounded-xl text-xs font-black text-blue-600 bg-blue-50/50 hover:bg-blue-50"
+                    >
+                      <ScanSearch className="h-3.5 w-3.5 mr-1.5" /> Extrair imagens do PDF
+                    </Button>
+                  )}
 
                   {/* Edit / Delete */}
                   <div className="flex gap-2 pt-1 border-t border-slate-100">
