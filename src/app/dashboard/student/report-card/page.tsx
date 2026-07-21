@@ -343,12 +343,17 @@ function PlatformSimuladosSection({ groups }: { groups: SimGroup[] }) {
   if (groups.length === 0) return null;
   return (
     <section className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-md">
-      <div className="flex items-center gap-2">
-        <Trophy className="h-5 w-5 text-primary" />
-        <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Simulados na plataforma</h3>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-primary" />
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Simulados na plataforma</h3>
+        </div>
+        <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-amber-700">
+          2o semestre
+        </span>
       </div>
       <p className="mt-2 text-xs font-semibold text-slate-500">
-        As 2 primeiras tentativas de cada simulado compoem seu historico de curso. Tentativas extras contam apenas como treino.
+        As 2 primeiras tentativas de cada simulado compoem seu historico do 2o semestre. Tentativas extras contam apenas como treino.
       </p>
 
       <div className="mt-4 space-y-3">
