@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -93,6 +94,18 @@ type AttemptHistory = {
   completedAt: string;
 };
 
+type SavedProgress = {
+  examId: string;
+  totalQuestions: number;
+  currentIndex: number;
+  answers: Answer[];
+  markedForReview: string[];
+  timeLeft: number | null;
+  savedAt: string;
+};
+
+type ProgressSummary = { currentIndex: number; total: number; answered: number; savedAt: string };
+
 type PageState = "loading" | "list" | "active" | "finished" | "error";
 
 function examTypeStyles(type: string) {
@@ -158,6 +171,29 @@ export default function ProvasCompletasPage() {
   const [finishedTriBand, setFinishedTriBand] = useState<{ low: number; high: number } | null>(null);
   const [attemptsByExam, setAttemptsByExam] = useState<Record<string, AttemptHistory[]>>({});
   const [evolutionExam, setEvolutionExam] = useState<Exam | null>(null);
+  const [progressByExam, setProgressByExam] = useState<Record<string, ProgressSummary>>({});
+
+  // ── Progresso salvo (continuar depois) — persistido em localStorage ──────────
+  const progressKey = useCallback(
+    (examId: string) => `prova_progress_${user?.id ?? "anon"}_${examId}`,
+    [user?.id]
+  );
+  const loadProgress = useCallback((examId: string): SavedProgress | null => {
+    try {
+      const raw = localStorage.getItem(progressKey(examId));
+      return raw ? (JSON.parse(raw) as SavedProgress) : null;
+    } catch {
+      return null;
+    }
+  }, [progressKey]);
+  const clearProgress = useCallback((examId: string) => {
+    try { localStorage.removeItem(progressKey(examId)); } catch {}
+    setProgressByExam((p) => {
+      const n = { ...p };
+      delete n[examId];
+      return n;
+    });
+  }, [progressKey]);
 
   // Group exams by type and year
   const groupedExams = useMemo(() => {
@@ -261,6 +297,24 @@ export default function ProvasCompletasPage() {
       });
       setAttemptsByExam(hist);
 
+      // Progresso salvo (localStorage) de cada prova carregada.
+      const prog: Record<string, ProgressSummary> = {};
+      mapped.forEach((ex) => {
+        try {
+          const raw = localStorage.getItem(`prova_progress_${user.id}_${ex.id}`);
+          if (!raw) return;
+          const sp = JSON.parse(raw) as SavedProgress;
+          if (sp.totalQuestions !== ex.question_count) return; // prova mudou → ignora
+          prog[ex.id] = {
+            currentIndex: sp.currentIndex,
+            total: sp.totalQuestions,
+            answered: sp.answers?.length ?? 0,
+            savedAt: sp.savedAt,
+          };
+        } catch {}
+      });
+      setProgressByExam(prog);
+
       setPageState("list");
     } catch (e: any) {
       setErrorMsg(e.message || "Erro ao carregar provas.");
@@ -272,7 +326,7 @@ export default function ProvasCompletasPage() {
     if (user) fetchExams();
   }, [fetchExams, user]);
 
-  const startExam = async (exam: Exam) => {
+  const startExam = async (exam: Exam, resume = false) => {
     setPageState("loading");
     try {
       const { data, error } = await supabase
@@ -297,19 +351,49 @@ export default function ProvasCompletasPage() {
         return;
       }
 
+      const saved = resume ? loadProgress(exam.id) : null;
+      const validSaved = saved && saved.totalQuestions === qs.length ? saved : null;
+
       setActiveExam(exam);
       setQuestions(qs);
-      setCurrentIndex(0);
-      setSelectedAnswer(null);
-      setAnswers([]);
-      setMarkedForReview(new Set());
-      setTimeLeft(qs.length * 3.5 * 60);
+
+      if (validSaved) {
+        const idx = Math.min(Math.max(0, validSaved.currentIndex), qs.length - 1);
+        setAnswers(validSaved.answers ?? []);
+        setCurrentIndex(idx);
+        const existing = (validSaved.answers ?? []).find((a) => a.questionId === qs[idx]?.id);
+        setSelectedAnswer(existing?.selected ?? null);
+        setMarkedForReview(new Set(validSaved.markedForReview ?? []));
+        setTimeLeft(validSaved.timeLeft ?? qs.length * 3.5 * 60);
+      } else {
+        if (resume) clearProgress(exam.id); // progresso incompatível
+        setCurrentIndex(0);
+        setSelectedAnswer(null);
+        setAnswers([]);
+        setMarkedForReview(new Set());
+        setTimeLeft(qs.length * 3.5 * 60);
+      }
+
       setIsPaused(false);
       setShowGrid(false);
       setShowFinishConfirm(false);
       setZoomImage(null);
       setFinishedTri(null);
       setFinishedTriBand(null);
+
+      // Aviso sobre as 2 tentativas que contam para o boletim.
+      const attemptNo = (attemptsByExam[exam.id]?.length ?? 0) + 1;
+      if (!validSaved) {
+        if (attemptNo === 1) {
+          toast({ title: "1ª tentativa", description: "Esta e a 2ª tentativa contam para o boletim do 2º semestre." });
+        } else if (attemptNo === 2) {
+          toast({ title: "2ª tentativa", description: "Ultima tentativa que conta para o boletim do 2º semestre." });
+        } else {
+          toast({ title: `${attemptNo}ª tentativa (treino)`, description: "Nao conta para o boletim, mas entra no seu grafico de evolucao." });
+        }
+      } else {
+        toast({ title: "Retomando prova", description: `Voce parou na questao ${Math.min(validSaved.currentIndex + 1, qs.length)}.` });
+      }
 
       setPageState("active");
     } catch (e: any) {
@@ -382,10 +466,40 @@ export default function ProvasCompletasPage() {
     }
   };
 
+  // Salva o progresso automaticamente (para continuar depois).
+  useEffect(() => {
+    if (pageState !== "active" || !activeExam || !user) return;
+    const snapshot: SavedProgress = {
+      examId: activeExam.id,
+      totalQuestions: questions.length,
+      currentIndex,
+      answers: commitCurrent(),
+      markedForReview: Array.from(markedForReview),
+      timeLeft,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem(progressKey(activeExam.id), JSON.stringify(snapshot));
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageState, activeExam, user, questions, currentIndex, selectedAnswer, markedForReview, timeLeft]);
+
+  // Pré-carrega a imagem da próxima questão para navegação instantânea.
+  useEffect(() => {
+    if (pageState !== "active" || typeof window === "undefined") return;
+    const nextUrl = questions[currentIndex + 1]?.image_url;
+    if (nextUrl) {
+      const im = new window.Image();
+      im.src = nextUrl;
+    }
+  }, [pageState, currentIndex, questions]);
+
   const finishExam = async (finalAnswers: Answer[]) => {
     const score = finalAnswers.filter((a) => norm(a.selected) === norm(a.correct)).length;
     setAnswers(finalAnswers);
     setPageState("finished");
+
+    if (activeExam) clearProgress(activeExam.id); // prova concluída → descarta rascunho
 
     if (!user || !activeExam) return;
 
@@ -664,13 +778,23 @@ export default function ProvasCompletasPage() {
                           </a>
                         </div>
                       )}
+                      {/* Continuar de onde parou (progresso salvo) */}
+                      {selectedExam.question_count > 0 && progressByExam[selectedExam.id] && (
+                        <button
+                          onClick={() => startExam(selectedExam, true)}
+                          className="w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30"
+                        >
+                          <Play className="h-3.5 w-3.5" />
+                          Continuar (questao {Math.min(progressByExam[selectedExam.id].currentIndex + 1, progressByExam[selectedExam.id].total)}/{progressByExam[selectedExam.id].total})
+                        </button>
+                      )}
                       {selectedExam.question_count > 0 && (
                         <button
                           onClick={() => startExam(selectedExam)}
                           className={`w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 ${isSpecial ? "bg-white/10 border-white/20 text-white hover:bg-white/20" : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700"}`}
                         >
                           <Timer className="h-3.5 w-3.5" />
-                          Simulado na Tela
+                          {progressByExam[selectedExam.id] ? "Recomecar do zero" : "Simulado na Tela"}
                         </button>
                       )}
                       {/* Gráfico de evolução — aparece após 2+ tentativas do aluno */}
@@ -811,6 +935,8 @@ export default function ProvasCompletasPage() {
     const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
     const isFirst = currentIndex === 0;
     const isLast = currentIndex + 1 >= questions.length;
+    const attemptNo = (activeExam ? attemptsByExam[activeExam.id]?.length ?? 0 : 0) + 1;
+    const attemptCountsForReport = attemptNo <= 2;
 
     return (
       <div className="pb-24 space-y-4 animate-in fade-in duration-500">
@@ -861,6 +987,16 @@ export default function ProvasCompletasPage() {
 
         {/* Sub-bar: chips + grid toggle */}
         <div className="flex items-center gap-2 flex-wrap">
+          <Badge
+            className={`border font-black text-[9px] uppercase tracking-widest px-2 h-5 ${
+              attemptCountsForReport
+                ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                : "bg-slate-100 text-slate-500 border-slate-200"
+            }`}
+            title={attemptCountsForReport ? "Conta para o boletim do 2º semestre" : "Tentativa de treino"}
+          >
+            {attemptNo}ª tentativa · {attemptCountsForReport ? "boletim" : "treino"}
+          </Badge>
           {currentQuestion.subjects?.name && (
             <Badge className="bg-orange-100 text-orange-700 border border-orange-200 font-black text-[9px] uppercase tracking-widest px-2 h-5">
               {currentQuestion.subjects.name}
@@ -940,13 +1076,15 @@ export default function ProvasCompletasPage() {
                 className="group relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-2 cursor-zoom-in transition-all hover:border-orange-300 active:scale-[0.99] touch-manipulation"
                 aria-label="Ampliar imagem"
               >
-                <img
+                <Image
                   src={currentQuestion.image_url}
                   alt="Visual de apoio à questão"
-                  loading="eager"
-                  className="w-full h-full object-contain"
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 100vw, 620px"
+                  className="object-contain"
                 />
-                <span className="absolute bottom-2 right-2 h-8 w-8 rounded-xl bg-black/55 backdrop-blur-sm text-white flex items-center justify-center shadow-lg opacity-90 group-hover:bg-orange-500 transition-colors">
+                <span className="absolute bottom-2 right-2 h-8 w-8 rounded-xl bg-black/55 backdrop-blur-sm text-white flex items-center justify-center shadow-lg opacity-90 group-hover:bg-orange-500 transition-colors z-10">
                   <Maximize2 className="h-4 w-4" />
                 </span>
               </button>

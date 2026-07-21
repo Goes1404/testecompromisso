@@ -2,7 +2,7 @@
 
 export const runtime = "edge";
 
-import { use, useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
@@ -117,6 +117,36 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     loadExam();
   }, [id, router, toast]);
 
+  // ── Progresso salvo (continuar depois) — localStorage ────────────────────────
+  const pdfProgressKey = user ? `prova_pdf_progress_${user.id}_${id}` : null;
+  const restoredRef = useRef(false);
+
+  // Restaura respostas/posição uma vez, após carregar as questões.
+  useEffect(() => {
+    if (restoredRef.current || result || !pdfProgressKey || questions.length === 0) return;
+    restoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(pdfProgressKey);
+      if (!raw) return;
+      const sp = JSON.parse(raw) as { answers?: Record<string, string>; currentIndex?: number; total?: number };
+      if (sp.total && sp.total !== questions.length) return; // prova mudou
+      if (sp.answers && Object.keys(sp.answers).length > 0) {
+        setAnswers(sp.answers);
+        setCurrentIndex(Math.min(sp.currentIndex ?? 0, questions.length - 1));
+        toast({ title: "Progresso restaurado", description: `Voce ja tinha marcado ${Object.keys(sp.answers).length} resposta(s).` });
+      }
+    } catch {}
+  }, [pdfProgressKey, questions.length, result, toast]);
+
+  // Salva progresso a cada mudança de resposta/posição.
+  useEffect(() => {
+    if (!pdfProgressKey || result || questions.length === 0) return;
+    if (Object.keys(answers).length === 0) return;
+    try {
+      localStorage.setItem(pdfProgressKey, JSON.stringify({ answers, currentIndex, total: questions.length, savedAt: new Date().toISOString() }));
+    } catch {}
+  }, [answers, currentIndex, pdfProgressKey, result, questions.length]);
+
   const handleSelectAnswer = useCallback(
     (qId: string, option: string) => {
       if (result) return;
@@ -214,6 +244,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         source: "self",
       });
 
+      if (pdfProgressKey) { try { localStorage.removeItem(pdfProgressKey); } catch {} }
       setResult({ score: correctCount, total: questions.length, triRange });
       setIsTrayExpanded(true);
       toast({ title: "Prova Finalizada!", description: `Você acertou ${correctCount} questões.` });
