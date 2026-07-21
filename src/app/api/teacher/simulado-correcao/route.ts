@@ -8,6 +8,28 @@ const admin = () => createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
+/**
+ * Lançamento oficial do professor: idempotente (1 registro por aluno+prova,
+ * source='teacher'). Substitui o upsert antigo (a UNIQUE user+exam foi
+ * removida para permitir múltiplas tentativas do aluno). Não toca nas
+ * tentativas do próprio aluno (source='self').
+ */
+async function saveTeacherAttempt(
+  db: ReturnType<typeof admin>,
+  row: { user_id: string; exam_id: string; score: number; total_questions: number; answers: unknown[]; tri_score?: number | null }
+) {
+  await db.from('exam_attempts')
+    .delete()
+    .eq('user_id', row.user_id)
+    .eq('exam_id', row.exam_id)
+    .eq('source', 'teacher');
+  return db.from('exam_attempts').insert({
+    ...row,
+    source: 'teacher',
+    completed_at: new Date().toISOString(),
+  });
+}
+
 const norm = (s: string) =>
   (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
@@ -85,10 +107,9 @@ export async function POST(req: NextRequest) {
   // ── Save score only (no per-question) ─────────────────────
   if (action === 'save_score') {
     const { examId, userId, score } = body as { examId: string; userId: string; score: number };
-    const { error } = await db.from('exam_attempts').upsert(
-      { user_id: userId, exam_id: examId, score, total_questions: 0, answers: [], completed_at: new Date().toISOString() },
-      { onConflict: 'user_id,exam_id' }
-    );
+    const { error } = await saveTeacherAttempt(db, {
+      user_id: userId, exam_id: examId, score, total_questions: 0, answers: [],
+    });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
   }
@@ -100,10 +121,9 @@ export async function POST(req: NextRequest) {
     };
     const score = selected.filter((a, i) => a && a.toUpperCase() === (answerKey[i] || '').toUpperCase()).length;
     const answers = selected.map((s, i) => ({ q: i + 1, selected: s.toUpperCase() }));
-    const { error } = await db.from('exam_attempts').upsert(
-      { user_id: userId, exam_id: examId, score, total_questions: answerKey.length, answers, completed_at: new Date().toISOString() },
-      { onConflict: 'user_id,exam_id' }
-    );
+    const { error } = await saveTeacherAttempt(db, {
+      user_id: userId, exam_id: examId, score, total_questions: answerKey.length, answers,
+    });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true, score });
   }
@@ -168,10 +188,9 @@ export async function POST(req: NextRequest) {
         score = e.answers.filter((a, i) => a && a.toUpperCase() === (answerKey[i] || '').toUpperCase()).length;
         answers = e.answers.map((s, i) => ({ q: i + 1, selected: s.toUpperCase() }));
       }
-      const { error } = await db.from('exam_attempts').upsert(
-        { user_id: e.userId, exam_id: examId, score, total_questions: answerKey?.length ?? 0, answers, completed_at: new Date().toISOString() },
-        { onConflict: 'user_id,exam_id' }
-      );
+      const { error } = await saveTeacherAttempt(db, {
+        user_id: e.userId, exam_id: examId, score, total_questions: answerKey?.length ?? 0, answers,
+      });
       if (error) err++; else ok++;
     }
     return NextResponse.json({ ok, err });

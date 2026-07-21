@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -36,7 +37,13 @@ import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
 import { FlameEmberCanvas } from "@/components/FlameEmberCanvas";
-import { estimateThetaEAP, mapThetaToEnemScore } from "@/lib/tri-solver";
+import { computeTriResult } from "@/lib/tri-solver";
+import { TrendingUp } from "lucide-react";
+
+const EvolutionChart = dynamic(
+  () => import("@/components/provas/EvolutionChart").then((m) => m.EvolutionChart),
+  { ssr: false, loading: () => <div className="h-[220px] flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-orange-400" /></div> }
+);
 
 type Exam = {
   id: string;
@@ -75,6 +82,15 @@ type Answer = {
   question_text: string;
   options: { key: string; text: string }[];
   subject: string | null;
+};
+
+type AttemptHistory = {
+  score: number;
+  total: number;
+  triScore: number | null;
+  attemptNumber: number | null;
+  countsForReport: boolean;
+  completedAt: string;
 };
 
 type PageState = "loading" | "list" | "active" | "finished" | "error";
@@ -139,6 +155,9 @@ export default function ProvasCompletasPage() {
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [zoomImage, setZoomImage]   = useState<string | null>(null);
   const [finishedTri, setFinishedTri] = useState<number | null>(null);
+  const [finishedTriBand, setFinishedTriBand] = useState<{ low: number; high: number } | null>(null);
+  const [attemptsByExam, setAttemptsByExam] = useState<Record<string, AttemptHistory[]>>({});
+  const [evolutionExam, setEvolutionExam] = useState<Exam | null>(null);
 
   // Group exams by type and year
   const groupedExams = useMemo(() => {
@@ -220,6 +239,28 @@ export default function ProvasCompletasPage() {
       }));
 
       setExams(mapped);
+
+      // Histórico do aluno (tentativas próprias) para o gráfico de evolução.
+      const { data: attData } = await supabase
+        .from("exam_attempts")
+        .select("exam_id, score, total_questions, tri_score, attempt_number, counts_for_report, completed_at")
+        .eq("user_id", user.id)
+        .eq("source", "self")
+        .order("completed_at", { ascending: true });
+
+      const hist: Record<string, AttemptHistory[]> = {};
+      (attData || []).forEach((a: any) => {
+        (hist[a.exam_id] ??= []).push({
+          score: a.score ?? 0,
+          total: a.total_questions ?? 0,
+          triScore: a.tri_score ?? null,
+          attemptNumber: a.attempt_number ?? null,
+          countsForReport: a.counts_for_report ?? false,
+          completedAt: a.completed_at,
+        });
+      });
+      setAttemptsByExam(hist);
+
       setPageState("list");
     } catch (e: any) {
       setErrorMsg(e.message || "Erro ao carregar provas.");
@@ -268,6 +309,7 @@ export default function ProvasCompletasPage() {
       setShowFinishConfirm(false);
       setZoomImage(null);
       setFinishedTri(null);
+      setFinishedTriBand(null);
 
       setPageState("active");
     } catch (e: any) {
@@ -363,8 +405,11 @@ export default function ProvasCompletasPage() {
           }
         };
       });
-      const theta = estimateThetaEAP(triResponses);
-      triScore = mapThetaToEnemScore(theta);
+      const tri = computeTriResult(triResponses);
+      triScore = tri.score;
+      setFinishedTriBand({ low: tri.scoreLow, high: tri.scoreHigh });
+    } else {
+      setFinishedTriBand(null);
     }
     setFinishedTri(triScore);
 
@@ -376,6 +421,7 @@ export default function ProvasCompletasPage() {
         total_questions: finalAnswers.length,
         answers: finalAnswers.map((a) => ({ questionId: a.questionId, selected: a.selected, correct: a.correct })),
         tri_score: triScore,
+        source: "self",
       });
     } catch {
       // silent
@@ -627,6 +673,16 @@ export default function ProvasCompletasPage() {
                           Simulado na Tela
                         </button>
                       )}
+                      {/* Gráfico de evolução — aparece após 2+ tentativas do aluno */}
+                      {(attemptsByExam[selectedExam.id]?.length ?? 0) >= 2 && (
+                        <button
+                          onClick={() => setEvolutionExam(selectedExam)}
+                          className={`w-full h-10 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 ${isSpecial ? "bg-white/10 border-white/20 text-white hover:bg-white/20" : "bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700"}`}
+                        >
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          Ver evolução ({attemptsByExam[selectedExam.id].length}x)
+                        </button>
+                      )}
                       {/* Gabarito Comentado */}
                       {selectedExam.gabarito_comentado_url && (
                         <a href={selectedExam.gabarito_comentado_url} target="_blank" rel="noopener noreferrer" className="block">
@@ -656,6 +712,89 @@ export default function ProvasCompletasPage() {
             })}
           </div>
         )}
+
+        {/* Modal de EVOLUÇÃO da prova */}
+        {evolutionExam && (() => {
+          const hist = attemptsByExam[evolutionExam.id] ?? [];
+          const points = hist.map((h, i) => ({
+            attempt: h.attemptNumber ?? i + 1,
+            tri: h.triScore,
+            pct: h.total > 0 ? Math.round((h.score / h.total) * 100) : 0,
+            countsForReport: h.countsForReport,
+            date: new Date(h.completedAt).toLocaleDateString("pt-BR"),
+          }));
+          const useTri = points.some((p) => p.tri != null);
+          const best = useTri
+            ? Math.max(...points.map((p) => p.tri ?? 0))
+            : Math.max(...points.map((p) => p.pct));
+          const last = points[points.length - 1];
+          const first = points[0];
+          const delta = useTri
+            ? (last.tri ?? 0) - (first.tri ?? 0)
+            : last.pct - first.pct;
+
+          return (
+            <div
+              onClick={() => setEvolutionExam(null)}
+              className="fixed inset-0 z-[85] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-200"
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-600">Evolução</p>
+                      <h3 className="font-black italic text-primary text-base leading-snug line-clamp-2">{evolutionExam.title}</h3>
+                    </div>
+                    <button
+                      onClick={() => setEvolutionExam(null)}
+                      className="h-9 w-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 transition-colors active:scale-95"
+                      aria-label="Fechar"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Resumo */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-center">
+                      <p className="text-lg font-black text-primary leading-none italic tabular-nums">{points.length}</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1">Tentativas</p>
+                    </div>
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-center">
+                      <p className="text-lg font-black text-emerald-600 leading-none italic tabular-nums">{useTri ? best : `${best}%`}</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-emerald-700/70 mt-1">Melhor</p>
+                    </div>
+                    <div className={`rounded-2xl p-3 text-center border ${delta >= 0 ? "bg-indigo-50 border-indigo-100" : "bg-red-50 border-red-100"}`}>
+                      <p className={`text-lg font-black leading-none italic tabular-nums ${delta >= 0 ? "text-indigo-600" : "text-red-500"}`}>
+                        {delta >= 0 ? "+" : ""}{delta}{useTri ? "" : "%"}
+                      </p>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1">1ª → última</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-100 p-2 pt-4">
+                    <EvolutionChart data={points} useTri={useTri} />
+                  </div>
+
+                  <div className="flex items-center justify-center gap-4 text-[9px] font-bold text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Conta no boletim (1ª e 2ª)
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-white border-2 border-orange-500" /> Treino
+                    </span>
+                  </div>
+                  <p className="text-center text-[10px] text-slate-400 font-medium italic">
+                    {useTri ? "Nota TRI estimada por tentativa." : "Aproveitamento (%) por tentativa."} Apenas as 2 primeiras contam para o boletim do curso.
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -1108,9 +1247,16 @@ export default function ProvasCompletasPage() {
                     <p className="text-[8px] font-medium text-slate-400 mt-0.5">Modelo de 3 parâmetros</p>
                   </div>
                 </div>
-                <span className="text-2xl font-black italic text-primary tracking-tighter leading-none tabular-nums">
-                  {Math.round(finishedTri)}
-                </span>
+                <div className="text-right">
+                  <span className="text-2xl font-black italic text-primary tracking-tighter leading-none tabular-nums">
+                    {Math.round(finishedTri)}
+                  </span>
+                  {finishedTriBand && (
+                    <p className="text-[9px] font-bold text-slate-400 tabular-nums mt-0.5">
+                      faixa {finishedTriBand.low}–{finishedTriBand.high}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>

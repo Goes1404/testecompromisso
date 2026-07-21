@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import Script from "next/script";
 import { supabase } from "@/app/lib/supabase";
-import { estimateThetaEAP, mapThetaToEnemScore } from "@/lib/tri-solver";
+import { computeTriResult } from "@/lib/tri-solver";
 import {
   Loader2,
   ChevronLeft,
@@ -196,9 +196,9 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
           }
         };
       });
-      const theta = estimateThetaEAP(triResponses);
-      triScore = mapThetaToEnemScore(theta);
-      triRange = `${triScore} pts`;
+      const tri = computeTriResult(triResponses);
+      triScore = tri.score;
+      triRange = `${tri.scoreLow}–${tri.scoreHigh} pts`;
     } else {
       triRange = "N/A";
     }
@@ -211,6 +211,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         total_questions: questions.length,
         answers: formattedAnswers,
         tri_score: triScore,
+        source: "self",
       });
 
       setResult({ score: correctCount, total: questions.length, triRange });
