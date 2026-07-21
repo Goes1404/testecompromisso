@@ -28,6 +28,8 @@ import {
   ArrowRight,
   Download,
   ExternalLink,
+  Maximize2,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
@@ -134,6 +136,9 @@ export default function ProvasCompletasPage() {
   const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
   const [showGrid, setShowGrid]     = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [zoomImage, setZoomImage]   = useState<string | null>(null);
+  const [finishedTri, setFinishedTri] = useState<number | null>(null);
 
   // Group exams by type and year
   const groupedExams = useMemo(() => {
@@ -260,6 +265,9 @@ export default function ProvasCompletasPage() {
       setTimeLeft(qs.length * 3.5 * 60);
       setIsPaused(false);
       setShowGrid(false);
+      setShowFinishConfirm(false);
+      setZoomImage(null);
+      setFinishedTri(null);
 
       setPageState("active");
     } catch (e: any) {
@@ -314,6 +322,9 @@ export default function ProvasCompletasPage() {
     const existing = next.find((a) => a.questionId === questions[idx]?.id);
     setSelectedAnswer(existing?.selected ?? null);
     setShowGrid(false);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const goPrev = () => {
@@ -324,8 +335,8 @@ export default function ProvasCompletasPage() {
     if (currentIndex + 1 < questions.length) {
       goToIndex(currentIndex + 1);
     } else {
-      const final = commitCurrent();
-      finishExam(final);
+      setAnswers(commitCurrent());
+      setShowFinishConfirm(true);
     }
   };
 
@@ -355,6 +366,7 @@ export default function ProvasCompletasPage() {
       const theta = estimateThetaEAP(triResponses);
       triScore = mapThetaToEnemScore(theta);
     }
+    setFinishedTri(triScore);
 
     try {
       await supabase.from("exam_attempts").insert({
@@ -374,6 +386,39 @@ export default function ProvasCompletasPage() {
   const pct = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0;
   const currentQuestion = questions[currentIndex];
   const answeredCount = answers.length + (selectedAnswer && !answers.find((a) => a.questionId === currentQuestion?.id) ? 1 : 0);
+
+  // Atalhos de teclado (desktop): ←/→ navega, A–E ou 1–5 seleciona, Esc fecha modais.
+  useEffect(() => {
+    if (pageState !== "active") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (zoomImage) setZoomImage(null);
+        else if (showFinishConfirm) setShowFinishConfirm(false);
+        return;
+      }
+      if (zoomImage || showFinishConfirm || isPaused) return;
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+
+      const cur = questions[currentIndex];
+      if (!cur) return;
+
+      if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); return; }
+      if (e.key === "ArrowRight") { e.preventDefault(); goNext(); return; }
+
+      const letter = e.key.toUpperCase();
+      let optKey: string | null = null;
+      if (/^[A-E]$/.test(letter)) optKey = letter;
+      else if (/^[1-5]$/.test(e.key)) optKey = cur.options[Number(e.key) - 1]?.key ?? null;
+      if (optKey && cur.options.some((o) => o.key === optKey)) {
+        e.preventDefault();
+        setSelectedAnswer(optKey);
+        triggerHaptic(10);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [pageState, zoomImage, showFinishConfirm, isPaused, currentIndex, questions, selectedAnswer]);
 
   // ── LOADING ──────────────────────────────────────────────────────────────────
   if (pageState === "loading") {
@@ -750,13 +795,22 @@ export default function ProvasCompletasPage() {
             )}
 
             {currentQuestion.image_url && (
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-2">
+              <button
+                type="button"
+                onClick={() => setZoomImage(currentQuestion.image_url)}
+                className="group relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-2 cursor-zoom-in transition-all hover:border-orange-300 active:scale-[0.99] touch-manipulation"
+                aria-label="Ampliar imagem"
+              >
                 <img
                   src={currentQuestion.image_url}
-                  alt="Visual de apoio"
+                  alt="Visual de apoio à questão"
+                  loading="eager"
                   className="w-full h-full object-contain"
                 />
-              </div>
+                <span className="absolute bottom-2 right-2 h-8 w-8 rounded-xl bg-black/55 backdrop-blur-sm text-white flex items-center justify-center shadow-lg opacity-90 group-hover:bg-orange-500 transition-colors">
+                  <Maximize2 className="h-4 w-4" />
+                </span>
+              </button>
             )}
 
             <p className="text-base font-bold text-primary italic leading-relaxed">
@@ -841,13 +895,135 @@ export default function ProvasCompletasPage() {
               </button>
             </div>
             <button
-              onClick={() => finishExam(commitCurrent())}
+              onClick={() => {
+                setAnswers(commitCurrent());
+                setShowFinishConfirm(true);
+              }}
               className="w-full mt-2 h-10 rounded-xl text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
             >
               Finalizar prova agora
             </button>
           </div>
         </div>
+
+        {/* Overlay de PAUSA — cobre o conteúdo (descanso / anti-cola) */}
+        {isPaused && (
+          <div className="fixed inset-0 z-[80] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in duration-200">
+            <div className="h-20 w-20 rounded-3xl bg-white/10 border border-white/20 flex items-center justify-center">
+              <Pause className="h-9 w-9 text-white" />
+            </div>
+            <div className="text-center space-y-1.5">
+              <p className="text-white font-black italic text-xl tracking-tight">Simulado pausado</p>
+              <p className="text-white/60 text-xs font-medium">O cronômetro está parado. Respire e volte quando quiser.</p>
+            </div>
+            <div className="flex items-center gap-2 px-4 h-11 rounded-2xl bg-white/10 border border-white/20 text-white font-black">
+              <Timer className="h-4 w-4 text-orange-400" />
+              <span className="font-mono">{timeLeft !== null ? formatTime(timeLeft) : "--:--"}</span>
+            </div>
+            <button
+              onClick={() => setIsPaused(false)}
+              className="h-14 px-10 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-orange-500/30 transition-all active:scale-95 flex items-center gap-2"
+            >
+              <Play className="h-4 w-4" /> Retomar
+            </button>
+          </div>
+        )}
+
+        {/* Lightbox de ZOOM da imagem */}
+        {zoomImage && (
+          <div
+            onClick={() => setZoomImage(null)}
+            className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 cursor-zoom-out"
+          >
+            <button
+              onClick={() => setZoomImage(null)}
+              className="absolute top-4 right-4 h-11 w-11 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-colors active:scale-95"
+              aria-label="Fechar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={zoomImage}
+              alt="Imagem ampliada"
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-full object-contain rounded-lg cursor-default select-none"
+            />
+            <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/50 text-[10px] font-black uppercase tracking-widest">
+              Toque fora para fechar
+            </p>
+          </div>
+        )}
+
+        {/* Modal de CONFIRMAÇÃO de finalização */}
+        {showFinishConfirm && (() => {
+          const unanswered = questions.filter((q) => !answers.find((a) => a.questionId === q.id));
+          return (
+            <div
+              onClick={() => setShowFinishConfirm(false)}
+              className="fixed inset-0 z-[85] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-200"
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300"
+              >
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${unanswered.length > 0 ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600"}`}>
+                      {unanswered.length > 0 ? <AlertCircle className="h-6 w-6" /> : <CheckCircle2 className="h-6 w-6" />}
+                    </div>
+                    <div>
+                      <p className="font-black italic text-primary text-lg leading-none">Finalizar prova?</p>
+                      <p className="text-xs text-slate-500 font-medium mt-1">Esta ação não pode ser desfeita.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-center">
+                      <p className="text-2xl font-black text-emerald-600 leading-none italic">{answers.length}</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700/70 mt-1">Respondidas</p>
+                    </div>
+                    <div className={`rounded-2xl p-3 text-center border ${unanswered.length > 0 ? "bg-amber-50 border-amber-100" : "bg-slate-50 border-slate-100"}`}>
+                      <p className={`text-2xl font-black leading-none italic ${unanswered.length > 0 ? "text-amber-600" : "text-slate-400"}`}>{unanswered.length}</p>
+                      <p className={`text-[9px] font-black uppercase tracking-widest mt-1 ${unanswered.length > 0 ? "text-amber-700/70" : "text-slate-400"}`}>Em branco</p>
+                    </div>
+                  </div>
+
+                  {unanswered.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const firstIdx = questions.findIndex((q) => q.id === unanswered[0].id);
+                        if (firstIdx >= 0) goToIndex(firstIdx);
+                        setShowFinishConfirm(false);
+                      }}
+                      className="w-full h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                    >
+                      <ArrowRight className="h-3.5 w-3.5" /> Ir para a 1ª em branco
+                    </button>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => setShowFinishConfirm(false)}
+                      className="h-12 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                    >
+                      Continuar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowFinishConfirm(false);
+                        finishExam(answers);
+                      }}
+                      className="h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/30 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                    >
+                      <Save className="h-3.5 w-3.5" /> Finalizar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -917,10 +1093,26 @@ export default function ProvasCompletasPage() {
                 <span className="text-[8px] font-bold text-white/70 uppercase tracking-wider mt-0.5">Erros</span>
               </div>
               <div className="flex flex-col items-center bg-white/20 border border-white/30 rounded-2xl py-2.5">
-                <span className="text-xl font-black text-white leading-none italic">{answers.length}</span>
-                <span className="text-[8px] font-bold text-white/70 uppercase tracking-wider mt-0.5">Total</span>
+                <span className="text-xl font-black text-white leading-none italic">{Math.max(0, questions.length - answers.length)}</span>
+                <span className="text-[8px] font-bold text-white/70 uppercase tracking-wider mt-0.5">Em branco</span>
               </div>
             </div>
+
+            {/* Nota TRI estimada (padrão ENEM) */}
+            {finishedTri !== null && (
+              <div className="w-full max-w-md flex items-center justify-between gap-3 bg-white/95 rounded-2xl px-4 py-3 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-orange-500" />
+                  <div className="text-left">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-slate-500 leading-none">Nota TRI estimada</p>
+                    <p className="text-[8px] font-medium text-slate-400 mt-0.5">Modelo de 3 parâmetros</p>
+                  </div>
+                </div>
+                <span className="text-2xl font-black italic text-primary tracking-tighter leading-none tabular-nums">
+                  {Math.round(finishedTri)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
