@@ -37,7 +37,7 @@ export function EvolutionChart({ data, useTri }: EvolutionChartProps): ReactElem
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: -18 }}>
+      <LineChart data={data} margin={{ top: 8, right: 14, bottom: 4, left: 0 }}>
         <XAxis
           dataKey="attempt"
           tickFormatter={(v) => `${v}ª`}
@@ -50,7 +50,7 @@ export function EvolutionChart({ data, useTri }: EvolutionChartProps): ReactElem
           tick={{ fontSize: 10, fontWeight: 700, fill: "#94a3b8" }}
           axisLine={false}
           tickLine={false}
-          width={44}
+          width={38}
         />
         {/* Divisor: tentativas > 2 não contam para o boletim */}
         {data.some((d) => d.attempt === 2) && data.length > 2 && (
