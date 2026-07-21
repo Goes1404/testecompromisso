@@ -331,9 +331,76 @@ function SubjectGrid({ enem }: { enem: EnemReportCard }) {
   );
 }
 
+type SimAttempt = { attemptNumber: number; score: number; total: number; tri: number | null; date: string };
+type SimGroup = { examId: string; title: string; counting: SimAttempt[]; totalAttempts: number };
+
+/**
+ * Simulados feitos pelo aluno na plataforma que entram no histórico do curso.
+ * Só as 2 primeiras tentativas de cada prova contam (as demais são treino e
+ * ficam no gráfico de evolução, dentro da tela de Provas).
+ */
+function PlatformSimuladosSection({ groups }: { groups: SimGroup[] }) {
+  if (groups.length === 0) return null;
+  return (
+    <section className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-md">
+      <div className="flex items-center gap-2">
+        <Trophy className="h-5 w-5 text-primary" />
+        <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">Simulados na plataforma</h3>
+      </div>
+      <p className="mt-2 text-xs font-semibold text-slate-500">
+        As 2 primeiras tentativas de cada simulado compoem seu historico de curso. Tentativas extras contam apenas como treino.
+      </p>
+
+      <div className="mt-4 space-y-3">
+        {groups.map((g) => (
+          <div key={g.examId} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="min-w-0 flex-1 truncate text-sm font-black italic text-slate-800">{g.title}</p>
+              {g.totalAttempts > 2 && (
+                <span className="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                  +{g.totalAttempts - 2} treino
+                </span>
+              )}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {[1, 2].map((n) => {
+                const att = g.counting.find((a) => a.attemptNumber === n);
+                const pct = att && att.total > 0 ? Math.round((att.score / att.total) * 100) : null;
+                return (
+                  <div
+                    key={n}
+                    className={`rounded-xl border p-3 ${att ? "border-orange-200 bg-white" : "border-dashed border-slate-200 bg-transparent"}`}
+                  >
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{n}a tentativa</p>
+                    {att ? (
+                      <div className="mt-1 flex items-end justify-between gap-1">
+                        <div>
+                          <p className="text-lg font-black italic tabular-nums text-slate-950 leading-none">
+                            {att.tri != null ? att.tri : `${pct}%`}
+                          </p>
+                          <p className="text-[9px] font-bold text-slate-400 mt-0.5">
+                            {att.tri != null ? "nota TRI" : "aproveitamento"} - {att.score}/{att.total}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-xs font-bold italic text-slate-300">nao realizada</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ReportCardPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const [entries, setEntries] = useState<any[]>([]);
+  const [simGroups, setSimGroups] = useState<SimGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [track, setTrack] = useState<"enem" | "etec">("enem");
   const [mode, setMode] = useState<"simple" | "complete">("simple");
@@ -349,15 +416,50 @@ export default function ReportCardPage() {
         setTrack(currentTrack);
 
         const table = currentTrack === "etec" ? "report_card_entries" : "report_card_entries_enem";
-        const { data, error } = await supabase
-          .from(table)
-          .select("*")
-          .eq("student_id", user.id)
-          .eq("status", "approved")
-          .order("semester", { ascending: true });
+        const [entriesRes, attemptsRes] = await Promise.all([
+          supabase
+            .from(table)
+            .select("*")
+            .eq("student_id", user.id)
+            .eq("status", "approved")
+            .order("semester", { ascending: true }),
+          // Tentativas do próprio aluno que compõem o histórico de curso.
+          supabase
+            .from("exam_attempts")
+            .select("exam_id, score, total_questions, tri_score, attempt_number, completed_at, exams!inner(title, exam_type)")
+            .eq("user_id", user.id)
+            .eq("source", "self")
+            .order("attempt_number", { ascending: true }),
+        ]);
 
-        if (!error && active) {
-          setEntries(data ?? []);
+        if (!entriesRes.error && active) {
+          setEntries(entriesRes.data ?? []);
+        }
+
+        if (!attemptsRes.error && active) {
+          const groups: Record<string, SimGroup> = {};
+          (attemptsRes.data ?? []).forEach((a: any) => {
+            const examType = (a.exams?.exam_type || "").toLowerCase();
+            const matchesTrack = currentTrack === "etec" ? examType.includes("etec") : !examType.includes("etec");
+            if (!matchesTrack) return;
+            const g = (groups[a.exam_id] ??= {
+              examId: a.exam_id,
+              title: a.exams?.title ?? "Simulado",
+              counting: [],
+              totalAttempts: 0,
+            });
+            g.totalAttempts += 1;
+            if ((a.attempt_number ?? 99) <= 2) {
+              g.counting.push({
+                attemptNumber: a.attempt_number ?? 0,
+                score: a.score ?? 0,
+                total: a.total_questions ?? 0,
+                tri: a.tri_score ?? null,
+                date: a.completed_at,
+              });
+            }
+          });
+          setSimGroups(Object.values(groups).filter((g) => g.counting.length > 0));
         }
       } catch (e) {
         console.error("Erro ao carregar boletim:", e);
@@ -385,7 +487,7 @@ export default function ReportCardPage() {
   const hasPdf2 = !!profile?.report_card_pdf_url_2sem;
   const hasPdfs = hasPdf1 || hasPdf2;
 
-  if (entries.length === 0 && !hasPdfs) {
+  if (entries.length === 0 && !hasPdfs && simGroups.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
         <GraduationCap className="mx-auto mb-3 h-10 w-10 text-slate-300" />
@@ -447,22 +549,24 @@ export default function ReportCardPage() {
         </div>
       </div>
 
-      <div className="flex rounded-2xl border border-slate-100 bg-white p-1 shadow-sm">
-        <button
-          type="button"
-          onClick={() => setMode("simple")}
-          className={`flex-1 rounded-xl px-4 py-3 text-sm font-black transition-all ${mode === "simple" ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
-        >
-          Boletim simplificado
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("complete")}
-          className={`flex-1 rounded-xl px-4 py-3 text-sm font-black transition-all ${mode === "complete" ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
-        >
-          Boletim completo
-        </button>
-      </div>
+      {entries.length > 0 && (
+        <div className="flex rounded-2xl border border-slate-100 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setMode("simple")}
+            className={`flex-1 rounded-xl px-4 py-3 text-sm font-black transition-all ${mode === "simple" ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
+          >
+            Boletim simplificado
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("complete")}
+            className={`flex-1 rounded-xl px-4 py-3 text-sm font-black transition-all ${mode === "complete" ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"}`}
+          >
+            Boletim completo
+          </button>
+        </div>
+      )}
 
       {hasPdfs && (
         <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-md">
@@ -490,7 +594,9 @@ export default function ReportCardPage() {
         </div>
       )}
 
-      {mode === "simple" ? (
+      <PlatformSimuladosSection groups={simGroups} />
+
+      {entries.length === 0 ? null : mode === "simple" ? (
         track === "enem" && enemEntries.length > 0 ? (
           <SimplifiedEnemReport entries={enemEntries} />
         ) : (
