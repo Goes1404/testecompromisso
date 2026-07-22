@@ -222,11 +222,24 @@ export default function DashboardHome() {
     completedAt?: string;
   } | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [simNoticeDismissed, setSimNoticeDismissed] = useState(true); // some hidden ate checar
 
   // Gabarito comentado (modal)
   const [gabaritoOpen, setGabaritoOpen] = useState(false);
   const [expandedQ, setExpandedQ] = useState<number | null>(null);
   const [onlyErrors, setOnlyErrors] = useState(false);
+
+  // Aviso de simulado na home (dispensável por aluno)
+  useEffect(() => {
+    if (!user) return;
+    try {
+      setSimNoticeDismissed(localStorage.getItem(`sim_notice_dismissed_${user.id}`) === '1');
+    } catch {}
+  }, [user]);
+  const dismissSimNotice = () => {
+    setSimNoticeDismissed(true);
+    try { if (user) localStorage.setItem(`sim_notice_dismissed_${user.id}`, '1'); } catch {}
+  };
 
   const [activeSession, setActiveSession] = useState<any>(null);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
@@ -661,6 +674,42 @@ export default function DashboardHome() {
                 </Button>
               </div>
             </form>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── AVISO DE SIMULADO ── */}
+      {simuladoEspecial && !simNoticeDismissed && (
+        <motion.div variants={itemVariants}
+          className="relative overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 p-5 md:p-6 shadow-2xl text-white">
+          <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none rounded-[2rem]" />
+          <button
+            onClick={dismissSimNotice}
+            aria-label="Dispensar aviso"
+            className="absolute top-3 right-3 z-20 h-8 w-8 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center transition-colors active:scale-95"
+          >
+            <XCircle className="h-4 w-4 text-white" />
+          </button>
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <div className="h-11 w-11 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0 shadow-lg animate-float">
+                <Megaphone className="h-5 w-5 text-white" />
+              </div>
+              <div className="min-w-0 pr-8 sm:pr-0">
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/75">Simulados disponíveis</span>
+                <h2 className="text-base md:text-lg font-black italic tracking-tighter leading-tight">
+                  Faça os simulados do 2º semestre
+                </h2>
+                <p className="text-[11px] md:text-xs font-semibold text-white/85 mt-1 leading-relaxed">
+                  As <strong>2 primeiras tentativas</strong> de cada simulado contam para o seu <strong>boletim do 2º semestre</strong>. As demais valem como treino e entram no seu gráfico de evolução.
+                </p>
+              </div>
+            </div>
+            <Link href="/dashboard/student/provas" className="shrink-0">
+              <Button className="w-full sm:w-auto h-11 px-5 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-black text-[11px] uppercase tracking-widest shadow-lg border-none active:scale-95 flex items-center justify-center gap-2">
+                Fazer simulado <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </motion.div>
       )}
