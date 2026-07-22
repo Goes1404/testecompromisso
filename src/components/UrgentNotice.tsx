@@ -8,7 +8,6 @@ import { useAuth } from "@/lib/AuthProvider";
 export function UrgentNotice() {
   const { user, profile } = useAuth();
   const [notice, setNotice] = useState<any>(null);
-  const [timeLeft, setTimeLeft] = useState(7);
   const [visible, setVisible] = useState(false);
 
   const dismiss = useCallback((id: string) => {
@@ -60,7 +59,6 @@ export function UrgentNotice() {
             (Date.now() - new Date(latest.created_at).getTime()) / 3_600_000;
           if (diffHour < 24 && !localStorage.getItem(`seen_urgent_${latest.id}`)) {
             setNotice(latest);
-            setTimeLeft(7);
             setTimeout(() => setVisible(true), 50);
           }
         }
@@ -70,19 +68,7 @@ export function UrgentNotice() {
     fetchUrgent();
   }, [user, profile]);
 
-  useEffect(() => {
-    if (!notice || !visible) return;
-    if (timeLeft <= 0) {
-      dismiss(notice.id);
-      return;
-    }
-    const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [notice, visible, timeLeft, dismiss]);
-
   if (!notice) return null;
-
-  const progress = ((7 - timeLeft) / 7) * 100;
 
   return (
     <div
@@ -180,11 +166,11 @@ export function UrgentNotice() {
           </p>
         </div>
 
-        {/* Countdown pill */}
+        {/* Hint de fechamento manual */}
         <div className="mt-7 flex items-center gap-1.5 bg-white/4 border border-white/8 rounded-full px-3 py-1.5">
           <Shield className="h-2.5 w-2.5 text-white/30" />
           <p className="text-[8px] font-black uppercase tracking-widest text-white/35">
-            Fechando em {timeLeft}s
+            Toque em &quot;Li e entendi&quot; para fechar
           </p>
         </div>
       </div>
@@ -194,14 +180,6 @@ export function UrgentNotice() {
         className="relative z-10 px-4 pt-3 shrink-0"
         style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
       >
-        {/* Progress bar */}
-        <div className="h-1 w-full bg-white/6 rounded-full overflow-hidden mb-4">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-red-600 to-red-400"
-            style={{ width: `${progress}%`, transition: "width 1s linear" }}
-          />
-        </div>
-
         {/* Primary dismiss button — large, centered, thumb-accessible */}
         <button
           onClick={() => dismiss(notice.id)}
