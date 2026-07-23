@@ -99,12 +99,47 @@ export function estimateThetaEAP(responses: StudentQuestionResponse[]): number {
 }
 
 /**
- * Mapeia a proficiência θ (~N(0,1)) para a escala ENEM (média 500, DP 100),
- * limitada a 0–1000.
+ * Âncoras de calibração θ → nota ENEM (0–1000) para provas de 45 questões.
+ *
+ * Motivo: o mapa linear ingênuo `500 + 100·θ` era desajustado num teste curto
+ * (45 itens, apenas 3 níveis de dificuldade, c=0,20). Com o encolhimento do
+ * prior N(0,1), o θ satura por volta de ±3, então:
+ *   - o topo ficava comprimido (45/45 dava ~800, não ~900+);
+ *   - o piso caía a ~210 (o ENEM real por área tem piso ~300).
+ *
+ * As âncoras abaixo reproduzem uma curva ENEM realista, calibrada contra o θ
+ * que ESTE teste de 45 itens produz (ver simulação em scratchpad/tri_sim.mjs):
+ * chute ~20% ≈ 350, metade ≈ 500, domínio total ≈ 920. Interpolação linear
+ * entre as âncoras (monótona), com piso e teto fixos nas pontas.
+ */
+const ENEM_ANCHORS: ReadonlyArray<readonly [theta: number, score: number]> = [
+  [-3.5, 300],  // piso (0 acertos coerentes é praticamente impossível)
+  [-1.6, 350],  // nível de chute (~20% de acerto)
+  [0.0, 500],   // metade da prova, padrão coerente
+  [1.5, 690],   // ~35/45 coerentes
+  [3.0, 920],   // domínio quase total
+  [3.6, 1000],  // teto
+];
+
+/**
+ * Mapeia a proficiência θ para a escala ENEM (0–1000) por interpolação linear
+ * nas âncoras de calibração acima. Monótona e limitada a [piso, teto].
  */
 export function mapThetaToEnemScore(theta: number): number {
-  const score = 500 + 100 * theta;
-  return Math.round(Math.max(0, Math.min(1000, score)));
+  const first = ENEM_ANCHORS[0];
+  const last = ENEM_ANCHORS[ENEM_ANCHORS.length - 1];
+  if (theta <= first[0]) return first[1];
+  if (theta >= last[0]) return last[1];
+
+  for (let i = 1; i < ENEM_ANCHORS.length; i++) {
+    const [t1, s1] = ENEM_ANCHORS[i];
+    if (theta <= t1) {
+      const [t0, s0] = ENEM_ANCHORS[i - 1];
+      const frac = (theta - t0) / (t1 - t0);
+      return Math.round(s0 + frac * (s1 - s0));
+    }
+  }
+  return last[1]; // inatingível (guardado pelas verificações acima)
 }
 
 /**
