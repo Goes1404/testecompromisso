@@ -47,8 +47,17 @@ export function PhoneGate() {
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("profiles").update({ phone: phoneValue }).eq("id", user.id);
+      // .select() confirma a persistência: se a RLS bloquear (0 linhas), tratamos
+      // como erro real em vez de "sucesso" falso que prenderia o aluno na tela.
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ phone: phoneValue })
+        .eq("id", user.id)
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Não foi possível salvar seu telefone. Fale com a secretaria.");
+      }
       toast({ title: "Telefone salvo! 🎉", description: "Agora você já pode acessar a plataforma." });
       if (refreshProfile) await refreshProfile();
     } catch (err: any) {
