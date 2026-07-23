@@ -17,6 +17,7 @@ import { LoadingShell } from "@/components/LoadingShell";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UrgentNotice } from "@/components/UrgentNotice";
+import { PhoneGate } from "@/components/PhoneGate";
 import { PushPermissionBanner } from "@/components/push-permission-banner";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
 import { ExtractionProvider } from "@/lib/ExtractionContext";
@@ -531,6 +532,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
 
         <OnboardingTour />
+        <PhoneGate />
         <UrgentNotice />
         <PushPermissionBanner />
         <FloatingExtractionBubble />
