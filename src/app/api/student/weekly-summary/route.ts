@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { getAuthUser } from '@/lib/server-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,10 +19,13 @@ function getWeekStart(): string {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await request.json();
-    if (!userId) {
-      return NextResponse.json({ error: 'userId obrigatório' }, { status: 400 });
+    // Segurança (IDOR): o resumo é sempre do usuário AUTENTICADO. Ignora
+    // qualquer userId enviado no corpo (permitia ler dados de outro aluno).
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+    const userId = authUser.id;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

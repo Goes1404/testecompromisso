@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getAuthUser } from '@/lib/server-auth';
 
 export async function POST(request: Request) {
   try {
+    // Segurança: a redação é sempre gravada para o usuário AUTENTICADO. Nunca
+    // confiar no user_id do corpo (permitia lançar redação/nota para outro aluno).
+    const user = await getAuthUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { user_id, theme, content, score, feedback, result_data } = body;
+    const { theme, content, score, feedback, result_data } = body;
 
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +22,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabaseAdmin
       .from('essay_submissions')
       .insert({
-        user_id,
+        user_id: user.id,
         theme,
         content,
         score,
