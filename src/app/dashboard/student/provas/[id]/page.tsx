@@ -115,6 +115,10 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
   // Vira true quando já decidimos entre passo a passo x entrar direto (evita
   // o passo a passo "piscar" para quem está retomando uma prova).
   const [introDecided, setIntroDecided] = useState(false);
+  // Quantas vezes o aluno saiu da página durante a prova. A 1ª saída é só um
+  // aviso; a 2ª encerra a prova (perde a oportunidade). Persistido no progresso.
+  const [leaveCount, setLeaveCount] = useState(0);
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false);
 
   // ── Cronômetro ───────────────────────────────────────────────────────────────
   // Contamos o tempo DECORRIDO (sobe a cada segundo). O tempo oficial é derivado
@@ -178,8 +182,12 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
           currentIndex?: number;
           total?: number;
           elapsedSeconds?: number;
+          leaves?: number;
         };
         if (!(sp.total && sp.total !== questions.length)) {
+          if (typeof sp.leaves === "number" && sp.leaves > 0) {
+            setLeaveCount(sp.leaves);
+          }
           if (typeof sp.elapsedSeconds === "number" && sp.elapsedSeconds > 0) {
             setElapsedSeconds(sp.elapsedSeconds);
             hasProgress = true;
@@ -209,17 +217,17 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     setStarted(true);
   }, [introSeenKey]);
 
-  // Salva progresso a cada mudança de resposta/posição/tempo.
+  // Salva progresso a cada mudança de resposta/posição/tempo/saídas.
   useEffect(() => {
     if (!pdfProgressKey || result || questions.length === 0) return;
-    if (Object.keys(answers).length === 0 && elapsedSeconds === 0) return;
+    if (Object.keys(answers).length === 0 && elapsedSeconds === 0 && leaveCount === 0) return;
     try {
       localStorage.setItem(
         pdfProgressKey,
-        JSON.stringify({ answers, currentIndex, total: questions.length, elapsedSeconds, savedAt: new Date().toISOString() })
+        JSON.stringify({ answers, currentIndex, total: questions.length, elapsedSeconds, leaves: leaveCount, savedAt: new Date().toISOString() })
       );
     } catch {}
-  }, [answers, currentIndex, elapsedSeconds, pdfProgressKey, result, questions.length]);
+  }, [answers, currentIndex, elapsedSeconds, leaveCount, pdfProgressKey, result, questions.length]);
 
   // Tique do cronômetro (1s) — só corre depois que a prova começa.
   useEffect(() => {
@@ -354,30 +362,34 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     finalizeAttempt({ forfeited: false });
   };
 
-  // ── Perde a oportunidade se sair da página durante a prova ────────────────────
-  // Trocar de aba, abrir outro app/site, minimizar ou fechar encerra a prova
-  // automaticamente com o que estiver marcado. Usamos visibilitychange/pagehide
-  // (sinais confiáveis) — não usamos "blur", que dispara ao abrir o próprio
-  // diálogo de confirmação e daria falso positivo.
+  // ── Sair da página durante a prova: 1 aviso, depois encerra ───────────────────
+  // Trocar de aba, abrir outro app/site ou minimizar dispara. Na 1ª vez é só um
+  // aviso (a prova continua); na 2ª a prova é encerrada (perde a oportunidade).
+  // Usamos visibilitychange/pagehide (confiáveis) — não usamos "blur", que
+  // dispara ao abrir o próprio diálogo de confirmação e daria falso positivo.
   useEffect(() => {
     if (!started || result) return;
 
-    const forfeitOnLeave = () => {
-      if (document.visibilityState === "hidden" && !finalizingRef.current) {
+    const onLeave = () => {
+      if (finalizingRef.current) return;
+      if (leaveCount >= 1) {
         finalizeAttempt({ forfeited: true });
+      } else {
+        setLeaveCount(1);
+        setShowLeaveWarning(true);
       }
     };
-    const onPageHide = () => {
-      if (!finalizingRef.current) finalizeAttempt({ forfeited: true });
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") onLeave();
     };
 
-    document.addEventListener("visibilitychange", forfeitOnLeave);
-    window.addEventListener("pagehide", onPageHide);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onLeave);
     return () => {
-      document.removeEventListener("visibilitychange", forfeitOnLeave);
-      window.removeEventListener("pagehide", onPageHide);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onLeave);
     };
-  }, [started, result, finalizeAttempt]);
+  }, [started, result, finalizeAttempt, leaveCount]);
 
   if (authLoading || loading) {
     return (
@@ -480,9 +492,10 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
             </div>
             <p className="text-xs font-semibold text-red-200/90 leading-relaxed">
               Se você <span className="font-black underline">sair desta página</span> durante a prova — trocar de aba,
-              abrir outro app ou site, ou minimizar a tela — a prova é <span className="font-black">encerrada na hora</span> com
-              o que você já marcou e <span className="font-black">você perde esta oportunidade</span>. Só existem
-              2 tentativas que valem para o boletim, então mantenha o foco até entregar.
+              abrir outro app ou site, ou minimizar a tela — você recebe <span className="font-black">1 aviso</span>.
+              Se sair <span className="font-black">uma segunda vez</span>, a prova é <span className="font-black">encerrada
+              na hora</span> com o que você já marcou e <span className="font-black">você perde esta oportunidade</span>.
+              Só existem 2 tentativas que valem para o boletim, então mantenha o foco até entregar.
             </p>
           </div>
 
@@ -581,7 +594,9 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         <div className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-500/10 border-b border-red-500/20">
           <AlertTriangle className="h-3 w-3 text-red-400 shrink-0" />
           <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-red-300/90 text-center">
-            Não saia desta página — sair encerra a prova e perde a oportunidade
+            {leaveCount >= 1
+              ? "Último aviso — se sair de novo, a prova é encerrada"
+              : "Não saia desta página — 1 aviso e depois a prova é encerrada"}
           </p>
         </div>
       )}
@@ -620,8 +635,8 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
                       <p className="text-sm font-black italic text-red-300 uppercase tracking-wide">Oportunidade encerrada</p>
                     </div>
                     <p className="text-xs font-semibold text-red-200/90 leading-relaxed">
-                      Você saiu da página durante a prova, então ela foi entregue automaticamente com o que estava marcado.
-                      Esta tentativa foi contabilizada.
+                      Você saiu da página novamente, mesmo após o aviso, então a prova foi encerrada automaticamente com
+                      o que estava marcado. Esta tentativa foi contabilizada.
                     </p>
                   </div>
                 )}
@@ -928,6 +943,31 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
           Cartão · {answeredCount}/{questions.length}
         </button>
       </nav>
+
+      {/* ════════════════════════════════════════════════════════════════════
+         AVISO — aluno saiu da página (1ª vez). A 2ª encerra a prova.
+      ═════════════════════════════════════════════════════════════════════ */}
+      {showLeaveWarning && !result && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-5 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-[1.75rem] bg-[#141416] border-2 border-red-500/50 p-6 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-red-500/15 border border-red-500/40 flex items-center justify-center">
+              <AlertTriangle className="h-7 w-7 text-red-400" />
+            </div>
+            <h2 className="text-lg font-black italic text-white leading-tight">Você saiu da prova!</h2>
+            <p className="mt-2 text-sm font-semibold text-white/70 leading-relaxed">
+              Este é o seu <span className="text-red-400 font-black">único aviso</span>. Se você sair da página de novo
+              — trocar de aba, abrir outro app ou site — a prova será <span className="font-black text-white">encerrada
+              na hora</span> e você <span className="font-black text-white">perde esta oportunidade</span>.
+            </p>
+            <button
+              onClick={() => setShowLeaveWarning(false)}
+              className="mt-5 w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/30 active:scale-95 transition-transform"
+            >
+              Entendi, voltar à prova
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
