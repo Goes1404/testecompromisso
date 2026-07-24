@@ -62,3 +62,11 @@ SET tri_score = s.new_score
 FROM scored s
 WHERE a.id = s.attempt_id AND a.tri_score IS DISTINCT FROM s.new_score
 RETURNING a.id, a.tri_score AS updated_to;
+
+-- Limpa notas TRI "fantasma": tentativas sem respostas por questão (registros
+-- só de score, importados/lançados) não têm como ter TRI calculada. Se tiverem
+-- um tri_score gravado, ele é inconsistente e polui o ranking — zeramos.
+UPDATE exam_attempts
+SET tri_score = NULL
+WHERE tri_score IS NOT NULL
+  AND (jsonb_typeof(answers) <> 'array' OR jsonb_array_length(answers) = 0);

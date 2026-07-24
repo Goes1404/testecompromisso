@@ -97,7 +97,22 @@ export async function GET() {
   };
   const groups: Record<string, ExamGroup> = {};
 
+  // Tamanho "cheio" de cada prova = maior total_questions visto. Tentativas
+  // parciais (aluno entregou com poucas questões, ou registros de teste) não
+  // devem competir no ranking — exigimos ao menos 60% do tamanho cheio.
+  const fullLen: Record<string, number> = {};
   for (const r of rows) {
+    const t = r.total_questions ?? 0;
+    if (t > (fullLen[r.exam_id] ?? 0)) fullLen[r.exam_id] = t;
+  }
+  const isFullEnough = (r: AttemptRow) => {
+    const full = fullLen[r.exam_id] ?? 0;
+    const t = r.total_questions ?? 0;
+    return t > 0 && (full === 0 || t >= full * 0.6);
+  };
+
+  for (const r of rows) {
+    if (!isFullEnough(r)) continue;
     const g = (groups[r.exam_id] ??= {
       examId: r.exam_id,
       title: r.exams?.title ?? "Prova",
