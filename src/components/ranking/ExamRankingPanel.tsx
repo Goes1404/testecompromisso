@@ -10,7 +10,13 @@ import {
   AlertTriangle,
   Search,
   Users,
+  FileDown,
 } from "lucide-react";
+
+// Escapa valores dinâmicos (nomes de alunos vêm do banco) antes de montar o
+// HTML de impressão manualmente — regra de segurança do projeto.
+const esc = (v: unknown) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 
 type RankedStudent = {
   userId: string;
@@ -95,6 +101,80 @@ export default function ExamRankingPanel() {
     return selected.students.filter((s) => s.name.toLowerCase().includes(q));
   }, [selected, query]);
 
+  // Exporta o ranking da prova selecionada em PDF via impressão do navegador
+  // (Salvar como PDF). Sem dependências novas; usa um iframe oculto para não
+  // esbarrar em bloqueador de pop-up.
+  const handleExportPdf = () => {
+    if (!selected) return;
+    const now = new Date().toLocaleString("pt-BR");
+    const rowsHtml = selected.students
+      .map((s, i) => {
+        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`;
+        const tri = s.tri !== null ? String(s.tri) : "—";
+        const dur = formatDuration(s.durationSeconds) ?? "—";
+        return `<tr>
+          <td class="pos">${medal}</td>
+          <td class="name">${esc(s.name)}${s.forfeited ? ' <span class="warn">(saiu da prova)</span>' : ""}</td>
+          <td>${s.score}/${s.total}</td>
+          <td>${s.pct}%</td>
+          ${selected.isTri ? `<td class="tri">${tri}</td>` : ""}
+          <td>${esc(dur)}</td>
+          <td>${s.attempts}</td>
+        </tr>`;
+      })
+      .join("");
+
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" />
+      <title>Ranking - ${esc(selected.title)}</title>
+      <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 24px; }
+        h1 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; margin: 0 0 4px; }
+        h2 { font-size: 22px; margin: 0; font-style: italic; }
+        .sub { font-size: 12px; color: #64748b; margin: 4px 0 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #e2e8f0; padding: 7px 9px; text-align: left; }
+        th { background: #f8fafc; text-transform: uppercase; font-size: 9px; letter-spacing: 1px; color: #64748b; }
+        td.pos { font-weight: bold; width: 42px; text-align: center; }
+        td.name { font-weight: bold; }
+        td.tri { font-weight: bold; color: #c2410c; }
+        .warn { color: #dc2626; font-weight: normal; font-size: 10px; }
+        footer { margin-top: 16px; font-size: 10px; color: #94a3b8; }
+        @media print { body { margin: 12mm; } thead { display: table-header-group; } tr { break-inside: avoid; } }
+      </style></head>
+      <body>
+        <h1>Ranking por prova · Cursinho Compromisso</h1>
+        <h2>${esc(selected.title)}</h2>
+        <p class="sub">${esc(selected.examType || "")}${selected.year ? ` · ${selected.year}` : ""} — ${selected.students.length} aluno(s), ordenado por ${selected.isTri ? "nota TRI" : "acertos"}.</p>
+        <table>
+          <thead><tr>
+            <th>#</th><th>Aluno</th><th>Acertos</th><th>%</th>${selected.isTri ? "<th>Nota TRI</th>" : ""}<th>Tempo</th><th>Tentativas</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <footer>Gerado em ${esc(now)}.</footer>
+      </body></html>`;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+    document.body.appendChild(iframe);
+    const win = iframe.contentWindow;
+    const doc = win?.document;
+    if (!win || !doc) {
+      document.body.removeChild(iframe);
+      return;
+    }
+    doc.open();
+    doc.write(html);
+    doc.close();
+    const cleanup = () => setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 500);
+    win.onafterprint = cleanup;
+    setTimeout(() => {
+      win.focus();
+      win.print();
+    }, 300);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -175,14 +255,26 @@ export default function ExamRankingPanel() {
                 {selected.isTri ? "nota TRI" : "acertos"}
               </p>
             </div>
-            <div className="relative sm:w-64">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar aluno..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 sm:w-64 sm:flex-none">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar aluno..."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleExportPdf}
+                title="Exportar este ranking em PDF"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-slate-950 px-3.5 py-2.5 text-sm font-black text-white transition-all hover:bg-slate-800 active:scale-95"
+              >
+                <FileDown className="h-4 w-4" />
+                <span className="hidden sm:inline">Exportar PDF</span>
+                <span className="sm:hidden">PDF</span>
+              </button>
             </div>
           </div>
 
