@@ -8,6 +8,7 @@ import { supabase } from "@/app/lib/supabase";
 import {
   ArrowLeftRight,
   Calendar,
+  Clock,
   FileText,
   GraduationCap,
   Loader2,
@@ -331,7 +332,18 @@ function SubjectGrid({ enem }: { enem: EnemReportCard }) {
   );
 }
 
-type SimAttempt = { attemptNumber: number; score: number; total: number; tri: number | null; date: string };
+type SimAttempt = { attemptNumber: number; score: number; total: number; tri: number | null; date: string; durationSeconds: number | null };
+
+/** Formata uma duração em segundos como "1h 12min", "48min" ou "37s". */
+function formatDuration(seconds: number | null | undefined): string | null {
+  if (seconds == null || seconds < 0) return null;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${m.toString().padStart(2, "0")}min`;
+  if (m > 0) return `${m}min`;
+  return `${s}s`;
+}
 type SimGroup = { examId: string; title: string; counting: SimAttempt[]; totalAttempts: number };
 
 /**
@@ -378,15 +390,19 @@ function PlatformSimuladosSection({ groups }: { groups: SimGroup[] }) {
                   >
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{n}a tentativa</p>
                     {att ? (
-                      <div className="mt-1 flex items-end justify-between gap-1">
-                        <div>
-                          <p className="text-lg font-black italic tabular-nums text-slate-950 leading-none">
-                            {att.tri != null ? att.tri : `${pct}%`}
+                      <div className="mt-1">
+                        <p className="text-lg font-black italic tabular-nums text-slate-950 leading-none">
+                          {att.tri != null ? att.tri : `${pct}%`}
+                        </p>
+                        <p className="text-[9px] font-bold text-slate-400 mt-0.5">
+                          {att.tri != null ? "nota TRI" : "aproveitamento"} - {att.score}/{att.total}
+                        </p>
+                        {formatDuration(att.durationSeconds) && (
+                          <p className="mt-1 inline-flex items-center gap-1 text-[9px] font-bold text-slate-500">
+                            <Clock className="h-2.5 w-2.5" />
+                            {formatDuration(att.durationSeconds)}
                           </p>
-                          <p className="text-[9px] font-bold text-slate-400 mt-0.5">
-                            {att.tri != null ? "nota TRI" : "aproveitamento"} - {att.score}/{att.total}
-                          </p>
-                        </div>
+                        )}
                       </div>
                     ) : (
                       <p className="mt-1 text-xs font-bold italic text-slate-300">nao realizada</p>
@@ -431,7 +447,7 @@ export default function ReportCardPage() {
           // Tentativas do próprio aluno que compõem o histórico de curso.
           supabase
             .from("exam_attempts")
-            .select("exam_id, score, total_questions, tri_score, attempt_number, completed_at, exams!inner(title, exam_type)")
+            .select("exam_id, score, total_questions, tri_score, attempt_number, completed_at, duration_seconds, exams!inner(title, exam_type)")
             .eq("user_id", user.id)
             .eq("source", "self")
             .order("attempt_number", { ascending: true }),
@@ -461,6 +477,7 @@ export default function ReportCardPage() {
                 total: a.total_questions ?? 0,
                 tri: a.tri_score ?? null,
                 date: a.completed_at,
+                durationSeconds: a.duration_seconds ?? null,
               });
             }
           });
