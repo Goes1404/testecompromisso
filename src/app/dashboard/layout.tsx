@@ -117,6 +117,7 @@ const teacherItems: NavItem[] = [
       { icon: Database,    label: "Banco de Questões",    href: "/dashboard/teacher/questions",           id: "nav-teacher-questions" },
       { icon: FilePenLine, label: "Correção de Redações", href: "/dashboard/teacher/essays",              id: "nav-teacher-essays" },
       { icon: ClipboardList, label: "Correção de Simulado", href: "/dashboard/teacher/simulado-correcao", id: "nav-teacher-simulado-correcao" },
+      { icon: Trophy,        label: "Ranking por Prova",   href: "/dashboard/teacher/ranking",            id: "nav-teacher-ranking" },
     ],
   },
   {
@@ -170,6 +171,7 @@ const adminItems: NavItem[] = [
     icon: BarChart3, label: "Monitoramento", id: "nav-admin-monitoramento",
     children: [
       { icon: BarChart3,      label: "BI & Analytics",     href: "/dashboard/teacher/analytics", id: "nav-admin-analytics" },
+      { icon: Trophy,         label: "Ranking por Prova",  href: "/dashboard/admin/ranking",     id: "nav-admin-ranking" },
       { icon: ClipboardCheck, label: "Frequência",          href: "/dashboard/admin/attendance",  id: "nav-admin-attendance" },
       { icon: FileCheck,      label: "Status de Documentos", href: "/dashboard/admin/checklists", id: "nav-admin-checklists" },
     ],

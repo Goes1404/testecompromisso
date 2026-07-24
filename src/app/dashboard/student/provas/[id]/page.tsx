@@ -101,6 +101,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     total: number;
     triRange: string;
     durationSeconds: number;
+    forfeited: boolean;
   } | null>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -270,74 +271,113 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     return () => window.removeEventListener("keydown", onKey);
   }, [currentIndex, questions, handleSelectAnswer, goPrev, goNext, result]);
 
-  const handleSubmit = async () => {
-    if (!user || !exam) return;
+  // Evita entrega dupla (ex.: aluno clica em Entregar e some da aba ao mesmo tempo).
+  const finalizingRef = useRef(false);
 
+  const finalizeAttempt = useCallback(
+    async ({ forfeited }: { forfeited: boolean }) => {
+      if (!user || !exam) return;
+      if (finalizingRef.current || result) return;
+      finalizingRef.current = true;
+
+      const durationSeconds = elapsedSeconds;
+      setIsSubmitting(true);
+      let correctCount = 0;
+
+      const formattedAnswers = questions.map((q) => {
+        const selected = answers[q.question.id] || null;
+        const correct = q.question.correct_answer;
+        if (norm(selected) === norm(correct)) correctCount++;
+        return { question_id: q.question.id, selected, correct };
+      });
+
+      let triScore: number | null = null;
+      let triRange = "";
+      const shouldCalcTri = exam.tri_score_calculated || exam.exam_type.toLowerCase() === "enem";
+
+      if (shouldCalcTri) {
+        const triResponses = questions.map((q) => {
+          const selected = answers[q.question.id] || null;
+          const correct = q.question.correct_answer;
+          const isRight = norm(selected) === norm(correct);
+          return {
+            correct: isRight,
+            triParams: {
+              a: Number(q.question.tri_a ?? 1.2),
+              b: Number(q.question.tri_b ?? 0.2),
+              c: Number(q.question.tri_c ?? 0.20),
+            },
+          };
+        });
+        const tri = computeTriResult(triResponses);
+        triScore = tri.score;
+        triRange = `${tri.scoreLow}–${tri.scoreHigh} pts`;
+      } else {
+        triRange = "N/A";
+      }
+
+      try {
+        await supabase.from("exam_attempts").insert({
+          user_id: user.id,
+          exam_id: exam.id,
+          score: correctCount,
+          total_questions: questions.length,
+          answers: formattedAnswers,
+          tri_score: triScore,
+          duration_seconds: durationSeconds,
+          forfeited,
+          source: "self",
+        });
+
+        if (pdfProgressKey) { try { localStorage.removeItem(pdfProgressKey); } catch {} }
+        setResult({ score: correctCount, total: questions.length, triRange, durationSeconds, forfeited });
+        setMobileTab("answers");
+        if (!forfeited) {
+          toast({ title: "Prova Finalizada!", description: `Você acertou ${correctCount} questões.` });
+        }
+      } catch {
+        finalizingRef.current = false; // permite tentar de novo em caso de erro
+        toast({ title: "Erro ao salvar", description: "Tente novamente.", variant: "destructive" });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [user, exam, result, elapsedSeconds, questions, answers, pdfProgressKey, toast]
+  );
+
+  const handleSubmit = () => {
     if (Object.keys(answers).length < questions.length) {
       if (!confirm("Você deixou questões em branco. Deseja entregar a prova mesmo assim?")) {
         return;
       }
     }
-
-    const durationSeconds = elapsedSeconds;
-    setIsSubmitting(true);
-    let correctCount = 0;
-
-    const formattedAnswers = questions.map((q) => {
-      const selected = answers[q.question.id] || null;
-      const correct = q.question.correct_answer;
-      if (norm(selected) === norm(correct)) correctCount++;
-      return { question_id: q.question.id, selected, correct };
-    });
-
-    let triScore: number | null = null;
-    let triRange = "";
-
-    const shouldCalcTri = exam.tri_score_calculated || exam.exam_type.toLowerCase() === "enem";
-
-    if (shouldCalcTri) {
-      const triResponses = questions.map((q) => {
-        const selected = answers[q.question.id] || null;
-        const correct = q.question.correct_answer;
-        const isRight = norm(selected) === norm(correct);
-        return {
-          correct: isRight,
-          triParams: {
-            a: Number(q.question.tri_a ?? 1.2),
-            b: Number(q.question.tri_b ?? 0.2),
-            c: Number(q.question.tri_c ?? 0.20),
-          }
-        };
-      });
-      const tri = computeTriResult(triResponses);
-      triScore = tri.score;
-      triRange = `${tri.scoreLow}–${tri.scoreHigh} pts`;
-    } else {
-      triRange = "N/A";
-    }
-
-    try {
-      await supabase.from("exam_attempts").insert({
-        user_id: user.id,
-        exam_id: exam.id,
-        score: correctCount,
-        total_questions: questions.length,
-        answers: formattedAnswers,
-        tri_score: triScore,
-        duration_seconds: durationSeconds,
-        source: "self",
-      });
-
-      if (pdfProgressKey) { try { localStorage.removeItem(pdfProgressKey); } catch {} }
-      setResult({ score: correctCount, total: questions.length, triRange, durationSeconds });
-      setMobileTab("answers");
-      toast({ title: "Prova Finalizada!", description: `Você acertou ${correctCount} questões.` });
-    } catch {
-      toast({ title: "Erro ao salvar", description: "Tente novamente.", variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
+    finalizeAttempt({ forfeited: false });
   };
+
+  // ── Perde a oportunidade se sair da página durante a prova ────────────────────
+  // Trocar de aba, abrir outro app/site, minimizar ou fechar encerra a prova
+  // automaticamente com o que estiver marcado. Usamos visibilitychange/pagehide
+  // (sinais confiáveis) — não usamos "blur", que dispara ao abrir o próprio
+  // diálogo de confirmação e daria falso positivo.
+  useEffect(() => {
+    if (!started || result) return;
+
+    const forfeitOnLeave = () => {
+      if (document.visibilityState === "hidden" && !finalizingRef.current) {
+        finalizeAttempt({ forfeited: true });
+      }
+    };
+    const onPageHide = () => {
+      if (!finalizingRef.current) finalizeAttempt({ forfeited: true });
+    };
+
+    document.addEventListener("visibilitychange", forfeitOnLeave);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", forfeitOnLeave);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, [started, result, finalizeAttempt]);
 
   if (authLoading || loading) {
     return (
@@ -432,6 +472,20 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
             );
           })}
 
+          {/* AVISO IMPORTANTE — sair da página perde a oportunidade */}
+          <div className="rounded-2xl bg-red-500/10 border-2 border-red-500/40 p-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+              <p className="text-sm font-black italic text-red-300 uppercase tracking-wide">Atenção: não saia da prova</p>
+            </div>
+            <p className="text-xs font-semibold text-red-200/90 leading-relaxed">
+              Se você <span className="font-black underline">sair desta página</span> durante a prova — trocar de aba,
+              abrir outro app ou site, ou minimizar a tela — a prova é <span className="font-black">encerrada na hora</span> com
+              o que você já marcou e <span className="font-black">você perde esta oportunidade</span>. Só existem
+              2 tentativas que valem para o boletim, então mantenha o foco até entregar.
+            </p>
+          </div>
+
           <div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/8 border border-amber-500/20 p-3.5">
             <Highlighter className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
             <p className="text-[11px] font-semibold text-amber-200/90 leading-relaxed">
@@ -522,6 +576,16 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         </div>
       </header>
 
+      {/* Lembrete fixo: não sair da página */}
+      {!result && (
+        <div className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-500/10 border-b border-red-500/20">
+          <AlertTriangle className="h-3 w-3 text-red-400 shrink-0" />
+          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-red-300/90 text-center">
+            Não saia desta página — sair encerra a prova e perde a oportunidade
+          </p>
+        </div>
+      )}
+
       {/* ════════════════════════════════════════════════════════════════════
          CONTEÚDO — PDF + Cartão-resposta
          Mobile: uma aba por vez (troca no rodapé). Desktop: lado a lado.
@@ -549,6 +613,18 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
             {result ? (
               /* ── RESULTADO ──────────────────────────────────────────────── */
               <div className="p-4 space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                {result.forfeited && (
+                  <div className="rounded-2xl bg-red-500/10 border-2 border-red-500/40 p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+                      <p className="text-sm font-black italic text-red-300 uppercase tracking-wide">Oportunidade encerrada</p>
+                    </div>
+                    <p className="text-xs font-semibold text-red-200/90 leading-relaxed">
+                      Você saiu da página durante a prova, então ela foi entregue automaticamente com o que estava marcado.
+                      Esta tentativa foi contabilizada.
+                    </p>
+                  </div>
+                )}
                 <div className="relative rounded-[1.5rem] overflow-hidden bg-[#0a0a0c] border border-emerald-500/20 p-5">
                   <div
                     className="absolute inset-0 pointer-events-none"
