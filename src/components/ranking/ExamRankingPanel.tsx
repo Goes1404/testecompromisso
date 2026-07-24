@@ -115,8 +115,8 @@ export default function ExamRankingPanel() {
         return `<tr>
           <td class="pos">${medal}</td>
           <td class="name">${esc(s.name)}${s.forfeited ? ' <span class="warn">(saiu da prova)</span>' : ""}</td>
-          <td>${s.score}/${s.total}</td>
-          <td>${s.pct}%</td>
+          <td>${s.total > 0 ? `${s.score}/${s.total}` : `${s.score} pts`}</td>
+          <td>${s.total > 0 ? `${s.pct}%` : "—"}</td>
           ${selected.isTri ? `<td class="tri">${tri}</td>` : ""}
           <td>${esc(dur)}</td>
           <td>${s.attempts}</td>
@@ -301,7 +301,7 @@ export default function ExamRankingPanel() {
                     </p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-bold text-slate-400">
                       <span>
-                        {s.score}/{s.total} acertos · {s.pct}%
+                        {s.total > 0 ? `${s.score}/${s.total} acertos · ${s.pct}%` : `${s.score} pts`}
                       </span>
                       {dur && (
                         <span className="inline-flex items-center gap-1">
@@ -325,10 +325,15 @@ export default function ExamRankingPanel() {
                         <p className="text-lg font-black italic tabular-nums text-slate-950 leading-none">{s.tri}</p>
                         <p className="text-[8px] font-black uppercase tracking-widest text-orange-500">nota TRI</p>
                       </>
-                    ) : (
+                    ) : s.total > 0 ? (
                       <>
                         <p className="text-lg font-black italic tabular-nums text-slate-950 leading-none">{s.pct}%</p>
                         <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">aproveitamento</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-lg font-black italic tabular-nums text-slate-950 leading-none">{s.score}</p>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">pontos</p>
                       </>
                     )}
                   </div>
