@@ -107,8 +107,11 @@ export async function GET() {
   }
   const isFullEnough = (r: AttemptRow) => {
     const full = fullLen[r.exam_id] ?? 0;
+    // Provas sem tamanho registrado (ex.: simulados importados só com a nota,
+    // total_questions = 0) não têm como medir "parcial" — entram todas.
+    if (full <= 0) return true;
     const t = r.total_questions ?? 0;
-    return t > 0 && (full === 0 || t >= full * 0.6);
+    return t >= full * 0.6;
   };
 
   for (const r of rows) {
