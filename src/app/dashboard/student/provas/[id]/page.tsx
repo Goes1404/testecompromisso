@@ -23,6 +23,9 @@ import {
   AlertTriangle,
   ClipboardList,
   Timer,
+  Play,
+  RotateCcw,
+  Highlighter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,6 +107,13 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
   const [showGrid, setShowGrid] = useState(false);
   // Aba ativa no mobile: a prova (PDF) ou o cartão-resposta.
   const [mobileTab, setMobileTab] = useState<"pdf" | "answers">("pdf");
+  // A prova só começa (e o cronômetro só corre) depois do "Começar prova".
+  // Quando há progresso salvo ou o aluno já viu o passo a passo antes, pulamos
+  // direto para a prova.
+  const [started, setStarted] = useState(false);
+  // Vira true quando já decidimos entre passo a passo x entrar direto (evita
+  // o passo a passo "piscar" para quem está retomando uma prova).
+  const [introDecided, setIntroDecided] = useState(false);
 
   // ── Cronômetro ───────────────────────────────────────────────────────────────
   // Contamos o tempo DECORRIDO (sobe a cada segundo). O tempo oficial é derivado
@@ -149,32 +159,54 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
 
   // ── Progresso salvo (continuar depois) — localStorage ────────────────────────
   const pdfProgressKey = user ? `prova_pdf_progress_${user.id}_${id}` : null;
+  // Flag global (por aluno) de que o passo a passo já foi visto.
+  const introSeenKey = user ? `prova_pdf_intro_seen_${user.id}` : null;
   const restoredRef = useRef(false);
 
-  // Restaura respostas/posição/tempo uma vez, após carregar as questões.
+  // Restaura respostas/posição/tempo uma vez, após carregar as questões, e
+  // decide se mostramos o passo a passo ou já entramos na prova.
   useEffect(() => {
     if (restoredRef.current || result || !pdfProgressKey || questions.length === 0) return;
     restoredRef.current = true;
+    let hasProgress = false;
     try {
       const raw = localStorage.getItem(pdfProgressKey);
-      if (!raw) return;
-      const sp = JSON.parse(raw) as {
-        answers?: Record<string, string>;
-        currentIndex?: number;
-        total?: number;
-        elapsedSeconds?: number;
-      };
-      if (sp.total && sp.total !== questions.length) return; // prova mudou
-      if (typeof sp.elapsedSeconds === "number" && sp.elapsedSeconds > 0) {
-        setElapsedSeconds(sp.elapsedSeconds);
-      }
-      if (sp.answers && Object.keys(sp.answers).length > 0) {
-        setAnswers(sp.answers);
-        setCurrentIndex(Math.min(sp.currentIndex ?? 0, questions.length - 1));
-        toast({ title: "Progresso restaurado", description: `Voce ja tinha marcado ${Object.keys(sp.answers).length} resposta(s).` });
+      if (raw) {
+        const sp = JSON.parse(raw) as {
+          answers?: Record<string, string>;
+          currentIndex?: number;
+          total?: number;
+          elapsedSeconds?: number;
+        };
+        if (!(sp.total && sp.total !== questions.length)) {
+          if (typeof sp.elapsedSeconds === "number" && sp.elapsedSeconds > 0) {
+            setElapsedSeconds(sp.elapsedSeconds);
+            hasProgress = true;
+          }
+          if (sp.answers && Object.keys(sp.answers).length > 0) {
+            setAnswers(sp.answers);
+            setCurrentIndex(Math.min(sp.currentIndex ?? 0, questions.length - 1));
+            hasProgress = true;
+            toast({ title: "Progresso restaurado", description: `Voce ja tinha marcado ${Object.keys(sp.answers).length} resposta(s).` });
+          }
+        }
       }
     } catch {}
-  }, [pdfProgressKey, questions.length, result, toast]);
+
+    let introSeen = false;
+    try { introSeen = !!(introSeenKey && localStorage.getItem(introSeenKey)); } catch {}
+
+    // Retomar prova em andamento ou já conhecer o passo a passo → entra direto.
+    if (hasProgress || introSeen) {
+      setStarted(true);
+    }
+    setIntroDecided(true);
+  }, [pdfProgressKey, introSeenKey, questions.length, result, toast]);
+
+  const handleStart = useCallback(() => {
+    try { if (introSeenKey) localStorage.setItem(introSeenKey, "1"); } catch {}
+    setStarted(true);
+  }, [introSeenKey]);
 
   // Salva progresso a cada mudança de resposta/posição/tempo.
   useEffect(() => {
@@ -188,14 +220,14 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
     } catch {}
   }, [answers, currentIndex, elapsedSeconds, pdfProgressKey, result, questions.length]);
 
-  // Tique do cronômetro (1s) enquanto a prova está ativa.
+  // Tique do cronômetro (1s) — só corre depois que a prova começa.
   useEffect(() => {
-    if (result || loading || questions.length === 0) return;
+    if (!started || result || loading || questions.length === 0) return;
     const timer = setInterval(() => {
       setElapsedSeconds((s) => s + 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [result, loading, questions.length]);
+  }, [started, result, loading, questions.length]);
 
   const handleSelectAnswer = useCallback(
     (qId: string, option: string) => {
@@ -314,6 +346,113 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">
           Carregando Prova e Gabarito...
         </p>
+      </div>
+    );
+  }
+
+  // ── PASSO A PASSO (antes de começar) ─────────────────────────────────────────
+  if (!result && !started) {
+    if (!introDecided) {
+      return (
+        <div className="h-[100dvh] flex flex-col items-center justify-center bg-[#0a0a0c] text-white gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Preparando prova...</p>
+        </div>
+      );
+    }
+
+    const totalMin = Math.round((questions.length * SECONDS_PER_QUESTION) / 60);
+    const steps: { icon: any; title: string; text: string }[] = [
+      {
+        icon: FileText,
+        title: "1. Leia a prova no PDF",
+        text: "A prova completa aparece em PDF. Você pode dar zoom, rolar as páginas e usar as ferramentas para grifar e anotar direto no material.",
+      },
+      {
+        icon: ClipboardList,
+        title: "2. Marque no cartão-resposta",
+        text: "As respostas vão no cartão, com botões grandes de A a E. No celular, troque entre a Prova (PDF) e o Cartão pelas duas abas na parte de baixo da tela.",
+      },
+      {
+        icon: LayoutGrid,
+        title: "3. Ande pelas questões",
+        text: "Use os botões Anterior e Próxima, ou toque em Mapa para pular direto para qualquer questão. As questões já respondidas ficam em verde no mapa.",
+      },
+      {
+        icon: Timer,
+        title: "4. De olho no tempo",
+        text: `O cronômetro no topo mostra o tempo restante (a prova tem cerca de ${totalMin} min). Nos últimos 5 minutos ele fica amarelo. Se o tempo zerar, a prova NÃO é encerrada: o relógio passa a contar em vermelho quanto tempo você excedeu.`,
+      },
+      {
+        icon: RotateCcw,
+        title: "5. Pode parar e voltar depois",
+        text: "Suas respostas e o tempo ficam salvos neste aparelho. Se sair e voltar, você retoma exatamente de onde parou.",
+      },
+      {
+        icon: Send,
+        title: "6. Entregue a prova",
+        text: "Ao terminar, toque em Entregar Prova (se deixar questões em branco, o sistema avisa). Depois você vê o gabarito, seu aproveitamento, a nota TRI estimada e o tempo que levou.",
+      },
+    ];
+
+    return (
+      <div className="h-[100dvh] flex flex-col bg-[#0a0a0c] text-white overflow-hidden">
+        {/* Cabeçalho */}
+        <header className="shrink-0 px-4 pt-5 pb-4 border-b border-white/5">
+          <button
+            onClick={() => router.back()}
+            className="mb-4 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Voltar
+          </button>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/30 bg-orange-500/15 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-orange-400">
+            Como funciona
+          </span>
+          <h1 className="mt-3 text-2xl font-black italic tracking-tighter leading-tight">{exam?.title}</h1>
+          <p className="mt-1 text-xs font-semibold text-white/55">
+            Leia o passo a passo antes de começar. Leva menos de 1 minuto.
+          </p>
+        </header>
+
+        {/* Passos */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5">
+          {steps.map((s) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.title} className="flex gap-3 rounded-2xl bg-white/[0.03] border border-white/8 p-4">
+                <div className="h-10 w-10 shrink-0 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center">
+                  <Icon className="h-5 w-5 text-orange-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black italic text-white leading-tight">{s.title}</p>
+                  <p className="mt-1 text-xs font-medium text-white/60 leading-relaxed">{s.text}</p>
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/8 border border-amber-500/20 p-3.5">
+            <Highlighter className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-[11px] font-semibold text-amber-200/90 leading-relaxed">
+              Dica: responda primeiro as questões que você tem certeza e use o Mapa para voltar nas mais difíceis. O tempo é só um guia — o importante é entregar tudo respondido.
+            </p>
+          </div>
+        </div>
+
+        {/* Começar */}
+        <div className="shrink-0 p-4 border-t border-white/5 bg-[#0a0a0c]">
+          <Button
+            onClick={handleStart}
+            className="w-full h-14 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-orange-500/30 border-none"
+          >
+            <Play className="h-5 w-5 mr-2" />
+            Começar prova
+          </Button>
+          <p className="mt-2 text-center text-[9px] font-bold uppercase tracking-widest text-white/40">
+            O cronômetro começa ao tocar em “Começar prova”
+          </p>
+        </div>
       </div>
     );
   }
