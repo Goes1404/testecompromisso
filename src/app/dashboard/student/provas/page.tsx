@@ -499,6 +499,10 @@ export default function ProvasCompletasPage() {
     setAnswers(finalAnswers);
     setPageState("finished");
 
+    // Tempo gasto = tempo oficial (3,5 min/questão) menos o que sobrou no relógio.
+    const allottedSeconds = questions.length * 3.5 * 60;
+    const durationSeconds = timeLeft !== null ? Math.max(0, Math.round(allottedSeconds - timeLeft)) : null;
+
     if (activeExam) clearProgress(activeExam.id); // prova concluída → descarta rascunho
 
     if (!user || !activeExam) return;
@@ -535,6 +539,7 @@ export default function ProvasCompletasPage() {
         total_questions: finalAnswers.length,
         answers: finalAnswers.map((a) => ({ questionId: a.questionId, selected: a.selected, correct: a.correct })),
         tri_score: triScore,
+        duration_seconds: durationSeconds,
         source: "self",
       });
     } catch {
