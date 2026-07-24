@@ -42,6 +42,18 @@ function formatTime(seconds: number) {
   return `${m}min`;
 }
 
+// Duração de uma tentativa de prova. Retorna null quando não há registro
+// (tentativas antigas, antes de passarmos a cronometrar).
+function formatAttemptDuration(seconds: number | null | undefined): string | null {
+  if (seconds == null || seconds < 0) return null;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${m.toString().padStart(2, "0")}min`;
+  if (m > 0) return `${m}min`;
+  return `${s}s`;
+}
+
 function formatLastAccess(ts: string | null) {
   if (!ts) return "Nunca";
   return format(new Date(ts), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
@@ -634,6 +646,12 @@ export default function AdminStudentProfilePage() {
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
                           {e.exams?.year ?? ""} · {e.exams?.exam_type ?? ""}
                         </p>
+                        {formatAttemptDuration(e.duration_seconds) && (
+                          <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            Concluiu em {formatAttemptDuration(e.duration_seconds)}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right shrink-0">
                         <p className="font-black text-primary italic">
@@ -642,6 +660,9 @@ export default function AdminStudentProfilePage() {
                         <p className={`text-[10px] font-black uppercase ${pct >= 60 ? "text-emerald-500" : "text-red-400"}`}>
                           {pct}%
                         </p>
+                        {e.tri_score != null && (
+                          <p className="text-[10px] font-black uppercase text-orange-500">TRI {e.tri_score}</p>
+                        )}
                       </div>
                     </div>
                   );
