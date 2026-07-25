@@ -344,7 +344,7 @@ function formatDuration(seconds: number | null | undefined): string | null {
   if (m > 0) return `${m}min`;
   return `${s}s`;
 }
-type SimGroup = { examId: string; title: string; counting: SimAttempt[]; totalAttempts: number };
+type SimGroup = { examId: string; title: string; counting: SimAttempt[]; totalAttempts: number; limit: number };
 
 /**
  * Simulados feitos pelo aluno na plataforma que entram no histórico do curso.
@@ -365,7 +365,7 @@ function PlatformSimuladosSection({ groups }: { groups: SimGroup[] }) {
         </span>
       </div>
       <p className="mt-2 text-xs font-semibold text-slate-500">
-        As 2 primeiras tentativas de cada simulado compoem seu historico do 2o semestre. Tentativas extras contam apenas como treino.
+        As primeiras tentativas de cada simulado compoem seu historico do 2o semestre. Tentativas extras contam apenas como treino.
       </p>
 
       <div className="mt-4 space-y-3">
@@ -373,14 +373,19 @@ function PlatformSimuladosSection({ groups }: { groups: SimGroup[] }) {
           <div key={g.examId} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="min-w-0 flex-1 truncate text-sm font-black italic text-slate-800">{g.title}</p>
-              {g.totalAttempts > 2 && (
+              {g.limit > 2 && (
+                <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-700">
+                  +{g.limit - 2} chances extras
+                </span>
+              )}
+              {g.totalAttempts > g.limit && (
                 <span className="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-slate-500">
-                  +{g.totalAttempts - 2} treino
+                  +{g.totalAttempts - g.limit} treino
                 </span>
               )}
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {[1, 2].map((n) => {
+              {Array.from({ length: g.limit }, (_, i) => i + 1).map((n) => {
                 const att = g.counting.find((a) => a.attemptNumber === n);
                 const pct = att && att.total > 0 ? Math.round((att.score / att.total) * 100) : null;
                 return (
@@ -437,7 +442,7 @@ export default function ReportCardPage() {
         setTrack(currentTrack);
 
         const table = currentTrack === "etec" ? "report_card_entries" : "report_card_entries_enem";
-        const [entriesRes, attemptsRes] = await Promise.all([
+        const [entriesRes, attemptsRes, grantsRes] = await Promise.all([
           supabase
             .from(table)
             .select("*")
@@ -451,7 +456,18 @@ export default function ReportCardPage() {
             .eq("user_id", user.id)
             .eq("source", "self")
             .order("attempt_number", { ascending: true }),
+          // Concessões de tentativas extras (mais chances) por prova.
+          supabase
+            .from("exam_report_attempt_grants")
+            .select("exam_id, max_attempts")
+            .eq("user_id", user.id),
         ]);
+
+        // Limite de tentativas que contam por prova (padrão 2; grant aumenta).
+        const limitByExam: Record<string, number> = {};
+        (grantsRes?.data ?? []).forEach((gr: any) => {
+          limitByExam[gr.exam_id] = gr.max_attempts ?? 2;
+        });
 
         if (!entriesRes.error && active) {
           setEntries(entriesRes.data ?? []);
@@ -463,14 +479,16 @@ export default function ReportCardPage() {
             const examType = (a.exams?.exam_type || "").toLowerCase();
             const matchesTrack = currentTrack === "etec" ? examType.includes("etec") : !examType.includes("etec");
             if (!matchesTrack) return;
+            const limit = limitByExam[a.exam_id] ?? 2;
             const g = (groups[a.exam_id] ??= {
               examId: a.exam_id,
               title: a.exams?.title ?? "Simulado",
               counting: [],
               totalAttempts: 0,
+              limit,
             });
             g.totalAttempts += 1;
-            if ((a.attempt_number ?? 99) <= 2) {
+            if ((a.attempt_number ?? 99) <= limit) {
               g.counting.push({
                 attemptNumber: a.attempt_number ?? 0,
                 score: a.score ?? 0,

@@ -170,6 +170,9 @@ export default function ProvasCompletasPage() {
   const [finishedTri, setFinishedTri] = useState<number | null>(null);
   const [finishedTriBand, setFinishedTriBand] = useState<{ low: number; high: number } | null>(null);
   const [attemptsByExam, setAttemptsByExam] = useState<Record<string, AttemptHistory[]>>({});
+  // Limite de tentativas que contam para o boletim por prova (padrão 2; grants
+  // dão mais chances a alunos específicos).
+  const [reportLimitByExam, setReportLimitByExam] = useState<Record<string, number>>({});
   const [evolutionExam, setEvolutionExam] = useState<Exam | null>(null);
   const [progressByExam, setProgressByExam] = useState<Record<string, ProgressSummary>>({});
 
@@ -297,6 +300,15 @@ export default function ProvasCompletasPage() {
       });
       setAttemptsByExam(hist);
 
+      // Concessões de tentativas extras (mais chances) por prova.
+      const { data: grantData } = await supabase
+        .from("exam_report_attempt_grants")
+        .select("exam_id, max_attempts")
+        .eq("user_id", user.id);
+      const limitMap: Record<string, number> = {};
+      (grantData || []).forEach((gr: any) => { limitMap[gr.exam_id] = gr.max_attempts ?? 2; });
+      setReportLimitByExam(limitMap);
+
       // Progresso salvo (localStorage) de cada prova carregada.
       const prog: Record<string, ProgressSummary> = {};
       mapped.forEach((ex) => {
@@ -381,13 +393,15 @@ export default function ProvasCompletasPage() {
       setFinishedTri(null);
       setFinishedTriBand(null);
 
-      // Aviso sobre as 2 tentativas que contam para o boletim.
+      // Aviso sobre as tentativas que contam para o boletim (limite pode ter
+      // sido ampliado por concessão de mais chances).
       const attemptNo = (attemptsByExam[exam.id]?.length ?? 0) + 1;
+      const reportLimit = reportLimitByExam[exam.id] ?? 2;
       if (!validSaved) {
-        if (attemptNo === 1) {
-          toast({ title: "1ª tentativa", description: "Esta e a 2ª tentativa contam para o boletim do 2º semestre." });
-        } else if (attemptNo === 2) {
-          toast({ title: "2ª tentativa", description: "Ultima tentativa que conta para o boletim do 2º semestre." });
+        if (attemptNo < reportLimit) {
+          toast({ title: `${attemptNo}ª tentativa`, description: `Conta para o boletim (as ${reportLimit} primeiras contam).` });
+        } else if (attemptNo === reportLimit) {
+          toast({ title: `${attemptNo}ª tentativa`, description: "Ultima tentativa que conta para o boletim do 2º semestre." });
         } else {
           toast({ title: `${attemptNo}ª tentativa (treino)`, description: "Nao conta para o boletim, mas entra no seu grafico de evolucao." });
         }
@@ -941,7 +955,8 @@ export default function ProvasCompletasPage() {
     const isFirst = currentIndex === 0;
     const isLast = currentIndex + 1 >= questions.length;
     const attemptNo = (activeExam ? attemptsByExam[activeExam.id]?.length ?? 0 : 0) + 1;
-    const attemptCountsForReport = attemptNo <= 2;
+    const reportLimit = activeExam ? reportLimitByExam[activeExam.id] ?? 2 : 2;
+    const attemptCountsForReport = attemptNo <= reportLimit;
 
     return (
       <div className="pb-24 space-y-4 animate-in fade-in duration-500">
