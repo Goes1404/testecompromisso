@@ -12,11 +12,7 @@ import {
   Users,
   FileDown,
 } from "lucide-react";
-
-// Escapa valores dinâmicos (nomes de alunos vêm do banco) antes de montar o
-// HTML de impressão manualmente — regra de segurança do projeto.
-const esc = (v: unknown) =>
-  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+import { useToast } from "@/hooks/use-toast";
 
 type RankedStudent = {
   userId: string;
@@ -64,6 +60,8 @@ export default function ExamRankingPanel() {
   const [error, setError] = useState<string | null>(null);
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     let active = true;
@@ -101,78 +99,114 @@ export default function ExamRankingPanel() {
     return selected.students.filter((s) => s.name.toLowerCase().includes(q));
   }, [selected, query]);
 
-  // Exporta o ranking da prova selecionada em PDF via impressão do navegador
-  // (Salvar como PDF). Sem dependências novas; usa um iframe oculto para não
-  // esbarrar em bloqueador de pop-up.
-  const handleExportPdf = () => {
-    if (!selected) return;
-    const now = new Date().toLocaleString("pt-BR");
-    const rowsHtml = selected.students
-      .map((s, i) => {
-        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`;
-        const tri = s.tri !== null ? String(s.tri) : "—";
-        const dur = formatDuration(s.durationSeconds) ?? "—";
-        return `<tr>
-          <td class="pos">${medal}</td>
-          <td class="name">${esc(s.name)}${s.forfeited ? ' <span class="warn">(saiu da prova)</span>' : ""}</td>
-          <td>${s.total > 0 ? `${s.score}/${s.total}` : `${s.score} pts`}</td>
-          <td>${s.total > 0 ? `${s.pct}%` : "—"}</td>
-          ${selected.isTri ? `<td class="tri">${tri}</td>` : ""}
-          <td>${esc(dur)}</td>
-          <td>${s.attempts}</td>
-        </tr>`;
-      })
-      .join("");
+  // Exporta o ranking da prova selecionada como um PDF de verdade (download
+  // direto). Antes usávamos a impressão do navegador via iframe oculto, mas o
+  // Chrome mostrava o preview correto e salvava o arquivo em branco. jsPDF é
+  // carregado sob demanda para não pesar o bundle inicial.
+  const handleExportPdf = async () => {
+    if (!selected || exporting) return;
+    setExporting(true);
+    try {
+      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
 
-    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" />
-      <title>Ranking - ${esc(selected.title)}</title>
-      <style>
-        * { box-sizing: border-box; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 24px; }
-        h1 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; margin: 0 0 4px; }
-        h2 { font-size: 22px; margin: 0; font-style: italic; }
-        .sub { font-size: 12px; color: #64748b; margin: 4px 0 16px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border: 1px solid #e2e8f0; padding: 7px 9px; text-align: left; }
-        th { background: #f8fafc; text-transform: uppercase; font-size: 9px; letter-spacing: 1px; color: #64748b; }
-        td.pos { font-weight: bold; width: 42px; text-align: center; }
-        td.name { font-weight: bold; }
-        td.tri { font-weight: bold; color: #c2410c; }
-        .warn { color: #dc2626; font-weight: normal; font-size: 10px; }
-        footer { margin-top: 16px; font-size: 10px; color: #94a3b8; }
-        @media print { body { margin: 12mm; } thead { display: table-header-group; } tr { break-inside: avoid; } }
-      </style></head>
-      <body>
-        <h1>Ranking por prova · Cursinho Compromisso</h1>
-        <h2>${esc(selected.title)}</h2>
-        <p class="sub">${esc(selected.examType || "")}${selected.year ? ` · ${selected.year}` : ""} — ${selected.students.length} aluno(s), ordenado por ${selected.isTri ? "nota TRI" : "acertos"}.</p>
-        <table>
-          <thead><tr>
-            <th>#</th><th>Aluno</th><th>Acertos</th><th>%</th>${selected.isTri ? "<th>Nota TRI</th>" : ""}<th>Tempo</th><th>Tentativas</th>
-          </tr></thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-        <footer>Gerado em ${esc(now)}.</footer>
-      </body></html>`;
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 40;
 
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
-    document.body.appendChild(iframe);
-    const win = iframe.contentWindow;
-    const doc = win?.document;
-    if (!win || !doc) {
-      document.body.removeChild(iframe);
-      return;
+      // Cabeçalho
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(217, 119, 6);
+      doc.text("RANKING POR PROVA  ·  CURSINHO COMPROMISSO", margin, 46);
+
+      doc.setFontSize(18);
+      doc.setTextColor(15, 23, 42);
+      doc.text(doc.splitTextToSize(selected.title, pageWidth - margin * 2), margin, 68);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      const info = [
+        selected.examType || null,
+        selected.year ? String(selected.year) : null,
+        `${selected.students.length} aluno(s)`,
+        `ordenado por ${selected.isTri ? "nota TRI" : "acertos"}`,
+      ]
+        .filter(Boolean)
+        .join("  ·  ");
+      doc.text(info, margin, 86);
+
+      const head = [
+        ["#", "Aluno", "Acertos", "%", ...(selected.isTri ? ["Nota TRI"] : []), "Tempo", "Tent."],
+      ];
+      const body = selected.students.map((s, i) => [
+        `${i + 1}º`,
+        s.name + (s.forfeited ? "  (saiu da prova)" : ""),
+        s.total > 0 ? `${s.score}/${s.total}` : `${s.score} pts`,
+        s.total > 0 ? `${s.pct}%` : "-",
+        ...(selected.isTri ? [s.tri !== null ? String(s.tri) : "-"] : []),
+        formatDuration(s.durationSeconds) ?? "-",
+        String(s.attempts),
+      ]);
+
+      autoTable(doc, {
+        head,
+        body,
+        startY: 100,
+        margin: { left: margin, right: margin, bottom: 46 },
+        styles: { font: "helvetica", fontSize: 9, cellPadding: 5, textColor: [15, 23, 42], lineColor: [226, 232, 240], lineWidth: 0.5 },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 34, halign: "center", fontStyle: "bold" },
+          1: { fontStyle: "bold" },
+        },
+        didParseCell: (data) => {
+          // Destaca a nota TRI e o pódio.
+          if (data.section === "body") {
+            if (selected.isTri && data.column.index === 4) {
+              data.cell.styles.textColor = [194, 65, 12];
+              data.cell.styles.fontStyle = "bold";
+            }
+            if (data.column.index === 0 && data.row.index < 3) {
+              data.cell.styles.textColor = [180, 83, 9];
+            }
+          }
+        },
+        didDrawPage: () => {
+          const page = doc.getCurrentPageInfo().pageNumber;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(148, 163, 184);
+          doc.text(
+            `Gerado em ${new Date().toLocaleString("pt-BR")}`,
+            margin,
+            doc.internal.pageSize.getHeight() - 24
+          );
+          doc.text(
+            `Pagina ${page}`,
+            pageWidth - margin,
+            doc.internal.pageSize.getHeight() - 24,
+            { align: "right" }
+          );
+        },
+      });
+
+      const slug = selected.title
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+      doc.save(`ranking-${slug || "prova"}.pdf`);
+    } catch {
+      toast({ title: "Erro ao gerar PDF", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setExporting(false);
     }
-    doc.open();
-    doc.write(html);
-    doc.close();
-    const cleanup = () => setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 500);
-    win.onafterprint = cleanup;
-    setTimeout(() => {
-      win.focus();
-      win.print();
-    }, 300);
   };
 
   if (loading) {
@@ -268,11 +302,12 @@ export default function ExamRankingPanel() {
               <button
                 type="button"
                 onClick={handleExportPdf}
-                title="Exportar este ranking em PDF"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-slate-950 px-3.5 py-2.5 text-sm font-black text-white transition-all hover:bg-slate-800 active:scale-95"
+                disabled={exporting}
+                title="Baixar este ranking em PDF"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-slate-950 px-3.5 py-2.5 text-sm font-black text-white transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-60"
               >
-                <FileDown className="h-4 w-4" />
-                <span className="hidden sm:inline">Exportar PDF</span>
+                {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+                <span className="hidden sm:inline">{exporting ? "Gerando..." : "Baixar PDF"}</span>
                 <span className="sm:hidden">PDF</span>
               </button>
             </div>
