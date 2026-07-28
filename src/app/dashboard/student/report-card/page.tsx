@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
+import { examTypeStyles } from "@/lib/exam-types";
 import {
   ArrowLeftRight,
   Calendar,
@@ -344,7 +345,19 @@ function formatDuration(seconds: number | null | undefined): string | null {
   if (m > 0) return `${m}min`;
   return `${s}s`;
 }
-type SimGroup = { examId: string; title: string; counting: SimAttempt[]; totalAttempts: number; limit: number };
+type SimGroup = { examId: string; title: string; examType: string; counting: SimAttempt[]; totalAttempts: number; limit: number };
+
+/**
+ * Selo do vestibular. Só aparece quando a prova não é do tipo "padrão" da trilha
+ * (ENEM/ETEC) — ou seja, marca FUVEST e outros vestibulares sem poluir a lista
+ * com um selo repetido em toda linha.
+ */
+function examTypeTag(examType: string): { label: string; chip: string } | null {
+  const t = (examType || "").toLowerCase();
+  if (!t || t === "enem" || t === "etec" || t === "simulado_importado") return null;
+  const s = examTypeStyles(t);
+  return { label: s.label, chip: s.chip };
+}
 
 /**
  * Simulados feitos pelo aluno na plataforma que entram no histórico do curso.
@@ -373,6 +386,15 @@ function PlatformSimuladosSection({ groups }: { groups: SimGroup[] }) {
           <div key={g.examId} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="min-w-0 flex-1 truncate text-sm font-black italic text-slate-800">{g.title}</p>
+              {(() => {
+                const tag = examTypeTag(g.examType);
+                if (!tag) return null;
+                return (
+                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${tag.chip}`}>
+                    {tag.label}
+                  </span>
+                );
+              })()}
               {g.limit > 2 && (
                 <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-700">
                   +{g.limit - 2} chances extras
@@ -483,6 +505,7 @@ export default function ReportCardPage() {
             const g = (groups[a.exam_id] ??= {
               examId: a.exam_id,
               title: a.exams?.title ?? "Simulado",
+              examType,
               counting: [],
               totalAttempts: 0,
               limit,

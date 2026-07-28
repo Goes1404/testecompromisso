@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExtraction, ParsedQuestion, Subject, ImgItem, UploadRecord } from '@/lib/ExtractionContext';
 import { extractPdfContent } from '@/lib/pdf-extract';
+import { EXAM_TYPES } from '@/lib/exam-types';
 
 type MicroTopic = { id: string; name: string };
 type QuestionOption = { key: string; text: string };
@@ -740,7 +741,7 @@ export default function QuestionBankPage() {
                                             <Select value={examType} onValueChange={setExamType}>
                                                 <SelectTrigger className="h-10 rounded-xl bg-white border-none shadow-md font-bold text-xs"><SelectValue /></SelectTrigger>
                                                 <SelectContent className="rounded-xl border-none shadow-2xl">
-                                                    {['enem', 'etec', 'fuvest', 'unicamp', 'outro'].map(t => (
+                                                    {EXAM_TYPES.map(t => (
                                                         <SelectItem key={t} value={t} className="font-bold text-xs">{t.toUpperCase()}</SelectItem>
                                                     ))}
                                                 </SelectContent>

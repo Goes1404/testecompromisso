@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import Script from "next/script";
 import { supabase } from "@/app/lib/supabase";
 import { computeTriResult } from "@/lib/tri-solver";
+import { examTypeLabel } from "@/lib/exam-types";
 import {
   Loader2,
   ChevronLeft,
@@ -564,7 +565,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
             </span>
             <span className="text-[8px] font-black text-white/40">·</span>
             <span className="text-[8px] font-black text-white/50 uppercase tracking-widest truncate">
-              {exam?.exam_type}
+              {examTypeLabel(exam?.exam_type)}
             </span>
           </div>
         </div>

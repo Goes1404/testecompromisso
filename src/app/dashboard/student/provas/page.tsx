@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
 import { FlameEmberCanvas } from "@/components/FlameEmberCanvas";
 import { computeTriResult } from "@/lib/tri-solver";
+import { allowedExamTypesFor, examTypeStyles, type ExamType } from "@/lib/exam-types";
 import { TrendingUp } from "lucide-react";
 
 const EvolutionChart = dynamic(
@@ -108,37 +109,6 @@ type ProgressSummary = { currentIndex: number; total: number; answered: number; 
 
 type PageState = "loading" | "list" | "active" | "finished" | "error";
 
-function examTypeStyles(type: string) {
-  const t = (type || "").toLowerCase();
-  if (t === "enem")
-    return {
-      chip: "bg-purple-100 text-purple-700 border-purple-200",
-      glow: "shadow-purple-500/20",
-      ring: "from-purple-600 to-fuchsia-600",
-      label: "ENEM",
-    };
-  if (t.includes("fuvest") || t.includes("usp"))
-    return {
-      chip: "bg-blue-100 text-blue-700 border-blue-200",
-      glow: "shadow-blue-500/20",
-      ring: "from-blue-600 to-indigo-600",
-      label: "FUVEST",
-    };
-  if (t.includes("etec") || t.includes("fatec"))
-    return {
-      chip: "bg-emerald-100 text-emerald-700 border-emerald-200",
-      glow: "shadow-emerald-500/20",
-      ring: "from-emerald-600 to-teal-600",
-      label: t.toUpperCase(),
-    };
-  return {
-    chip: "bg-orange-100 text-orange-700 border-orange-200",
-    glow: "shadow-orange-500/20",
-    ring: "from-orange-500 to-amber-500",
-    label: (type || "").toUpperCase(),
-  };
-}
-
 const norm = (v: string | undefined | null) => (v ?? "").trim().toUpperCase();
 const triggerHaptic = (ms = 15) => {
   if (typeof window !== "undefined" && navigator.vibrate) {
@@ -175,6 +145,10 @@ export default function ProvasCompletasPage() {
   const [reportLimitByExam, setReportLimitByExam] = useState<Record<string, number>>({});
   const [evolutionExam, setEvolutionExam] = useState<Exam | null>(null);
   const [progressByExam, setProgressByExam] = useState<Record<string, ProgressSummary>>({});
+  // Tipos de prova que a trilha do aluno permite ver, e a aba ativa. O aluno de
+  // ETEC tem um tipo só, então nem chega a ver a régua de abas.
+  const [allowedTypes, setAllowedTypes] = useState<ExamType[]>([]);
+  const [typeFilter, setTypeFilter] = useState<ExamType | null>(null);
 
   // ── Progresso salvo (continuar depois) — persistido em localStorage ──────────
   const progressKey = useCallback(
@@ -225,6 +199,31 @@ export default function ProvasCompletasPage() {
     }).sort((a, b) => (b.year || 0) - (a.year || 0));
   }, [exams]);
 
+  // Contagem por tipo, para o número em cada aba.
+  const countByType = useMemo(() => {
+    const counts: Record<string, number> = {};
+    exams.forEach((exam) => {
+      const t = (exam.exam_type || "").toLowerCase();
+      counts[t] = (counts[t] ?? 0) + 1;
+    });
+    return counts;
+  }, [exams]);
+
+  // Mantém a aba ativa válida: começa sempre na primeira permitida (ENEM).
+  useEffect(() => {
+    if (allowedTypes.length === 0) return;
+    if (!typeFilter || !allowedTypes.includes(typeFilter)) {
+      setTypeFilter(allowedTypes[0]);
+    }
+  }, [allowedTypes, typeFilter]);
+
+  const visibleGroups = useMemo(() => {
+    if (!typeFilter) return groupedExams;
+    return groupedExams.filter(
+      (g) => (g.exam_type || "").toLowerCase() === typeFilter
+    );
+  }, [groupedExams, typeFilter]);
+
   // Set default selected variant for each group
   useEffect(() => {
     const defaults: Record<string, string> = {};
@@ -242,7 +241,8 @@ export default function ProvasCompletasPage() {
     if (!user) return;
     setPageState("loading");
     try {
-      // Determina o foco do aluno: ETEC ou ENEM
+      // Determina o foco do aluno. O aluno de ETEC vê só provas de ETEC; o da
+      // trilha ENEM vê ENEM e FUVEST (a FUVEST faz parte da trilha ENEM).
       const rawTarget = (
         profile?.exam_target ||
         user?.user_metadata?.exam_target ||
@@ -250,13 +250,13 @@ export default function ProvasCompletasPage() {
         user?.user_metadata?.profile_type ||
         'enem'
       ).toLowerCase();
-      const isEtec = rawTarget.includes('etec');
-      const allowedType = isEtec ? 'etec' : 'enem';
+      const types = allowedExamTypesFor(rawTarget);
+      setAllowedTypes(types);
 
       let query = supabase
         .from("exams")
         .select("id, title, description, year, exam_type, pdf_url, gabarito_url, gabarito_comentado_url, difficulty_level, is_special_cursinho, tri_score_calculated, exam_questions(count)")
-        .eq("exam_type", allowedType)
+        .in("exam_type", types)
         .order("year", { ascending: false });
 
       const { data, error } = await query;
@@ -663,12 +663,50 @@ export default function ProvasCompletasPage() {
           </div>
         </div>
 
+        {/* Abas por vestibular — só aparecem quando a trilha tem mais de um tipo
+            (o aluno de ETEC vê apenas ETEC, então não há o que alternar). */}
+        {allowedTypes.length > 1 && exams.length > 0 && (
+          <div className="flex items-center gap-1.5 p-1 bg-slate-50 rounded-2xl border border-slate-100">
+            {allowedTypes.map((t) => {
+              const isActive = typeFilter === t;
+              const s = examTypeStyles(t);
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic();
+                    setTypeFilter(t);
+                  }}
+                  aria-pressed={isActive}
+                  className={`flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+                    isActive
+                      ? "bg-white text-primary shadow-md"
+                      : "text-muted-foreground hover:bg-white/60"
+                  }`}
+                >
+                  {s.label}
+                  <span
+                    className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[9px] font-black ${
+                      isActive ? s.chip : "bg-slate-200 text-slate-500 border-transparent"
+                    }`}
+                  >
+                    {countByType[t] ?? 0}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Empty state */}
-        {exams.length === 0 ? (
+        {visibleGroups.length === 0 ? (
           <div className="py-16 text-center border border-dashed border-slate-200 rounded-[1.5rem]">
             <BookOpen className="h-9 w-9 mx-auto mb-2 text-slate-300" />
             <p className="text-sm font-black italic text-slate-400 uppercase tracking-widest">
-              Nenhuma prova cadastrada
+              {exams.length === 0
+                ? "Nenhuma prova cadastrada"
+                : `Nenhuma prova de ${examTypeStyles(typeFilter).label}`}
             </p>
             <p className="text-[10px] text-slate-400 font-medium mt-1.5 max-w-xs mx-auto">
               A equipe pedagógica disponibilizará provas em breve.
@@ -676,7 +714,7 @@ export default function ProvasCompletasPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {groupedExams.map((group) => {
+            {visibleGroups.map((group) => {
               const selectedId = selectedVariants[group.key] || group.variants[0]?.id;
               const selectedExam = group.variants.find((v) => v.id === selectedId) || group.variants[0];
               if (!selectedExam) return null;
