@@ -31,6 +31,27 @@ const ETEC_SUBJECTS = [
   "Física", "Química", "Biologia", "Inglês", "Literatura", "Arte",
 ];
 
+/**
+ * Desempate para a classificação por matéria.
+ *
+ * A prova da ETEC é interdisciplinar: um mesmo texto de apoio (ex.: sobre a
+ * Amazônia) serve a questões de matérias diferentes. Sem estas regras o modelo
+ * classificava pelo TEMA do texto e não pela competência avaliada — uma questão
+ * de geometria ambientada na floresta virava "Geografia", e interpretação de
+ * texto e gramática viravam "Literatura".
+ */
+const ETEC_CLASSIFY_GUIDANCE = [
+  "Estas questões são do Vestibulinho ETEC, não do ENEM.",
+  "Classifique pela COMPETÊNCIA AVALIADA, nunca pelo tema do texto de apoio:",
+  "vários enunciados compartilham o mesmo texto e pertencem a matérias diferentes.",
+  "Se a questão pede cálculo, geometria, porcentagem, proporção, gráfico numérico ou",
+  "raciocínio quantitativo, é Matemática — mesmo que o texto fale de floresta, história ou saúde.",
+  "Português cobre interpretação de texto, gramática, ortografia, coesão, reescrita,",
+  "gênero e função da linguagem. Literatura só quando a questão trata de obra literária,",
+  "autor, escola literária ou figura de linguagem em texto literário.",
+  "Arte só quando a questão trata de obra de arte, artista, música ou movimento artístico.",
+].join(" ");
+
 // ─── Args ────────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
 function strFlag(name: string, def: string): string {
@@ -130,7 +151,7 @@ async function importProva(p: Prova, subjectMap: Record<string, string>) {
   }));
   const matRes = await classifyIntoCategories(
     classifiable, ETEC_SUBJECTS, "do Vestibulinho ETEC (ensino fundamental, interdisciplinar)",
-    { client: openai }
+    { client: openai, guidance: ETEC_CLASSIFY_GUIDANCE }
   );
   const materiaDe = new Map(matRes.map((r) => [r.id, r.category]));
 
