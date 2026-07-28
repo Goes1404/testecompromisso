@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
     Loader2, FilePlus, ListChecks, PlusCircle, Trash2, Database, BrainCircuit,
     Save, ArrowRight, Scroll, Upload, FileText, BookOpen, CheckCircle2,
-    Sparkles, ImageIcon, X, History, ChevronDown, ChevronUp, ChevronLeft, ChevronRight as ChevronRightIcon, Download, AlertTriangle, Clock
+    Sparkles, ImageIcon, X, History, ChevronDown, ChevronUp, ChevronLeft, ChevronRight as ChevronRightIcon, Download, AlertTriangle, Clock, ClipboardList
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -30,8 +30,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useExtraction, ParsedQuestion, Subject, ImgItem, UploadRecord } from '@/lib/ExtractionContext';
 import { extractPdfContent } from '@/lib/pdf-extract';
 import { EXAM_TYPES } from '@/lib/exam-types';
+import { parseAnswerKey, applyAnswerKey } from '@/lib/answer-key';
 
-type MicroTopic = { id: string; name: string };
+type MicroTopic = { id: string; name: string; subject_id?: string };
 type QuestionOption = { key: string; text: string };
 
 const ITEMS_PER_PAGE = 12;
@@ -65,6 +66,12 @@ export default function QuestionBankPage() {
     const [bulkTargetAudience, setBulkTargetAudience] = useState('all');
     const [microTopics, setMicroTopics] = useState<MicroTopic[]>([]);
     const [manualMicroTopics, setManualMicroTopics] = useState<MicroTopic[]>([]);
+    // Todos os micro-tópicos (são ~133), para o seletor por questão na revisão
+    // filtrar pela matéria de cada questão sem uma ida ao banco por card.
+    const [allMicroTopics, setAllMicroTopics] = useState<MicroTopic[]>([]);
+
+    const [showAnswerKeyPanel, setShowAnswerKeyPanel] = useState(false);
+    const [answerKeyText, setAnswerKeyText] = useState('');
 
     const [manualQuestion, setManualQuestion] = useState({
         question_text: '', year: new Date().getFullYear(), subject_id: '',
@@ -115,12 +122,59 @@ export default function QuestionBankPage() {
             .then(({ data }) => setMicroTopics(data ?? []));
     }, [bulkSubjectId]);
 
+    // Todos os micro-tópicos, para o seletor por questão na revisão.
+    useEffect(() => {
+        supabase.from('micro_topics').select('id, name, subject_id').order('name')
+            .then(({ data }) => setAllMicroTopics((data ?? []) as MicroTopic[]));
+    }, []);
+
     // Auto-save timestamp
     useEffect(() => {
         if (extractedQuestions.length > 0) {
             setLastSaved(new Date());
         }
     }, [extractedQuestions]);
+
+    // Micro-tópicos oferecidos na barra de lote: só fazem sentido se todas as
+    // questões selecionadas forem da mesma matéria.
+    const bulkSelectionMicroTopics = useMemo(() => {
+        const subjectIds = new Set(
+            extractedQuestions
+                .filter(q => selectedQuestions.includes(q._tempId!))
+                .map(q => q.subject_id)
+                .filter(Boolean)
+        );
+        if (subjectIds.size !== 1) return [];
+        const [only] = [...subjectIds];
+        return allMicroTopics.filter(mt => mt.subject_id === only);
+    }, [extractedQuestions, selectedQuestions, allMicroTopics]);
+
+    // ---------- Gabarito em lote ----------
+    const answerKeyPreview = useMemo(() => {
+        if (!answerKeyText.trim() || extractedQuestions.length === 0) return null;
+        const key = parseAnswerKey(answerKeyText);
+        const { applied, leftover } = applyAnswerKey(extractedQuestions, key);
+        return { mode: key.mode, total: key.total, applied, leftover };
+    }, [answerKeyText, extractedQuestions]);
+
+    const handleApplyAnswerKey = () => {
+        const key = parseAnswerKey(answerKeyText);
+        const { updated, appliedIndices, applied, unmatched } = applyAnswerKey(extractedQuestions, key);
+        if (applied === 0) {
+            toast({ title: 'Nenhuma questão casou com o gabarito', variant: 'destructive' });
+            return;
+        }
+        // Só as que vieram do gabarito são marcadas como confirmadas; as demais
+        // continuam visíveis nos filtros de revisão.
+        const confirmed = new Set(appliedIndices);
+        setExtractedQuestions(
+            updated.map((q, i) => (confirmed.has(i) ? { ...q, _confirmed_answer: true } : q)) as ParsedQuestion[]
+        );
+        toast({
+            title: `Gabarito aplicado a ${applied} questões`,
+            description: unmatched > 0 ? `${unmatched} ficaram sem resposta — confira o filtro "Gabarito Pendente".` : undefined,
+        });
+    };
 
     const deleteImageFromStorage = async (url: string) => {
         try {
@@ -273,6 +327,8 @@ export default function QuestionBankPage() {
                 if (q.explanation) item.explanation = q.explanation;
                 if (q.supporting_text) item.supporting_text = q.supporting_text;
                 if (q.image_url) item.image_url = q.image_url;
+                // Sem micro-tópico a questão fica fora do "Treino Específico".
+                if (q.micro_topic_id) item.micro_topic_id = q.micro_topic_id;
                 if (bulkTargetAudience !== 'all') item.target_audience = bulkTargetAudience;
                 return item;
             });
@@ -770,6 +826,66 @@ export default function QuestionBankPage() {
                                 </Button>
                             </div>
 
+                            {/* Gabarito em lote — provas como a da FUVEST publicam o gabarito
+                                num PDF separado, então as questões saem da extração sem resposta. */}
+                            <Card className="border-none shadow-lg bg-white p-5 rounded-[2rem]">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAnswerKeyPanel(v => !v)}
+                                    className="w-full flex items-center justify-between gap-3 text-left"
+                                >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <ClipboardList className="h-4 w-4 text-primary shrink-0" />
+                                        <span className="text-xs font-black uppercase tracking-widest text-slate-800">
+                                            Aplicar gabarito em lote
+                                        </span>
+                                        {filterCounts.needs_gabarito > 0 && (
+                                            <span className="shrink-0 rounded-full bg-rose-100 text-rose-700 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest">
+                                                {filterCounts.needs_gabarito} sem resposta
+                                            </span>
+                                        )}
+                                    </div>
+                                    <ChevronRightIcon className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${showAnswerKeyPanel ? 'rotate-90' : ''}`} />
+                                </button>
+
+                                {showAnswerKeyPanel && (
+                                    <div className="mt-4 space-y-3">
+                                        <p className="text-[10px] font-semibold text-muted-foreground leading-relaxed">
+                                            Cole o gabarito oficial. Entende <b>1-A 2-B 3-C</b>, <b>1. A</b>, <b>01) A</b> ou só as letras
+                                            (<b>A B C D</b>). Com numeração, casa pelo número impresso da questão — questão faltando não desalinha.
+                                        </p>
+                                        <Textarea
+                                            value={answerKeyText}
+                                            onChange={e => setAnswerKeyText(e.target.value)}
+                                            placeholder={"1-A 2-B 3-C 4-D 5-E ..."}
+                                            className="min-h-[110px] rounded-2xl bg-slate-50 border-none font-mono text-xs"
+                                        />
+                                        {answerKeyPreview && (
+                                            <div className={`rounded-2xl p-3 text-[10px] font-bold ${answerKeyPreview.applied > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                                                {answerKeyPreview.total === 0 ? (
+                                                    <>Nenhuma resposta reconhecida no texto colado.</>
+                                                ) : (
+                                                    <>
+                                                        {answerKeyPreview.total} respostas lidas
+                                                        {answerKeyPreview.mode === 'numbered' ? ' (com numeração)' : ' (por ordem)'} ·{' '}
+                                                        <b>{answerKeyPreview.applied}</b> de {extractedQuestions.length} questões serão preenchidas
+                                                        {answerKeyPreview.leftover > 0 && <> · {answerKeyPreview.leftover} do gabarito sem questão correspondente</>}
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                        <Button
+                                            onClick={handleApplyAnswerKey}
+                                            disabled={!answerKeyPreview || answerKeyPreview.applied === 0}
+                                            className="h-11 rounded-2xl font-black text-xs uppercase tracking-widest"
+                                        >
+                                            <Save className="h-4 w-4 mr-2" />
+                                            Aplicar aos {answerKeyPreview?.applied ?? 0} itens
+                                        </Button>
+                                    </div>
+                                )}
+                            </Card>
+
                             {/* Filter toolbar */}
                             <div className="flex flex-wrap gap-2">
                                 {([
@@ -920,17 +1036,34 @@ export default function QuestionBankPage() {
                                             </div>
                                         </div>
 
-                                        <div className="mb-4">
-                                            <Label className="text-[9px] font-black uppercase opacity-40 ml-1 mb-1 block">Disciplina</Label>
-                                            <Select value={q.subject_id || ''}
-                                                onValueChange={val => setExtractedQuestions(prev => prev.map(item => item._tempId === q._tempId ? { ...item, subject_id: val } : item))}>
-                                                <SelectTrigger className="h-9 rounded-xl bg-slate-50 border-none font-bold text-xs w-full">
-                                                    <SelectValue placeholder="Selecionar matéria..." />
-                                                </SelectTrigger>
-                                                <SelectContent className="rounded-xl border-none shadow-2xl">
-                                                    {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-xs">{s.name}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
+                                        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div>
+                                                <Label className="text-[9px] font-black uppercase opacity-40 ml-1 mb-1 block">Disciplina</Label>
+                                                <Select value={q.subject_id || ''}
+                                                    onValueChange={val => setExtractedQuestions(prev => prev.map(item => item._tempId === q._tempId ? { ...item, subject_id: val, micro_topic_id: undefined } : item))}>
+                                                    <SelectTrigger className="h-9 rounded-xl bg-slate-50 border-none font-bold text-xs w-full">
+                                                        <SelectValue placeholder="Selecionar matéria..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                        {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-xs">{s.name}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            {/* Sem micro-tópico a questão não aparece no "Treino Específico". */}
+                                            <div>
+                                                <Label className="text-[9px] font-black uppercase opacity-40 ml-1 mb-1 block">Micro-tópico</Label>
+                                                <Select value={q.micro_topic_id || ''}
+                                                    disabled={!q.subject_id}
+                                                    onValueChange={val => setExtractedQuestions(prev => prev.map(item => item._tempId === q._tempId ? { ...item, micro_topic_id: val } : item))}>
+                                                    <SelectTrigger className="h-9 rounded-xl bg-slate-50 border-none font-bold text-xs w-full">
+                                                        <SelectValue placeholder={q.subject_id ? 'Opcional...' : 'Escolha a matéria'} />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                        {allMicroTopics.filter(mt => mt.subject_id === q.subject_id)
+                                                            .map(mt => <SelectItem key={mt.id} value={mt.id} className="font-bold text-xs">{mt.name}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">
@@ -993,7 +1126,7 @@ export default function QuestionBankPage() {
                             <span className="text-sm font-bold">{selectedQuestions.length} selecionadas</span>
                             <div className="h-6 w-px bg-slate-700 mx-2" />
                             <Select onValueChange={(val) => {
-                                setExtractedQuestions(prev => prev.map(q => selectedQuestions.includes(q._tempId!) ? { ...q, subject_id: val } : q));
+                                setExtractedQuestions(prev => prev.map(q => selectedQuestions.includes(q._tempId!) ? { ...q, subject_id: val, micro_topic_id: undefined } : q));
                                 toast({ title: 'Matéria atribuída em lote!' });
                             }}>
                                 <SelectTrigger className="h-8 bg-slate-800 border-none text-xs font-bold text-white w-40"><SelectValue placeholder="Atribuir Matéria" /></SelectTrigger>
@@ -1001,6 +1134,19 @@ export default function QuestionBankPage() {
                                     {subjects.map(s => <SelectItem key={s.id} value={s.id} className="text-xs font-bold">{s.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
+
+                            {/* Só oferece micro-tópicos válidos para a matéria comum às selecionadas. */}
+                            {bulkSelectionMicroTopics.length > 0 && (
+                                <Select onValueChange={(val) => {
+                                    setExtractedQuestions(prev => prev.map(q => selectedQuestions.includes(q._tempId!) ? { ...q, micro_topic_id: val } : q));
+                                    toast({ title: 'Micro-tópico atribuído em lote!' });
+                                }}>
+                                    <SelectTrigger className="h-8 bg-slate-800 border-none text-xs font-bold text-white w-44"><SelectValue placeholder="Micro-tópico" /></SelectTrigger>
+                                    <SelectContent className="border-none shadow-xl rounded-xl">
+                                        {bulkSelectionMicroTopics.map(mt => <SelectItem key={mt.id} value={mt.id} className="text-xs font-bold">{mt.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            )}
 
                             <Select onValueChange={(val) => {
                                 setExtractedQuestions(prev => prev.map(q => selectedQuestions.includes(q._tempId!) ? { ...q, target_audience: val } : q));
