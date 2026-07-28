@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,9 +23,12 @@ import {
   XP_PER_CORRECT_QUESTION, XP_PER_SIMULADO_COMPLETE, BADGE_META,
 } from '@/lib/gamification';
 import { trackMissionProgress } from '@/lib/missions';
+import { allowedExamTypesFor, examTypeLabel } from '@/lib/exam-types';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ALL_TOPICS = '_all';
+/** Sentinela do seletor de banca: mistura as bancas da trilha, a pedido do aluno. */
+const ALL_BOARDS = '_all_boards';
 
 type Mode = 'especifico' | 'materia' | 'completo';
 type Subject     = { id: string; name: string; question_count: number };
@@ -142,6 +145,8 @@ export default function SimuladoPage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [microTopics, setMicroTopics]         = useState<MicroTopic[]>([]);
   const [selectedMicroTopicId, setSelectedMicroTopicId] = useState<string>(ALL_TOPICS);
+  /** Banca escolhida: um `exam_type` específico ou ALL_BOARDS (mistura consentida). */
+  const [selectedBoard, setSelectedBoard]     = useState<string>(ALL_BOARDS);
 
   const [questions, setQuestions]   = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -176,11 +181,29 @@ export default function SimuladoPage() {
       });
   }, [user]);
 
+  /**
+   * Bancas que a trilha do aluno permite. O aluno de ETEC só vê ETEC; o da
+   * trilha ENEM vê ENEM e FUVEST (a FUVEST faz parte da trilha ENEM).
+   */
+  const allowedBoards = useMemo(
+    () => allowedExamTypesFor(profile?.exam_target || user?.user_metadata?.exam_target || profile?.profile_type),
+    [profile?.exam_target, profile?.profile_type, user?.user_metadata?.exam_target]
+  );
+
+  /** Bancas que a busca deve considerar, conforme a escolha do aluno. */
+  const activeBoards = useMemo(
+    () => (selectedBoard === ALL_BOARDS ? allowedBoards : [selectedBoard]),
+    [selectedBoard, allowedBoards]
+  );
+
   // ── data fetching ──
   const fetchSubjects = useCallback(async () => {
     setGameState('loading_subjects');
     try {
-      const { data, error } = await supabase.rpc('get_subjects_with_question_count');
+      // Conta só as questões das bancas escolhidas — senão o número exibido em
+      // cada matéria mentiria ao filtrar por banca.
+      const { data, error } = await supabase
+        .rpc('get_subjects_with_question_count_by_boards', { p_boards: activeBoards });
       if (error) {
         const { data: fb } = await supabase.from('subjects').select('id, name').order('name');
         setSubjects((fb ?? []).map(s => ({ id: s.id, name: s.name, question_count: 0 })));
@@ -191,7 +214,7 @@ export default function SimuladoPage() {
     } catch {
       setGameState('error');
     }
-  }, []);
+  }, [activeBoards]);
 
   useEffect(() => { fetchSubjects(); }, [fetchSubjects]);
 
@@ -201,12 +224,25 @@ export default function SimuladoPage() {
       .then(({ data }) => setMicroTopics(data ?? []));
   }, [selectedSubjectId, mode]);
 
+  /**
+   * Monta a busca de questões.
+   *
+   * `ignoreAudience` relaxa apenas o público-alvo (`target_audience`), que é a
+   * trilha do aluno. O filtro de BANCA nunca é relaxado: misturar questões de
+   * vestibulares diferentes sem o aluno pedir é justamente o que não pode
+   * acontecer. Quando ele escolhe "Todas", a busca ainda fica restrita às
+   * bancas da trilha dele — "todas" nunca significa o banco inteiro.
+   */
   const buildQuery = (ignoreAudience = false) => {
     let q = supabase.from('questions').select('*, subjects(name)');
     if ((mode === 'materia' || mode === 'especifico') && selectedSubjectId)
       q = q.eq('subject_id', selectedSubjectId) as any;
     if (mode === 'especifico' && selectedMicroTopicId && selectedMicroTopicId !== ALL_TOPICS)
       q = q.eq('micro_topic_id', selectedMicroTopicId) as any;
+
+    // Banca — sempre aplicada, inclusive no fallback.
+    q = q.in('exam_board', activeBoards) as any;
+
     if (!ignoreAudience) {
       const audience = (
         profile?.exam_target || user?.user_metadata?.exam_target ||
@@ -237,7 +273,17 @@ export default function SimuladoPage() {
       const items = raw ?? [];
       const shuffled = items.sort(() => 0.5 - Math.random()).slice(0, simSize);
       if (shuffled.length === 0) {
-        toast({ title: 'Sem questões', description: 'Não há questões para este filtro.', variant: 'destructive' });
+        // Estado vazio honesto: diz qual banca e matéria faltam, em vez de
+        // completar às escondidas com questões de outro vestibular.
+        const bancaLabel = selectedBoard === ALL_BOARDS ? null : examTypeLabel(selectedBoard);
+        const materiaLabel = subjects.find(s => s.id === selectedSubjectId)?.name;
+        toast({
+          title: bancaLabel ? `Ainda não temos questões de ${bancaLabel}` : 'Sem questões',
+          description: bancaLabel
+            ? `Não há questões de ${bancaLabel}${materiaLabel ? ` em ${materiaLabel}` : ''} por enquanto. Troque a banca ou a matéria para continuar treinando.`
+            : 'Não há questões para este filtro.',
+          variant: 'destructive',
+        });
         setGameState('idle'); return;
       }
       const formatted: Question[] = shuffled.map((q: any) => {
@@ -254,7 +300,7 @@ export default function SimuladoPage() {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       setGameState('error');
     }
-  }, [mode, selectedSubjectId, selectedMicroTopicId, profile, toast, simSize]);
+  }, [mode, selectedSubjectId, selectedMicroTopicId, selectedBoard, activeBoards, subjects, profile, toast, simSize]);
 
   // ── timer ──
   useEffect(() => {
@@ -967,6 +1013,35 @@ export default function SimuladoPage() {
               transition={{ duration: 0.18 }}
               className="bg-white rounded-[2rem] shadow-md border border-slate-200 p-6 space-y-4"
             >
+              {/* Banca — só faz sentido quando a trilha do aluno tem mais de uma.
+                  O aluno de ETEC não vê seletor, porque só existe uma banca para ele. */}
+              {allowedBoards.length > 1 && (
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Banca</Label>
+                  <div className="flex gap-2">
+                    {[ALL_BOARDS, ...allowedBoards].map(board => {
+                      const isActive = selectedBoard === board;
+                      const label = board === ALL_BOARDS ? 'Todas' : examTypeLabel(board);
+                      return (
+                        <button
+                          key={board}
+                          type="button"
+                          onClick={() => { triggerHaptic(10); setSelectedBoard(board); }}
+                          aria-pressed={isActive}
+                          className={`flex-1 h-11 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border ${
+                            isActive
+                              ? 'bg-slate-900 text-white border-transparent shadow-md'
+                              : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Disciplina Principal</Label>
                 <Select value={selectedSubjectId} onValueChange={(v) => { triggerHaptic(10); setSelectedSubjectId(v); }}>

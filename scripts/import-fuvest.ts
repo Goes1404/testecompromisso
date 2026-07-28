@@ -12,10 +12,13 @@
  *
  * Flags:
  *   --dry-run       Não escreve nada. Relata exatamente o que faria.
- *   --skip-images   Descarta as questões que dependem de imagem (o dataset não
- *                   traz as imagens). Sem a flag, elas entram marcadas com
- *                   [IMAGEM_PENDENTE], que é o marcador que a tela de revisão
- *                   e o Motor de Provas já entendem.
+ *   --keep-images   Importa também as questões que dependem de imagem, marcadas
+ *                   com [IMAGEM_PENDENTE]. Fora do padrão de propósito: o
+ *                   dataset não traz as imagens e a tela de simulado REMOVE o
+ *                   marcador na exibição, então o aluno receberia um enunciado
+ *                   do tipo "observe o gráfico" sem gráfico e sem aviso. Foi
+ *                   assim que 76 questões precisaram ser apagadas depois da
+ *                   primeira importação.
  *
  * Requer no .env.local:
  *   NEXT_PUBLIC_SUPABASE_URL
@@ -192,7 +195,7 @@ export function prepare(
 
   const needsImage = IMAGE_HINT.test(statement);
   if (needsImage) {
-    if (opts.skipImages) return { ok: false, reason: "depende de imagem (--skip-images)" };
+    if (opts.skipImages) return { ok: false, reason: "depende de imagem (use --keep-images para incluir)" };
     statement = `[IMAGEM_PENDENTE]\n${statement}`;
   }
 
@@ -329,7 +332,8 @@ async function importYear(
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
-  const skipImages = args.includes("--skip-images");
+  // Padrão é descartar: questão que depende de imagem ausente é inrespondível.
+  const skipImages = !args.includes("--keep-images");
 
   const flag = (name: string): number | null => {
     const i = args.indexOf(name);
@@ -347,7 +351,7 @@ async function main() {
       "Uso:\n" +
         "  npx tsx scripts/import-fuvest.ts --from 2003 --to 2020 --dry-run\n" +
         "  npx tsx scripts/import-fuvest.ts --year 2024\n\n" +
-        "Flags: --dry-run, --skip-images"
+        "Flags: --dry-run, --keep-images"
     );
     process.exit(1);
   }
@@ -358,7 +362,7 @@ async function main() {
   }
 
   console.log(`🎯 FUVEST ${from}–${to}${dryRun ? "  (SIMULAÇÃO — nada será gravado)" : ""}`);
-  console.log(`   fonte: Alvorada-Bench (MIT) · ${skipImages ? "descartando" : "marcando"} questões com imagem\n`);
+  console.log(`   fonte: Alvorada-Bench (MIT) · ${skipImages ? "descartando" : "marcando"} questões que dependem de imagem\n`);
 
   const subjectMap = await fetchSubjectMap();
   const raw = await fetchFuvestRows();
