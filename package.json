@@ -19,7 +19,8 @@
     "import:enem": "tsx scripts/import-enem.ts",
     "reclassify:enem": "tsx scripts/reclassify-enem.ts",
     "classify:microtopics": "tsx scripts/classify-microtopics-enem.ts",
-    "import:etec": "tsx scripts/import-etec.ts"
+    "import:etec": "tsx scripts/import-etec.ts",
+    "import:fuvest": "tsx scripts/import-fuvest.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.49",
