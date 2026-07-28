@@ -20,17 +20,7 @@ import {
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const EXAM_TYPES = ['enem', 'etec', 'fuvest', 'unicamp', 'usp', 'outro'] as const;
-type ExamType = typeof EXAM_TYPES[number];
-
-const TYPE_COLOR: Record<ExamType, string> = {
-  enem:    'bg-blue-100 text-blue-700',
-  etec:    'bg-purple-100 text-purple-700',
-  fuvest:  'bg-orange-100 text-orange-700',
-  unicamp: 'bg-green-100 text-green-700',
-  usp:     'bg-rose-100 text-rose-700',
-  outro:   'bg-zinc-100 text-zinc-600',
-};
+import { EXAM_TYPES, EXAM_TYPE_BADGE as TYPE_COLOR, type ExamType } from '@/lib/exam-types';
 
 type Exam = {
   id: string;
