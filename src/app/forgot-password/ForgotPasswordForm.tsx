@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Loader2, AlertCircle, CheckCircle2, Lock, User, Phone, Calendar,
+  Loader2, AlertCircle, CheckCircle2, Lock, Phone,
   Eye, EyeOff, ArrowLeft, KeyRound, MessageSquare,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-type Step = "phone" | "fallback" | "otp";
+type Step = "phone" | "otp";
 
 /**
  * Atendimento da secretaria por WhatsApp.
@@ -45,8 +45,6 @@ async function callApi(action: string, payload: Record<string, unknown>) {
 
 export function ForgotPasswordForm() {
   const [step, setStep] = useState<Step>("phone");
-  const [fullName, setFullName] = useState("");
-  const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -82,7 +80,18 @@ export function ForgotPasswordForm() {
     try {
       const data = await callApi("lookup-phone", { phone });
       if (data.found === false) {
-        setStep("fallback");
+        // Antes daqui saía uma etapa que pedia nome + data de nascimento para
+        // cadastrar o telefone. Ela foi removida: a data de nascimento era a
+        // ÚNICA prova de identidade desse caminho e só 39 dos 1058 alunos a têm
+        // cadastrada — na prática atendia 3,7% e confundia o resto. Sem ela o
+        // caminho viraria "digite o nome de alguém e cadastre seu telefone",
+        // ou seja, tomada de conta. Quem não tem telefone vai para o
+        // atendimento humano, que confere identidade presencialmente.
+        setError(
+          "Não encontramos esse telefone em nenhum cadastro. " +
+          "Muitas contas ainda não têm telefone registrado — se for o seu caso, " +
+          "fale com a secretaria pelo WhatsApp que ela redefine sua senha na hora."
+        );
       } else {
         setResetToken(data.resetToken);
         setMaskedPhone(data.maskedPhone);
@@ -96,26 +105,6 @@ export function ForgotPasswordForm() {
     }
   };
 
-  const handleRegisterPhone = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (!fullName.trim() || !birthDate) {
-      setError("Preencha nome e data de nascimento.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await callApi("register-phone", { fullName, birthDate, phone });
-      setResetToken(data.resetToken);
-      setMaskedPhone(data.maskedPhone);
-      setStep("otp");
-      startCooldown();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleResend = async () => {
     setError(null);
@@ -179,7 +168,7 @@ export function ForgotPasswordForm() {
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-primary italic uppercase tracking-tighter">Senha Redefinida!</h2>
           <p className="text-sm text-primary/60 font-medium leading-relaxed italic">
-            Tudo certo{fullName ? `, ${fullName.split(" ")[0]}` : ""}. Sua nova senha já está ativa. É só entrar.
+            Tudo certo. Sua nova senha já está ativa. É só entrar.
           </p>
         </div>
         <Button asChild className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 rounded-2xl shadow-xl border-none text-sm uppercase tracking-widest">
@@ -200,7 +189,6 @@ export function ForgotPasswordForm() {
         <CardTitle className="text-xl font-black text-primary italic uppercase">Recuperar Acesso</CardTitle>
         <CardDescription className="text-xs font-medium italic px-4">
           {step === "phone" && "Informe o telefone cadastrado pra receber o código."}
-          {step === "fallback" && "Não encontramos esse telefone no seu cadastro — confirme seus dados pra cadastrá-lo."}
           {step === "otp" && `Enviamos um código pro telefone ${maskedPhone}.`}
         </CardDescription>
       </CardHeader>
@@ -250,50 +238,6 @@ export function ForgotPasswordForm() {
             <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none uppercase tracking-widest">
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Continuar"}
             </Button>
-          </form>
-        )}
-
-        {step === "fallback" && (
-          <form onSubmit={handleRegisterPhone} className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nome Completo</Label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Como foi cadastrado pela escola"
-                  className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-primary/40 px-2">Nascimento</Label>
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="pl-11 h-14 bg-muted/30 border-none rounded-xl font-bold"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/95 text-white font-black h-14 text-sm shadow-xl rounded-xl transition-all border-none uppercase tracking-widest">
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Cadastrar e Enviar Código"}
-            </Button>
-            <button
-              type="button"
-              onClick={() => { setError(null); setStep("phone"); }}
-              disabled={loading}
-              className="w-full text-[10px] font-black uppercase text-primary/40 hover:text-primary flex items-center justify-center gap-2 h-8"
-            >
-              <ArrowLeft className="h-3 w-3" /> Usar outro telefone
-            </button>
           </form>
         )}
 
