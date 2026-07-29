@@ -45,39 +45,44 @@ export function getLevel(xp: number) {
   return { current, next, progressPct, xp };
 }
 
+/**
+ * Concede XP. A pontuação é decidida pelo SERVIDOR — o cliente só informa a
+ * ação e, quando ela é por volume (acertos de um simulado), a quantidade.
+ *
+ * Antes daqui saía um `update` em `profiles.xp_points` e um `insert` em
+ * `student_xp_log` com o valor vindo do cliente. Como o ranking semanal passou
+ * a valer prêmio, isso virou alvo: qualquer aluno podia mandar 999999 pelo
+ * console e liderar na hora. Agora ambos os caminhos diretos estão fechados no
+ * banco e a única via é a função `award_xp`, que consulta a tabela de valores,
+ * ignora repetição da mesma referência e respeita o teto diário.
+ *
+ * Retorna o XP efetivamente concedido — 0 quando já havia sido contabilizado
+ * ou quando o teto do dia foi atingido.
+ */
 export async function awardXP(
-  userId: string,
+  _userId: string,
   points: number,
   action = 'generic',
   referenceId?: string,
+  quantity?: number,
 ): Promise<number> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('xp_points')
-    .eq('id', userId)
-    .single();
+  // `points` continua na assinatura por compatibilidade com as chamadas
+  // existentes, mas é ignorado: quem define o valor é o servidor.
+  void points;
 
-  const currentXP = (profile?.xp_points as number) ?? 0;
-  const newXP = currentXP + points;
+  const { data, error } = await supabase.rpc('award_xp', {
+    p_action: action,
+    p_reference_id: referenceId ?? null,
+    p_quantity: quantity ?? 1,
+  });
 
-  // 1. Atualiza xp_points no perfil (sistema legado — mantido)
-  await supabase
-    .from('profiles')
-    .update({ xp_points: newXP })
-    .eq('id', userId);
+  if (error) {
+    console.error('[awardXP]', error.message);
+    return 0;
+  }
 
-  // 2. Insere no log histórico (para ranking semanal). Falha silenciosa.
-  void Promise.resolve(supabase.from('student_xp_log').insert({
-    student_id:   userId,
-    action,
-    xp_earned:    points,
-    reference_id: referenceId ?? null,
-  })).catch(() => undefined);
-
-  // 3. Atualiza streak
-  bumpStreak(userId).catch(() => undefined);
-
-  return newXP;
+  bumpStreak(_userId).catch(() => undefined);
+  return (data as number) ?? 0;
 }
 
 export async function checkAndAwardBadges(

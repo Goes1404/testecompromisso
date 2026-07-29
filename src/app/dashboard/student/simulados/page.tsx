@@ -368,16 +368,28 @@ export default function SimuladoPage() {
       const s = newAnswers.filter(a => norm(a.selected) === norm(a.correct)).length;
       if (user) {
         // Registra a tentativa (inclui o tempo gasto). subject_id só no modo matéria.
+        // O id da tentativa vira a referência do XP: é ele que impede o mesmo
+        // simulado de pontuar duas vezes se a chamada for repetida.
         supabase.from('simulation_attempts').insert({
           user_id: user.id,
           subject_id: mode === 'materia' && selectedSubjectId ? selectedSubjectId : null,
           score: s,
           total_questions: newAnswers.length,
           duration_seconds: elapsedSeconds,
-        }).then(() => {});
-
-        const xp = s * XP_PER_CORRECT_QUESTION + XP_PER_SIMULADO_COMPLETE;
-        awardXP(user.id, xp).then(() => {});
+        }).select('id').single().then(async ({ data: attempt }) => {
+          const ref = attempt?.id;
+          if (!ref) return;
+          // O valor de cada ação é decidido no servidor; aqui só dizemos o que
+          // aconteceu — quantos acertos, e que o simulado foi concluído.
+          const ganho =
+            (s > 0 ? await awardXP(user.id, 0, 'correct_answer', ref, s) : 0) +
+            (await awardXP(user.id, 0, 'simulado_complete', ref));
+          // Mostra o que o servidor realmente concedeu: pode ser menos que o
+          // esperado se o aluno já bateu o teto do dia.
+          if (ganho > 0) {
+            toast({ title: `+${ganho} XP ganhos!`, description: `${s} acertos neste simulado.` });
+          }
+        });
         trackMissionProgress(supabase, user.id, 'answer_questions', newAnswers.length).then(() => {});
         trackMissionProgress(supabase, user.id, 'complete_simulados', 1).then(() => {});
         const total = await getTotalAnswered(user.id);
@@ -387,7 +399,6 @@ export default function SimuladoPage() {
         });
         if (badges.length > 0)
           toast({ title: '🏆 Conquista desbloqueada!', description: badges.map(b => BADGE_META[b].label).join(', ') });
-        toast({ title: `+${xp} XP ganhos!`, description: `${s} acertos neste simulado.` });
       }
       setGameState('finished');
     }
