@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
-import { rankingTrackFor } from '@/lib/exam-types';
 import { useToast } from '@/hooks/use-toast';
 import {
   Trophy, Medal, Crown, Flame, Star,
@@ -107,18 +106,10 @@ export default function RankingPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Filtra pela trilha normalizada (`track`), nao pelo `exam_target` cru.
-      // O valor cru tem 6 variacoes em producao (ENEM/enem/ETEC/etec/Nao
-      // informado/nulo): comparar com 'enem' minusculo casava so com 9 alunos,
-      // e o aluno cadastrado como 'ENEM' via um ranking que nao o incluia.
-      const audience = rankingTrackFor(
-        profile?.exam_target || user?.user_metadata?.exam_target || profile?.profile_type
-      );
-
+      // Ranking único: ENEM e ETEC disputam juntos, sem filtro por trilha.
       const { data, error } = await supabase
         .from('weekly_ranking')
         .select('student_id, full_name, avatar_url, exam_target, weekly_xp, total_xp, position')
-        .eq('track', audience)
         .order('position', { ascending: true })
         .limit(50);
 
@@ -126,7 +117,21 @@ export default function RankingPage() {
 
       const list = (data ?? []) as RankEntry[];
       setRanking(list);
-      setMyEntry(list.find(r => r.student_id === user.id) ?? null);
+
+      // Com trilha única a lista passou de dezenas para 1058 alunos, então a
+      // maioria fica fora do top 50. Sem esta busca extra o aluno deixaria de
+      // ver a própria posição — que é justamente o que o faz voltar.
+      const naLista = list.find(r => r.student_id === user.id);
+      if (naLista) {
+        setMyEntry(naLista);
+      } else {
+        const { data: minha } = await supabase
+          .from('weekly_ranking')
+          .select('student_id, full_name, avatar_url, exam_target, weekly_xp, total_xp, position')
+          .eq('student_id', user.id)
+          .maybeSingle();
+        setMyEntry((minha as RankEntry) ?? null);
+      }
       setLastUpdated(new Date());
     } catch (e: any) {
       toast({ title: 'Erro ao carregar ranking', description: e.message, variant: 'destructive' });
