@@ -89,7 +89,6 @@ function InviteLinkModal({ open, onClose }: { open: boolean; onClose: () => void
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           expiryDays: expiryDays,
         }),
       });
@@ -239,7 +238,6 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           email: user.email,
           type: 'recovery',
         }),
@@ -275,7 +273,6 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           email: user.email,
           newPassword,
         }),
@@ -393,7 +390,6 @@ function NewStudentModal({ open, onClose, onCreated }: { open: boolean; onClose:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           fullName: fullName.trim(),
           cpf: cpf.trim() || undefined,
           birthDate,
@@ -692,7 +688,11 @@ export default function SecretaryEnrollmentDirectory() {
       (statusFilter === 'is_financial_aid_eligible' && u.is_financial_aid_eligible) ||
       (statusFilter === 'income_ok' && u.is_financial_aid_eligible) ||
       (statusFilter === 'income_exceeded' && Number(u.family_income) > 0 && !u.is_financial_aid_eligible) ||
-      (statusFilter === 'income_pending' && !u.is_financial_aid_eligible && (!u.family_income || Number(u.family_income) === 0));
+      (statusFilter === 'income_pending' && !u.is_financial_aid_eligible && (!u.family_income || Number(u.family_income) === 0)) ||
+      // Quem não tem telefone não consegue recuperar a senha sozinho (o fluxo
+      // por SMS depende do número cadastrado). É exatamente o público que
+      // precisa do atendimento da secretaria.
+      (statusFilter === 'sem_telefone' && !String(u.phone || '').trim());
 
     const matchesCourse = !courseFilter || (u.course || '') === courseFilter;
     const matchesInstitution = !institutionFilter || (u.institution || '') === institutionFilter;
@@ -787,6 +787,7 @@ export default function SecretaryEnrollmentDirectory() {
               <SelectItem value="income_ok" className="font-bold text-xs">Renda OK / Isento</SelectItem>
               <SelectItem value="income_exceeded" className="font-bold text-xs">Excedeu Limite (Reprovado)</SelectItem>
               <SelectItem value="income_pending" className="font-bold text-xs">Pendente (Não Simularam)</SelectItem>
+              <SelectItem value="sem_telefone" className="font-bold text-xs">Sem telefone (não recupera senha sozinho)</SelectItem>
             </SelectContent>
           </Select>
         }

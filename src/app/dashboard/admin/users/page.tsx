@@ -73,7 +73,6 @@ function InviteLinkModal({ open, onClose }: { open: boolean; onClose: () => void
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           expiryDays: expiryDays,
         }),
       });
@@ -233,7 +232,6 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           email: user.email,
           type: 'recovery',
         }),
@@ -270,7 +268,6 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           email: user.email,
           newPassword,
         }),
@@ -571,7 +568,6 @@ export default function AdminUserDirectoryPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           userId: id,
         }),
       });

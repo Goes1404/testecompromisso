@@ -250,7 +250,6 @@ export default function AdminNewUserPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           fullName: form.fullName.trim(),
           cpf: form.cpf,
           birthDate: form.birthDate || undefined,
@@ -291,7 +290,6 @@ export default function AdminNewUserPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          masterPassword: 'compromisso2026',
           email,
           type: 'invite',
         }),
