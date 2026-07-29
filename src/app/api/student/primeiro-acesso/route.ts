@@ -172,8 +172,8 @@ export async function POST(request: Request) {
 
     // AÇÃO: BUSCAR POR TELEFONE (passo 1 do wizard de recuperação por SMS)
     // O telefone é a chave primária: quem tem o aparelho prova posse via OTP.
-    // Nome+nascimento só entra como fallback (action register-phone) quando o
-    // telefone não bate com nenhuma conta, permitindo cadastrar telefone novo.
+    // Não há mais fallback por nome+nascimento — quando o telefone não bate com
+    // nenhuma conta, o aluno é direcionado à secretaria (ver nota abaixo).
     if (action === 'lookup-phone') {
       const { phone } = body;
       if (!phone?.trim() || phone.replace(/\D/g, '').length < 10) {
@@ -238,93 +238,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ resetToken, maskedPhone: maskPhone(match.phone) });
     }
 
-    // AÇÃO: CADASTRAR TELEFONE (fallback, só quando lookup-phone não achou nada)
-    // Prova de identidade por nome+data de nascimento (mesmo padrão já usado em
-    // outros fluxos), só permite cadastrar se a conta ainda não tiver telefone.
-    if (action === 'register-phone') {
-      const { fullName, birthDate, phone } = body;
-
-      if (!fullName?.trim() || !birthDate?.trim() || !phone?.trim()) {
-        return NextResponse.json({ error: 'Preencha nome, data de nascimento e telefone.' }, { status: 400 });
-      }
-      const inputDigits = normalizePhoneDigits(phone);
-      if (inputDigits.length < 10) {
-        return NextResponse.json({ error: 'Informe um telefone válido com DDD.' }, { status: 400 });
-      }
-
-      const ip = getClientIp(request);
-      const idHash = hashIdentifier(fullName);
-
-      if (await checkRecoverRateLimit(supabaseAdmin, ip, idHash)) {
-        return NextResponse.json(
-          { error: 'Muitas tentativas. Por segurança, aguarde 1 hora ou procure a secretaria.' },
-          { status: 429 }
-        );
-      }
-
-      const generatedEmail = generateEmail(fullName.trim());
-      const safeName = fullName.trim().replace(/[,()*\\]/g, ' ').replace(/\s+/g, ' ').trim();
-      const { data: candidates, error: searchErr } = await supabaseAdmin
-        .from('profiles')
-        .select('id, phone, birth_date')
-        .or(`email.eq.${generatedEmail},name.ilike.%${safeName}%`)
-        .limit(10);
-
-      if (searchErr) {
-        console.error('[REGISTER_PHONE] erro na busca:', searchErr);
-        throw searchErr;
-      }
-
-      const inputBirth = String(birthDate).slice(0, 10);
-      const match = (candidates || []).find((c: any) =>
-        c.birth_date && String(c.birth_date).slice(0, 10) === inputBirth
-      );
-
-      // Anti-takeover: mesma mensagem genérica tanto pra "não achou" quanto pra
-      // "achou mas a conta já tem telefone" — não revela qual dos dois aconteceu.
-      //
-      // A mensagem NÃO diz "confira seus dados", como dizia antes: apenas 39 dos
-      // 1058 alunos têm data de nascimento cadastrada, então na esmagadora
-      // maioria das vezes o aluno digitou tudo certo e não há o que conferir —
-      // é o cadastro que está incompleto. Culpar o aluno o fazia tentar de novo
-      // em vão (263 falhas de 126 pessoas distintas em um mês). Mandamos direto
-      // para o atendimento, que resolve na hora.
-      if (!match || match.phone) {
-        await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
-        return NextResponse.json(
-          {
-            error:
-              'Não conseguimos confirmar seus dados automaticamente. ' +
-              'Muitos cadastros ainda não têm data de nascimento — quando é esse o caso, ' +
-              'não há como validar por aqui. Fale com a secretaria pelo WhatsApp: ela redefine sua senha na hora.',
-            contactSupport: true,
-          },
-          { status: 401 }
-        );
-      }
-
-      await recordRecoverAttempt(supabaseAdmin, ip, idHash, true);
-
-      const { error: updateErr } = await supabaseAdmin
-        .from('profiles')
-        .update({ phone: phone.trim() })
-        .eq('id', match.id);
-      if (updateErr) {
-        console.error('[REGISTER_PHONE] erro ao salvar telefone:', updateErr);
-        throw updateErr;
-      }
-
-      const resetToken = generateResetToken(match.id);
-
-      try {
-        await createAndSendOtp(supabaseAdmin, match.id, phone.trim());
-      } catch (e: any) {
-        console.error('[REGISTER_PHONE] falha ao enviar SMS (code):', e?.code ?? 'unknown');
-        return NextResponse.json({ error: 'Não foi possível enviar o SMS agora. Tente novamente.' }, { status: 503 });
-      }
-
-      return NextResponse.json({ resetToken, maskedPhone: maskPhone(phone.trim()) });
-    }
+    // A AÇÃO 'register-phone' FOI REMOVIDA.
+    //
+    // Ela deixava o aluno cadastrar um telefone provando identidade por nome +
+    // data de nascimento. Só que a data de nascimento era a ÚNICA prova desse
+    // caminho, e apenas 39 dos 1058 alunos a têm preenchida: atendia 3,7% e
+    // devolvia erro para todo o resto (263 falhas de 126 pessoas em um mês).
+    //
+    // Remover só o campo, mantendo o cadastro por nome, transformaria isso em
+    // tomada de conta: bastaria digitar o nome de um aluno, registrar o próprio
+    // telefone e receber o OTP. Por isso o caminho inteiro saiu. Quem não tem
+    // telefone cadastrado vai para a secretaria, que confere identidade
+    // presencialmente.
 
     // AÇÃO: REENVIAR CÓDIGO
     if (action === 'resend') {

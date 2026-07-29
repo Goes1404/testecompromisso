@@ -56,12 +56,17 @@ para de mandar 126 pessoas para uma parede.
 O `PhoneGate` já bloqueia o aluno sem telefone e resolve o caso de quem loga.
 Falta o simétrico:
 
-- **Pedir data de nascimento junto do telefone no gate.** É um campo a mais na
-  mesma tela, e ataca justamente o dado com 3,7% de cobertura. Com os dois, o
-  aluno passa a ter duas provas de identidade em vez de nenhuma.
 - **Cobrir quem não loga há meses.** O gate só alcança quem entra. Medir quantos
   dos 834 acessaram nos últimos 90 dias (`last_access`) dá o tamanho real da
   fila que precisa de mutirão.
+
+> **Data de nascimento saiu do escopo** (decisão de 2026-07-29). O caminho que
+> dependia dela — `register-phone` — foi removido: era a única prova de
+> identidade daquele fluxo, só 39 dos 1058 alunos a têm cadastrada, e mantê-lo
+> sem o campo transformaria o fluxo em tomada de conta (bastaria digitar o nome
+> de um aluno e registrar o próprio telefone). Quem não tem telefone vai para a
+> secretaria, que confere identidade presencialmente — o que num cursinho
+> presencial é mais forte que qualquer prova digital.
 
 ### Fase C — Mutirão de cadastro
 A secretaria usa o filtro novo para ligar/abordar presencialmente e preencher
