@@ -282,10 +282,23 @@ export async function POST(request: Request) {
 
       // Anti-takeover: mesma mensagem genérica tanto pra "não achou" quanto pra
       // "achou mas a conta já tem telefone" — não revela qual dos dois aconteceu.
+      //
+      // A mensagem NÃO diz "confira seus dados", como dizia antes: apenas 39 dos
+      // 1058 alunos têm data de nascimento cadastrada, então na esmagadora
+      // maioria das vezes o aluno digitou tudo certo e não há o que conferir —
+      // é o cadastro que está incompleto. Culpar o aluno o fazia tentar de novo
+      // em vão (263 falhas de 126 pessoas distintas em um mês). Mandamos direto
+      // para o atendimento, que resolve na hora.
       if (!match || match.phone) {
         await recordRecoverAttempt(supabaseAdmin, ip, idHash, false);
         return NextResponse.json(
-          { error: 'Os dados não conferem com nenhum cadastro. Confira nome e data de nascimento — ou procure a secretaria.' },
+          {
+            error:
+              'Não conseguimos confirmar seus dados automaticamente. ' +
+              'Muitos cadastros ainda não têm data de nascimento — quando é esse o caso, ' +
+              'não há como validar por aqui. Fale com a secretaria pelo WhatsApp: ela redefine sua senha na hora.',
+            contactSupport: true,
+          },
           { status: 401 }
         );
       }
