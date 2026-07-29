@@ -24,6 +24,13 @@ export interface ExtractedPdfImage {
   y: number;
   /** Número da questão impressa mais próxima acima da imagem, se detectado. */
   questionNumber: number | null;
+  /**
+   * Retângulo ocupado pela imagem, em coordenadas PDF. Permite a quem consome
+   * saber o que mais existe naquela região da página — por exemplo, distinguir
+   * uma figura de verdade de um retângulo decorativo que serve apenas de fundo
+   * para um texto de apoio.
+   */
+  rect: { minX: number; minY: number; maxX: number; maxY: number };
 }
 
 export interface PdfExtractionResult {
@@ -197,6 +204,7 @@ export async function extractPdfContent(file: File, fileLabel: string): Promise<
   const markers: QuestionMarker[] = [];
   const rawImages: Array<{
     blob: Blob; page: number; yTop: number; yBase: number; centerX: number; column: 0 | 1;
+    rect: { minX: number; minY: number; maxX: number; maxY: number };
   }> = [];
   const seenFingerprints = new Map<string, number>();
 
@@ -300,6 +308,7 @@ export async function extractPdfContent(file: File, fileLabel: string): Promise<
         yBase: p.minY,
         centerX,
         column: twoCols && centerX >= pageWidth * 0.5 ? 1 : 0,
+        rect: { minX: p.minX, minY: p.minY, maxX: p.maxX, maxY: p.maxY },
       });
     }
   }
@@ -361,6 +370,7 @@ export async function extractPdfContent(file: File, fileLabel: string): Promise<
         page: img.page,
         y: img.yTop,
         questionNumber,
+        rect: img.rect,
       };
     });
 

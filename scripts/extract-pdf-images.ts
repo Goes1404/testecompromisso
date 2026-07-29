@@ -77,7 +77,7 @@ function db(): SupabaseClient {
 /** Manifesto: rótulo da prova → { número da questão → URL pública }. */
 export type ImageManifest = Record<string, Record<number, string>>;
 
-type ExtractedImage = { questionNumber: number | null; page: number; base64: string };
+type ExtractedImage = { questionNumber: number | null; page: number; charsDentro: number; base64: string };
 type ExtractResult = { text: string; images: ExtractedImage[] };
 
 /**
@@ -100,14 +100,43 @@ export function pageByQuestion(text: string): Map<number, number> {
 }
 
 /**
+ * Máximo de caracteres do PDF dentro do retângulo para a imagem ainda contar
+ * como figura. Calibrado conferindo recortes um a um: figuras ficam em 0-72
+ * (o que aparece é a legenda de fonte), enquanto caixas de texto de apoio dão
+ * 330, 551, 620, 836, 885.
+ */
+const MAX_CHARS_FIGURA = 200;
+
+/**
+ * Proporção máxima largura/altura. Faixas do tipo "responda às questões 44 e
+ * 45" têm texto curto demais para cair no filtro de caracteres, mas são tiras
+ * de ~13:1. A figura mais alongada que encontrei conferindo os recortes foi uma
+ * tirinha de quadrinhos, em 2,7:1.
+ */
+const MAX_PROPORCAO = 6;
+
+/** Dimensões do PNG lidas do cabeçalho IHDR, sem decodificar a imagem. */
+function pngSize(base64: string): { w: number; h: number } | null {
+  const head = Buffer.from(base64.slice(0, 64), "base64");
+  if (head.length < 24) return null;
+  return { w: head.readUInt32BE(16), h: head.readUInt32BE(20) };
+}
+
+/**
  * Escolhe a melhor imagem para cada questão.
  *
- * Duas correções sobre o pareamento cru: (1) só aceita imagem que esteja na
- * mesma página em que a questão começa (ou na seguinte, para figura que
- * transborda) — sem isso o logotipo da margem da capa era atribuído a uma
- * questão do meio da prova; (2) havendo mais de uma candidata, fica com a
- * maior, já que faixas decorativas e selos são muito menores que um mapa ou
- * gráfico de verdade.
+ * Três correções sobre o pareamento cru, todas encontradas conferindo os
+ * recortes visualmente:
+ *
+ * 1. Só aceita imagem na mesma página em que a questão começa (ou na seguinte,
+ *    para figura que transborda). Sem isso o logotipo da margem da capa era
+ *    atribuído a uma questão do meio da prova.
+ * 2. Descarta o que é caixa de texto, não figura. O vestibulinho desenha os
+ *    textos de apoio dentro de um retângulo com fundo sombreado; esse fundo é
+ *    uma imagem, então o recorte saía com o texto por cima — metade das
+ *    "imagens" eram enunciados repetidos, ou banners do tipo "responda às
+ *    questões 44 e 45".
+ * 3. Havendo mais de uma candidata, fica com a maior.
  */
 export function pickImages(
   images: ExtractedImage[],
@@ -121,6 +150,9 @@ export function pickImages(
     const qPage = pageOf.get(n);
     if (qPage === undefined) continue;
     if (img.page !== qPage && img.page !== qPage + 1) continue;
+    if (img.charsDentro > MAX_CHARS_FIGURA) continue;
+    const dim = pngSize(img.base64);
+    if (dim && dim.h > 0 && dim.w / dim.h > MAX_PROPORCAO) continue;
     const size = Buffer.from(img.base64, "base64").length;
     if (size < minBytes) continue;
     const atual = best.get(n);
@@ -173,12 +205,39 @@ window.__extractForNode = async function (data, label) {
       r.readAsDataURL(blob);
     });
   }
+  // Quanto TEXTO do PDF cai dentro do retangulo de cada imagem. E o sinal que
+  // separa figura de caixa decorativa: o vestibulinho desenha os textos de
+  // apoio dentro de um retangulo com fundo sombreado, e esse fundo e uma
+  // imagem -- o recorte sai com o texto por cima. Figura de verdade tem quase
+  // nenhum caractere do PDF dentro da sua area.
+  var doc = await window.pdfjsLib.getDocument(new Uint8Array(data)).promise;
+  var charsPorPagina = {};
+  for (var pg = 1; pg <= doc.numPages; pg++) {
+    var pagina = await doc.getPage(pg);
+    var tc = await pagina.getTextContent();
+    var itens = [];
+    for (var k = 0; k < tc.items.length; k++) {
+      var it = tc.items[k];
+      if (!it.str || !it.str.trim()) continue;
+      itens.push({ x: it.transform[4], y: it.transform[5], n: it.str.trim().length });
+    }
+    charsPorPagina[pg] = itens;
+  }
+
   var out = [];
   for (var i = 0; i < res.images.length; i++) {
     var img = res.images[i];
+    var dentro = 0;
+    var lista = charsPorPagina[img.page] || [];
+    for (var j = 0; j < lista.length; j++) {
+      var t = lista[j];
+      if (t.x >= img.rect.minX && t.x <= img.rect.maxX &&
+          t.y >= img.rect.minY && t.y <= img.rect.maxY) dentro += t.n;
+    }
     out.push({
       questionNumber: img.questionNumber,
       page: img.page,
+      charsDentro: dentro,
       base64: await toBase64(img.file),
     });
   }

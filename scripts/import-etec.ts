@@ -66,6 +66,15 @@ function numFlag(name: string, def: number): number {
 const DRY = args.includes("--dry") || args.includes("--dry-run");
 const DIR = strFlag("--dir", "C:/Users/User/AppData/Local/Temp/etec");
 const LIMIT = numFlag("--limit", 999);
+/**
+ * Rótulos de prova a processar (ex.: `--only 2019-1,2019-2`). Serve para
+ * retomar uma execução interrompida sem gastar cota de IA reprocessando o que
+ * já entrou.
+ */
+const ONLY = strFlag("--only", "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 // ─── Clients ─────────────────────────────────────────────────────────────────
 const supabase = createClient(
@@ -186,15 +195,34 @@ async function importProva(p: Prova, subjectMap: Record<string, string>) {
     if (MICRO_TOPICS_BY_SUBJECT[mat]) microMapCache[mat] = await ensureMicroTopics(sid, MICRO_TOPICS_BY_SUBJECT[mat]);
   }
 
-  // 4) Cria o exame.
-  const { data: exam, error: examErr } = await supabase
+  // 4) Cria o exame — ou reaproveita, se já existir.
+  //
+  // Antes esta linha era um INSERT puro, então reexecutar o script duplicava
+  // todas as provas já importadas. Isso importa muito na prática: uma execução
+  // pode parar no meio (falha de rede, cota da IA esgotada) e a retomada
+  // natural é rodar de novo. Agora a retomada é segura.
+  const examTitle = `ETEC ${p.id}`;
+  const { data: existente } = await supabase
     .from("exams")
-    .insert({ title: `ETEC ${p.id}`, year: p.year, exam_type: "etec" })
     .select("id")
-    .single();
-  if (examErr || !exam) {
-    console.error(`  ⚠️ erro ao criar exame: ${examErr?.message}`);
-    return { inserted: 0, skipped: 0, dropped };
+    .eq("title", examTitle)
+    .eq("exam_type", "etec")
+    .maybeSingle();
+
+  let exam = existente ?? null;
+  if (!exam) {
+    const { data: novo, error: examErr } = await supabase
+      .from("exams")
+      .insert({ title: examTitle, year: p.year, exam_type: "etec" })
+      .select("id")
+      .single();
+    if (examErr || !novo) {
+      console.error(`  ⚠️ erro ao criar exame: ${examErr?.message}`);
+      return { inserted: 0, skipped: 0, dropped };
+    }
+    exam = novo;
+  } else {
+    console.log(`  ↻ prova "${examTitle}" já existia — reaproveitando`);
   }
 
   // 5) Insere as questões e vincula ao exame.
@@ -246,7 +274,12 @@ async function main() {
     process.exit(1);
   }
 
-  const provas = discoverProvas(DIR).slice(0, LIMIT);
+  const todas = discoverProvas(DIR);
+  const provas = (ONLY.length > 0 ? todas.filter((p) => ONLY.includes(p.id)) : todas).slice(0, LIMIT);
+  if (ONLY.length > 0) {
+    const faltando = ONLY.filter((id) => !todas.some((p) => p.id === id));
+    if (faltando.length > 0) console.warn(`⚠️  sem arquivos para: ${faltando.join(", ")}`);
+  }
   if (provas.length === 0) {
     console.error(`❌ Nenhuma prova em ${DIR}. Rode antes: bash scripts/fetch-etec-pdfs.sh`);
     process.exit(1);
