@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Trophy, Medal, Crown, Zap, Loader2, ArrowRight } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
+import { rankingTrackFor } from '@/lib/exam-types';
 import Link from 'next/link';
 
 type RankEntry = {
@@ -25,13 +26,13 @@ export function WeeklyRankingWidget({ userId, examTarget }: Props) {
 
   const load = useCallback(async () => {
     try {
-      const rawTarget = (examTarget || 'enem').toLowerCase();
-      const audience = rawTarget.includes('etec') ? 'etec' : 'enem';
+      // Trilha normalizada — ver nota em rankingTrackFor.
+      const audience = rankingTrackFor(examTarget);
 
       const { data, error } = await supabase
         .from('weekly_ranking')
         .select('student_id, full_name, avatar_url, exam_target, weekly_xp, position')
-        .eq('exam_target', audience)
+        .eq('track', audience)
         .order('position', { ascending: true })
         .limit(5);
 

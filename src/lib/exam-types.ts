@@ -109,3 +109,16 @@ export function allowedExamTypesFor(rawTarget: string | null | undefined): ExamT
   if (target.includes('etec')) return ['etec'];
   return ['enem', 'fuvest'];
 }
+
+/**
+ * Trilha canônica para o ranking. Espelha a função `ranking_track` do banco.
+ *
+ * `profiles.exam_target` é texto livre e tem 6 variações em produção: `ENEM`,
+ * `enem`, `ETEC`, `etec`, `Não informado` e nulo. Filtrar o ranking pelo valor
+ * bruto criava listas paralelas — quem tinha `enem` minúsculo disputava contra
+ * 9 pessoas em vez de 357, e aparecia como "1º lugar" com menos XP que o
+ * primeiro real. Com prêmio em jogo isso premiaria a pessoa errada.
+ */
+export function rankingTrackFor(rawTarget: string | null | undefined): 'enem' | 'etec' {
+  return (rawTarget || '').toLowerCase().includes('etec') ? 'etec' : 'enem';
+}
