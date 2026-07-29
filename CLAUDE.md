@@ -130,7 +130,8 @@ já **aplicadas em produção** e versionadas em `/supabase/migrations` e `/supa
 
 | Sev | Local | Correção |
 |-----|-------|----------|
-| ✅ CRÍTICO | `direct_messages` e ~30 tabelas (`profiles`, `essay_submissions`, `student_question_answers`, `material_annotations`, `simulation_attempts`, `invitations`, fóruns, lives, trilhas, materiais…) | Policies residuais de "modo demo" (`Acesso Demo`, `open_*`) com `USING/WITH CHECK true` anulavam as restritas via OR. Em `profiles` permitia escalada de privilégio (qualquer autenticado alterava o próprio `role`). **Removidas; mantidas/criadas policies por dono ou papel.** Migrations `20260710010000`/`020000`/`030000`. |
+| ✅ CRÍTICO | `direct_messages` e ~30 tabelas (`profiles`, `essay_submissions`, `student_question_answers`, `material_annotations`, `simulation_attempts`, `invitations`, fóruns, lives, trilhas, materiais…) | Policies residuais de "modo demo" (`Acesso Demo`, `open_*`) com `USING/WITH CHECK true` anulavam as restritas via OR. Em `profiles` permitia escalada de privilégio (qualquer autenticado alterava o próprio `role`). **Removidas; mantidas/criadas policies por dono ou papel.** Migrations `20260710010000`/`020000`/`030000`. ⚠️ **A remoção NÃO fechou a escalada** — ver linha abaixo. |
+| ✅ CRÍTICO | `profiles.role` (escalada de privilégio) | Remover as policies abertas não bastou: as policies de dono que ficaram (`auth.uid() = id`) valem para **qualquer coluna**, inclusive `role`, e a tabela não tinha trigger nenhum. Confirmado por simulação de RLS em 2026-07-29: como aluno autenticado, `UPDATE profiles SET role='admin' WHERE id=<ele mesmo>` era aceito sem erro. **Corrigido** pelo trigger `trg_profiles_block_role_escalation` (migration `20260729090000`), que barra a troca de papel em sessão de usuário comum e mantém `service_role` e admin/staff. A edição legítima do próprio perfil (telefone, nome, avatar) continua funcionando. |
 | ✅ CRÍTICO | 8 tabelas com RLS **desligada** (`trails`, `classes`, `user_progress`, `student_checklists`, `activity_logs`, `forum_bans`, `library_items`, `subjects`) + `learning_trails`/`learning_modules`/`notices`/`quiz_submissions` | **RLS religada** com policies mínimas corretas. |
 | ✅ CRÍTICO | edge function `learning-trails-crud` | SQL injection (concatenação de string com `id` da URL) + JWT sem verificar assinatura, rodando com service role. **Reescrita** para usar supabase-js com o JWT do chamador (RLS + query builder parametrizado). |
 | ✅ CRÍTICO | edge functions `delete-all-students-only`, `reset-students-only`, `reset-user-password-next-login`, `create-auth-users`, `backfill-teachers-auth` | Rodavam com service role gateadas só por `verify_jwt` (qualquer sessão, até de aluno) — permitiam apagar todos os alunos, resetar/assumir a conta admin, escalar privilégio. **Adicionado guard `requireAdmin` (checa `profiles.role='admin'`).** Não são usadas pelo app (scripts one-off). |
@@ -176,9 +177,12 @@ sintéticos (login interno, sem caixa de e-mail real), então recuperação por 
 A prova de identidade é **posse do aparelho** → enviar **OTP via SMS para o número já cadastrado**.
 
 Fases:
-1. **Telefone obrigatório (gate):** transformar o card "Cadastre seu Telefone" da home num
-   bloqueio igual ao `must_change_password` — sem telefone, não acessa o dashboard. Grátis,
-   não depende de SMS, faz a cobertura de telefone tender a 100% com o tempo. *(Pendente)*
+1. **Telefone obrigatório (gate):** ✅ **IMPLEMENTADO** — `src/components/PhoneGate.tsx`, montado em
+   `src/app/dashboard/layout.tsx`. Bloqueia o dashboard para aluno sem telefone, igual ao
+   `must_change_password`, com saída por "Sair da conta" para não prender ninguém na tela.
+   ⚠️ **Cobertura ainda baixa:** em 2026-07-29, **224 de 1110 perfis** têm telefone (20%); entre
+   alunos, **834 de 1058 estão sem**. O gate só alcança quem faz login a partir de agora, então
+   a Fase 3 (fallback pela secretaria) segue necessária para quem não acessa há tempo.
 2. **Reset self-service por SMS OTP:** ✅ **IMPLEMENTADO** — aluno informa o nome → servidor acha a conta → envia
    OTP ao telefone cadastrado → valida OTP → permite trocar a senha. Integração com provedor SMS
    (Twilio). Detalhes da implementação em `docs/superpowers/plans/2026-07-08-forgot-password-sms-otp.md`.
