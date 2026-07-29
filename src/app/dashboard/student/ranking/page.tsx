@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
+import { rankingTrackFor } from '@/lib/exam-types';
 import { useToast } from '@/hooks/use-toast';
 import {
   Trophy, Medal, Crown, Flame, Star,
@@ -106,16 +107,18 @@ export default function RankingPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const rawTarget = (
-        profile?.exam_target || user?.user_metadata?.exam_target ||
-        profile?.profile_type || 'enem'
-      ).toLowerCase();
-      const audience = rawTarget.includes('etec') ? 'etec' : 'enem';
+      // Filtra pela trilha normalizada (`track`), nao pelo `exam_target` cru.
+      // O valor cru tem 6 variacoes em producao (ENEM/enem/ETEC/etec/Nao
+      // informado/nulo): comparar com 'enem' minusculo casava so com 9 alunos,
+      // e o aluno cadastrado como 'ENEM' via um ranking que nao o incluia.
+      const audience = rankingTrackFor(
+        profile?.exam_target || user?.user_metadata?.exam_target || profile?.profile_type
+      );
 
       const { data, error } = await supabase
         .from('weekly_ranking')
         .select('student_id, full_name, avatar_url, exam_target, weekly_xp, total_xp, position')
-        .eq('exam_target', audience)
+        .eq('track', audience)
         .order('position', { ascending: true })
         .limit(50);
 
