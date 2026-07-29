@@ -51,6 +51,11 @@ export interface ClassifyOptions {
   /** Cliente OpenAI injetável (testes/reuso); por padrão instancia com OPENAI_API_KEY. */
   client?: OpenAI;
   model?: string;
+  /**
+   * Regras extras de desempate, anexadas ao prompt. Útil quando a prova é
+   * interdisciplinar e o tema do texto de apoio não indica a matéria avaliada.
+   */
+  guidance?: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -106,6 +111,7 @@ export async function classifyIntoCategories(
     `Você classifica questões do ENEM ${label} na categoria correta. ` +
     `Escolha EXATAMENTE uma destas categorias para cada questão: ${categories.join(', ')}. ` +
     `Use apenas esses nomes, exatamente como escritos. ` +
+    (opts.guidance ? `${opts.guidance} ` : '') +
     `Responda SOMENTE com JSON no formato ` +
     `{"classifications":[{"id":"<id>","category":"<categoria>"}]} sem texto extra.`;
 

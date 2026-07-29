@@ -48,7 +48,10 @@ export interface EtecStructuredQuestion {
 export interface StructureOptions {
   client?: OpenAI;
   model?: string;
-  /** Quantas questões por chamada de IA (padrão 25). */
+  /**
+   * Quantas questões por chamada de IA (padrão 10). Era 25, mas com o caderno
+   * inteiro no contexto a resposta não cabia e metade das questões se perdia.
+   */
   chunkSize?: number;
   /** Total de questões da prova (padrão 50). */
   totalQuestions?: number;
@@ -95,6 +98,9 @@ async function structureRange(
   const completion = await client.chat.completions.create({
     model,
     temperature: 0,
+    // Sem teto explícito a resposta era cortada no meio do JSON, o parse falhava
+    // e o lote inteiro voltava vazio — em silêncio.
+    max_tokens: 16000,
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: system },
@@ -107,6 +113,16 @@ async function structureRange(
   try {
     parsed = responseSchema.parse(JSON.parse(raw));
   } catch {
+    // Resposta truncada ou inválida. Divide a faixa e tenta de novo: metade das
+    // questões cabe na resposta. Só desiste quando a faixa é de uma só questão.
+    if (to > from) {
+      const mid = Math.floor((from + to) / 2);
+      const [a, b] = [
+        await structureRange(examText, from, mid, client, model),
+        await structureRange(examText, mid + 1, to, client, model),
+      ];
+      return [...a, ...b];
+    }
     return [];
   }
 
@@ -125,7 +141,7 @@ export async function structureQuestions(
   const client = opts.client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = opts.model ?? DEFAULT_MODEL;
   const total = opts.totalQuestions ?? 50;
-  const chunk = opts.chunkSize ?? 25;
+  const chunk = opts.chunkSize ?? 10;
 
   const all: EtecStructuredQuestion[] = [];
   for (let from = 1; from <= total; from += chunk) {
