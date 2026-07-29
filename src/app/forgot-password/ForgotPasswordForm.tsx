@@ -13,6 +13,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Step = "phone" | "fallback" | "otp";
 
+/**
+ * Atendimento da secretaria por WhatsApp.
+ *
+ * A recuperação automática exige telefone cadastrado ou data de nascimento, e
+ * hoje a maioria das contas não tem nenhum dos dois — para essas pessoas o
+ * atendimento humano é o único caminho, não um plano B.
+ *
+ * Número em formato internacional, sem símbolos, como o wa.me exige.
+ */
+const WHATSAPP_NUMBER = "5511950085875";
+const WHATSAPP_MESSAGE =
+  "Olá! Não consegui recuperar minha senha na plataforma do Cursinho Compromisso e preciso de ajuda.";
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+
 async function callApi(action: string, payload: Record<string, unknown>) {
   const res = await Promise.race([
     fetch("/api/student/primeiro-acesso", {
@@ -197,6 +211,24 @@ export function ForgotPasswordForm() {
             <AlertDescription className="text-[11px] font-bold">{error}</AlertDescription>
           </Alert>
         )}
+
+        {/* Saída pelo atendimento humano. A recuperação automática depende de
+            telefone ou data de nascimento no cadastro, e a maioria das contas
+            ainda não tem nenhum dos dois — sem esta saída o aluno fica sem
+            caminho nenhum. Aparece sempre, e com destaque quando deu erro. */}
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center justify-center gap-2 w-full h-12 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 ${
+            error
+              ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+              : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" />
+          Falar com a secretaria no WhatsApp
+        </a>
 
         {step === "phone" && (
           <form onSubmit={handlePhoneLookup} className="space-y-4">
