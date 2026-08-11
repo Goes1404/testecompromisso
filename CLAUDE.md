@@ -113,15 +113,32 @@ servidor+cliente e rotação de segredo (decisão do time):
 | Sev | Local | Problema |
 |-----|-------|----------|
 | ✅ CORRIGIDO | `api/auth/reset-password`, `api/admin/{create-user,delete-user,generate-link,generate-registration-link}` | Antes protegidas só pela string fixa `'compromisso2026'`. **Agora exigem sessão de admin/staff via `requireAdminUser()`.** ⚠️ Ainda falta: rotacionar a senha `'compromisso2026'` (é também `DEFAULT_PASSWORD` de novos usuários) e limpar os literais inertes `masterPassword` nos clientes. |
-| 🟡 MÉDIO | `api/student/primeiro-acesso` (action `search`) | `search` (usada pelo fluxo de primeiro acesso) ainda devolve `userId`/`email` e permite enumeração de usuários. O reset de senha (`identify`/`confirm`) já exige prova de identidade + SMS OTP + rate limit (ver Fase 2 do plano de recuperação). **Fix:** blindar `search` para não devolver dados identificáveis. |
-| 🟠 ALTO | `lib/registration-token.ts` | HMAC dos tokens de cadastro usa a própria `SUPABASE_SERVICE_ROLE_KEY` como chave. Usar segredo dedicado (`REGISTRATION_TOKEN_SECRET`). |
-| 🟠 ALTO | `api/student/weekly-summary` | IDOR: lê dados de qualquer `userId` do body com service role. |
-| 🟡 MÉDIO | `api/push/notify` (branch `chat`) | Usuário autenticado pode enviar push com conteúdo arbitrário a qualquer `receiverId`. |
-| 🟡 MÉDIO | `api/essay-save` | Insere `essay_submissions` com `user_id`/`score` do body sem auth. |
-| 🟢 BAIXO | `api/student/self-register` | Sem rate limit (spam de contas via token vazado). |
+| ✅ CORRIGIDO (11/08) | `api/student/primeiro-acesso` (action `search`) | Deixou de devolver o `id` do perfil (a tela nunca usou) e ganhou rate limit por IP e por nome, reaproveitando o limitador do reset. O e-mail continua sendo devolvido de propósito: é o login que o aluno precisa descobrir. Fechar isso mataria o primeiro acesso — o que dá para impedir é a varredura. |
+| ✅ CORRIGIDO (11/08) | `lib/registration-token.ts` | Passa a usar `REGISTRATION_TOKEN_SECRET`. A chave antiga continua aceita **só na verificação**, para os links já emitidos valerem até expirar (7 dias). Comparação com `timingSafeEqual`. ⚠️ Defina a variável em produção — sem ela, o código cai no legado e avisa no log. |
+| ✅ CORRIGIDO | `api/student/weekly-summary` | Usa `getAuthUser()` e ignora o `userId` do corpo. |
+| ✅ CORRIGIDO (11/08) | `api/push/notify` (branch `chat`) | O texto não vem mais do corpo: a rota lê a mensagem gravada nos últimos 2 minutos entre remetente e destinatário. Prova que a conversa existe e impede forjar mensagem em nome de outra pessoa. |
+| ✅ CORRIGIDO | `api/essay-save` | Exige sessão (`getAuthUser()`) e grava sempre para o usuário autenticado. |
+| ✅ CORRIGIDO (11/08) | `api/student/self-register` | Rate limit por IP (40/hora — alto porque uma turma inteira usa o mesmo Wi-Fi). |
 
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
-novos usuários) e migrar as rotas acima para `requireAdminUser()`.
+novos usuários) e a `SUPABASE_SERVICE_ROLE_KEY`. São as duas únicas pendências que sobraram
+desta lista, e ambas dependem de acesso ao painel.
+
+### ⚠️ Contas duplicadas (descoberto em 11/08/2026)
+
+**201 alunos têm mais de uma conta** — 403 contas, 202 excedentes. A base tem 1.057 contas
+para cerca de 855 alunos reais. "Abner de Jesus Jales da Silva" tem TRÊS contas, cada uma com
+um pedaço do boletim.
+
+Causa: `generateEmail()` deriva o login do nome, e a regra mudou ao longo do tempo —
+`abnerjsilva@` (inicial do primeiro nome do meio), `abnerdsilva@` (inicial da segunda palavra,
+que aqui é a preposição "de") e `abnersilva@` (regra de duas partes). Como nomes com preposição
+são a maioria em português, isso atingiu metade do cadastro.
+
+`create-user` passou a recusar nome já existente (com saída por `emailOverride` para homônimos
+reais), então o problema não cresce. **Fundir as contas existentes continua pendente e é decisão
+da secretaria** — escolher qual sobrevive é escolha sobre o histórico do aluno.
+Relatório: `npx tsx scripts/duplicatas-de-alunos.ts --csv`.
 
 ### 🔒 Auditoria de RLS + Edge Functions (2026-07-10) — aplicado em produção
 
