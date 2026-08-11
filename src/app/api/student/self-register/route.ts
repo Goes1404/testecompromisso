@@ -52,6 +52,32 @@ export async function POST(request: Request) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // Rate limit por IP. Esta rota cria conta sem sessão, protegida só pelo
+    // token de convite — se um token vazar, dá para encher a base de contas
+    // falsas até alguém perceber. O limite é alto porque uma turma inteira
+    // pode se cadastrar do mesmo Wi-Fi da escola no mesmo dia.
+    const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+      || request.headers.get('x-real-ip') || 'unknown';
+    try {
+      const desde = new Date(Date.now() - 3_600_000).toISOString();
+      const { count } = await supabaseAdmin
+        .from('password_reset_attempts')
+        .select('id', { count: 'exact', head: true })
+        .eq('ip', ip)
+        .eq('identifier', 'self-register')
+        .gte('created_at', desde);
+      if ((count ?? 0) >= 40) {
+        return NextResponse.json(
+          { error: 'Muitos cadastros deste local na última hora. Procure a secretaria.' },
+          { status: 429 },
+        );
+      }
+      await supabaseAdmin.from('password_reset_attempts')
+        .insert({ ip, identifier: 'self-register', success: true });
+    } catch {
+      // Tabela indisponível: degrada sem travar cadastro legítimo.
+    }
+
     const email = generateEmail(fullName);
     if (!email) {
       return NextResponse.json({ error: 'Não foi possível gerar e-mail a partir do nome fornecido.' }, { status: 400 });

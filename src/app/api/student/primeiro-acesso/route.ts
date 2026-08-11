@@ -142,6 +142,25 @@ export async function POST(request: Request) {
       const { fullName } = body;
       if (!fullName?.trim()) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 });
 
+      // Esta busca é, por construção, um oráculo: digite um nome e descubra se
+      // a pessoa estuda aqui e qual é o login dela. Não dá para fechar sem
+      // matar o primeiro acesso — o aluno precisa justamente descobrir o
+      // próprio login —, mas dá para impedir a VARREDURA, que é o que
+      // transforma isso em vazamento de base.
+      //
+      // O limite por IP é generoso de propósito: na escola muitos alunos
+      // dividem o mesmo Wi-Fi, e travar cedo demais quebraria o fluxo legítimo
+      // numa sala inteira fazendo o primeiro acesso ao mesmo tempo.
+      const ipBusca = getClientIp(request);
+      const hashBusca = hashIdentifier(fullName);
+      if (await checkRecoverRateLimit(supabaseAdmin, ipBusca, hashBusca)) {
+        return NextResponse.json(
+          { error: 'Muitas buscas seguidas. Espere alguns minutos e tente de novo.' },
+          { status: 429 },
+        );
+      }
+      await recordRecoverAttempt(supabaseAdmin, ipBusca, hashBusca, true);
+
       console.log('[PRIMEIRO_ACESSO] Busca de aluno recebida');
 
       const generatedEmail = generateEmail(fullName.trim());
@@ -161,9 +180,12 @@ export async function POST(request: Request) {
       }
 
       if (profiles && profiles.length > 0) {
+        // Sem o `id`: a tela nunca usou (só exibe nome e e-mail de login), e o
+        // uuid do perfil é a chave usada em várias rotas — não há motivo para
+        // entregá-lo a quem só digitou um nome.
         return NextResponse.json({
           found: true,
-          user: { id: profiles[0].id, email: profiles[0].email, name: profiles[0].name }
+          user: { email: profiles[0].email, name: profiles[0].name }
         });
       } else {
         return NextResponse.json({ found: false });

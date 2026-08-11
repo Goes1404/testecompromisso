@@ -39,10 +39,38 @@ export async function POST(req: NextRequest) {
 
     // ── Caso 1: Mensagem direta no chat ──────────────────────
     if (body.type === "chat") {
-      if (!body.receiverId || !body.content) {
-        return NextResponse.json({ error: "receiverId e content obrigatórios" }, { status: 400 });
+      if (!body.receiverId) {
+        return NextResponse.json({ error: "receiverId obrigatório" }, { status: 400 });
       }
-      const preview = body.content.length > 140 ? body.content.slice(0, 140) + "…" : body.content;
+
+      // A notificação é derivada da mensagem GRAVADA, não do texto enviado no
+      // corpo. Antes, qualquer sessão autenticada podia disparar push com
+      // conteúdo arbitrário para qualquer usuário — bastava informar o id do
+      // destinatário. O nome do remetente ia junto, então dava para forjar uma
+      // mensagem convincente de outra pessoa.
+      //
+      // Buscar a mensagem real resolve as duas coisas de uma vez: prova que a
+      // conversa existe e garante que o texto notificado é o que foi de fato
+      // enviado.
+      const { data: mensagem } = await admin
+        .from("direct_messages")
+        .select("content, created_at")
+        .eq("sender_id", user.id)
+        .eq("receiver_id", body.receiverId)
+        .gte("created_at", new Date(Date.now() - 120_000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!mensagem) {
+        return NextResponse.json(
+          { error: "Nenhuma mensagem recente para notificar." },
+          { status: 409 },
+        );
+      }
+
+      const texto = mensagem.content ?? "";
+      const preview = texto.length > 140 ? texto.slice(0, 140) + "…" : texto;
       const result = await sendPushToUser(body.receiverId, {
         title: senderName,
         body: preview,
