@@ -81,8 +81,15 @@ export default function ResetPasswordForm() {
       // Promise.race garante que a chamada nunca trave indefinidamente
       // (ex.: service worker antigo interceptando o fetch ou rede lenta),
       // o que deixava a tela "salvando" para sempre.
+      // `must_change_password: false` junto com a senha: o aluno acabou de
+      // escolher uma senha nova aqui, então forçá-lo à tela de primeiro acesso
+      // logo em seguida seria pedir a mesma coisa duas vezes. Antes isso não
+      // aparecia porque a tela de primeiro acesso era inalcançável.
       const { error } = await Promise.race([
-        supabase.auth.updateUser({ password }),
+        supabase.auth.updateUser({
+          password,
+          data: { must_change_password: false },
+        }),
         new Promise<never>((_, reject) =>
           setTimeout(
             () => reject(new Error("Tempo esgotado. Verifique sua conexão e tente novamente.")),
