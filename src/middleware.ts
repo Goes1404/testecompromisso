@@ -116,7 +116,31 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    if (request.nextUrl.pathname === '/dashboard/first-access') {
+    // ── Primeiro acesso ──────────────────────────────────────────────────
+    //
+    // Antes, QUALQUER acesso a `/dashboard/first-access` era mandado para a
+    // home — sem condição nenhuma. A tela existia, funcionava (troca a senha
+    // no passo 1, completa o perfil no passo 2), e era inalcançável.
+    //
+    // Duas consequências em produção: 366 alunos ficaram com
+    // `must_change_password: true` para sempre, ainda usando a senha padrão; e
+    // o link que a secretaria gera em `/api/admin/generate-link` aponta
+    // justamente para `/dashboard/first-access` — o aluno clicava, era jogado
+    // para a home e nunca trocava a senha.
+    //
+    // A condição correta é o metadado, não a rota. Assim não há o
+    // redirect-loop que motivou o bloqueio original: quem precisa trocar entra
+    // e fica; quem já trocou é mandado para fora.
+    const precisaTrocarSenha = user?.user_metadata?.must_change_password === true;
+    const estaNoPrimeiroAcesso = request.nextUrl.pathname === '/dashboard/first-access';
+
+    if (precisaTrocarSenha && !estaNoPrimeiroAcesso) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/dashboard/first-access'
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    if (!precisaTrocarSenha && estaNoPrimeiroAcesso) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/dashboard/home'
       return NextResponse.redirect(redirectUrl)
