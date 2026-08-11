@@ -107,12 +107,21 @@ alunos não têm nem telefone nem data de nascimento.
 secretaria (reset direto ou link de recuperação), que é adequado a um cursinho
 presencial onde a identidade se prova no balcão.
 
-### 1.3 · Separar as 328 contas do import
+### 1.3 · Situação de acesso — ✅ FEITO (11/08)
 
-Criadas em 14/07 pela importação de boletim, todas ETEC, 319 nunca logaram.
-Não devem ser apagadas — as notas importadas pertencem a elas —, mas precisam
-ser marcadas para não distorcerem toda métrica. A view `funil_alunos` já as
-exclui; falta o mesmo no restante dos relatórios.
+A proposta inicial era excluir os 580 alunos que nunca entraram. A verificação
+mostrou que **525 deles têm histórico acadêmico**: apagá-los levaria junto 661
+tentativas de prova (`exam_attempts` → `auth.users` com CASCADE) e 430 linhas de
+boletim (`report_card_entries` → `profiles` com CASCADE). Só 55 não têm nada — e
+nenhum desses veio da importação.
+
+Em vez de apagar, classificar: `listar_status_alunos()` devolve
+`ativo` / `sumido` / `sem_acesso` / `arquivado` por aluno, e o diretório ganhou
+filtro por situação. **A lista "Nunca entraram" é a lista de trabalho da
+secretaria** — são senhas a entregar, não contas a limpar.
+
+`arquivar_aluno(id, motivo)` permite arquivar quem realmente saiu do cursinho,
+sem perder o boletim, e é reversível.
 
 ---
 

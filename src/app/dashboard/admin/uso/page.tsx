@@ -22,6 +22,7 @@ import { Loader2, RefreshCw, AlertTriangle, MonitorSmartphone, Users, Timer } fr
 
 type Funil = {
   base_real: number;
+  sem_acesso: number;
   contas_de_importacao: number;
   ja_entraram: number;
   ativos_30d: number;
@@ -136,10 +137,11 @@ export default function UsoPage() {
   const carregar = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: f, error: erroFunil } = await supabase
-        .from('funil_alunos').select('*').maybeSingle();
+      // Via RPC: a view perdeu o GRANT para `authenticated` porque números de
+      // operação não precisam ser visíveis ao aluno. A função confere o papel.
+      const { data: f, error: erroFunil } = await supabase.rpc('obter_funil_alunos');
       if (erroFunil) throw erroFunil;
-      setFunil(f as Funil);
+      setFunil((Array.isArray(f) ? f[0] : f) as Funil);
 
       // Janela de 14 dias: o suficiente para ver o padrão da semana sem
       // arrastar o histórico inteiro para o navegador.
@@ -167,7 +169,8 @@ export default function UsoPage() {
   useEffect(() => { carregar(); }, [carregar]);
 
   const etapas = funil ? [
-    { label: 'Contas reais', valor: funil.base_real, cor: 'bg-slate-400' },
+    { label: 'Contas reais (sem arquivados)', valor: funil.base_real, cor: 'bg-slate-400' },
+    { label: 'Nunca entraram — falta entregar a senha', valor: funil.sem_acesso, cor: 'bg-rose-400' },
     { label: 'Já entraram alguma vez', valor: funil.ja_entraram, cor: 'bg-blue-500' },
     { label: 'Ativos nos últimos 30 dias', valor: funil.ativos_30d, cor: 'bg-indigo-500' },
     { label: 'Ativos nos últimos 7 dias', valor: funil.ativos_7d, cor: 'bg-violet-500' },
@@ -214,11 +217,14 @@ export default function UsoPage() {
               ))}
             </div>
 
-            {(funil?.contas_de_importacao ?? 0) > 0 && (
+            {(funil?.sem_acesso ?? 0) > 0 && (
               <p className="text-[11px] font-medium text-slate-500 leading-relaxed border-t border-slate-100 pt-3">
-                Fora da conta: <strong>{funil?.contas_de_importacao} contas</strong> criadas pela importação de
-                boletim de 14/07/2026. Quase nenhuma chegou a ser usada — mantê-las no total faria toda taxa
-                aqui parecer metade do que é.
+                Os <strong>{funil?.sem_acesso} alunos que nunca entraram</strong> não são contas para apagar:
+                a maioria tem boletim e nota de prova presencial. O que falta a eles é a senha, não a matrícula.
+                A lista está em <strong>Diretório → Status → “Nunca entraram”</strong>.
+                {(funil?.contas_de_importacao ?? 0) > 0 && (
+                  <> Destas, {funil?.contas_de_importacao} nasceram da importação de boletim de 14/07.</>
+                )}
               </p>
             )}
           </section>

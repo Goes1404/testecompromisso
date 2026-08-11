@@ -388,13 +388,20 @@
       </p>
     </div>
 
-    <div class="item">
-      <span class="id">1.3 — MÉDIO</span>
-      <h3>Separar as 328 contas do import</h3>
+    <div class="item ok">
+      <span class="id">1.3 — FEITO EM 11/08</span>
+      <h3>Situação de acesso: classificar em vez de apagar</h3>
+      <div class="evidencia">
+        Dos 580 que nunca entraram, <b>525 têm histórico acadêmico</b>. Apagá-los levaria junto
+        <b>661 tentativas de prova</b> e <b>430 linhas de boletim</b> — as duas chaves estrangeiras
+        são <span class="mono">ON DELETE CASCADE</span>. Só 55 não têm nada, e nenhum deles veio
+        da importação.
+      </div>
       <p>
-        Criadas em 14/07 pela importação de boletim, todas ETEC, 319 nunca logaram. Não devem ser
-        apagadas — as notas importadas pertencem a elas — mas precisam ser marcadas para não
-        distorcerem as métricas. A view <code>funil_alunos</code> já as exclui; falta o resto.
+        O diretório ganhou filtro por situação — <em>ativo</em>, <em>sumido</em>,
+        <em>nunca entrou</em>, <em>arquivado</em>. A lista “Nunca entraram” é a lista de trabalho
+        da secretaria: são senhas a entregar, não contas a limpar. Arquivar continua possível
+        para quem saiu de fato, sem perder o boletim, e é reversível.
       </p>
     </div>
   </section>
