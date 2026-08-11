@@ -37,6 +37,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
+import { medirCarregamentoDeTela } from "@/lib/perf";
 import { supabase } from "@/app/lib/supabase";
 import Script from "next/script";
 import Link from "next/link";
@@ -109,11 +111,13 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
 
   const loadTrailData = useCallback(async () => {
     if (!trailId || !user) return;
+    const inicioCarga = Date.now();
     try {
       setLoading(true);
       
       const { data: trailData, error: trailError } = await supabase.from('trails').select('*').eq('id', trailId).single();
       if (trailError || !trailData) {
+        trackFalha('aula_trilha_inexistente', trailError ?? 'sem dados');
         toast({ title: "Trilha não encontrada", variant: "destructive" });
         router.push("/dashboard/trails");
         return;
@@ -161,13 +165,23 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
       });
 
       setContents(contentMap);
+      hasLoaded.current = true;
       
       // Auto-select first lesson if none selected
       if (!activeContentId && modulesData[0].id && contentMap[modulesData[0].id]?.length > 0) {
         setActiveContentId(contentMap[modulesData[0].id][0].id);
       }
+      medirCarregamentoDeTela('aula', inicioCarga);
+      trackAcao('aula_carregada', { modulos: modulesData.length });
     } catch (e: any) {
-      console.error("Erro ao carregar aula:", e);
+      // Antes só ia para o console. A tela ficava em branco e o aluno não
+      // tinha como distinguir "aula sem conteúdo" de "falhou ao carregar".
+      trackFalha('aula_falha_carregar', e);
+      toast({
+        title: 'Não foi possível abrir a aula',
+        description: 'Verifique sua conexão e tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -176,7 +190,9 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
   const hasLoaded = useRef(false);
   useEffect(() => {
     if (!hasLoaded.current && trailId && user) {
-      hasLoaded.current = true;
+      // A guarda é marcada dentro de `loadTrailData`, após o sucesso. Marcá-la
+      // aqui fazia uma falha de rede desligar a tela em definitivo: nem voltar
+      // e entrar de novo refazia a busca.
       loadTrailData();
     }
   }, [trailId, user, loadTrailData]);
@@ -263,9 +279,24 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
             playerVars: { 'autoplay': 1, 'modestbranding': 1, 'rel': 0, 'showinfo': 0 },
             events: { 'onStateChange': onPlayerStateChange }
           });
+          trackAcao('aula_video_iniciado');
+        } else {
+          // Este ramo não lançava exceção nenhuma: sem id extraído da URL ou
+          // com a API do YouTube bloqueada (rede de escola costuma bloquear),
+          // o player simplesmente não aparecia e o aluno ficava olhando uma
+          // área vazia. É a falha mais provável desta tela.
+          trackFalha('aula_player_indisponivel', 'YT.Player ausente ou URL sem id', {
+            tem_id: Boolean(vidId),
+            api_pronta: Boolean((window as any).YT?.Player),
+          });
+          toast({
+            title: 'O vídeo não carregou',
+            description: 'Pode ser bloqueio de rede. Tente pelos dados do celular ou avise a secretaria.',
+            variant: 'destructive',
+          });
         }
       } catch (e) {
-        console.error("Erro init player", e);
+        trackFalha('aula_player_falhou', e);
       }
     } else {
       // Clear progress interval if not a video

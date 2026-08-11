@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
+import { trackAcao, trackFalha } from '@/lib/telemetry';
+import { medirCarregamentoDeTela } from '@/lib/perf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -171,6 +173,7 @@ export default function StudentMaterialsPage() {
       ).toLowerCase();
       const tg = rawTarget.includes('etec') ? 'etec' : 'enem';
 
+      const inicioCarga = Date.now();
       const [matRes, viewRes] = await Promise.all([
         supabase
           .from('class_materials')
@@ -180,10 +183,24 @@ export default function StudentMaterialsPage() {
           .order('created_at', { ascending: false }),
         supabase.from('material_views').select('material_id').eq('student_id', user.id),
       ]);
+      // `.data ?? []` sozinho engolia o erro: uma query que falha devolve
+      // data=null sem lançar, e a tela mostrava "nenhum material" — um estado
+      // vazio indistinguível de falha, que é exatamente o que faz o aluno
+      // achar que a plataforma não tem conteúdo.
+      if (matRes.error) throw matRes.error;
+      if (viewRes.error) throw viewRes.error;
+
       setMaterials(matRes.data ?? []);
       setViewedIds(new Set((viewRes.data ?? []).map(v => v.material_id)));
+      medirCarregamentoDeTela('materiais', inicioCarga);
+      trackAcao('materiais_carregados', { total: matRes.data?.length ?? 0, trilha: tg });
     } catch (e) {
-      console.error('Erro ao carregar materiais:', e);
+      trackFalha('materiais_falha_carregar', e);
+      toast({
+        title: 'Não foi possível carregar os materiais',
+        description: 'Verifique sua conexão e toque em atualizar.',
+        variant: 'destructive',
+      });
       setMaterials([]);
     } finally {
       setLoading(false);
@@ -205,7 +222,27 @@ export default function StudentMaterialsPage() {
       url = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
     }
 
-    window.open(url, '_blank', 'noopener,noreferrer');
+    // `window.open` devolve null quando o navegador bloqueia o pop-up —
+    // comum no Chrome de Android quando a abertura não é reconhecida como
+    // gesto direto. Sem esta checagem o aluno toca no material e nada
+    // acontece, sem nenhuma pista do motivo.
+    const janela = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!janela) {
+      trackFalha('material_popup_bloqueado', 'window.open devolveu null', {
+        tipo: material.file_type ?? 'desconhecido',
+      });
+      toast({
+        title: 'Seu navegador bloqueou a abertura',
+        description: 'Toque e segure no material para abrir em nova aba, ou libere pop-ups para este site.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    trackAcao('material_aberto', {
+      tipo: material.file_type ?? 'desconhecido',
+      via_viewer: isDocument,
+    });
     if (!viewedIds.has(material.id)) await markViewed(material.id);
   }
 
@@ -219,6 +256,10 @@ export default function StudentMaterialsPage() {
       setViewedIds(prev => new Set([...prev, materialId]));
       setJustChecked(materialId);
       setTimeout(() => setJustChecked(null), 800);
+    } else {
+      // Antes o `if (!error)` simplesmente não fazia nada quando dava erro: o
+      // aluno abria o material e a marca de "visto" nunca aparecia.
+      trackFalha('material_visto_nao_gravado', error);
     }
     setToggling(null);
   }
