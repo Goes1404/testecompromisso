@@ -9,13 +9,25 @@ export const dynamic = 'force-dynamic';
 const toISODate = (d: Date) => d.toISOString().split('T')[0];
 
 function getWeekStart(): string {
-  // segunda-feira da semana atual
-  const d = new Date();
-  const day = d.getDay(); // 0=dom, 1=seg...
+  // Segunda-feira da semana atual, no horário de Brasília.
+  //
+  // O servidor roda em UTC: domingo às 21h no Brasil já é segunda 00h UTC, e a
+  // semana virava três horas antes. Quem estudava domingo à noite via esse
+  // esforço cair na semana seguinte, e recebia um resumo dizendo que não tinha
+  // estudado nada.
+  const agoraBR = new Date(
+    new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }),
+  );
+  const day = agoraBR.getDay(); // 0=dom, 1=seg...
   const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return toISODate(d);
+  agoraBR.setDate(agoraBR.getDate() + diff);
+  agoraBR.setHours(0, 0, 0, 0);
+
+  // Formata a data local sem passar por toISOString(), que converteria para UTC
+  // e poderia devolver o dia anterior.
+  const mes = String(agoraBR.getMonth() + 1).padStart(2, '0');
+  const dia = String(agoraBR.getDate()).padStart(2, '0');
+  return `${agoraBR.getFullYear()}-${mes}-${dia}`;
 }
 
 export async function POST(request: Request) {
@@ -27,6 +39,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
     const userId = authUser.id;
+
+    // O botão "Regenerar" do widget existia mas não regenerava nada: a rota
+    // devolvia o resumo em cache e o ícone girava à toa. Agora o cliente pode
+    // pedir explicitamente uma nova geração.
+    const corpo = await request.json().catch(() => ({}));
+    const forcar = corpo?.forcar === true;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -48,7 +66,7 @@ export async function POST(request: Request) {
       .eq('week_start', weekStart)
       .maybeSingle();
 
-    if (existing) {
+    if (existing && !forcar) {
       return NextResponse.json({ success: true, cached: true, summary: existing });
     }
 
@@ -56,7 +74,7 @@ export async function POST(request: Request) {
     const weekStartDate = new Date(weekStart);
     const weekStartISO = weekStartDate.toISOString();
 
-    const [answersRes, essaysRes, examsRes, journalRes, profileRes] = await Promise.all([
+    const [answersRes, essaysRes, examsRes, journalRes, profileRes, flashRes, xpRes] = await Promise.all([
       supabase
         .from('student_question_answers')
         .select('is_correct, created_at, questions(subject_id, subjects(name))')
@@ -82,6 +100,19 @@ export async function POST(request: Request) {
         .select('name, exam_target')
         .eq('id', userId)
         .maybeSingle(),
+      // Flashcards e XP faltavam nas métricas. Quem estudou a semana inteira
+      // por flashcard recebia um resumo dizendo que não tinha respondido nada
+      // — e o texto motivacional era escrito em cima desse zero.
+      supabase
+        .from('flashcard_progress')
+        .select('question_id, last_reviewed')
+        .eq('student_id', userId)
+        .gte('last_reviewed', weekStartISO),
+      supabase
+        .from('student_xp_log')
+        .select('xp_earned')
+        .eq('student_id', userId)
+        .gte('created_at', weekStartISO),
     ]);
 
     const answers = answersRes.data ?? [];
@@ -89,6 +120,8 @@ export async function POST(request: Request) {
     const exams = examsRes.data ?? [];
     const journal = journalRes.data ?? [];
     const profile = profileRes.data;
+    const flashcards = flashRes.data ?? [];
+    const xpSemana = (xpRes.data ?? []).reduce((s: number, l: any) => s + (l.xp_earned ?? 0), 0);
 
     const totalAnswered = answers.length;
     const correct = answers.filter((a: any) => a.is_correct).length;
@@ -121,6 +154,8 @@ export async function POST(request: Request) {
       examsCount: exams.length,
       examAvg,
       journalEntries: journal.length,
+      flashcards: flashcards.length,
+      xp: xpSemana,
       weakestSubjects,
       examTarget: profile?.exam_target ?? 'ENEM',
     };
@@ -135,6 +170,8 @@ Métricas da semana:
 - Questões respondidas: ${totalAnswered} (${accuracy}% de acerto)
 - Redações enviadas: ${essays.length} (média ${essayAvg})
 - Simulados/Provas: ${exams.length} (média ${examAvg})
+- Flashcards revisados: ${flashcards.length}
+- XP conquistado na semana: ${xpSemana}
 - Dias com diário registrado: ${journal.length}/7
 - Matérias mais fracas: ${weakestSubjects.map(s => `${s.name} (${s.accuracy}%)`).join(', ') || 'sem dados'}
 
@@ -148,7 +185,12 @@ Retorne um JSON com:
   ]
 }
 
-3 recomendações no máximo. Concretas e específicas. Se a semana foi pouco produtiva, motive sem julgar.`;
+3 recomendações no máximo. Concretas e específicas.
+
+REGRA IMPORTANTE: se TODAS as métricas estiverem zeradas, o aluno provavelmente
+não abriu a plataforma nesta semana — não é fracasso de estudo, é ausência.
+Nesse caso, escreva um convite curto e leve (2 parágrafos), sem cobrança e sem
+fingir que houve desempenho a analisar. Sugira UMA ação pequena para recomeçar.`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -165,15 +207,17 @@ Retorne um JSON com:
     const recommendations = aiResult.recommendations ?? [];
 
     // Persiste
+    // upsert e não insert: com a regeneração, um insert cru falharia na
+    // segunda vez por já existir linha da mesma semana.
     const { data: saved, error: saveError } = await supabase
       .from('weekly_summaries')
-      .insert({
+      .upsert({
         user_id: userId,
         week_start: weekStart,
         summary: summaryText,
         metrics,
         recommendations,
-      })
+      }, { onConflict: 'user_id,week_start' })
       .select()
       .single();
 

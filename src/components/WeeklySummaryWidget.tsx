@@ -36,6 +36,7 @@ export function WeeklySummaryWidget({ userId }: Props) {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [indisponivel, setIndisponivel] = useState(false);
   const [summary, setSummary] = useState<SummaryData | null>(null);
 
   useEffect(() => {
@@ -55,17 +56,26 @@ export function WeeklySummaryWidget({ userId }: Props) {
     return () => { alive = false; };
   }, [userId]);
 
-  const generate = async () => {
+  /**
+   * `forcar` distingue as duas chamadas que antes eram idênticas: gerar pela
+   * primeira vez e regenerar. Sem isso, o botão de recarregar devolvia o mesmo
+   * resumo em cache — o ícone girava e nada mudava na tela.
+   */
+  const generate = async (forcar = false) => {
     setGenerating(true);
     setError(null);
+    setIndisponivel(false);
     try {
       const res = await fetch('/api/student/weekly-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ forcar }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
+        // 503 com `indisponivel` é a IA fora do ar, não erro do aluno: merece
+        // uma mensagem diferente de "falha ao gerar".
+        if (data?.indisponivel) setIndisponivel(true);
         throw new Error(data.error ?? 'Falha ao gerar resumo');
       }
       setSummary(data.summary);
@@ -95,9 +105,9 @@ export function WeeklySummaryWidget({ userId }: Props) {
           </div>
           {summary && (
             <button
-              onClick={generate}
+              onClick={() => generate(true)}
               disabled={generating}
-              title="Regenerar"
+              title="Gerar de novo com os dados mais recentes"
               className="h-8 w-8 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center disabled:opacity-40"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${generating ? 'animate-spin' : ''}`} />
@@ -108,8 +118,17 @@ export function WeeklySummaryWidget({ userId }: Props) {
 
       <div className="p-6 space-y-4">
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-[11px] font-bold">
+          <div className={`p-3 rounded-2xl text-[11px] font-bold border ${
+            indisponivel
+              ? 'bg-amber-50 border-amber-200 text-amber-800'
+              : 'bg-rose-50 border-rose-200 text-rose-700'
+          }`}>
             {error}
+            {indisponivel && (
+              <p className="font-medium mt-1 opacity-80">
+                Seu progresso continua sendo registrado normalmente — só o texto da Aurora está em espera.
+              </p>
+            )}
           </div>
         )}
 
@@ -119,7 +138,7 @@ export function WeeklySummaryWidget({ userId }: Props) {
               A Aurora pode gerar uma análise da sua semana com base no seu desempenho.
             </p>
             <button
-              onClick={generate}
+              onClick={() => generate(false)}
               className="inline-flex items-center gap-2 h-10 px-5 bg-primary text-white font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-lg hover:scale-[1.03] active:scale-95 transition-all"
             >
               <Sparkles className="h-4 w-4 text-accent" /> Gerar resumo
