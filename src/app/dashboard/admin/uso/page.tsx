@@ -18,7 +18,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, AlertTriangle, MonitorSmartphone, Users } from 'lucide-react';
+import { Loader2, RefreshCw, AlertTriangle, MonitorSmartphone, Users, Timer } from 'lucide-react';
 
 type Funil = {
   base_real: number;
@@ -32,6 +32,69 @@ type Funil = {
 };
 
 type Linha = { chave: string; alunos: number; ocorrencias: number };
+
+type EventoBruto = {
+  kind: string;
+  name: string;
+  screen: string | null;
+  user_id: string | null;
+  props: Record<string, any> | null;
+};
+
+type Lentidao = {
+  operacao: string;
+  amostras: number;
+  medianaMs: number;
+  piorMs: number;
+  travadas: number;
+};
+
+/** Mediana: a média é distorcida por um único caso extremo de rede ruim. */
+function mediana(valores: number[]): number {
+  if (valores.length === 0) return 0;
+  const s = [...valores].sort((a, b) => a - b);
+  const meio = Math.floor(s.length / 2);
+  return s.length % 2 ? s[meio] : Math.round((s[meio - 1] + s[meio]) / 2);
+}
+
+/**
+ * Junta o que é lento e o que travou, por operação.
+ *
+ * `acao_lenta` e `tela_lenta` são conclusões que demoraram; `acao_travada` é a
+ * operação que nunca respondeu e foi cortada pelo timeout. As duas contam a
+ * mesma história do ponto de vista do aluno — ele esperou — mas só a segunda
+ * termina em tela de erro.
+ */
+function resumirLentidao(eventos: EventoBruto[]): Lentidao[] {
+  const mapa = new Map<string, { duracoes: number[]; travadas: number }>();
+
+  for (const e of eventos) {
+    const ms = Number(e.props?.ms ?? e.props?.lcp_ms ?? 0);
+    const chave = String(e.props?.operacao ?? e.props?.tela ?? e.name);
+
+    if (e.name === 'acao_lenta' || e.name === 'tela_lenta' || e.name === 'desempenho_tela') {
+      if (!Number.isFinite(ms) || ms <= 0) continue;
+      const atual = mapa.get(chave) ?? { duracoes: [], travadas: 0 };
+      atual.duracoes.push(ms);
+      mapa.set(chave, atual);
+    } else if (e.name === 'acao_travada') {
+      const atual = mapa.get(chave) ?? { duracoes: [], travadas: 0 };
+      atual.travadas++;
+      mapa.set(chave, atual);
+    }
+  }
+
+  return [...mapa.entries()]
+    .map(([operacao, v]) => ({
+      operacao,
+      amostras: v.duracoes.length,
+      medianaMs: mediana(v.duracoes),
+      piorMs: v.duracoes.length ? Math.max(...v.duracoes) : 0,
+      travadas: v.travadas,
+    }))
+    // Travamento vem primeiro: é pior que lentidão, mesmo sendo mais raro.
+    .sort((a, b) => (b.travadas - a.travadas) || (b.medianaMs - a.medianaMs));
+}
 
 /** Agrupa eventos por uma chave, contando alunos distintos e ocorrências. */
 function agrupar(eventos: { name: string; screen: string | null; user_id: string | null }[], por: 'name' | 'screen'): Linha[] {
@@ -65,6 +128,7 @@ export default function UsoPage() {
   const [funil, setFunil] = useState<Funil | null>(null);
   const [telas, setTelas] = useState<Linha[]>([]);
   const [falhas, setFalhas] = useState<Linha[]>([]);
+  const [lentidao, setLentidao] = useState<Lentidao[]>([]);
   const [acoes, setAcoes] = useState<Linha[]>([]);
   const [eventosTotal, setEventosTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -82,16 +146,17 @@ export default function UsoPage() {
       const desde = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
       const { data: ev, error: erroEv } = await supabase
         .from('app_events')
-        .select('kind, name, screen, user_id')
+        .select('kind, name, screen, user_id, props')
         .gte('created_at', desde)
         .limit(5000);
       if (erroEv) throw erroEv;
 
-      const eventos = ev ?? [];
+      const eventos = (ev ?? []) as EventoBruto[];
       setEventosTotal(eventos.length);
       setTelas(agrupar(eventos.filter(e => e.kind === 'tela'), 'screen'));
       setAcoes(agrupar(eventos.filter(e => e.kind === 'acao'), 'name'));
       setFalhas(agrupar(eventos.filter(e => e.kind === 'falha'), 'name'));
+      setLentidao(resumirLentidao(eventos));
     } catch (e: any) {
       toast({ title: 'Erro ao carregar', description: e.message, variant: 'destructive' });
     } finally {
@@ -177,6 +242,48 @@ export default function UsoPage() {
                     <span className="flex-1 min-w-0 truncate text-xs font-black text-slate-700">{f.chave}</span>
                     <span className="text-[10px] font-bold text-slate-400">{f.alunos} aluno(s)</span>
                     <span className="w-10 text-right text-sm font-black text-red-600">{f.ocorrencias}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* ── DESEMPENHO ── */}
+          <section className="rounded-[2rem] border border-amber-100 bg-amber-50/40 p-6 shadow-sm space-y-3">
+            <div className="flex items-center gap-2">
+              <Timer className="h-4 w-4 text-amber-600" />
+              <h2 className="text-sm font-black uppercase tracking-widest text-amber-700">Espera e travamento</h2>
+            </div>
+            <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
+              Só aparece o que passou de 3 segundos. <strong>Travadas</strong> são operações que não responderam
+              e foram cortadas — o aluno viu o botão girar e desistir.
+            </p>
+
+            {lentidao.length === 0 ? (
+              <p className="text-xs font-medium text-slate-500">
+                Nada acima de 3 segundos em 14 dias.
+                {eventosTotal === 0 && ' (Ainda não há telemetria.)'}
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-3 px-3 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  <span className="flex-1">Operação</span>
+                  <span className="w-14 text-right">Mediana</span>
+                  <span className="w-14 text-right">Pior</span>
+                  <span className="w-16 text-right">Travadas</span>
+                </div>
+                {lentidao.map(l => (
+                  <div key={l.operacao} className="flex items-center gap-3 rounded-xl border border-amber-100 bg-white px-3 py-2">
+                    <span className="flex-1 min-w-0 truncate text-xs font-black text-slate-700">{l.operacao}</span>
+                    <span className="w-14 text-right text-xs font-bold text-slate-600">
+                      {l.amostras ? `${(l.medianaMs / 1000).toFixed(1)}s` : '—'}
+                    </span>
+                    <span className="w-14 text-right text-xs font-bold text-slate-500">
+                      {l.amostras ? `${(l.piorMs / 1000).toFixed(1)}s` : '—'}
+                    </span>
+                    <span className={`w-16 text-right text-sm font-black ${l.travadas > 0 ? 'text-red-600' : 'text-slate-300'}`}>
+                      {l.travadas || '—'}
+                    </span>
                   </div>
                 ))}
               </div>

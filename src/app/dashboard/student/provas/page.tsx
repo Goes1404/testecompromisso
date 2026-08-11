@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { trackAcao, trackFalha } from "@/lib/telemetry";
+import { medirCarregamentoDeTela } from "@/lib/perf";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
@@ -241,6 +242,9 @@ export default function ProvasCompletasPage() {
   const fetchExams = useCallback(async () => {
     if (!user) return;
     setPageState("loading");
+    // Mede quando os DADOS chegaram, não quando os pixels apareceram: o
+    // esqueleto desta tela renderiza rápido e a lista de provas é que demora.
+    const inicioCarga = Date.now();
     try {
       // Determina o foco do aluno. O aluno de ETEC vê só provas de ETEC; o da
       // trilha ENEM vê ENEM e FUVEST (a FUVEST faz parte da trilha ENEM).
@@ -329,6 +333,7 @@ export default function ProvasCompletasPage() {
       setProgressByExam(prog);
 
       setPageState("list");
+      medirCarregamentoDeTela("provas", inicioCarga);
     } catch (e: any) {
       setErrorMsg(e.message || "Erro ao carregar provas.");
       setPageState("error");
@@ -498,7 +503,12 @@ export default function ProvasCompletasPage() {
     };
     try {
       localStorage.setItem(progressKey(activeExam.id), JSON.stringify(snapshot));
-    } catch {}
+    } catch (e) {
+      // Storage cheio ou bloqueado (aba anônima em alguns aparelhos). Antes
+      // era `catch {}`: o progresso deixava de ser salvo e o aluno só
+      // descobria ao voltar e encontrar a prova do zero.
+      trackFalha("prova_progresso_nao_salvo", e, { questoes: questions.length });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageState, activeExam, user, questions, currentIndex, selectedAnswer, markedForReview, timeLeft]);
 

@@ -367,11 +367,21 @@ export default function SimuladoPage() {
     setSelectedAnswer(null);
 
     if (user) {
-      supabase.from('student_question_answers').insert({
-        student_id: user.id, question_id: q.id,
-        selected_option: selectedAnswer,
-        is_correct: isSkipped ? false : norm(selectedAnswer) === norm(q.correct_answer),
-      }).then(() => {});
+      // Sem `await` de propósito: a navegação para a próxima questão não pode
+      // esperar a rede. Mas a falha deixou de ser silenciosa — antes era
+      // `.then(() => {})`, e uma resposta que não gravava sumia do histórico
+      // sem ninguém perceber. É esse histórico que alimenta "Meu Desempenho" e
+      // o Treino Específico.
+      void supabase
+        .from('student_question_answers')
+        .insert({
+          student_id: user.id, question_id: q.id,
+          selected_option: selectedAnswer,
+          is_correct: isSkipped ? false : norm(selectedAnswer) === norm(q.correct_answer),
+        })
+        .then(({ error }) => {
+          if (error) trackFalha('resposta_nao_gravada', error, { modo: mode });
+        });
     }
 
     if (currentIndex < questions.length - 1) {

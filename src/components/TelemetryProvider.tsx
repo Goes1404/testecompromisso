@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/AuthProvider';
 import { identificar, trackTela, flush } from '@/lib/telemetry';
+import { observarDesempenhoDaTela } from '@/lib/perf';
 
 export function TelemetryProvider() {
   const { user } = useAuth();
@@ -19,6 +20,9 @@ export function TelemetryProvider() {
 
   useEffect(() => {
     identificar(user?.id ?? null);
+    // LCP e INP: "quando a tela ficou útil" e "quanto o toque demorou a
+    // responder". São as duas causas de abandono que não deixam erro nenhum.
+    if (user?.id) observarDesempenhoDaTela();
     // Ao sair (logout ou desmontagem), descarrega o que ficou na fila.
     return () => { void flush(); };
   }, [user?.id]);

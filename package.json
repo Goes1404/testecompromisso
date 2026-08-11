@@ -22,7 +22,7 @@
     "import:etec": "tsx scripts/import-etec.ts",
     "import:fuvest": "tsx scripts/import-fuvest.ts",
     "test:essay": "tsx scripts/test-essay-analysis.ts && tsx scripts/test-inep-banca.ts && tsx scripts/test-localizar-trechos.ts",
-    "test": "npm run test:essay && tsx scripts/test-telemetry.ts"
+    "test": "npm run test:essay && tsx scripts/test-telemetry.ts && tsx scripts/test-perf.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.49",

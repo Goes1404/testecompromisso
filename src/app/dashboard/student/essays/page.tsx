@@ -37,6 +37,7 @@ import { ptBR } from "date-fns/locale";
 import { trackMissionProgress } from "@/lib/missions";
 import { EssayHighlightedText, BancaMirror, AnulacaoAviso } from "@/components/EssayMirror";
 import { trackAcao, trackFalha } from "@/lib/telemetry";
+import { medir, TempoEsgotado } from "@/lib/perf";
 
 const EssayChart = dynamic(
   () =>
@@ -375,16 +376,24 @@ export default function StudentEssayPage() {
     }
     setLoadingGrading(true);
     try {
-      const res = await fetch("/api/essay-evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme,
-          text,
-          supporting_texts: supportingTexts,
-          origin: fromPhoto ? "ocr" : "typed",
+      // Medido em produção: 6-7s com os dois corretores de acordo, 18s quando
+      // é preciso chamar o terceiro. A rota declara maxDuration = 60s, então
+      // 75s é folga suficiente para a rede do aluno sem deixar o botão girando
+      // indefinidamente se a rota travar.
+      const res = await medir(
+        "corrigir_redacao",
+        () => fetch("/api/essay-evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            theme,
+            text,
+            supporting_texts: supportingTexts,
+            origin: fromPhoto ? "ocr" : "typed",
+          }),
         }),
-      });
+        { timeoutMs: 75_000, limiarLentoMs: 15_000, props: { chars: text.length } },
+      );
       const data = await res.json();
       if (res.ok && data.success) {
         const aiOutput = data.result;
@@ -421,7 +430,14 @@ export default function StudentEssayPage() {
       }
     } catch (e) {
       trackFalha("redacao_falha_corrigir", e, { chars: text.length });
-      toast({ title: "Erro de Sincronização", description: "Houve uma oscilação na rede. Tente novamente.", variant: "destructive" });
+      const demorou = e instanceof TempoEsgotado;
+      toast({
+        title: demorou ? "A correção demorou demais" : "Não foi possível corrigir agora",
+        description: demorou
+          ? "Seu texto continua salvo aqui na tela. Tente enviar de novo em alguns minutos."
+          : "Houve uma falha ao falar com o corretor. Seu texto não foi perdido — tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingGrading(false);
     }

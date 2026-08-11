@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { awardXP } from '@/lib/gamification';
+import { medirCarregamentoDeTela } from '@/lib/perf';
+import { trackFalha } from '@/lib/telemetry';
 import { trackMissionProgress } from '@/lib/missions';
 import {
   Brain, ChevronLeft, ChevronRight, Loader2, RefreshCw,
@@ -173,6 +175,7 @@ export default function FlashcardsPage() {
     setIndex(0);
     setRevealed(false);
     setSession({ reviewed: 0, correct: 0, xp: 0 });
+    const inicioCarga = Date.now();
     try {
       // Get exam_target to scope questions
       const rawTarget = (profile?.exam_target || 'enem').toLowerCase();
@@ -245,7 +248,9 @@ export default function FlashcardsPage() {
       const subs = Array.from(new Set(all.map(c => c.subject).filter(Boolean))) as string[];
       setSubjects(subs);
       setCards(all);
+      medirCarregamentoDeTela('flashcards', inicioCarga);
     } catch (e: any) {
+      trackFalha('flashcards_falha_carregar', e);
       toast({ title: 'Erro ao carregar flashcards', description: e.message, variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -314,6 +319,7 @@ export default function FlashcardsPage() {
         setRevealed(false);
       }
     } catch (e: any) {
+      trackFalha('flashcard_progresso_nao_salvo', e);
       toast({ title: 'Erro ao salvar progresso', description: e.message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
