@@ -209,10 +209,20 @@ export default function SimuladoPage() {
       const { data, error } = await supabase
         .rpc('get_subjects_with_question_count_by_boards', { p_boards: activeBoards });
       if (error) {
+        // Sem a contagem não dá para saber o que está vazio; mostra tudo em vez
+        // de esconder matérias que talvez tenham questões.
         const { data: fb } = await supabase.from('subjects').select('id, name').order('name');
         setSubjects((fb ?? []).map(s => ({ id: s.id, name: s.name, question_count: 0 })));
       } else {
-        setSubjects(data ?? []);
+        // Só matérias que existem para a banca escolhida.
+        //
+        // A função usa LEFT JOIN e devolve todas as matérias cadastradas,
+        // inclusive as que não têm nenhuma questão. Na prática isso oferecia
+        // ao aluno de ETEC matérias que nem caem no Vestibulinho — Sociologia,
+        // Filosofia e Espanhol não existem nessa prova —, e ele escolhia uma
+        // delas para bater num estado vazio. O problema não era falta de
+        // conteúdo: era oferecer o que não existe.
+        setSubjects((data ?? []).filter((s: any) => Number(s.question_count) > 0));
       }
       setGameState('idle');
     } catch {
