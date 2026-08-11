@@ -19,8 +19,7 @@ import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { SupportingTextBlock } from '@/components/SupportingTextBlock';
 import {
-  awardXP, checkAndAwardBadges, getTotalAnswered,
-  XP_PER_CORRECT_QUESTION, XP_PER_SIMULADO_COMPLETE, BADGE_META,
+  awardXP, checkAndAwardBadges, getTotalAnswered, BADGE_META,
 } from '@/lib/gamification';
 import { trackMissionProgress } from '@/lib/missions';
 import { allowedExamTypesFor, examTypeLabel } from '@/lib/exam-types';
@@ -157,6 +156,10 @@ export default function SimuladoPage() {
   const [timeLeft, setTimeLeft]     = useState<number | null>(null);
   const [isPaused, setIsPaused]     = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0); // cronômetro crescente (tempo gasto)
+  // XP que o servidor concedeu de fato nesta tentativa. Antes o placar somava
+  // `acertos × 5 + 20` no cliente, o que passou a mentir quando concluir o
+  // simulado deixou de valer XP — e já mentia ao bater o teto diário.
+  const [xpGained, setXpGained]     = useState(0);
   // Active theme (dark or light)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
@@ -294,6 +297,7 @@ export default function SimuladoPage() {
       setQuestions(formatted); setCurrentIndex(0); setAnswers([]); setSelectedAnswer(null);
       setTimeLeft(formatted.length * 3.5 * 60); setIsPaused(false);
       setElapsedSeconds(0);
+      setXpGained(0);
       setExpandedIndex(null);
       setGameState('active');
     } catch (e: any) {
@@ -385,7 +389,9 @@ export default function SimuladoPage() {
             (s > 0 ? await awardXP(user.id, 0, 'correct_answer', ref, s) : 0) +
             (await awardXP(user.id, 0, 'simulado_complete', ref));
           // Mostra o que o servidor realmente concedeu: pode ser menos que o
-          // esperado se o aluno já bateu o teto do dia.
+          // esperado se o aluno já bateu o teto do dia, e concluir o simulado
+          // deixou de valer XP por si só — só os acertos contam.
+          setXpGained(ganho);
           if (ganho > 0) {
             toast({ title: `+${ganho} XP ganhos!`, description: `${s} acertos neste simulado.` });
           }
@@ -708,7 +714,6 @@ export default function SimuladoPage() {
     const resultColor = pct >= 70 ? 'text-green-400' : pct >= 50 ? 'text-amber-400' : 'text-red-400';
     const resultLabel = pct >= 70 ? 'Desempenho de Elite!' : pct >= 50 ? 'Bom progresso!' : 'Continue praticando!';
     const resultBg    = pct >= 70 ? 'from-[#0d2e1b] to-[#070709]' : pct >= 50 ? 'from-[#3a2007] to-[#070709]' : 'from-[#380e14] to-[#070709]';
-    const xpGained = score * XP_PER_CORRECT_QUESTION + XP_PER_SIMULADO_COMPLETE;
 
     return (
       <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-700 pb-28 px-2 sm:px-4">

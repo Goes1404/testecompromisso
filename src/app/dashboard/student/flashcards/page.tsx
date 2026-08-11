@@ -157,7 +157,10 @@ export default function FlashcardsPage() {
   const [revealed, setRevealed]   = useState(false);
   const [loading, setLoading]     = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [session, setSession]     = useState({ reviewed: 0, correct: 0 });
+  // `xp` é o que o servidor realmente concedeu, não `acertos × 5`: um card já
+  // pontuado antes paga 0 quando volta na revisão, e o teto diário também pode
+  // cortar o valor. Somar na mão faria a tela prometer XP que não existe.
+  const [session, setSession]     = useState({ reviewed: 0, correct: 0, xp: 0 });
   const [done, setDone]           = useState(false);
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [subjects, setSubjects]   = useState<string[]>([]);
@@ -169,7 +172,7 @@ export default function FlashcardsPage() {
     setDone(false);
     setIndex(0);
     setRevealed(false);
-    setSession({ reviewed: 0, correct: 0 });
+    setSession({ reviewed: 0, correct: 0, xp: 0 });
     try {
       // Get exam_target to scope questions
       const rawTarget = (profile?.exam_target || 'enem').toLowerCase();
@@ -287,16 +290,18 @@ export default function FlashcardsPage() {
         c.question_id === currentCard.question_id ? { ...c, ...update } : c
       ));
 
+      // XP & mission
+      const ganho = isCorrect
+        ? await awardXP(user.id, 5, 'flashcard_correct', currentCard.question_id)
+        : 0;
+
       const newSession = {
         reviewed: session.reviewed + 1,
         correct:  session.correct + (isCorrect ? 1 : 0),
+        xp:       session.xp + ganho,
       };
       setSession(newSession);
 
-      // XP & mission
-      if (isCorrect) {
-        await awardXP(user.id, 5, 'flashcard_correct', currentCard.question_id);
-      }
       if (newSession.reviewed % 5 === 0) {
         await trackMissionProgress(supabase, user.id, 'answer_questions', 5);
       }
@@ -342,7 +347,7 @@ export default function FlashcardsPage() {
               {[
                 { label: 'Revisados', value: session.reviewed, icon: Brain },
                 { label: 'Acertos', value: `${pct}%`, icon: CheckCircle2 },
-                { label: 'XP ganhos', value: `+${session.correct * 5}`, icon: Zap },
+                { label: 'XP ganhos', value: `+${session.xp}`, icon: Zap },
               ].map(stat => (
                 <div key={stat.label} className="bg-white/10 rounded-2xl p-3 text-center border border-white/10">
                   <p className="text-2xl font-black leading-none">{stat.value}</p>
@@ -396,7 +401,7 @@ export default function FlashcardsPage() {
             <XCircle className="h-3 w-3 text-red-300" />{session.reviewed - session.correct} erros
           </div>
           <div className="flex items-center gap-1 text-[10px] font-bold text-white/60 ml-auto">
-            <Zap className="h-3 w-3 text-amber-300" />+{session.correct * 5} XP
+            <Zap className="h-3 w-3 text-amber-300" />+{session.xp} XP
           </div>
         </div>
       </section>
