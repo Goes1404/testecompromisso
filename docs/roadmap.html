@@ -393,13 +393,27 @@
 
   <section>
     <h2>Fase 1 · Deixar o aluno entrar</h2>
-    <p class="fase-nota">Semana seguinte.</p>
+    <p class="fase-nota"><strong>Feito em 11/08</strong>, com um bloqueio novo que precisa da sua decisão.</p>
 
-    <div class="item atencao">
-      <span class="id">1.1 — ALTO</span>
-      <h3>366 alunos presos na troca de senha</h3>
-      <p>Contas com senha padrão e <code>must_change_password</code> ligado que nunca completaram
-      o primeiro acesso. Destas, 273 nunca logaram.</p>
+    <div class="item ok">
+      <span class="id">1.1 — FEITO EM 11/08</span>
+      <h3>A tela de primeiro acesso era inalcançável</h3>
+      <div class="evidencia">
+        O middleware redirecionava <b>qualquer</b> acesso a
+        <span class="mono">/dashboard/first-access</span> para a home, sem condição nenhuma.
+        A tela existia e funcionava.
+      </div>
+      <p>
+        Resultado: 400 contas ficaram com a senha padrão para sempre — 366 alunos, 24 professores,
+        6 admins, 4 da equipe — e <strong>105 delas já usam a plataforma</strong>. O link que a
+        secretaria gera aponta justamente para essa tela, então o convite inteiro não funcionava.
+      </p>
+      <p>
+        A condição passou a ser o metadado, não a rota. Segundo defeito na mesma tela:
+        <span class="mono">isStudent</span> comparava <span class="mono">profile_type</span> com a
+        string “student”, e esse campo tem cinco valores em produção — 452 alunos pulavam a escolha
+        de trilha.
+      </p>
     </div>
 
     <div class="item atencao">
@@ -410,9 +424,31 @@
         chegou a ser enviado.
       </div>
       <p>
-        A causa é de dados, não de código: 811 de 1.058 alunos não têm nem telefone nem data de
-        nascimento. <strong>Fazer:</strong> o fallback pela secretaria — adequado a um cursinho
-        presencial, onde a identidade se prova no balcão.
+        A secretaria já tinha as duas opções na tela. O que faltava era elas funcionarem:
+        <span class="mono">reset-password</span> <strong>não marcava</strong> a troca obrigatória,
+        então a senha temporária virava definitiva e a secretaria ficava sabendo a senha do aluno.
+      </p>
+    </div>
+
+    <div class="item critico">
+      <span class="id">1.4 — BLOQUEADO · PRECISA DE VOCÊ</span>
+      <h3>201 alunos têm mais de uma conta</h3>
+      <div class="evidencia">
+        <b>403 contas, 202 excedentes.</b> A base tem 1.057 contas para cerca de <b>855 alunos
+        reais</b>. “Abner de Jesus Jales da Silva” tem TRÊS contas, cada uma com um pedaço do
+        boletim, e nunca acessou nenhuma.
+      </div>
+      <p>
+        A causa é o login ser derivado do nome por uma regra que mudou:
+        <span class="mono">abnerjsilva@</span>, <span class="mono">abnerdsilva@</span> e
+        <span class="mono">abnersilva@</span>. Nomes com preposição são a maioria em português,
+        então isso atingiu metade do cadastro.
+      </p>
+      <p>
+        A criação de usuário já recusa nome repetido — <strong>não cresce mais</strong>. Fundir as
+        existentes é decisão sua: escolher qual conta sobrevive é escolha sobre o histórico do
+        aluno. Planilha:
+        <code>npx tsx scripts/duplicatas-de-alunos.ts --csv</code>
       </p>
     </div>
 
@@ -501,16 +537,28 @@
 
   <section>
     <h2>Fase 4 · Dívida de segurança</h2>
-    <p class="fase-nota">Contínuo. Já documentada em <code>CLAUDE.md</code>, sem prazo definido.</p>
+    <p class="fase-nota"><strong>Feito em 11/08</strong>, menos as duas rotações que dependem do painel.</p>
+
+    <div class="item ok">
+      <span class="id">4 — FEITO EM 11/08</span>
+      <h3>Quatro itens fechados</h3>
+      <p>
+        <strong>Token de cadastro</strong> passa a usar <code>REGISTRATION_TOKEN_SECRET</code> — a chave
+        antiga continua aceita só na verificação, para os convites em circulação valerem até expirar.
+        <strong>Push de chat</strong> não aceita mais texto do corpo: lê a mensagem realmente gravada,
+        porque antes dava para forjar notificação em nome de outra pessoa.
+        <strong>Busca do primeiro acesso</strong> e <strong>auto-cadastro</strong> ganharam rate limit.
+      </p>
+    </div>
 
     <div class="item atencao">
-      <span class="id">4 — PENDENTE</span>
-      <h3>Cinco itens abertos</h3>
+      <span class="id">4 — DEPENDE DE VOCÊ</span>
+      <h3>Duas rotações e uma variável</h3>
       <p>
-        Rotacionar a senha padrão <code>compromisso2026</code> (é também a senha de novos usuários);
-        rotacionar a <code>SUPABASE_SERVICE_ROLE_KEY</code>, exposta em texto puro durante a auditoria;
-        corrigir o IDOR em <code>/api/student/weekly-summary</code>; usar segredo dedicado no HMAC dos
-        tokens de cadastro; e blindar a enumeração de usuários em <code>primeiro-acesso</code>.
+        Rotacionar a senha padrão <code>compromisso2026</code> e a
+        <code>SUPABASE_SERVICE_ROLE_KEY</code>, exposta em texto puro durante a auditoria. E definir
+        <code>REGISTRATION_TOKEN_SECRET</code> em produção — sem ela o código cai no legado e avisa
+        no log.
       </p>
     </div>
   </section>

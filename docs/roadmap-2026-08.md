@@ -117,12 +117,23 @@ O job tinha dois defeitos somados: o nome diz `nightly`, mas o agendamento era
 
 ---
 
-## Fase 1 — Deixar o aluno entrar (semana seguinte)
+## Fase 1 — Deixar o aluno entrar — ✅ FEITO em 11/08 (com um bloqueio)
 
-### 1.1 · 366 alunos presos na troca de senha
+### 1.1 · 366 alunos presos na troca de senha — ✅ FEITO
 
-Contas criadas com senha padrão, com `must_change_password = true`, que nunca
-completaram o primeiro acesso. Destes, 273 nunca logaram.
+**Causa encontrada:** a tela `/dashboard/first-access` existe e funciona, mas o
+middleware redirecionava **qualquer** acesso a ela para `/dashboard/home`, sem
+condição nenhuma. Era inalcançável.
+
+Duas consequências: 400 contas (366 alunos, 24 professores, 6 admins, 4 da
+equipe) ficaram com a senha padrão para sempre — 105 delas **já usam a
+plataforma** —, e o link que a secretaria gera aponta justamente para essa
+tela, então o fluxo de convite inteiro não funcionava.
+
+A condição passou a ser o metadado, não a rota. Segundo defeito na mesma tela:
+`isStudent` comparava `profile_type` com a string `'student'`, e esse campo tem
+cinco valores em produção — 452 alunos eram tratados como não-estudantes e
+pulavam a escolha de trilha.
 
 ### 1.2 · Recuperação de senha não funciona
 
@@ -130,9 +141,34 @@ completaram o primeiro acesso. Destes, 273 nunca logaram.
 Nenhum OTP chegou a ser enviado. A causa é de dados, não de código: 811 de 1.058
 alunos não têm nem telefone nem data de nascimento.
 
-**O que fazer:** Fase 3 do plano já documentado — fallback permanente pela
-secretaria (reset direto ou link de recuperação), que é adequado a um cursinho
-presencial onde a identidade se prova no balcão.
+**Feito:** a secretaria já tinha as duas opções na tela; o que faltava era elas
+funcionarem.
+
+- `/api/auth/reset-password` **não marcava** `must_change_password`. A tela
+  promete "o aluno será obrigado a alterá-la no próximo login", e a senha
+  temporária virava definitiva — a secretaria ficava sabendo a senha do aluno.
+- `/reset-password` passou a limpar o metadado junto com a senha, para quem
+  acabou de escolher uma senha ali não ser mandado à tela de primeiro acesso.
+
+### 1.4 · ⛔ BLOQUEADO — 201 alunos com mais de uma conta
+
+Descoberto ao preparar a entrega de acesso em massa. **403 contas, 202
+excedentes**: a base tem 1.057 contas para cerca de 855 alunos reais.
+
+A causa é `generateEmail()`, que deriva o login do nome — e a regra mudou ao
+longo do tempo. "Abner de Jesus Jales da Silva" gerou `abnerjsilva@`,
+`abnerdsilva@` e `abnersilva@`. Nomes com preposição são a maioria em
+português, então isso atingiu metade do cadastro. Ele tem três contas, cada uma
+com um pedaço do boletim, e nunca acessou nenhuma.
+
+`create-user` já recusa nome repetido, então **não cresce mais**. Fundir as
+existentes é decisão sua: escolher qual conta sobrevive é escolha sobre o
+histórico do aluno.
+
+    npx tsx scripts/duplicatas-de-alunos.ts --csv    # planilha da secretaria
+
+⚠️ Por isso `scripts/preparar-primeiro-acesso.ts` **não foi executado** —
+rodá-lo agora entregaria três senhas ao mesmo aluno.
 
 ### 1.3 · Situação de acesso — ✅ FEITO (11/08)
 
@@ -191,15 +227,24 @@ Se nenhum aparecer, as três hipóteses morrem e a busca continua com dados novo
 
 ---
 
-## Fase 4 — Dívida de segurança (contínuo)
+## Fase 4 — Dívida de segurança — ✅ FEITO em 11/08 (menos as rotações)
 
-Já documentada em `CLAUDE.md`, sem prazo definido:
+Quatro itens fechados:
 
-- Rotacionar a senha padrão `compromisso2026` (é também a senha de novos usuários).
-- Rotacionar a `SUPABASE_SERVICE_ROLE_KEY`, exposta em texto puro durante a auditoria.
-- IDOR em `/api/student/weekly-summary` — lê dados de qualquer `userId` do body.
-- HMAC dos tokens de cadastro usa a própria service role key como chave.
-- `search` em `/api/student/primeiro-acesso` permite enumeração de usuários.
+- **Token de cadastro** passa a usar `REGISTRATION_TOKEN_SECRET`. A chave antiga
+  continua aceita só na verificação, para os links já emitidos valerem até
+  expirar. Comparação com `timingSafeEqual`.
+  ⚠️ **Defina a variável em produção** — sem ela o código cai no legado.
+- **Push de chat** não aceita mais texto do corpo: lê a mensagem realmente
+  gravada. Antes dava para forjar notificação em nome de outra pessoa.
+- **Busca do primeiro acesso** ganhou rate limit e parou de devolver o `id` do
+  perfil.
+- **Auto-cadastro** ganhou rate limit por IP.
+
+Dependem de você (acesso ao painel):
+
+- Rotacionar a senha padrão `compromisso2026`.
+- Rotacionar a `SUPABASE_SERVICE_ROLE_KEY`, exposta em texto puro na auditoria.
 
 ---
 
