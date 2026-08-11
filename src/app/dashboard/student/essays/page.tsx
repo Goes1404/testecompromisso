@@ -110,12 +110,17 @@ function scoreColor(score: number | null) {
 export default function StudentEssayPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const [theme, setTheme] = useState("Os impactos da Inteligência Artificial na educação brasileira contemporânea");
-  const [supportingTexts, setSupportingTexts] = useState<any[]>([
-    { id: 1, content: "A inteligência artificial pode personalizar o ensino, mas levanta questões éticas sobre a autonomia do aluno.", source: "MEC 2024" },
-    { id: 2, content: "O Brasil ocupa a 5ª posição no ranking de países que mais buscam ferramentas de IA para estudo.", source: "G1 Notícias" },
-    { id: 3, content: "A desigualdade digital no Brasil ainda é um entrave para a implementação plena de tecnologias educacionais.", source: "IBGE" },
-  ]);
+  // ⚠️ O tema COMEÇA VAZIO, de propósito.
+  //
+  // Antes ele vinha pré-preenchido com "Os impactos da Inteligência Artificial
+  // na educação brasileira contemporânea". Como o tema é o critério de fuga
+  // ao tema, quem abrisse a tela e escrevesse sobre outro assunto — inclusive
+  // quem fotografava uma redação feita no papel — era anulado por não atender
+  // a um tema que nunca escolheu. Foi o que aconteceu com 2 das 3 redações
+  // reais já enviadas: as duas gravadas com este tema exato, sobre outro
+  // assunto, e zeradas por fuga.
+  const [theme, setTheme] = useState("");
+  const [supportingTexts, setSupportingTexts] = useState<any[]>([]);
   const [customTheme, setCustomTheme] = useState(false);
   const [text, setText] = useState("");
   const [loadingTopic, setLoadingTopic] = useState(false);
@@ -211,7 +216,14 @@ export default function StudentEssayPage() {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (data) setWeeklyTheme(data);
+        if (data) {
+          setWeeklyTheme(data);
+          // Aplica o tema da semana quando o aluno ainda não escolheu nenhum.
+          // Antes o card mostrava o tema em destaque mas só o aplicava se o
+          // aluno clicasse em "Usar este tema" — quem lia o tema ali e escrevia
+          // sobre ele era corrigido contra outro tema, e anulado por fuga.
+          setTheme(atual => (atual.trim() ? atual : data.title));
+        }
       } catch {}
     };
     fetchWeeklyTheme();
@@ -256,7 +268,23 @@ export default function StudentEssayPage() {
 
       setText((prev) => (prev.trim() ? `${prev.trim()}\n\n${data.text}` : data.text));
       setFromPhoto(true);
-      toast({ title: "Redação digitalizada! 📸", description: "Revise o texto transcrito antes de enviar." });
+
+      // Quem fotografa já escreveu a redação no papel, sobre um tema que a
+      // plataforma não conhece. Sem perguntar, a correção usaria o tema que
+      // estivesse na tela e anularia o texto por fuga — foi assim que uma
+      // redação de 2.652 caracteres tirou zero.
+      if (!theme.trim()) {
+        setCustomTheme(true);
+        toast({
+          title: "Redação digitalizada! 📸",
+          description: "Agora escreva o tema da proposta que você respondeu — sem ele, a correção não tem como avaliar fuga ao tema.",
+        });
+      } else {
+        toast({
+          title: "Redação digitalizada! 📸",
+          description: `Revise o texto e confirme o tema: "${theme}".`,
+        });
+      }
     } catch (err: any) {
       toast({ title: "Erro ao digitalizar", description: err.message, variant: "destructive" });
     } finally {
@@ -328,6 +356,17 @@ export default function StudentEssayPage() {
     // deixar passar não custa nada.
     if (text.trim().length < 40) {
       toast({ title: "Escreva um pouco mais", description: "Precisamos de pelo menos algumas linhas para avaliar.", variant: "destructive" });
+      return;
+    }
+
+    // Sem tema não há como avaliar C2 — e corrigir contra um tema errado anula
+    // a redação por fuga. Melhor barrar aqui do que devolver zero.
+    if (!theme.trim()) {
+      toast({
+        title: "Qual é o tema?",
+        description: "Escolha um tema acima (ou escreva o seu em 'Tema Manual') antes de enviar. A correção usa o tema para avaliar fuga.",
+        variant: "destructive",
+      });
       return;
     }
     setLoadingGrading(true);
@@ -558,9 +597,34 @@ export default function StudentEssayPage() {
           )}
         </div>
         <div className="border-t border-slate-100 p-4 space-y-3">
+          {/* Confirmação do tema logo acima do botão.
+              O critério de fuga ao tema é este texto — se ele não for o que o
+              aluno respondeu, a redação é anulada por inteiro. Mostrar aqui é a
+              última chance de perceber a troca antes de perder a nota. */}
+          {theme.trim() ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                Será corrigida com este tema
+              </p>
+              <p className="text-xs font-black italic text-primary leading-snug mt-1">{theme}</p>
+              <p className="text-[10px] font-medium text-slate-500 mt-1.5 leading-snug">
+                Escreveu sobre outro assunto? Troque o tema antes de enviar — fugir do tema zera a redação.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+              <p className="text-[11px] font-black text-amber-800 leading-snug">
+                Escolha um tema antes de enviar.
+              </p>
+              <p className="text-[10px] font-medium text-amber-700/80 mt-1 leading-snug">
+                Use o tema da semana, gere uma proposta ou escreva o seu em "Tema Manual".
+              </p>
+            </div>
+          )}
+
           <Button
             onClick={handleSubmitEssay}
-            disabled={loadingGrading || !text || !theme}
+            disabled={loadingGrading || !text || !theme.trim()}
             className="btn-shimmer w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 group"
           >
             {loadingGrading ? (
