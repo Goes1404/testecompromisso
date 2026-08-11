@@ -35,6 +35,7 @@ import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { trackMissionProgress } from "@/lib/missions";
+import { EssayHighlightedText, BancaMirror, AnulacaoAviso } from "@/components/EssayMirror";
 
 const EssayChart = dynamic(
   () =>
@@ -320,8 +321,13 @@ export default function StudentEssayPage() {
   };
 
   const handleSubmitEssay = async () => {
-    if (text.length < 100) {
-      toast({ title: "Texto Insuficiente", description: "Escreva ao menos 100 caracteres.", variant: "destructive" });
+    // Antes o envio era bloqueado abaixo de 100 caracteres com um toast seco.
+    // Agora o piso é só para não mandar texto vazio: entre isso e as 7 linhas
+    // do INEP, a correção devolve a explicação de "texto insuficiente" — que
+    // ensina a regra em vez de apenas recusar. Esse caso não chama a IA, então
+    // deixar passar não custa nada.
+    if (text.trim().length < 40) {
+      toast({ title: "Escreva um pouco mais", description: "Precisamos de pelo menos algumas linhas para avaliar.", variant: "destructive" });
       return;
     }
     setLoadingGrading(true);
@@ -613,6 +619,12 @@ export default function StudentEssayPage() {
             </div>
           </div>
 
+          {/* Anulação: explica por que tudo ficou zero antes de mostrar as
+              competências zeradas, senão o aluno lê cinco zeros sem contexto. */}
+          {result.anulacao && (
+            <AnulacaoAviso motivo={result.anulacao} explicacao={result.general_feedback} />
+          )}
+
           {/* Competencies */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {Object.entries(result.competencies || {}).map(([key, comp]: any, idx) => {
@@ -635,7 +647,16 @@ export default function StudentEssayPage() {
             })}
           </div>
 
-          {/* Corrections */}
+          {/* Redação com os desvios grifados no lugar onde foram escritos. */}
+          {result.detailed_corrections?.some((c: any) => typeof c?.start === 'number') && (
+            <EssayHighlightedText texto={text} correcoes={result.detailed_corrections} />
+          )}
+
+          {/* Espelho da banca: quantas correções, se divergiram, como fechou. */}
+          {result._banca && <BancaMirror banca={result._banca} />}
+
+          {/* Corrections — lista completa, inclusive os trechos que não foi
+              possível localizar no texto (o modelo citou de forma aproximada). */}
           {result.detailed_corrections?.length > 0 && (
             <div className="bg-white border border-slate-100 shadow-sm rounded-[1.5rem] overflow-hidden">
               <div className="p-5 border-b border-slate-100 bg-red-50">
