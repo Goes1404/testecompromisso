@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { respostaFalhaIA } from "@/lib/ia-status";
+import { respostaFalhaIA, registrarIncidenteIA } from "@/lib/ia-status";
+import { avaliarLegibilidade } from "@/lib/essay-legibilidade";
 import { OpenAI } from "openai";
 
 export const dynamic = 'force-dynamic';
@@ -62,6 +63,29 @@ export async function POST(req: Request) {
     if (!transcription) {
       return NextResponse.json(
         { success: false, error: "Não foi possível ler o texto da imagem. Tente uma foto mais nítida." },
+        { status: 422 }
+      );
+    }
+
+    // Transcrição embaralhada não pode seguir para a correção.
+    //
+    // Em 11/08 um aluno fotografou a redação, a foto saiu ruim, o OCR devolveu
+    // texto sem sentido — "sya ves mercados leesoos de reapas" — e o corretor
+    // deu ZERO dizendo que o texto dele tinha "desvios gramaticais
+    // sistemáticos". O aluno escreveu certo; a máquina é que não leu. Devolver
+    // o embaralhado para ele revisar também não resolve: para consertar aquilo
+    // ele teria de redigitar a redação inteira.
+    const legibilidade = avaliarLegibilidade(transcription);
+    if (!legibilidade.legivel) {
+      // Vale um incidente no painel: se isso passar a acontecer com frequência,
+      // o problema é a orientação de como fotografar, não uma foto isolada.
+      await registrarIncidenteIA(
+        "essay-ocr",
+        "outro",
+        `transcricao_ilegivel ${legibilidade.taxaImpossiveis.toFixed(1)}% ${legibilidade.exemplos.join(" ")}`,
+      );
+      return NextResponse.json(
+        { success: false, error: legibilidade.motivo },
         { status: 422 }
       );
     }

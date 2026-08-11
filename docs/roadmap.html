@@ -298,7 +298,7 @@
   <section>
     <h2>Fase 0 · Parar de perder aluno</h2>
     <p class="fase-nota">
-      <strong>4 de 5 concluídos em 11/08.</strong> Resta habilitar o Web Analytics no painel da Vercel.
+      <strong>5 de 6 concluídos em 11/08.</strong> Resta habilitar o Web Analytics no painel da Vercel.
     </p>
 
     <div class="item ok">
@@ -345,6 +345,57 @@
         <span class="mono">"As pessoa…"</span>. Corrigido — agora 4 de 4, e o grifo continua sobre o texto
         original do aluno.
       </p>
+    </div>
+
+    <div class="item ok">
+      <span class="id">0.2b — FEITO EM 11/08</span>
+      <h3>Foto ilegível vira zero e a culpa cai no aluno</h3>
+      <div class="evidencia">
+        Encontrado ao fechar a Fase 2, numa redação enviada <b>hoje às 15h39</b>. O OCR devolveu
+        texto embaralhado — <span class="mono">“as vende-as I rem principais meios económicos …
+        sya ves mercados leesoos de reapas”</span> — e o corretor deu <b>zero</b>, dizendo que
+        <b>o texto do aluno</b> tinha “desvios gramaticais sistemáticos”.
+      </div>
+      <p>
+        O aluno escreveu; a máquina é que não leu. Devolver o embaralhado para ele “revisar”
+        também não resolve — consertar aquilo é redigitar a redação inteira.
+      </p>
+      <p>
+        <strong>Feito:</strong> a transcrição embaralhada é barrada <em>antes</em> de chegar à
+        correção, e a mensagem diz o que é verdade: <em>“o problema é a foto, não a sua redação”</em>.
+        Cada bloqueio vira incidente no painel — se virar rotina, o conserto é a orientação de
+        como fotografar.
+      </p>
+      <p>
+        A detecção é fonotática, não dicionário: o português proíbe certas sequências de letras,
+        e o OCR erra exatamente aí — preserva as palavras curtas e destrói as longas, produzindo
+        <span class="mono">sya</span>, <span class="mono">leesoos</span>,
+        <span class="mono">vsonvênicos</span>. A métrica mais óbvia foi testada e
+        <b>descartada por não funcionar</b>: a taxa de palavras funcionais não separa nada — a
+        redação embaralhada marcou 40,0% e as legíveis, de 37% a 49%.
+      </p>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Texto</th><th>Palavras impossíveis</th></tr></thead>
+          <tbody>
+            <tr><td>8 redações legíveis (notas 42 a 960)</td><td>0,0% a 0,9%</td></tr>
+            <tr><td>OCR embaralhado (nota 0)</td><td><b>4,2%</b></td></tr>
+            <tr><td>Link colado no lugar do texto</td><td>70,6%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Limite em 3%, deslocado para o lado permissivo: barrar uma redação boa por engano é pior
+        do que deixar passar uma transcrição sofrível. 42 testes, incluindo palavras legítimas de
+        grafia difícil (<em>construção</em>, <em>pneumático</em>, <em>mnemônico</em>, <em>voo</em>)
+        que não podem ser barradas.
+      </p>
+      <div class="evidencia">
+        ⚠️ <b>Fica uma decisão sua.</b> A redação daquele aluno continua no banco com nota
+        <b>0</b> e o retorno que culpa a escrita dele. <span class="mono">score</span> é
+        <span class="mono">NOT NULL</span>, então não dá para simplesmente anular — e pedir que ele
+        reenvie, apagar o registro ou deixar o professor avaliar é decisão de vocês, não minha.
+      </div>
     </div>
 
     <div class="item ok">
@@ -472,30 +523,60 @@
 
   <section>
     <h2>Fase 2 · Ter o que fazer lá dentro</h2>
-    <p class="fase-nota">Depende de trabalho de conteúdo, não só de código.</p>
+    <p class="fase-nota">Concluída em 11/08 — as três bancas agora têm banco de questões utilizável.</p>
 
-    <div class="item atencao">
-      <span class="id">2.1 — ALTO</span>
+    <div class="item ok">
+      <span class="id">2.1 — FEITO</span>
       <h3>Conteúdo ETEC</h3>
+      <p>Eram 245 questões contra 2.607 de ENEM, com metade da base de alunos em ETEC.
+      Importadas 10 provas do Vestibulinho (2017-2 a 2025-1): <strong>597 questões</strong>,
+      todas com gabarito.</p>
       <div class="evidencia">
-        245 questões contra 2.607 de ENEM. <b>Sociologia, Filosofia e Espanhol têm zero.</b>
-        Provas com PDF: 3, contra 24 do ENEM. Metade da base é ETEC.
+        <b>Correção de um erro deste roadmap.</b> A versão anterior apontava
+        “Sociologia, Filosofia e Espanhol têm zero” como lacuna de conteúdo.
+        Não é lacuna — <b>essas matérias não caem no Vestibulinho</b>. O problema real
+        era outro, e estava no código: o seletor de matérias usava um <code>LEFT JOIN</code>
+        e oferecia ao aluno de ETEC matérias que não existem para a banca dele. Ele
+        escolhia uma e batia num estado vazio. Corrigido: o seletor só mostra matéria
+        que tem questão.
       </div>
     </div>
 
-    <div class="item">
-      <span class="id">2.2 — MÉDIO</span>
+    <div class="item ok">
+      <span class="id">2.2 — FEITO</span>
       <h3>FUVEST</h3>
-      <p>18 provas cadastradas, <strong>nenhuma com PDF</strong>. 782 questões,
-      <strong>nenhuma com micro-tópico</strong> — ficam fora do Treino Específico.</p>
+      <p>Eram 782 questões <strong>sem nenhum micro-tópico</strong>, todas fora do
+      Treino Específico. Hoje <strong>763 das 782 (98%)</strong> estão classificadas.</p>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Banca</th><th>Questões</th><th>Com micro-tópico</th><th>Sem gabarito</th></tr></thead>
+          <tbody>
+            <tr><td>ENEM</td><td>2.607</td><td>2.373 (91%)</td><td>0</td></tr>
+            <tr><td>FUVEST</td><td>782</td><td>763 (98%)</td><td>0</td></tr>
+            <tr><td>ETEC</td><td>597</td><td>571 (96%)</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Pendência menor: 18 provas da FUVEST seguem <strong>sem PDF</strong> — o aluno
+      resolve as questões no simulado, mas não tem a prova original para baixar.</p>
     </div>
 
     <div class="item ok">
-      <span class="id">2.3 — RÁPIDO</span>
+      <span class="id">2.3 — FEITO</span>
       <h3>Reprocessar as redações zeradas</h3>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Redação</th><th>Antes</th><th>Depois</th></tr></thead>
+          <tbody>
+            <tr><td>Lucas (2.652 caracteres)</td><td>0</td><td><b>840</b></td></tr>
+            <tr><td>Gyovana (919 caracteres)</td><td>0</td><td><b>320</b></td></tr>
+            <tr><td>Kelvin (125 caracteres)</td><td>0</td><td><b>0</b> — anulação legítima</td></tr>
+          </tbody>
+        </table>
+      </div>
       <p>
-        A do Lucas já saiu de 0 para 840. Restam a da Gyovana (919 caracteres) e a do Kelvin
-        (125 caracteres — provavelmente anulação legítima).
+        O caso do Kelvin não era defeito: o aluno colou um <strong>link</strong> no lugar do texto,
+        e o corretor respondeu exatamente isso. Nenhum zero restante é erro da plataforma.
         <br><code>npx tsx scripts/recorrigir-redacao.ts --id &lt;uuid&gt;</code>
       </p>
     </div>

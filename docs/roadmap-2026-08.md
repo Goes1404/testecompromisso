@@ -35,7 +35,7 @@ prioridade (ver Fase 0).
 
 ---
 
-## Fase 0 — Parar de perder aluno (esta semana) — ✅ 4 de 5 FEITOS em 11/08
+## Fase 0 — Parar de perder aluno (esta semana) — ✅ 5 de 6 FEITOS em 11/08
 
 ### 0.1 · A camada de IA esteve fora do ar por 11 dias — ✅ FEITO
 
@@ -78,6 +78,51 @@ O teste com desvios revelou um defeito no destaque de trechos: 1 de 4 não era
 localizado porque o modelo devolve `"as pessoa que mora"` para um texto que
 abre a frase com `"As pessoa que mora"`. Corrigido com casamento tolerante a
 maiúsculas — mantendo o grifo sobre o texto original do aluno. Agora 4 de 4.
+
+### 0.2b · Foto ilegível vira zero e a culpa cai no aluno — ✅ FEITO (11/08)
+
+**Evidência:** encontrado ao fechar a Fase 2, numa redação enviada **hoje às
+15h39**. O aluno fotografou a redação, o OCR devolveu texto embaralhado —
+*"as vende-as I rem principais meios económicos … sya ves mercados leesoos de
+reapas"* — e o corretor deu **zero**, com o retorno dizendo que **o texto dele**
+tinha "desvios gramaticais sistemáticos".
+
+O aluno escreveu; a máquina é que não leu. Dar zero e culpar a escrita dele é o
+pior resultado possível — e devolver o texto embaralhado para ele "revisar"
+também não resolve, porque consertar aquilo é redigitar a redação inteira.
+
+**Feito:** `src/lib/essay-legibilidade.ts` barra a transcrição embaralhada
+**antes** de ela chegar à correção, e a mensagem diz o que é verdade: *"o
+problema é a foto, não a sua redação"*. Cada bloqueio vira incidente no painel —
+se virar rotina, o conserto é a orientação de como fotografar.
+
+A detecção é fonotática, não dicionário: o português proíbe certas sequências de
+letras, e o OCR erra exatamente aí — preserva as palavras curtas e frequentes e
+destrói as longas, produzindo `sya`, `leesoos`, `vsonvênicos`.
+
+Uma métrica mais óbvia foi testada e **descartada por não funcionar**: a taxa de
+palavras funcionais (*de, a, que, para*) não separa nada — a redação embaralhada
+marcou 40,0% e as legíveis, de 37% a 49%. Justamente porque o OCR acerta as
+palavras curtas.
+
+Calibrado contra as 10 redações reais do banco:
+
+| Texto | Palavras impossíveis |
+|---|---|
+| 8 redações legíveis (notas 42 a 960) | 0,0% a 0,9% |
+| OCR embaralhado (nota 0) | **4,2%** |
+| Link colado no lugar do texto | 70,6% |
+
+Limite em 3%, deslocado para o lado permissivo: barrar uma redação boa por engano
+é pior do que deixar passar uma transcrição sofrível. 42 testes em
+`scripts/test-legibilidade.ts`, incluindo palavras legítimas de grafia difícil
+(*construção*, *pneumático*, *mnemônico*, *voo*) que não podem ser barradas.
+
+⚠️ **Fica uma decisão sua:** a redação daquele aluno continua no banco com nota
+**0** e o retorno que culpa a escrita dele. `essay_submissions.score` é `NOT
+NULL`, então não dá para simplesmente anular — e pedir que ele reenvie, apagar o
+registro ou deixar o professor avaliar é decisão de vocês, não minha.
+O registro é `55e31221-0925-46e5-a14f-fdb35766a693`.
 
 ### 0.3 · O aluno é derrubado para o login no meio do uso — ✅ FEITO
 
@@ -188,23 +233,49 @@ sem perder o boletim, e é reversível.
 
 ---
 
-## Fase 2 — Ter o que fazer lá dentro
+## Fase 2 — Ter o que fazer lá dentro — ✅ FEITO em 11/08
 
-### 2.1 · Conteúdo ETEC
+### 2.1 · Conteúdo ETEC — ✅ FEITO (11/08)
 
-245 questões contra 2.607 de ENEM. **Sociologia, Filosofia e Espanhol têm zero.**
-Provas com PDF: 3, contra 24 do ENEM. Metade da base é ETEC.
+Eram 245 questões contra 2.607 de ENEM, com metade da base de alunos em ETEC.
+Importadas 10 provas do Vestibulinho (2017-2 a 2025-1): **597 questões**, todas
+com gabarito.
 
-### 2.2 · FUVEST
+**Correção de um erro deste roadmap:** a versão anterior apontava "Sociologia,
+Filosofia e Espanhol têm zero" como lacuna de conteúdo. Não é lacuna — **essas
+matérias não caem no Vestibulinho**. O problema real era outro, e estava no
+código: o seletor de matérias usava um `LEFT JOIN` e oferecia ao aluno de ETEC
+matérias que não existem para a banca dele. Ele escolhia uma e batia num estado
+vazio. Corrigido: o seletor só mostra matéria com questão.
 
-18 provas cadastradas, **nenhuma com PDF**. 782 questões, **nenhuma com
-micro-tópico** — ficam fora do Treino Específico.
+### 2.2 · FUVEST — ✅ FEITO (11/08)
 
-### 2.3 · Reprocessar as redações zeradas
+Eram 782 questões **sem nenhum micro-tópico**, todas fora do Treino Específico.
+Hoje **763 das 782 (98%)** estão classificadas.
 
-A do Lucas já foi recorrigida (0 → 840). Restam a da Gyovana (919 caracteres) e
-a do Kelvin (125 caracteres — provavelmente anulação legítima por texto
-insuficiente). O script existe: `npx tsx scripts/recorrigir-redacao.ts --id <uuid>`.
+**Estado do banco depois das duas fases:**
+
+| Banca | Questões | Com micro-tópico | Sem gabarito |
+|---|---|---|---|
+| ENEM | 2.607 | 2.373 (91%) | 0 |
+| FUVEST | 782 | 763 (98%) | 0 |
+| ETEC | 597 | 571 (96%) | 0 |
+
+Pendência menor: 18 provas da FUVEST seguem **sem PDF** — o aluno resolve as
+questões no simulado, mas não tem a prova original para baixar.
+
+### 2.3 · Reprocessar as redações zeradas — ✅ FEITO (11/08)
+
+| Redação | Antes | Depois |
+|---|---|---|
+| Lucas (2.652 caracteres) | 0 | **840** |
+| Gyovana (919 caracteres) | 0 | **320** |
+| Kelvin (125 caracteres) | 0 | **0** — anulação legítima |
+
+O caso do Kelvin não era defeito: o aluno colou um **link** no lugar do texto, e
+o corretor respondeu exatamente isso. Nenhum zero restante é erro da plataforma.
+
+Para reprocessar qualquer outra: `npx tsx scripts/recorrigir-redacao.ts --id <uuid>`.
 
 ---
 
