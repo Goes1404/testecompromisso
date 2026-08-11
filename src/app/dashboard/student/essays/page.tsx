@@ -36,6 +36,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { trackMissionProgress } from "@/lib/missions";
 import { EssayHighlightedText, BancaMirror, AnulacaoAviso } from "@/components/EssayMirror";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
 
 const EssayChart = dynamic(
   () =>
@@ -286,6 +287,7 @@ export default function StudentEssayPage() {
         });
       }
     } catch (err: any) {
+      trackFalha("redacao_falha_ocr", err);
       toast({ title: "Erro ao digitalizar", description: err.message, variant: "destructive" });
     } finally {
       setLoadingOcr(false);
@@ -355,6 +357,7 @@ export default function StudentEssayPage() {
     // ensina a regra em vez de apenas recusar. Esse caso não chama a IA, então
     // deixar passar não custa nada.
     if (text.trim().length < 40) {
+      trackAcao("redacao_bloqueada_curta", { chars: text.trim().length });
       toast({ title: "Escreva um pouco mais", description: "Precisamos de pelo menos algumas linhas para avaliar.", variant: "destructive" });
       return;
     }
@@ -362,6 +365,7 @@ export default function StudentEssayPage() {
     // Sem tema não há como avaliar C2 — e corrigir contra um tema errado anula
     // a redação por fuga. Melhor barrar aqui do que devolver zero.
     if (!theme.trim()) {
+      trackAcao("redacao_bloqueada_sem_tema", { chars: text.trim().length });
       toast({
         title: "Qual é o tema?",
         description: "Escolha um tema acima (ou escreva o seu em 'Tema Manual') antes de enviar. A correção usa o tema para avaliar fuga.",
@@ -394,12 +398,16 @@ export default function StudentEssayPage() {
             });
             const saveData = await saveRes.json();
             if (!saveRes.ok || !saveData.success) throw new Error(saveData.error || "Erro ao salvar");
+            trackAcao("redacao_salva", { nota: aiOutput.total_score, chars: text.length });
             
             // Incrementa missão de redação
             trackMissionProgress(supabase, user.id, 'submit_essay', 1).then(() => {});
 
             fetchHistory();
           } catch (insertError) {
+            // Este catch escondeu por dois meses que o CHECK (score <= 100)
+            // barrava toda redação com nota real. Agora o erro é registrado.
+            trackFalha("redacao_falha_salvar", insertError, { nota: aiOutput.total_score });
             console.error("Erro insert", insertError);
             toast({ title: "Erro na Evolução", description: "Avaliação finalizada, mas houve falha ao salvar no histórico.", variant: "destructive" });
           }
@@ -411,7 +419,8 @@ export default function StudentEssayPage() {
       } else {
         throw new Error(data.error || "IA offline");
       }
-    } catch {
+    } catch (e) {
+      trackFalha("redacao_falha_corrigir", e, { chars: text.length });
       toast({ title: "Erro de Sincronização", description: "Houve uma oscilação na rede. Tente novamente.", variant: "destructive" });
     } finally {
       setLoadingGrading(false);

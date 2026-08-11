@@ -34,6 +34,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
@@ -354,6 +355,7 @@ export default function ProvasCompletasPage() {
       const qs: Question[] = (data || []).map((row: any) => row.questions).filter(Boolean);
 
       if (qs.length === 0) {
+        trackAcao("prova_sem_questoes", { prova: exam.exam_type });
         toast({
           title: "Prova sem questões",
           description: "Esta prova ainda não tem questões cadastradas.",
@@ -410,7 +412,9 @@ export default function ProvasCompletasPage() {
       }
 
       setPageState("active");
+      trackAcao("prova_iniciada", { tipo: exam.exam_type, questoes: qs.length, tentativa: attemptNo });
     } catch (e: any) {
+      trackFalha("prova_falha_iniciar", e, { tipo: exam.exam_type });
       toast({ title: "Erro", description: e.message, variant: "destructive" });
       setPageState("list");
     }

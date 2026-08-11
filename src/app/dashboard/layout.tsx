@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet, MonitorSmartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +18,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UrgentNotice } from "@/components/UrgentNotice";
 import { PhoneGate } from "@/components/PhoneGate";
+import { TelemetryProvider } from "@/components/TelemetryProvider";
 import { PushPermissionBanner } from "@/components/push-permission-banner";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
 import { ExtractionProvider } from "@/lib/ExtractionContext";
@@ -171,6 +172,7 @@ const adminItems: NavItem[] = [
     icon: BarChart3, label: "Monitoramento", id: "nav-admin-monitoramento",
     children: [
       { icon: BarChart3,      label: "BI & Analytics",     href: "/dashboard/teacher/analytics", id: "nav-admin-analytics" },
+      { icon: MonitorSmartphone, label: "Onde o aluno para", href: "/dashboard/admin/uso",      id: "nav-admin-uso" },
       { icon: Trophy,         label: "Ranking por Prova",  href: "/dashboard/admin/ranking",     id: "nav-admin-ranking" },
       { icon: ClipboardCheck, label: "Frequência",          href: "/dashboard/admin/attendance",  id: "nav-admin-attendance" },
       { icon: FileCheck,      label: "Status de Documentos", href: "/dashboard/admin/checklists", id: "nav-admin-checklists" },
@@ -533,6 +535,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </main>
 
+        <TelemetryProvider />
         <OnboardingTour />
         <PhoneGate />
         <UrgentNotice />

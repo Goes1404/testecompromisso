@@ -23,6 +23,7 @@ import {
 } from '@/lib/gamification';
 import { trackMissionProgress } from '@/lib/missions';
 import { allowedExamTypesFor, examTypeLabel } from '@/lib/exam-types';
+import { trackAcao, trackFalha } from '@/lib/telemetry';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ALL_TOPICS = '_all';
@@ -280,6 +281,12 @@ export default function SimuladoPage() {
         // completar às escondidas com questões de outro vestibular.
         const bancaLabel = selectedBoard === ALL_BOARDS ? null : examTypeLabel(selectedBoard);
         const materiaLabel = subjects.find(s => s.id === selectedSubjectId)?.name;
+        // Mede a hipótese de que o aluno não estuda porque não há conteúdo
+        // para a trilha dele. Sem isto, "banco vazio" é indistinguível de
+        // "aluno desistiu".
+        trackAcao('simulado_sem_questoes', {
+          banca: selectedBoard, materia: materiaLabel ?? 'nenhuma', modo: mode,
+        });
         toast({
           title: bancaLabel ? `Ainda não temos questões de ${bancaLabel}` : 'Sem questões',
           description: bancaLabel
@@ -300,7 +307,9 @@ export default function SimuladoPage() {
       setXpGained(0);
       setExpandedIndex(null);
       setGameState('active');
+      trackAcao('simulado_iniciado', { questoes: formatted.length, banca: selectedBoard, modo: mode });
     } catch (e: any) {
+      trackFalha('simulado_falha_iniciar', e, { banca: selectedBoard, modo: mode });
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       setGameState('error');
     }
@@ -392,6 +401,7 @@ export default function SimuladoPage() {
           // esperado se o aluno já bateu o teto do dia, e concluir o simulado
           // deixou de valer XP por si só — só os acertos contam.
           setXpGained(ganho);
+          trackAcao('simulado_concluido', { acertos: s, total: newAnswers.length, xp: ganho, segundos: elapsedSeconds });
           if (ganho > 0) {
             toast({ title: `+${ganho} XP ganhos!`, description: `${s} acertos neste simulado.` });
           }
