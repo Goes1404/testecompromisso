@@ -66,11 +66,20 @@ console.log('\nCombinação sem discrepância');
   const r = aplicarProtocoloInep([v(160, 160, 120, 160, 120), v(160, 120, 120, 160, 160)]);
   checar('não marca discrepância', !r.houveDiscrepancia);
   checar('usa as duas correções', r.usadas.length === 2);
-  // C2: média de 160 e 120 = 140 → snap para 120 ou 160.
-  checar('média por competência fica em valor válido',
-    r.vetor.every(n => [0, 40, 80, 120, 160, 200].includes(n)), JSON.stringify(r.vetor));
   checar('total bate com a soma', r.total === total(r.vetor));
   checar('não pede banca', !r.precisouBanca);
+
+  // A média NÃO é arredondada para múltiplo de 40: C2 = média de 160 e 120 =
+  // 140, e é assim que fica. Arredondar dava viés para baixo — ver mediaFinal.
+  checar('média de 160 e 120 dá 140, não 120', r.vetor[1] === 140, JSON.stringify(r.vetor));
+  checar('média de 120 e 160 dá 140 em C5', r.vetor[4] === 140, JSON.stringify(r.vetor));
+
+  // Este é o caso real que revelou o bug: dois corretores em 800 e 760, e a
+  // nota final saía 720 — abaixo do MENOR dos dois.
+  const real = aplicarProtocoloInep([v(160, 200, 160, 120, 160), v(160, 160, 200, 120, 120)]);
+  checar('nota final fica entre as duas correções',
+    real.total >= 760 && real.total <= 800, `total=${real.total}`);
+  checar('nota final é a média exata dos totais', real.total === 780, `total=${real.total}`);
 }
 
 console.log('\nDiscrepância com terceiro corretor');

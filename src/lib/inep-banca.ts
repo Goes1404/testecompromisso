@@ -25,10 +25,16 @@
 export const COMP_KEYS = ['c1', 'c2', 'c3', 'c4', 'c5'] as const;
 export type CompKey = (typeof COMP_KEYS)[number];
 
-/** Notas de competência do ENEM são sempre múltiplos de 40 entre 0 e 200. */
+/**
+ * Notas que um CORRETOR pode atribuir a uma competência: múltiplos de 40.
+ *
+ * A nota FINAL não obedece a isso, porque é a média de dois corretores — é por
+ * isso que existem notas de ENEM como 940 ou 780, que não são múltiplos de 40.
+ * Ver `mediaFinal`.
+ */
 export const VALID_SCORES = [0, 40, 80, 120, 160, 200];
 
-/** Aproxima qualquer valor ao múltiplo de 40 válido mais próximo (0–200). */
+/** Aproxima o palpite do corretor ao múltiplo de 40 válido mais próximo (0–200). */
 export function snapCompetency(raw: unknown): number {
   const n = Number(raw);
   if (!Number.isFinite(n)) return 0;
@@ -36,6 +42,23 @@ export function snapCompetency(raw: unknown): number {
     (best, v) => (Math.abs(v - n) < Math.abs(best - n) ? v : best),
     0,
   );
+}
+
+/**
+ * Média das notas de competência que compõem o resultado final.
+ *
+ * NÃO arredonda para múltiplo de 40. Fazer isso introduzia um viés sistemático
+ * para baixo: toda média que caísse no meio de duas bandas (140, 180) descia
+ * uma faixa inteira, porque o desempate do `snapCompetency` escolhe o menor.
+ * Numa redação real corrigida em 800 e 760, a nota final saía 720 — quarenta
+ * pontos abaixo do MENOR dos dois corretores.
+ *
+ * A média de dois múltiplos de 40 é múltiplo de 20, e é assim que o ENEM
+ * funciona de fato. Com três notas (caso de banca) o valor é arredondado ao
+ * inteiro, já que aí a divisão pode não ser exata.
+ */
+export function mediaFinal(notas: number[]): number {
+  return Math.round(notas.reduce((a, b) => a + b, 0) / notas.length);
 }
 
 /**
@@ -119,7 +142,7 @@ export function aplicarProtocoloInep(correcoes: Correcao[]): ResultadoBanca {
 
   // Sem discrepância: média dos dois, como o INEP faz.
   if (motivos.length === 0) {
-    const vetor = a.vetor.map((_, i) => snapCompetency((a.vetor[i] + b.vetor[i]) / 2));
+    const vetor = a.vetor.map((_, i) => mediaFinal([a.vetor[i], b.vetor[i]]));
     return {
       vetor, total: total(vetor),
       houveDiscrepancia: false, motivos: [], precisouBanca: false, usadas: [0, 1],
@@ -129,7 +152,7 @@ export function aplicarProtocoloInep(correcoes: Correcao[]): ResultadoBanca {
   // Discrepância sem terceiro corretor disponível: o melhor que dá para fazer
   // é a média, sinalizando que a divergência ficou sem arbitragem.
   if (correcoes.length < 3) {
-    const vetor = a.vetor.map((_, i) => snapCompetency((a.vetor[i] + b.vetor[i]) / 2));
+    const vetor = a.vetor.map((_, i) => mediaFinal([a.vetor[i], b.vetor[i]]));
     return {
       vetor, total: total(vetor),
       houveDiscrepancia: true, motivos, precisouBanca: false, usadas: [0, 1],
@@ -150,7 +173,7 @@ export function aplicarProtocoloInep(correcoes: Correcao[]): ResultadoBanca {
   const empatados = distancias.filter(d => d === menor).length > 1;
   if (empatados) {
     const vetor = a.vetor.map((_, i) =>
-      snapCompetency((a.vetor[i] + b.vetor[i] + c.vetor[i]) / 3));
+      mediaFinal([a.vetor[i], b.vetor[i], c.vetor[i]]));
     return {
       vetor, total: total(vetor),
       houveDiscrepancia: true,
@@ -162,7 +185,7 @@ export function aplicarProtocoloInep(correcoes: Correcao[]): ResultadoBanca {
 
   const [i, j] = pares[distancias.indexOf(menor)];
   const vetor = correcoes[i].vetor.map((_, k) =>
-    snapCompetency((correcoes[i].vetor[k] + correcoes[j].vetor[k]) / 2));
+    mediaFinal([correcoes[i].vetor[k], correcoes[j].vetor[k]]));
 
   return {
     vetor, total: total(vetor),
