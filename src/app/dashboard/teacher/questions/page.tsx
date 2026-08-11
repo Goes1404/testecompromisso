@@ -180,7 +180,11 @@ export default function QuestionBankPage() {
         try {
             const m = url.match(/question-images\/(.+)$/);
             if (m?.[1]) await supabase.storage.from('question-images').remove([m[1]]);
-        } catch { }
+        } catch {
+            // Limpeza de arquivo órfão no storage. Falhar aqui só deixa a
+            // imagem ocupando espaço — a questão já foi removida do banco, e
+            // interromper o fluxo do professor por isso seria pior.
+        }
     };
 
     // ---------- File upload (reads file, feeds context) ----------

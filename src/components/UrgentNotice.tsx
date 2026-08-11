@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { AlertOctagon, X, Shield } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
+import { trackFalha } from '@/lib/telemetry';
 import { useAuth } from "@/lib/AuthProvider";
 
 export function UrgentNotice() {
@@ -62,7 +63,11 @@ export function UrgentNotice() {
             setTimeout(() => setVisible(true), 50);
           }
         }
-      } catch {}
+      } catch (e) {
+        // Comunicado urgente que não carrega não avisa ninguém, e ninguém
+        // fica sabendo que não avisou.
+        trackFalha('aviso_urgente_falhou', e);
+      }
     }
 
     fetchUrgent();

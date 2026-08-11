@@ -226,7 +226,12 @@ export default function StudentEssayPage() {
           // sobre ele era corrigido contra outro tema, e anulado por fuga.
           setTheme(atual => (atual.trim() ? atual : data.title));
         }
-      } catch {}
+      } catch (e) {
+        // Sem o tema da semana o aluno precisa gerar ou digitar um tema. Não
+        // quebra a tela, mas remove o caminho mais curto para escrever — e a
+        // tela fica exigindo uma escolha que ele não sabe que precisa fazer.
+        trackFalha('tema_da_semana_falhou', e);
+      }
     };
     fetchWeeklyTheme();
   }, [profile]);
@@ -254,16 +259,18 @@ export default function StudentEssayPage() {
         reader.readAsDataURL(file);
       });
 
-      const res = await Promise.race([
-        fetch("/api/essay-ocr", {
+      // Era um Promise.race escrito à mão; passa pelo helper para o tempo
+      // gasto também virar telemetria — a transcrição de foto é a operação
+      // mais pesada da tela depois da própria correção.
+      const res = await medir(
+        "ocr_redacao",
+        () => fetch("/api/essay-ocr", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: dataUrl }),
         }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Tempo esgotado ao digitalizar. Tente novamente.")), 60_000)
-        ),
-      ]);
+        { timeoutMs: 60_000, limiarLentoMs: 20_000 },
+      );
 
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Falha ao digitalizar a imagem.");
@@ -300,10 +307,14 @@ export default function StudentEssayPage() {
     setResult(null);
     setCustomTheme(false);
     try {
-      const res = await fetch("/api/essay-theme", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await medir(
+        "gerar_tema",
+        () => fetch("/api/essay-theme", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }),
+        { timeoutMs: 30_000 },
+      );
       const data = await res.json();
       if (res.ok && data.success) {
         setTheme(data.result.title);
@@ -400,11 +411,26 @@ export default function StudentEssayPage() {
         setResult(aiOutput);
         if (user) {
           try {
-            const saveRes = await fetch("/api/essay-save", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ user_id: user.id, theme, content: text, score: aiOutput.total_score, feedback: aiOutput.general_feedback, result_data: aiOutput }),
-            });
+            // Timeout curto de propósito: aqui já não há IA no caminho, é só
+            // um insert. Se demorar 20s, algo está errado — e pendurar sem
+            // limite reproduziria o sintoma que investigamos por dois meses:
+            // o aluno vê a nota na tela e a redação nunca chega ao histórico.
+            const saveRes = await medir(
+              "salvar_redacao",
+              () => fetch("/api/essay-save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  user_id: user.id,
+                  theme,
+                  content: text,
+                  score: aiOutput.total_score,
+                  feedback: aiOutput.general_feedback,
+                  result_data: aiOutput,
+                }),
+              }),
+              { timeoutMs: 20_000, props: { chars: text.length } },
+            );
             const saveData = await saveRes.json();
             if (!saveRes.ok || !saveData.success) throw new Error(saveData.error || "Erro ao salvar");
             trackAcao("redacao_salva", { nota: aiOutput.total_score, chars: text.length });

@@ -234,11 +234,18 @@ export default function DashboardHome() {
     if (!user) return;
     try {
       setSimNoticeDismissed(localStorage.getItem(`sim_notice_dismissed_${user.id}`) === '1');
-    } catch {}
+    } catch {
+      // Storage indisponível: o aviso de simulado reaparece. Incômodo, não
+      // perda de dado — o aluno consegue dispensar de novo.
+    }
   }, [user]);
   const dismissSimNotice = () => {
     setSimNoticeDismissed(true);
-    try { if (user) localStorage.setItem(`sim_notice_dismissed_${user.id}`, '1'); } catch {}
+    try {
+      if (user) localStorage.setItem(`sim_notice_dismissed_${user.id}`, '1');
+    } catch {
+      // Idem: sem persistir, o aviso volta na próxima visita.
+    }
   };
 
   const [activeSession, setActiveSession] = useState<any>(null);

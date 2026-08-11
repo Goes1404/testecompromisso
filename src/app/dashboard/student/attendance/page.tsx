@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { medir, TempoEsgotado } from "@/lib/perf";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -108,7 +110,7 @@ export default function StudentAttendancePage() {
         setMyRecords(map);
       }
     } catch (err) {
-      console.error(err);
+      trackFalha("presenca_falha_carregar", err);
     } finally {
       setLoading(false);
     }
@@ -134,15 +136,24 @@ export default function StudentAttendancePage() {
     }
     setCheckingIn(true);
     try {
-      const res = await fetch("/api/attendance/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, confirmed: true }),
-      });
+      // Check-in acontece no fim da aula, com a turma inteira no wi-fi da
+      // escola ao mesmo tempo. É onde a rede mais aperta — e o aluno costuma
+      // ter poucos minutos para registrar presença antes do código expirar.
+      const res = await medir(
+        "checkin_presenca",
+        () => fetch("/api/attendance/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, confirmed: true }),
+        }),
+        { timeoutMs: 15_000 },
+      );
       const data = await res.json();
       if (!res.ok) {
+        trackFalha("checkin_recusado", data.error ?? "sem detalhe");
         toast({ title: "Erro no check-in", description: data.error || "Código inválido ou expirado.", variant: "destructive" });
       } else {
+        trackAcao("checkin_ok");
         toast({ title: "Presença registrada!", description: `Aula: ${data.session_title}` });
         if (user) {
           trackMissionProgress(supabase, user.id, 'checkin', 1).then(() => {});
@@ -152,8 +163,16 @@ export default function StudentAttendancePage() {
         setConfirmoInput("");
         fetchData();
       }
-    } catch {
-      toast({ title: "Erro de conexão", variant: "destructive" });
+    } catch (e) {
+      trackFalha("checkin_falhou", e);
+      const demorou = e instanceof TempoEsgotado;
+      toast({
+        title: demorou ? "A rede não respondeu" : "Erro de conexão",
+        description: demorou
+          ? "Seu código continua válido. Tente de novo — se insistir, avise o professor."
+          : "Não conseguimos registrar sua presença. Tente de novo.",
+        variant: "destructive",
+      });
     } finally {
       setCheckingIn(false);
     }

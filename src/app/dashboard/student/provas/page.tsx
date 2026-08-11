@@ -116,7 +116,11 @@ const triggerHaptic = (ms = 15) => {
   if (typeof window !== "undefined" && navigator.vibrate) {
     try {
       navigator.vibrate(ms);
-    } catch {}
+    } catch {
+      // Único catch vazio proposital do arquivo: retorno háptico é enfeite.
+      // iOS não implementa `vibrate` e alguns Android recusam sem gesto do
+      // usuário. Não há o que reportar nem o que o aluno perca.
+    }
   }
 };
 
@@ -161,12 +165,21 @@ export default function ProvasCompletasPage() {
     try {
       const raw = localStorage.getItem(progressKey(examId));
       return raw ? (JSON.parse(raw) as SavedProgress) : null;
-    } catch {
+    } catch (e) {
+      // JSON corrompido ou storage bloqueado: o aluno perde a retomada da
+      // prova e recomeça do zero, sem entender por quê.
+      trackFalha("prova_progresso_ilegivel", e);
       return null;
     }
   }, [progressKey]);
   const clearProgress = useCallback((examId: string) => {
-    try { localStorage.removeItem(progressKey(examId)); } catch {}
+    try {
+      localStorage.removeItem(progressKey(examId));
+    } catch (e) {
+      // Falhar aqui deixa progresso órfão de uma prova já entregue, e a tela
+      // oferece "retomar" numa prova concluída.
+      trackFalha("prova_progresso_nao_limpo", e);
+    }
     setProgressByExam((p) => {
       const n = { ...p };
       delete n[examId];
@@ -328,7 +341,9 @@ export default function ProvasCompletasPage() {
             answered: sp.answers?.length ?? 0,
             savedAt: sp.savedAt,
           };
-        } catch {}
+        } catch (e) {
+          trackFalha("prova_progresso_ilegivel_na_lista", e);
+        }
       });
       setProgressByExam(prog);
 
