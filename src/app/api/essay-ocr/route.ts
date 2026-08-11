@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { respostaFalhaIA } from "@/lib/ia-status";
 import { OpenAI } from "openai";
 
 export const dynamic = 'force-dynamic';
@@ -68,10 +69,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, text: transcription });
 
   } catch (error: any) {
-    console.error("Erro na transcrição da redação:", error);
-    return NextResponse.json(
-      { success: false, error: "Falha ao processar a imagem. Tente novamente." },
-      { status: 500 }
-    );
+    return respostaFalhaIA("essay-ocr", error);
   }
 }

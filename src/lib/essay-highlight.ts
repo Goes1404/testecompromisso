@@ -53,8 +53,18 @@ export function localizarTrechos(texto: string, correcoes: unknown[]): CorrecaoL
     if (!original) return c;
 
     const alvo = original.replace(/\s+/g, ' ');
+
+    // Três tentativas, da mais estrita para a mais tolerante. A ordem importa:
+    // começar pela busca frouxa arriscaria casar o trecho errado quando o
+    // mesmo desvio aparece mais de uma vez no texto.
     let idx = normalizado.indexOf(alvo);
     if (idx < 0) idx = normalizadoSuave.indexOf(suavizar(alvo));
+    if (idx < 0) {
+      // Capitalização: o modelo devolve "as pessoa que mora" para um texto que
+      // começa a frase com "As pessoa que mora". Aconteceu em 1 de 4 trechos na
+      // validação com redação real — sem isto, o aluno não vê o grifo do erro.
+      idx = normalizadoSuave.toLowerCase().indexOf(suavizar(alvo).toLowerCase());
+    }
     if (idx < 0 || idx >= mapa.length) return { ...c, start: null, end: null };
 
     const start = mapa[idx];

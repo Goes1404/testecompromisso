@@ -35,9 +35,9 @@ prioridade (ver Fase 0).
 
 ---
 
-## Fase 0 — Parar de perder aluno (esta semana)
+## Fase 0 — Parar de perder aluno (esta semana) — ✅ 4 de 5 FEITOS em 11/08
 
-### 0.1 · A camada de IA esteve fora do ar por 11 dias
+### 0.1 · A camada de IA esteve fora do ar por 11 dias — ✅ FEITO
 
 **Evidência (Vercel, últimos 7 dias):** 429 `credit_balance_exhausted` em quatro
 rotas, de 30/07 a 10/08 — `weekly-summary` (14 ocorrências, 3 alunos), `chat` da
@@ -47,11 +47,17 @@ recolocados em 11/08.
 Enquanto isso, todo aluno que abriu o chat da Aurora, pediu o resumo semanal,
 gerou tema de redação ou fotografou uma redação recebeu erro.
 
-**O que fazer:** alerta quando a chave ficar sem crédito, e degradação honesta
-em vez de erro cru — a tela precisa dizer "esta função está temporariamente
-indisponível", não "erro de conexão".
+**Feito:** `src/lib/ia-status.ts` classifica a falha (sem crédito, limite de
+uso, chave inválida, instabilidade) nas 5 rotas de IA. Falhas temporárias viram
+**503 com mensagem honesta** em vez de 500 genérico, e cada incidente é gravado
+em `ia_incidentes`. O painel `/dashboard/admin/uso` mostra um aviso vermelho
+quando há falha nas últimas 24h — é o alerta que faltou.
 
-### 0.2 · Redação falhou para 4 alunos sem virar registro
+A classificação enxerga através do `lastError` do Vercel AI SDK, que embrulha o
+erro real depois de esgotar as tentativas — sem isso, o caso do chat da Aurora
+seria classificado como erro genérico.
+
+### 0.2 · Redação falhou para 4 alunos sem virar registro — ✅ FEITO
 
 **Evidência:** `Nenhuma correção válida retornada pela IA` — 14 ocorrências,
 **4 alunos distintos**, em `/api/essay-evaluate`, entre 11/07 e 10/08.
@@ -61,32 +67,53 @@ banco mostram**. As tentativas falharam antes de gravar. Combinado com o
 `CHECK (score <= 100)` já corrigido, a funcionalidade estava quebrada em duas
 camadas ao mesmo tempo.
 
-**O que fazer:** com os créditos de volta, validar o fluxo ponta a ponta com uma
-redação real. O motor já tem timeout e telemetria.
+**Feito:** validado ponta a ponta com a API real, duas redações:
 
-### 0.3 · O aluno é derrubado para o login no meio do uso
+| Redação | Tempo | Nota | Corretores |
+|---|---|---|---|
+| Boa, com repertório | 8,8s | 920 | 920 / 920, sem discrepância |
+| Com desvios de norma | 10,3s | 400 | 400 / 400, sem discrepância |
+
+O teste com desvios revelou um defeito no destaque de trechos: 1 de 4 não era
+localizado porque o modelo devolve `"as pessoa que mora"` para um texto que
+abre a frase com `"As pessoa que mora"`. Corrigido com casamento tolerante a
+maiúsculas — mantendo o grifo sobre o texto original do aluno. Agora 4 de 4.
+
+### 0.3 · O aluno é derrubado para o login no meio do uso — ✅ FEITO
 
 **Evidência:** `Invalid Refresh Token: Refresh Token Not Found` — 20 ocorrências
 em `/middleware`, 3 usuários, de 16/06 a 10/08.
 
-**O que fazer:** tratar o refresh inválido no middleware limpando o cookie e
-redirecionando com uma mensagem, em vez de estourar. Um aluno que é expulso sem
-explicação não tenta de novo.
+**Feito:** o middleware captura a falha (antes virava erro de runtime na
+Vercel), **apaga os cookies de sessão mortos** e redireciona com
+`?sessao=expirada`. A tela de login explica: "Sua sessão expirou por
+inatividade."
 
-### 0.4 · Habilitar Web Analytics e Speed Insights
+O detalhe que mais pesava: o cookie inválido *permanecia*. A cada nova página o
+middleware via um cookie de auth, refazia a chamada de rede que já tinha
+falhado, e o aluno pagava essa latência em toda navegação. Limpando, a próxima
+requisição resolve sem tocar a rede.
+
+### 0.4 · Habilitar Web Analytics e Speed Insights — ⏳ DEPENDE DE VOCÊ
 
 Painel da Vercel → projeto `testecompromisso` → Analytics → Enable. Sem código
-novo. Depois disso, "página mais acessada", "tempo na página" e Web Vitals
-passam a existir — com alguns dias de acúmulo.
+novo — os pacotes já estão instalados e montados. Único item da Fase 0 que não
+posso fazer daqui.
 
-### 0.5 · Desligar o cron job quebrado
+### 0.5 · Desligar o cron job quebrado — ✅ FEITO
 
 **Evidência:** `cron.job` id 1 dispara `net.http_post` a cada minuto para
 `https://SEU_PROJECT_REF.supabase.co/...` com a service role key literal
 `SUA_SERVICE_ROLE_KEY`. São **136.312 execuções** desde maio contra um host que
 não existe.
 
-`SELECT cron.unschedule(1);`
+**Feito:** desativado (`active = false`), não removido — a limpeza de imagens
+órfãs é uma necessidade real, e a definição fica guardada para quando a edge
+function existir. Chegou a 137.050 execuções.
+
+O job tinha dois defeitos somados: o nome diz `nightly`, mas o agendamento era
+`* * * * *`. Para reativar depois de corrigir a URL:
+`SELECT cron.alter_job(1, schedule := '0 3 * * *', active := true);`
 
 ---
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { respostaFalhaIA } from "@/lib/ia-status";
 import { OpenAI } from "openai";
 import { corrigirRedacao, ErroCorrecao } from "@/lib/essay-grader";
 
@@ -29,7 +30,6 @@ export async function POST(req: Request) {
     if (error instanceof ErroCorrecao) {
       return NextResponse.json({ success: false, error: error.message }, { status: error.status });
     }
-    console.error("Erro na avaliação da redação:", error);
-    return NextResponse.json({ success: false, error: "Falha na comunicação com a API de IA." }, { status: 500 });
+    return respostaFalhaIA("essay-evaluate", error);
   }
 }

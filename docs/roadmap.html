@@ -297,10 +297,12 @@
 
   <section>
     <h2>Fase 0 · Parar de perder aluno</h2>
-    <p class="fase-nota">Esta semana. Tudo aqui já está acontecendo agora.</p>
+    <p class="fase-nota">
+      <strong>4 de 5 concluídos em 11/08.</strong> Resta habilitar o Web Analytics no painel da Vercel.
+    </p>
 
-    <div class="item critico">
-      <span class="id">0.1 — CRÍTICO</span>
+    <div class="item ok">
+      <span class="id">0.1 — FEITO EM 11/08</span>
       <h3>A camada de IA esteve fora do ar por 11 dias</h3>
       <div class="evidencia">
         429 <span class="mono">credit_balance_exhausted</span> em quatro rotas, de 30/07 a 10/08:
@@ -311,12 +313,20 @@
         Todo aluno que abriu o chat, pediu o resumo semanal, gerou tema de redação ou fotografou
         uma redação recebeu erro. Créditos voltaram em 11/08.
       </p>
-      <p><strong>Fazer:</strong> alerta de saldo e degradação honesta — “esta função está
-      temporariamente indisponível”, não “erro de conexão”.</p>
+      <p>
+        <strong>Feito:</strong> as 5 rotas de IA classificam a falha e devolvem <span class="mono">503</span>
+        com mensagem honesta, em vez de 500 genérico. Cada incidente é gravado, e o painel mostra aviso
+        vermelho quando há falha nas últimas 24h — é o alerta que faltou.
+      </p>
+      <p>
+        A classificação enxerga através do <span class="mono">lastError</span> do Vercel AI SDK, que
+        embrulha o erro real depois de esgotar as tentativas. Sem isso, o caso do chat da Aurora seria
+        lido como erro genérico.
+      </p>
     </div>
 
-    <div class="item critico">
-      <span class="id">0.2 — CRÍTICO</span>
+    <div class="item ok">
+      <span class="id">0.2 — FEITO EM 11/08</span>
       <h3>Redação falhou para 4 alunos sem virar registro</h3>
       <div class="evidencia">
         <span class="mono">Nenhuma correção válida retornada pela IA</span> — 14 ocorrências,
@@ -327,39 +337,57 @@
         falharam antes de gravar. Somado ao <code>CHECK (score &lt;= 100)</code> já corrigido, a
         funcionalidade estava quebrada em duas camadas ao mesmo tempo.
       </p>
-      <p><strong>Fazer:</strong> validar o fluxo ponta a ponta com uma redação real, agora que há crédito.</p>
+      <p><strong>Feito:</strong> validado com a API real. Redação boa: 8,8s, nota 920. Redação com desvios:
+      10,3s, nota 400. Os dois corretores concordaram nas duas.</p>
+      <p>
+        O teste com desvios achou um defeito no destaque de trechos: 1 de 4 não era localizado porque o
+        modelo devolve <span class="mono">"as pessoa que mora"</span> para um texto que abre a frase com
+        <span class="mono">"As pessoa…"</span>. Corrigido — agora 4 de 4, e o grifo continua sobre o texto
+        original do aluno.
+      </p>
     </div>
 
-    <div class="item atencao">
-      <span class="id">0.3 — ALTO</span>
+    <div class="item ok">
+      <span class="id">0.3 — FEITO EM 11/08</span>
       <h3>O aluno é derrubado para o login no meio do uso</h3>
       <div class="evidencia">
         <span class="mono">Invalid Refresh Token: Refresh Token Not Found</span> — 20 ocorrências
         em <b>/middleware</b>, 3 usuários, de 16/06 a 10/08.
       </div>
-      <p><strong>Fazer:</strong> tratar o refresh inválido limpando o cookie e redirecionando com
-      mensagem, em vez de estourar. Quem é expulso sem explicação não tenta de novo.</p>
+      <p>
+        <strong>Feito:</strong> o middleware captura a falha, <strong>apaga os cookies mortos</strong> e
+        redireciona com <span class="mono">?sessao=expirada</span>. O login explica: “Sua sessão expirou
+        por inatividade.”
+      </p>
+      <p>
+        O que mais pesava era invisível: o cookie inválido permanecia, então a cada página o middleware
+        refazia a chamada de rede que já tinha falhado. O aluno pagava essa latência em toda navegação.
+      </p>
     </div>
 
-    <div class="item ok">
-      <span class="id">0.4 — RÁPIDO</span>
+    <div class="item atencao">
+      <span class="id">0.4 — DEPENDE DE VOCÊ</span>
       <h3>Habilitar Web Analytics e Speed Insights</h3>
       <p>
         Painel da Vercel → <span class="mono">testecompromisso</span> → Analytics → Enable.
-        Zero código. Depois disso, “página mais acessada”, “tempo na página” e Web Vitals passam
-        a existir, com alguns dias de acúmulo.
+        Zero código: os pacotes já estão instalados e montados. É o único item da Fase 0 que não
+        posso fazer daqui.
       </p>
     </div>
 
     <div class="item ok">
-      <span class="id">0.5 — RÁPIDO</span>
+      <span class="id">0.5 — FEITO EM 11/08</span>
       <h3>Desligar o cron job quebrado</h3>
       <div class="evidencia">
         <b>136.312 execuções</b> desde maio disparando para
         <span class="mono">https://SEU_PROJECT_REF.supabase.co/…</span> com a chave literal
         <span class="mono">SUA_SERVICE_ROLE_KEY</span>. Host inexistente, a cada minuto.
       </div>
-      <p><code>SELECT cron.unschedule(1);</code></p>
+      <p>
+        <strong>Feito:</strong> desativado, não removido — a limpeza de imagens órfãs é necessidade real,
+        e a definição fica guardada. O job somava dois defeitos: o nome diz <em>nightly</em>, mas o
+        agendamento era a cada minuto. Chegou a 137.050 execuções.
+      </p>
     </div>
   </section>
 

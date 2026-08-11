@@ -1,4 +1,5 @@
 import { openai } from '@ai-sdk/openai';
+import { classificarFalhaIA, mensagemParaAluno, registrarIncidenteIA } from '@/lib/ia-status';
 import { generateText } from 'ai';
 
 // 300s no Pro / 60s no Hobby — a Vercel usa o máximo permitido pelo plano
@@ -29,10 +30,16 @@ Sua missão: ajudar o aluno a ser aprovado no ENEM e nas ETECs.
     return Response.json({ success: true, result: { response: text } });
 
   } catch (error) {
-    console.error("Erro na API da Aurora:", error);
+    // Mesmo tratamento das demais rotas de IA: sem crédito e limite de uso são
+    // 503 com mensagem honesta, e o incidente fica registrado para o painel.
+    const tipo = classificarFalhaIA(error);
+    const temporario = tipo !== 'outro';
+    if (temporario) await registrarIncidenteIA('chat', tipo, error);
+    console.error(`[IA:chat] ${tipo}`, error);
+
     return new Response(
-      JSON.stringify({ error: "Erro na comunicação com o cérebro da Aurora OpenAI." }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ indisponivel: temporario, tipo, error: mensagemParaAluno(tipo) }),
+      { status: temporario ? 503 : 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { respostaFalhaIA } from '@/lib/ia-status';
 import { OpenAI } from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import { getAuthUser } from '@/lib/server-auth';
@@ -187,10 +188,8 @@ Retorne um JSON com:
 
     return NextResponse.json({ success: true, cached: false, summary: saved });
   } catch (error: any) {
-    console.error('[WEEKLY_SUMMARY]', error);
-    return NextResponse.json(
-      { error: error.message ?? 'Erro ao gerar resumo semanal' },
-      { status: 500 }
-    );
+    // A mensagem crua do erro ia para o cliente. Além de inútil para o aluno
+    // ("You have no credits remaining..."), vazava detalhe de infraestrutura.
+    return respostaFalhaIA('weekly-summary', error);
   }
 }

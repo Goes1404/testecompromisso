@@ -18,7 +18,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, AlertTriangle, MonitorSmartphone, Users, Timer } from 'lucide-react';
+import { Loader2, RefreshCw, AlertTriangle, MonitorSmartphone, Users, Timer, BrainCircuit } from 'lucide-react';
 
 type Funil = {
   base_real: number;
@@ -42,6 +42,8 @@ type EventoBruto = {
   props: Record<string, any> | null;
 };
 
+type IncidenteIA = { rota: string; tipo: string; criado_em: string; detalhe: string | null };
+
 type Lentidao = {
   operacao: string;
   amostras: number;
@@ -49,6 +51,16 @@ type Lentidao = {
   piorMs: number;
   travadas: number;
 };
+
+function rotuloTipoIA(tipo: string): string {
+  switch (tipo) {
+    case 'sem_credito':    return 'sem crédito na OpenAI';
+    case 'limite_uso':     return 'limite de uso atingido';
+    case 'chave_invalida': return 'chave de API inválida';
+    case 'indisponivel':   return 'serviço instável';
+    default:               return tipo;
+  }
+}
 
 /** Mediana: a média é distorcida por um único caso extremo de rede ruim. */
 function mediana(valores: number[]): number {
@@ -130,6 +142,7 @@ export default function UsoPage() {
   const [telas, setTelas] = useState<Linha[]>([]);
   const [falhas, setFalhas] = useState<Linha[]>([]);
   const [lentidao, setLentidao] = useState<Lentidao[]>([]);
+  const [incidentesIA, setIncidentesIA] = useState<IncidenteIA[]>([]);
   const [acoes, setAcoes] = useState<Linha[]>([]);
   const [eventosTotal, setEventosTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -159,6 +172,17 @@ export default function UsoPage() {
       setAcoes(agrupar(eventos.filter(e => e.kind === 'acao'), 'name'));
       setFalhas(agrupar(eventos.filter(e => e.kind === 'falha'), 'name'));
       setLentidao(resumirLentidao(eventos));
+
+      // Incidentes de IA: é o alerta que faltou quando a chave ficou sem
+      // crédito e quatro funcionalidades pararam por onze dias sem ninguém
+      // perceber.
+      const { data: ia } = await supabase
+        .from('ia_incidentes')
+        .select('rota, tipo, criado_em, detalhe')
+        .gte('criado_em', desde)
+        .order('criado_em', { ascending: false })
+        .limit(200);
+      setIncidentesIA((ia ?? []) as IncidenteIA[]);
     } catch (e: any) {
       toast({ title: 'Erro ao carregar', description: e.message, variant: 'destructive' });
     } finally {
@@ -198,6 +222,48 @@ export default function UsoPage() {
         <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary/30" /></div>
       ) : (
         <>
+          {/* ── IA FORA DO AR ── */}
+          {incidentesIA.length > 0 && (() => {
+            const ultimo = incidentesIA[0];
+            const horas = (Date.now() - new Date(ultimo.criado_em).getTime()) / 3_600_000;
+            const agora = horas < 24;
+            const porRota = new Map<string, number>();
+            for (const i of incidentesIA) porRota.set(i.rota, (porRota.get(i.rota) ?? 0) + 1);
+
+            return (
+              <section className={`rounded-[2rem] border p-6 shadow-sm space-y-2 ${
+                agora ? 'border-red-200 bg-red-50' : 'border-amber-100 bg-amber-50/40'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <BrainCircuit className={`h-4 w-4 ${agora ? 'text-red-600' : 'text-amber-600'}`} />
+                  <h2 className={`text-sm font-black uppercase tracking-widest ${
+                    agora ? 'text-red-700' : 'text-amber-700'
+                  }`}>
+                    {agora ? 'A IA está falhando agora' : 'A IA falhou nos últimos 14 dias'}
+                  </h2>
+                </div>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  {incidentesIA.length} falha(s), a última{' '}
+                  {horas < 1 ? 'há menos de uma hora' : `há ${Math.round(horas)}h`}.
+                  Motivo mais recente: <strong>{rotuloTipoIA(ultimo.tipo)}</strong>.
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[...porRota.entries()].map(([rota, n]) => (
+                    <span key={rota} className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-600">
+                      {rota} · {n}
+                    </span>
+                  ))}
+                </div>
+                {ultimo.tipo === 'sem_credito' && (
+                  <p className="text-[11px] font-bold text-red-700 pt-1">
+                    Sem crédito na OpenAI. Enquanto isso, chat, resumo semanal, geração de tema e
+                    correção de redação ficam indisponíveis para o aluno.
+                  </p>
+                )}
+              </section>
+            );
+          })()}
+
           {/* ── FUNIL ── */}
           <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2">

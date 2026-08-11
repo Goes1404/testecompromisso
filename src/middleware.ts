@@ -62,10 +62,51 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANTE: Usamos getUser() em vez de getSession() para garantir que metadados 
+  // IMPORTANTE: Usamos getUser() em vez de getSession() para garantir que metadados
   // (como must_change_password) estejam 100% atualizados e evitar loops.
-  const { data: { user } } = await supabase.auth.getUser()
+  //
+  // O try/catch não é defensivo à toa: em produção este ponto acumulou 20
+  // ocorrências de `Invalid Refresh Token: Refresh Token Not Found` entre
+  // 16/06 e 10/08, com 3 alunos afetados. Sem capturar, cada uma vira erro de
+  // runtime na Vercel e a requisição morre no meio.
+  let user = null;
+  let sessaoInvalida = false;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    user = data.user;
+    // `refresh_token_not_found` e afins: o cookie existe mas não vale mais.
+    if (error && !user) sessaoInvalida = true;
+  } catch {
+    sessaoInvalida = true;
+  }
   const session = user ? { user } : null;
+
+  // Cookie de sessão morto precisa ser APAGADO, não apenas ignorado.
+  //
+  // Antes, o cookie inválido permanecia no navegador: a cada nova página o
+  // curto-circuito acima via um cookie de auth, entrava aqui e refazia a
+  // chamada de rede que já tinha falhado. O aluno pagava a latência dessa ida
+  // e volta em toda navegação, e o log enchia. Limpando, a próxima requisição
+  // resolve na hora, sem rede.
+  if (sessaoInvalida) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = '/login';
+    // A tela de login usa isto para explicar o que houve, em vez de deixar o
+    // aluno achar que errou a senha.
+    destino.searchParams.set('sessao', 'expirada');
+
+    const limpa = request.nextUrl.pathname.startsWith('/dashboard')
+      ? NextResponse.redirect(destino)
+      : response;
+
+    for (const c of request.cookies.getAll()) {
+      if (c.name.startsWith('sb-') && c.name.includes('auth-token')) {
+        limpa.cookies.delete(c.name);
+      }
+    }
+    limpa.headers.set('x-request-id', requestId);
+    return limpa;
+  }
 
   // Proteger rotas /dashboard originando flash of content
   if (request.nextUrl.pathname.startsWith('/dashboard')) {

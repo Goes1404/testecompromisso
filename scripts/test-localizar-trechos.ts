@@ -61,6 +61,19 @@ console.log('\nAspas curvas');
   checar('casa aspas curvas com retas', r[0].start === 0, JSON.stringify(r[0]));
 }
 
+console.log('\nCapitalização diferente');
+{
+  // Caso real da validação com redação de aluno: o texto abre a frase com
+  // maiúscula e o modelo devolve o trecho em minúscula.
+  const r = localizarTrechos(TEXTO, [
+    { original: 'as pessoa não liga', suggestion: 'As pessoas não ligam', reason: 'concordância' },
+  ]);
+  checar('casa ignorando maiúsculas', r[0].start === 0, JSON.stringify(r[0]));
+  checar('o grifo usa o texto ORIGINAL, não o do modelo',
+    TEXTO.slice(r[0].start ?? 0, r[0].end ?? 0) === 'As pessoa não liga',
+    JSON.stringify(TEXTO.slice(r[0].start ?? 0, r[0].end ?? 0)));
+}
+
 console.log('\nSobreposição');
 {
   const r = localizarTrechos(TEXTO, [
