@@ -25,10 +25,22 @@ export const metadata = {
   keywords: 'curso preparatório, cursinho enem, pre vestibulinho etec, santana de parnaíba, aprovação, redação enem',
   // manifest gerado por src/app/manifest.ts (/manifest.webmanifest). Não
   // declarar aqui também — evita <link rel="manifest"> duplicado.
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    // O iPhone tira o ícone da tela de início DAQUI, não do manifesto. Sem
+    // esta linha ele usa uma miniatura da página — o aluno instala e fica com
+    // um retângulo borrado no lugar do logo, o que faz parecer que deu errado.
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   appleWebApp: {
     capable: true,
     title: "Compromisso",
-    statusBarStyle: "black-translucent"
+    // Era "black-translucent": no iPhone isso faz o conteúdo subir para trás
+    // da barra de status, e o topo da tela fica ilegível sobre o fundo claro.
+    statusBarStyle: "default"
   }
 };
 

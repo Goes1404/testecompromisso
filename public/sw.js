@@ -22,8 +22,10 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Compromisso";
   const options = {
     body: payload.body || "",
-    icon: payload.icon || "/icons/icon-192x192.png",
-    badge: payload.badge || "/icons/icon-192x192.png",
+    // Apontavam para um JPEG de 1024x1024 renomeado para .png — 512 KB
+    // baixados para desenhar um ícone de notificação, e um selo de 24 pixels.
+    icon: payload.icon || "/icons/icon-192.png",
+    badge: payload.badge || "/icons/badge-96.png",
     image: payload.image,
     tag: payload.tag || payload.type || "compromisso",
     renotify: true,
