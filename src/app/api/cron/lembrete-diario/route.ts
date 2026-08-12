@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "crypto";
 import { sendPushToUsers } from "@/lib/push";
 
@@ -56,14 +56,17 @@ function mensagem(a: Alvo): { title: string; body: string } {
             body: "Responda 1 questão e ela continua de pé. Leva um minuto.",
           };
     case "protegida":
+      // "Sua ofensiva de N dia(s)" em vez de "seus N dias guardados": com N=1 a
+      // segunda forma vira "você tem 1 dia guardados", e concordância errada
+      // numa mensagem automática soa como robô — justamente o oposto do tom.
       return pet
         ? {
             title: `🛡️ ${pet} segurou sua ofensiva`,
-            body: `Seus ${dias(a.ofensiva)} continuam guardados. Estude hoje para seguir de onde parou.`,
+            body: `Sua ofensiva de ${dias(a.ofensiva)} continua de pé. Estude hoje para seguir de onde parou.`,
           }
         : {
             title: "🛡️ Uma proteção segurou sua ofensiva",
-            body: `Você tem ${dias(a.ofensiva)} guardados. Estude hoje para seguir de onde parou.`,
+            body: `Sua ofensiva de ${dias(a.ofensiva)} continua de pé. Estude hoje para seguir de onde parou.`,
           };
     case "sumido":
       return pet
@@ -86,12 +89,50 @@ function segredoConfere(recebido: string, esperado: string): boolean {
   return timingSafeEqual(a, b);
 }
 
+/**
+ * O segredo que autoriza esta chamada.
+ *
+ * Fonte da verdade é `configuracao_privada` no banco, e não uma variável de
+ * ambiente. O motivo é prático: quem assina a chamada é o `pg_cron`, que roda
+ * DENTRO do Postgres e só sabe ler dali. Guardar o mesmo valor também na Vercel
+ * criaria duas cópias do mesmo segredo, que precisam ser trocadas juntas — e a
+ * primeira vez que uma delas ficar para trás, o lembrete para de sair sem
+ * ninguém entender por quê.
+ *
+ * A tabela tem RLS ligada e nenhuma policy: `anon` e `authenticated` não leem
+ * uma linha sequer. Chegam nela apenas o `postgres` (que é quem o cron usa) e a
+ * service role — que esta rota já precisa ter de qualquer modo para consultar
+ * os alunos. Ou seja, nenhum acesso novo foi criado.
+ *
+ * `CRON_SECRET` continua sendo aceito e tem prioridade, para o dia em que
+ * alguém quiser tirar o segredo do banco sem mexer em código.
+ */
+async function segredoEsperado(admin: SupabaseClient): Promise<string | null> {
+  const doAmbiente = process.env.CRON_SECRET;
+  if (doAmbiente && doAmbiente.length >= 16) return doAmbiente;
+
+  const { data, error } = await admin
+    .from("configuracao_privada")
+    .select("valor")
+    .eq("chave", "cron_secret")
+    .maybeSingle();
+
+  if (error || !data?.valor || data.valor.length < 16) return null;
+  return data.valor;
+}
+
 export async function POST(req: NextRequest) {
-  const esperado = process.env.CRON_SECRET;
-  if (!esperado || esperado.length < 16) {
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+
+  const esperado = await segredoEsperado(admin);
+  if (!esperado) {
     // Falha fechada: sem segredo configurado a rota não roda, em vez de ficar
     // aberta para qualquer um disparar notificação para a base inteira.
-    console.error("[cron/lembrete-diario] CRON_SECRET ausente ou curto demais.");
+    console.error("[cron/lembrete-diario] segredo ausente ou curto demais.");
     return NextResponse.json({ error: "Rota não configurada." }, { status: 503 });
   }
 
@@ -101,18 +142,33 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } },
-    );
-
     const { data, error } = await admin.rpc("alunos_para_lembrete");
     if (error) throw new Error(error.message);
 
     const alvos = (data ?? []) as Alvo[];
     if (alvos.length === 0) {
       return NextResponse.json({ ok: true, enviados: 0, porSegmento: {} });
+    }
+
+    // Simulação: mostra QUEM receberia e o QUE receberia, sem tocar em nada.
+    //
+    // Existe porque testar esta rota sem ela custa caro: `sendPushToUsers`
+    // grava na caixa de avisos ANTES de tentar o push, então uma chamada de
+    // teste deixa 21 mensagens reais na inbox de 21 alunos — e, pior, o limite
+    // de um lembrete por dia passa a considerar o teste, silenciando o envio
+    // de verdade daquele dia. Foi exatamente o que aconteceu em 12/08.
+    if (new URL(req.url).searchParams.get("simular") === "1") {
+      const porSegmento: Record<string, number> = {};
+      for (const a of alvos) porSegmento[a.segmento] = (porSegmento[a.segmento] ?? 0) + 1;
+      return NextResponse.json({
+        ok: true,
+        simulacao: true,
+        alvos: alvos.length,
+        porSegmento,
+        comBichinho: alvos.filter(a => a.pet_nome).length,
+        // Amostra dos textos, sem nome de aluno nem id.
+        exemplos: [...new Map(alvos.map(a => [a.segmento, mensagem(a)])).values()],
+      });
     }
 
     // Agrupa por texto: alunos do mesmo segmento e mesma ofensiva recebem a
