@@ -843,3 +843,109 @@ input:-webkit-autofill:active {
   display: none;
 }
 
+
+/* ── Mascote 3D ────────────────────────────────────────────────────────────
+   O boneco é montado em nove camadas (ver src/components/mascote/arte.tsx).
+   O giro é escrito no DOM por rAF; estas keyframes são só o repouso — respirar,
+   pular, abanar a cauda. Elas vivem em `transform`/`opacity` de propósito: são
+   as duas únicas propriedades que o compositor anima sem tocar em layout, e o
+   alvo é o celular de entrada do aluno.
+
+   O bloco global de `prefers-reduced-motion` acima já zera tudo isto; o
+   componente ainda checa a mesma media query no JS para desligar também a
+   inércia do arrasto, que o CSS não alcança. */
+
+@keyframes mascote-respira {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50%      { transform: translateY(-1.5%) scaleY(1.025); }
+}
+
+@keyframes mascote-pulo {
+  0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); }
+  18%      { transform: translateY(2%) scaleY(0.9) scaleX(1.08); }
+  50%      { transform: translateY(-13%) scaleY(1.07) scaleX(0.95); }
+  78%      { transform: translateY(1%) scaleY(0.94) scaleX(1.05); }
+}
+
+@keyframes mascote-power {
+  0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+  35%      { transform: translateY(-6%) scale(1.06); filter: brightness(1.35); }
+  70%      { transform: translateY(-2%) scale(1.02); filter: brightness(1.1); }
+}
+
+@keyframes mascote-soneca {
+  0%, 100% { transform: translateY(0) scaleY(1) rotate(0deg); }
+  50%      { transform: translateY(1.5%) scaleY(0.975) rotate(1.2deg); }
+}
+
+@keyframes mascote-cabeca {
+  0%, 100% { transform: translateY(0) rotate(-1.8deg); }
+  50%      { transform: translateY(-1.2%) rotate(1.8deg); }
+}
+
+/* Curiosidade: o bicho novo espia de um lado para o outro esperando o aluno. */
+@keyframes mascote-espia {
+  0%, 100% { transform: rotate(-4deg) translateX(-1%); }
+  30%      { transform: rotate(4deg) translateX(1.5%); }
+  60%      { transform: rotate(-2deg) translateX(-0.5%); }
+}
+
+/* Carinho: a cabeça sobe e encosta na mão, e fica lá um instante. */
+@keyframes mascote-carinho {
+  0%       { transform: translateY(0) rotate(0deg); }
+  30%      { transform: translateY(-4%) rotate(-7deg); }
+  60%      { transform: translateY(-3%) rotate(6deg); }
+  100%     { transform: translateY(-1%) rotate(-2deg); }
+}
+
+@keyframes mascote-cauda {
+  0%, 100% { transform: rotate(-9deg); }
+  50%      { transform: rotate(11deg); }
+}
+
+@keyframes mascote-asa {
+  0%, 100% { transform: scaleX(1) rotate(-3deg); }
+  50%      { transform: scaleX(0.82) rotate(6deg); }
+}
+
+@keyframes mascote-sombra {
+  0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.25; }
+  50%      { transform: translateX(-50%) scaleX(0.78); opacity: 0.14; }
+}
+
+@keyframes mascote-coracao {
+  0%   { transform: translateY(0) scale(0.5); opacity: 0; }
+  20%  { transform: translateY(-14px) scale(1.15); opacity: 1; }
+  100% { transform: translateY(-88px) scale(0.85); opacity: 0; }
+}
+
+/* Fogo, faísca, folha e pena — as partículas de ambiente por arquétipo. */
+@keyframes mascote-particula {
+  0%, 100% { transform: translateY(0) scale(0.85); opacity: 0; }
+  25%      { opacity: 0.95; }
+  50%      { transform: translateY(-16px) scale(1.1); opacity: 0.8; }
+  85%      { opacity: 0; }
+}
+
+/* Anel de captura, no vocabulário de Pokémon GO. */
+@keyframes mascote-anel {
+  0%   { transform: translate(-50%, -50%) scale(1.35); opacity: 0; }
+  35%  { opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(0.82); opacity: 0; }
+}
+
+@keyframes mascote-varredura {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(320%) skewX(-18deg); }
+}
+
+/* Balão de fala do carinho: aparece com um estalo e some no lugar.
+   Antes reaproveitava `mascote-coracao`, que sobe 88px — o balão subia junto e
+   ia parar em cima da placa de CP. */
+@keyframes mascote-balao {
+  0%   { transform: scale(0.6) translateY(6px); opacity: 0; }
+  18%  { transform: scale(1.06) translateY(0); opacity: 1; }
+  28%  { transform: scale(1) translateY(0); opacity: 1; }
+  80%  { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(0.96) translateY(-4px); opacity: 0; }
+}

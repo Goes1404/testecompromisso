@@ -1,6 +1,18 @@
 import { supabase } from '@/app/lib/supabase';
 
-export type Especie = 'capivara' | 'coruja' | 'gato' | 'tucano';
+/**
+ * Espécies adotáveis.
+ *
+ * Os quatro primeiros são os arquétipos 3D; os quatro últimos são o legado —
+ * já existem alunos com eles adotados, e tirar uma espécie da lista apagaria o
+ * bicho de quem a escolheu. A arte de todos vive em `@/lib/mascote`.
+ *
+ * Precisa bater com o CHECK de `pets.especie` e com a validação de
+ * `adotar_bichinho()` — quem recusa espécie inválida é o banco.
+ */
+export type Especie =
+  | 'lobinho' | 'dragao' | 'dinossauro' | 'eletrico'
+  | 'capivara' | 'coruja' | 'gato' | 'tucano';
 export type Humor = 'novo' | 'feliz' | 'com_fome' | 'triste' | 'dormindo';
 
 export interface Bichinho {
@@ -18,13 +30,6 @@ export interface Bichinho {
   saldo: number;
   preco_protecao: number;
 }
-
-export const ESPECIES: { id: Especie; emoji: string; nome: string }[] = [
-  { id: 'capivara', emoji: '🦫', nome: 'Capivara' },
-  { id: 'coruja',   emoji: '🦉', nome: 'Coruja'   },
-  { id: 'gato',     emoji: '🐱', nome: 'Gato'     },
-  { id: 'tucano',   emoji: '🦜', nome: 'Tucano'   },
-];
 
 export const NIVEIS = [
   'Filhote', 'Curioso', 'Esperto', 'Estudioso',
@@ -106,10 +111,6 @@ export async function comprarProtecao(): Promise<Bichinho> {
   const { data, error } = await supabase.rpc('comprar_protecao');
   if (error) throw new Error(error.message);
   return data as unknown as Bichinho;
-}
-
-export function emojiDaEspecie(e: Especie | null): string {
-  return ESPECIES.find(x => x.id === e)?.emoji ?? '🥚';
 }
 
 export function nomeDoNivel(nivel: number): string {

@@ -7,9 +7,11 @@ import { useToast } from '@/hooks/use-toast';
 import { estadoOfensiva } from '@/lib/streak';
 import {
   getBichinho, adotarBichinho, comprarProtecao,
-  ESPECIES, HUMORES, emojiDaEspecie, nomeDoNivel, progressoDoNivel,
+  HUMORES, nomeDoNivel, progressoDoNivel,
   type Bichinho, type Especie,
 } from '@/lib/bichinho';
+import { ARQUETIPOS_NOVOS, arquetipo, calcularCP, expressaoDoHumor } from '@/lib/mascote';
+import { MascoteRetrato } from '@/components/mascote/MascoteRetrato';
 
 /**
  * Bichinho de estimação — e, junto, a ofensiva.
@@ -24,7 +26,7 @@ export function BichinhoWidget() {
   const [bicho, setBicho] = useState<Bichinho | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
-  const [especie, setEspecie] = useState<Especie>('capivara');
+  const [especie, setEspecie] = useState<Especie>('lobinho');
   const [nome, setNome] = useState('');
 
   useEffect(() => {
@@ -44,7 +46,10 @@ export function BichinhoWidget() {
     setSalvando(true);
     try {
       setBicho(await adotarBichinho(especie, escolhido));
-      toast({ title: `${escolhido} é seu! 🎉`, description: 'Ele cresce a cada dia que você estuda.' });
+      toast({
+        title: `${escolhido} é seu! ${arquetipo(especie).emoji}`,
+        description: 'Ele cresce a cada dia que você estuda.',
+      });
     } catch (e) {
       toast({
         title: 'Não deu para adotar agora',
@@ -108,21 +113,27 @@ export function BichinhoWidget() {
             </p>
           </div>
 
+          {/* Só os quatro 3D aqui: o cartão da home não tem altura para as oito
+              espécies, e a página do bichinho oferece as clássicas a quem quiser. */}
           <div className="grid grid-cols-4 gap-2">
-            {ESPECIES.map(e => (
+            {ARQUETIPOS_NOVOS.map(a => (
               <button
-                key={e.id}
+                key={a.id}
                 type="button"
-                onClick={() => setEspecie(e.id)}
-                aria-pressed={especie === e.id}
-                className={`rounded-2xl p-2 border transition-all ${
-                  especie === e.id
+                onClick={() => setEspecie(a.id)}
+                aria-pressed={especie === a.id}
+                className={`rounded-2xl p-1.5 border transition-all ${
+                  especie === a.id
                     ? 'bg-white/25 border-white/50 scale-105'
                     : 'bg-white/10 border-white/10 hover:bg-white/15'
                 }`}
               >
-                <span className="text-3xl block leading-none" aria-hidden>{e.emoji}</span>
-                <span className="text-[9px] font-black uppercase tracking-wide block mt-1">{e.nome}</span>
+                <MascoteRetrato
+                  especie={a.id}
+                  expressao={especie === a.id ? 'feliz' : 'normal'}
+                  className="w-full h-12"
+                />
+                <span className="text-[9px] font-black uppercase tracking-wide block mt-0.5">{a.nome}</span>
               </button>
             ))}
           </div>
@@ -146,7 +157,7 @@ export function BichinhoWidget() {
               className="w-full rounded-2xl bg-white text-indigo-700 font-black py-2.5 text-sm disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
-              Adotar
+              Adotar {arquetipo(especie).nome}
             </button>
           </div>
         </div>
@@ -181,15 +192,20 @@ export function BichinhoWidget() {
             : 'bg-gradient-to-br from-slate-700 to-slate-900'
       }`}>
         <div className="flex items-start gap-4">
-          <div
-            className={`text-6xl leading-none shrink-0 ${humor.animacao} ${bicho.humor === 'dormindo' ? 'opacity-50' : ''}`}
-            aria-hidden
-          >
-            {emojiDaEspecie(bicho.especie)}
+          {/* Retrato parado, não o rig 3D: o cartão é um `Link`, e arrastar para
+              girar brigaria com a navegação. O boneco que gira e recebe carinho
+              está na página, a um toque daqui. */}
+          <div className={`shrink-0 w-20 ${bicho.humor === 'dormindo' ? 'opacity-60' : ''}`}>
+            <MascoteRetrato
+              especie={bicho.especie}
+              nivel={bicho.nivel}
+              expressao={expressaoDoHumor(bicho.humor)}
+              className={`w-20 h-20 ${humor.animacao}`}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-white/60">
-              Nível {bicho.nivel} · {nomeDoNivel(bicho.nivel)}
+              Nível {bicho.nivel} · {nomeDoNivel(bicho.nivel)} · CP {calcularCP(bicho)}
             </p>
             <p className="text-xl font-black italic leading-tight truncate">{apelido}</p>
             <p className="text-[11px] font-bold text-white/75 leading-tight mt-1">

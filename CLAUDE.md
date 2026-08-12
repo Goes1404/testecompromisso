@@ -27,6 +27,42 @@ npx supabase db push # Aplicar migrations locais ao projeto remoto
 - **Ícones**: Lucide React
 - **Animações**: Framer Motion (já instalado)
 - **Charts**: Recharts (usar `dynamic(..., { ssr: false })` para SSR)
+- **Mascote 3D**: SVG em camadas + CSS transform (sem three.js — ver abaixo)
+
+## 🐺 Mascote (bichinho) 3D
+
+O bichinho é desenhado por um rig 2.5D próprio em `/src/components/mascote`,
+não por uma engine 3D. `three` + `react-three-fiber` custaria ~600 KB de JS e um
+`.glb` por arquétipo, numa plataforma que roda no celular do aluno em rede
+móvel — por isso a rotação é feita com SVG em camadas e `transform`.
+
+| Arquivo | Papel |
+|---------|-------|
+| `src/lib/mascote.ts` | Engine: arquétipos, CP/HP, iluminação, estado de animação e o JSON de especificação (`specDoMascote`) |
+| `components/mascote/arte.tsx` | As peças em SVG (orelha, focinho, cauda…) e a profundidade de cada camada |
+| `components/mascote/Mascote3D.tsx` | O rig: giro 360°, arrasto, carinho |
+| `components/mascote/ArenaMascote.tsx` | A moldura estilo Pokémon GO (CP, HP, anel de captura) |
+| `components/mascote/MascoteRetrato.tsx` | Versão parada, num SVG só — para grades e cartões |
+
+### Regras ao mexer aqui
+
+1. **Peça grudada em outra tem a mesma profundidade.** Orelha e chapéu andam com
+   a cabeça (z=16/18), bandana com o peito (z=8). Só protuberância real (focinho,
+   cauda, asas) ganha z próprio — é ela que produz a paralaxe. Dar z diferente a
+   uma peça grudada faz ela descolar e flutuar ao girar.
+2. **CP nunca cai.** Sai de `nivel` + `dias_estudo`, as duas grandezas que o banco
+   garante monotônicas. Ofensiva e saldo de XP ficam fora de propósito: um CP que
+   despenca depois de um fim de semana mal dado, ou que cai porque o aluno comprou
+   proteção, transforma o boneco em cobrança.
+3. **Carinho não dá XP.** XP vem de estudar (régua de 11/08). Afeto que paga vira
+   tarefa.
+4. **Animação só em `transform`/`opacity`**, e o giro é escrito no DOM dentro de um
+   `requestAnimationFrame` — passar o ângulo por `useState` custaria um render por
+   frame de arrasto.
+5. **Espécie nova exige migration**: o CHECK de `pets.especie` *e* a validação
+   dentro de `adotar_bichinho()` (as duas listas precisam bater com `ARQUETIPOS`).
+   Nunca remover uma espécie da lista — isso deixaria o bicho de quem a adotou num
+   estado que a própria tabela recusa.
 
 ## 🗂 Banco de Dados (Tabelas Principais)
 

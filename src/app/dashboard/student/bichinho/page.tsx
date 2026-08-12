@@ -3,16 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Flame, Shield, Trophy, Loader2, ArrowRight, Sparkles, Calendar, Info,
+  Flame, Shield, Trophy, Loader2, ArrowRight, Sparkles, Calendar, Info, Wand2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { estadoOfensiva } from '@/lib/streak';
 import {
   getBichinho, adotarBichinho, comprarProtecao,
-  ESPECIES, HUMORES, DIAS_POR_NIVEL, NIVEIS,
-  emojiDaEspecie, nomeDoNivel, progressoDoNivel,
+  HUMORES, DIAS_POR_NIVEL, NIVEIS,
+  nomeDoNivel, progressoDoNivel,
   type Bichinho, type Especie,
 } from '@/lib/bichinho';
+import { arquetipo } from '@/lib/mascote';
+import { ArenaMascote } from '@/components/mascote/ArenaMascote';
+import { SeletorArquetipo } from '@/components/mascote/SeletorArquetipo';
 
 /**
  * A casa do bichinho.
@@ -32,8 +35,9 @@ export default function BichinhoPage() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
-  const [especie, setEspecie] = useState<Especie>('capivara');
+  const [especie, setEspecie] = useState<Especie>('lobinho');
   const [nome, setNome] = useState('');
+  const [trocando, setTrocando] = useState(false);
 
   async function carregar() {
     setCarregando(true);
@@ -62,10 +66,41 @@ export default function BichinhoPage() {
     setSalvando(true);
     try {
       setBicho(await adotarBichinho(especie, escolhido));
-      toast({ title: `${escolhido} é seu! 🎉`, description: 'Ele cresce a cada dia que você estuda.' });
+      toast({
+        title: `${escolhido} é seu! ${arquetipo(especie).emoji}`,
+        description: 'Ele cresce a cada dia que você estuda.',
+      });
     } catch (e) {
       toast({
         title: 'Não deu para adotar agora',
+        description: e instanceof Error ? e.message : 'Tente de novo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  /**
+   * Troca só a aparência.
+   *
+   * `adotar_bichinho` é upsert e já permitia trocar de espécie desde a primeira
+   * migration — o nome vai junto e sem alteração, senão o bicho perderia o
+   * apelido no caminho.
+   */
+  async function trocar() {
+    if (!bicho?.nome) return;
+    setSalvando(true);
+    try {
+      setBicho(await adotarBichinho(especie, bicho.nome));
+      setTrocando(false);
+      toast({
+        title: `${bicho.nome} agora é ${arquetipo(especie).nome}! ✨`,
+        description: 'Seu nível, sua ofensiva e seu XP continuam iguais.',
+      });
+    } catch (e) {
+      toast({
+        title: 'Não deu para trocar agora',
         description: e instanceof Error ? e.message : 'Tente de novo.',
         variant: 'destructive',
       });
@@ -133,26 +168,7 @@ export default function BichinhoPage() {
         </header>
 
         <div className="rounded-[2.5rem] bg-white shadow-2xl border border-slate-100 p-8 space-y-7">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {ESPECIES.map(e => (
-              <button
-                key={e.id}
-                type="button"
-                onClick={() => setEspecie(e.id)}
-                aria-pressed={especie === e.id}
-                className={`rounded-[1.5rem] p-5 border-2 transition-all ${
-                  especie === e.id
-                    ? 'border-orange-500 bg-orange-50 scale-105 shadow-lg'
-                    : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                <span className="text-5xl block leading-none" aria-hidden>{e.emoji}</span>
-                <span className="text-[11px] font-black uppercase tracking-wide block mt-2 text-slate-600">
-                  {e.nome}
-                </span>
-              </button>
-            ))}
-          </div>
+          <SeletorArquetipo valor={especie} onChange={setEspecie} />
 
           <div className="space-y-3">
             <label htmlFor="nome" className="text-[11px] font-black uppercase tracking-widest text-slate-400 block">
@@ -173,7 +189,7 @@ export default function BichinhoPage() {
               className="w-full h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm uppercase tracking-widest disabled:opacity-60 flex items-center justify-center gap-2 active:scale-95 transition-all"
             >
               {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
-              Adotar {ESPECIES.find(e => e.id === especie)?.nome}
+              Adotar {arquetipo(especie).nome}
             </button>
           </div>
         </div>
@@ -195,7 +211,11 @@ export default function BichinhoPage() {
 
   return (
     <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-6">
-      {/* Retrato */}
+      {/* A arena: o boneco 3D, o CP e o HP. */}
+      <ArenaMascote bicho={bicho} tamanho="pagina" controles className="max-w-md mx-auto" />
+
+      {/* Nível, humor e progresso — o que a moldura da arena não comporta sem
+          virar HUD de jogo. */}
       <div className={`rounded-[2.5rem] shadow-2xl overflow-hidden text-white ${
         animado
           ? 'bg-gradient-to-br from-orange-500 via-rose-500 to-red-600'
@@ -203,13 +223,7 @@ export default function BichinhoPage() {
             ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600'
             : 'bg-gradient-to-br from-slate-700 to-slate-900'
       }`}>
-        <div className="p-8 md:p-10 text-center space-y-4">
-          <div
-            className={`text-[7rem] leading-none ${humor.animacao} ${bicho.humor === 'dormindo' ? 'opacity-50' : ''}`}
-            aria-hidden
-          >
-            {emojiDaEspecie(bicho.especie)}
-          </div>
+        <div className="p-8 text-center space-y-4">
           <div className="space-y-1">
             <h1 className="text-3xl md:text-4xl font-black italic tracking-tighter">{apelido}</h1>
             <p className="text-[11px] font-black uppercase tracking-widest text-white/60">
@@ -312,6 +326,61 @@ export default function BichinhoPage() {
                 : `Faltam ${bicho.preco_protecao - bicho.saldo} XP`}
           </button>
         </div>
+      </section>
+
+      {/* Troca de arquétipo.
+          Existe porque os quatro bichos 3D chegaram depois: quem já tinha
+          adotado uma capivara ficaria preso a ela sem nunca ver o boneco novo.
+          Trocar não custa nada e não mexe em nível, ofensiva nem XP — a espécie
+          nunca teve economia atrelada, e a migration original já dizia isso. */}
+      <section className="rounded-[2.5rem] bg-white shadow-xl border border-slate-100 p-7 space-y-4">
+        <div className="flex items-center gap-2">
+          <Wand2 className="h-4 w-4 text-violet-500" />
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-600">Trocar de bichinho</h2>
+        </div>
+
+        {trocando ? (
+          <div className="space-y-4">
+            <p className="text-xs font-medium text-slate-500 leading-relaxed">
+              {apelido} continua com os mesmos {bicho.dias_estudo}{' '}
+              {bicho.dias_estudo === 1 ? 'dia' : 'dias'} de estudo, o mesmo nível e a
+              mesma ofensiva — só muda a aparência.
+            </p>
+            <SeletorArquetipo valor={especie} onChange={setEspecie} />
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setTrocando(false)}
+                className="h-12 px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-[11px] uppercase tracking-widest"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={trocar}
+                disabled={salvando || especie === bicho.especie}
+                className="flex-1 h-12 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black text-[11px] uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {salvando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {especie === bicho.especie ? 'Já é este' : `Virar ${arquetipo(especie).nome}`}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-slate-50 p-5">
+            <p className="text-xs font-medium text-slate-500 leading-relaxed max-w-sm">
+              Agora existem quatro bichinhos em 3D: lobinho, dragão, dinossauro e
+              elétrico. Trocar é de graça e não afeta seu progresso.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setEspecie(bicho.especie ?? 'lobinho'); setTrocando(true); }}
+              className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black text-[11px] uppercase tracking-widest shrink-0"
+            >
+              Escolher outro
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Escada de níveis */}
