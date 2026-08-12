@@ -7,7 +7,7 @@
  * tinha morrido, e o widget prometia "estude hoje para não perder seus 3 dias"
  * para quem ia recomeçar do 1 de qualquer jeito.
  */
-import { estadoOfensiva, isStreakAtRisk, hojeNoBrasil } from '../src/lib/streak';
+import { estadoOfensivaPorData as estadoOfensiva, isStreakAtRisk, hojeNoBrasil } from '../src/lib/streak';
 
 let ok = 0;
 let falhou = 0;

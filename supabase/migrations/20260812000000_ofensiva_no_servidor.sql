@@ -138,6 +138,9 @@ BEGIN
   v_recorde := GREATEST(v_atual, COALESCE(v_recorde, 0));
 
   UPDATE public.study_streaks SET
+    -- Dias de estudo acumulados: so cresce, nunca zera. E dele que sai o nivel
+    -- do bichinho — o aluno pode perder a ofensiva, nunca o que ja estudou.
+    total_study_days   = COALESCE(total_study_days, 0) + 1,
     current_streak     = v_atual,
     longest_streak     = v_recorde,
     last_activity_date = v_hoje,

@@ -98,15 +98,27 @@ export type EstadoOfensiva =
  * dias" para alguém que ia recomeçar do 1 de qualquer jeito. Risco de verdade é
  * o dia seguinte ao último estudo, que é quando ainda dá para salvar.
  */
-export function estadoOfensiva(s: Pick<StreakData, 'last_activity_date' | 'current_streak' | 'protections'>): EstadoOfensiva {
-  if (!s.last_activity_date || s.current_streak === 0) return 'nenhuma';
+export function estadoOfensiva(s: {
+  /** Dias sem estudar. `null` quando o aluno nunca estudou. */
+  dias_sem_estudar: number | null;
+  current_streak: number;
+  protections: number;
+}): EstadoOfensiva {
+  if (s.dias_sem_estudar == null || s.current_streak === 0) return 'nenhuma';
+  if (s.dias_sem_estudar <= 0) return 'mantida';
+  if (s.dias_sem_estudar === 1) return 'ultimo_dia';
 
-  const dias = diasDesde(s.last_activity_date);
-  if (dias <= 0) return 'mantida';
-  if (dias === 1) return 'ultimo_dia';
-
-  const perdidos = dias - 1;
+  const perdidos = s.dias_sem_estudar - 1;
   return perdidos <= s.protections ? 'protegida' : 'perdida';
+}
+
+/** Conveniência para quem tem a data em vez da contagem de dias. */
+export function estadoOfensivaPorData(s: Pick<StreakData, 'last_activity_date' | 'current_streak' | 'protections'>): EstadoOfensiva {
+  return estadoOfensiva({
+    dias_sem_estudar: s.last_activity_date ? diasDesde(s.last_activity_date) : null,
+    current_streak: s.current_streak,
+    protections: s.protections,
+  });
 }
 
 /**
