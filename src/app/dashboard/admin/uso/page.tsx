@@ -44,6 +44,14 @@ type EventoBruto = {
 
 type IncidenteIA = { rota: string; tipo: string; criado_em: string; detalhe: string | null };
 
+/** Quantos alunos conseguem receber notificacao — e o que barra os outros. */
+type AlcancePush = {
+  rotulo: string;
+  alunos: number;
+  cor: string;
+  nota?: string;
+};
+
 type Lentidao = {
   operacao: string;
   amostras: number;
@@ -110,6 +118,45 @@ function resumirLentidao(eventos: EventoBruto[]): Lentidao[] {
 }
 
 /** Agrupa eventos por uma chave, contando alunos distintos e ocorrências. */
+/**
+ * Resume o funil de notificacao a partir dos eventos `push_estado`.
+ *
+ * Ate 12/08 so se sabia quem CONSEGUIU se inscrever — 68 alunos. Quem esbarrava
+ * em alguma barreira era invisivel, e foi assim que o iPhone passou meses sem
+ * aparecer: das 68 inscricoes, UMA era de iOS, porque no iPhone o Web Push so
+ * existe com o site instalado na tela de inicio e a tela simplesmente sumia.
+ */
+function resumirAlcance(eventos: EventoBruto[]): AlcancePush[] {
+  const porAluno = new Map<string, EventoBruto>();
+  for (const e of eventos) {
+    if (e.name !== 'push_estado' || !e.user_id) continue;
+    // Um registro por aluno: o mais recente conta.
+    porAluno.set(e.user_id, e);
+  }
+  if (porAluno.size === 0) return [];
+
+  const conta = { ativo: 0, pode: 0, bloqueado: 0, ios: 0, sem_suporte: 0 };
+  for (const e of porAluno.values()) {
+    const p = e.props ?? {};
+    if (p.inscrito === true) conta.ativo++;
+    else if (p.motivo === 'ios_precisa_instalar') conta.ios++;
+    else if (p.permissao === 'denied') conta.bloqueado++;
+    else if (p.permissao === 'unsupported') conta.sem_suporte++;
+    else conta.pode++;
+  }
+
+  return [
+    { rotulo: 'Recebendo notificacao', alunos: conta.ativo, cor: 'bg-emerald-500' },
+    { rotulo: 'Ainda nao ativou', alunos: conta.pode, cor: 'bg-amber-400',
+      nota: 'Ve o convite e pode ativar num toque.' },
+    { rotulo: 'iPhone sem instalar', alunos: conta.ios, cor: 'bg-violet-500',
+      nota: 'Precisa adicionar a tela de inicio; agora recebe as instrucoes.' },
+    { rotulo: 'Bloqueou no navegador', alunos: conta.bloqueado, cor: 'bg-rose-500',
+      nota: 'Agora ve como liberar de novo.' },
+    { rotulo: 'Navegador sem suporte', alunos: conta.sem_suporte, cor: 'bg-slate-400' },
+  ].filter(l => l.alunos > 0);
+}
+
 function agrupar(eventos: { name: string; screen: string | null; user_id: string | null }[], por: 'name' | 'screen'): Linha[] {
   const mapa = new Map<string, { alunos: Set<string>; n: number }>();
   for (const e of eventos) {
@@ -144,6 +191,7 @@ export default function UsoPage() {
   const [lentidao, setLentidao] = useState<Lentidao[]>([]);
   const [incidentesIA, setIncidentesIA] = useState<IncidenteIA[]>([]);
   const [acoes, setAcoes] = useState<Linha[]>([]);
+  const [alcance, setAlcance] = useState<AlcancePush[]>([]);
   const [eventosTotal, setEventosTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -172,6 +220,7 @@ export default function UsoPage() {
       setAcoes(agrupar(eventos.filter(e => e.kind === 'acao'), 'name'));
       setFalhas(agrupar(eventos.filter(e => e.kind === 'falha'), 'name'));
       setLentidao(resumirLentidao(eventos));
+      setAlcance(resumirAlcance(eventos));
 
       // Incidentes de IA: é o alerta que faltou quando a chave ficou sem
       // crédito e quatro funcionalidades pararam por onze dias sem ninguém
@@ -378,6 +427,30 @@ export default function UsoPage() {
                   <span className="w-8 text-right text-xs font-black text-slate-700">{t.ocorrencias}</span>
                 </div>
               ))}
+            </section>
+
+            <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm space-y-3">
+              <div className="flex items-center gap-2">
+                <MonitorSmartphone className="h-4 w-4 text-violet-600" />
+                <h2 className="text-sm font-black uppercase tracking-widest text-slate-600">Alcance da notificação</h2>
+              </div>
+              {alcance.length === 0 ? (
+                <p className="text-xs font-medium text-slate-500">
+                  Sem dados ainda — aparece conforme os alunos abrem o painel.
+                </p>
+              ) : alcance.map(l => {
+                const total = alcance.reduce((s, x) => s + x.alunos, 0);
+                return (
+                  <div key={l.rotulo} className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="flex-1 min-w-0 truncate text-[11px] font-bold text-slate-600">{l.rotulo}</span>
+                      <span className="text-xs font-black text-slate-700 tabular-nums">{l.alunos}</span>
+                    </div>
+                    <Barra valor={l.alunos} total={total} cor={l.cor} />
+                    {l.nota && <p className="text-[10px] font-medium text-slate-400 leading-tight">{l.nota}</p>}
+                  </div>
+                );
+              })}
             </section>
 
             <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm space-y-3">
