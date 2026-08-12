@@ -85,7 +85,10 @@ export async function awardXP(
     return 0;
   }
 
-  bumpStreak(_userId).catch(() => undefined);
+  // A ação vai junto: o servidor decide se ela sustenta ofensiva. `checkin`
+  // continua valendo XP, mas entrar e clicar não é estudo — e é do estudo que a
+  // ofensiva (e o bichinho preso a ela) se alimenta.
+  bumpStreak(_userId, action).catch(() => undefined);
   return (data as number) ?? 0;
 }
 
