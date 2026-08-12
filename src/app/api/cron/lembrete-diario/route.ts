@@ -18,7 +18,7 @@ export const maxDuration = 60;
  * só se decide o texto e se envia.
  */
 
-type Segmento = "ultimo_dia" | "protegida" | "sumido";
+type Segmento = "ultimo_dia" | "protegida" | "sumido" | "nunca_estudou";
 
 interface Alvo {
   user_id: string;
@@ -45,6 +45,19 @@ function mensagem(a: Alvo): { title: string; body: string } {
   const dias = (n: number) => `${n} ${n === 1 ? "dia" : "dias"}`;
 
   switch (a.segmento) {
+    // Quem tem push mas nunca respondeu uma questão. São 35 pessoas — mais do
+    // que todo o resto da lista somado. A mensagem da ofensiva seria mentira
+    // para eles: não há ofensiva para perder nem bichinho para alimentar, e
+    // cobrar algo que a pessoa nunca teve é o que faz desativar notificação.
+    //
+    // Estes recebem no máximo UM POR SEMANA (a regra está em
+    // `alunos_para_lembrete`): quem nunca começou não muda de ideia por
+    // insistência diária, muda por convite ocasional.
+    case "nunca_estudou":
+      return {
+        title: "Seu bichinho está esperando 🐾",
+        body: "Escolha o seu e responda 1 questão — leva um minuto e ele começa a crescer.",
+      };
     case "ultimo_dia":
       return pet
         ? {
@@ -189,7 +202,11 @@ export async function POST(req: NextRequest) {
       const r = await sendPushToUsers(doGrupo.map(a => a.user_id), {
         ...texto,
         type: "ofensiva",
-        url: "/dashboard/student/simulados",
+        // Quem nunca estudou cai na página do bichinho (o convite é adotar);
+        // os demais caem direto onde se responde questão.
+        url: doGrupo[0].segmento === "nunca_estudou"
+          ? "/dashboard/student/bichinho"
+          : "/dashboard/student/simulados",
         // `tag` faz a notificação nova substituir a anterior no aparelho, em
         // vez de empilhar lembretes de dias diferentes na bandeja.
         tag: "lembrete-estudo",

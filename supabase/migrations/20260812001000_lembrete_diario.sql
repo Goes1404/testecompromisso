@@ -16,6 +16,12 @@
 --     se resolve por notificação, e insistir é só incomodar;
 --   · só alunos, e só quem tem push cadastrado (sem isso a linha na inbox
 --     in-app não seria vista por ninguém).
+--
+-- Atualizado em 12/08: passou a alcançar também quem tem push mas NUNCA
+-- estudou — 35 pessoas, mais do que todo o resto da lista somado. Para elas a
+-- mensagem da ofensiva seria mentira (não há ofensiva nem bichinho), então
+-- recebem um convite próprio, e no máximo UM POR SEMANA: quem nunca começou
+-- não muda de ideia por insistência diária.
 
 -- `DROP` antes do `CREATE`: mudar a lista de colunas de RETURNS TABLE nao e
 -- permitido por CREATE OR REPLACE.
