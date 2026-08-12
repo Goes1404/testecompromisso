@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Flame, Shield, Trophy, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { Flame, Shield, Trophy, Loader2, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { estadoOfensiva } from '@/lib/streak';
 import {
@@ -75,7 +76,24 @@ export function BichinhoWidget() {
     return <div className="h-64 rounded-[2.5rem] bg-muted/20 animate-pulse" />;
   }
 
-  if (!bicho) return null;
+  // Sumir em silêncio era exatamente o defeito: qualquer falha na chamada
+  // fazia o cartão desaparecer da home, sem erro e sem explicação — o aluno
+  // concluía que o bichinho não existe. Melhor um convite que leva à página,
+  // onde o erro aparece por extenso e há um botão de tentar de novo.
+  if (!bicho) {
+    return (
+      <Link
+        href="/dashboard/student/bichinho"
+        className="block rounded-[2.5rem] bg-slate-100 border border-slate-200 p-6 text-center active:scale-[0.99] transition-transform"
+      >
+        <p className="text-3xl mb-1" aria-hidden>🐾</p>
+        <p className="text-sm font-black italic text-slate-700">Seu bichinho</p>
+        <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+          Não carregou agora — toque para abrir.
+        </p>
+      </Link>
+    );
+  }
 
   // ── Adoção ───────────────────────────────────────────────────────────────
   if (!bicho.existe) {
@@ -154,7 +172,7 @@ export function BichinhoWidget() {
   });
 
   return (
-    <div className="gradient-border bg-white rounded-[2.5rem] shadow-xl overflow-hidden">
+    <Link href="/dashboard/student/bichinho" className="block gradient-border bg-white rounded-[2.5rem] shadow-xl overflow-hidden active:scale-[0.99] transition-transform">
       <div className={`p-6 space-y-4 relative text-white ${
         animado
           ? 'bg-gradient-to-br from-orange-500 via-rose-500 to-red-600'
@@ -178,6 +196,9 @@ export function BichinhoWidget() {
               {humor.emoji} {humor.fala(apelido)}
             </p>
           </div>
+          {/* O cartão precisa levar a algum lugar: sem isto o aluno adotava o
+              bichinho e não tinha para onde ir depois. */}
+          <ChevronRight className="h-5 w-5 text-white/40 shrink-0 mt-1" aria-hidden />
         </div>
 
         {/* Progresso de nível — dias acumulados, que nunca voltam atrás. */}
@@ -235,7 +256,9 @@ export function BichinhoWidget() {
         {bicho.protecoes < 2 && (
           <button
             type="button"
-            onClick={comprar}
+            // Dentro de um Link: sem isto o clique no botao navegaria para a
+            // pagina em vez de comprar.
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); void comprar(); }}
             disabled={!podeComprar || salvando}
             className="w-full rounded-2xl bg-white/15 border border-white/20 py-2.5 text-[11px] font-black uppercase tracking-wide disabled:opacity-50 hover:bg-white/25 transition-colors flex items-center justify-center gap-2"
           >
@@ -246,6 +269,6 @@ export function BichinhoWidget() {
           </button>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

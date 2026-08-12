@@ -62,6 +62,7 @@ const studentItems: NavItem[] = [
   {
     icon: Flame, label: "Meu Progresso", id: "nav-progresso", initialOpen: true,
     children: [
+      { icon: Sparkles,   label: "Meu Bichinho 🐾", href: "/dashboard/student/bichinho", id: "nav-student-bichinho" },
       { icon: Target,     label: "Metas",   href: "/dashboard/student/goals",   id: "nav-student-goals" },
       { icon: GraduationCap, label: "Meu Boletim", href: "/dashboard/student/report-card", id: "nav-student-report-card" },
       { icon: BookHeart,  label: "Diário",  href: "/dashboard/student/journal", id: "nav-student-journal" },
