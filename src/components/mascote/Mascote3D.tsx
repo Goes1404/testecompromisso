@@ -11,6 +11,7 @@ import {
   Olhos, Orelhas, PROFUNDIDADE,
 } from './arte';
 import type { Camada, Vista } from './arte';
+import type { MascoteControle } from './controle';
 
 /**
  * O bichinho em 3D — gira 360°, aceita carinho e reage ao humor.
@@ -48,12 +49,6 @@ const LIMIAR_ARRASTO = 8;
  * o dedo parou.
  */
 const INERCIA_MAX = 8;
-
-/** O que dá para pedir ao boneco de fora do palco. */
-export interface MascoteControle {
-  girar360: () => void;
-  fazerCarinho: () => void;
-}
 
 export interface Mascote3DProps {
   especie: Arquetipo | null;

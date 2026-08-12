@@ -7,7 +7,8 @@ import {
   arquetipo, calcularCP, calcularHP, corDoAnel, expressaoDoHumor,
   animacaoDoHumor, iluminacaoDoHumor, CENARIOS,
 } from '@/lib/mascote';
-import { Mascote3D, type MascoteControle } from './Mascote3D';
+import { Mascote } from './Mascote';
+import type { MascoteControle } from './controle';
 
 /**
  * A arena — o boneco dentro da moldura de Pokémon GO.
@@ -154,8 +155,11 @@ export function ArenaMascote({ bicho, tamanho = 'pagina', controles = false, cla
         )}
 
         {/* O boneco. */}
-        <div className="absolute inset-x-0 bottom-0 top-[22%] flex items-end justify-center px-4 pb-2 z-10">
-          <Mascote3D
+        {/* `pb` generoso: a arte renderizada vem com as patas na borda de baixo
+            do arquivo (é o que o README pede), então sem folga o bicho encosta
+            na moldura e pisa em cima da dica de gesto. */}
+        <div className="absolute inset-x-0 bottom-0 top-[20%] flex items-end justify-center px-4 pb-[9%] z-10">
+          <Mascote
             especie={bicho.especie}
             nivel={bicho.nivel}
             expressao={expressaoDoHumor(bicho.humor)}

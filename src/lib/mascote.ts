@@ -109,7 +109,7 @@ export const ARQUETIPOS: DefinicaoArquetipo[] = [
     },
     orelha: 'pontuda', focinho: 'focinho', cauda: 'felpuda', efeito: 'nenhum',
     asas: false, escala: 1,
-    descricaoEn: 'a fluffy grey husky wolf pup with bright blue eyes, alert pointed ears, a huge curled fluffy tail and a blue bandana',
+    descricaoEn: 'a fluffy grey husky wolf pup with bright blue eyes, alert pointed ears and a huge curled fluffy tail',
     novo: true,
   },
   {
@@ -347,10 +347,18 @@ export interface EspecificacaoMascote {
   image_gen_prompt: string;
 }
 
+/**
+ * Iluminação, não cenário.
+ *
+ * A arena desenha o próprio fundo (céu, chão, bokeh) e ainda o troca conforme o
+ * humor. Uma imagem com parque embutido brigaria com isso: o bicho pula, se
+ * inclina com o dedo e dá pirueta, e um parque colado nele pularia junto. Então
+ * o que o prompt pede do ambiente é só a luz que bate no bicho.
+ */
 const ILUMINACAO_EN: Record<Iluminacao, string> = {
-  sunny_park: 'a sunlit green park with soft dappled light and blurred trees',
-  sunset: 'a warm golden-hour field with long soft shadows',
-  neon_city: 'a quiet night street lit by cool blue and violet neon',
+  sunny_park: 'warm midday sunlight from above, soft dappled highlights',
+  sunset: 'warm golden-hour rim light from the side',
+  neon_city: 'cool blue and violet rim light, dim ambient',
 };
 
 const ANIMACAO_EN: Record<EstadoAnimacao, string> = {
@@ -363,11 +371,18 @@ const ANIMACAO_EN: Record<EstadoAnimacao, string> = {
 };
 
 /**
- * Monta o prompt em inglês para geração de imagem estática.
+ * Monta o prompt em inglês para gerar a arte do bichinho.
  *
- * O acessório e o cenário entram no texto porque são o que muda entre o
- * bichinho de um aluno e o de outro — sem isso, todo mundo geraria a mesma
- * figura.
+ * ── O resultado precisa ser um recorte, não uma cena ───────────────────────
+ *
+ * A parte mais importante deste prompt é o fim: fundo transparente, sem chão e
+ * sem sombra. A arena já desenha céu, chão e bokeh, e ainda os troca conforme o
+ * humor do bicho; o boneco por cima pula, se inclina com o dedo e dá pirueta.
+ * Uma imagem com parque embutido tornaria tudo isso impossível — o parque
+ * pularia junto, e o sistema de iluminação por humor viraria enfeite morto.
+ *
+ * Por isso o ambiente entra só como direção de luz (`ILUMINACAO_EN`), nunca
+ * como paisagem.
  */
 export function promptDeImagem(
   def: DefinicaoArquetipo,
@@ -379,9 +394,11 @@ export function promptDeImagem(
   return [
     `3D rendered Pixar-style character render of ${def.descricaoEn}${extras}`,
     ANIMACAO_EN[estado],
-    `set in ${ILUMINACAO_EN[luz]}`,
-    'shallow depth of field, soft global illumination, subsurface scattering, chunky stylized proportions, big expressive eyes, mobile AR game creature, centered full body, no text, no watermark',
-    '--ar 3:4 --style raw',
+    ILUMINACAO_EN[luz],
+    'soft global illumination, subsurface scattering, chunky stylized proportions, big expressive eyes, mobile game creature',
+    'full body, centered, feet at the bottom edge, isolated cutout on a fully transparent background',
+    'no background, no scenery, no ground, no cast shadow, no text, no watermark',
+    '--ar 1:1 --style raw',
   ].join(', ');
 }
 

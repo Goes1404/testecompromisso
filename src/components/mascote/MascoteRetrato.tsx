@@ -1,19 +1,23 @@
+'use client';
+
 import { arquetipo, type Arquetipo, type Expressao } from '@/lib/mascote';
 import {
   Acessorio, Asas, Cabeca, Cauda, Chapeu, Corpo, Efeito, Focinho, Olhos, Orelhas,
 } from './arte';
+import { useImagemDoMascote } from './useImagemDoMascote';
 
 /**
- * O bichinho parado, num SVG só.
+ * O bichinho parado — a arte renderizada quando existe, o vetor quando não.
  *
  * O `Mascote3D` monta nove camadas em nove SVGs e roda um rAF para girar. Isso
  * vale a pena no retrato grande, onde o aluno interage — mas a tela de adoção
  * mostra oito arquétipos de uma vez, e oito rigs seriam setenta e dois SVGs e
  * oito laços de animação disputando o mesmo frame no celular.
  *
- * Aqui as mesmas peças são empilhadas de frente, sem paralaxe e sem laço: é a
- * mesma criatura, só que quieta. Serve para escolher, para o cartão da home e
- * para qualquer lugar onde o boneco é ilustração e não brinquedo.
+ * Aqui é uma ilustração parada: serve para escolher, para o cartão da home e
+ * para qualquer lugar onde o boneco não é brinquedo. Segue a mesma regra do
+ * `Mascote` — se houver imagem em `/public/mascotes`, é ela que aparece, para o
+ * aluno não escolher um desenho e receber outro.
  */
 export function MascoteRetrato({
   especie, nivel = 1, expressao = 'feliz', className = '',
@@ -24,6 +28,20 @@ export function MascoteRetrato({
   className?: string;
 }) {
   const def = arquetipo(especie);
+  const imagem = useImagemDoMascote(especie);
+
+  if (imagem) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imagem}
+        alt={def.nome}
+        draggable={false}
+        className={`object-contain ${className}`}
+      />
+    );
+  }
+
   // Ids de gradiente precisam ser únicos por arquétipo: dois retratos na mesma
   // página compartilhariam o `<defs>` do primeiro e sairiam com a cor errada.
   const uid = `ret-${def.id}`;

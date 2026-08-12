@@ -31,25 +31,46 @@ npx supabase db push # Aplicar migrations locais ao projeto remoto
 
 ## 🐺 Mascote (bichinho) 3D
 
-O bichinho é desenhado por um rig 2.5D próprio em `/src/components/mascote`,
-não por uma engine 3D. `three` + `react-three-fiber` custaria ~600 KB de JS e um
-`.glb` por arquétipo, numa plataforma que roda no celular do aluno em rede
-móvel — por isso a rotação é feita com SVG em camadas e `transform`.
+O bichinho tem **dois modos de desenho**, e quem escolhe é o `Mascote`:
+
+- **Arte renderizada** (preferida): existe `/public/mascotes/<arquetipo>.webp`?
+  É ela que aparece. Requisitos e prompts de geração em
+  `public/mascotes/README.md` — **fundo transparente é obrigatório**, porque a
+  arena desenha o próprio cenário e o boneco pula/inclina/roda por cima dele.
+- **Rig 2.5D em SVG** (fallback): sem arquivo, o bicho é montado em dez camadas
+  de SVG e gira 360° de verdade por paralaxe. Nada de `three` +
+  `react-three-fiber` — custaria ~600 KB de JS e um `.glb` por arquétipo, numa
+  plataforma que roda no celular do aluno em rede móvel.
+
+O vetor entra primeiro e a foto substitui quando carrega. É de propósito: em
+rede ruim, esperar a imagem deixaria a arena vazia por segundos, e vazia para
+sempre se ela nunca chegar.
 
 | Arquivo | Papel |
 |---------|-------|
-| `src/lib/mascote.ts` | Engine: arquétipos, CP/HP, iluminação, estado de animação e o JSON de especificação (`specDoMascote`) |
+| `src/lib/mascote.ts` | Engine: arquétipos, CP/HP, iluminação, estado de animação, `specDoMascote` e `promptDeImagem` |
+| `components/mascote/Mascote.tsx` | Decide entre foto e vetor |
+| `components/mascote/useImagemDoMascote.ts` | Sonda se existe arte renderizada (cache de uma sondagem por sessão) |
+| `components/mascote/MascoteRenderizado.tsx` | A foto: inclinação ±22° no arrasto, pirueta, carinho |
+| `components/mascote/Mascote3D.tsx` | O rig em SVG: giro 360°, arrasto, carinho |
 | `components/mascote/arte.tsx` | As peças em SVG (orelha, focinho, cauda…) e a profundidade de cada camada |
-| `components/mascote/Mascote3D.tsx` | O rig: giro 360°, arrasto, carinho |
 | `components/mascote/ArenaMascote.tsx` | A moldura estilo Pokémon GO (CP, HP, anel de captura) |
-| `components/mascote/MascoteRetrato.tsx` | Versão parada, num SVG só — para grades e cartões |
+| `components/mascote/MascoteRetrato.tsx` | Versão parada — foto ou vetor, para grades e cartões |
+| `components/mascote/controle.ts` | `MascoteControle`, a interface que as duas implementações expõem |
+
+**Foto e vetor não são equivalentes**, e a diferença é deliberada: uma imagem é
+uma face só, então `girar360` nela é uma pirueta (não há costas para mostrar) e
+`expressao`/`nivel` não chegam a ela (não há camada de olho para trocar nem peça
+de chapéu para acrescentar). Humor e nível continuam legíveis pela iluminação da
+arena, pela barra de HP e pelo estado de animação, que valem para os dois modos.
 
 ### Regras ao mexer aqui
 
-1. **Peça grudada em outra tem a mesma profundidade.** Orelha e chapéu andam com
-   a cabeça (z=16/18), bandana com o peito (z=8). Só protuberância real (focinho,
-   cauda, asas) ganha z próprio — é ela que produz a paralaxe. Dar z diferente a
-   uma peça grudada faz ela descolar e flutuar ao girar.
+1. **Peça grudada em outra tem a mesma profundidade** (só vale para o rig SVG).
+   Orelha e chapéu andam com a cabeça (z=16/18), bandana com o peito (z=8). Só
+   protuberância real (focinho, cauda, asas) ganha z próprio — é ela que produz
+   a paralaxe. Dar z diferente a uma peça grudada faz ela descolar e flutuar ao
+   girar.
 2. **CP nunca cai.** Sai de `nivel` + `dias_estudo`, as duas grandezas que o banco
    garante monotônicas. Ofensiva e saldo de XP ficam fora de propósito: um CP que
    despenca depois de um fim de semana mal dado, ou que cai porque o aluno comprou
