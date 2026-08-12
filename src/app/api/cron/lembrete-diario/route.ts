@@ -26,6 +26,8 @@ interface Alvo {
   ofensiva: number;
   protecoes: number;
   dias_parado: number;
+  /** Nome do bichinho, quando o aluno já adotou um. */
+  pet_nome: string | null;
 }
 
 /**
@@ -34,24 +36,45 @@ interface Alvo {
  * Regra de tom: cobrar o que dá para cumprir hoje e nunca culpar. O aluno que
  * sumiu duas semanas já sabe que sumiu — repetir isso é o que faz desinstalar.
  * Uma questão é um pedido pequeno o bastante para caber num intervalo de aula.
+ *
+ * Quem tem bichinho ouve a voz dele. É a diferença entre um sistema cobrando
+ * uma métrica e alguém esperando por você — e era esse o ponto da ideia.
  */
 function mensagem(a: Alvo): { title: string; body: string } {
+  const pet = a.pet_nome;
+  const dias = (n: number) => `${n} ${n === 1 ? "dia" : "dias"}`;
+
   switch (a.segmento) {
     case "ultimo_dia":
-      return {
-        title: `🔥 Sua ofensiva de ${a.ofensiva} ${a.ofensiva === 1 ? "dia" : "dias"} termina hoje`,
-        body: "Responda 1 questão e ela continua de pé. Leva um minuto.",
-      };
+      return pet
+        ? {
+            title: `🍎 ${pet} está com fome`,
+            body: `Sua ofensiva de ${dias(a.ofensiva)} termina hoje. Uma questão alimenta ele.`,
+          }
+        : {
+            title: `🔥 Sua ofensiva de ${dias(a.ofensiva)} termina hoje`,
+            body: "Responda 1 questão e ela continua de pé. Leva um minuto.",
+          };
     case "protegida":
-      return {
-        title: "🛡️ Uma proteção segurou sua ofensiva",
-        body: `Você tem ${a.ofensiva} ${a.ofensiva === 1 ? "dia" : "dias"} guardados. Estude hoje para seguir de onde parou.`,
-      };
+      return pet
+        ? {
+            title: `🛡️ ${pet} segurou sua ofensiva`,
+            body: `Seus ${dias(a.ofensiva)} continuam guardados. Estude hoje para seguir de onde parou.`,
+          }
+        : {
+            title: "🛡️ Uma proteção segurou sua ofensiva",
+            body: `Você tem ${dias(a.ofensiva)} guardados. Estude hoje para seguir de onde parou.`,
+          };
     case "sumido":
-      return {
-        title: "Bora voltar? 👋",
-        body: "Uma questão hoje já começa uma ofensiva nova. Escolha a matéria que quiser.",
-      };
+      return pet
+        ? {
+            title: `💤 ${pet} foi dormir esperando você`,
+            body: "Uma questão hoje acorda ele. Escolha a matéria que quiser.",
+          }
+        : {
+            title: "Bora voltar? 👋",
+            body: "Uma questão hoje já começa uma ofensiva nova. Escolha a matéria que quiser.",
+          };
   }
 }
 

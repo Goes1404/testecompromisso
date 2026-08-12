@@ -17,13 +17,20 @@
 --   · só alunos, e só quem tem push cadastrado (sem isso a linha na inbox
 --     in-app não seria vista por ninguém).
 
-CREATE OR REPLACE FUNCTION public.alunos_para_lembrete()
+-- `DROP` antes do `CREATE`: mudar a lista de colunas de RETURNS TABLE nao e
+-- permitido por CREATE OR REPLACE.
+DROP FUNCTION IF EXISTS public.alunos_para_lembrete();
+
+CREATE FUNCTION public.alunos_para_lembrete()
 RETURNS TABLE (
   user_id        UUID,
   segmento       TEXT,
   ofensiva       INTEGER,
   protecoes      INTEGER,
-  dias_parado    INTEGER
+  dias_parado    INTEGER,
+  -- Nome do bichinho: quem tem um ouve a voz dele em vez de um aviso de
+  -- sistema. E a diferenca entre uma metrica cobrando e alguem esperando.
+  pet_nome       TEXT
 )
 LANGUAGE sql
 SECURITY DEFINER
@@ -35,9 +42,11 @@ AS $function$
       p.id,
       COALESCE(s.current_streak, 0) AS ofensiva,
       COALESCE(s.protections, 0)    AS protecoes,
-      (SELECT d FROM hoje) - s.last_activity_date AS dias
+      (SELECT d FROM hoje) - s.last_activity_date AS dias,
+      pet.nome AS pet_nome
     FROM public.profiles p
     JOIN public.study_streaks s ON s.user_id = p.id
+    LEFT JOIN public.pets pet ON pet.user_id = p.id
     WHERE p.role = 'student'
       AND s.last_activity_date IS NOT NULL
       -- Sem push cadastrado, o lembrete não chega a lugar nenhum.
@@ -63,14 +72,15 @@ AS $function$
     END,
     ofensiva,
     protecoes,
-    dias
+    dias,
+    pet_nome
   FROM base
   -- dias = 0 é quem já estudou hoje.
   WHERE dias BETWEEN 1 AND 21;
 $function$;
 
 COMMENT ON FUNCTION public.alunos_para_lembrete() IS
-  'Alunos que devem receber lembrete hoje, com o motivo. Só seleciona; o envio é da rota /api/cron/lembrete-diario.';
+  'Alunos que devem receber lembrete hoje, com o motivo e o nome do bichinho. Só seleciona; o envio é da rota /api/cron/lembrete-diario.';
 
 -- Só o servidor consulta isto: a lista inteira de quem parou de estudar é dado
 -- de todo mundo, não do aluno.
