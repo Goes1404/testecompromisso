@@ -14,7 +14,10 @@ export interface PushPayload {
   title: string;
   body?: string;
   url?: string;
-  type?: "chat" | "communication" | "material" | "document" | "attendance" | "info";
+  // Precisa bater com o CHECK de `notifications.type` — a inbox in-app recusa
+  // qualquer outro valor, e sem a linha gravada o limite de 1 lembrete por dia
+  // (que consulta essa tabela) deixaria de valer.
+  type?: "chat" | "communication" | "material" | "document" | "attendance" | "info" | "ofensiva";
   icon?: string;
   image?: string;
   tag?: string;

@@ -35,6 +35,9 @@ import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { trackMissionProgress } from "@/lib/missions";
+import { EssayHighlightedText, BancaMirror, AnulacaoAviso } from "@/components/EssayMirror";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
+import { medir, TempoEsgotado } from "@/lib/perf";
 
 const EssayChart = dynamic(
   () =>
@@ -109,12 +112,17 @@ function scoreColor(score: number | null) {
 export default function StudentEssayPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const [theme, setTheme] = useState("Os impactos da Inteligência Artificial na educação brasileira contemporânea");
-  const [supportingTexts, setSupportingTexts] = useState<any[]>([
-    { id: 1, content: "A inteligência artificial pode personalizar o ensino, mas levanta questões éticas sobre a autonomia do aluno.", source: "MEC 2024" },
-    { id: 2, content: "O Brasil ocupa a 5ª posição no ranking de países que mais buscam ferramentas de IA para estudo.", source: "G1 Notícias" },
-    { id: 3, content: "A desigualdade digital no Brasil ainda é um entrave para a implementação plena de tecnologias educacionais.", source: "IBGE" },
-  ]);
+  // ⚠️ O tema COMEÇA VAZIO, de propósito.
+  //
+  // Antes ele vinha pré-preenchido com "Os impactos da Inteligência Artificial
+  // na educação brasileira contemporânea". Como o tema é o critério de fuga
+  // ao tema, quem abrisse a tela e escrevesse sobre outro assunto — inclusive
+  // quem fotografava uma redação feita no papel — era anulado por não atender
+  // a um tema que nunca escolheu. Foi o que aconteceu com 2 das 3 redações
+  // reais já enviadas: as duas gravadas com este tema exato, sobre outro
+  // assunto, e zeradas por fuga.
+  const [theme, setTheme] = useState("");
+  const [supportingTexts, setSupportingTexts] = useState<any[]>([]);
   const [customTheme, setCustomTheme] = useState(false);
   const [text, setText] = useState("");
   const [loadingTopic, setLoadingTopic] = useState(false);
@@ -210,8 +218,20 @@ export default function StudentEssayPage() {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (data) setWeeklyTheme(data);
-      } catch {}
+        if (data) {
+          setWeeklyTheme(data);
+          // Aplica o tema da semana quando o aluno ainda não escolheu nenhum.
+          // Antes o card mostrava o tema em destaque mas só o aplicava se o
+          // aluno clicasse em "Usar este tema" — quem lia o tema ali e escrevia
+          // sobre ele era corrigido contra outro tema, e anulado por fuga.
+          setTheme(atual => (atual.trim() ? atual : data.title));
+        }
+      } catch (e) {
+        // Sem o tema da semana o aluno precisa gerar ou digitar um tema. Não
+        // quebra a tela, mas remove o caminho mais curto para escrever — e a
+        // tela fica exigindo uma escolha que ele não sabe que precisa fazer.
+        trackFalha('tema_da_semana_falhou', e);
+      }
     };
     fetchWeeklyTheme();
   }, [profile]);
@@ -239,24 +259,43 @@ export default function StudentEssayPage() {
         reader.readAsDataURL(file);
       });
 
-      const res = await Promise.race([
-        fetch("/api/essay-ocr", {
+      // Era um Promise.race escrito à mão; passa pelo helper para o tempo
+      // gasto também virar telemetria — a transcrição de foto é a operação
+      // mais pesada da tela depois da própria correção.
+      const res = await medir(
+        "ocr_redacao",
+        () => fetch("/api/essay-ocr", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: dataUrl }),
         }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Tempo esgotado ao digitalizar. Tente novamente.")), 60_000)
-        ),
-      ]);
+        { timeoutMs: 60_000, limiarLentoMs: 20_000 },
+      );
 
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Falha ao digitalizar a imagem.");
 
       setText((prev) => (prev.trim() ? `${prev.trim()}\n\n${data.text}` : data.text));
       setFromPhoto(true);
-      toast({ title: "Redação digitalizada! 📸", description: "Revise o texto transcrito antes de enviar." });
+
+      // Quem fotografa já escreveu a redação no papel, sobre um tema que a
+      // plataforma não conhece. Sem perguntar, a correção usaria o tema que
+      // estivesse na tela e anularia o texto por fuga — foi assim que uma
+      // redação de 2.652 caracteres tirou zero.
+      if (!theme.trim()) {
+        setCustomTheme(true);
+        toast({
+          title: "Redação digitalizada! 📸",
+          description: "Agora escreva o tema da proposta que você respondeu — sem ele, a correção não tem como avaliar fuga ao tema.",
+        });
+      } else {
+        toast({
+          title: "Redação digitalizada! 📸",
+          description: `Revise o texto e confirme o tema: "${theme}".`,
+        });
+      }
     } catch (err: any) {
+      trackFalha("redacao_falha_ocr", err);
       toast({ title: "Erro ao digitalizar", description: err.message, variant: "destructive" });
     } finally {
       setLoadingOcr(false);
@@ -268,10 +307,14 @@ export default function StudentEssayPage() {
     setResult(null);
     setCustomTheme(false);
     try {
-      const res = await fetch("/api/essay-theme", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await medir(
+        "gerar_tema",
+        () => fetch("/api/essay-theme", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }),
+        { timeoutMs: 30_000 },
+      );
       const data = await res.json();
       if (res.ok && data.success) {
         setTheme(data.result.title);
@@ -320,41 +363,86 @@ export default function StudentEssayPage() {
   };
 
   const handleSubmitEssay = async () => {
-    if (text.length < 100) {
-      toast({ title: "Texto Insuficiente", description: "Escreva ao menos 100 caracteres.", variant: "destructive" });
+    // Antes o envio era bloqueado abaixo de 100 caracteres com um toast seco.
+    // Agora o piso é só para não mandar texto vazio: entre isso e as 7 linhas
+    // do INEP, a correção devolve a explicação de "texto insuficiente" — que
+    // ensina a regra em vez de apenas recusar. Esse caso não chama a IA, então
+    // deixar passar não custa nada.
+    if (text.trim().length < 40) {
+      trackAcao("redacao_bloqueada_curta", { chars: text.trim().length });
+      toast({ title: "Escreva um pouco mais", description: "Precisamos de pelo menos algumas linhas para avaliar.", variant: "destructive" });
+      return;
+    }
+
+    // Sem tema não há como avaliar C2 — e corrigir contra um tema errado anula
+    // a redação por fuga. Melhor barrar aqui do que devolver zero.
+    if (!theme.trim()) {
+      trackAcao("redacao_bloqueada_sem_tema", { chars: text.trim().length });
+      toast({
+        title: "Qual é o tema?",
+        description: "Escolha um tema acima (ou escreva o seu em 'Tema Manual') antes de enviar. A correção usa o tema para avaliar fuga.",
+        variant: "destructive",
+      });
       return;
     }
     setLoadingGrading(true);
     try {
-      const res = await fetch("/api/essay-evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme,
-          text,
-          supporting_texts: supportingTexts,
-          origin: fromPhoto ? "ocr" : "typed",
+      // Medido em produção: 6-7s com os dois corretores de acordo, 18s quando
+      // é preciso chamar o terceiro. A rota declara maxDuration = 60s, então
+      // 75s é folga suficiente para a rede do aluno sem deixar o botão girando
+      // indefinidamente se a rota travar.
+      const res = await medir(
+        "corrigir_redacao",
+        () => fetch("/api/essay-evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            theme,
+            text,
+            supporting_texts: supportingTexts,
+            origin: fromPhoto ? "ocr" : "typed",
+          }),
         }),
-      });
+        { timeoutMs: 75_000, limiarLentoMs: 15_000, props: { chars: text.length } },
+      );
       const data = await res.json();
       if (res.ok && data.success) {
         const aiOutput = data.result;
         setResult(aiOutput);
         if (user) {
           try {
-            const saveRes = await fetch("/api/essay-save", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ user_id: user.id, theme, content: text, score: aiOutput.total_score, feedback: aiOutput.general_feedback, result_data: aiOutput }),
-            });
+            // Timeout curto de propósito: aqui já não há IA no caminho, é só
+            // um insert. Se demorar 20s, algo está errado — e pendurar sem
+            // limite reproduziria o sintoma que investigamos por dois meses:
+            // o aluno vê a nota na tela e a redação nunca chega ao histórico.
+            const saveRes = await medir(
+              "salvar_redacao",
+              () => fetch("/api/essay-save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  user_id: user.id,
+                  theme,
+                  content: text,
+                  score: aiOutput.total_score,
+                  feedback: aiOutput.general_feedback,
+                  result_data: aiOutput,
+                }),
+              }),
+              { timeoutMs: 20_000, props: { chars: text.length } },
+            );
             const saveData = await saveRes.json();
             if (!saveRes.ok || !saveData.success) throw new Error(saveData.error || "Erro ao salvar");
+            trackAcao("redacao_salva", { nota: aiOutput.total_score, chars: text.length });
             
             // Incrementa missão de redação
             trackMissionProgress(supabase, user.id, 'submit_essay', 1).then(() => {});
 
             fetchHistory();
           } catch (insertError) {
+            // Este catch escondeu por dois meses que o CHECK (score <= 100)
+            // barrava toda redação com nota real. Agora o erro é registrado.
+            trackFalha("redacao_falha_salvar", insertError, { nota: aiOutput.total_score });
             console.error("Erro insert", insertError);
             toast({ title: "Erro na Evolução", description: "Avaliação finalizada, mas houve falha ao salvar no histórico.", variant: "destructive" });
           }
@@ -366,8 +454,16 @@ export default function StudentEssayPage() {
       } else {
         throw new Error(data.error || "IA offline");
       }
-    } catch {
-      toast({ title: "Erro de Sincronização", description: "Houve uma oscilação na rede. Tente novamente.", variant: "destructive" });
+    } catch (e) {
+      trackFalha("redacao_falha_corrigir", e, { chars: text.length });
+      const demorou = e instanceof TempoEsgotado;
+      toast({
+        title: demorou ? "A correção demorou demais" : "Não foi possível corrigir agora",
+        description: demorou
+          ? "Seu texto continua salvo aqui na tela. Tente enviar de novo em alguns minutos."
+          : "Houve uma falha ao falar com o corretor. Seu texto não foi perdido — tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingGrading(false);
     }
@@ -552,9 +648,34 @@ export default function StudentEssayPage() {
           )}
         </div>
         <div className="border-t border-slate-100 p-4 space-y-3">
+          {/* Confirmação do tema logo acima do botão.
+              O critério de fuga ao tema é este texto — se ele não for o que o
+              aluno respondeu, a redação é anulada por inteiro. Mostrar aqui é a
+              última chance de perceber a troca antes de perder a nota. */}
+          {theme.trim() ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                Será corrigida com este tema
+              </p>
+              <p className="text-xs font-black italic text-primary leading-snug mt-1">{theme}</p>
+              <p className="text-[10px] font-medium text-slate-500 mt-1.5 leading-snug">
+                Escreveu sobre outro assunto? Troque o tema antes de enviar — fugir do tema zera a redação.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+              <p className="text-[11px] font-black text-amber-800 leading-snug">
+                Escolha um tema antes de enviar.
+              </p>
+              <p className="text-[10px] font-medium text-amber-700/80 mt-1 leading-snug">
+                Use o tema da semana, gere uma proposta ou escreva o seu em "Tema Manual".
+              </p>
+            </div>
+          )}
+
           <Button
             onClick={handleSubmitEssay}
-            disabled={loadingGrading || !text || !theme}
+            disabled={loadingGrading || !text || !theme.trim()}
             className="btn-shimmer w-full h-13 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40 group"
           >
             {loadingGrading ? (
@@ -613,6 +734,12 @@ export default function StudentEssayPage() {
             </div>
           </div>
 
+          {/* Anulação: explica por que tudo ficou zero antes de mostrar as
+              competências zeradas, senão o aluno lê cinco zeros sem contexto. */}
+          {result.anulacao && (
+            <AnulacaoAviso motivo={result.anulacao} explicacao={result.general_feedback} />
+          )}
+
           {/* Competencies */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {Object.entries(result.competencies || {}).map(([key, comp]: any, idx) => {
@@ -635,7 +762,16 @@ export default function StudentEssayPage() {
             })}
           </div>
 
-          {/* Corrections */}
+          {/* Redação com os desvios grifados no lugar onde foram escritos. */}
+          {result.detailed_corrections?.some((c: any) => typeof c?.start === 'number') && (
+            <EssayHighlightedText texto={text} correcoes={result.detailed_corrections} />
+          )}
+
+          {/* Espelho da banca: quantas correções, se divergiram, como fechou. */}
+          {result._banca && <BancaMirror banca={result._banca} />}
+
+          {/* Corrections — lista completa, inclusive os trechos que não foi
+              possível localizar no texto (o modelo citou de forma aproximada). */}
           {result.detailed_corrections?.length > 0 && (
             <div className="bg-white border border-slate-100 shadow-sm rounded-[1.5rem] overflow-hidden">
               <div className="p-5 border-b border-slate-100 bg-red-50">

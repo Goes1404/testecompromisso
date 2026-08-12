@@ -53,10 +53,22 @@ export async function POST(request: Request) {
     }
 
     // 4. Resetar senha via Admin API (Sem deletar/reproducir o usuário).
+    //
+    // `must_change_password: true` é obrigatório aqui. A interface da secretaria
+    // promete "o aluno será obrigado a alterá-la no próximo login", e a rota
+    // não marcava nada: a senha temporária virava definitiva, e a secretaria
+    // ficava sabendo a senha do aluno para sempre.
+    //
+    // O metadado é lido e mesclado porque a Admin API SUBSTITUI o objeto
+    // inteiro — passar só uma chave apagaria as demais.
+    const { data: atual } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+    const metaExistente = atual?.user?.user_metadata ?? {};
+
     // Promise.race evita que a rota fique pendurada se a Admin API não responder.
     const { error: updateError } = await Promise.race([
       supabaseAdmin.auth.admin.updateUserById(profile.id, {
         password: newPassword,
+        user_metadata: { ...metaExistente, must_change_password: true },
       }),
       new Promise<never>((_, reject) =>
         setTimeout(

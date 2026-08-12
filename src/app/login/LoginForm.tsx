@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import Link from "next/link";
@@ -15,6 +16,18 @@ export function LoginForm() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused]   = useState<string | null>(null);
+  const [aviso, setAviso]       = useState<string | null>(null);
+  const params = useSearchParams();
+
+  // O middleware manda `?sessao=expirada` quando encontra um cookie de sessão
+  // que não vale mais. Sem esta mensagem, o aluno é devolvido ao login sem
+  // explicação e conclui que errou a senha — foram 20 ocorrências em produção
+  // entre junho e agosto.
+  useEffect(() => {
+    if (params?.get('sessao') === 'expirada') {
+      setAviso('Sua sessão expirou por inatividade. Entre novamente para continuar.');
+    }
+  }, [params]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +154,14 @@ export function LoginForm() {
                 </button>
               </div>
             </div>
+
+            {/* Sessão expirada — informativo, não é erro do aluno */}
+            {aviso && !authError && (
+              <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/25 p-3.5 rounded-xl animate-in fade-in slide-in-from-top-1 duration-300">
+                <ShieldCheck className="h-4 w-4 text-amber-300 shrink-0" />
+                <p className="text-amber-200 text-xs font-bold">{aviso}</p>
+              </div>
+            )}
 
             {/* Error */}
             {authError && (

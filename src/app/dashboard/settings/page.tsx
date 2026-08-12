@@ -52,7 +52,7 @@ export default function SettingsPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
+  const { permission, motivo: motivoPush, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -536,11 +536,30 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 md:p-10">
-            {permission === "unsupported" ? (
+            {motivoPush === "ios_precisa_instalar" ? (
+              /* Das 68 inscricoes de push da base, UMA e de iPhone. Nao e
+                 recusa: no iOS o Web Push so existe com o site instalado na
+                 tela de inicio, e a mensagem generica de "navegador sem
+                 suporte" nao dizia o que fazer a respeito. */
+              <div className="flex items-start gap-4 p-5 rounded-2xl bg-amber-50 border border-amber-100">
+                <BellOff className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-black text-amber-800">Falta instalar na tela de início</p>
+                  <p className="text-xs font-medium text-amber-700/80 mt-1 leading-relaxed">
+                    No iPhone, as notificações só funcionam com o Compromisso aberto pelo ícone.
+                  </p>
+                  <ol className="text-xs font-medium text-amber-700/90 mt-2 space-y-1 list-decimal list-inside">
+                    <li>Toque em <b>Compartilhar</b>, na barra do Safari.</li>
+                    <li>Escolha <b>Adicionar à Tela de Início</b>.</li>
+                    <li>Abra pelo <b>ícone novo</b> e volte aqui para ativar.</li>
+                  </ol>
+                </div>
+              </div>
+            ) : permission === "unsupported" ? (
               <div className="flex items-center gap-4 p-5 rounded-2xl bg-muted/20">
                 <BellOff className="h-6 w-6 text-muted-foreground shrink-0" />
                 <p className="text-sm font-medium text-muted-foreground italic">
-                  Este navegador não suporta notificações. Tente abrir pelo app instalado na tela inicial.
+                  Este navegador não suporta notificações.
                 </p>
               </div>
             ) : permission === "denied" ? (

@@ -18,6 +18,7 @@ import {
   Phone, BookOpen, School, ChevronRight, ChevronLeft,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 
@@ -115,7 +116,16 @@ export default function FirstAccessPage() {
   const isMatch   = newPassword === confirmPassword && confirmPassword.length > 0;
   const step1OK   = hasLength && hasSymbol && hasNumber && isMatch;
 
-  const isStudent = profile?.profile_type === 'student' || user?.user_metadata?.profile_type === 'student';
+  // `role` e não `profile_type`: este último é texto livre e tem cinco valores
+  // distintos em produção ('student' 608, 'etec' 259, 'enem' 167, 'Estudante
+  // ENEM' 17, 'Estudante ETEC' 9). Comparar com a string 'student' deixava 452
+  // alunos de fora — eles pulariam a escolha de trilha, que é justamente o que
+  // decide qual conteúdo passam a ver.
+  const isStudent =
+    profile?.role === 'student' ||
+    user?.user_metadata?.role === 'student' ||
+    (profile?.profile_type ?? '').toLowerCase().includes('estudante') ||
+    ['student', 'etec', 'enem'].includes((profile?.profile_type ?? '').toLowerCase());
 
   function handlePhoneChange(v: string) {
     setPhone(maskPhone(v));
@@ -137,8 +147,10 @@ export default function FirstAccessPage() {
         ),
       ]);
       if (result.error) throw result.error;
+      trackAcao('primeiro_acesso_senha_trocada');
       setStep(2);
     } catch (err: any) {
+      trackFalha('primeiro_acesso_senha_falhou', err);
       setError(err.message || "Não foi possível salvar a senha. Tente novamente.");
     } finally {
       setLoading(false);
@@ -179,10 +191,14 @@ export default function FirstAccessPage() {
       ]);
       if (metaResult.error) throw metaResult.error;
 
+      trackAcao('primeiro_acesso_concluido', { aluno: isStudent });
       toast({ title: "Perfil salvo!", description: "Seja bem-vindo ao Compromisso!" });
       setStep(3);
       setTimeout(() => window.location.assign("/dashboard"), 2000);
     } catch (err: any) {
+      // Falhar aqui deixa o aluno preso: a senha já mudou, mas o metadado
+      // `must_change_password` continua ligado e o middleware o traz de volta.
+      trackFalha('primeiro_acesso_perfil_falhou', err);
       setError(err.message || "Não foi possível salvar o perfil. Tente novamente.");
     } finally {
       setLoading(false);

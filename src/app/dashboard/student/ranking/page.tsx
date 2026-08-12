@@ -20,6 +20,16 @@ type RankEntry = {
   position:    number;
 };
 
+/** Pódio congelado da leva anterior (`ranking_last_podium`). */
+type PodiumWinner = {
+  position:    number;
+  student_id:  string;
+  full_name:   string;
+  avatar_url:  string | null;
+  xp:          number;
+  cycle_label: string | null;
+};
+
 function Avatar({ name, url, size = 'md' }: { name: string; url?: string | null; size?: 'sm' | 'md' | 'lg' }) {
   const sz = size === 'lg' ? 'h-16 w-16 text-xl' : size === 'md' ? 'h-11 w-11 text-sm' : 'h-8 w-8 text-xs';
   const initials = name?.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase() || '?';
@@ -99,6 +109,8 @@ export default function RankingPage() {
 
   const [ranking, setRanking]     = useState<RankEntry[]>([]);
   const [myEntry, setMyEntry]     = useState<RankEntry | null>(null);
+  const [winners, setWinners]     = useState<PodiumWinner[]>([]);
+  const [cycle, setCycle]         = useState<{ label: string | null; ends_at: string } | null>(null);
   const [loading, setLoading]     = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -132,6 +144,30 @@ export default function RankingPage() {
           .maybeSingle();
         setMyEntry((minha as RankEntry) ?? null);
       }
+
+      // Vencedores da leva anterior. A falha silenciosa é proposital: se a view
+      // ainda não existir no ambiente, o ranking da semana continua carregando.
+      const { data: podio } = await supabase
+        .from('ranking_last_podium')
+        .select('position, student_id, full_name, avatar_url, xp, cycle_label')
+        .order('position', { ascending: true });
+      setWinners((podio as PodiumWinner[]) ?? []);
+
+      // Janela real da disputa. Sem isto o cabeçalho anuncia "reseta toda
+      // segunda" mesmo quando o ciclo vigente não é uma semana civil — a leva
+      // atual, por exemplo, começou num sábado para não deixar buraco depois da
+      // primeira premiação.
+      const agora = new Date().toISOString();
+      const { data: ciclo } = await supabase
+        .from('ranking_cycles')
+        .select('label, ends_at')
+        .lte('starts_at', agora)
+        .gte('ends_at', agora)
+        .order('ends_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      setCycle((ciclo as { label: string | null; ends_at: string }) ?? null);
+
       setLastUpdated(new Date());
     } catch (e: any) {
       toast({ title: 'Erro ao carregar ranking', description: e.message, variant: 'destructive' });
@@ -146,12 +182,17 @@ export default function RankingPage() {
   const rest    = ranking.slice(3);
   const myPos   = myEntry?.position ?? null;
 
-  const weekStart = (() => {
+  const periodo = (() => {
+    if (cycle) {
+      const fim = new Date(cycle.ends_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+      return `${cycle.label ?? 'Leva atual'} · Vale até ${fim}`;
+    }
     const d = new Date();
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const mon = new Date(d.setDate(diff));
-    return mon.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+    const ini = mon.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+    return `Semana de ${ini} · Reseta toda segunda-feira`;
   })();
 
   return (
@@ -173,7 +214,7 @@ export default function RankingPage() {
               <span className="text-gradient-brand">Líderes 🏆</span>
             </h1>
             <p className="text-white/40 text-xs font-medium">
-              Semana de {weekStart} · Reseta toda segunda-feira
+              {periodo}
             </p>
           </div>
 
@@ -200,6 +241,54 @@ export default function RankingPage() {
           </div>
         )}
       </section>
+
+      {/* ── VENCEDORES DA LEVA ANTERIOR ── */}
+      {winners.length > 0 && (
+        <section className="rounded-[2.5rem] border border-amber-200 bg-gradient-to-b from-amber-50 to-white p-6 shadow-md">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <Crown className="h-4 w-4 text-amber-600" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">
+              Vencedores da leva anterior
+            </p>
+          </div>
+          {winners[0]?.cycle_label && (
+            <p className="text-center text-[10px] text-amber-700/60 font-medium mb-4">
+              {winners[0].cycle_label}
+            </p>
+          )}
+
+          <div className="space-y-2">
+            {winners.map((w) => {
+              const isMe = w.student_id === user?.id;
+              const medalha = w.position === 1 ? '🥇' : w.position === 2 ? '🥈' : w.position === 3 ? '🥉' : `${w.position}º`;
+              return (
+                <div
+                  key={w.student_id}
+                  className={`flex items-center gap-3 rounded-2xl border px-4 py-2.5 ${
+                    isMe ? 'border-primary/20 bg-primary/5' : 'border-amber-100 bg-white'
+                  }`}
+                >
+                  <span className="w-6 text-center text-lg shrink-0">{medalha}</span>
+                  <Avatar name={w.full_name} url={w.avatar_url} size="sm" />
+                  <p className="flex-1 min-w-0 truncate text-sm font-black text-slate-800">
+                    {w.full_name}
+                    {isMe && <span className="ml-1.5 text-[9px] font-bold text-primary/60">(você)</span>}
+                  </p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Zap className="h-3.5 w-3.5 text-amber-500" />
+                    <span className="text-sm font-black text-slate-700">{w.xp}</span>
+                    <span className="text-[9px] font-bold text-slate-400">XP</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-4 text-center text-[10px] font-medium text-muted-foreground">
+            A secretaria entra em contato com os premiados. A disputa recomeçou do zero — boa sorte! 📚
+          </p>
+        </section>
+      )}
 
       {/* Refresh */}
       <div className="flex items-center justify-between px-1">

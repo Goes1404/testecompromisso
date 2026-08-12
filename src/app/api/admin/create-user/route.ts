@@ -76,6 +76,37 @@ export async function POST(request: Request) {
       );
     }
 
+    // ── Guarda contra conta duplicada da MESMA pessoa ────────────────────
+    //
+    // Checar só o e-mail não bastava, porque o e-mail é derivado do nome por
+    // uma regra que mudou ao longo do tempo. "Abner de Jesus Jales da Silva"
+    // virou `abnerjsilva@` numa versão (inicial do primeiro nome do meio),
+    // `abnerdsilva@` em outra (inicial da segunda palavra, que aqui é a
+    // preposição "de") e `abnersilva@` na regra de duas partes. Resultado em
+    // produção: 201 nomes com mais de uma conta, 202 contas excedentes, e o
+    // boletim do aluno espalhado entre elas.
+    //
+    // Nomes brasileiros com preposição são a maioria, então isso não era caso
+    // raro — era o caso comum.
+    const nomeNormalizado = fullName.trim().replace(/\s+/g, ' ').toLowerCase();
+    const { data: mesmoNome } = await supabaseAdmin
+      .from('profiles')
+      .select('id, email, full_name')
+      .ilike('full_name', nomeNormalizado)
+      .limit(3);
+
+    if (mesmoNome && mesmoNome.length > 0 && !emailOverride) {
+      return NextResponse.json(
+        {
+          error: `Já existe cadastro para "${fullName}" (${mesmoNome.map(m => m.email).join(', ')}). ` +
+                 `Se for outra pessoa com o mesmo nome, informe um e-mail de login diferente para prosseguir.`,
+          duplicado: true,
+          existentes: mesmoNome,
+        },
+        { status: 409 }
+      );
+    }
+
     // Criar usuário no Supabase Auth
     const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,

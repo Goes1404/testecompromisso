@@ -6,6 +6,35 @@ import { useToast } from "@/hooks/use-toast";
 
 type PushPermissionState = "default" | "granted" | "denied" | "unsupported";
 
+/**
+ * Por que o push não está disponível neste aparelho.
+ *
+ * A distinção existe por causa de um número: das 68 inscrições de push da base,
+ * **uma** é de iPhone, contra 55 de Android. Não é preferência dos alunos — é
+ * que no iOS o Web Push só funciona com o site instalado na tela de início, e
+ * antes disso o `PushManager` nem existe. O código antigo lia isso como
+ * "navegador sem suporte" e escondia o banner, então o aluno de iPhone nunca
+ * via absolutamente nada, nem uma instrução. Ele não recusou: nunca foi
+ * convidado.
+ */
+export type MotivoIndisponivel = "ios_precisa_instalar" | "sem_suporte" | null;
+
+function ehIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return true;
+  // iPadOS 13+ se apresenta como Mac; o que o denuncia é a tela sensível ao toque.
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+/** O site foi aberto pelo ícone da tela de início (e não pela aba do navegador). */
+function ehInstalado(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    (navigator as unknown as { standalone?: boolean }).standalone === true
+  );
+}
+
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -23,6 +52,7 @@ export function usePushNotifications() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [permission, setPermission] = useState<PushPermissionState>("default");
+  const [motivo, setMotivo] = useState<MotivoIndisponivel>(null);
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -31,9 +61,13 @@ export function usePushNotifications() {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
       setPermission("unsupported");
+      // No iPhone fora da tela de início isso é temporário e tem conserto:
+      // instalar o site resolve. Em qualquer outro caso é o navegador mesmo.
+      setMotivo(ehIOS() && !ehInstalado() ? "ios_precisa_instalar" : "sem_suporte");
       return;
     }
     setPermission(Notification.permission as PushPermissionState);
+    setMotivo(null);
   }, []);
 
   // Registra o SW assim que possível
@@ -143,5 +177,5 @@ export function usePushNotifications() {
     }
   }, [toast]);
 
-  return { permission, subscribed, loading, subscribe, unsubscribe };
+  return { permission, motivo, subscribed, loading, subscribe, unsubscribe };
 }

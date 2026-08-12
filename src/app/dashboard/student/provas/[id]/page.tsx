@@ -31,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
 
 const InteractiveWorkbook = dynamic(
   () => import("@/components/InteractiveWorkbook").then((mod) => mod.InteractiveWorkbook),
@@ -201,10 +202,17 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
           }
         }
       }
-    } catch {}
+    } catch (e) {
+      // O aluno recomeça a prova do zero achando que nunca salvou nada.
+      trackFalha("prova_pdf_progresso_ilegivel", e);
+    }
 
     let introSeen = false;
-    try { introSeen = !!(introSeenKey && localStorage.getItem(introSeenKey)); } catch {}
+    try {
+      introSeen = !!(introSeenKey && localStorage.getItem(introSeenKey));
+    } catch {
+      // Sem consequência: o aluno vê a tela de instruções mais uma vez.
+    }
 
     // Retomar prova em andamento ou já conhecer o passo a passo → entra direto.
     if (hasProgress || introSeen) {
@@ -214,7 +222,11 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
   }, [pdfProgressKey, introSeenKey, questions.length, result, toast]);
 
   const handleStart = useCallback(() => {
-    try { if (introSeenKey) localStorage.setItem(introSeenKey, "1"); } catch {}
+    try {
+      if (introSeenKey) localStorage.setItem(introSeenKey, "1");
+    } catch {
+      // Idem: só faz a intro reaparecer numa próxima vez.
+    }
     setStarted(true);
   }, [introSeenKey]);
 
@@ -227,7 +239,12 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
         pdfProgressKey,
         JSON.stringify({ answers, currentIndex, total: questions.length, elapsedSeconds, leaves: leaveCount, savedAt: new Date().toISOString() })
       );
-    } catch {}
+    } catch (e) {
+      // O pior silêncio desta tela: é a prova EM ANDAMENTO que deixa de ser
+      // salva. Se o aparelho fechar a aba, o aluno perde tudo o que respondeu
+      // e ainda gasta uma das duas tentativas.
+      trackFalha("prova_pdf_progresso_nao_salvo", e, { respondidas: Object.keys(answers).length });
+    }
   }, [answers, currentIndex, elapsedSeconds, leaveCount, pdfProgressKey, result, questions.length]);
 
   // Tique do cronômetro (1s) — só corre depois que a prova começa.
@@ -338,15 +355,34 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
           source: "self",
         });
 
-        if (pdfProgressKey) { try { localStorage.removeItem(pdfProgressKey); } catch {} }
+        if (pdfProgressKey) {
+          try {
+            localStorage.removeItem(pdfProgressKey);
+          } catch (e) {
+            trackFalha("prova_pdf_progresso_nao_limpo", e);
+          }
+        }
         setResult({ score: correctCount, total: questions.length, triRange, durationSeconds, forfeited });
         setMobileTab("answers");
         if (!forfeited) {
           toast({ title: "Prova Finalizada!", description: `Você acertou ${correctCount} questões.` });
         }
-      } catch {
+        trackAcao("prova_pdf_finalizada", {
+          acertos: correctCount, total: questions.length,
+          segundos: durationSeconds, desistiu: forfeited,
+        });
+      } catch (e) {
+        // O aluno fez a prova inteira e ela não foi registrada. Sem este
+        // evento, some sem deixar rastro — e a nota nunca aparece no boletim.
+        trackFalha("prova_pdf_nao_registrada", e, {
+          acertos: correctCount, total: questions.length,
+        });
         finalizingRef.current = false; // permite tentar de novo em caso de erro
-        toast({ title: "Erro ao salvar", description: "Tente novamente.", variant: "destructive" });
+        toast({
+          title: "Não conseguimos registrar sua prova",
+          description: "Suas respostas continuam aqui. Toque em entregar de novo.",
+          variant: "destructive",
+        });
       } finally {
         setIsSubmitting(false);
       }

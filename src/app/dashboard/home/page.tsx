@@ -51,9 +51,12 @@ const StudySuggestionWidget = dynamic(
   () => import('@/components/StudySuggestionWidget').then(m => ({ default: m.StudySuggestionWidget })),
   { ssr: false, loading: () => <div className="h-24 rounded-[2rem] bg-muted/20 animate-pulse" /> }
 );
-const StreakWidget = dynamic(
-  () => import('@/components/StreakWidget').then(m => ({ default: m.StreakWidget })),
-  { ssr: false, loading: () => <div className="h-32 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
+// O bichinho absorveu o cartao de ofensiva: os dois contam a mesma coisa
+// (quantos dias seguidos), e a home ja tinha oito cartoes — somar um nono
+// empurraria o resto para fora da primeira tela do celular.
+const BichinhoWidget = dynamic(
+  () => import('@/components/BichinhoWidget').then(m => ({ default: m.BichinhoWidget })),
+  { ssr: false, loading: () => <div className="h-64 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
 );
 const GoalsWidget = dynamic(
   () => import('@/components/GoalsWidget').then(m => ({ default: m.GoalsWidget })),
@@ -234,11 +237,18 @@ export default function DashboardHome() {
     if (!user) return;
     try {
       setSimNoticeDismissed(localStorage.getItem(`sim_notice_dismissed_${user.id}`) === '1');
-    } catch {}
+    } catch {
+      // Storage indisponível: o aviso de simulado reaparece. Incômodo, não
+      // perda de dado — o aluno consegue dispensar de novo.
+    }
   }, [user]);
   const dismissSimNotice = () => {
     setSimNoticeDismissed(true);
-    try { if (user) localStorage.setItem(`sim_notice_dismissed_${user.id}`, '1'); } catch {}
+    try {
+      if (user) localStorage.setItem(`sim_notice_dismissed_${user.id}`, '1');
+    } catch {
+      // Idem: sem persistir, o aviso volta na próxima visita.
+    }
   };
 
   const [activeSession, setActiveSession] = useState<any>(null);
@@ -1356,7 +1366,7 @@ export default function DashboardHome() {
           {user && <WeeklyMissionsWidget userId={user.id} examTarget={profile?.exam_target} />}
           {user && <WeeklyRankingWidget userId={user.id} examTarget={profile?.exam_target} />}
           {user && profile && <DailyQuestionCard userId={user.id} profile={profile} />}
-          {user && <StreakWidget userId={user.id} />}
+          {user && <BichinhoWidget />}
           {user && <GoalsWidget userId={user.id} />}
           {user && <JournalWidget userId={user.id} />}
           {user && <GamificationWidget userId={user.id} />}

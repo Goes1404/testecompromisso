@@ -129,6 +129,12 @@ export default function AssessmentsGraderPage() {
     fetchSubmissions();
   }, [fetchSubmissions]);
 
+  /** Espelho da banca gravado pela correção, quando existe. */
+  const banca = useMemo(
+    () => selectedEssay?.result_data?._banca ?? null,
+    [selectedEssay],
+  );
+
   const handleSelectEssay = (essay: any) => {
     setSelectedEssay(essay);
     setMentorFeedback(essay.mentor_notes || "");
@@ -447,6 +453,43 @@ export default function AssessmentsGraderPage() {
                     <p className="relative z-10 text-xs font-medium italic text-white/60 leading-relaxed mt-4 pt-4 border-t border-white/10">
                       "{selectedEssay.feedback}"
                     </p>
+                  )}
+
+                  {/* Espelho da banca: as correções independentes e o que o
+                      protocolo do INEP fez com elas. É o que diz ao professor
+                      se a nota foi tranquila ou disputada — e, portanto, onde
+                      a revisão humana rende mais. */}
+                  {banca && (
+                    <div className="relative z-10 mt-4 pt-4 border-t border-white/10 space-y-2">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/55">
+                        Banca · {banca.corretores?.length ?? 0} correções independentes
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(banca.corretores ?? []).map((c: any, i: number) => (
+                          <span
+                            key={i}
+                            className={`rounded-lg px-2 py-1 text-[10px] font-mono ${
+                              banca.usadas?.includes(i)
+                                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                                : 'bg-white/5 text-white/40 border border-white/10 line-through'
+                            }`}
+                            title={banca.usadas?.includes(i) ? 'Usada na nota final' : 'Descartada pelo protocolo'}
+                          >
+                            {c.vetor?.join('·')} = {c.total}
+                          </span>
+                        ))}
+                      </div>
+                      {banca.houveDiscrepancia && (
+                        <p className="text-[10px] font-medium text-amber-300/80 leading-relaxed">
+                          Divergência acima do limite do INEP: {banca.motivos?.join('; ')}.
+                        </p>
+                      )}
+                      {banca.revisaoRecomendada && (
+                        <p className="text-[10px] font-black text-amber-300 leading-relaxed">
+                          ⚠ Caso limítrofe — sua correção aqui vale mais que a média.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 

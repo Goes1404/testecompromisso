@@ -43,6 +43,8 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
+import { medirCarregamentoDeTela } from "@/lib/perf";
 import { getTrailCoverUrl, isPlaceholderImage } from "@/lib/trail-cover";
 
 const TRAIL_CATEGORIES = ["Todos", "Matemática", "Linguagens", "Física", "Biologia", "História", "Geografia", "Atualidades", "Literatura", "Química", "Filosofia", "Sociologia"];
@@ -169,7 +171,11 @@ export default function LearningTrailsPage() {
     if (!user || !profile || dataFetchedRef.current) return;
 
     setLoading(true);
-    dataFetchedRef.current = true;
+    // A marcação de "já buscou" só acontece DEPOIS do sucesso. Antes ela vinha
+    // aqui, então uma falha de rede deixava a guarda ligada para sempre: a tela
+    // ficava permanentemente vazia e nem trocar de aba refazia a busca — só
+    // recarregar a página inteira.
+    const inicioCarga = Date.now();
 
     try {
       const audience = (
@@ -181,11 +187,17 @@ export default function LearningTrailsPage() {
       ).toLowerCase().trim();
       const userAudience = audience.includes('etec') ? 'etec' : 'enem';
 
-      // Busca simples (sem filtro de coluna que pode não existir)
-      let trailsResult = await supabase.from('trails')
-        .select('*')
-        .or('status.eq.active,status.eq.published')
-        .order('created_at', { ascending: false });
+      // Em paralelo: as duas consultas são independentes, e em série a tela
+      // esperava a soma das duas latências.
+      let [trailsResult, progressResult] = await Promise.all([
+        supabase.from('trails')
+          .select('*')
+          .or('status.eq.active,status.eq.published')
+          .order('created_at', { ascending: false }),
+        supabase.from('user_progress').select('*').eq('user_id', user.id),
+      ]);
+
+      if (trailsResult.error) throw trailsResult.error;
 
       // Filtra por segmentação no front-end
       if (trailsResult.data) {
@@ -195,14 +207,23 @@ export default function LearningTrailsPage() {
         });
       }
 
-      const progressResult = await supabase.from('user_progress').select('*').eq('user_id', user.id);
-
       if (trailsResult.data) {
         setDbTrails(trailsResult.data);
       }
       if (progressResult.data) setAllProgress(progressResult.data);
+
+      dataFetchedRef.current = true;
+      medirCarregamentoDeTela('trilhas', inicioCarga);
+      trackAcao('trilhas_carregadas', { total: trailsResult.data?.length ?? 0 });
     } catch (e: any) {
-      console.error("Error loading trails:", e);
+      // Antes: `console.error` e nada mais. A tela caía no estado vazio, e
+      // "não há trilhas" é indistinguível de "a busca falhou" para o aluno.
+      trackFalha('trilhas_falha_carregar', e);
+      toast({
+        title: 'Não foi possível carregar as trilhas',
+        description: 'Verifique sua conexão e tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -227,6 +248,7 @@ export default function LearningTrailsPage() {
         const { error } = await supabase.from('user_progress').delete().eq('user_id', user.id).eq('trail_id', trailId);
         if (error) throw error;
         toast({ title: "Trilha Removida da Home 📌", description: "O item saiu da sua lista de acesso rápido." });
+        trackAcao('trilha_desafixada');
       } else {
         // Pin: Upsert the record
         const { error } = await supabase.from('user_progress').upsert({
@@ -241,12 +263,18 @@ export default function LearningTrailsPage() {
           title: "Trilha Fixada! 📌",
           description: "Acesse rapidamente pela Página Inicial."
         });
+        trackAcao('trilha_fixada');
       }
 
       const { data: progressRes } = await supabase.from('user_progress').select('*').eq('user_id', user.id);
       if (progressRes) setAllProgress(progressRes);
     } catch (e: any) {
-      toast({ title: "Falha na operação", variant: "destructive" });
+      trackFalha('trilha_falha_fixar', e);
+      toast({
+        title: "Não foi possível fixar a trilha",
+        description: "Tente de novo em instantes.",
+        variant: "destructive",
+      });
     } finally {
       setPinningId(null);
     }

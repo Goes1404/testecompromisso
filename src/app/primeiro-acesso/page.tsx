@@ -33,7 +33,8 @@ function PrimeiroAcessoContent() {
   const [error, setError] = useState('');
 
   const [fullName, setFullName] = useState('');
-  const [userFound, setUserFound] = useState<{ id: string; email: string; name: string } | null>(null);
+  // Sem `id`: a rota deixou de devolver o uuid do perfil, que esta tela nunca usou.
+  const [userFound, setUserFound] = useState<{ email: string; name: string } | null>(null);
 
   // Register fields
   const [password, setPassword] = useState('');
@@ -84,7 +85,7 @@ function PrimeiroAcessoContent() {
       const res = await apiPost({ action: 'register', fullName, examTarget, password, institution, classroom: sala, inviteToken });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setUserFound({ id: '', email: data.email, name: fullName });
+      setUserFound({ email: data.email, name: fullName });
       setStep('success');
     } catch (err: any) {
       setError(err.message || 'Erro ao criar cadastro.');

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginForm } from "@/app/login/LoginForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -48,7 +49,12 @@ export default function LoginPage() {
 
       {/* ── Center content ── */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-16">
-        <LoginForm />
+        {/* Suspense por causa do `useSearchParams` no formulário: sem ele, o
+            Next arrasta esta rota estática inteira para renderização no
+            cliente, e a tela de login é a primeira coisa que o aluno carrega. */}
+        <Suspense fallback={<div className="h-[420px]" />}>
+          <LoginForm />
+        </Suspense>
       </div>
 
       {/* ── Footer ── */}

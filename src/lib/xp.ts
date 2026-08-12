@@ -10,7 +10,7 @@ import { awardXP, XP_PER_CORRECT_QUESTION, XP_LEVELS, getLevel } from '@/lib/gam
 export const XP_VALUES = {
   correct_answer:          XP_PER_CORRECT_QUESTION,  // 5 (existente)
   wrong_answer:            2,
-  simulado_complete:       20,                        // XP_PER_SIMULADO_COMPLETE
+  simulado_complete:       0,                         // concluir não vale XP: só os acertos contam
   daily_question_correct:  25,
   daily_question_wrong:    5,
   essay_submit:            80,

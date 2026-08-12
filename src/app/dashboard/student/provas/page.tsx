@@ -34,6 +34,8 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
+import { trackAcao, trackFalha } from "@/lib/telemetry";
+import { medirCarregamentoDeTela } from "@/lib/perf";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
@@ -114,7 +116,11 @@ const triggerHaptic = (ms = 15) => {
   if (typeof window !== "undefined" && navigator.vibrate) {
     try {
       navigator.vibrate(ms);
-    } catch {}
+    } catch {
+      // Único catch vazio proposital do arquivo: retorno háptico é enfeite.
+      // iOS não implementa `vibrate` e alguns Android recusam sem gesto do
+      // usuário. Não há o que reportar nem o que o aluno perca.
+    }
   }
 };
 
@@ -159,12 +165,21 @@ export default function ProvasCompletasPage() {
     try {
       const raw = localStorage.getItem(progressKey(examId));
       return raw ? (JSON.parse(raw) as SavedProgress) : null;
-    } catch {
+    } catch (e) {
+      // JSON corrompido ou storage bloqueado: o aluno perde a retomada da
+      // prova e recomeça do zero, sem entender por quê.
+      trackFalha("prova_progresso_ilegivel", e);
       return null;
     }
   }, [progressKey]);
   const clearProgress = useCallback((examId: string) => {
-    try { localStorage.removeItem(progressKey(examId)); } catch {}
+    try {
+      localStorage.removeItem(progressKey(examId));
+    } catch (e) {
+      // Falhar aqui deixa progresso órfão de uma prova já entregue, e a tela
+      // oferece "retomar" numa prova concluída.
+      trackFalha("prova_progresso_nao_limpo", e);
+    }
     setProgressByExam((p) => {
       const n = { ...p };
       delete n[examId];
@@ -240,6 +255,9 @@ export default function ProvasCompletasPage() {
   const fetchExams = useCallback(async () => {
     if (!user) return;
     setPageState("loading");
+    // Mede quando os DADOS chegaram, não quando os pixels apareceram: o
+    // esqueleto desta tela renderiza rápido e a lista de provas é que demora.
+    const inicioCarga = Date.now();
     try {
       // Determina o foco do aluno. O aluno de ETEC vê só provas de ETEC; o da
       // trilha ENEM vê ENEM e FUVEST (a FUVEST faz parte da trilha ENEM).
@@ -323,11 +341,14 @@ export default function ProvasCompletasPage() {
             answered: sp.answers?.length ?? 0,
             savedAt: sp.savedAt,
           };
-        } catch {}
+        } catch (e) {
+          trackFalha("prova_progresso_ilegivel_na_lista", e);
+        }
       });
       setProgressByExam(prog);
 
       setPageState("list");
+      medirCarregamentoDeTela("provas", inicioCarga);
     } catch (e: any) {
       setErrorMsg(e.message || "Erro ao carregar provas.");
       setPageState("error");
@@ -354,6 +375,7 @@ export default function ProvasCompletasPage() {
       const qs: Question[] = (data || []).map((row: any) => row.questions).filter(Boolean);
 
       if (qs.length === 0) {
+        trackAcao("prova_sem_questoes", { prova: exam.exam_type });
         toast({
           title: "Prova sem questões",
           description: "Esta prova ainda não tem questões cadastradas.",
@@ -410,7 +432,9 @@ export default function ProvasCompletasPage() {
       }
 
       setPageState("active");
+      trackAcao("prova_iniciada", { tipo: exam.exam_type, questoes: qs.length, tentativa: attemptNo });
     } catch (e: any) {
+      trackFalha("prova_falha_iniciar", e, { tipo: exam.exam_type });
       toast({ title: "Erro", description: e.message, variant: "destructive" });
       setPageState("list");
     }
@@ -494,7 +518,12 @@ export default function ProvasCompletasPage() {
     };
     try {
       localStorage.setItem(progressKey(activeExam.id), JSON.stringify(snapshot));
-    } catch {}
+    } catch (e) {
+      // Storage cheio ou bloqueado (aba anônima em alguns aparelhos). Antes
+      // era `catch {}`: o progresso deixava de ser salvo e o aluno só
+      // descobria ao voltar e encontrar a prova do zero.
+      trackFalha("prova_progresso_nao_salvo", e, { questoes: questions.length });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageState, activeExam, user, questions, currentIndex, selectedAnswer, markedForReview, timeLeft]);
 

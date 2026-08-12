@@ -226,11 +226,13 @@ export default function DirectChatPage() {
           return [...prev, data as ChatMessage];
         });
 
-        // Push notification (fire-and-forget)
+        // Push (fire-and-forget). O texto NÃO vai mais no corpo: a rota lê a
+        // mensagem que acabou de ser gravada, para ninguém conseguir disparar
+        // notificação com conteúdo forjado em nome de outra pessoa.
         fetch("/api/push/notify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "chat", receiverId: contactId, content: userText }),
+          body: JSON.stringify({ type: "chat", receiverId: contactId }),
         }).catch(() => {});
       } catch (err: any) {
         toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" });

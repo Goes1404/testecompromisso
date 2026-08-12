@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -523,14 +523,39 @@ export default function AdminUserDirectoryPage() {
   const [editProfileType, setEditProfileType] = useState("");
   const [editIsSubmitting, setEditIsSubmitting] = useState(false);
 
+  /** Quantos alunos em cada situação, para rotular os filtros. */
+  const contagem = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const u of users) {
+      const sit = u.acesso?.situacao;
+      if (sit) c[sit] = (c[sit] ?? 0) + 1;
+    }
+    return c;
+  }, [users]);
+
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('profiles').select('*').order('name');
+      // A situação de acesso vem de `auth.users.last_sign_in_at`, que o cliente
+      // não pode ler — por isso uma função com checagem de papel, e não uma
+      // view (que rodaria como dono e exporia a lista a qualquer sessão).
+      const [{ data, error }, { data: situacoes }] = await Promise.all([
+        supabase.from('profiles').select('*').order('name'),
+        supabase.rpc('listar_status_alunos'),
+      ]);
       if (error) throw error;
-      setUsers(data || []);
+
+      const porId = new Map(
+        (situacoes ?? []).map((s: any) => [s.id, s]),
+      );
+      setUsers((data ?? []).map(u => ({ ...u, acesso: porId.get(u.id) ?? null })));
     } catch (err) {
       console.error("Erro diretório:", err);
+      toast({
+        title: 'Não foi possível carregar o diretório',
+        description: 'Verifique sua conexão e tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -652,7 +677,13 @@ export default function AdminUserDirectoryPage() {
     const matchesStatus =
       statusFilter === 'all' ||
       (statusFilter === 'active' && u.status !== 'suspended') ||
-      (statusFilter === 'suspended' && u.status === 'suspended');
+      (statusFilter === 'suspended' && u.status === 'suspended') ||
+      // "Sem acesso" é a lista de trabalho da secretaria: alunos que existem,
+      // têm boletim, e nunca conseguiram entrar. Não são contas para apagar —
+      // são senhas para entregar.
+      (statusFilter === 'sem_acesso' && u.acesso?.situacao === 'sem_acesso') ||
+      (statusFilter === 'sumido' && u.acesso?.situacao === 'sumido') ||
+      (statusFilter === 'arquivado' && u.acesso?.situacao === 'arquivado');
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -729,6 +760,15 @@ export default function AdminUserDirectoryPage() {
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="active">Ativos</SelectItem>
               <SelectItem value="suspended">Suspensos</SelectItem>
+              <SelectItem value="sem_acesso">
+                Nunca entraram{contagem.sem_acesso ? ` (${contagem.sem_acesso})` : ''}
+              </SelectItem>
+              <SelectItem value="sumido">
+                Sumidos há 30+ dias{contagem.sumido ? ` (${contagem.sumido})` : ''}
+              </SelectItem>
+              <SelectItem value="arquivado">
+                Arquivados{contagem.arquivado ? ` (${contagem.arquivado})` : ''}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { respostaFalhaIA } from "@/lib/ia-status";
 import { OpenAI } from "openai";
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,6 @@ Gere um tema de impacto e atualidade no Brasil. Seu JSON deve conter:
     return NextResponse.json({ success: true, result });
 
   } catch (error: any) {
-    console.error("Erro na geração de tema:", error);
-    return NextResponse.json({ success: false, error: "Falha na comunicação com a API de IA." }, { status: 500 });
+    return respostaFalhaIA("essay-theme", error);
   }
 }

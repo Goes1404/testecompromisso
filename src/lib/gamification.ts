@@ -1,8 +1,12 @@
 import { supabase } from '@/app/lib/supabase';
 import { bumpStreak, getStreak } from '@/lib/streak';
 
+// ⚠️ Cópias locais dos valores da tabela `xp_action_values`, mantidas só para
+// texto de interface ("cada acerto vale 5 XP"). Quem concede é o servidor, em
+// `award_xp()` — nenhum destes números influencia o XP de verdade. Se divergir
+// da tabela, a tabela está certa.
 export const XP_PER_CORRECT_QUESTION = 5;
-export const XP_PER_SIMULADO_COMPLETE = 20;
+export const XP_PER_SIMULADO_COMPLETE = 0;  // concluir simulado deixou de valer XP
 export const XP_PER_EXAM_COMPLETE = 50;
 
 export const XP_LEVELS = [
@@ -81,7 +85,10 @@ export async function awardXP(
     return 0;
   }
 
-  bumpStreak(_userId).catch(() => undefined);
+  // A ação vai junto: o servidor decide se ela sustenta ofensiva. `checkin`
+  // continua valendo XP, mas entrar e clicar não é estudo — e é do estudo que a
+  // ofensiva (e o bichinho preso a ela) se alimenta.
+  bumpStreak(_userId, action).catch(() => undefined);
   return (data as number) ?? 0;
 }
 
