@@ -10,7 +10,7 @@ import {
   HUMORES, nomeDoNivel, progressoDoNivel,
   type Bichinho, type Especie,
 } from '@/lib/bichinho';
-import { ARQUETIPOS_NOVOS, arquetipo, calcularCP, expressaoDoHumor } from '@/lib/mascote';
+import { ARQUETIPOS_DESTAQUE, arquetipo, calcularCP, expressaoDoHumor } from '@/lib/mascote';
 import { MascoteRetrato } from '@/components/mascote/MascoteRetrato';
 
 /**
@@ -113,10 +113,10 @@ export function BichinhoWidget() {
             </p>
           </div>
 
-          {/* Só os quatro 3D aqui: o cartão da home não tem altura para as oito
-              espécies, e a página do bichinho oferece as clássicas a quem quiser. */}
+          {/* Só quatro aqui: o cartão da home não tem altura para os dez
+              arquétipos, e a página do bichinho mostra todos. */}
           <div className="grid grid-cols-4 gap-2">
-            {ARQUETIPOS_NOVOS.map(a => (
+            {ARQUETIPOS_DESTAQUE.map(a => (
               <button
                 key={a.id}
                 type="button"

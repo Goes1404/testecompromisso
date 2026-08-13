@@ -225,6 +225,20 @@ export function Orelhas({ variante, p, vista }: PecaProps & { variante: OrelhaVa
           {variante === 'tufo' && (
             <path d="M16 4 C14 -14 22 -28 34 -26 C30 -18 30 -6 26 2 Z" fill={p.primaria} stroke={p.sombra} strokeWidth="2" strokeLinejoin="round" />
           )}
+
+          {/* Guelras do axolote: três plumas por lado, é a silhueta inteira do
+              bicho. Vão para fora e para cima, não para trás como orelha. */}
+          {variante === 'guelras' && [0, 1, 2].map(i => (
+            <g key={i} transform={`translate(${18 + i * 4} ${-2 - i * 12}) rotate(${-18 - i * 16})`}>
+              <path d="M0 0 L34 -4" stroke={p.detalhe} strokeWidth="3.5" strokeLinecap="round" />
+              {[8, 16, 24, 30].map(d => (
+                <g key={d}>
+                  <path d={`M${d} ${-d * 0.12} l4 -7`} stroke={p.detalhe} strokeWidth="2.6" strokeLinecap="round" />
+                  <path d={`M${d} ${-d * 0.12} l4 7`} stroke={p.detalhe} strokeWidth="2.6" strokeLinecap="round" />
+                </g>
+              ))}
+            </g>
+          ))}
         </g>
       ))}
     </g>
@@ -349,6 +363,22 @@ export function Focinho({ variante, p, expressao }: PecaProps & { variante: Foci
           />
           <path d="M150 82 C166 86 174 91 178 96 C174 101 166 105 152 108 Z" fill="#EA580C" opacity="0.85" />
           <path d="M98 93 C130 97 160 97 178 96" stroke={p.sombra} strokeWidth="2" fill="none" opacity="0.6" />
+        </g>
+      );
+
+    // Bico de pato do ornitorrinco: largo, chato e arredondado na ponta.
+    case 'bico_pato':
+      return (
+        <g>
+          <path
+            d="M100 76 C126 76 142 84 142 94 C142 106 122 114 100 114 C78 114 58 106 58 94 C58 84 74 76 100 76 Z"
+            fill={p.detalhe}
+            stroke={p.sombra}
+            strokeWidth="2"
+          />
+          <path d="M60 94 C78 100 122 100 140 94" stroke={p.sombra} strokeWidth="2.2" fill="none" opacity="0.55" />
+          <ellipse cx="86" cy="86" rx="3.4" ry="2.4" fill={p.sombra} />
+          <ellipse cx="114" cy="86" rx="3.4" ry="2.4" fill={p.sombra} />
         </g>
       );
 

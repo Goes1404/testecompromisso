@@ -11,7 +11,7 @@ import { supabase } from '@/app/lib/supabase';
  * `adotar_bichinho()` — quem recusa espécie inválida é o banco.
  */
 export type Especie =
-  | 'lobinho' | 'dragao' | 'dinossauro' | 'eletrico'
+  | 'lobinho' | 'dragao' | 'dinossauro' | 'eletrico' | 'axolote' | 'ornitorrinco'
   | 'capivara' | 'coruja' | 'gato' | 'tucano';
 export type Humor = 'novo' | 'feliz' | 'com_fome' | 'triste' | 'dormindo';
 

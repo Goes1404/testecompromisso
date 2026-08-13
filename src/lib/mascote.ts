@@ -33,10 +33,10 @@ export type Arquetipo = Especie;
 export type Textura = 'fur' | 'scales' | 'smooth_skin' | 'glowing_fur';
 
 export type OrelhaVariante =
-  | 'pontuda' | 'chifre' | 'pequena' | 'longa' | 'tufo' | 'nenhuma';
+  | 'pontuda' | 'chifre' | 'pequena' | 'longa' | 'tufo' | 'guelras' | 'nenhuma';
 
 export type FocinhoVariante =
-  | 'focinho' | 'bico' | 'bico_grande' | 'mandibula' | 'dragao' | 'bochecha';
+  | 'focinho' | 'bico' | 'bico_grande' | 'bico_pato' | 'mandibula' | 'dragao' | 'bochecha';
 
 export type CaudaVariante =
   | 'felpuda' | 'espinhosa' | 'grossa' | 'raio' | 'fina' | 'penas' | 'nenhuma';
@@ -157,6 +157,36 @@ export const ARQUETIPOS: DefinicaoArquetipo[] = [
     descricaoEn: 'a small yellow electric rodent creature with long black-tipped ears, glowing red cheeks and a lightning-bolt tail crackling with sparks',
     novo: true,
   },
+  {
+    id: 'ornitorrinco',
+    nome: 'Ornitorrinco',
+    emoji: '🦫',
+    tagline: 'Bico de pato, cauda de castor, nada como ninguém.',
+    textura: 'fur',
+    paleta: {
+      primaria: '#8B5E3C', secundaria: '#D9B99B', detalhe: '#64748B',
+      sombra: '#5C3D26', olho: '#1C1917',
+    },
+    orelha: 'nenhuma', focinho: 'bico_pato', cauda: 'grossa', efeito: 'nenhum',
+    asas: false, escala: 1.02,
+    descricaoEn: 'a chubby baby platypus with soft brown fur, a wide flat grey duck bill, dark round eyes and a broad beaver tail',
+    novo: true,
+  },
+  {
+    id: 'axolote',
+    nome: 'Axolote',
+    emoji: '🦎',
+    tagline: 'Guelras cor-de-rosa e um sorriso que não sai.',
+    textura: 'smooth_skin',
+    paleta: {
+      primaria: '#F9A8D4', secundaria: '#FCE7F3', detalhe: '#EC4899',
+      sombra: '#DB7BAF', olho: '#1E293B',
+    },
+    orelha: 'guelras', focinho: 'focinho', cauda: 'fina', efeito: 'nenhum',
+    asas: false, escala: 1,
+    descricaoEn: 'a cute pink axolotl with feathery pink external gills, big dark eyes, a permanent smile and smooth glossy skin',
+    novo: true,
+  },
   // ── Legado: já existem alunos com estes adotados ─────────────────────────
   {
     id: 'capivara',
@@ -226,9 +256,14 @@ export function arquetipo(id: Arquetipo | null | undefined): DefinicaoArquetipo 
   return ARQUETIPOS.find(a => a.id === id) ?? PADRAO;
 }
 
-/** Os quatro arquétipos 3D do pedido, na frente da lista de adoção. */
-export const ARQUETIPOS_NOVOS = ARQUETIPOS.filter(a => a.novo);
-export const ARQUETIPOS_LEGADO = ARQUETIPOS.filter(a => !a.novo);
+/**
+ * Os quatro que cabem no cartão da home.
+ *
+ * O cartão não tem altura para os dez, e quem quiser ver todos toca nele e cai
+ * na página do bichinho. São os quatro primeiros da lista — a ordem de
+ * `ARQUETIPOS` é a ordem de destaque.
+ */
+export const ARQUETIPOS_DESTAQUE = ARQUETIPOS.slice(0, 4);
 
 // ── Combate de mentirinha, dados de verdade ────────────────────────────────
 
