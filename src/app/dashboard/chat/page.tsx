@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, Bot, User, Users, MapPin, ShieldCheck, GraduationCap, MessagesSquare, MessageSquare } from "lucide-react";
+import { Search, Loader2, User, Users, MapPin, ShieldCheck, GraduationCap, MessagesSquare, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { Badge } from "@/components/ui/badge";
+import { AuroraAvatar } from "@/components/AuroraAvatar";
 
 export default function ChatListPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -401,8 +402,11 @@ export default function ChatListPage() {
         <Card className="relative overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-gradient-to-br from-primary via-primary to-slate-900">
           <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-[80px] pointer-events-none" />
           <CardContent className="p-6 md:p-8 flex flex-col sm:flex-row items-center gap-5 relative z-10">
-            <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shrink-0 shadow-xl">
-              <Bot className="h-9 w-9 md:h-10 md:w-10" />
+            {/* O rosto do próprio bichinho do aluno, quando ele tem um — a
+                mentoria de IA e a criatura que ele alimenta estudando são
+                as duas faces do mesmo incentivo. */}
+            <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shrink-0 shadow-xl overflow-hidden p-1.5">
+              <AuroraAvatar className="h-full w-full" />
             </div>
             <div className="flex-1 min-w-0 text-center sm:text-left">
               <div className="flex items-center justify-center sm:justify-start gap-2">

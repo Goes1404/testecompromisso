@@ -19,6 +19,15 @@ export interface Bichinho {
   existe: boolean;
   especie: Especie | null;
   nome: string | null;
+  /**
+   * O nome que o aluno deu a cada espécie, não só à atual.
+   *
+   * Sem isso, trocar de dragão "Fumaça" para lobinho e voltar apagava
+   * "Fumaça" — a troca reaproveitava sempre o nome da espécie anterior, porque
+   * só existia um campo de nome no banco. Agora cada espécie lembra o próprio
+   * nome, e `nome` é só o apelido ativo (o da espécie corrente).
+   */
+  apelidos: Partial<Record<Especie, string>>;
   nivel: number;
   humor: Humor;
   dias_estudo: number;
@@ -111,6 +120,16 @@ export async function comprarProtecao(): Promise<Bichinho> {
   const { data, error } = await supabase.rpc('comprar_protecao');
   if (error) throw new Error(error.message);
   return data as unknown as Bichinho;
+}
+
+/**
+ * O nome que o aluno já deu a essa espécie, se algum dia deu.
+ *
+ * É o que permite a tela de troca pré-preencher "Fumaça" quando o aluno volta
+ * para o dragão, em vez de abrir o campo em branco de novo.
+ */
+export function apelidoDe(bicho: Pick<Bichinho, 'apelidos'>, especie: Especie): string {
+  return bicho.apelidos?.[especie] ?? '';
 }
 
 export function nomeDoNivel(nivel: number): string {

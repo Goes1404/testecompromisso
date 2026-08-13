@@ -9,10 +9,11 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, ChevronLeft, Loader2, MessageSquare, Bot, ShieldCheck, AlertCircle, Sparkles, Terminal, ShieldAlert } from "lucide-react";
+import { Send, ChevronLeft, Loader2, MessageSquare, ShieldCheck, AlertCircle, Sparkles, Terminal, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
+import { AuroraAvatar } from "@/components/AuroraAvatar";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -268,7 +269,9 @@ export default function DirectChatPage() {
             <div className="relative shrink-0">
               <Avatar className={`h-11 w-11 md:h-14 md:w-14 border-[3px] shadow-lg ${isAurora ? 'bg-accent border-white' : 'border-primary/5'}`}>
                 {isAurora ? (
-                  <div className="h-full w-full flex items-center justify-center text-accent-foreground"><Bot className="h-7 w-7" /></div>
+                  <div className="h-full w-full flex items-center justify-center text-accent-foreground p-1.5">
+                    <AuroraAvatar className="h-full w-full" />
+                  </div>
                 ) : (
                   <>
                     <AvatarImage src={`https://picsum.photos/seed/${contactId}/150/150`} />

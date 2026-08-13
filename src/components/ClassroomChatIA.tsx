@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send, Loader2, Sparkles, MessageCircle } from "lucide-react";
+import { Send, Loader2, Sparkles, MessageCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { AuroraAvatar } from "@/components/AuroraAvatar";
 
 interface ClassroomChatIAProps {
   contextTitle?: string;
@@ -72,8 +73,8 @@ export function ClassroomChatIA({ contextTitle }: ClassroomChatIAProps) {
     <div className="flex flex-col h-[500px] bg-white rounded-3xl shadow-xl border border-muted/20 overflow-hidden animate-in zoom-in-95 duration-500">
       <div className="p-4 bg-primary text-white flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-accent text-accent-foreground flex items-center justify-center">
-            <Bot className="h-5 w-5" />
+          <div className="h-8 w-8 rounded-lg bg-accent text-accent-foreground flex items-center justify-center overflow-hidden p-1">
+            <AuroraAvatar className="h-full w-full" />
           </div>
           <div>
             <h4 className="text-xs font-black italic uppercase tracking-tighter leading-none">Mentoria IA Aurora</h4>

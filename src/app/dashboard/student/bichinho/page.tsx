@@ -10,7 +10,7 @@ import { estadoOfensiva } from '@/lib/streak';
 import {
   getBichinho, adotarBichinho, comprarProtecao,
   HUMORES, DIAS_POR_NIVEL, NIVEIS,
-  nomeDoNivel, progressoDoNivel,
+  apelidoDe, nomeDoNivel, progressoDoNivel,
   type Bichinho, type Especie,
 } from '@/lib/bichinho';
 import { arquetipo } from '@/lib/mascote';
@@ -38,6 +38,7 @@ export default function BichinhoPage() {
   const [especie, setEspecie] = useState<Especie>('lobinho');
   const [nome, setNome] = useState('');
   const [trocando, setTrocando] = useState(false);
+  const [nomeTroca, setNomeTroca] = useState('');
 
   async function carregar() {
     setCarregando(true);
@@ -82,20 +83,40 @@ export default function BichinhoPage() {
   }
 
   /**
-   * Troca só a aparência.
+   * Escolhe a espécie na troca — e junto o nome que ela já teve.
+   *
+   * Sem isso, ir de dragão "Fumaça" para lobinho abriria o campo em branco
+   * mesmo que o aluno já tivesse um lobinho chamado "Lupo" antes: o nome mora
+   * por espécie (`apelidos`), então trocar de espécie é trocar de campo, não
+   * só de figurinha.
+   */
+  function escolherNaTroca(nova: Especie) {
+    setEspecie(nova);
+    setNomeTroca(bicho ? apelidoDe(bicho, nova) : '');
+  }
+
+  /**
+   * Troca a aparência — e, se for a primeira vez com essa espécie, batiza.
    *
    * `adotar_bichinho` é upsert e já permitia trocar de espécie desde a primeira
-   * migration — o nome vai junto e sem alteração, senão o bicho perderia o
-   * apelido no caminho.
+   * migration; nível, ofensiva e XP não se movem porque nunca estiveram presos
+   * à espécie.
    */
   async function trocar() {
-    if (!bicho?.nome) return;
+    const escolhido = nomeTroca.trim();
+    if (!escolhido) {
+      toast({
+        title: 'Dê um nome a ele',
+        description: `Como você quer chamar ${arquetipo(especie).nome.toLowerCase()}?`,
+      });
+      return;
+    }
     setSalvando(true);
     try {
-      setBicho(await adotarBichinho(especie, bicho.nome));
+      setBicho(await adotarBichinho(especie, escolhido));
       setTrocando(false);
       toast({
-        title: `${bicho.nome} agora é ${arquetipo(especie).nome}! ✨`,
+        title: `Agora é ${escolhido}, o ${arquetipo(especie).nome}! ✨`,
         description: 'Seu nível, sua ofensiva e seu XP continuam iguais.',
       });
     } catch (e) {
@@ -342,11 +363,34 @@ export default function BichinhoPage() {
         {trocando ? (
           <div className="space-y-4">
             <p className="text-xs font-medium text-slate-500 leading-relaxed">
-              {apelido} continua com os mesmos {bicho.dias_estudo}{' '}
-              {bicho.dias_estudo === 1 ? 'dia' : 'dias'} de estudo, o mesmo nível e a
-              mesma ofensiva — só muda a aparência.
+              {bicho.dias_estudo} {bicho.dias_estudo === 1 ? 'dia' : 'dias'} de estudo, o
+              nível e a ofensiva continuam do jeito que estão — só a espécie e o nome mudam.
+              Cada bicho lembra o nome que você já deu a ele.
             </p>
-            <SeletorArquetipo valor={especie} onChange={setEspecie} />
+            <SeletorArquetipo valor={especie} onChange={escolherNaTroca} />
+
+            <div className="space-y-2">
+              <label htmlFor="nome-troca" className="text-[11px] font-black uppercase tracking-widest text-slate-400 block">
+                Nome {especie === bicho.especie ? 'dele' : `do ${arquetipo(especie).nome.toLowerCase()}`}
+              </label>
+              <input
+                id="nome-troca"
+                value={nomeTroca}
+                onChange={ev => setNomeTroca(ev.target.value)}
+                maxLength={20}
+                placeholder={apelidoDe(bicho, especie) ? undefined : 'Ainda sem nome — escolha um'}
+                className="w-full rounded-2xl border-2 border-slate-100 px-5 py-3.5 text-base font-bold outline-none focus-visible:border-violet-400"
+              />
+              {/* Só aparece quando o campo já veio preenchido pela memória —
+                  é a prova de que trocar de volta não obriga a reinventar o
+                  nome, que é o problema que essa tela veio resolver. */}
+              {apelidoDe(bicho, especie) && (
+                <p className="text-[11px] font-medium text-violet-500">
+                  Era assim que {arquetipo(especie).nome.toLowerCase()} se chamava da última vez.
+                </p>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button
                 type="button"
@@ -358,23 +402,25 @@ export default function BichinhoPage() {
               <button
                 type="button"
                 onClick={trocar}
-                disabled={salvando || especie === bicho.especie}
+                disabled={salvando || !nomeTroca.trim() || (especie === bicho.especie && nomeTroca.trim() === bicho.nome)}
                 className="flex-1 h-12 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black text-[11px] uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2"
               >
                 {salvando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {especie === bicho.especie ? 'Já é este' : `Virar ${arquetipo(especie).nome}`}
+                {especie === bicho.especie && nomeTroca.trim() === bicho.nome
+                  ? 'Já é este'
+                  : `Virar ${arquetipo(especie).nome}`}
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-slate-50 p-5">
             <p className="text-xs font-medium text-slate-500 leading-relaxed max-w-sm">
-              Agora existem quatro bichinhos em 3D: lobinho, dragão, dinossauro e
-              elétrico. Trocar é de graça e não afeta seu progresso.
+              Existem dez bichinhos diferentes. Trocar é de graça, não afeta seu
+              progresso, e cada um guarda o próprio nome.
             </p>
             <button
               type="button"
-              onClick={() => { setEspecie(bicho.especie ?? 'lobinho'); setTrocando(true); }}
+              onClick={() => { escolherNaTroca(bicho.especie ?? 'lobinho'); setTrocando(true); }}
               className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black text-[11px] uppercase tracking-widest shrink-0"
             >
               Escolher outro

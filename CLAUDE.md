@@ -84,6 +84,16 @@ arena, pela barra de HP e pelo estado de animação, que valem para os dois modo
    dentro de `adotar_bichinho()` (as duas listas precisam bater com `ARQUETIPOS`).
    Nunca remover uma espécie da lista — isso deixaria o bicho de quem a adotou num
    estado que a própria tabela recusa.
+6. **Nome é por espécie, não por bicho.** `pets.nome` é só o apelido ativo (o da
+   espécie corrente); `pets.apelidos` (JSONB, espécie → nome) é quem lembra. Trocar
+   de dragão "Fumaça" para lobinho e voltar devolve "Fumaça" — não abre um campo em
+   branco. `adotar_bichinho()` escreve nos dois; `apelidoDe()` em `lib/bichinho.ts`
+   lê o mapa para pré-preencher o campo de nome na troca.
+7. **A Aurora usa a cara do bicho do aluno.** `components/AuroraAvatar.tsx` sonda
+   `getBichinho()` e mostra o retrato do bichinho (foto ou vetor, via
+   `MascoteRetrato`) no lugar do ícone genérico de robô — na lista de conversas, no
+   cabeçalho do chat e no mentor de sala de aula. Sem bicho adotado, ou enquanto
+   carrega, continua mostrando o robô — nunca um estado de carregamento visível.
 
 ## 🗂 Banco de Dados (Tabelas Principais)
 
