@@ -37,6 +37,30 @@ um de cada vez — não precisa ter os oito para começar.
 > Um PNG de 2 MB por bicho é o tipo de coisa que só dói no aluno com internet
 > ruim, que é justamente quem a plataforma não pode perder.
 
+## Se o gerador devolver o quadriculado desenhado
+
+Pedir "fundo transparente" costuma devolver o **quadriculado de transparência
+desenhado como pixels**, sem canal alfa nenhum. Foi o que aconteceu com o
+lobinho. Nesse caso não regere: rode
+
+```bash
+node scripts/recortar-mascote.mjs ~/Downloads/lobinho.png lobinho
+```
+
+Ele recorta o xadrez, apara a margem, apoia o bicho pelas patas, redimensiona
+para 1024×1024 e grava direto em `public/mascotes/lobinho.webp`.
+
+O script recusa a imagem em vez de gravar arquivo ruim quando quase nada foi
+recortado (não havia xadrez) ou quando quase tudo foi (o recorte comeu o bicho).
+
+**Confira o resultado antes de commitar.** Onde o bicho é branco e felpudo e
+encosta num quadro branco, o recorte apara algumas pontas de pelo — no lobinho
+isso aconteceu na cauda, e ficou imperceptível na escala da arena. Se o seu
+bicho for muito claro, vale olhar.
+
+Se o fundo vier chapado (branco liso, sem xadrez), este script não serve — me
+avise que eu trato esse caso.
+
 ## Prompts
 
 Gerados pela própria engine (`promptDeImagem` em `src/lib/mascote.ts`) — é a
