@@ -86,9 +86,19 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
         sent++;
       } catch (err: any) {
         failed++;
-        // 404 / 410 = subscription expirada — limpa do banco
-        if (err.statusCode === 404 || err.statusCode === 410) {
+        // 404 / 410 = subscription expirada. 403 = o serviço de push (FCM,
+        // Mozilla…) rejeitou as credenciais VAPID contra ESTA subscription —
+        // sinal de que a chave pública mudou depois que o navegador se
+        // inscreveu. Nos três casos o reenvio nunca vai funcionar: a
+        // subscription ficaria reprovando para sempre, silenciosa, se só
+        // logasse o erro. Por isso os três limpam do banco — é o que devolve
+        // o aluno para o fluxo de "ativar notificações" na próxima visita, em
+        // vez de um push que nunca chega e nunca é revisto.
+        if (err.statusCode === 404 || err.statusCode === 410 || err.statusCode === 403) {
           expiredEndpoints.push(s.endpoint);
+          if (err.statusCode === 403) {
+            console.error("[push] subscription com VAPID incompatível, removida:", s.endpoint, err.body || err.message);
+          }
         } else {
           console.error("[push] send error:", err.statusCode, err.body || err.message);
         }

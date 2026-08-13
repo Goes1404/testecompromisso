@@ -2,13 +2,14 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, HandMetal, Send, Bot, Eraser, Loader2 } from "lucide-react";
+import { HandMetal, Send, Eraser, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { Virtuoso } from 'react-virtuoso';
 import { usePathname } from "next/navigation";
+import { AuroraAvatar } from "@/components/AuroraAvatar";
 
 interface Message {
   role: "assistant" | "user";
@@ -106,9 +107,12 @@ export function AccessibilityWidget() {
             }`}
             title="Abrir Aurora IA"
           >
-            <div className="relative flex items-center justify-center">
-              <MessageCircle className="h-7 w-7 transition-all group-hover:scale-90 text-accent" />
-              <MessageCircle className="h-4 w-4 text-white absolute transition-all group-hover:scale-125" />
+            {/* O rosto do próprio bichinho do aluno, quando ele tem um — este
+                botão fica visível em quase toda página do dashboard, então é
+                aqui que o detalhe mais aparece. Sem bicho adotado, o robô
+                (mesmo ícone dos outros três lugares onde a Aurora mora). */}
+            <div className="relative flex items-center justify-center h-9 w-9 overflow-hidden rounded-full">
+              <AuroraAvatar className="h-full w-full transition-all group-hover:scale-95" />
             </div>
             {!isOpen && <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-50 rounded-full border-2 border-white animate-bounce shadow-sm" />}
           </button>
@@ -117,8 +121,8 @@ export function AccessibilityWidget() {
           <SheetHeader className="p-6 bg-primary text-white shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-lg">
-                  <Bot className="h-6 w-6" />
+                <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-lg overflow-hidden p-1">
+                  <AuroraAvatar className="h-full w-full" />
                 </div>
                 <div className="text-left">
                   <SheetTitle className="text-white font-black italic leading-none">Aurora IA</SheetTitle>
