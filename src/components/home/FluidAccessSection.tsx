@@ -2,9 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, KeyRound, LockKeyhole, Sparkles } from "lucide-react";
+import { ArrowRight, KeyRound, Sparkles } from "lucide-react";
 import Link from "next/link";
-import type { FormEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
+import { DEMO_WHATSAPP_URL } from "@/lib/site-contact";
 
 export interface FluidAccessSectionProps {
   /** Navega para uma rota interna (ex.: /login) exibindo o overlay de transição. */
@@ -12,17 +13,12 @@ export interface FluidAccessSectionProps {
 }
 
 /**
- * Seção de acesso fluido: painel de vidro com CTA polido levando ao /login,
- * além dos fluxos reais de primeiro acesso e recuperação de senha.
+ * Seção de acesso fluido: painel de vidro com CTA de contato pra escolas que
+ * ainda não são clientes, mais os atalhos reais pra quem já é (login,
+ * primeiro acesso, recuperação de senha).
  */
 export function FluidAccessSection({ onNavigate }: FluidAccessSectionProps): ReactElement {
   const reduceMotion = useReducedMotion();
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
-    event.preventDefault();
-    // O formulário é apenas a porta de entrada — nenhum dado é enviado daqui.
-    onNavigate("/login");
-  };
 
   return (
     <section className="relative overflow-hidden bg-gray-950 py-24 border-t border-white/5">
@@ -40,46 +36,42 @@ export function FluidAccessSection({ onNavigate }: FluidAccessSectionProps): Rea
         >
           <div className="text-center space-y-4 mb-8">
             <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px] bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
-              <Sparkles className="h-3.5 w-3.5" /> Acesso ao Portal
+              <Sparkles className="h-3.5 w-3.5" /> Pronto pra começar?
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter italic leading-tight">
-              Pronto para entrar?
+              Vamos conhecer sua escola
             </h2>
             <p className="text-sm text-gray-400 font-medium max-w-md mx-auto leading-relaxed">
-              Alunos do Compromisso já têm acesso liberado. Entre com seu usuário e continue
-              exatamente de onde parou.
+              Fale com a gente e veja em poucos minutos como a plataforma fica com a cara da
+              sua instituição.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1 group">
-              <LockKeyhole className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-primary transition-colors" />
-              <input
-                type="text"
-                inputMode="email"
-                autoComplete="username"
-                placeholder="Seu e-mail ou usuário"
-                aria-label="Seu e-mail ou usuário"
-                className="h-14 w-full rounded-full bg-white/[0.05] border border-white/15 pl-12 pr-5 text-sm font-bold text-white placeholder:text-gray-500 outline-none transition-all duration-300 focus:border-primary/60 focus:bg-white/[0.08] focus:shadow-[0_0_30px_rgba(255,107,0,0.2)]"
-              />
-            </div>
+          <div className="flex justify-center">
             <Button
-              type="submit"
-              className="btn-shimmer h-14 px-8 bg-primary hover:bg-[#e06000] text-white font-black text-sm rounded-full glow-orange-strong border-none transition-[transform,box-shadow] active:scale-95 group shrink-0"
+              asChild
+              className="btn-shimmer h-14 px-10 bg-primary hover:bg-[#0f7a95] text-white font-black text-sm rounded-full glow-orange-strong border-none transition-[transform,box-shadow] active:scale-95 group"
             >
-              <span className="flex items-center gap-2">
-                Entrar no Portal
+              <a href={DEMO_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                Falar com a gente
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </span>
+              </a>
             </Button>
-          </form>
+          </div>
 
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-center">
-            <Link
-              href="/primeiro-acesso"
+          <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-center">
+            <span className="text-[11px] font-black uppercase tracking-widest text-gray-500">Já é cliente?</span>
+            <button
+              onClick={() => onNavigate("/login")}
               className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
             >
-              <KeyRound className="h-3.5 w-3.5" /> É meu primeiro acesso
+              <KeyRound className="h-3.5 w-3.5" /> Entrar na plataforma
+            </button>
+            <Link
+              href="/primeiro-acesso"
+              className="text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
+            >
+              Primeiro acesso
             </Link>
             <Link
               href="/forgot-password"

@@ -7,6 +7,9 @@ import { Suspense } from 'react';
 import { LoadingShell } from '@/components/LoadingShell';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
+import { headers } from 'next/headers';
+import { TenantProvider } from '@/components/TenantProvider';
+import { getTenantForHost } from '@/lib/get-tenant';
 
 // Sora é a única fonte de fato renderizada (sempre 1ª no stack `sans`). Inter
 // era carregada mas nunca pintava — removida (4 woff2 a menos). Pesos alinhados
@@ -20,9 +23,9 @@ const sora = Sora({
 });
 
 export const metadata = {
-  title: 'Compromisso | Curso Preparatório ENEM e ETEC em Santana de Parnaíba',
-  description: 'O cursinho preparatório de elite em Santana de Parnaíba. Metodologia focada, simulados, correção de redação com IA e mentoria para aprovação no ENEM, ETEC, FATEC e USP.',
-  keywords: 'curso preparatório, cursinho enem, pre vestibulinho etec, santana de parnaíba, aprovação, redação enem',
+  title: 'Plataforma EAD | Sistema de Ensino para Escolas e Cursinhos',
+  description: 'Plataforma de gestão educacional e aprendizado adaptativo: simulados, correção de redação com IA e mentoria para preparação de vestibulares e exames.',
+  keywords: 'plataforma educacional, sistema de ensino, simulados online, correção de redação com IA',
   // manifest gerado por src/app/manifest.ts (/manifest.webmanifest). Não
   // declarar aqui também — evita <link rel="manifest"> duplicado.
   icons: {
@@ -37,7 +40,7 @@ export const metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "Compromisso",
+    title: "Plataforma EAD",
     // Era "black-translucent": no iPhone isso faz o conteúdo subir para trás
     // da barra de status, e o topo da tela fica ilegível sobre o fundo claro.
     statusBarStyle: "default"
@@ -45,12 +48,15 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#FF6B00',
+  themeColor: '#1E40AF',
   width: 'device-width',
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers();
+  const tenant = await getTenantForHost(headersList.get('host'));
+
   return (
     <html lang="pt-BR" className={`${sora.variable} font-sans`}>
       <head>
@@ -94,16 +100,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="antialiased min-h-screen bg-background">
-        <AuthProvider>
-          <Suspense fallback={<LoadingShell />}>
-            <ClientWrapper>
-              {children}
-            </ClientWrapper>
-          </Suspense>
-          <Toaster />
-          <SpeedInsights />
-          <Analytics />
-        </AuthProvider>
+        <TenantProvider initialTenant={tenant}>
+          <AuthProvider>
+            <Suspense fallback={<LoadingShell />}>
+              <ClientWrapper>
+                {children}
+              </ClientWrapper>
+            </Suspense>
+            <Toaster />
+            <SpeedInsights />
+            <Analytics />
+          </AuthProvider>
+        </TenantProvider>
       </body>
     </html>
   );

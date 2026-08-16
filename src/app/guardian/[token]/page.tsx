@@ -60,7 +60,7 @@ export default function GuardianPage() {
     <>
       {/* SEO otimizado */}
       <Head>
-        <title>Acompanhamento do Aluno – Compromisso</title>
+        <title>Acompanhamento do Aluno – Plataforma</title>
         <meta
           name="description"
           content="Visão geral das métricas de engajamento do aluno disponibilizada para responsáveis via token seguro."

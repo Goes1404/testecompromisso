@@ -140,7 +140,7 @@ export default function SecretaryDocumentsPage() {
         nascido(a) em <strong>${esc(birthStr)}</strong>, inscrito(a) no CPF sob o nº <strong>${esc(studentCpf) || "___________________"}</strong>
         e no RG sob o nº <strong>${esc(studentRg) || "___________________"}</strong>, encontra-se regularmente matriculado(a)
         e frequentando as aulas do curso preparatório de <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong>
-        no polo <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>.</p>
+        no polo <strong>${esc(selectedStudent.institution) || "Unidade Geral"}</strong>.</p>
 
         <p>Por ser verdade, firmamos o presente documento para que surta seus devidos efeitos legais.</p>
       `;
@@ -154,7 +154,7 @@ export default function SecretaryDocumentsPage() {
       contentHtml = `
         <p>Declaramos, para os devidos fins, que o(a) estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong>,
         matriculado(a) no curso preparatório de <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong>
-        no polo <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>, frequenta regularmente as
+        no polo <strong>${esc(selectedStudent.institution) || "Unidade Geral"}</strong>, frequenta regularmente as
         atividades letivas.</p>
 
         <p>${freqLine}</p>
@@ -167,7 +167,7 @@ export default function SecretaryDocumentsPage() {
         <p>Declaramos, a pedido e para os devidos fins, que o(a) estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong>,
         nascido(a) em <strong>${esc(birthStr)}</strong>, encontra-se regularmente matriculado(a) no curso preparatório de
         <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong> no polo
-        <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>.</p>
+        <strong>${esc(selectedStudent.institution) || "Unidade Geral"}</strong>.</p>
 
         <p>Fica esta declaração aos cuidados de seu(sua) responsável legal
         <strong>${esc(guardian?.name).toUpperCase()}</strong>${guardian?.relationship ? ` (${esc(guardian.relationship)})` : ""}${guardian?.cpf ? `, CPF nº <strong>${esc(guardian.cpf)}</strong>` : ""}.</p>
@@ -179,7 +179,7 @@ export default function SecretaryDocumentsPage() {
       contentHtml = `
         <p>Certificamos que o(a) estudante <strong>${esc(selectedStudent.name).toUpperCase()}</strong> concluiu com êxito
         as trilhas de aprendizado e atividades complementares no curso preparatório de <strong>${esc(selectedStudent.course) || "Ensino Geral"}</strong>,
-        realizado no polo <strong>${esc(selectedStudent.institution) || "Compromisso Geral"}</strong>, com carga horária total
+        realizado no polo <strong>${esc(selectedStudent.institution) || "Unidade Geral"}</strong>, com carga horária total
         de <strong>${esc(workload)} horas</strong>.</p>
 
         <p>O presente certificado atesta o empenho acadêmico e a prontidão do estudante nas competências avaliadas.</p>
@@ -307,7 +307,7 @@ export default function SecretaryDocumentsPage() {
         <body>
           <div class="container">
             <div class="header">
-              <div class="logo-text">COMPROMISSO</div>
+              <div class="logo-text">PLATAFORMA</div>
               <div class="sub-header">Secretaria Geral e Atendimento Acadêmico</div>
             </div>
             
@@ -320,10 +320,10 @@ export default function SecretaryDocumentsPage() {
             <div class="footer">
               <div class="date-place">São Paulo, ${todayStr}.</div>
               <div class="signature-line"></div>
-              <div class="signature-title">Secretaria Compromisso</div>
+              <div class="signature-title">Secretaria Acadêmica</div>
             </div>
-            
-            <div class="watermark">Código de Verificação: C360-${Math.floor(100000 + Math.random() * 900000)}</div>
+
+            <div class="watermark">Código de Verificação: DOC-${Math.floor(100000 + Math.random() * 900000)}</div>
           </div>
           
           <script>

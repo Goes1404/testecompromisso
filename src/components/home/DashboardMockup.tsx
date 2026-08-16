@@ -81,7 +81,7 @@ export function DashboardMockup(): ReactElement {
         className="relative h-full w-full"
       >
         {/* Janela principal */}
-        <div className="gradient-border relative h-full w-full rounded-[2rem] bg-gray-900/70 backdrop-blur-2xl shadow-[0_0_80px_-15px_rgba(255,107,0,0.45)] overflow-hidden noise">
+        <div className="gradient-border relative h-full w-full rounded-[2rem] bg-gray-900/70 backdrop-blur-2xl shadow-[0_0_80px_-15px_rgba(76,204,237,0.45)] overflow-hidden noise">
           {/* Barra da janela */}
           <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/5">
             <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
@@ -100,7 +100,7 @@ export function DashboardMockup(): ReactElement {
                   key={i}
                   className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
                     item.active
-                      ? "bg-primary text-white shadow-[0_0_18px_rgba(255,107,0,0.5)]"
+                      ? "bg-primary text-white shadow-[0_0_18px_rgba(76,204,237,0.5)]"
                       : "bg-white/5 text-gray-500"
                   }`}
                 >
@@ -134,8 +134,8 @@ export function DashboardMockup(): ReactElement {
                 <svg viewBox="0 0 288 72" className="w-full h-16" aria-hidden="true">
                   <defs>
                     <linearGradient id="mockup-area" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(255,107,0,0.35)" />
-                      <stop offset="100%" stopColor="rgba(255,107,0,0)" />
+                      <stop offset="0%" stopColor="rgba(76,204,237,0.35)" />
+                      <stop offset="100%" stopColor="rgba(76,204,237,0)" />
                     </linearGradient>
                   </defs>
                   <polygon
@@ -145,7 +145,7 @@ export function DashboardMockup(): ReactElement {
                   <motion.polyline
                     points="0,64 32,58 64,60 96,48 128,52 160,38 192,40 224,26 256,30 288,16"
                     fill="none"
-                    stroke="#FF6B00"
+                    stroke="#4CCCED"
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     initial={{ pathLength: 0 }}
@@ -156,7 +156,7 @@ export function DashboardMockup(): ReactElement {
                     cx="288"
                     cy="16"
                     r="4"
-                    fill="#FF6B00"
+                    fill="#4CCCED"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 2, type: "spring" }}

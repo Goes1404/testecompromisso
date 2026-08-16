@@ -11,7 +11,7 @@ const studentSteps: DriveStep[] = [
   {
     element: "#sidebar-logo",
     popover: {
-      title: "🎓 Bem-vindo ao Compromisso!",
+      title: "🎓 Bem-vindo à Plataforma!",
       description: "Vamos fazer um tour rápido pela plataforma para você conhecer todos os recursos disponíveis.",
       side: "right",
       align: "start",

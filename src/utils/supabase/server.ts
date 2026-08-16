@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { log } from '@/lib/logger'
 
 /**
- * 🔒 CLIENTE SUPABASE SERVER - COMPROMISSO 360
+ * 🔒 CLIENTE SUPABASE SERVER - PLATAFORMA
  * Atualizado para Next.js 15: cookies() agora é assíncrono.
  * Esta correção elimina o erro 500 em logins reais ao usar a IA.
  */

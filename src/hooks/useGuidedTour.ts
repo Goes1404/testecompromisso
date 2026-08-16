@@ -25,7 +25,7 @@ export function useGuidedTour({ steps, onComplete, onSkip }: UseGuidedTourOption
       overlayColor: "rgba(0, 0, 0, 0.75)",
       stagePadding: 8,
       stageRadius: 12,
-      popoverClass: "compromisso-tour-popover",
+      popoverClass: "app-tour-popover",
       nextBtnText: "Próximo →",
       prevBtnText: "← Anterior",
       doneBtnText: "Concluir ✓",

@@ -20,7 +20,7 @@ function generateEmail(fullName: string): string {
   return `${first}${middleInitial}${last}@compromisso.com`;
 }
 
-const DEFAULT_PASSWORD = 'compromisso2026';
+const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || 'mudar123';
 
 export async function POST(request: Request) {
   try {

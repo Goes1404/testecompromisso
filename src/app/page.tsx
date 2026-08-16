@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { HeroShowcase } from "@/components/home/HeroShowcase";
+import { DEMO_WHATSAPP_URL } from "@/lib/site-contact";
 
 const sectionFallback = (
   <div className="min-h-[40vh] py-32 flex justify-center items-center bg-gray-950">
@@ -42,8 +43,8 @@ interface NavLink {
 
 const NAV_LINKS: readonly NavLink[] = [
   { label: "Funcionalidades", anchor: "#funcionalidades" },
-  { label: "Metodologia", anchor: "#metodologia" },
-  { label: "Resultados", anchor: "#resultados" },
+  { label: "Como funciona", anchor: "#metodologia" },
+  { label: "Quem usa", anchor: "#resultados" },
   { label: "Dúvidas", anchor: "#faq" },
 ];
 
@@ -95,15 +96,15 @@ export default function LandingPage() {
           ? 'bg-white/95 md:bg-white/95 backdrop-blur-xl py-2 shadow-lg border-gray-100'
           : 'bg-black/20 backdrop-blur-sm py-4 border-white/5'
           }`}
-        style={scrolled && typeof window !== 'undefined' && window.innerWidth < 768 ? { backgroundColor: 'rgba(255, 107, 0, 0.95)', borderBottom: 'none' } : {}}
+        style={scrolled && typeof window !== 'undefined' && window.innerWidth < 768 ? { backgroundColor: 'rgba(76, 204, 237, 0.95)', borderBottom: 'none' } : {}}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
             <Link href="/" onClick={(e) => { e.preventDefault(); handleScrollTo('#home'); }} className="flex items-center group">
               <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-xl shadow-lg bg-white p-1.5 transition-transform group-hover:rotate-6 duration-500">
                 <Image
-                  src="/images/logocompromisso.png"
-                  alt="Logo Compromisso"
+                  src="/images/default-logo.png"
+                  alt="Logo"
                   fill
                   className="object-contain p-1"
                   sizes="(max-width: 768px) 40px, 48px"
@@ -124,9 +125,15 @@ export default function LandingPage() {
                 <span className="group-hover:translate-x-1 transition-transform">{link.label}</span>
               </a>
             ))}
-            <div className="flex items-center gap-3">
-              <Button onClick={() => handleRedirect('/login')} className="bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => handleRedirect('/login')}
+                className={`text-sm font-black transition-colors ${scrolled ? 'text-gray-600 hover:text-primary' : 'text-white hover:text-primary'}`}
+              >
                 Entrar
+              </button>
+              <Button asChild className="bg-primary hover:bg-[#0f7a95] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
+                <a href={DEMO_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Falar com a gente</a>
               </Button>
             </div>
           </nav>
@@ -147,7 +154,7 @@ export default function LandingPage() {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[110] bg-white animate-in slide-in-from-right duration-500 md:hidden">
           <div className="p-8 flex justify-between items-center border-b border-gray-100">
-            <span className="text-2xl font-black text-primary italic uppercase tracking-tighter">Compromisso</span>
+            <span className="text-2xl font-black text-primary italic uppercase tracking-tighter">Plataforma</span>
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2 py-2 px-4 bg-gray-50 text-gray-400 rounded-full active:scale-95 transition-all text-[11px] font-black uppercase tracking-widest border border-gray-100"
@@ -168,8 +175,11 @@ export default function LandingPage() {
               </a>
             ))}
             <div className="pt-8 space-y-3">
-              <Button onClick={() => handleRedirect('/login')} disabled={isRedirecting} className="w-full bg-primary h-14 text-white rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
-                Entrar no Portal
+              <Button asChild className="w-full bg-primary h-14 text-white rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
+                <a href={DEMO_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Falar com a gente</a>
+              </Button>
+              <Button onClick={() => handleRedirect('/login')} disabled={isRedirecting} variant="outline" className="w-full h-14 rounded-full border-gray-200 text-gray-600 text-lg font-black">
+                Entrar
               </Button>
             </div>
           </div>

@@ -155,7 +155,7 @@ export default function TeacherStudentsPage() {
   };
 
   const FILTERS = [
-    { key: "all", label: "Todos", count: students.length, color: "bg-orange-500" },
+    { key: "all", label: "Todos", count: students.length, color: "bg-[#4CCCED]" },
     { key: "etec", label: "ETEC", count: students.filter((s) => (s.exam_target || "").toLowerCase().includes("etec")).length, color: "bg-indigo-500" },
     { key: "enem", label: "ENEM", count: students.filter((s) => (s.exam_target || "").toLowerCase().includes("enem")).length, color: "bg-purple-500" },
     { key: "at_risk", label: "Em Risco", count: atRiskCount, color: "bg-red-500" },
@@ -170,7 +170,7 @@ export default function TeacherStudentsPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 20%, rgba(255,107,0,0.12) 0%, transparent 60%), radial-gradient(ellipse at 10% 80%, rgba(139,92,246,0.08) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 20%, rgba(76,204,237,0.12) 0%, transparent 60%), radial-gradient(ellipse at 10% 80%, rgba(139,92,246,0.08) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -210,7 +210,7 @@ export default function TeacherStudentsPage() {
           placeholder="Pesquisar por nome, e-mail ou polo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 focus:bg-white/8 transition-all"
+          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 focus:bg-white/8 transition-all"
         />
       </div>
 
@@ -295,13 +295,13 @@ export default function TeacherStudentsPage() {
               return (
                 <div
                   key={student.id}
-                  className="group relative bg-white shadow-sm border border-slate-200 hover:border-orange-500/20 rounded-[1.5rem] p-4 transition-all hover:bg-white shadow-sm"
+                  className="group relative bg-white shadow-sm border border-slate-200 hover:border-[#4CCCED]/20 rounded-[1.5rem] p-4 transition-all hover:bg-white shadow-sm"
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <div
                       className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm text-slate-800 shrink-0 shadow-lg ${
-                        isInactive ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                        isInactive ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-[#4CCCED]/20 text-orange-400 border border-[#4CCCED]/30"
                       }`}
                     >
                       {initials}
@@ -339,7 +339,7 @@ export default function TeacherStudentsPage() {
                           </span>
                         )}
                         {student.exam_target && (
-                          <span className="text-[9px] font-bold text-orange-400/85 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                          <span className="text-[9px] font-bold text-orange-400/85 bg-[#4CCCED]/10 px-2 py-0.5 rounded-full">
                             {student.exam_target}
                           </span>
                         )}
@@ -389,7 +389,7 @@ export default function TeacherStudentsPage() {
                               setEditingStudent(student);
                               setEditCourse(student.course || "");
                             }}
-                            className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-orange-400 hover:bg-orange-500/10 transition-all active:scale-90"
+                            className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-orange-400 hover:bg-[#4CCCED]/10 transition-all active:scale-90"
                             title="Alterar Sala/Turma"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -433,7 +433,7 @@ export default function TeacherStudentsPage() {
         <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md bg-white">
           <DialogHeader className="p-8 pb-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-[#4CCCED]/20 border border-[#4CCCED]/30 flex items-center justify-center shrink-0">
                 <Pencil className="h-5 w-5 text-orange-400" />
               </div>
               <div>
@@ -488,7 +488,7 @@ export default function TeacherStudentsPage() {
               <Button
                 onClick={handleUpdateStudentCourse}
                 disabled={isSubmittingCourse}
-                className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl border-none text-xs"
+                className="flex-1 h-12 bg-[#4CCCED] hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl border-none text-xs"
               >
                 {isSubmittingCourse && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
                 Confirmar

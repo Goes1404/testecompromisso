@@ -335,7 +335,7 @@ export default function SimuladoImportPage() {
         <div className="space-y-5">
           {/* Hero de sucesso */}
           <div className="relative bg-[#0d0d0f] rounded-[2.5rem] p-8 overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 30% 50%, rgba(255,107,0,0.25) 0%, transparent 65%)" }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 30% 50%, rgba(76,204,237,0.25) 0%, transparent 65%)" }} />
             <div className="relative z-10 flex items-center gap-5">
               <div className="h-16 w-16 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
                 <Trophy className="h-8 w-8 text-primary" />

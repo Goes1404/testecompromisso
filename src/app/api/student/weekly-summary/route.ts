@@ -163,7 +163,7 @@ export async function POST(request: Request) {
     // Gera o resumo com IA
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    const prompt = `Você é Aurora, mentora educacional da plataforma Compromisso 360 (cursinho ENEM/ETEC).
+    const prompt = `Você é Aurora, mentora educacional da plataforma.
 Gere um resumo semanal motivacional e estratégico para o aluno **${profile?.name ?? 'Estudante'}** (foco: ${metrics.examTarget}).
 
 Métricas da semana:

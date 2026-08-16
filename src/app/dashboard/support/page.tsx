@@ -178,7 +178,7 @@ export default function AuroraSupportPage() {
                 </div>
               </div>
               <p className="text-[10px] opacity-70 leading-relaxed font-medium italic">
-                O sinal em {profile?.institution || 'Santana de Parnaíba'} está 100% estável.
+                O sinal em {profile?.institution || 'sua unidade'} está 100% estável.
               </p>
             </div>
           </Card>

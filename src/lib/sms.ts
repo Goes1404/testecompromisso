@@ -26,6 +26,6 @@ export async function sendOtpSms(phone: string, code: string): Promise<void> {
   await client().messages.create({
     to: toE164BR(phone),
     from,
-    body: `Compromisso: seu código de recuperação de senha é ${code}. Válido por 5 minutos.`,
+    body: `Plataforma: seu código de recuperação de senha é ${code}. Válido por 5 minutos.`,
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 📊 Premium Chart Library — Compromisso LMS
+ * 📊 Premium Chart Library — Plataforma LMS
  *
  * Conjunto único de gráficos Recharts com visual premium (gradientes, brilho,
  * animações suaves e tooltip consistente). Mobile-first: eixos enxutos, fontes
@@ -12,7 +12,7 @@
  * (useId) para evitar colisão quando há vários gráficos na mesma tela.
  *
  * Uso:
- *   <AreaChartPremium  data={d} xKey="date" yKey="acertos" color="#ff6b00" />
+ *   <AreaChartPremium  data={d} xKey="date" yKey="acertos" color="#4ccced" />
  *   <BarChartPremium   data={d} xKey="subject" yKey="count" />
  *   <BarChartPremium   data={d} xKey="name" yKey="performance" horizontal domainMax={100} unit="%" />
  *   <LineChartPremium  data={d} xKey="week" yKey="pct" referenceY={75} unit="%" domainMax={100} />
@@ -34,7 +34,7 @@ function PremiumTooltip({ active, payload, label, unit = "" }: any) {
         <div key={i} className="flex items-center gap-2">
           <span
             className="h-2.5 w-2.5 rounded-full shrink-0"
-            style={{ background: p.color || p.stroke || p.fill || "#ff6b00" }}
+            style={{ background: p.color || p.stroke || p.fill || "#4ccced" }}
           />
           <span className="text-sm font-black italic text-slate-900 leading-none">
             {typeof p.value === "number" ? p.value.toLocaleString("pt-BR") : p.value}
@@ -51,7 +51,7 @@ function ChartSkeleton() {
   return <div className="h-full w-full flex items-center justify-center bg-slate-50/60 animate-pulse rounded-2xl" />;
 }
 
-const PALETTE = ["#ff6b00", "#6366f1", "#10b981", "#f59e0b", "#ec4899", "#0ea5e9", "#a855f7", "#14b8a6"];
+const PALETTE = ["#4ccced", "#6366f1", "#10b981", "#f59e0b", "#ec4899", "#0ea5e9", "#a855f7", "#14b8a6"];
 
 /* ── Área premium (gradiente + brilho) ─────────────────────────────────────── */
 export const AreaChartPremium = dynamic(
@@ -61,7 +61,7 @@ export const AreaChartPremium = dynamic(
         data,
         xKey = "name",
         yKey = "score",
-        color = "#ff6b00",
+        color = "#4ccced",
         unit = "",
         showAxis = true,
         domainMax,
@@ -145,7 +145,7 @@ export const BarChartPremium = dynamic(
         const uid = useId().replace(/:/g, "");
         const pal = colors && colors.length ? colors : PALETTE;
         const radius: [number, number, number, number] = horizontal ? [0, 10, 10, 0] : [10, 10, 0, 0];
-        const colorFor = (i: number) => (colorKey ? data[i]?.[colorKey] : pal[i % pal.length]) || "#ff6b00";
+        const colorFor = (i: number) => (colorKey ? data[i]?.[colorKey] : pal[i % pal.length]) || "#4ccced";
         return (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -283,7 +283,7 @@ export const LineChartPremium = dynamic(
 export const RadarChartPremium = dynamic(
   () =>
     import("recharts").then(({ Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip }) => {
-      function Chart({ data, angleKey = "subject", yKey = "score", color = "#ff6b00", unit = "" }: any) {
+      function Chart({ data, angleKey = "subject", yKey = "score", color = "#4ccced", unit = "" }: any) {
         const uid = useId().replace(/:/g, "");
         const gradId = `radar-grad-${uid}`;
         return (

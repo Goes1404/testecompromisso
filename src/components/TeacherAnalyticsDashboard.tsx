@@ -385,7 +385,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.15) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.08) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.15) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.08) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -586,13 +586,13 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
       </div>
 
       {/* ── Aurora IA Insights ── */}
-      <div className="relative rounded-[1.5rem] overflow-hidden border border-orange-500/15 bg-gradient-to-br from-orange-500/5 to-amber-500/3 p-5 shadow-inner">
+      <div className="relative rounded-[1.5rem] overflow-hidden border border-[#4CCCED]/15 bg-gradient-to-br from-orange-500/5 to-amber-500/3 p-5 shadow-inner">
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.12) 0%, transparent 60%)" }}
+          style={{ background: "radial-gradient(ellipse at 100% 0%, rgba(76,204,237,0.12) 0%, transparent 60%)" }}
         />
         <div className="relative z-10 flex items-start gap-4">
-          <div className="h-10 w-10 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-2xl bg-[#4CCCED]/20 border border-[#4CCCED]/30 flex items-center justify-center shrink-0">
             <BrainCircuit className="h-5 w-5 text-orange-400" />
           </div>
           <div className="space-y-1">
@@ -631,7 +631,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
                   horizontal
                   domainMax={100}
                   unit="%"
-                  colors={["#ff6b00", "#fb923c", "#fdba74", "#fcd34d", "#fde68a", "#6366f1", "#10b981", "#ec4899"]}
+                  colors={["#4ccced", "#fb923c", "#fdba74", "#fcd34d", "#fde68a", "#6366f1", "#10b981", "#ec4899"]}
                 />
               ) : (
                 <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-sm">
@@ -656,7 +656,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
                   data={data.engagementTrend}
                   xKey="day"
                   yKey="acessos"
-                  color="#ff6b00"
+                  color="#4ccced"
                   unit=" q"
                 />
               ) : (
@@ -675,7 +675,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
           {userId && currentStudent && (
             <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] p-5 space-y-4">
               <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                <div className="h-10 w-10 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center font-black text-base italic shadow-md">
+                <div className="h-10 w-10 rounded-xl bg-[#4CCCED]/20 text-orange-400 border border-[#4CCCED]/30 flex items-center justify-center font-black text-base italic shadow-md">
                   {currentStudent.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -718,7 +718,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
               </div>
 
               <div className="pt-2 border-t border-slate-100 flex gap-2">
-                <Button asChild size="sm" className="flex-1 h-9 rounded-xl text-[9px] font-black uppercase tracking-wider bg-orange-500 hover:bg-orange-600 text-slate-800 border-none shadow-md">
+                <Button asChild size="sm" className="flex-1 h-9 rounded-xl text-[9px] font-black uppercase tracking-wider bg-[#4CCCED] hover:bg-orange-600 text-slate-800 border-none shadow-md">
                   <Link href={`/dashboard/chat/${currentStudent.id}`}>
                     <Send className="h-3 w-3 mr-1" />
                     Contatar Aluno
@@ -791,7 +791,7 @@ export default function TeacherAnalyticsDashboard({ userId }: { userId?: string 
                         <span className="text-xs font-black text-emerald-500 italic leading-none">{student.accuracy}%</span>
                         <Link
                           href={`/dashboard/teacher/analytics?user=${student.id}`}
-                          className="h-7 w-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:text-orange-500 hover:bg-orange-500/10 transition-all"
+                          className="h-7 w-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:text-orange-500 hover:bg-[#4CCCED]/10 transition-all"
                           title="Ficha do Aluno"
                         >
                           <ArrowUpRight className="h-3.5 w-3.5" />

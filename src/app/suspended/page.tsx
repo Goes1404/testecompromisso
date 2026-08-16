@@ -50,7 +50,7 @@ export default function SuspendedPage() {
 
           <div className="pt-6 border-t border-dashed flex items-center justify-center gap-2 opacity-40">
             <Sparkles className="h-3 w-3 text-accent" />
-            <span className="text-[8px] font-black uppercase tracking-[0.3em] text-primary">Compromisso Smart Education</span>
+            <span className="text-[8px] font-black uppercase tracking-[0.3em] text-primary">Plataforma Smart Education</span>
           </div>
         </CardContent>
       </Card>

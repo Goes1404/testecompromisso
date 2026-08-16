@@ -16,6 +16,7 @@ import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
 import { SCHOOL_LIST } from "@/lib/constants";
+import { useTenant } from "@/components/TenantProvider";
 
 type Step = 1 | 2 | 3;
 type ProfileType = "etec" | "enem";
@@ -26,8 +27,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  
-  const logoUrl = "/images/logocompromisso.png";
+  const { tenant } = useTenant();
+  const logoUrl = tenant.branding.logoUrl;
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -188,15 +189,15 @@ export default function RegisterPage() {
         </Button>
       </div>
 
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#FF6B00]/8 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#FF6B00]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#4CCCED]/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#4CCCED]/5 rounded-full blur-[100px] pointer-events-none" />
       
       <div className="w-full max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative z-10">
         <div className="space-y-4 text-center">
           <div className="relative h-16 w-16 md:h-20 md:w-20 mx-auto overflow-hidden rounded-2xl shadow-xl bg-white p-2">
             <Image 
               src={logoUrl} 
-              alt="Logo Santana de Parnaíba" 
+              alt="Logo"
               fill 
               unoptimized
               priority
@@ -204,7 +205,7 @@ export default function RegisterPage() {
             />
           </div>
           <h1 className="text-4xl font-black tracking-tight text-white flex items-center justify-center gap-3 italic">
-            Cadastro <span className="text-accent">Compromisso</span>
+            Criar <span className="text-accent">Cadastro</span>
           </h1>
           <p className="text-white/70 text-lg font-medium italic">Sua rota de aprovação começa agora.</p>
         </div>
@@ -382,7 +383,7 @@ export default function RegisterPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="interests" className="font-bold text-primary/60 ml-2">O que você busca no Compromisso?</Label>
+                  <Label htmlFor="interests" className="font-bold text-primary/60 ml-2">O que você busca na plataforma?</Label>
                   <Input id="interests" placeholder="Ex: Mentoria em Redação, Simulados..." value={formData.interests} onChange={(e) => updateField("interests", e.target.value)} className="h-12 bg-white/50 rounded-xl" />
                 </div>
               </div>

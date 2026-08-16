@@ -12,7 +12,7 @@ import Image from 'next/image';
  * página, os cabeçalhos do site e a barra de endereço no rodapé.
  */
 export const metadata = {
-  title: 'Cartaz de instalação | Compromisso',
+  title: 'Cartaz de instalação | Plataforma',
   // Cartaz de uso interno: não deve aparecer em busca.
   robots: { index: false, follow: false },
 };
@@ -54,7 +54,7 @@ export default function CartazPage() {
         />
 
         <h1 className="text-[46px] leading-[1.05] font-black italic tracking-tighter text-slate-900 text-balance">
-          Instale o Compromisso<br />no seu celular
+          Instale o app<br />no seu celular
         </h1>
 
         <p className="mt-5 text-lg font-medium text-slate-500 leading-relaxed">
@@ -92,7 +92,7 @@ export default function CartazPage() {
             </ul>
           </div>
           <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-slate-300">
-            Cursinho Compromisso · Santana de Parnaíba
+            Sua Instituição de Ensino
           </p>
         </div>
       </section>

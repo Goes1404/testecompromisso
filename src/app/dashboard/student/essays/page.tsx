@@ -568,7 +568,7 @@ export default function StudentEssayPage() {
             <>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-3 w-3 text-orange-500" />
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-600">Tema Sintonizado</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#0F7A95]">Tema Sintonizado</p>
               </div>
               <h2 className="text-base font-black italic text-primary leading-snug">
                 {theme || "Aguardando geração de tema..."}
@@ -584,7 +584,7 @@ export default function StudentEssayPage() {
             className={`flex items-center gap-1.5 cursor-pointer text-[10px] font-black uppercase tracking-widest px-3 h-8 rounded-xl border transition-all ${
               loadingOcr || loadingGrading
                 ? "opacity-50 pointer-events-none border-slate-200 text-slate-400"
-                : "border-orange-200 text-orange-600 hover:bg-orange-50 active:scale-95"
+                : "border-orange-200 text-[#0F7A95] hover:bg-orange-50 active:scale-95"
             }`}
           >
             {loadingOcr ? (
@@ -701,14 +701,14 @@ export default function StudentEssayPage() {
           </div>
 
           {/* Score Card */}
-          <div className="relative bg-[#0d0d0f] border border-orange-500/20 rounded-[1.5rem] overflow-hidden p-6 animate-in zoom-in-95 duration-500">
-            <div className="absolute inset-0 pointer-events-none animate-pulse" style={{ background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.25) 0%, transparent 60%)", animationDuration: "3s" }} />
-            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full pointer-events-none opacity-40" style={{ background: "radial-gradient(circle, rgba(255,107,0,0.4) 0%, transparent 60%)", filter: "blur(40px)" }} />
+          <div className="relative bg-[#0d0d0f] border border-[#4CCCED]/20 rounded-[1.5rem] overflow-hidden p-6 animate-in zoom-in-95 duration-500">
+            <div className="absolute inset-0 pointer-events-none animate-pulse" style={{ background: "radial-gradient(ellipse at 100% 0%, rgba(76,204,237,0.25) 0%, transparent 60%)", animationDuration: "3s" }} />
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full pointer-events-none opacity-40" style={{ background: "radial-gradient(circle, rgba(76,204,237,0.4) 0%, transparent 60%)", filter: "blur(40px)" }} />
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="h-3 w-3 text-orange-400 fill-orange-400 animate-pulse" />
-                  <Badge className="bg-orange-500/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">Pontuação Final</Badge>
+                  <Badge className="bg-[#4CCCED]/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">Pontuação Final</Badge>
                 </div>
                 <h2 className="text-6xl sm:text-7xl font-black italic tracking-tighter leading-[0.85] text-white drop-shadow-xl">{result.total_score}</h2>
                 <p className="text-[10px] font-bold text-white/55 uppercase tracking-widest mt-2">de 1000 pontos</p>
@@ -801,10 +801,10 @@ export default function StudentEssayPage() {
 
           {/* Suggestions */}
           {result.suggestions?.length > 0 && (
-            <div className="bg-[#0d0d0f] border border-orange-500/15 rounded-[1.5rem] overflow-hidden">
+            <div className="bg-[#0d0d0f] border border-[#4CCCED]/15 rounded-[1.5rem] overflow-hidden">
               <div className="p-5 border-b border-white/5">
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
+                  <div className="h-7 w-7 rounded-xl bg-[#4CCCED]/20 border border-[#4CCCED]/30 flex items-center justify-center">
                     <Zap className="h-3.5 w-3.5 text-orange-400" />
                   </div>
                   <h3 className="text-sm font-black italic text-orange-400 uppercase tracking-wide">Plano de Evolução</h3>
@@ -813,7 +813,7 @@ export default function StudentEssayPage() {
               <div className="p-4 space-y-2.5">
                 {result.suggestions.map((sug: string, i: number) => (
                   <div key={i} className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/3 border border-white/5">
-                    <div className="h-6 w-6 rounded-lg bg-orange-500 text-white flex items-center justify-center font-black text-[10px] shrink-0">{i + 1}</div>
+                    <div className="h-6 w-6 rounded-lg bg-[#4CCCED] text-white flex items-center justify-center font-black text-[10px] shrink-0">{i + 1}</div>
                     <p className="text-xs font-medium italic text-white/70 leading-relaxed">{sug}</p>
                   </div>
                 ))}
@@ -836,7 +836,7 @@ export default function StudentEssayPage() {
                 <p className="text-xs font-medium italic text-slate-600 leading-relaxed">"{st.content}"</p>
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Fonte: {st.source}</span>
-                  <Badge className="bg-orange-100 text-orange-600 border border-orange-200 font-black text-[7px] uppercase px-1.5 h-4">Motivador</Badge>
+                  <Badge className="bg-orange-100 text-[#0F7A95] border border-orange-200 font-black text-[7px] uppercase px-1.5 h-4">Motivador</Badge>
                 </div>
               </div>
             ))}
@@ -982,7 +982,7 @@ export default function StudentEssayPage() {
                     <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <MessageSquareQuote className="h-4 w-4 text-orange-500" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">Avaliação Geral</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#0F7A95]">Avaliação Geral</p>
                       </div>
                       <p className="text-sm font-medium italic text-slate-700 leading-relaxed">"{selectedEntry.feedback}"</p>
                     </div>
@@ -1053,7 +1053,7 @@ export default function StudentEssayPage() {
                       <div className="space-y-2">
                         {rd.suggestions.map((sug: string, i: number) => (
                           <div key={i} className="flex items-start gap-3 p-3 bg-white border border-slate-100 rounded-xl">
-                            <div className="h-5 w-5 rounded-lg bg-orange-500 text-white flex items-center justify-center font-black text-[9px] shrink-0">{i + 1}</div>
+                            <div className="h-5 w-5 rounded-lg bg-[#4CCCED] text-white flex items-center justify-center font-black text-[9px] shrink-0">{i + 1}</div>
                             <p className="text-[11px] font-medium text-slate-600 italic leading-relaxed">{sug}</p>
                           </div>
                         ))}

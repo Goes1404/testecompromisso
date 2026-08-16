@@ -3,10 +3,10 @@
 import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import {
   BarChart3,
-  GraduationCap,
-  KeyRound,
-  Route,
+  Palette,
+  Rocket,
   ShieldCheck,
+  Upload,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRef } from "react";
@@ -23,37 +23,37 @@ const FLOW_STEPS: readonly FlowStep[] = [
   {
     icon: ShieldCheck,
     step: "01",
-    title: "Acesso Seguro",
+    title: "Conversa inicial",
     description:
-      "Login individual com sessão protegida. Cada perfil — aluno, professor ou secretaria — enxerga apenas o que é seu.",
+      "Entendemos o tamanho da sua instituição, quantas turmas e quais módulos fazem sentido pra você — sem contrato genérico.",
   },
   {
-    icon: KeyRound,
+    icon: Palette,
     step: "02",
-    title: "Primeiro Acesso Guiado",
+    title: "Sua marca, seu domínio",
     description:
-      "No primeiro login você define sua senha e configura seu perfil: escola, objetivo (ENEM ou ETEC) e metas de estudo.",
+      "Configuramos logo, cores e nome da sua instituição na plataforma. Cada escola tem seu próprio ambiente, isolado das demais.",
   },
   {
-    icon: Route,
+    icon: Upload,
     step: "03",
-    title: "Trilha Personalizada",
+    title: "Importação de alunos e turmas",
     description:
-      "A plataforma monta sua jornada com trilhas, materiais e listas focadas exatamente nos seus gaps de conhecimento.",
+      "Trazemos sua base de alunos e professores pra dentro da plataforma — sem trabalho manual de cadastro um por um.",
   },
   {
     icon: BarChart3,
     step: "04",
-    title: "Treino & Diagnóstico",
+    title: "Uso do dia a dia",
     description:
-      "Simulados padrão ENEM, redações corrigidas pela Aurora IA e dashboards que auditam seus erros recorrentes.",
+      "Simulados, redação corrigida por IA, trilhas de estudo e dashboards de desempenho — tudo já funcionando pros seus alunos.",
   },
   {
-    icon: GraduationCap,
+    icon: Rocket,
     step: "05",
-    title: "Aprovação",
+    title: "Acompanhamento contínuo",
     description:
-      "Acompanhamento próximo da equipe até o dia da prova — e a comemoração da sua vaga na universidade.",
+      "Suporte e evolução da plataforma junto com sua instituição — novos módulos, novos ciclos letivos, sem dor de cabeça técnica.",
   },
 ];
 
@@ -81,14 +81,14 @@ export function FlowSection(): ReactElement {
       <div className="relative z-10 max-w-5xl mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
           <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px] bg-primary/5 px-4 py-1.5 rounded-full border border-primary/20">
-            <Route className="h-4 w-4" /> Fluxo do Aluno
+            <Rocket className="h-4 w-4" /> Como funciona
           </div>
           <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter leading-tight italic">
-            Do login à aprovação
+            Do primeiro contato ao ar
           </h2>
           <p className="text-gray-500 font-medium leading-relaxed">
-            O caminho completo dentro da plataforma, desenhado para que nenhum aluno seja
-            deixado para trás.
+            O caminho completo pra colocar sua instituição na plataforma — sem precisar de
+            equipe técnica própria.
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export function FlowSection(): ReactElement {
           {/* Trilho + progresso scroll-driven */}
           <div className="absolute left-6 md:left-1/2 md:-translate-x-1/2 top-0 bottom-0 w-px bg-gray-200">
             <motion.div
-              className="absolute inset-x-0 top-0 origin-top bg-gradient-to-b from-primary to-amber-400 shadow-[0_0_12px_rgba(255,107,0,0.5)]"
+              className="absolute inset-x-0 top-0 origin-top bg-gradient-to-b from-primary to-amber-400 shadow-[0_0_12px_rgba(76,204,237,0.5)]"
               style={{ scaleY: reduceMotion ? 1 : progress, height: "100%" }}
             />
           </div>

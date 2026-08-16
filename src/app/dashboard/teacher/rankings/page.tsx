@@ -123,8 +123,8 @@ export default function TeacherRankingsPage() {
           style={{
             background:
               activeTab === "etec"
-                ? "radial-gradient(ellipse at 80% 10%, rgba(99,102,241,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(255,107,0,0.08) 0%, transparent 60%)"
-                : "radial-gradient(ellipse at 80% 10%, rgba(168,85,247,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(255,107,0,0.08) 0%, transparent 60%)",
+                ? "radial-gradient(ellipse at 80% 10%, rgba(99,102,241,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(76,204,237,0.08) 0%, transparent 60%)"
+                : "radial-gradient(ellipse at 80% 10%, rgba(168,85,247,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(76,204,237,0.08) 0%, transparent 60%)",
           }}
         />
         <Trophy className="absolute right-4 top-4 h-20 w-20 text-white/[0.04]" />

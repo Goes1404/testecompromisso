@@ -301,7 +301,7 @@ export default function ResetPasswordForm() {
       </div>
 
       <p className="text-center text-white/15 text-[10px] font-black uppercase tracking-widest">
-        Compromisso · Acesso Seguro · {new Date().getFullYear()}
+        Plataforma · Acesso Seguro · {new Date().getFullYear()}
       </p>
     </div>
   );

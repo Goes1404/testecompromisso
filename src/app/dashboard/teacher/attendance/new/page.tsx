@@ -140,7 +140,7 @@ export default function NewAttendanceSessionPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.08) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.08) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -205,7 +205,7 @@ export default function NewAttendanceSessionPage() {
               value={formData.title}
               onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               required
-              className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
+              className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
             />
           </div>
 
@@ -220,7 +220,7 @@ export default function NewAttendanceSessionPage() {
                 value={formData.session_date}
                 onChange={(e) => setFormData((prev) => ({ ...prev, session_date: e.target.value }))}
                 required
-                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-[#4CCCED]/40 transition-all [color-scheme:dark]"
               />
             </div>
             <div className="space-y-1.5">
@@ -231,7 +231,7 @@ export default function NewAttendanceSessionPage() {
                 type="time"
                 value={formData.start_time}
                 onChange={(e) => setFormData((prev) => ({ ...prev, start_time: e.target.value }))}
-                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
+                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-3 text-sm font-bold text-slate-800 outline-none focus:border-[#4CCCED]/40 transition-all [color-scheme:dark]"
               />
             </div>
           </div>
@@ -247,7 +247,7 @@ export default function NewAttendanceSessionPage() {
                 placeholder="Matemática"
                 value={formData.subject}
                 onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
-                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
+                className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
               />
             </div>
             <div className="space-y-1.5">
@@ -312,7 +312,7 @@ export default function NewAttendanceSessionPage() {
               value={formData.description}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
-              className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
+              className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-[#4CCCED]/30"
             />
           </div>
 

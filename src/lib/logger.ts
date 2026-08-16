@@ -1,5 +1,5 @@
 /**
- * logger.ts — Structured JSON logger for Compromisso LMS
+ * logger.ts — Structured JSON logger for Plataforma LMS
  *
  * Zero external dependencies: works in Node.js, Edge Runtime and browser.
  * All sensitive fields are redacted before any log is emitted (data masking).

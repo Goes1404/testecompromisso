@@ -84,7 +84,7 @@ function BentoCard({
         className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 group-[.is-active]:opacity-100 transition-opacity duration-500"
         style={{
           background:
-            "radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255,107,0,0.12), transparent 65%)",
+            "radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(76,204,237,0.12), transparent 65%)",
         }}
       />
       {/* Brilho na borda superior */}
@@ -97,7 +97,7 @@ function BentoCard({
         <span className="text-[9px] font-black uppercase tracking-[0.25em] text-primary/80">
           {tagline}
         </span>
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary transition-all duration-500 group-hover:bg-primary group-[.is-active]:bg-primary group-hover:text-white group-[.is-active]:text-white group-hover:rotate-6 group-[.is-active]:rotate-6 group-hover:shadow-[0_0_25px_rgba(255,107,0,0.5)] group-[.is-active]:shadow-[0_0_25px_rgba(255,107,0,0.5)]">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary transition-all duration-500 group-hover:bg-primary group-[.is-active]:bg-primary group-hover:text-white group-[.is-active]:text-white group-hover:rotate-6 group-[.is-active]:rotate-6 group-hover:shadow-[0_0_25px_rgba(76,204,237,0.5)] group-[.is-active]:shadow-[0_0_25px_rgba(76,204,237,0.5)]">
           <Icon className="h-5 w-5" />
         </span>
       </div>
@@ -208,7 +208,7 @@ function TrilhasDemo(): ReactElement {
         <div key={step} className="flex items-center flex-1 last:flex-none">
           <div className="flex flex-col items-center gap-1.5">
             <span
-              className="h-3.5 w-3.5 rounded-full border-2 border-primary/40 bg-primary/15 transition-all duration-500 group-hover:bg-primary group-[.is-active]:bg-primary group-hover:border-primary group-[.is-active]:border-primary group-hover:shadow-[0_0_12px_rgba(255,107,0,0.7)] group-[.is-active]:shadow-[0_0_12px_rgba(255,107,0,0.7)]"
+              className="h-3.5 w-3.5 rounded-full border-2 border-primary/40 bg-primary/15 transition-all duration-500 group-hover:bg-primary group-[.is-active]:bg-primary group-hover:border-primary group-[.is-active]:border-primary group-hover:shadow-[0_0_12px_rgba(76,204,237,0.7)] group-[.is-active]:shadow-[0_0_12px_rgba(76,204,237,0.7)]"
               style={{ transitionDelay: `${i * 120}ms` }}
             />
             <span className="text-[8px] font-black uppercase tracking-wider text-gray-500">
@@ -273,7 +273,7 @@ function GraphDemo(): ReactElement {
   ];
   return (
     <svg viewBox="0 0 300 80" className="w-full h-16" aria-hidden="true">
-      <g stroke="rgba(255,107,0,0.3)" strokeWidth="1.5" className="transition-all duration-500 group-hover:stroke-[rgba(255,107,0,0.7)] group-[.is-active]:stroke-[rgba(255,107,0,0.7)]">
+      <g stroke="rgba(76,204,237,0.3)" strokeWidth="1.5" className="transition-all duration-500 group-hover:stroke-[rgba(76,204,237,0.7)] group-[.is-active]:stroke-[rgba(76,204,237,0.7)]">
         <line x1="40" y1="40" x2="120" y2="18" />
         <line x1="40" y1="40" x2="150" y2="58" />
         <line x1="120" y1="18" x2="230" y2="30" />
@@ -314,14 +314,14 @@ export function FeatureBentoGrid(): ReactElement {
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
           <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px] bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
-            <LayoutDashboard className="h-4 w-4" /> Vitrine da Plataforma
+            <LayoutDashboard className="h-4 w-4" /> O que seus alunos recebem
           </div>
           <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tighter leading-tight italic">
             Um ecossistema completo
           </h2>
           <p className="text-gray-400 font-medium leading-relaxed">
-            Tudo que você usa no dia a dia do Compromisso, em um só portal — do primeiro login
-            até a aprovação.
+            Tudo isso já pronto, com a marca da sua instituição — sem precisar construir ou
+            manter nada.
           </p>
         </div>
 
