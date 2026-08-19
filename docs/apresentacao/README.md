@@ -1,29 +1,48 @@
 # Apresentação comercial da plataforma
 
-`plataforma-360-apresentacao-comercial.pdf` — deck de 22 slides em formato
-widescreen (960 × 540 pt, 16:9), em português, para apresentar a plataforma a
-outras instituições.
+`plataforma-360-apresentacao-comercial.pdf` — documento de 25 páginas em **A4
+retrato** (210 × 297 mm), em português, para apresentar a plataforma a outras
+instituições. Imprime em folha comum e lê bem no celular.
 
-**Marca branca por decisão:** o deck não cita o nome do cliente original, a
-cidade, a prefeitura, nem os exames específicos que a instituição prepara.
-O nome comercial usado (`Plataforma 360`) é um marcador — trocar a constante
-`BRAND` em `src/build.py` renomeia o documento inteiro, capa e rodapés
-inclusive. O contato na última página também é fictício e precisa ser
-substituído antes de enviar.
+**Marca branca por decisão:** o documento não cita o nome do cliente original, a
+cidade, a prefeitura, nem os exames específicos que a instituição prepara — só
+"o padrão do exame" e "a matriz de referência". O nome comercial usado
+(`Plataforma 360`) é um marcador: trocar a constante `BRAND` em `src/build.py`
+renomeia capa, rodapés, sumário e diagrama de uma vez. O contato da última
+página é fictício e precisa ser substituído antes de enviar.
 
 ## Estrutura
 
-| Slides | Conteúdo |
-|--------|----------|
-| 1–5    | Capa, problema, proposta, mapa de módulos, dimensão do produto |
-| 6–12   | Perfil do aluno: estudo, redação com IA, mentor de IA, engajamento, caderno, vida escolar |
-| 13–16  | Professor, secretaria, gestão e portal do responsável |
-| 17–19  | Alcance e acessibilidade, segurança e conformidade, arquitetura |
-| 20–22  | Posicionamento comparativo, implantação e chamada para ação |
+| Páginas | Conteúdo |
+|---------|----------|
+| 01–02 | Capa e sumário |
+| 03–06 | Panorama: o cenário atual, a proposta, os números do produto, o mapa de módulos |
+| 07–13 | **Parte 1 · O aluno** — estudo e avaliação, redação com IA, mentor de IA, engajamento, caderno, vida escolar |
+| 14–18 | **Parte 2 · A equipe** — professor, secretaria, gestão, portal do responsável |
+| 19–22 | **Parte 3 · A plataforma** — alcance e acessibilidade, segurança e conformidade, arquitetura white-label |
+| 23–25 | Posicionamento comparativo, implantação e chamada para ação |
 
-Os números do slide 5 (telas, tabelas, serviços, migrations) são contagens
-reais do repositório na data de geração. Ao regerar o deck depois de mudanças
-grandes no produto, recontar antes de publicar:
+Cada parte abre numa página divisora de fundo colorido cheio, com o índice
+daquele trecho.
+
+## Sistema de cores
+
+Cada página declara a própria paleta em variáveis CSS (`--c1` acento, `--c2`
+fundo suave, `--c3` texto de acento, `--c4` par do gradiente), e todo o resto
+— faixa do topo, título de destaque, chips, faixa de conclusão, rodapé — deriva
+dela. Isso é o que deixa o documento colorido sem virar colcha de retalhos:
+trocar a paleta de uma página recolore a página inteira de forma coerente.
+
+As paletas disponíveis estão no dicionário `PAL` em `src/build.py`
+(`blue`, `indigo`, `violet`, `cyan`, `teal`, `green`, `amber`, `rose`, `pink`).
+Cada card também aceita a própria cor, o que produz o mosaico das páginas de
+módulos — use isso com parcimônia fora delas.
+
+## Números do slide de dimensão
+
+Os números da página 05 (telas, tabelas, serviços, migrations) são contagens
+reais do repositório na data de geração. Ao regerar o documento depois de
+mudanças grandes no produto, recontar antes de publicar:
 
 ```bash
 find src/app/dashboard -name page.tsx | wc -l    # telas
@@ -33,7 +52,7 @@ ls supabase/migrations/*.sql | wc -l             # migrations
 
 ## Como regerar o PDF
 
-O deck é HTML impresso pelo Chromium — sem dependência de editor de slides.
+O documento é HTML impresso pelo Chromium — sem dependência de editor de slides.
 
 ```bash
 cd docs/apresentacao/src
@@ -53,7 +72,7 @@ for u in set(re.findall(r'https://fonts\.gstatic\.com/[^)]+', css)):
 open('fonts.css','w').write(css)
 PY
 
-# 2. Gera o index.html com os 22 slides
+# 2. Gera o index.html com as 25 páginas
 python3 build.py
 
 # 3. Imprime em PDF (qualquer Chrome/Chromium serve)
@@ -61,20 +80,23 @@ chromium --headless --no-pdf-header-footer \
   --print-to-pdf=../plataforma-360-apresentacao-comercial.pdf index.html
 ```
 
-O tamanho da página vem do `@page { size: 1280px 720px }` em `style.css`;
-cada `<section class="slide">` tem exatamente essa altura e vira uma página.
-Conteúdo que passar de ~660 px de altura encosta no rodapé — o script abaixo
-mede todos os slides de uma vez e denuncia quem estourou:
+O tamanho da página vem do `@page { size: 210mm 297mm }` em `style.css`, e cada
+`<section class="page">` tem exatamente essa altura — página e conteúdo não
+podem divergir. Conteúdo que passe de ~1040 px de altura encosta no rodapé; o
+script abaixo mede todas as páginas de uma vez e denuncia quem estourou:
 
 ```bash
 python3 - <<'PY'
 h = open('index.html').read()
 js = ("<script>window.addEventListener('load',()=>{const o=[];"
-      "document.querySelectorAll('.slide').forEach((s,i)=>{const r=s.getBoundingClientRect();let m=0;"
+      "document.querySelectorAll('.page').forEach((s,i)=>{const r=s.getBoundingClientRect();let m=0;"
       "s.querySelectorAll('.pad *').forEach(e=>{const b=e.getBoundingClientRect();"
       "if(b.height>0)m=Math.max(m,b.bottom-r.top)});o.push((i+1)+':'+Math.round(m))});"
       "document.title='RPT '+o.join(' ')});</script>")
 open('check.html','w').write(h.replace('</body>', js + '</body>'))
 PY
-chromium --headless --virtual-time-budget=6000 --dump-dom check.html | grep -o 'RPT [^<]*'
+chromium --headless --virtual-time-budget=8000 --dump-dom check.html | grep -o 'RPT [^<]*'
 ```
+
+Uma versão anterior deste material, em formato de slides 16:9, está no
+histórico do git (commit `fab999c`), caso seja útil para projeção.
