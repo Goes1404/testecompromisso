@@ -19,6 +19,8 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
+import { resumoDaBancaAtiva } from "@/lib/redacao-metrics";
+import { BANCA_ENEM } from "@/lib/bancas";
 
 // ──────────────────────────────────────────────
 // Tipagens (espelham as tabelas do Supabase)
@@ -28,6 +30,10 @@ interface StudentMetrics {
   essaysSubmitted: number;
   /** Média das notas corrigidas (modelo ENEM 0–1000) */
   averageGrade: number;
+  /** Teto da banca da média — sem ele o número é ilegível (0-1000 ou 0-50). */
+  averageGradeMax: number;
+  /** Rótulo da banca a que a média se refere. */
+  averageGradeBanca: string;
   /** Progresso geral calculado a partir de user_progress */
   overallProgress: number;
 }
@@ -39,6 +45,8 @@ interface EssayRow {
   /** "pending" | "reviewed" | null */
   status: string | null;
   score: number | null;
+  /** Ausente no histórico anterior à migration — vale como ENEM. */
+  banca?: string | null;
 }
 
 // ──────────────────────────────────────────────
@@ -60,7 +68,7 @@ function useStudentDashboard(userId: string | undefined) {
       const [essayRes, progressRes] = await Promise.all([
         supabase
           .from("essay_submissions")
-          .select("id, theme, created_at, status, score")
+          .select("id, theme, created_at, status, score, banca")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(5),
@@ -73,14 +81,12 @@ function useStudentDashboard(userId: string | undefined) {
       const essayData: EssayRow[] = essayRes.data ?? [];
       const progressData = progressRes.data ?? [];
 
-      const scored = essayData.filter((e) => e.score !== null && e.score > 0);
-      const avg =
-        scored.length > 0
-          ? Math.round(
-              scored.reduce((acc, e) => acc + Number(e.score), 0) /
-                scored.length
-            )
-          : 0;
+      // Média só da banca que o aluno está treinando agora. Somar ENEM
+      // (0-1000) com FUVEST (0-50) devolveria um número em escala nenhuma —
+      // três redações de 800 e uma de 45 dariam 611, que parece um desabamento
+      // de desempenho e não é nada.
+      const ativa = resumoDaBancaAtiva(essayData);
+      const avg = ativa?.resumo.media != null ? Math.round(ativa.resumo.media) : 0;
 
       const overallProgress =
         progressData.length > 0
@@ -96,6 +102,8 @@ function useStudentDashboard(userId: string | undefined) {
       setMetrics({
         essaysSubmitted: essayData.length,
         averageGrade: avg,
+        averageGradeMax: ativa?.banca.totalMax ?? BANCA_ENEM.totalMax,
+        averageGradeBanca: ativa?.banca.label ?? BANCA_ENEM.label,
         overallProgress,
       });
     } catch {
@@ -235,10 +243,10 @@ export default function StudentDashboard() {
           loading={loading}
         />
         <MetricCard
-          title="Média de Notas"
+          title={metrics?.averageGrade ? `Média · ${metrics.averageGradeBanca}` : "Média de Notas"}
           value={
             metrics?.averageGrade
-              ? `${metrics.averageGrade} pts`
+              ? `${metrics.averageGrade} / ${metrics.averageGradeMax}`
               : "–"
           }
           icon={<TrendingUp className="text-emerald-600" size={20} />}

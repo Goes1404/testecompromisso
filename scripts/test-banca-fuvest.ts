@@ -15,6 +15,10 @@ import {
 } from '../src/lib/inep-banca';
 import { analisarRedacao, evidenciaParaPrompt } from '../src/lib/essay-analysis';
 import { PROPOSTA_FUVEST_NOSTALGIA, motivadoresDaProposta } from '../src/lib/propostas/fuvest-nostalgia';
+import {
+  mediaRedacao, agruparPorBanca, resumoDaBancaAtiva, resumoPorBanca,
+  type RedacaoTreino,
+} from '../src/lib/redacao-metrics';
 
 let falhas = 0;
 let testes = 0;
@@ -168,6 +172,83 @@ console.log('\nContagem de linhas e texto insuficiente');
   checar('texto longo não é insuficiente em nenhuma banca',
     !analisarRedacao(longo, [], BANCA_FUVEST).textoInsuficiente &&
     !analisarRedacao(longo, [], BANCA_ENEM).textoInsuficiente);
+}
+
+
+console.log('\nAgregação com bancas misturadas');
+{
+  const r = (score: number | null, dia: string, banca?: string | null): RedacaoTreino =>
+    ({ score, created_at: `2026-08-${dia}T12:00:00Z`, banca });
+
+  // Três de ENEM e uma de FUVEST — o caso que produzia "611 pts" na home.
+  const misturado = [
+    r(45, '18', 'fuvest'),
+    r(780, '15', 'enem'),
+    r(820, '12', 'enem'),
+    r(800, '10', 'enem'),
+  ];
+
+  const grupos = agruparPorBanca(misturado);
+  checar('separa as duas bancas', grupos.size === 2, `size=${grupos.size}`);
+  checar('3 redações no ENEM', (grupos.get('enem') ?? []).length === 3);
+  checar('1 redação na FUVEST', (grupos.get('fuvest') ?? []).length === 1);
+
+  const ativa = resumoDaBancaAtiva(misturado)!;
+  checar('banca ativa é a da redação MAIS RECENTE, não a mais frequente',
+    ativa.banca.id === 'fuvest', `id=${ativa.banca.id}`);
+  checar('média da banca ativa é só da FUVEST', ativa.resumo.media === 45, String(ativa.resumo.media));
+  checar('média nunca cai entre as duas escalas',
+    ativa.resumo.media !== null && ativa.resumo.media <= ativa.banca.totalMax,
+    `media=${ativa.resumo.media} teto=${ativa.banca.totalMax}`);
+  // O número que o bug produzia: (780+820+800+45)/4 = 611.
+  checar('não reproduz o 611 da média cruzada', ativa.resumo.media !== 611);
+
+  // Mesma lista, agora com a mais recente sendo de ENEM.
+  const enemRecente = [r(800, '20', 'enem'), r(45, '18', 'fuvest'), r(780, '15', 'enem')];
+  const ativa2 = resumoDaBancaAtiva(enemRecente)!;
+  checar('troca de banca ativa quando a mais recente muda', ativa2.banca.id === 'enem');
+  checar('média do ENEM ignora a nota da FUVEST', ativa2.resumo.media === 790, String(ativa2.resumo.media));
+
+  // Linhas antigas, anteriores à migration, não têm banca.
+  const semBanca = [r(700, '14', null), r(800, '13'), r(900, '12', undefined as any)];
+  const grupoLegado = agruparPorBanca(semBanca);
+  checar('linha sem banca conta como ENEM',
+    grupoLegado.size === 1 && (grupoLegado.get('enem') ?? []).length === 3);
+  checar('banca desconhecida também cai no ENEM',
+    agruparPorBanca([r(700, '14', 'unicamp')]).get('enem')?.length === 1);
+
+  // Cada banca com seu resumo.
+  const todos = resumoPorBanca(misturado);
+  checar('resumoPorBanca devolve uma entrada por banca', todos.length === 2);
+  checar('cada resumo respeita o próprio teto',
+    todos.every(t => t.resumo.media === null || t.resumo.media <= t.banca.totalMax),
+    JSON.stringify(todos.map(t => [t.banca.id, t.resumo.media])));
+}
+
+console.log('\nAnuladas e casos de borda da média');
+{
+  const r = (score: number | null, dia: string, banca = 'enem'): RedacaoTreino =>
+    ({ score, created_at: `2026-08-${dia}T12:00:00Z`, banca });
+
+  const comAnuladas = mediaRedacao([r(800, '15'), r(0, '14'), r(600, '13'), r(0, '12')]);
+  checar('anuladas ficam fora da média', comAnuladas.media === 700, String(comAnuladas.media));
+  checar('anuladas são contadas ao lado', comAnuladas.anuladas === 2);
+  checar('consideradas conta só as válidas', comAnuladas.consideradas === 2);
+  checar('melhor ignora as anuladas', comAnuladas.melhor === 800);
+  checar('ultima é a primeira da lista (ordem decrescente)', comAnuladas.ultima === 800);
+
+  const soAnuladas = mediaRedacao([r(0, '15'), r(0, '14')]);
+  checar('só anuladas devolve media null', soAnuladas.media === null);
+  checar('só anuladas não divide por zero', Number.isNaN(soAnuladas.media as any) === false);
+  checar('só anuladas ainda conta as anuladas', soAnuladas.anuladas === 2);
+
+  const vazia = mediaRedacao([]);
+  checar('lista vazia devolve media null', vazia.media === null);
+  checar('lista vazia não lança', vazia.consideradas === 0 && vazia.anuladas === 0);
+  checar('resumoDaBancaAtiva de lista vazia devolve null', resumoDaBancaAtiva([]) === null);
+
+  const comNulos = mediaRedacao([r(null, '15'), r(600, '14')]);
+  checar('score null é ignorado, não vira zero', comNulos.media === 600 && comNulos.anuladas === 0);
 }
 
 console.log('\nProposta padrão da FUVEST');

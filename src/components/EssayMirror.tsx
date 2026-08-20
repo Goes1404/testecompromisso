@@ -13,6 +13,7 @@
 
 import { useState } from 'react';
 import { AlertCircle, Scale, ChevronDown, ChevronUp } from 'lucide-react';
+import { getBanca } from '@/lib/bancas';
 
 export type TrechoCorrigido = {
   original?: string;
@@ -125,6 +126,8 @@ export function EssayHighlightedText({
 
 export type BancaInfo = {
   corretores?: { vetor: number[]; total: number }[];
+  /** Banca que corrigiu; ausente nas correções anteriores à FUVEST (= ENEM). */
+  id?: string;
   houveDiscrepancia?: boolean;
   motivos?: string[];
   precisouBanca?: boolean;
@@ -140,6 +143,10 @@ export type BancaInfo = {
  * sistema reconhece que o caso é limítrofe.
  */
 export function BancaMirror({ banca }: { banca: BancaInfo }) {
+  // Configuração da banca que corrigiu — dá o teto para os totais e o nome
+  // certo no texto. O protocolo de dupla correção vale nas duas bancas; só o
+  // "INEP" era do ENEM.
+  const cfgBanca = getBanca(banca.id);
   const [aberto, setAberto] = useState(false);
   const corretores = banca.corretores ?? [];
   if (corretores.length === 0) return null;
@@ -184,15 +191,18 @@ export function BancaMirror({ banca }: { banca: BancaInfo }) {
                 <span className="text-[11px] font-mono text-slate-600 flex-1">
                   {c.vetor.join(' · ')}
                 </span>
-                <span className="text-sm font-black text-slate-800">{c.total}</span>
+                <span className="text-sm font-black text-slate-800">
+                  {c.total}
+                  <span className="text-[10px] font-bold text-slate-400"> / {cfgBanca.totalMax}</span>
+                </span>
               </div>
             ))}
           </div>
 
           <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
             {banca.houveDiscrepancia
-              ? `As correções divergiram além do limite do INEP (${banca.motivos?.join('; ')}), então uma terceira correção foi feita e a nota final é a média das duas mais próximas — destacadas acima.`
-              : 'As correções ficaram dentro do limite de divergência do INEP, então a nota final é a média entre elas.'}
+              ? `As correções divergiram além do limite da ${cfgBanca.label} (${banca.motivos?.join('; ')}), então uma terceira correção foi feita e a nota final é a média das duas mais próximas — destacadas acima.`
+              : `As correções ficaram dentro do limite de divergência da ${cfgBanca.label}, então a nota final é a média entre elas.`}
           </p>
 
           {banca.revisaoRecomendada && (

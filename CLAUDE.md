@@ -168,6 +168,13 @@ código**: `src/lib/bancas.ts` é a fonte única de verdade (mesmo molde de `exa
    de código porque os textos motivadores alimentam `detectarCopia` — um motivador com
    palavra trocada faz a detecção errar em silêncio.
 
+9. **Toda leitura de `essay_submissions` que use `score` PRECISA trazer `banca` no
+   `.select()`** e agregar por `src/lib/redacao-metrics.ts` (`mediaRedacao`,
+   `agruparPorBanca`, `resumoDaBancaAtiva`). Somar 0–1000 com 0–50 não dá número em escala
+   nenhuma: três redações de 800 e uma de 45 viravam "611 pts" na home. Onde só cabe um
+   número — tile de dashboard —, use `resumoDaBancaAtiva()` (a banca da redação mais
+   recente) e **mostre o teto ao lado**.
+
 **No boletim**, a média da FUVEST tem seção própria, alimentada por `essay_submissions`.
 Ela **não** escreve em `report_card_entries*.redacao_score`: aquela é a nota oficial da
 secretaria, com fila de aprovação; esta é treino corrigido por IA. Anuladas (nota 0) ficam

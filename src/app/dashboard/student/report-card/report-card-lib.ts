@@ -104,58 +104,21 @@ export function avg(values: Array<number | null | undefined>) {
   return Math.round((valid.reduce((sum, value) => sum + value, 0) / valid.length) * 10) / 10;
 }
 
-/** Uma redação corrigida na plataforma, no recorte que o boletim precisa. */
-export type RedacaoTreino = {
-  score: number | null;
-  created_at: string;
-  theme?: string | null;
-};
-
-export type MediaRedacao = {
-  /** Média das tentativas que valem — `null` quando não há nenhuma. */
-  media: number | null;
-  /** Tentativas consideradas na média. */
-  consideradas: number;
-  /** Tentativas anuladas, mostradas ao lado mas fora da média. */
-  anuladas: number;
-  melhor: number | null;
-  ultima: number | null;
-};
-
 /**
- * Média das redações de treino de uma banca.
- *
- * Anuladas (nota 0) ficam FORA da média e são contadas à parte. Uma anulação
- * mede falha de procedimento — fuga ao tema, cópia, texto insuficiente — não
- * capacidade de escrita; incluí-la afundaria a média justamente de quem treina
- * mais, que é o comportamento que a plataforma quer incentivar. O número de
- * anuladas continua visível para a informação não sumir.
- *
- * ⚠️ Existem hoje duas médias de redação divergentes no código:
- * `dashboard/home/page.tsx` exclui zeros e `api/student/weekly-summary` os
- * inclui. Esta função é a referência; as duas outras deveriam convergir para cá.
+ * A agregação de nota de redação vive em `src/lib/redacao-metrics.ts`, porque
+ * não é só do boletim: a home, o dashboard do aluno e o resumo semanal da
+ * Aurora fazem a mesma conta e divergiam entre si. Reexportado aqui para o
+ * boletim continuar importando de um lugar só.
  */
-export function mediaRedacao(redacoes: RedacaoTreino[]): MediaRedacao {
-  const notas = redacoes
-    .map((r) => (typeof r.score === "number" ? r.score : null))
-    .filter((n): n is number => n !== null);
-
-  const validas = notas.filter((n) => n > 0);
-  const anuladas = notas.length - validas.length;
-
-  if (!validas.length) {
-    return { media: null, consideradas: 0, anuladas, melhor: null, ultima: null };
-  }
-
-  return {
-    media: Math.round((validas.reduce((s, n) => s + n, 0) / validas.length) * 10) / 10,
-    consideradas: validas.length,
-    anuladas,
-    melhor: Math.max(...validas),
-    // `redacoes` chega em ordem decrescente de data, como o histórico consulta.
-    ultima: notas[0] ?? null,
-  };
-}
+export {
+  mediaRedacao,
+  agruparPorBanca,
+  resumoDaBancaAtiva,
+  resumoPorBanca,
+  type RedacaoTreino,
+  type MediaRedacao,
+  type ResumoDaBanca,
+} from '@/lib/redacao-metrics';
 
 export function subjectScores(enem: EnemReportCard | undefined) {
   if (!enem) return [];

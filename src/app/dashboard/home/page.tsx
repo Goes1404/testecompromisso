@@ -24,6 +24,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
+import { resumoDaBancaAtiva } from "@/lib/redacao-metrics";
+import { BANCA_ENEM, getBanca } from "@/lib/bancas";
 import { useRouter } from "next/navigation";
 import { AreaChartPremium } from "@/components/charts/premium";
 
@@ -211,7 +213,10 @@ export default function DashboardHome() {
   const [libraryResources, setLibraryResources] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
-  const [essayStats, setEssayStats] = useState<{ count: number; average: number; latest: any } | null>(null);
+  // `max` e `banca` viajam junto da média: desde a FUVEST, `score` não tem
+  // teto único e o número sozinho não diz nada. São opcionais porque o cache
+  // em localStorage (`dash_cache_*`, TTL 60s) pode ter entradas antigas sem eles.
+  const [essayStats, setEssayStats] = useState<{ count: number; average: number; max?: number; banca?: string; latest: any } | null>(null);
   const [examStats, setExamStats] = useState<{ totalAssessed: number; averageScore: number; history?: any[] } | null>(null);
   const [simuladoOficial, setSimuladoOficial] = useState<{ title: string; score: number; total: number; completed_at: string; answers: { q: number; selected: string }[] } | null>(null);
   const [simuladoEspecial, setSimuladoEspecial] = useState<{
@@ -396,7 +401,7 @@ export default function DashboardHome() {
         supabase.from('trails').select('*').or('status.eq.active,status.eq.published').limit(3),
         supabase.from('user_progress').select(`*, trail:trails(title, category, image_url)`).eq('user_id', user.id).order('last_accessed', { ascending: false }).limit(4),
         supabase.from('library_resources').select('*').not('category', 'ilike', 'LIVRO|%').order('created_at', { ascending: false }).limit(3),
-        supabase.from('essay_submissions').select('score, status, theme, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('essay_submissions').select('score, status, theme, created_at, banca').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('simulation_attempts').select('score, total_questions').eq('user_id', user.id),
         // sem `answers` aqui: o JSONB de 60+ respostas de CADA tentativa pesava
         // o payload no celular — só a tentativa do simulado oficial usa answers,
@@ -416,11 +421,19 @@ export default function DashboardHome() {
       setRecommendedTrails(trailRes?.data || []);
       setRecentProgress(progressRes?.data ? (progressRes.data as any[]).filter((p: any) => p.trail) : []);
       setLibraryResources(libRes?.data || []);
-      let newEssayStats = { count: 0, average: 0, latest: null as any };
+      // Média só da banca que o aluno treina agora. Misturar ENEM (0-1000) com
+      // FUVEST (0-50) daria um número em escala nenhuma: três redações de 800 e
+      // uma de 45 viram 611, que parece uma queda brutal e não significa nada.
+      let newEssayStats = { count: 0, average: 0, max: BANCA_ENEM.totalMax, banca: BANCA_ENEM.label, latest: null as any };
       if (essayData.length > 0) {
-        const scoredEssays = essayData.filter((e: any) => e.score !== null && e.score > 0);
-        const avg = scoredEssays.length > 0 ? scoredEssays.reduce((acc: number, curr: any) => acc + Number(curr.score), 0) / scoredEssays.length : 0;
-        newEssayStats = { count: essayData.length, average: Math.round(avg), latest: essayData[0] };
+        const ativa = resumoDaBancaAtiva(essayData as any);
+        newEssayStats = {
+          count: essayData.length,
+          average: ativa?.resumo.media != null ? Math.round(ativa.resumo.media) : 0,
+          max: ativa?.banca.totalMax ?? BANCA_ENEM.totalMax,
+          banca: ativa?.banca.label ?? BANCA_ENEM.label,
+          latest: essayData[0],
+        };
       }
       setEssayStats(newEssayStats);
       let newExamStats = { totalAssessed: 0, averageScore: 0, history: [] as any[] };
@@ -846,7 +859,7 @@ export default function DashboardHome() {
           <div className="grid grid-cols-3 gap-3">
             {[
               { label: "Acertos", value: examStats?.averageScore || 0, suffix: "%",    icon: BrainCircuit },
-              { label: "Redação", value: essayStats?.average || 0,     suffix: " pts", icon: FilePenLine  },
+              { label: "Redação", value: essayStats?.average || 0,     suffix: ` / ${essayStats?.max ?? BANCA_ENEM.totalMax}`, icon: FilePenLine  },
               { label: "Trilhas", value: recentProgress.length,        suffix: "",     icon: PlayCircle   },
             ].map((stat, i) => (
               <motion.div key={stat.label}
@@ -1145,7 +1158,8 @@ export default function DashboardHome() {
             </div>
             <div className="bg-accent/5 rounded-xl p-2.5 text-center">
               <span className="text-2xl font-black text-accent">{essayStats?.average || 0}</span>
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Média</p>
+              <span className="text-[10px] font-bold text-slate-400">/{essayStats?.max ?? BANCA_ENEM.totalMax}</span>
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Média · {essayStats?.banca ?? BANCA_ENEM.label}</p>
             </div>
           </div>
         </div>
@@ -1301,7 +1315,8 @@ export default function DashboardHome() {
               </div>
               <div className="bg-gradient-to-br from-accent/5 to-primary/5 rounded-2xl p-4 text-center border border-accent/10">
                 <span className="text-3xl font-black text-accent">{essayStats?.average || 0}</span>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Média pts</p>
+                <span className="text-xs font-bold text-slate-400">/{essayStats?.max ?? BANCA_ENEM.totalMax}</span>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Média · {essayStats?.banca ?? BANCA_ENEM.label}</p>
               </div>
             </div>
             {essayStats?.latest ? (
@@ -1318,6 +1333,7 @@ export default function DashboardHome() {
                 {essayStats.latest.score && (
                   <div className="shrink-0 bg-white shadow border border-muted/20 px-2.5 py-1.5 rounded-xl">
                     <span className="font-black text-primary text-sm">{essayStats.latest.score}</span>
+                    <span className="text-[10px] font-bold text-slate-400">/{getBanca(essayStats.latest.banca).totalMax}</span>
                   </div>
                 )}
               </div>

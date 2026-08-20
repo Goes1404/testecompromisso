@@ -3,6 +3,8 @@ import { respostaFalhaIA } from '@/lib/ia-status';
 import { OpenAI } from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import { getAuthUser } from '@/lib/server-auth';
+import { resumoDaBancaAtiva } from '@/lib/redacao-metrics';
+import { BANCA_ENEM } from '@/lib/bancas';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +84,7 @@ export async function POST(request: Request) {
         .gte('created_at', weekStartISO),
       supabase
         .from('essay_submissions')
-        .select('score, created_at')
+        .select('score, created_at, banca')
         .eq('user_id', userId)
         .gte('created_at', weekStartISO),
       supabase
@@ -142,7 +144,19 @@ export async function POST(request: Request) {
     })).sort((a, b) => a.accuracy - b.accuracy);
 
     const weakestSubjects = subjectStats.slice(0, 3);
-    const essayAvg = essays.length > 0 ? Math.round(essays.reduce((s, e: any) => s + (e.score ?? 0), 0) / essays.length) : 0;
+    // Média da banca que o aluno treinou nesta semana, na escala dela.
+    //
+    // Antes esta linha somava tudo e dividia pelo total. Com duas bancas isso
+    // mistura 0-1000 com 0-50, e o número vai direto para o prompt da Aurora —
+    // ela elogiaria ou alertaria na régua errada. Também incluía os zeros, ao
+    // contrário das outras médias da plataforma; `mediaRedacao` uniformiza:
+    // anuladas ficam fora e são contadas ao lado, porque medem procedimento e
+    // não escrita.
+    const redacaoSemana = resumoDaBancaAtiva(essays as any);
+    const essayAvg = redacaoSemana?.resumo.media != null ? Math.round(redacaoSemana.resumo.media) : 0;
+    const essayMax = redacaoSemana?.banca.totalMax ?? BANCA_ENEM.totalMax;
+    const essayBanca = redacaoSemana?.banca.label ?? BANCA_ENEM.label;
+    const essayAnuladas = redacaoSemana?.resumo.anuladas ?? 0;
     const examAvg = exams.length > 0 ? Math.round(exams.reduce((s, e: any) => s + (e.score ?? 0), 0) / exams.length) : 0;
 
     const metrics = {
@@ -151,6 +165,9 @@ export async function POST(request: Request) {
       accuracy,
       essaysCount: essays.length,
       essayAvg,
+      essayMax,
+      essayBanca,
+      essayAnuladas,
       examsCount: exams.length,
       examAvg,
       journalEntries: journal.length,
@@ -168,7 +185,7 @@ Gere um resumo semanal motivacional e estratégico para o aluno **${profile?.nam
 
 Métricas da semana:
 - Questões respondidas: ${totalAnswered} (${accuracy}% de acerto)
-- Redações enviadas: ${essays.length} (média ${essayAvg})
+- Redações enviadas: ${essays.length} — banca ${essayBanca}, média ${essayAvg} de ${essayMax}${essayAnuladas > 0 ? ` (${essayAnuladas} anulada${essayAnuladas > 1 ? 's' : ''}, fora da média)` : ''}. A nota máxima possível nesta banca é ${essayMax} — interprete a média nessa escala, nunca em outra.
 - Simulados/Provas: ${exams.length} (média ${examAvg})
 - Flashcards revisados: ${flashcards.length}
 - XP conquistado na semana: ${xpSemana}

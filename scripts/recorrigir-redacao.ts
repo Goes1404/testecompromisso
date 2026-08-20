@@ -18,6 +18,7 @@ import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import { config } from 'dotenv';
 import { corrigirRedacao } from '../src/lib/essay-grader';
+import { getBanca, type Banca } from '../src/lib/bancas';
 
 config({ path: '.env.local' });
 
@@ -45,23 +46,34 @@ function ia() {
  * Reconstrói a proposta a partir do texto do aluno.
  *
  * O risco desta operação é circular: se o modelo inventa um tema colado no que
- * o aluno escreveu, a fuga ao tema fica impossível por construção e a nota de
- * C2 sobe artificialmente. Por isso o prompt pede o RECORTE, no formato de uma
- * proposta do ENEM — que é mais amplo que o texto e admite abordagens que o
- * aluno não tomou.
+ * o aluno escreveu, a fuga ao tema fica impossível por construção e a nota do
+ * critério de tema sobe artificialmente. Por isso o prompt pede o RECORTE —
+ * mais amplo que o texto, admitindo abordagens que o aluno não tomou.
+ *
+ * O formato do recorte muda com a banca: o ENEM propõe um problema social a
+ * enfrentar, a FUVEST um recorte conceitual a pensar. Inferir no molde errado
+ * devolveria o aluno a uma proposta que não é da prova dele.
  */
-async function inferirTema(openai: OpenAI, texto: string): Promise<{ tema: string; justificativa: string }> {
+async function inferirTema(
+  openai: OpenAI,
+  texto: string,
+  banca: Banca,
+): Promise<{ tema: string; justificativa: string }> {
   const r = await openai.chat.completions.create({
     model: 'gpt-4o',
     messages: [
       {
         role: 'system',
         content:
-          'Você recebe uma redação dissertativo-argumentativa de um aluno brasileiro e precisa reconstruir a ' +
-          'PROPOSTA DE REDAÇÃO do ENEM que ela responde.\n\n' +
+          `Você recebe uma dissertação de um aluno brasileiro e precisa reconstruir a ` +
+          `PROPOSTA DE REDAÇÃO da ${banca.label} que ela responde.\n\n` +
           'Regras:\n' +
-          '- O tema deve ter a forma de uma proposta oficial do ENEM: um recorte social amplo, ex.: ' +
-          '"Desafios para o combate ao desperdício de alimentos no Brasil".\n' +
+          (banca.exigeIntervencao
+            ? '- O tema deve ter a forma de uma proposta oficial do ENEM: um recorte social amplo, ex.: ' +
+              '"Desafios para o combate ao desperdício de alimentos no Brasil".\n'
+            : '- O tema deve ter a forma de uma proposta da FUVEST: um recorte CONCEITUAL, que admita tese ' +
+              'filosófica e reflexão crítica, ex.: "Memória e esquecimento: o que uma sociedade escolhe guardar?". ' +
+              'NÃO formule como problema social a ser resolvido.\n') +
           '- NÃO resuma o texto do aluno nem copie a tese dele. O tema é mais AMPLO que a redação: outros alunos ' +
           'poderiam respondê-lo por caminhos diferentes.\n' +
           '- Se o texto tratar de vários assuntos sem foco, escolha o predominante.\n' +
@@ -82,7 +94,7 @@ async function inferirTema(openai: OpenAI, texto: string): Promise<{ tema: strin
 async function listar() {
   const { data, error } = await db()
     .from('essay_submissions')
-    .select('id, user_id, theme, content, score, created_at')
+    .select('id, user_id, theme, content, score, created_at, banca')
     .order('created_at', { ascending: false });
   if (error) throw error;
 
@@ -96,7 +108,11 @@ async function listar() {
   for (const e of data ?? []) {
     const nome = nomes.get(e.user_id) ?? '(sem nome)';
     console.log(
-      `${e.id}  ${String(e.created_at).slice(0, 10)}  ${String(e.score).padStart(4)} pts  ` +
+      // A escala junto da nota: numa lista com as duas bancas, "45" e "800"
+      // lado a lado sem teto são ilegíveis.
+      `${e.id}  ${String(e.created_at).slice(0, 10)}  ` +
+      `${String(e.score).padStart(4)}/${String(getBanca(e.banca).totalMax).padEnd(4)} ` +
+      `${getBanca(e.banca).label.padEnd(6)}  ` +
       `${String((e.content || '').length).padStart(5)} chars  ${nome}`,
     );
     console.log(`    tema gravado: ${e.theme}`);
@@ -109,20 +125,26 @@ async function recorrigir(id: string, gravar: boolean) {
 
   const { data: essay, error } = await supabase
     .from('essay_submissions')
-    .select('id, user_id, theme, content, score, result_data, created_at')
+    .select('id, user_id, theme, content, score, result_data, created_at, banca')
     .eq('id', id)
     .single();
   if (error) throw error;
   if (!essay?.content) throw new Error('Redação sem conteúdo.');
 
+  // A banca da LINHA manda. Recorrigir com outra régua trocaria uma nota de
+  // 0-50 por uma de 0-1000 numa linha marcada como FUVEST — dado corrompido em
+  // silêncio, e este script escreve em produção com service role.
+  const bancaDaLinha = getBanca(essay.banca);
+
   console.log(`\n── Redação ${id} ──`);
   console.log(`Enviada em .... ${String(essay.created_at).slice(0, 10)}`);
+  console.log(`Banca ......... ${bancaDaLinha.label} (0–${bancaDaLinha.totalMax})`);
   console.log(`Tema gravado .. ${essay.theme}`);
   console.log(`Nota atual .... ${essay.score}`);
   console.log(`Tamanho ....... ${essay.content.length} caracteres`);
 
   console.log('\n1) Inferindo o tema a partir do texto…');
-  const { tema, justificativa } = await inferirTema(openai, essay.content);
+  const { tema, justificativa } = await inferirTema(openai, essay.content, bancaDaLinha);
   console.log(`   Tema inferido: ${tema}`);
   console.log(`   Justificativa: ${justificativa}`);
 
@@ -130,7 +152,7 @@ async function recorrigir(id: string, gravar: boolean) {
   // Sem motivadores: a proposta original se perdeu, e inventar textos de apoio
   // criaria um alvo de "cópia" que não existiu na prova real do aluno.
   const resultado = await corrigirRedacao(
-    { theme: tema, text: essay.content, motivadores: [] },
+    { theme: tema, text: essay.content, motivadores: [], banca: bancaDaLinha.id },
     openai,
   );
 
@@ -142,7 +164,7 @@ async function recorrigir(id: string, gravar: boolean) {
     for (const [k, v] of Object.entries(resultado.competencies)) {
       console.log(`  ${k.toUpperCase()}: ${String((v as any).score).padStart(3)}  ${(v as any).feedback.slice(0, 110)}…`);
     }
-    console.log(`  TOTAL: ${resultado.total_score}  (antes: ${essay.score})`);
+    console.log(`  TOTAL: ${resultado.total_score} / ${bancaDaLinha.totalMax}  (antes: ${essay.score})`);
   }
 
   const banca: any = (resultado as any)._banca;
@@ -150,7 +172,7 @@ async function recorrigir(id: string, gravar: boolean) {
     console.log('\n── Banca ──');
     banca.corretores.forEach((c: any, i: number) => {
       const usada = banca.usadas?.includes(i) ? 'usada    ' : 'descartada';
-      console.log(`  Corretor ${i + 1} [${usada}]: ${c.vetor.join(' · ')} = ${c.total}`);
+      console.log(`  Corretor ${i + 1} [${usada}]: ${c.vetor.join(' · ')} = ${c.total} / ${bancaDaLinha.totalMax}`);
     });
     console.log(`  Discrepância: ${banca.houveDiscrepancia ? banca.motivos.join('; ') : 'nenhuma'}`);
   }
@@ -160,12 +182,30 @@ async function recorrigir(id: string, gravar: boolean) {
     console.log('\n── Análise determinística ──');
     console.log(`  ${analise.palavras} palavras · ~${analise.linhasEstimadas} linhas · ${analise.paragrafos} parágrafos`);
     console.log(`  Conectivos: ${analise.conectivos.total} (${analise.conectivos.distintos} distintos)`);
-    console.log(`  Intervenção: ${analise.intervencao.elementos}/5 elementos`);
+    if (bancaDaLinha.exigeIntervencao) {
+      console.log(`  Intervenção: ${analise.intervencao.elementos}/5 elementos`);
+    }
   }
 
   if (!gravar) {
     console.log('\n(simulação — nada foi gravado. Use --gravar para aplicar.)');
     return;
+  }
+
+  // Guarda dura: a correção precisa ter saído na régua da linha. Se por algum
+  // motivo a banca resolvida divergir, abortar é melhor que gravar um número
+  // que ninguém consegue reinterpretar depois — a coluna `banca` diria uma
+  // coisa e `score` outra, sem nada no dado que denuncie a inconsistência.
+  const bancaDoResultado = getBanca((resultado as any).banca);
+  if (bancaDoResultado.id !== bancaDaLinha.id) {
+    throw new Error(
+      `Abortado: a linha é ${bancaDaLinha.id} mas a correção saiu como ${bancaDoResultado.id}. Nada foi gravado.`,
+    );
+  }
+  if (resultado.total_score > bancaDaLinha.totalMax) {
+    throw new Error(
+      `Abortado: nota ${resultado.total_score} acima do teto ${bancaDaLinha.totalMax} da ${bancaDaLinha.label}. Nada foi gravado.`,
+    );
   }
 
   const { error: upErr } = await supabase

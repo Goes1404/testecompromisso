@@ -31,6 +31,7 @@ import { supabase } from "@/app/lib/supabase";
 import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { RadarChartPremium, AreaChartPremium } from "@/components/charts/premium";
+import { getBanca } from "@/lib/bancas";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -196,7 +197,7 @@ export default function AdminStudentProfilePage() {
             .limit(10),
           supabase
             .from("essay_submissions")
-            .select("id, theme, score, status, created_at")
+            .select("id, theme, score, status, created_at, banca")
             .eq("user_id", studentId)
             .order("created_at", { ascending: false })
             .limit(8),
@@ -705,7 +706,18 @@ export default function AdminStudentProfilePage() {
                     </div>
                     <div className="shrink-0 flex flex-col items-end gap-1">
                       {essay.score != null ? (
-                        <span className="font-black text-primary italic">{essay.score} pts</span>
+                        <div className="flex items-center gap-1.5">
+                          {/* A escala vem junto: um 45 é nota alta na FUVEST e
+                              quase zero no ENEM. Sem o teto, o professor lê o
+                              número na régua errada. */}
+                          <span className="font-black text-primary italic">
+                            {essay.score}
+                            <span className="text-[10px] font-bold text-slate-400"> / {getBanca(essay.banca).totalMax}</span>
+                          </span>
+                          <Badge variant="outline" className="text-[8px] font-black uppercase border-slate-200 text-slate-500 bg-slate-50">
+                            {getBanca(essay.banca).label}
+                          </Badge>
+                        </div>
                       ) : (
                         <Badge variant="outline" className="text-[9px] font-black uppercase border-amber-200 text-amber-600 bg-amber-50">
                           Pendente

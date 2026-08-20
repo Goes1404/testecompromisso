@@ -566,7 +566,7 @@ export default function ReportCardPage() {
           // `report_card_entries*`, e nada aqui escreve na nota da secretaria.
           supabase
             .from("essay_submissions")
-            .select("score, created_at, theme")
+            .select("score, created_at, theme, banca")
             .eq("user_id", user.id)
             .eq("banca", "fuvest")
             .not("score", "is", null)
