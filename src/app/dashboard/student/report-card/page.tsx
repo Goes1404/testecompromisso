@@ -17,16 +17,21 @@ import {
   Sparkles,
   TrendingUp,
   Trophy,
+  PenTool,
 } from "lucide-react";
 import {
   ENEM_SUBJECTS,
   LABELS,
   avg,
+  mediaRedacao,
   pct,
   subjectScores,
   type EnemReportCard,
   type EtecReportCard,
+  type MediaRedacao,
+  type RedacaoTreino,
 } from "./report-card-lib";
+import { BANCA_FUVEST } from "@/lib/bancas";
 
 // Recharts (~100 kB gzip) só é necessário no modo "completo" — carrega sob
 // demanda pra não pesar o primeiro paint no celular (regra da casa: recharts
@@ -364,6 +369,78 @@ function examTypeTag(examType: string): { label: string; chip: string } | null {
  * Só as 2 primeiras tentativas de cada prova contam (as demais são treino e
  * ficam no gráfico de evolução, dentro da tela de Provas).
  */
+/**
+ * Redação FUVEST treinada na plataforma.
+ *
+ * Fica numa seção PRÓPRIA, separada do `ScoreCard` de redação do boletim, e a
+ * separação é o ponto: `report_card_entries*.redacao_score` é a nota oficial
+ * que a secretaria lançou por planilha e um admin aprovou; esta aqui é treino
+ * corrigido por IA, que o aluno refaz quantas vezes quiser. Fundir as duas
+ * numa linha só apagaria de quem é cada nota — por isso nada aqui escreve em
+ * `redacao_score`.
+ */
+function RedacaoFuvestSection({ resumo }: { resumo: MediaRedacao }) {
+  if (resumo.consideradas === 0 && resumo.anuladas === 0) return null;
+
+  return (
+    <section className="rounded-[1.75rem] border border-blue-100 bg-white p-6 shadow-md">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <PenTool className="h-5 w-5 text-blue-600" />
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+            Redacao {BANCA_FUVEST.label}
+          </h3>
+        </div>
+        <span className="shrink-0 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-blue-700">
+          Treino na plataforma
+        </span>
+      </div>
+      <p className="mt-2 text-xs font-semibold text-slate-500">
+        Corrigida pela Aurora nos {BANCA_FUVEST.criterios.length} eixos da {BANCA_FUVEST.label},
+        na escala de 0 a {BANCA_FUVEST.totalMax}. Nao substitui a nota de redacao lancada pela secretaria.
+      </p>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-blue-700">Media</p>
+          <p className="mt-1 text-2xl font-black italic leading-none text-slate-800">
+            {resumo.media ?? "--"}
+            <span className="text-xs font-bold text-slate-400"> / {BANCA_FUVEST.totalMax}</span>
+          </p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">
+            {resumo.consideradas} {resumo.consideradas === 1 ? "redacao" : "redacoes"}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Melhor</p>
+          <p className="mt-1 text-2xl font-black italic leading-none text-slate-800">
+            {resumo.melhor ?? "--"}
+            <span className="text-xs font-bold text-slate-400"> / {BANCA_FUVEST.totalMax}</span>
+          </p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">Maior nota ate agora</p>
+        </div>
+
+        <div className="col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:col-span-1">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Ultima</p>
+          <p className="mt-1 text-2xl font-black italic leading-none text-slate-800">
+            {resumo.ultima ?? "--"}
+            <span className="text-xs font-bold text-slate-400"> / {BANCA_FUVEST.totalMax}</span>
+          </p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">Envio mais recente</p>
+        </div>
+      </div>
+
+      {resumo.anuladas > 0 && (
+        <p className="mt-3 text-[10px] font-semibold text-amber-700">
+          {resumo.anuladas} {resumo.anuladas === 1 ? "redacao anulada" : "redacoes anuladas"} (fuga ao tema,
+          copia ou texto insuficiente) — fora da media, porque medem procedimento e nao escrita.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function PlatformSimuladosSection({ groups }: { groups: SimGroup[] }) {
   if (groups.length === 0) return null;
   return (
@@ -449,6 +526,7 @@ export default function ReportCardPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const [entries, setEntries] = useState<any[]>([]);
   const [simGroups, setSimGroups] = useState<SimGroup[]>([]);
+  const [redacoesFuvest, setRedacoesFuvest] = useState<RedacaoTreino[]>([]);
   const [loading, setLoading] = useState(true);
   const [track, setTrack] = useState<"enem" | "etec">("enem");
   const [mode, setMode] = useState<"simple" | "complete">("simple");
@@ -464,7 +542,7 @@ export default function ReportCardPage() {
         setTrack(currentTrack);
 
         const table = currentTrack === "etec" ? "report_card_entries" : "report_card_entries_enem";
-        const [entriesRes, attemptsRes, grantsRes] = await Promise.all([
+        const [entriesRes, attemptsRes, grantsRes, redacoesRes] = await Promise.all([
           supabase
             .from(table)
             .select("*")
@@ -483,6 +561,16 @@ export default function ReportCardPage() {
             .from("exam_report_attempt_grants")
             .select("exam_id, max_attempts")
             .eq("user_id", user.id),
+          // Redações de treino da FUVEST. Fonte totalmente separada do
+          // boletim oficial: vem de `essay_submissions`, não de
+          // `report_card_entries*`, e nada aqui escreve na nota da secretaria.
+          supabase
+            .from("essay_submissions")
+            .select("score, created_at, theme")
+            .eq("user_id", user.id)
+            .eq("banca", "fuvest")
+            .not("score", "is", null)
+            .order("created_at", { ascending: false }),
         ]);
 
         // Limite de tentativas que contam por prova (padrão 2; grant aumenta).
@@ -493,6 +581,13 @@ export default function ReportCardPage() {
 
         if (!entriesRes.error && active) {
           setEntries(entriesRes.data ?? []);
+        }
+
+        // A coluna `banca` só existe depois da migration; um erro aqui não
+        // pode derrubar o boletim inteiro, que é a tela que o aluno abre para
+        // ver as notas oficiais.
+        if (!redacoesRes.error && active) {
+          setRedacoesFuvest((redacoesRes.data ?? []) as RedacaoTreino[]);
         }
 
         if (!attemptsRes.error && active) {
@@ -536,6 +631,7 @@ export default function ReportCardPage() {
   }, [user, profile, authLoading]);
 
   const enemEntries = useMemo(() => (track === "enem" ? (entries as EnemReportCard[]) : []), [entries, track]);
+  const resumoRedacaoFuvest = useMemo(() => mediaRedacao(redacoesFuvest), [redacoesFuvest]);
   const latestEnem = enemEntries[enemEntries.length - 1];
 
   if (loading || authLoading) {
@@ -656,6 +752,8 @@ export default function ReportCardPage() {
           </div>
         </div>
       )}
+
+      <RedacaoFuvestSection resumo={resumoRedacaoFuvest} />
 
       <PlatformSimuladosSection groups={simGroups} />
 

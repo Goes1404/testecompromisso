@@ -129,6 +129,51 @@ Todas as tabelas têm RLS ativo. Filtre sempre por `user_id` ou `role`. Nunca ex
 - Server Components por padrão. `"use client"` apenas quando há estado/interatividade.
 - Recharts e qualquer lib que acesse `window`/`document` deve usar `dynamic(..., { ssr: false })`.
 
+### ✍️ Redação: duas bancas, um motor
+
+O motor de correção atende **ENEM e FUVEST**, e a diferença entre elas é **dado, não
+código**: `src/lib/bancas.ts` é a fonte única de verdade (mesmo molde de `exam-types.ts`).
+
+| | ENEM | FUVEST |
+|---|---|---|
+| Critérios | 5 competências (`c1`–`c5`) × 200 | 3 eixos (`dt`, `es`, `ex`) × 50 |
+| Grade do corretor | 0/40/80/120/160/200 | 0/10/20/30/40/50 |
+| Nota final | **soma** → 0–1000 | **média** → 0–50 |
+| Proposta de intervenção | obrigatória (C5) | **não existe** |
+
+**Regras ao mexer aqui:**
+
+1. **A banca é sempre o último parâmetro e sempre opcional, com default ENEM.**
+   `snapCompetency`, `total`, `motivosDeDiscrepancia`, `aplicarProtocoloInep`,
+   `analisarRedacao` e `evidenciaParaPrompt` seguem esse contrato. É o que faz
+   `scripts/test-inep-banca.ts` continuar passando sem alteração — ele é a prova de
+   não-regressão do ENEM.
+2. **Nunca ramifique por `banca.id` dentro do motor.** Se precisa saber "qual critério é
+   o de norma" ou "quais a cópia contamina", isso vira campo da `Banca`
+   (`criterioNorma`, `criteriosDeConteudo`), não `if`.
+3. **Os prompts são calibrados.** O do ENEM foi ajustado contra correções reais de
+   professor — reescrever por estilo muda nota de aluno. Ao mover, confira byte a byte.
+4. **A FUVEST nunca pode cobrar proposta de intervenção.** O modelo conhece muito mais
+   ENEM que FUVEST e importa o hábito sozinho; por isso existe regra dura no prompt *e*
+   o bloco de intervenção é omitido da evidência (`banca.exigeIntervencao`).
+5. **Escala na UI é sempre proporcional ao teto**, nunca valor absoluto. `scoreColor`
+   usa 80%/60%/40% — com cortes fixos em 800/600/400, um 48 de 50 da FUVEST cairia na
+   faixa vermelha.
+6. **Gráfico e histórico são separados por banca.** Misturar 0–1000 e 0–50 no mesmo eixo
+   achata a curva da FUVEST contra o chão.
+7. **`essay_submissions.banca`** (DEFAULT `'enem'`) diz como ler `score` e
+   `competencies`. O CHECK de `score` continua `0..1000` de propósito: 0–50 cabe dentro,
+   e foi um CHECK de escala errado que barrou toda redação real por dois meses.
+8. **A proposta padrão da FUVEST** (`src/lib/propostas/fuvest-nostalgia.ts`) é constante
+   de código porque os textos motivadores alimentam `detectarCopia` — um motivador com
+   palavra trocada faz a detecção errar em silêncio.
+
+**No boletim**, a média da FUVEST tem seção própria, alimentada por `essay_submissions`.
+Ela **não** escreve em `report_card_entries*.redacao_score`: aquela é a nota oficial da
+secretaria, com fila de aprovação; esta é treino corrigido por IA. Anuladas (nota 0) ficam
+fora da média — medem procedimento, não escrita — e são contadas ao lado (`mediaRedacao()`
+em `report-card-lib.ts`).
+
 ### IA Extraction (Motor de Provas)
 - Se o enunciado original diz "utilize o texto para responder as questões X a Y", a IA **deve** repetir o `supporting_text` integralmente em **cada** objeto de questão do JSON gerado.
 - Se houver referência a imagem/gráfico, insira `[IMAGEM_PENDENTE]` no enunciado.
