@@ -14,6 +14,8 @@
  * Todo o resto vira evidência no prompt, e quem decide a nota continua sendo a
  * banca simulada.
  */
+import { BANCA_ENEM, type Banca } from '@/lib/bancas';
+
 
 /** Conectivos e operadores argumentativos usados na avaliação de C4. */
 const CONECTIVOS = [
@@ -106,7 +108,7 @@ const STOPWORDS = new Set([
  * caractere faria a mesma quantidade de linhas render estimativas diferentes só
  * pelo estilo do aluno.
  */
-const PALAVRAS_POR_LINHA = 11;
+const PALAVRAS_POR_LINHA = BANCA_ENEM.palavrasPorLinha;
 
 export type ConectivoUso = { termo: string; ocorrencias: number };
 
@@ -267,14 +269,26 @@ function analisarIntervencao(texto: string, paragrafos: string[]): EssayAnalysis
   return { agente, acao, meio, efeito, detalhamento, elementos };
 }
 
-/** Roda a análise completa. `motivadores` são os textos de apoio da proposta. */
-export function analisarRedacao(texto: string, motivadores: string[] = []): EssayAnalysis {
+/**
+ * Roda a análise completa. `motivadores` são os textos de apoio da proposta.
+ *
+ * A banca define quantas palavras cabem numa linha e a partir de quantas linhas
+ * o texto é insuficiente. A heurística de intervenção roda SEMPRE, mesmo em
+ * banca que não a exige: é regex sobre dois parágrafos, custa quase nada, e
+ * mantê-la no tipo evita tornar `intervencao` opcional em todos os
+ * consumidores. Quem decide se ela chega ao corretor é `evidenciaParaPrompt`.
+ */
+export function analisarRedacao(
+  texto: string,
+  motivadores: string[] = [],
+  banca: Banca = BANCA_ENEM,
+): EssayAnalysis {
   const limpo = texto.trim();
   const norm = normalizar(limpo);
   const palavras = palavrasDe(limpo);
   const paragrafos = limpo.split(/\n\s*\n|\n/).map(p => p.trim()).filter(p => p.length > 0);
 
-  const linhasEstimadas = Math.max(1, Math.ceil(palavras.length / PALAVRAS_POR_LINHA));
+  const linhasEstimadas = Math.max(1, Math.ceil(palavras.length / banca.palavrasPorLinha));
 
   // ── C4: conectivos ──
   const usos: ConectivoUso[] = [];
@@ -310,7 +324,7 @@ export function analisarRedacao(texto: string, motivadores: string[] = []): Essa
     palavras: palavras.length,
     paragrafos: paragrafos.length,
     linhasEstimadas,
-    textoInsuficiente: linhasEstimadas <= 7,
+    textoInsuficiente: linhasEstimadas <= banca.linhasInsuficientes,
 
     fracaoCopiada: copia.fracao,
     trechosCopiados: copia.trechos,
@@ -336,7 +350,7 @@ export function analisarRedacao(texto: string, motivadores: string[] = []): Essa
  * corretor continua livre para discordar, mas não pode mais afirmar que "há
  * poucos conectivos" quando existem doze, nem deixar de ver uma cópia.
  */
-export function evidenciaParaPrompt(a: EssayAnalysis): string {
+export function evidenciaParaPrompt(a: EssayAnalysis, banca: Banca = BANCA_ENEM): string {
   const linhas: string[] = [
     'EVIDÊNCIA OBJETIVA (medida por análise textual determinística — são contagens exatas, não estimativas suas):',
     `- Extensão: ${a.palavras} palavras, ${a.caracteres} caracteres, ${a.paragrafos} parágrafos, ~${a.linhasEstimadas} linhas manuscritas.`,
@@ -358,7 +372,15 @@ export function evidenciaParaPrompt(a: EssayAnalysis): string {
     linhas.push(`- Marcas de informalidade/clichê detectadas: ${a.informalidades.map(t => `"${t}"`).join(', ')}.`);
   }
   if (a.fracaoCopiada > 0.05) {
-    linhas.push(`- ⚠️ ${(a.fracaoCopiada * 100).toFixed(0)}% do texto reproduz literalmente os textos motivadores. Trechos: ${a.trechosCopiados.map(t => `"${t}"`).join(' | ')}. O INEP desconsidera trechos copiados: avalie C2 e C3 apenas pelo que é autoral.`);
+    const criteriosDeConteudo = banca.criteriosDeConteudo.map(k => k.toUpperCase()).join(' e ');
+    linhas.push(`- ⚠️ ${(a.fracaoCopiada * 100).toFixed(0)}% do texto reproduz literalmente os textos motivadores. Trechos: ${a.trechosCopiados.map(t => `"${t}"`).join(' | ')}. Trechos copiados não contam como autoria: avalie ${criteriosDeConteudo} apenas pelo que é autoral.`);
+  }
+
+  // A FUVEST não pede proposta de intervenção. Mandar a contagem de elementos
+  // para o corretor dessa banca não é só ruído: é uma deixa para ele descontar
+  // por algo que a prova nunca cobrou.
+  if (!banca.exigeIntervencao) {
+    return linhas.join('\n');
   }
 
   const i = a.intervencao;
