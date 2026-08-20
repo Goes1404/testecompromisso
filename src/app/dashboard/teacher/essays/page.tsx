@@ -23,24 +23,41 @@ import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { getBanca, type Banca } from "@/lib/bancas";
 import { ptBR } from "date-fns/locale";
 
-const VALID_SCORES = [0, 40, 80, 120, 160, 200];
-const COMP_KEYS = ["c1", "c2", "c3", "c4", "c5"] as const;
-const COMP_SHORT: Record<string, string> = {
-  c1: "C1 · Norma",
-  c2: "C2 · Tema",
-  c3: "C3 · Argum.",
-  c4: "C4 · Coesão",
-  c5: "C5 · Interv.",
-};
+/**
+ * A grade de notas e os critérios vinham copiados aqui, divergindo de
+ * `inep-banca.ts`. Agora vêm de `src/lib/bancas.ts`, que é a mesma fonte que o
+ * motor usa — sem isso, a FUVEST corrigiria em três eixos enquanto esta tela
+ * continuaria oferecendo cinco competências de 0 a 200.
+ */
 
-/** Extrai as notas por competência que a IA atribuiu a uma submissão. */
-function aiComps(essay: any): Record<string, number> {
+/** Banca com que uma redação foi corrigida. Sem a coluna, é ENEM. */
+function bancaDe(essay: any): Banca {
+  return getBanca(essay?.banca);
+}
+
+/** Extrai as notas por critério que a IA atribuiu a uma submissão. */
+function aiComps(essay: any, banca: Banca = bancaDe(essay)): Record<string, number> {
   const src = essay?.result_data?.competencies || essay?.competencies || {};
   const out: Record<string, number> = {};
-  for (const k of COMP_KEYS) out[k] = Number(src?.[k]?.score ?? src?.[k] ?? 0) || 0;
+  for (const { key } of banca.criterios) out[key] = Number(src?.[key]?.score ?? src?.[key] ?? 0) || 0;
   return out;
+}
+
+/**
+ * Tolerância do viés, proporcional ao teto da banca.
+ *
+ * Os ±40 originais eram 4% dos 1000 do ENEM. Mantidos como fração, valem ±2 na
+ * FUVEST — usar 40 lá diria que a IA está calibrada mesmo errando o teto
+ * inteiro da prova.
+ */
+function toleranciaBias(banca: Banca) {
+  return Math.max(1, Math.round(banca.totalMax * 0.04));
+}
+function toleranciaBiasCriterio(banca: Banca) {
+  return Math.max(1, Math.round((banca.criterios[0]?.max ?? 200) * 0.04));
 }
 
 export default function AssessmentsGraderPage() {
@@ -55,33 +72,59 @@ export default function AssessmentsGraderPage() {
   // Notas humanas por competência para o aluno selecionado (calibração da IA).
   const [teacherComps, setTeacherComps] = useState<Record<string, number>>({});
 
+  // Banca da redação aberta. Define a grade de notas, os rótulos e como o
+  // total do professor é formado.
+  const bancaAtual = useMemo(() => bancaDe(selectedEssay), [selectedEssay]);
+
+  // Soma no ENEM, média na FUVEST — a mesma regra que o motor aplica à nota da
+  // IA. Somar os três eixos da FUVEST daria 150 numa prova que vale 50.
   const teacherTotal = useMemo(
-    () => COMP_KEYS.reduce((sum, k) => sum + (teacherComps[k] || 0), 0),
-    [teacherComps]
+    () => bancaAtual.combinarTotal(bancaAtual.criterios.map(c => teacherComps[c.key] || 0)),
+    [teacherComps, bancaAtual]
   );
 
   // ── Estatística de calibração: viés médio da IA vs. correção humana ──
-  const calibration = useMemo(() => {
-    const reviewed = submissions.filter(
+  //
+  // Agrupada POR BANCA. Um viés médio que misturasse ENEM (0-1000) e FUVEST
+  // (0-50) não teria significado: quarenta pontos de generosidade no ENEM e
+  // quarenta na FUVEST são erros de ordem completamente diferente.
+  const calibracoes = useMemo(() => {
+    const revisadas = submissions.filter(
       (s) => s.teacher_score !== null && s.teacher_score !== undefined
     );
-    if (reviewed.length === 0) return null;
-    let totalBias = 0;
-    const compBias: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
-    reviewed.forEach((s) => {
-      totalBias += Number(s.score || 0) - Number(s.teacher_score || 0);
-      const ai = aiComps(s);
-      const human = s.teacher_competencies || {};
-      for (const k of COMP_KEYS) {
-        compBias[k] += (ai[k] || 0) - (Number(human?.[k] ?? ai[k]) || 0);
-      }
+    if (revisadas.length === 0) return [];
+
+    const porBanca = new Map<string, any[]>();
+    revisadas.forEach((s) => {
+      const id = bancaDe(s).id;
+      porBanca.set(id, [...(porBanca.get(id) || []), s]);
     });
-    const n = reviewed.length;
-    return {
-      n,
-      avgBias: Math.round(totalBias / n),
-      compBias: Object.fromEntries(COMP_KEYS.map((k) => [k, Math.round(compBias[k] / n)])),
-    };
+
+    return [...porBanca.entries()].map(([id, lista]) => {
+      const banca = getBanca(id);
+      let totalBias = 0;
+      const compBias: Record<string, number> = {};
+      for (const { key } of banca.criterios) compBias[key] = 0;
+
+      lista.forEach((s) => {
+        totalBias += Number(s.score || 0) - Number(s.teacher_score || 0);
+        const ai = aiComps(s, banca);
+        const human = s.teacher_competencies || {};
+        for (const { key } of banca.criterios) {
+          compBias[key] += (ai[key] || 0) - (Number(human?.[key] ?? ai[key]) || 0);
+        }
+      });
+
+      const n = lista.length;
+      return {
+        banca,
+        n,
+        avgBias: Math.round(totalBias / n),
+        compBias: Object.fromEntries(
+          banca.criterios.map(({ key }) => [key, Math.round(compBias[key] / n)])
+        ) as Record<string, number>,
+      };
+    });
   }, [submissions]);
 
   const fetchSubmissions = useCallback(async () => {
@@ -234,54 +277,64 @@ export default function AssessmentsGraderPage() {
         </div>
       </div>
 
-      {/* ── Calibração da IA (viés médio vs. correção humana) ── */}
-      {calibration && (
-        <div className={`${selectedEssay ? "hidden lg:block" : "block"}`}>
-          <div className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Scale className="h-4 w-4 text-orange-500" />
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
-                Calibração da Aurora · {calibration.n} corrigidas
-              </p>
-              <Badge
-                className={`ml-auto border-none font-black text-[9px] uppercase px-2 ${
-                  Math.abs(calibration.avgBias) <= 40
-                    ? "bg-emerald-100 text-emerald-700"
-                    : calibration.avgBias > 0
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-blue-100 text-blue-700"
-                }`}
-              >
-                {calibration.avgBias > 0
-                  ? `+${calibration.avgBias} generosa`
-                  : calibration.avgBias < 0
-                  ? `${calibration.avgBias} rígida`
-                  : "calibrada"}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {COMP_KEYS.map((k) => {
-                const b = (calibration.compBias as any)[k] as number;
-                return (
-                  <div key={k} className="text-center bg-slate-50 border border-slate-100 rounded-xl py-2">
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-none">
-                      {COMP_SHORT[k]}
-                    </p>
-                    <p
-                      className={`text-sm font-black italic leading-none mt-1 ${
-                        Math.abs(b) <= 8 ? "text-emerald-600" : b > 0 ? "text-amber-600" : "text-blue-600"
-                      }`}
-                    >
-                      {b > 0 ? `+${b}` : b}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-[9px] font-medium text-slate-400 italic mt-2 leading-tight">
-              Diferença média (IA − professor). Positivo = IA generosa demais; negativo = rígida demais.
-            </p>
-          </div>
+      {/* ── Calibração da IA (viés médio vs. correção humana), uma por banca ── */}
+      {calibracoes.length > 0 && (
+        <div className={`${selectedEssay ? "hidden lg:block" : "block"} space-y-3`}>
+          {calibracoes.map((cal) => {
+            const tolTotal = toleranciaBias(cal.banca);
+            const tolCriterio = toleranciaBiasCriterio(cal.banca);
+            return (
+              <div key={cal.banca.id} className="bg-white shadow-sm border border-slate-200 rounded-[1.5rem] p-4">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <Scale className="h-4 w-4 text-orange-500" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600">
+                    Calibração da Aurora · {cal.banca.label} · {cal.n} corrigidas
+                  </p>
+                  <Badge
+                    className={`ml-auto border-none font-black text-[9px] uppercase px-2 ${
+                      Math.abs(cal.avgBias) <= tolTotal
+                        ? "bg-emerald-100 text-emerald-700"
+                        : cal.avgBias > 0
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {cal.avgBias > 0
+                      ? `+${cal.avgBias} generosa`
+                      : cal.avgBias < 0
+                      ? `${cal.avgBias} rígida`
+                      : "calibrada"}
+                  </Badge>
+                </div>
+                <div
+                  className="grid gap-2"
+                  style={{ gridTemplateColumns: `repeat(${cal.banca.criterios.length}, minmax(0, 1fr))` }}
+                >
+                  {cal.banca.criterios.map(({ key, short }) => {
+                    const b = cal.compBias[key] ?? 0;
+                    return (
+                      <div key={key} className="text-center bg-slate-50 border border-slate-100 rounded-xl py-2">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-none">
+                          {short}
+                        </p>
+                        <p
+                          className={`text-sm font-black italic leading-none mt-1 ${
+                            Math.abs(b) <= tolCriterio ? "text-emerald-600" : b > 0 ? "text-amber-600" : "text-blue-600"
+                          }`}
+                        >
+                          {b > 0 ? `+${b}` : b}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[9px] font-medium text-slate-400 italic mt-2 leading-tight">
+                  Diferença média (IA − professor). Positivo = IA generosa demais; negativo = rígida demais.
+                  Tolerância de ±{tolTotal} nesta escala de 0 a {cal.banca.totalMax}.
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -357,11 +410,17 @@ export default function AssessmentsGraderPage() {
                         <p className="text-[10px] font-bold text-slate-500 truncate italic mb-2 leading-tight">
                           "{item.theme}"
                         </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest">
-                            {item.score} pts
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest shrink-0">
+                            {/* A escala vem junto: sem ela, um 42 da FUVEST e
+                                um 42 do ENEM parecem a mesma nota, e são o
+                                oposto uma da outra. */}
+                            {item.score} / {bancaDe(item).totalMax}
                           </span>
-                          <span className="text-[8px] font-bold text-slate-500 uppercase">
+                          <Badge className="bg-slate-100 text-slate-500 border-none font-black text-[7px] uppercase px-1.5 h-4 shrink-0">
+                            {bancaDe(item).label}
+                          </Badge>
+                          <span className="text-[8px] font-bold text-slate-500 uppercase ml-auto shrink-0">
                             {format(new Date(item.created_at), "dd/MM HH:mm", { locale: ptBR })}
                           </span>
                         </div>
@@ -493,7 +552,7 @@ export default function AssessmentsGraderPage() {
                   )}
                 </div>
 
-                {/* Correção humana por competência (calibra a IA) */}
+                {/* Correção humana por critério (calibra a IA) */}
                 <div className="space-y-3 bg-white shadow-sm border border-slate-100 rounded-2xl p-4">
                   <div className="flex items-center justify-between">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-2">
@@ -501,21 +560,24 @@ export default function AssessmentsGraderPage() {
                     </Label>
                     <div className="flex items-center gap-2">
                       <span className="text-[9px] font-bold text-slate-400 uppercase">IA: {selectedEssay.score}</span>
+                      <Badge className="bg-slate-100 text-slate-600 border-none font-black text-[9px] uppercase px-2">
+                        {bancaAtual.label}
+                      </Badge>
                       <Badge className="bg-orange-500/15 text-orange-500 border-none font-black text-[10px] px-2">
-                        {teacherTotal} pts
+                        {teacherTotal} / {bancaAtual.totalMax}
                       </Badge>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {COMP_KEYS.map((k) => {
-                      const ai = aiComps(selectedEssay)[k];
+                    {bancaAtual.criterios.map(({ key: k, short }) => {
+                      const ai = aiComps(selectedEssay, bancaAtual)[k];
                       return (
                         <div key={k} className="flex items-center gap-2">
                           <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider w-[68px] shrink-0">
-                            {COMP_SHORT[k]}
+                            {short}
                           </span>
                           <div className="flex gap-1 flex-1">
-                            {VALID_SCORES.map((v) => {
+                            {bancaAtual.valoresValidos.map((v) => {
                               const active = teacherComps[k] === v;
                               return (
                                 <button

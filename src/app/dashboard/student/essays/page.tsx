@@ -38,29 +38,35 @@ import { trackMissionProgress } from "@/lib/missions";
 import { EssayHighlightedText, BancaMirror, AnulacaoAviso } from "@/components/EssayMirror";
 import { trackAcao, trackFalha } from "@/lib/telemetry";
 import { medir, TempoEsgotado } from "@/lib/perf";
+import { BANCAS, bancaSugeridaPara, isBancaId, type BancaId } from "@/lib/bancas";
+import { PROPOSTA_FUVEST_NOSTALGIA, motivadoresDaProposta } from "@/lib/propostas/fuvest-nostalgia";
 
 const EssayChart = dynamic(
   () =>
     import("recharts").then(({ AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }) => {
-      function Chart({ data }: { data: { date: string; score: number; theme?: string }[] }) {
+      function Chart({ data, domainMax, cor }: {
+        data: { date: string; score: number; theme?: string }[];
+        domainMax: number;
+        cor: string;
+      }) {
         return (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient id="colorScoreEssay" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#fb923c" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#fb923c" stopOpacity={0} />
+                <linearGradient id={`colorScoreEssay-${cor.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={cor} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={cor} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.4)" />
               <XAxis dataKey="date" stroke="rgba(100,116,139,0.5)" fontSize={10} tickLine={false} axisLine={false} dy={6} />
-              <YAxis stroke="rgba(100,116,139,0.5)" fontSize={10} tickLine={false} axisLine={false} domain={[0, 1000]} />
+              <YAxis stroke="rgba(100,116,139,0.5)" fontSize={10} tickLine={false} axisLine={false} domain={[0, domainMax]} />
               <Tooltip
                 content={({ active, payload, label }: any) =>
                   active && payload?.length ? (
                     <div className="bg-white border border-slate-100 p-3 rounded-2xl shadow-lg flex flex-col gap-1 max-w-[200px]">
                       <p className="font-bold text-slate-500 text-[10px]">{label}</p>
-                      <p className="font-black text-orange-500 text-lg">{payload[0].value} pts</p>
+                      <p className="font-black text-lg" style={{ color: cor }}>{payload[0].value} pts</p>
                       {payload[0].payload.theme && (
                         <p className="text-[9px] font-bold text-slate-500 leading-tight italic line-clamp-3 mt-1">
                           "{payload[0].payload.theme}"
@@ -70,7 +76,7 @@ const EssayChart = dynamic(
                   ) : null
                 }
               />
-              <Area type="monotone" dataKey="score" stroke="#fb923c" strokeWidth={2.5} fillOpacity={1} fill="url(#colorScoreEssay)" />
+              <Area type="monotone" dataKey="score" stroke={cor} strokeWidth={2.5} fillOpacity={1} fill={`url(#colorScoreEssay-${cor.replace("#", "")})`} />
             </AreaChart>
           </ResponsiveContainer>
         );
@@ -83,12 +89,28 @@ const EssayChart = dynamic(
   }
 );
 
-const COMPETENCY_LABELS: Record<string, { label: string; icon: any; color: string; bg: string }> = {
+/**
+ * Aparência de cada critério, por banca. As chaves batem com `banca.criterios`
+ * de `src/lib/bancas.ts` — o rótulo textual vem de lá; aqui vive só o que é
+ * visual (ícone e cor), que não faz sentido no motor de correção.
+ */
+const CRITERIO_UI: Record<string, { label: string; icon: any; color: string; bg: string }> = {
+  // ENEM
   c1: { label: "C1: Norma Culta", icon: PenTool, color: "text-blue-600", bg: "bg-blue-100 border-blue-200" },
   c2: { label: "C2: Estrutura", icon: FileSearch, color: "text-purple-600", bg: "bg-purple-100 border-purple-200" },
   c3: { label: "C3: Argumentação", icon: Target, color: "text-orange-500", bg: "bg-orange-100 border-orange-200" },
   c4: { label: "C4: Coesão", icon: LinkIcon, color: "text-cyan-600", bg: "bg-cyan-100 border-cyan-200" },
   c5: { label: "C5: Intervenção", icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-100 border-emerald-200" },
+  // FUVEST
+  dt: { label: "Desenvolvimento do tema", icon: Target, color: "text-indigo-600", bg: "bg-indigo-100 border-indigo-200" },
+  es: { label: "Estrutura", icon: FileSearch, color: "text-blue-600", bg: "bg-blue-100 border-blue-200" },
+  ex: { label: "Expressão", icon: PenTool, color: "text-cyan-600", bg: "bg-cyan-100 border-cyan-200" },
+};
+
+/** Cor da série de cada banca no gráfico — a mesma paleta de `exam-types.ts`. */
+const COR_DA_BANCA: Record<BancaId, string> = {
+  enem: "#fb923c",
+  fuvest: "#3b82f6",
 };
 
 type FullEntry = {
@@ -99,13 +121,22 @@ type FullEntry = {
   feedback: string | null;
   result_data: any;
   created_at: string;
+  banca?: string | null;
 };
 
-function scoreColor(score: number | null) {
+/**
+ * Faixa de cor por PROPORÇÃO do teto, não por valor absoluto.
+ *
+ * Os cortes eram 800/600/400 sobre 1000. Mantidos como fração (80%/60%/40%),
+ * eles valem igual nas duas bancas — sem isso, toda nota da FUVEST (teto 50)
+ * cairia na faixa vermelha, inclusive um 48.
+ */
+function scoreColor(score: number | null, totalMax: number) {
   if (!score) return { badge: "bg-slate-100 text-slate-500", ring: "#94a3b8" };
-  if (score >= 800) return { badge: "bg-emerald-100 text-emerald-700", ring: "#10b981" };
-  if (score >= 600) return { badge: "bg-blue-100 text-blue-700", ring: "#3b82f6" };
-  if (score >= 400) return { badge: "bg-amber-100 text-amber-700", ring: "#f59e0b" };
+  const fracao = score / totalMax;
+  if (fracao >= 0.8) return { badge: "bg-emerald-100 text-emerald-700", ring: "#10b981" };
+  if (fracao >= 0.6) return { badge: "bg-blue-100 text-blue-700", ring: "#3b82f6" };
+  if (fracao >= 0.4) return { badge: "bg-amber-100 text-amber-700", ring: "#f59e0b" };
   return { badge: "bg-red-100 text-red-700", ring: "#ef4444" };
 }
 
@@ -121,6 +152,12 @@ export default function StudentEssayPage() {
   // a um tema que nunca escolheu. Foi o que aconteceu com 2 das 3 redações
   // reais já enviadas: as duas gravadas com este tema exato, sobre outro
   // assunto, e zeradas por fuga.
+  // Modo de treino. Começa no ENEM e só muda por escolha explícita — a
+  // sugestão por `exam_target` e a preferência salva são aplicadas no efeito
+  // abaixo, depois que o perfil carrega.
+  const [bancaId, setBancaId] = useState<BancaId>('enem');
+  const banca = BANCAS[bancaId];
+
   const [theme, setTheme] = useState("");
   const [supportingTexts, setSupportingTexts] = useState<any[]>([]);
   const [customTheme, setCustomTheme] = useState(false);
@@ -151,8 +188,9 @@ export default function StudentEssayPage() {
     try {
       const { data, error } = await supabase
         .from("essay_submissions")
-        .select("id, theme, content, score, feedback, result_data, created_at")
+        .select("id, theme, content, score, feedback, result_data, created_at, banca")
         .eq("user_id", user.id)
+        .eq("banca", bancaId)
         .not("score", "is", null)
         .order("created_at", { ascending: false });
 
@@ -186,7 +224,7 @@ export default function StudentEssayPage() {
     } finally {
       setHistoryLoading(false);
     }
-  }, [user]);
+  }, [user, bancaId]);
 
   useEffect(() => {
     setCharCount(text.length);
@@ -196,9 +234,43 @@ export default function StudentEssayPage() {
     fetchHistory();
   }, [fetchHistory]);
 
+  // Modo inicial: preferência salva > sugestão do objetivo do aluno > ENEM.
+  // Roda uma vez por carregamento de perfil; a troca manual é sempre soberana.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const salvo = window.localStorage.getItem('redacao_banca');
+    setBancaId(isBancaId(salvo) ? salvo : bancaSugeridaPara(profile?.exam_target));
+  }, [profile]);
+
+  // No modo FUVEST a proposta é única e fixa: a do Prof. Fernando Martins.
+  //
+  // Isto NÃO recria o bug do tema pré-preenchido. Lá o campo vinha com um tema
+  // que o aluno nunca escolheu, escondido atrás de um card que não aplicava
+  // nada — e quem escrevia sobre outro assunto era zerado por fuga. Aqui a
+  // proposta é a única do modo, os cinco textos motivadores ficam à vista, e o
+  // card de confirmação acima do botão continua dizendo contra o que a redação
+  // será corrigida.
+  useEffect(() => {
+    if (bancaId !== 'fuvest') return;
+    const proposta = PROPOSTA_FUVEST_NOSTALGIA;
+    setTheme(proposta.tema);
+    setSupportingTexts(
+      motivadoresDaProposta(proposta).map((content, i) => ({
+        id: i + 1,
+        content,
+        source: proposta.textos[i].fonte,
+      })),
+    );
+    setCustomTheme(false);
+  }, [bancaId]);
+
   // Buscar tema da semana
   useEffect(() => {
     const fetchWeeklyTheme = async () => {
+      // No modo FUVEST a proposta é fixa (a do Prof. Fernando Martins) e já foi
+      // aplicada pelo efeito acima. Sobrescrevê-la com o tema da semana faria o
+      // aluno ler uma proposta e ser corrigido contra outra.
+      if (bancaId !== 'enem') return;
       try {
         const weekStart = (() => {
           const d = new Date();
@@ -234,7 +306,7 @@ export default function StudentEssayPage() {
       }
     };
     fetchWeeklyTheme();
-  }, [profile]);
+  }, [profile, bancaId]);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -362,6 +434,32 @@ export default function StudentEssayPage() {
     }
   };
 
+  const trocarBanca = (nova: BancaId) => {
+    if (nova === bancaId) return;
+
+    // Trocar de banca troca a proposta. Um texto escrito para a proposta
+    // anterior, corrigido contra esta, seria fuga ao tema — nota zero. Não dá
+    // para bloquear a troca (o aluno pode ter mudado de ideia antes de
+    // escrever), então o que se pode fazer é avisar.
+    if (text.trim().length > 0) {
+      toast({
+        title: `Modo ${BANCAS[nova].label}`,
+        description: "A proposta mudou. Confira o tema no card acima do botão antes de enviar — é contra ele que a correção avalia fuga.",
+      });
+    }
+
+    setBancaId(nova);
+    setResult(null);
+    // O ENEM não tem proposta fixa: volta a exigir escolha, como sempre exigiu.
+    if (nova === 'enem') {
+      setTheme("");
+      setSupportingTexts([]);
+      setCustomTheme(false);
+    }
+    if (typeof window !== 'undefined') window.localStorage.setItem('redacao_banca', nova);
+    trackAcao('redacao_troca_banca', { de: bancaId, para: nova });
+  };
+
   const handleSubmitEssay = async () => {
     // Antes o envio era bloqueado abaixo de 100 caracteres com um toast seco.
     // Agora o piso é só para não mandar texto vazio: entre isso e as 7 linhas
@@ -401,6 +499,7 @@ export default function StudentEssayPage() {
             text,
             supporting_texts: supportingTexts,
             origin: fromPhoto ? "ocr" : "typed",
+            banca: bancaId,
           }),
         }),
         { timeoutMs: 75_000, limiarLentoMs: 15_000, props: { chars: text.length } },
@@ -427,13 +526,14 @@ export default function StudentEssayPage() {
                   score: aiOutput.total_score,
                   feedback: aiOutput.general_feedback,
                   result_data: aiOutput,
+                  banca: bancaId,
                 }),
               }),
               { timeoutMs: 20_000, props: { chars: text.length } },
             );
             const saveData = await saveRes.json();
             if (!saveRes.ok || !saveData.success) throw new Error(saveData.error || "Erro ao salvar");
-            trackAcao("redacao_salva", { nota: aiOutput.total_score, chars: text.length });
+            trackAcao("redacao_salva", { nota: aiOutput.total_score, chars: text.length, banca: bancaId });
             
             // Incrementa missão de redação
             trackMissionProgress(supabase, user.id, 'submit_essay', 1).then(() => {});
@@ -482,7 +582,11 @@ export default function StudentEssayPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/80">Aurora IA Ativa</p>
               </div>
               <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">Lab de Redação</h1>
-              <p className="text-white/80 text-xs font-semibold mt-1">Auditoria por IA · critérios INEP</p>
+              <p className="text-white/80 text-xs font-semibold mt-1">
+                {banca.id === 'enem'
+                  ? 'Auditoria por IA · critérios INEP'
+                  : `Auditoria por IA · ${banca.criterios.length} eixos · nota 0–${banca.totalMax}`}
+              </p>
             </div>
             <div className="relative shrink-0">
               <svg className="h-16 w-16 -rotate-90" viewBox="0 0 56 56">
@@ -501,9 +605,41 @@ export default function StudentEssayPage() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-4">
+          {/* ── Seletor de banca ──
+              O aluno da trilha ENEM também presta FUVEST (ver `exam-types.ts`),
+              então os dois modos ficam sempre disponíveis: quem decide é ele,
+              não o cadastro. */}
+          <div
+            role="tablist"
+            aria-label="Banca de correção"
+            className="mt-4 flex gap-1 p-1 rounded-2xl bg-black/15 border border-white/15"
+          >
+            {(Object.keys(BANCAS) as BancaId[]).map((id) => {
+              const ativa = id === bancaId;
+              return (
+                <button
+                  key={id}
+                  role="tab"
+                  type="button"
+                  aria-selected={ativa}
+                  onClick={() => trocarBanca(id)}
+                  disabled={loadingGrading || loadingOcr}
+                  className={`flex-1 h-9 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all disabled:opacity-50 ${
+                    ativa
+                      ? "bg-white text-orange-600 shadow-sm"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {BANCAS[id].label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-2">
             <Button
               onClick={() => { setCustomTheme(!customTheme); setTheme(""); setSupportingTexts([]); setResult(null); setFromPhoto(false); }}
+              disabled={banca.id === 'fuvest'}
               className={`h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${
                 customTheme ? "bg-white/20 border-white/30 text-white" : "bg-transparent border-white/20 text-white/70 hover:text-white hover:bg-white/10"
               }`}
@@ -522,8 +658,40 @@ export default function StudentEssayPage() {
         </div>
       </div>
 
+      {/* ── Proposta padrão da FUVEST ──
+          Fica sempre visível no modo FUVEST: é a proposta contra a qual a
+          redação será corrigida, e o aluno precisa poder relê-la enquanto
+          escreve. */}
+      {banca.id === 'fuvest' && (
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 shadow-sm">
+          <div className="absolute -top-6 -right-6 w-24 h-24 bg-blue-200/30 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative z-10 flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
+              <MessageSquareQuote className="h-4 w-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-blue-600">Proposta FUVEST</p>
+                <Badge className="bg-blue-100 text-blue-700 border border-blue-200 font-black text-[7px] uppercase px-1.5 h-4">
+                  {PROPOSTA_FUVEST_NOSTALGIA.genero}
+                </Badge>
+              </div>
+              <p className="text-sm font-black italic text-slate-800 leading-tight mt-1">
+                {PROPOSTA_FUVEST_NOSTALGIA.tema}
+              </p>
+              <p className="text-[11px] font-medium text-slate-600 leading-relaxed mt-2">
+                {PROPOSTA_FUVEST_NOSTALGIA.comando}
+              </p>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2">
+                {PROPOSTA_FUVEST_NOSTALGIA.autoria}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Banner Tema da Semana ── */}
-      {weeklyTheme && (
+      {banca.id === 'enem' && weeklyTheme && (
         <div className="relative overflow-hidden rounded-[1.5rem] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 shadow-sm">
           <div className="absolute -top-6 -right-6 w-24 h-24 bg-amber-200/30 rounded-full blur-2xl pointer-events-none" />
           <div className="relative z-10 flex items-start gap-3">
@@ -619,8 +787,8 @@ export default function StudentEssayPage() {
             {[
               { key: 'hasIntro',      label: 'Introdução com tese?' },
               { key: 'hasDev',        label: '2 parágrafos de desenvolvimento?' },
-              { key: 'hasConclusion', label: 'Proposta de intervenção?' },
-              { key: 'hasMinLines',   label: 'Acima de 25 linhas?' },
+              { key: 'hasConclusion', label: banca.exigeIntervencao ? 'Proposta de intervenção?' : 'Conclusão que fecha a tese?' },
+              { key: 'hasMinLines',   label: `Acima de ${banca.linhasAlvo[0]} linhas?` },
             ].map(item => {
               const checked = checklist[item.key as keyof typeof checklist];
               return (
@@ -711,19 +879,19 @@ export default function StudentEssayPage() {
                   <Badge className="bg-orange-500/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">Pontuação Final</Badge>
                 </div>
                 <h2 className="text-6xl sm:text-7xl font-black italic tracking-tighter leading-[0.85] text-white drop-shadow-xl">{result.total_score}</h2>
-                <p className="text-[10px] font-bold text-white/55 uppercase tracking-widest mt-2">de 1000 pontos</p>
+                <p className="text-[10px] font-bold text-white/55 uppercase tracking-widest mt-2">de {banca.totalMax} pontos</p>
               </div>
               <div className="relative shrink-0">
                 <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
                   <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
                   <circle cx="40" cy="40" r="34" fill="none" stroke="#fb923c" strokeWidth="4" strokeLinecap="round"
                     strokeDasharray={2 * Math.PI * 34}
-                    strokeDashoffset={(2 * Math.PI * 34) * (1 - (result.total_score || 0) / 1000)}
+                    strokeDashoffset={(2 * Math.PI * 34) * (1 - (result.total_score || 0) / banca.totalMax)}
                     style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-base font-black text-orange-400 leading-none italic">{Math.round(((result.total_score || 0) / 1000) * 100)}</span>
+                  <span className="text-base font-black text-orange-400 leading-none italic">{Math.round(((result.total_score || 0) / banca.totalMax) * 100)}</span>
                   <span className="text-[7px] font-bold text-white/55 uppercase tracking-wider mt-0.5">%</span>
                 </div>
               </div>
@@ -743,7 +911,7 @@ export default function StudentEssayPage() {
           {/* Competencies */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {Object.entries(result.competencies || {}).map(([key, comp]: any, idx) => {
-              const info = COMPETENCY_LABELS[key];
+              const info = CRITERIO_UI[key];
               if (!info) return null;
               const Icon = info.icon;
               return (
@@ -833,7 +1001,7 @@ export default function StudentEssayPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {supportingTexts.map((st) => (
               <div key={st.id} className="bg-white border border-slate-100 border-l-2 border-l-orange-500 shadow-sm rounded-2xl p-4">
-                <p className="text-xs font-medium italic text-slate-600 leading-relaxed">"{st.content}"</p>
+                <p className="text-xs font-medium italic text-slate-600 leading-relaxed whitespace-pre-line max-h-56 overflow-y-auto">{st.content}</p>
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Fonte: {st.source}</span>
                   <Badge className="bg-orange-100 text-orange-600 border border-orange-200 font-black text-[7px] uppercase px-1.5 h-4">Motivador</Badge>
@@ -853,7 +1021,7 @@ export default function StudentEssayPage() {
         <div className="bg-white border border-slate-100 shadow-sm rounded-[1.5rem] overflow-hidden p-4">
           {chartData.length > 0 ? (
             <div className="h-[220px] w-full">
-              <EssayChart data={chartData} />
+              <EssayChart data={chartData} domainMax={banca.totalMax} cor={COR_DA_BANCA[bancaId]} />
             </div>
           ) : (
             <div className="h-[220px] flex flex-col items-center justify-center gap-3">
@@ -892,7 +1060,7 @@ export default function StudentEssayPage() {
         ) : (
           <div className="space-y-3">
             {fullHistory.map((entry, idx) => {
-              const colors = scoreColor(entry.score);
+              const colors = scoreColor(entry.score, BANCAS[isBancaId(entry.banca) ? entry.banca : 'enem'].totalMax);
               return (
                 <div
                   key={entry.id}
@@ -910,7 +1078,7 @@ export default function StudentEssayPage() {
                           strokeWidth="3"
                           strokeLinecap="round"
                           strokeDasharray={2 * Math.PI * 22}
-                          strokeDashoffset={(2 * Math.PI * 22) * (1 - (entry.score || 0) / 1000)}
+                          strokeDashoffset={(2 * Math.PI * 22) * (1 - (entry.score || 0) / BANCAS[isBancaId(entry.banca) ? entry.banca : 'enem'].totalMax)}
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -947,7 +1115,11 @@ export default function StudentEssayPage() {
       <Sheet open={!!selectedEntry} onOpenChange={(v) => { if (!v) setSelectedEntry(null); }}>
         <SheetContent side="bottom" className="h-[92dvh] w-full sm:side-right sm:max-w-2xl overflow-y-auto p-0 rounded-t-[2rem] sm:rounded-none">
           {selectedEntry && (() => {
-            const colors = scoreColor(selectedEntry.score);
+            // A redação guarda a banca com que foi corrigida: uma nota antiga
+            // continua sendo lida na escala em que nasceu, mesmo que o aluno
+            // esteja treinando na outra banca agora.
+            const bancaDaEntrada = BANCAS[isBancaId(selectedEntry.banca) ? selectedEntry.banca : 'enem'];
+            const colors = scoreColor(selectedEntry.score, bancaDaEntrada.totalMax);
             const rd = selectedEntry.result_data;
             return (
               <>
@@ -958,7 +1130,7 @@ export default function StudentEssayPage() {
                         <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.20)" strokeWidth="3" />
                         <circle cx="28" cy="28" r="22" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"
                           strokeDasharray={2 * Math.PI * 22}
-                          strokeDashoffset={(2 * Math.PI * 22) * (1 - (selectedEntry.score || 0) / 1000)}
+                          strokeDashoffset={(2 * Math.PI * 22) * (1 - (selectedEntry.score || 0) / bancaDaEntrada.totalMax)}
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -991,11 +1163,14 @@ export default function StudentEssayPage() {
                   {/* Competências */}
                   {rd?.competencies && Object.keys(rd.competencies).length > 0 && (
                     <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Competências</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                        {bancaDaEntrada.id === 'enem' ? 'Competências' : 'Eixos'}
+                      </p>
                       <div className="grid grid-cols-1 gap-2">
                         {Object.entries(rd.competencies).map(([key, comp]: any) => {
-                          const info = COMPETENCY_LABELS[key];
+                          const info = CRITERIO_UI[key];
                           if (!info) return null;
+                          const tetoCriterio = bancaDaEntrada.criterios.find(c => c.key === key)?.max ?? 200;
                           const Icon = info.icon;
                           return (
                             <div key={key} className="bg-white border border-slate-100 rounded-2xl p-3 md:p-4 flex items-center gap-3">
@@ -1008,7 +1183,7 @@ export default function StudentEssayPage() {
                               </div>
                               <div className="text-right shrink-0">
                                 <span className="text-xl font-black italic text-primary">{comp.score}</span>
-                                <span className="text-[9px] font-bold text-slate-400 block">/ 200</span>
+                                <span className="text-[9px] font-bold text-slate-400 block">/ {tetoCriterio}</span>
                               </div>
                             </div>
                           );

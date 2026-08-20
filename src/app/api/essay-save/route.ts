@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getAuthUser } from '@/lib/server-auth';
+import { getBanca } from '@/lib/bancas';
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { theme, content, score, feedback, result_data } = body;
+    const { theme, content, score, feedback, result_data, banca } = body;
+
+    // A banca decide como o número em `score` deve ser lido (0-1000 no ENEM,
+    // 0-50 na FUVEST). Valor inválido cai no ENEM em vez de gravar lixo.
+    const bancaId = getBanca(banca).id;
 
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,7 +32,13 @@ export async function POST(request: Request) {
         content,
         score,
         feedback,
-        result_data
+        result_data,
+        banca: bancaId,
+        // `competencies` existe desde 20260525 com índice GIN e nunca foi
+        // escrita — a UI sempre leu de dentro de `result_data`. Preencher aqui
+        // torna a coluna consultável por SQL (média por critério, calibração)
+        // sem ter que abrir o JSONB inteiro.
+        competencies: result_data?.competencies ?? null,
       })
       .select('*')
       .single();

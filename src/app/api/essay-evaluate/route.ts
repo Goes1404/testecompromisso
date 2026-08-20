@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { respostaFalhaIA } from "@/lib/ia-status";
 import { OpenAI } from "openai";
 import { corrigirRedacao, ErroCorrecao } from "@/lib/essay-grader";
+import { getBanca } from "@/lib/bancas";
 
 export const dynamic = 'force-dynamic';
 // Duas correções em paralelo + eventual terceira em série.
@@ -15,7 +16,7 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   try {
-    const { theme, text, supporting_texts, origin } = await req.json();
+    const { theme, text, supporting_texts, origin, banca } = await req.json();
 
     const motivadores: string[] = Array.isArray(supporting_texts)
       ? supporting_texts
@@ -23,7 +24,14 @@ export async function POST(req: Request) {
           .filter((l: string) => typeof l === "string" && l.trim().length > 4)
       : [];
 
-    const result = await corrigirRedacao({ theme, text, motivadores, origin }, openai);
+    // `getBanca` nunca lança: banca ausente ou desconhecida cai no ENEM. Uma
+    // banca inválida vinda do cliente não deve derrubar a correção do aluno.
+    const bancaId = getBanca(banca).id;
+
+    const result = await corrigirRedacao(
+      { theme, text, motivadores, origin, banca: bancaId },
+      openai,
+    );
     return NextResponse.json({ success: true, result });
 
   } catch (error: any) {
