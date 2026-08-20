@@ -54,3 +54,18 @@ remote_schema.sql
 supabase/.branches/
 # Boletins reais (nome+nota de aluno = PII; nao versionar no GitHub)
 supabase/seed-data/
+
+# Dumps e relatorios da migracao de alunos (nome+email+id = PII; nao versionar)
+auth_users_dump.json
+full_student_list_grouped.md
+students_source_718.txt
+students_source_718_chunk_part2.txt
+students_data.json
+students_with_sala.json
+parsed_students.json
+new_accounts.json
+matching_report.json
+low_confidence.json
+medium_confidence.json
+real_collisions.json
+duplicates.txt
