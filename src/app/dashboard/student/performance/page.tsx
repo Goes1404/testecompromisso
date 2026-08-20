@@ -216,7 +216,7 @@ export default function StudentPerformancePage() {
           </div>
           <div className="p-4 md:p-8 pt-2 h-[260px] md:h-[400px]">
             {subjectData.length > 0 ? (
-              <RadarChartPremium data={subjectData} angleKey="subject" yKey="score" color="#4ccced" unit="%" />
+              <RadarChartPremium data={subjectData} angleKey="subject" yKey="score" color="#ff6b00" unit="%" />
             ) : (
               <div className="h-full flex flex-col items-center justify-center opacity-20 italic text-sm">
                 <p>Responda questões para gerar seu mapa.</p>
@@ -233,7 +233,7 @@ export default function StudentPerformancePage() {
               <p className="text-xs text-slate-400 italic mt-0.5">Acertos nos últimos 15 dias.</p>
             </div>
             <div className="p-4 md:p-8 pt-2 h-[200px] md:h-[260px]">
-              <AreaChartPremium data={historyData} xKey="date" yKey="acertos" color="#4ccced" />
+              <AreaChartPremium data={historyData} xKey="date" yKey="acertos" color="#ff6b00" />
             </div>
           </div>
 

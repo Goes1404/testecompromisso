@@ -142,7 +142,7 @@ export default function CommunicationPage() {
         {/* ── Hero ── */}
         <div className="relative rounded-[2rem] overflow-hidden bg-[#0d0d0f] border border-white/5 p-5">
           <div className="absolute inset-0 pointer-events-none" style={{
-            background: "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.14) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(245,158,11,0.07) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.14) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(245,158,11,0.07) 0%, transparent 60%)",
           }} />
           <div className="relative z-10 flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -170,7 +170,7 @@ export default function CommunicationPage() {
         {!showComposer && (
           <button
             onClick={() => setShowComposer(true)}
-            className="w-full h-13 flex items-center justify-center gap-2 bg-[#4CCCED] hover:bg-orange-600 active:scale-[0.97] text-white font-black rounded-2xl shadow-xl shadow-orange-500/25 text-xs uppercase tracking-widest transition-all touch-manipulation"
+            className="w-full h-13 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-[0.97] text-white font-black rounded-2xl shadow-xl shadow-orange-500/25 text-xs uppercase tracking-widest transition-all touch-manipulation"
             style={{ height: 52 }}
           >
             <PlusCircle className="h-4 w-4" />
@@ -212,7 +212,7 @@ export default function CommunicationPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/6">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-xl bg-[#4CCCED]/15 border border-[#4CCCED]/25 flex items-center justify-center">
+                <div className="h-7 w-7 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center">
                   <PlusCircle className="h-3.5 w-3.5 text-orange-400" />
                 </div>
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/65">Nova Mensagem</p>
@@ -234,7 +234,7 @@ export default function CommunicationPage() {
                   value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Título do aviso..."
-                  className="w-full h-12 bg-white/4 border border-white/10 rounded-xl px-4 text-sm font-bold italic text-white placeholder:text-white/25 outline-none focus:border-[#4CCCED]/40 focus:bg-white/6 transition-all"
+                  className="w-full h-12 bg-white/4 border border-white/10 rounded-xl px-4 text-sm font-bold italic text-white placeholder:text-white/25 outline-none focus:border-orange-500/40 focus:bg-white/6 transition-all"
                 />
               </div>
 
@@ -245,7 +245,7 @@ export default function CommunicationPage() {
                   value={formData.message}
                   onChange={e => setFormData({ ...formData, message: e.target.value })}
                   placeholder="Detalhes do comunicado..."
-                  className="min-h-[90px] bg-white/4 border border-white/10 rounded-xl text-white placeholder:text-white/25 text-sm italic resize-none focus-visible:ring-0 focus-visible:border-[#4CCCED]/40 focus-visible:bg-white/6 transition-all"
+                  className="min-h-[90px] bg-white/4 border border-white/10 rounded-xl text-white placeholder:text-white/25 text-sm italic resize-none focus-visible:ring-0 focus-visible:border-orange-500/40 focus-visible:bg-white/6 transition-all"
                 />
               </div>
 
@@ -324,7 +324,7 @@ export default function CommunicationPage() {
             placeholder="Pesquisar no histórico..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full h-11 bg-white/4 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/25 outline-none focus:border-[#4CCCED]/30 focus:bg-white/5 transition-all"
+            className="w-full h-11 bg-white/4 border border-white/8 rounded-2xl pl-11 pr-4 text-sm font-semibold text-white placeholder:text-white/25 outline-none focus:border-orange-500/30 focus:bg-white/5 transition-all"
           />
         </div>
 

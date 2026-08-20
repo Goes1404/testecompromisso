@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 
 /**
- * 🏥 DIAGNÓSTICO DE INFRAESTRUTURA - PLATAFORMA
+ * 🏥 DIAGNÓSTICO DE INFRAESTRUTURA - COMPROMISSO 360
  * Verifica a saúde do Supabase no ambiente de deploy.
  */
 

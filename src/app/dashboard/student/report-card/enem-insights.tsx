@@ -65,7 +65,7 @@ export default function EnemInsights({ entries }: { entries: EnemReportCard[] })
               <XAxis dataKey="semester" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748b", fontWeight: 700 }} />
               <YAxis domain={[0, 100]} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748b" }} />
               <Tooltip formatter={(value) => [`${value}%`, ""]} contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 12 }} />
-              <Line type="monotone" dataKey="classificatoria" name={LABELS.classificatoria} stroke="#4ccced" strokeWidth={3} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="classificatoria" name={LABELS.classificatoria} stroke="#ff6b00" strokeWidth={3} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="simulados" name="Simulados" stroke="#0f172a" strokeWidth={3} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="redacao" name={LABELS.redacao} stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} />
             </LineChart>
@@ -93,7 +93,7 @@ export default function EnemInsights({ entries }: { entries: EnemReportCard[] })
               <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#334155", fontWeight: 800 }} />
               <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
               <Tooltip formatter={(value, _name, props) => [`${props.payload.raw}`, "Nota"]} contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 12 }} />
-              <Radar dataKey="value" stroke="#4ccced" fill="#4ccced" fillOpacity={0.28} strokeWidth={3} />
+              <Radar dataKey="value" stroke="#ff6b00" fill="#ff6b00" fillOpacity={0.28} strokeWidth={3} />
             </RadarChart>
           </ResponsiveContainer>
         </div>

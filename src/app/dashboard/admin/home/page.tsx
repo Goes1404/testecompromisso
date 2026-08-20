@@ -71,7 +71,7 @@ export default function CoordinatorDashboard() {
     eligibleStudents: 0
   });
 
-  const TEACHER_CODE = "PROFESSOR2026";
+  const TEACHER_CODE = "COMPROMISSO2024";
 
   useEffect(() => {
     if (!isUserLoading && userRole !== 'admin' && userRole !== 'staff') {
@@ -186,7 +186,7 @@ export default function CoordinatorDashboard() {
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/45">Painel Admin</span>
             </div>
             <h1 className="text-[2.5rem] md:text-[3.5rem] font-black text-white italic tracking-tighter leading-none">
-              Plataforma<span className="text-primary">.</span>
+              Compromisso<span className="text-primary">.</span>
             </h1>
             <p className="text-white/45 text-[10px] font-bold mt-2 tracking-wide uppercase">Coordenação · {new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</p>
           </div>

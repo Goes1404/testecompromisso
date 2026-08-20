@@ -7,7 +7,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
 /**
- * 🔒 PROVEDOR DE IDENTIDADE INDUSTRIAL - PLATAFORMA
+ * 🔒 PROVEDOR DE IDENTIDADE INDUSTRIAL - COMPROMISSO 360
  * Versão Estabilizada: Elimina travamentos de sincronização e melhora a resiliência do perfil.
  */
 

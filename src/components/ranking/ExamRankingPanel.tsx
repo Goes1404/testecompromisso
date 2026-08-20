@@ -120,7 +120,7 @@ export default function ExamRankingPanel() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       doc.setTextColor(217, 119, 6);
-      doc.text("RANKING POR PROVA  ·  PLATAFORMA", margin, 46);
+      doc.text("RANKING POR PROVA  ·  CURSINHO COMPROMISSO", margin, 46);
 
       doc.setFontSize(18);
       doc.setTextColor(15, 23, 42);

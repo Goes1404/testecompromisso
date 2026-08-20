@@ -2,7 +2,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { log } from '@/lib/logger'
 
 /**
- * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - PLATAFORMA
+ * 🔒 CONFIGURAÇÃO INDUSTRIAL SUPABASE - COMPROMISSO 360
  * Versão Estabilizada: Cliente usando @supabase/ssr para sincronia de cookies e middleware.
  */
 

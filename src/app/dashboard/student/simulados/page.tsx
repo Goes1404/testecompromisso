@@ -75,7 +75,7 @@ const triggerConfetti = () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   
-  const colors = ["#4ccced", "#6366f1", "#10b981", "#ec4899", "#f59e0b"];
+  const colors = ["#ff6b00", "#6366f1", "#10b981", "#ec4899", "#f59e0b"];
   const particles: any[] = [];
   
   for (let i = 0; i < 120; i++) {
@@ -450,7 +450,7 @@ export default function SimuladoPage() {
           <div className="h-20 w-20 rounded-3xl aurora-dark flex items-center justify-center shadow-2xl">
             <BrainCircuit className="h-9 w-9 text-white animate-pulse" />
           </div>
-          <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-[#4CCCED] flex items-center justify-center shadow-lg">
+          <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-orange-500 flex items-center justify-center shadow-lg">
             <Loader2 className="h-3.5 w-3.5 text-white animate-spin" />
           </div>
         </div>
@@ -510,7 +510,7 @@ export default function SimuladoPage() {
         {isPaused && (
           <div className={`absolute inset-0 z-[10001] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300 backdrop-blur-md
             ${isDark ? 'bg-[#070709]/95 text-white' : 'bg-white/95 text-slate-900 border border-slate-200 shadow-2xl'}`}>
-            <div className="h-16 w-16 rounded-3xl bg-[#4CCCED]/10 border border-[#4CCCED]/25 flex items-center justify-center mb-6">
+            <div className="h-16 w-16 rounded-3xl bg-orange-500/10 border border-orange-500/25 flex items-center justify-center mb-6">
               <Timer className="h-8 w-8 text-orange-500 animate-pulse" />
             </div>
             <h2 className={`text-2xl font-black italic mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Simulado Pausado</h2>
@@ -533,7 +533,7 @@ export default function SimuladoPage() {
         {/* ── Sticky HUD Header ── */}
         <header className={`h-20 ${headerTheme} px-4 sm:px-6 flex items-center justify-between shrink-0 z-50 transition-colors duration-300`}>
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-[#4CCCED]/15 border border-[#4CCCED]/25 flex items-center justify-center shrink-0">
+            <div className="h-9 w-9 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0">
               <BrainCircuit className="h-5 w-5 text-orange-400" />
             </div>
             <div>
@@ -646,7 +646,7 @@ export default function SimuladoPage() {
             )}
 
             <div className="space-y-4">
-              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-orange-500 bg-[#4CCCED]/10 border border-[#4CCCED]/20 px-2 py-0.5 rounded-full">Enunciado</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-orange-500 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">Enunciado</span>
               <p className={`text-sm sm:text-base font-bold leading-[1.8] whitespace-pre-wrap break-words italic pr-2 transition-colors duration-300 ${bodyTextTheme}`}>
                 {currentQuestion.question_text.replace(/\[IMAGEM_PENDENTE\]/g, '').trim()}
               </p>
@@ -675,15 +675,15 @@ export default function SimuladoPage() {
                       className={`group flex items-start gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer select-none active:scale-[0.99]
                         ${isSelected
                           ? isDark
-                            ? 'border-[#4CCCED] bg-[#4CCCED]/15 shadow-[0_0_25px_rgba(76,204,237,0.18)] text-white'
-                            : 'border-[#4CCCED] bg-[#4CCCED]/5 shadow-[0_0_20px_rgba(76,204,237,0.08)] text-[#0F7A95] font-bold'
+                            ? 'border-orange-500 bg-orange-500/15 shadow-[0_0_25px_rgba(255,107,0,0.18)] text-white'
+                            : 'border-orange-500 bg-orange-500/5 shadow-[0_0_20px_rgba(255,107,0,0.08)] text-orange-600 font-bold'
                           : isDark
                             ? 'border-white/5 bg-[#121215]/80 text-white/80 hover:border-white/10'
                             : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'}`}
                     >
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center font-black text-sm italic transition-all shrink-0
                         ${isSelected
-                          ? 'bg-[#4CCCED] text-slate-950 shadow-[0_0_10px_rgba(76,204,237,0.5)]'
+                          ? 'bg-orange-500 text-slate-950 shadow-[0_0_10px_rgba(255,107,0,0.5)]'
                           : isDark
                             ? 'bg-white/5 border border-white/10 text-white/40 group-hover:border-white/20 group-hover:text-white/60'
                             : 'bg-slate-200 border border-slate-350 text-slate-500 group-hover:border-slate-400 group-hover:text-slate-700'}`}
@@ -702,7 +702,7 @@ export default function SimuladoPage() {
               ${isDark ? 'bg-[#0a0a0d]/90 backdrop-blur-xl border-white/5' : 'bg-white/90 backdrop-blur-xl border-slate-200'}`}>
               <Button
                 onClick={handleNext}
-                className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest bg-[#4CCCED] text-slate-950 hover:bg-orange-600 shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 touch-manipulation border-none"
+                className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest bg-orange-500 text-slate-950 hover:bg-orange-600 shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 touch-manipulation border-none"
               >
                 {selectedAnswer === null ? (
                   currentIndex < questions.length - 1 ? (
@@ -754,7 +754,7 @@ export default function SimuladoPage() {
         {/* Premium Gamer Scorecard */}
         <div className={`rounded-[2.5rem] bg-gradient-to-b ${resultBg} border border-white/5 overflow-hidden shadow-2xl p-6 sm:p-8 space-y-6 text-center relative`}>
           <div className="absolute top-3 right-3 shrink-0">
-            <Badge className="bg-[#4CCCED]/10 text-orange-400 border border-[#4CCCED]/25 font-black text-[9px] uppercase tracking-widest px-2.5 h-6">
+            <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/25 font-black text-[9px] uppercase tracking-widest px-2.5 h-6">
               <Trophy className="h-3 w-3 mr-1" />
               Simulado Concluído
             </Badge>
@@ -788,7 +788,7 @@ export default function SimuladoPage() {
           {/* Gamified Reward Banner */}
           <div className="bg-white/5 border border-white/8 rounded-2xl p-4 flex items-center justify-center gap-6 max-w-md mx-auto">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-[#4CCCED]/20 flex items-center justify-center shadow-md">
+              <div className="h-8 w-8 rounded-lg bg-orange-500/20 flex items-center justify-center shadow-md">
                 <Zap className="h-4.5 w-4.5 text-orange-400 fill-orange-400" />
               </div>
               <div className="text-left">
@@ -830,7 +830,7 @@ export default function SimuladoPage() {
                 setAnswers([]);
                 setGameState('idle');
               }}
-              className="w-full h-12 rounded-2xl bg-[#4CCCED] text-slate-950 hover:bg-orange-600 font-black text-sm uppercase tracking-wider active:scale-95 transition-transform border-none"
+              className="w-full h-12 rounded-2xl bg-orange-500 text-slate-950 hover:bg-orange-600 font-black text-sm uppercase tracking-wider active:scale-95 transition-transform border-none"
             >
               <RotateCw className="h-4 w-4 mr-2" />
               Iniciar Novo Simulado
@@ -1035,7 +1035,7 @@ export default function SimuladoPage() {
               }}
               className={`p-4 rounded-[1.75rem] border-2 text-left transition-all duration-200 active:scale-[0.99] [touch-action:manipulation]
                 ${mode === m.id
-                  ? 'border-[#4CCCED] bg-[#4CCCED]/5 shadow-md'
+                  ? 'border-orange-500 bg-orange-500/5 shadow-md'
                   : 'border-slate-100 bg-white hover:border-slate-200'}`}
             >
               <div className={`h-10 w-10 rounded-2xl ${mode === m.id ? 'aurora-dark text-white' : m.bg + ' ' + m.color} flex items-center justify-center mb-3 shadow-inner`}>
@@ -1145,7 +1145,7 @@ export default function SimuladoPage() {
                       onClick={() => { triggerHaptic(10); setSimSize(n); }}
                       className={`h-11 rounded-xl font-black text-xs transition-all active:scale-95 [touch-action:manipulation]
                         ${simSize === n
-                          ? 'bg-[#4CCCED] text-slate-950 shadow-md font-black'
+                          ? 'bg-orange-500 text-slate-950 shadow-md font-black'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                     >
                       {n === 90 ? <span className="text-[9px]">ENEM<br/>Oficial</span> : `${n} questões`}
@@ -1154,8 +1154,8 @@ export default function SimuladoPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-orange-500/5 to-amber-500/5 rounded-2xl border border-[#4CCCED]/10">
-                <div className="h-9 w-9 rounded-xl bg-[#4CCCED]/15 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-orange-500/5 to-amber-500/5 rounded-2xl border border-orange-500/10">
+                <div className="h-9 w-9 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
                   <Timer className="h-4.5 w-4.5 text-orange-500" />
                 </div>
                 <div>
@@ -1174,7 +1174,7 @@ export default function SimuladoPage() {
                     onClick={() => { triggerHaptic(10); setSimSize(n); }}
                     className={`flex-1 h-10 rounded-xl font-black text-xs transition-all active:scale-95 [touch-action:manipulation]
                       ${simSize === n
-                        ? 'bg-[#4CCCED] text-slate-950 shadow-sm font-black'
+                        ? 'bg-orange-500 text-slate-950 shadow-sm font-black'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                   >
                     {n} q
@@ -1193,7 +1193,7 @@ export default function SimuladoPage() {
           startSimulado();
         }}
         disabled={!canStart}
-        className="btn-orange-neon w-full h-14 rounded-2xl bg-[#4CCCED] text-slate-950 font-black text-base hover:scale-[1.01] active:scale-95 transition-transform [touch-action:manipulation] flex items-center justify-center gap-2 border-none shadow-xl glow-orange"
+        className="btn-orange-neon w-full h-14 rounded-2xl bg-orange-500 text-slate-950 font-black text-base hover:scale-[1.01] active:scale-95 transition-transform [touch-action:manipulation] flex items-center justify-center gap-2 border-none shadow-xl glow-orange"
       >
         <BrainCircuit className="h-5 w-5" />
         Iniciar Simulado

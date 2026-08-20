@@ -192,7 +192,7 @@ export default function FirstAccessPage() {
       if (metaResult.error) throw metaResult.error;
 
       trackAcao('primeiro_acesso_concluido', { aluno: isStudent });
-      toast({ title: "Perfil salvo!", description: "Seja bem-vindo à Plataforma!" });
+      toast({ title: "Perfil salvo!", description: "Seja bem-vindo ao Compromisso!" });
       setStep(3);
       setTimeout(() => window.location.assign("/dashboard"), 2000);
     } catch (err: any) {
@@ -227,7 +227,7 @@ export default function FirstAccessPage() {
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Primeiro Acesso</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
-            Bem-vindo à <span className="text-primary">Plataforma!</span>
+            Bem-vindo ao <span className="text-primary">Compromisso!</span>
           </h1>
           {step < 3 && <StepBar current={step} />}
         </div>
@@ -501,7 +501,7 @@ export default function FirstAccessPage() {
 
         <footer className="text-center opacity-40 pb-4">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white">
-            Plataforma • Sistema Acadêmico Inteligente
+            Compromisso • Sistema Acadêmico Inteligente
           </p>
         </footer>
       </div>

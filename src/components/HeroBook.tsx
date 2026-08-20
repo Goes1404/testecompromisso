@@ -158,7 +158,7 @@ export function HeroBook() {
     <section
       ref={sectionRef}
       id="home"
-      aria-label="Apresentação da plataforma"
+      aria-label="Apresentação do Cursinho Compromisso"
       className="relative h-[100svh] overflow-hidden bg-gray-950"
     >
       {/* ── Atmosfera ── */}
@@ -169,7 +169,7 @@ export function HeroBook() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 110%, rgba(76,204,237,0.13) 0%, transparent 70%)",
+            "radial-gradient(ellipse 80% 50% at 50% 110%, rgba(255,107,0,0.13) 0%, transparent 70%)",
         }}
       />
 
@@ -271,7 +271,7 @@ export function HeroBook() {
                 {/* Rodapé da página */}
                 <div className="mt-auto pt-3 flex items-end justify-between">
                   <p className="text-[8px] font-black uppercase tracking-[0.35em] text-[#8a5a20]/50">
-                    Edição 2026
+                    Santana de Parnaíba
                   </p>
                   <p
                     className="text-[11px] italic text-[#b05c0e]/50"
@@ -318,18 +318,18 @@ export function HeroBook() {
                   className="absolute inset-y-0 left-0 w-5 pointer-events-none"
                   style={{ background: "linear-gradient(to right, rgba(0,0,0,0.6), transparent)" }}
                 />
-                <div className="absolute inset-y-4 left-[7px] w-px bg-[#4CCCED]/20 pointer-events-none" />
+                <div className="absolute inset-y-4 left-[7px] w-px bg-orange-500/20 pointer-events-none" />
 
                 {/* Moldura em relevo */}
-                <div className="absolute inset-4 rounded-xl border border-[#4CCCED]/25 pointer-events-none" />
-                <div className="absolute inset-[22px] rounded-lg border border-[#4CCCED]/10 pointer-events-none" />
+                <div className="absolute inset-4 rounded-xl border border-orange-500/25 pointer-events-none" />
+                <div className="absolute inset-[22px] rounded-lg border border-orange-500/10 pointer-events-none" />
 
                 {/* Brilho âmbar inferior */}
                 <div
                   className="absolute inset-x-0 bottom-0 h-1/2 pointer-events-none"
                   style={{
                     background:
-                      "radial-gradient(ellipse 90% 80% at 50% 115%, rgba(76,204,237,0.16), transparent 70%)",
+                      "radial-gradient(ellipse 90% 80% at 50% 115%, rgba(255,107,0,0.16), transparent 70%)",
                   }}
                 />
 
@@ -337,11 +337,11 @@ export function HeroBook() {
                 <div className="relative flex-1 flex flex-col items-center justify-center text-center px-7">
                   <div className="relative w-[58%] max-w-[180px] h-14 mb-5">
                     <Image
-                      src="/images/default-logo.png"
-                      alt="Logo"
+                      src="/images/logocompromisso.png"
+                      alt="Cursinho Compromisso"
                       fill
                       priority
-                      className="object-contain drop-shadow-[0_0_16px_rgba(76,204,237,0.55)]"
+                      className="object-contain drop-shadow-[0_0_16px_rgba(255,107,0,0.55)]"
                       sizes="180px"
                     />
                   </div>
@@ -354,14 +354,14 @@ export function HeroBook() {
                     className="font-black italic tracking-tighter text-white leading-[1.12]"
                     style={{
                       fontSize: "clamp(22px, 6vw, 30px)",
-                      textShadow: "0 0 40px rgba(76,204,237,0.35)",
+                      textShadow: "0 0 40px rgba(255,107,0,0.35)",
                     }}
                   >
                     Sua aprovação é o nosso{" "}
-                    <span className="text-gradient-brand">Objetivo.</span>
+                    <span className="text-gradient-brand">Compromisso.</span>
                   </h1>
 
-                  <div className="mt-5 h-px w-12 bg-[#4CCCED]/40" />
+                  <div className="mt-5 h-px w-12 bg-orange-500/40" />
 
                   <p className="mt-4 text-[9px] font-black uppercase tracking-[0.4em] text-white/30">
                     ENEM · ETEC · 2026
@@ -373,7 +373,7 @@ export function HeroBook() {
                   className="relative pb-5 text-center text-[8px] italic text-white/25"
                   style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                 >
-                  Edição 2026
+                  Edição Santana de Parnaíba
                 </p>
               </div>
 
@@ -396,7 +396,7 @@ export function HeroBook() {
                 >
                   “Toda grande história começa quando alguém decide virar a página.”
                   <footer className="mt-4 text-[9px] font-black uppercase tracking-[0.35em] not-italic text-[#b05c0e]/60">
-                    — Equipe Pedagógica, 2026
+                    — Compromisso, 2026
                   </footer>
                 </blockquote>
               </div>

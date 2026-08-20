@@ -154,7 +154,7 @@ export default function TeacherHelpPage() {
         overlayColor: "rgba(0, 0, 0, 0.85)",
         stagePadding: 8,
         stageRadius: 12,
-        popoverClass: "app-tour-popover",
+        popoverClass: "compromisso-tour-popover",
         nextBtnText: "Próximo →",
         prevBtnText: "← Anterior",
         doneBtnText: "Entendi ✓",
@@ -185,7 +185,7 @@ export default function TeacherHelpPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(59,130,246,0.10) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(59,130,246,0.10) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -212,7 +212,7 @@ export default function TeacherHelpPage() {
           placeholder="Buscar por pergunta ou categoria..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
+          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
         />
       </div>
 
@@ -222,7 +222,7 @@ export default function TeacherHelpPage() {
           onClick={() => setSearchQuery("")}
           className={`shrink-0 h-8 px-3.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
             searchQuery === ""
-              ? "bg-[#4CCCED] text-white shadow-lg shadow-orange-500/20"
+              ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
               : "bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-slate-800"
           }`}
         >
@@ -234,7 +234,7 @@ export default function TeacherHelpPage() {
             onClick={() => setSearchQuery(cat)}
             className={`shrink-0 h-8 px-3.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
               searchQuery === cat
-                ? "bg-[#4CCCED] text-white shadow-lg shadow-orange-500/20"
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
                 : "bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -244,15 +244,15 @@ export default function TeacherHelpPage() {
       </div>
 
       {/* ── Info card ── */}
-      <div className="relative rounded-2xl overflow-hidden bg-[#0d0d0f] border border-[#4CCCED]/15 p-4">
+      <div className="relative rounded-2xl overflow-hidden bg-[#0d0d0f] border border-orange-500/15 p-4">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse at 100% 50%, rgba(76,204,237,0.13) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 100% 50%, rgba(255,107,0,0.13) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10 flex items-start gap-3">
-          <div className="h-9 w-9 rounded-xl bg-[#4CCCED]/20 border border-[#4CCCED]/30 flex items-center justify-center shrink-0">
+          <div className="h-9 w-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
             <Sparkles className="h-4 w-4 text-orange-400" />
           </div>
           <div>
@@ -277,11 +277,11 @@ export default function TeacherHelpPage() {
             <AccordionItem
               key={faq.id}
               value={faq.id}
-              className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm data-[state=open]:bg-slate-50 data-[state=open]:border-[#4CCCED]/20 transition-all"
+              className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm data-[state=open]:bg-slate-50 data-[state=open]:border-orange-500/20 transition-all"
             >
               <AccordionTrigger className="px-4 py-3.5 hover:no-underline group">
                 <div className="flex items-center gap-3 text-left flex-1">
-                  <div className="h-9 w-9 rounded-xl bg-[#4CCCED]/15 border border-[#4CCCED]/25 flex items-center justify-center shrink-0 group-data-[state=open]:bg-[#4CCCED]/30 transition-all">
+                  <div className="h-9 w-9 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0 group-data-[state=open]:bg-orange-500/30 transition-all">
                     <faq.icon className="h-4 w-4 text-orange-400" />
                   </div>
                   <div className="flex-1 min-w-0">

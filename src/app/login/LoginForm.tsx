@@ -6,11 +6,10 @@ import { Loader2, Eye, EyeOff, AlertCircle, Sparkles, ShieldCheck } from "lucide
 import { supabase, isSupabaseConfigured } from "@/app/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
-import { useTenant } from "@/components/TenantProvider";
+
+const logoUrl = "/images/logocompromisso.png";
 
 export function LoginForm() {
-  const { tenant } = useTenant();
-  const logoUrl = tenant.branding.logoUrl;
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
@@ -73,7 +72,7 @@ export function LoginForm() {
           <div
             className="absolute top-[-40px] right-[-40px] w-[180px] h-[180px] rounded-full pointer-events-none"
             style={{
-              background: "radial-gradient(circle, rgba(76,204,237,0.12) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(255,107,0,0.12) 0%, transparent 70%)",
               filter: "blur(30px)",
             }}
           />
@@ -81,7 +80,7 @@ export function LoginForm() {
           {/* ── Logo ── */}
           <div className="flex justify-center mb-6">
             <div className="relative w-44 h-14">
-              <Image src={logoUrl} alt="Logo" fill unoptimized priority className="object-contain drop-shadow-[0_0_12px_rgba(76,204,237,0.5)]" />
+              <Image src={logoUrl} alt="Logo Compromisso" fill unoptimized priority className="object-contain drop-shadow-[0_0_12px_rgba(255,107,0,0.5)]" />
             </div>
           </div>
 
@@ -109,7 +108,7 @@ export function LoginForm() {
               <label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 ml-1">
                 E-mail de Acesso
               </label>
-              <div className={`relative transition-all duration-200 ${focused === 'email' ? 'drop-shadow-[0_0_8px_rgba(76,204,237,0.25)]' : ''}`}>
+              <div className={`relative transition-all duration-200 ${focused === 'email' ? 'drop-shadow-[0_0_8px_rgba(255,107,0,0.25)]' : ''}`}>
                 <input
                   id="email"
                   type="email"
@@ -131,7 +130,7 @@ export function LoginForm() {
               <label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 ml-1">
                 Senha
               </label>
-              <div className={`relative transition-all duration-200 ${focused === 'password' ? 'drop-shadow-[0_0_8px_rgba(76,204,237,0.25)]' : ''}`}>
+              <div className={`relative transition-all duration-200 ${focused === 'password' ? 'drop-shadow-[0_0_8px_rgba(255,107,0,0.25)]' : ''}`}>
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}

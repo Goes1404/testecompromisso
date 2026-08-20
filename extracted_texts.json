@@ -1,0 +1,5710 @@
+[
+  {
+    "file": "src\\lib\\AuthProvider.tsx",
+    "text": "Promise"
+  },
+  {
+    "file": "src\\lib\\AuthProvider.tsx",
+    "text": ";\r\n  refreshProfile: () => Promise"
+  },
+  {
+    "file": "src\\lib\\AuthProvider.tsx",
+    "text": ";\r\n}\r\n\r\nconst AuthContext = createContext"
+  },
+  {
+    "file": "src\\lib\\AuthProvider.tsx",
+    "text": "(null);\r\n  const [session, setSession] = useState"
+  },
+  {
+    "file": "src\\lib\\AuthProvider.tsx",
+    "text": "(null);\r\n  const [profile, setProfile] = useState"
+  },
+  {
+    "file": "src\\components\\Vlibras.tsx",
+    "text": "window.removeEventListener(\"vlibras-loaded\", initVlibras);\r\n  }, []);\r\n\r\n  if (!mounted) return null;\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\components\\UrgentNotice.tsx",
+    "text": "Aviso Urgente"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Sintonizando Satélite Analítico..."
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Inteligência Pedagógica (BI)"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Visão térmica de engajamento e performance acadêmica."
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "MODO DEMONSTRAÇÃO"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "DADOS EM TEMPO REAL"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Alunos na Rede"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Média de Acertos"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Conclusão Trilhas"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Performance por Matéria"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "SIMULADOS"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Engajamento Semanal"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Monitoramento Ativo"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Insights Aurora"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "50 ? 'alto' : 'moderado'} engajamento nos módulos publicados pelos mentores.\"`\r\n              )}"
+  },
+  {
+    "file": "src\\components\\TeacherAnalyticsDashboard.tsx",
+    "text": "Gerar Relatório Executivo"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "([]);\r\n    const [subjects, setSubjects] = useState"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "([]);\r\n    const [isLoading, setIsLoading] = useState(true);\r\n    const [isProcessing, setIsProcessing] = useState(false);\r\n    \r\n    const [questionToDelete, setQuestionToDelete] = useState"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "(null);\r\n    const [questionToEdit, setQuestionToEdit] = useState"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "opt.text.toLowerCase().includes(lowerSearch)));\r\n            return matchesSubject && matchesSearch;\r\n        });\r\n    }, [questions, searchTerm, subjectFilter]);\r\n\r\n    if (isLoading) return"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": ";\r\n\r\n    return ("
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Todas as Matérias"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n                                />"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "setQuestionToEdit(question)} className=\"rounded-xl font-bold gap-3 py-3 cursor-pointer\">"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Editar Questão"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "setQuestionToDelete(question.id)}>"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Remover"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Nenhuma questão encontrada para este filtro."
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "setQuestionToDelete(null)}>"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Excluir Questão?"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Esta ação é irreversível e removerá o item permanentemente do banco."
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Cancelar"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": ": \"Sim, Excluir\"}"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "!open && setQuestionToEdit(null)}>"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Ajuste Pedagógico"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Enunciado"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "handleFormChange('question_text', e.target.value)} \r\n                                className=\"min-h-[120px] rounded-2xl bg-muted/30 border-none font-medium italic p-4\"\r\n                            />"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "handleOptionChange(key, e.target.value)} className=\"h-12 rounded-xl bg-muted/30 border-none font-medium\" />"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Gabarito"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "handleFormChange('correct_answer', val)}>"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Matéria"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "handleFormChange('subject_id', val)}>"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Ano"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "handleFormChange('year', parseInt(e.target.value, 10))} className=\"h-12 rounded-xl bg-muted/30 border-none font-black text-center\" />"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Descartar"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": ": \"Gravar Alterações\"}"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Matéria"
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Buscar enunciado..."
+  },
+  {
+    "file": "src\\components\\QuestionsList.tsx",
+    "text": "Enunciado"
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "Banco de Dados em Branco"
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "Alimente o banco com questões manuais ou em massa para habilitar os gráficos de performance."
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": ");\r\n    }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "Análise Industrial do Banco"
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "Volume Total"
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "ITENS NO REPOSITÓRIO"
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "Exploração de Rede"
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "TAXA DE COBERTURA"
+  },
+  {
+    "file": "src\\components\\QuestionsDashboard.tsx",
+    "text": "Distribuição Geográfica de Matérias"
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": ";\r\n      case 'medium': return"
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": ";\r\n      default: return"
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": ";\r\n    }\r\n  };\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": "Central de Avisos"
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": "Novidade"
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": "Sincronizando..."
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": ") : announcements.length === 0 ? ("
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": "Nenhum comunicado recente."
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": ") : (\r\n            announcements.map((ann) => ("
+  },
+  {
+    "file": "src\\components\\NotificationBell.tsx",
+    "text": "Ver todo o histórico"
+  },
+  {
+    "file": "src\\components\\LoadingShell.tsx",
+    "text": "Compromisso"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "(null);\r\n  const canvasRef = useRef"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "(null);\r\n  const fabricCanvasRef = useRef"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "(null);\r\n  const renderTaskRef = useRef"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "(null);\r\n  \r\n  const [pdfDoc, setPdfDoc] = useState"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "(null);\r\n  const [currentPdfUrl, setCurrentPdfUrl] = useState"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "('pan');\r\n  const [brushColor, setBrushColor] = useState(\"#FF0000\");\r\n  const [highlightColor, setHighlightColor] = useState(\"rgba(255, 255, 0, 0.3)\");\r\n  \r\n  const [isSaving, setIsSaving] = useState(false);\r\n  const [error, setError] = useState"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "window.location.reload()} variant=\"outline\" className=\"border-white/20 text-white\">Tentar Novamente"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "))\r\n            ) : activeTool === 'highlighter' ? (\r\n              [\"rgba(255,255,0,0.3)\", \"rgba(0,255,0,0.2)\", \"rgba(255,0,255,0.2)\", \"rgba(0,255,255,0.2)\"].map(c => ("
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "))\r\n            ) : null}"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "setZoom(prev => Math.max(0.5, prev - 0.25))} className=\"text-white hover:bg-white/10\">"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "setZoom(prev => Math.min(3, prev + 0.25))} className=\"text-white hover:bg-white/10\">"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "setZoom(1.0)} className=\"text-white hover:bg-white/10\" title=\"Reset Zoom\">"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "Sintonizando..."
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "numPages) p = numPages; if(p"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "setInputPage(e.target.value)}\r\n            className=\"w-14 h-8 bg-transparent border-none text-center font-black text-white p-0 focus-visible:ring-0 text-xl italic\"\r\n          />"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "Mover Página"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "Lápis"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "Marca-Texto"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "Borracha"
+  },
+  {
+    "file": "src\\components\\InteractiveWorkbook.tsx",
+    "text": "Reset Zoom"
+  },
+  {
+    "file": "src\\components\\ClassroomChatIA.tsx",
+    "text": "Mentoria IA Aurora"
+  },
+  {
+    "file": "src\\components\\ClassroomChatIA.tsx",
+    "text": "Sintonizada nesta Aula"
+  },
+  {
+    "file": "src\\components\\ClassroomChatIA.tsx",
+    "text": "Pensando..."
+  },
+  {
+    "file": "src\\components\\ClassroomChatIA.tsx",
+    "text": "setInput(e.target.value)}\r\n          placeholder=\"Dúvida sobre esta aula...\"\r\n          className=\"flex-1 h-10 bg-muted/30 border-none rounded-xl text-xs font-bold italic focus-visible:ring-1 focus-visible:ring-accent\"\r\n        />"
+  },
+  {
+    "file": "src\\components\\ClassroomChatIA.tsx",
+    "text": "Dúvida sobre esta aula..."
+  },
+  {
+    "file": "src\\components\\AccessibilityWidget.tsx",
+    "text": ");\r\n  \r\n  return ("
+  },
+  {
+    "file": "src\\components\\AccessibilityWidget.tsx",
+    "text": "Aurora IA"
+  },
+  {
+    "file": "src\\components\\AccessibilityWidget.tsx",
+    "text": "Gabinete de Apoio 360"
+  },
+  {
+    "file": "src\\components\\AccessibilityWidget.tsx",
+    "text": "Abrir Aurora IA"
+  },
+  {
+    "file": "src\\components\\AccessibilityWidget.tsx",
+    "text": "Pergunte sobre gestão ou conteúdo..."
+  },
+  {
+    "file": "src\\components\\AccessibilityWidget.tsx",
+    "text": "Acessibilidade VLibras"
+  },
+  {
+    "file": "src\\components\\ui\\tooltip.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": "&\r\n    VariantProps"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": ")\r\n})\r\nToast.displayName = ToastPrimitives.Root.displayName\r\n\r\nconst ToastAction = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": "))\r\nToastAction.displayName = ToastPrimitives.Action.displayName\r\n\r\nconst ToastClose = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": "))\r\nToastClose.displayName = ToastPrimitives.Close.displayName\r\n\r\nconst ToastTitle = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": "))\r\nToastTitle.displayName = ToastPrimitives.Title.displayName\r\n\r\nconst ToastDescription = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": "))\r\nToastDescription.displayName = ToastPrimitives.Description.displayName\r\n\r\ntype ToastProps = React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\toast.tsx",
+    "text": "type ToastActionElement = React.ReactElement"
+  },
+  {
+    "file": "src\\components\\ui\\tabs.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\tabs.tsx",
+    "text": "))\r\nTabsList.displayName = TabsPrimitive.List.displayName\r\n\r\nconst TabsTrigger = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\tabs.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\tabs.tsx",
+    "text": "))\r\nTabsTrigger.displayName = TabsPrimitive.Trigger.displayName\r\n\r\nconst TabsContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\tabs.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\table.tsx",
+    "text": "))\r\nTable.displayName = \"Table\"\r\n\r\nconst TableHeader = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\table.tsx",
+    "text": "))\r\nTableHeader.displayName = \"TableHeader\"\r\n\r\nconst TableBody = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\table.tsx",
+    "text": "))\r\nTableBody.displayName = \"TableBody\"\r\n\r\nconst TableFooter = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\table.tsx",
+    "text": "))\r\nTableFooter.displayName = \"TableFooter\"\r\n\r\nconst TableRow = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\table.tsx",
+    "text": "))\r\nTableRow.displayName = \"TableRow\"\r\n\r\nconst TableHead = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\table.tsx",
+    "text": "))\r\nTableHead.displayName = \"TableHead\"\r\n\r\nconst TableCell = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\table.tsx",
+    "text": "))\r\nTableCell.displayName = \"TableCell\"\r\n\r\nconst TableCaption = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\switch.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\slider.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "void\r\n  openMobile: boolean\r\n  setOpenMobile: (open: boolean) => void\r\n  isMobile: boolean\r\n  toggleSidebar: () => void\r\n}\r\n\r\nconst SidebarContext = React.createContext"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "window.removeEventListener(\"keydown\", handleKeyDown)\r\n    }, [toggleSidebar])\r\n\r\n    const state = open ? \"expanded\" : \"collapsed\"\r\n\r\n    const contextValue = React.useMemo"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n  }\r\n)\r\nSidebarProvider.displayName = \"SidebarProvider\"\r\n\r\nconst Sidebar = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "Menu de Navegação"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n    }\r\n\r\n    return ("
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n  }\r\n)\r\nSidebar.displayName = \"Sidebar\"\r\n\r\nconst SidebarTrigger = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ",\r\n  React.ComponentProps"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "Toggle Sidebar"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarTrigger.displayName = \"SidebarTrigger\"\r\n\r\nconst SidebarRail = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarRail.displayName = \"SidebarRail\"\r\n\r\nconst SidebarInset = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarInset.displayName = \"SidebarInset\"\r\n\r\nconst SidebarInput = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ",\r\n  React.ComponentProps"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarInput.displayName = \"SidebarInput\"\r\n\r\nconst SidebarHeader = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarHeader.displayName = \"SidebarHeader\"\r\n\r\nconst SidebarFooter = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarFooter.displayName = \"SidebarFooter\"\r\n\r\nconst SidebarSeparator = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ",\r\n  React.ComponentProps"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarSeparator.displayName = \"SidebarSeparator\"\r\n\r\nconst SidebarContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarContent.displayName = \"SidebarContent\"\r\n\r\nconst SidebarGroup = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarGroup.displayName = \"SidebarGroup\"\r\n\r\nconst SidebarGroupLabel = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarGroupLabel.displayName = \"SidebarGroupLabel\"\r\n\r\nconst SidebarGroupAction = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarGroupAction.displayName = \"SidebarGroupAction\"\r\n\r\nconst SidebarGroupContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "))\r\nSidebarGroupContent.displayName = \"SidebarGroupContent\"\r\n\r\nconst SidebarMenu = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "))\r\nSidebarMenu.displayName = \"SidebarMenu\"\r\n\r\nconst SidebarMenuItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "} & VariantProps"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n  }\r\n)\r\nSidebarMenuButton.displayName = \"SidebarMenuButton\"\r\n\r\nconst SidebarMenuAction = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarMenuAction.displayName = \"SidebarMenuAction\"\r\n\r\nconst SidebarMenuBadge = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "))\r\nSidebarMenuBadge.displayName = \"SidebarMenuBadge\"\r\n\r\nconst SidebarMenuSkeleton = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\n})\r\nSidebarMenuSkeleton.displayName = \"SidebarMenuSkeleton\"\r\n\r\nconst SidebarMenuSub = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "))\r\nSidebarMenuSub.displayName = \"SidebarMenuSub\"\r\n\r\nconst SidebarMenuSubItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": ")\r\nSidebarMenuSubItem.displayName = \"SidebarMenuSubItem\"\r\n\r\nconst SidebarMenuSubButton = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "Toggle Sidebar"
+  },
+  {
+    "file": "src\\components\\ui\\sidebar.tsx",
+    "text": "Toggle Sidebar"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": ",\r\n    VariantProps"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": "Menu de Navegação"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": "Navegação Lateral do Sistema"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": "Fechar"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": ")\r\nSheetFooter.displayName = \"SheetFooter\"\r\n\r\nconst SheetTitle = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": "))\r\nSheetTitle.displayName = SheetPrimitive.Title.displayName\r\n\r\nconst SheetDescription = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\sheet.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\separator.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": "))\r\nSelectTrigger.displayName = SelectPrimitive.Trigger.displayName\r\n\r\nconst SelectScrollUpButton = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": "))\r\nSelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName\r\n\r\nconst SelectScrollDownButton = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": "))\r\nSelectScrollDownButton.displayName =\r\n  SelectPrimitive.ScrollDownButton.displayName\r\n\r\nconst SelectContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": "))\r\nSelectContent.displayName = SelectPrimitive.Content.displayName\r\n\r\nconst SelectLabel = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": "))\r\nSelectLabel.displayName = SelectPrimitive.Label.displayName\r\n\r\nconst SelectItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": "))\r\nSelectItem.displayName = SelectPrimitive.Item.displayName\r\n\r\nconst SelectSeparator = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\select.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\scroll-area.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\scroll-area.tsx",
+    "text": "))\r\nScrollArea.displayName = ScrollAreaPrimitive.Root.displayName\r\n\r\nconst ScrollBar = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\scroll-area.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\radio-group.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\radio-group.tsx",
+    "text": ")\r\n})\r\nRadioGroup.displayName = RadioGroupPrimitive.Root.displayName\r\n\r\nconst RadioGroupItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\radio-group.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\progress.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\popover.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "}\r\n\r\nconst Menubar = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubar.displayName = MenubarPrimitive.Root.displayName\r\n\r\nconst MenubarTrigger = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName\r\n\r\nconst MenubarSubTrigger = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName\r\n\r\nconst MenubarSubContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName\r\n\r\nconst MenubarContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ")\r\n)\r\nMenubarContent.displayName = MenubarPrimitive.Content.displayName\r\n\r\nconst MenubarItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubarItem.displayName = MenubarPrimitive.Item.displayName\r\n\r\nconst MenubarCheckboxItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName\r\n\r\nconst MenubarRadioItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName\r\n\r\nconst MenubarLabel = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": "))\r\nMenubarLabel.displayName = MenubarPrimitive.Label.displayName\r\n\r\nconst MenubarSeparator = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\menubar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\label.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\label.tsx",
+    "text": "&\r\n    VariantProps"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": "= FieldPath"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": "= FieldPath"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": ")\r\n})\r\nFormItem.displayName = \"FormItem\"\r\n\r\nconst FormLabel = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": ")\r\n})\r\nFormLabel.displayName = \"FormLabel\"\r\n\r\nconst FormControl = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": ")\r\n})\r\nFormControl.displayName = \"FormControl\"\r\n\r\nconst FormDescription = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\form.tsx",
+    "text": ")\r\n})\r\nFormDescription.displayName = \"FormDescription\"\r\n\r\nconst FormMessage = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": "))\r\nDropdownMenuSubTrigger.displayName =\r\n  DropdownMenuPrimitive.SubTrigger.displayName\r\n\r\nconst DropdownMenuSubContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": "))\r\nDropdownMenuSubContent.displayName =\r\n  DropdownMenuPrimitive.SubContent.displayName\r\n\r\nconst DropdownMenuContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": "))\r\nDropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName\r\n\r\nconst DropdownMenuItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": "))\r\nDropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName\r\n\r\nconst DropdownMenuCheckboxItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": "))\r\nDropdownMenuCheckboxItem.displayName =\r\n  DropdownMenuPrimitive.CheckboxItem.displayName\r\n\r\nconst DropdownMenuRadioItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": "))\r\nDropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName\r\n\r\nconst DropdownMenuLabel = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": "))\r\nDropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName\r\n\r\nconst DropdownMenuSeparator = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dropdown-menu.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": "))\r\nDialogOverlay.displayName = DialogPrimitive.Overlay.displayName\r\n\r\nconst DialogContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": "Close"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": ")\r\nDialogFooter.displayName = \"DialogFooter\"\r\n\r\nconst DialogTitle = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": "))\r\nDialogTitle.displayName = DialogPrimitive.Title.displayName\r\n\r\nconst DialogDescription = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\checkbox.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\chart.tsx",
+    "text": "\")\r\n  }\r\n\r\n  return context\r\n}\r\n\r\nconst ChartContainer = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\chart.tsx",
+    "text": ")\r\n}\r\n\r\nconst ChartTooltip = RechartsPrimitive.Tooltip\r\n\r\nconst ChartTooltipContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\chart.tsx",
+    "text": "&\r\n    React.ComponentProps"
+  },
+  {
+    "file": "src\\components\\ui\\chart.tsx",
+    "text": ") : (\r\n                      !hideIndicator && ("
+  },
+  {
+    "file": "src\\components\\ui\\chart.tsx",
+    "text": ")\r\n  }\r\n)\r\nChartTooltipContent.displayName = \"ChartTooltip\"\r\n\r\nconst ChartLegend = RechartsPrimitive.Legend\r\n\r\nconst ChartLegendContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\chart.tsx",
+    "text": "&\r\n    Pick"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": "[0]\r\n  api: ReturnType"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": "[1]\r\n  scrollPrev: () => void\r\n  scrollNext: () => void\r\n  canScrollPrev: boolean\r\n  canScrollNext: boolean\r\n} & CarouselProps\r\n\r\nconst CarouselContext = React.createContext"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": "\")\r\n  }\r\n  return context\r\n}\r\n\r\nconst Carousel = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": ")\r\n})\r\nCarousel.displayName = \"Carousel\"\r\n\r\nconst CarouselContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": ")\r\n})\r\nCarouselContent.displayName = \"CarouselContent\"\r\n\r\nconst CarouselItem = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": ")\r\n})\r\nCarouselItem.displayName = \"CarouselItem\"\r\n\r\nconst CarouselPrevious = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": "Previous slide"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": ")\r\n})\r\nCarouselPrevious.displayName = \"CarouselPrevious\"\r\n\r\nconst CarouselNext = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": "Next slide"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": "carousel"
+  },
+  {
+    "file": "src\\components\\ui\\carousel.tsx",
+    "text": "slide"
+  },
+  {
+    "file": "src\\components\\ui\\card.tsx",
+    "text": "))\r\nCard.displayName = \"Card\"\r\n\r\nconst CardHeader = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\card.tsx",
+    "text": "))\r\nCardHeader.displayName = \"CardHeader\"\r\n\r\nconst CardTitle = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\card.tsx",
+    "text": "))\r\nCardTitle.displayName = \"CardTitle\"\r\n\r\nconst CardDescription = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\card.tsx",
+    "text": "))\r\nCardDescription.displayName = \"CardDescription\"\r\n\r\nconst CardContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\card.tsx",
+    "text": "))\r\nCardContent.displayName = \"CardContent\"\r\n\r\nconst CardFooter = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\button.tsx",
+    "text": ",\r\n    VariantProps"
+  },
+  {
+    "file": "src\\components\\ui\\badge.tsx",
+    "text": ",\r\n    VariantProps"
+  },
+  {
+    "file": "src\\components\\ui\\avatar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\avatar.tsx",
+    "text": "))\r\nAvatar.displayName = AvatarPrimitive.Root.displayName\r\n\r\nconst AvatarImage = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\avatar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\avatar.tsx",
+    "text": "))\r\nAvatarImage.displayName = AvatarPrimitive.Image.displayName\r\n\r\nconst AvatarFallback = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\avatar.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert.tsx",
+    "text": "& VariantProps"
+  },
+  {
+    "file": "src\\components\\ui\\alert.tsx",
+    "text": "))\r\nAlert.displayName = \"Alert\"\r\n\r\nconst AlertTitle = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert.tsx",
+    "text": "))\r\nAlertTitle.displayName = \"AlertTitle\"\r\n\r\nconst AlertDescription = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": "))\r\nAlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName\r\n\r\nconst AlertDialogContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": ")\r\nAlertDialogFooter.displayName = \"AlertDialogFooter\"\r\n\r\nconst AlertDialogTitle = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": "))\r\nAlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName\r\n\r\nconst AlertDialogDescription = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": "))\r\nAlertDialogDescription.displayName =\r\n  AlertDialogPrimitive.Description.displayName\r\n\r\nconst AlertDialogAction = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": "))\r\nAlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName\r\n\r\nconst AlertDialogCancel = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\alert-dialog.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\accordion.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\accordion.tsx",
+    "text": "))\r\nAccordionItem.displayName = \"AccordionItem\"\r\n\r\nconst AccordionTrigger = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\accordion.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\components\\ui\\accordion.tsx",
+    "text": "))\r\nAccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName\r\n\r\nconst AccordionContent = React.forwardRef"
+  },
+  {
+    "file": "src\\components\\ui\\accordion.tsx",
+    "text": ",\r\n  React.ComponentPropsWithoutRef"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Acessando o Portal..."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleScrollTo(e, '#home')} className=\"flex items-center group\">"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Metodologia"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Resultados"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Dúvidas"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Entrar"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleRedirect(e, '/register')} className=\"bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none\">\r\n                Criar Conta Grátis"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "setMobileMenuOpen(true)}\r\n          >"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Menu"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Compromisso"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "setMobileMenuOpen(false)} \r\n              className=\"flex items-center gap-2 py-2 px-4 bg-gray-50 text-gray-400 rounded-full active:scale-95 transition-all text-[11px] font-black uppercase tracking-widest border border-gray-100\"\r\n            >"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Fechar"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleScrollTo(e, '#metodologia')}>Metodologia"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleScrollTo(e, '#resultados')}>Resultados"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleScrollTo(e, '#faq')}>Dúvidas FAQ"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleRedirect(e, '/register')} className=\"w-full bg-primary h-14 rounded-full border-none text-lg font-black shadow-xl shadow-primary/20\">\r\n                Criar Conta Grátis"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Entrar no Portal"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Ensino de Alta Performance"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Sua Aprovação é o"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "nosso Compromisso."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Preparamos você com excelência para"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "ENEM e ETEC"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "aliando ensino tradicional à"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Tecnologia IA de ponta"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": ". Foco total nos seus resultados!"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleRedirect(e, '/login')} className=\"h-11 px-8 bg-primary hover:bg-[#e06000] text-white font-black text-sm rounded-full shadow-lg shadow-primary/20 border-none transition-all active:scale-95 group\">"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Acessar Plataforma"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleRedirect(e, '/register')} variant=\"outline\" className=\"h-11 px-8 border-2 border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-sm rounded-full transition-all backdrop-blur-sm\">\r\n                  Criar Conta Grátis"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "handleScrollTo(e, '#metodologia')} className=\"flex items-center gap-2\">"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Conheça o Método"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Inteligência Aurora"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "\"Otimizamos cada minuto com diagnósticos preditivos e mentoria individualizada.\""
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Ecossistema Pedagógico"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Os Pilares do Seu Sucesso"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Desenvolvemos uma estrutura 360º para garantir que nenhum aluno seja deixado para trás, unindo tecnologia humana e algoritmos de aprovação."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Infraestrutura"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Ambiente de Imersão Total"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Explorar Portal"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Unidade Santana de Parnaíba"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Prova Social"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Histórias de Aprovação"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Veja quem já estudou conosco e hoje está nas melhores instituições do país."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Perguntas Frequentes"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Tire as pequenas dúvidas e dê o primeiro passo."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Nossa Localização"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Local do cursinho"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Estamos localizados no coração de Santana de Parnaíba, no"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Colégio Colaço"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": ". Um ambiente preparado para transformar seu futuro."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Endereço Unidade Central"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "R. Cel. Raimundo, 32 - Centro, Santana de Parnaíba - SP, 06501-010"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Abrir no Maps"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Unidade Colaço - Compromisso"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Referência:"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Ao lado do Posto de Saúde Central e da Praça Monumento."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Sua jornada para o"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "sucesso começa aqui."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Vagas limitadas para o próximo ciclo de aprovação. Garanta sua mentoria com os melhores do mercado."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Garanta Sua Vaga"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Falar com Consultor"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "\"Referência em aprovação nas instituições mais concorridas de Santana de Parnaíba e região.\""
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Patrocinador Oficial"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Esta plataforma é integralmente patrocinada pela Prefeitura de Santana de Parnaíba, garantindo ensino de elite gratuito para a nossa comunidade."
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Plataforma"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Portal do Sucesso"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Metodologia 360º"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Matrícula Online"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "contato@compromisso.edu.br"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Unidade Central Parnaíba"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Oficial"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "© 2024 CURSO COMPROMISSO"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "CNPJ 45.123.456/0001-00"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "text": "Educação Inteligente • Resultados Reais"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "Acesso"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "Restrito"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "Olá,"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": ". Identificamos uma irregularidade ou manutenção pendente em seu cadastro."
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "Status da Conta"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "SUSPENSÃO TEMPORÁRIA ATIVA"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "Contatar Suporte Aurora"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "signOut()} className=\"w-full h-12 text-muted-foreground font-black uppercase text-[10px] tracking-widest gap-2 hover:bg-red-50 hover:text-red-600\">"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "Sair da Conta"
+  },
+  {
+    "file": "src\\app\\suspended\\page.tsx",
+    "text": "Compromisso Smart Education"
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "Validando Sessão Segura..."
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": ");\n  }\n\n  return ("
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "Nova Senha"
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "Crie uma credencial forte para sua conta."
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "setPassword(e.target.value)}\n                className=\"h-14 bg-slate-50 border-none rounded-2xl font-bold pr-12 focus-visible:ring-primary shadow-inner\"\n                required\n              />"
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "setConfirmPassword(e.target.value)}\n              className=\"h-14 bg-slate-50 border-none rounded-2xl font-bold focus-visible:ring-primary shadow-inner\"\n              required\n            />"
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "Padrão de Segurança"
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": ": \"Gravar Nova Senha\"}"
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "Sua nova senha forte"
+  },
+  {
+    "file": "src\\app\\reset-password\\ResetPasswordForm.tsx",
+    "text": "Confirme sua nova senha"
+  },
+  {
+    "file": "src\\app\\reset-password\\page.tsx",
+    "text": "Carregando Formulário Seguro..."
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "(1);\r\n  const [profileType, setProfileType] = useState"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Voltar ao Início"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Início"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Cadastro"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Compromisso"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Sua rota de aprovação começa agora."
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Nome"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"firstName\", e.target.value)} className=\"h-12 bg-white/50 rounded-2xl border-muted/20\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Nome do Meio"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"middleName\", e.target.value)} className=\"h-12 bg-white/50 rounded-2xl border-muted/20\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Sobrenome"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"lastName\", e.target.value)} className=\"h-12 bg-white/50 rounded-2xl border-muted/20\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "CPF"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "E-mail"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"email\", e.target.value)} className=\"pl-12 h-12 bg-white/50 rounded-2xl border-muted/20\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Senha de Segurança"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "setProfileType(v as ProfileType)} \r\n                  className=\"grid grid-cols-1 md:grid-cols-2 gap-6\"\r\n                >"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Aluno ETEC"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Formação Técnica"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Aluno ENEM"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Foco Vestibular"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Unidade Escolar / Polo"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"school\", v)}>"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Outra Rede / Não Listada"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Curso Atual ou Série"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"course\", e.target.value)} className=\"h-12 bg-white/50 rounded-xl\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Unidade Escolar / Polo Atual"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"school\", v)}>"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Outra Rede / Não Listada"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Instituição Alvo (Opcional)"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"university\", e.target.value)} className=\"h-12 bg-white/50 rounded-xl\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Carreira Desejada"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"major\", e.target.value)} className=\"h-12 bg-white/50 rounded-xl\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "O que você busca no Compromisso?"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "updateField(\"interests\", e.target.value)} className=\"h-12 bg-white/50 rounded-xl\" />"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Continuar"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "}\r\n                Finalizar Matrícula"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Seu nome"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Opcional"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Seu sobrenome"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "000.000.000-00"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "nome@exemplo.com"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Senha"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Selecione sua escola..."
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Ex: Informática ou 3º Ano Médio"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Selecione sua escola atual..."
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Ex: USP, FATEC, UNESP"
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Ex: Medicina, Engenharia..."
+  },
+  {
+    "file": "src\\app\\register\\page.tsx",
+    "text": "Ex: Mentoria em Redação, Simulados..."
+  },
+  {
+    "file": "src\\app\\login\\page.tsx",
+    "text": "Voltar ao Início"
+  },
+  {
+    "file": "src\\app\\login\\page.tsx",
+    "text": "Início"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Iniciando Sessão..."
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Compro"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "misso"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Ensino de Elite"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Acesso Restrito"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Insira suas credenciais para entrar."
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Email de acesso"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Senha de Segurança"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Esqueceu sua senha?"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Acesso ao portal"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Ainda não tem conta?"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Criar Cadastro Grátis"
+  },
+  {
+    "file": "src\\app\\login\\LoginForm.tsx",
+    "text": "Senha"
+  },
+  {
+    "file": "src\\app\\forgot-password\\page.tsx",
+    "text": "Voltar ao Login"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "(null);\r\n  const [success, setSuccess] = useState(false);\r\n  const [step, setStep] = useState"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "Sucesso!"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "Verifique seu e-mail para seguir as instruções e acessar o sistema."
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "Ir para o Login"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "E-mail Cadastrado"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": ": \"Verificar Conta\"}"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "Lembrei minha senha / Voltar"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "Nova Senha"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "Segurança da Senha"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "Confirmar Nova Senha"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": ": \"Redefinir e Entrar\"}"
+  },
+  {
+    "file": "src\\app\\forgot-password\\ForgotPasswordForm.tsx",
+    "text": "seuemail@exemplo.com"
+  },
+  {
+    "file": "src\\app\\dashboard\\page.tsx",
+    "text": "Sincronizando..."
+  },
+  {
+    "file": "src\\app\\dashboard\\layout.tsx",
+    "text": "isMobile && setOpenMobile(false)} className=\"flex items-center gap-3\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\layout.tsx",
+    "text": "0 && item.badge && ("
+  },
+  {
+    "file": "src\\app\\dashboard\\layout.tsx",
+    "text": "Compromisso"
+  },
+  {
+    "file": "src\\app\\dashboard\\layout.tsx",
+    "text": "Sistema de Ensino"
+  },
+  {
+    "file": "src\\app\\dashboard\\layout.tsx",
+    "text": "Plataforma Patrocinada pela Prefeitura"
+  },
+  {
+    "file": "src\\app\\dashboard\\layout.tsx",
+    "text": "signOut()} className=\"text-red-400 hover:bg-red-500/10 h-11 rounded-lg\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\layout.tsx",
+    "text": "Sair"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "([]);\r\n  const [allProgress, setAllProgress] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "([]);\r\n  const [loading, setLoading] = useState(true);\r\n  const [pinningId, setPinningId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Sintonizando Estúdio..."
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "COMPROMISSO 360"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Sua Rota de"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Alta Performance"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Escolha um dos eixos temáticos e inicie sua jornada guiada rumo ao sucesso acadêmico."
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n            />"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Filtrar Perfil"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Público-Alvo"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "p.trail_id === trail.id);\r\n          const percentage = userProgress?.percentage || 0;\r\n          const isPinned = !!userProgress;\r\n\r\n          return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": ") : isPinned ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Especialista"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Entrar"
+  },
+  {
+    "file": "src\\app\\dashboard\\trails\\page.tsx",
+    "text": "Pesquisar trilha..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "t.title?.toLowerCase().includes(searchTerm.toLowerCase()) || \r\n    t.category?.toLowerCase().includes(searchTerm.toLowerCase())\r\n  );\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Gestão de Trilhas"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Administre caminhos pedagógicos e publique para a rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "document.body.style.pointerEvents = \"\", 100);\r\n          }}>"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Nova Trilha Manual"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Configurar Trilha"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Título da Trilha"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Categoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Público-Alvo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Todos os Alunos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Apenas ETEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Apenas ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Descrição Geral"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "setSearchTerm(e.target.value)} />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Sincronizando Banco de Dados..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "handleDeleteTrail(trail.id)}\r\n                      className=\"h-10 w-10 rounded-full text-red-500 hover:bg-red-50\" \r\n                      title=\"Excluir Trilha\"\r\n                    >"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Gerenciar"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Nenhuma trilha encontrada"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Inicie uma nova trilha ou ajuste seus filtros."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Ex: Fundamentos de IA"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Matéria Principal"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Todos os Alunos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "O que o aluno aprenderá nesta jornada?"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Pesquisar entre suas trilhas..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Simular Visão do Aluno"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\page.tsx",
+    "text": "Excluir Trilha"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [modules, setModules] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "([]);\r\n  const [contents, setContents] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "([]);\r\n  const [loading, setLoading] = useState(true);\r\n  const [isSubmitting, setIsSubmitting] = useState(false);\r\n  const [isPublishing, setIsPublishing] = useState(false);\r\n  const [deletingId, setDeletingId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "(null);\r\n\r\n  const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);\r\n  const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);\r\n  const [isEditTrailDialogOpen, setIsEditTrailDialogOpen] = useState(false);\r\n  \r\n  const [activeModuleId, setActiveModuleId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "(null);\r\n  const activeModuleRef = useRef"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [editingContentId, setEditingContentId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [uploading, setUploading] = useState(false);\r\n  const [fileInputKey, setFileInputKey] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Sintonizando Estúdio..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "router.back()}\r\n            className='rounded-full h-12 w-12 bg-muted/30 hover:bg-primary/5 transition-all'\r\n          >"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Painel de Autor"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Detalhes"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Prévia"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "setIsModuleDialogOpen(true)}\r\n            className='bg-primary text-white font-black rounded-xl shadow-lg h-12 px-8 hover:scale-105 transition-all'\r\n          >"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Novo Capítulo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Inicie sua Jornada"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "setIsModuleDialogOpen(true)}\r\n                className='bg-accent text-accent-foreground font-black px-10 h-14 rounded-2xl shadow-xl'\r\n              >\r\n                Criar Primeiro Capítulo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": ") : (\r\n            modules.map((mod, idx) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Adicionar Aula"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": ") : content.type === 'quiz' ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "APOSTILA"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "startEditContent(content)}\r\n                        >"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Este capítulo ainda está sem materiais didáticos."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Status de Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Mentoria Compromisso"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "\"Organize suas aulas em blocos de até 15 minutos para maximizar o foco dos estudantes de Santana de Parnaíba.\""
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Editar Rótulo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Título Principal"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Matéria Central"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Breve Descrição"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "}\r\n              Salvar Alterações"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Novo Capítulo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Título da Unidade Didática"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": ") : (\r\n                'Criar Unidade'\r\n              )}"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Categoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "🎞️ Videoaula"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "🧠 Quiz"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "📄 PDF"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "📝 Texto"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "📎 Anexo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Apostila"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Sem Apostila"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Título do Conteúdo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Link Externo (URL)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Notas do Mentor (Opcional)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Fila"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Estúdio Vazio"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Adicione materiais para ver a fila."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": ") : (\r\n                        pendingItems.map((item) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "removeFromQueue(item.id)}\r\n                              className='h-8 w-8 rounded-full bg-white text-muted-foreground hover:text-red-600 hover:bg-red-50 shadow-sm transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 shrink-0'\r\n                            >"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "⚠️ Você começou a preencher um item, mas não clicou em \"Adicionar à Fila\"."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Sincronizando..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Excluir Trilha Definitivamente"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Ex: Fundamentos de Redação"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Selecione a disciplina"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Qual o propósito deste conjunto de módulos?"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Ex: Introdução à Matéria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Nenhuma"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Ex: Aula 01 - Conceitos Base"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "https://..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\trails\\[id]\\page.tsx",
+    "text": "Oriente o aluno sobre como usar este material..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "(\"all\");\r\n  const [filterInstitution, setFilterInstitution] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "(\"all\");\r\n  const [filterCourse, setFilterCourse] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "(\"all\");\r\n  const [students, setStudents] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Gestão de Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Monitoramento estratégico do corpo discente em tempo real."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Filtrar por Instituição/Escola"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Todas as Instituições"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Filtrar por Carreira/Curso"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Todas as Carreiras"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Turma ETEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Turma ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Alunos em Risco"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Isenção Social"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Sincronizando Banco de Identidades..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Estudante"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Instituição / Polo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Último Acesso"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Tempo na Platforma"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Evolução"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Ações de Apoio"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Progresso"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Nenhum registro localizado"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Pesquisar por nome ou polo..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Todas as Instituições"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Todas as Carreiras"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Abrir Chat"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\students\\page.tsx",
+    "text": "Ver Analíticos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "([]);\r\n  const [enemRank, setEnemRank] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Elite Performance"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Top 10 estudantes com as maiores pontuações em simulados."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Aguardando dados de performance..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": ") : (\r\n            data.map((student, index) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Recorde"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "PTS"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Voltar ao Painel"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Rankings de Elite"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "AUDITORIA VIVA"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Classificação meritocrática baseada em performance técnica real."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Atividade Global"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Calculando..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Ranking ETEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Ranking ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Sincronizando Posições de Liderança..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Master ETEC 2024"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\rankings\\page.tsx",
+    "text": "Elite ENEM 2024"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "('bulk');\r\n    const [isSaving, setIsSaving] = useState(false);\r\n    const [subjects, setSubjects] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "([]);\r\n    \r\n    // Bulk States\r\n    const [rawText, setRawText] = useState('');\r\n    const [extractedQuestions, setExtractedQuestions] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "('');\r\n    const [bulkTargetAudience, setBulkTargetAudience] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Banco de Questões"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Gestão estratégica de avaliações e simulados."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Carga em Massa"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Manual"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Texto Bruto da Prova"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "setRawText(e.target.value)} \r\n                                />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Analisando com Aurora IA..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Extrair Questões com Aurora IA"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Enunciado da Questão"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Gabarito"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Disciplina"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Público Alvo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Todos (Geral)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Foco ETEC / FATEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Foco ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Ano Referência"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Explicação Pedagógica (Opcional)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "}\r\n                                Salvar no Repositório"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Vincule as questões a uma matéria para finalizar a importação."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Todos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "ETEC/FATEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "}\r\n                                        Validar e Salvar Tudo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "setExtractedQuestions(prev => prev.filter((_, idx) => idx !== i))} className=\"absolute top-4 right-4 h-8 w-8 rounded-full bg-slate-50 text-red-400 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Histórico do Repositório"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Cole aqui o texto copiado de um PDF ou documento..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Digite o texto da pergunta..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Selecione"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Matéria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Turma"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Justifique a resposta correta para auxiliar o estudo do aluno..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Público Alvo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\questions\\page.tsx",
+    "text": "Vincular Matéria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "([]);\r\n  const [loading, setLoading] = useState(true);\r\n  const [isCreateOpen, setIsCreateOpen] = useState(false);\r\n  const [isSubmitting, setIsSubmitting] = useState(false);\r\n  const [deletingId, setDeletingId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Studio Virtual"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Gerencie o link de suas reuniões (Meet/YouTube)."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Agendar Aula"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Nova Sala Online"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Título da Aula"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Data"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Horário"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Link da Reunião (Google Meet / Zoom)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Pauta da Aula"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": ": \"Publicar na Agenda\"}"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Certifique-se de rodar o SQL no Supabase."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": ") : lives.length === 0 ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Nenhuma aula agendada."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": ") : (\r\n          lives.map((live) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "} // CORRIGIDO"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Studio"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "Ex: Mentoria - Carreira"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "https://meet.google.com/..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\page.tsx",
+    "text": "O que será discutido..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "Sincronizando Studio Master..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "router.back()} className=\"text-white hover:bg-white/10 rounded-full h-12 w-12\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "CONSOLE DE TRANSMISSÃO"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "ABRIR MEU GOOGLE MEET"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "Sinal Monitorado"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "Console de Gerenciamento"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "O chat foi desabilitado. Utilize este console para monitorar o status da sua transmissão externa."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "Status da Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\live\\[id]\\page.tsx",
+    "text": "Sincronizada"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "([]);\r\n  const [searchTerm, setSearchTerm] = useState(\"\");\r\n  const [isDialogOpen, setIsDialogOpen] = useState(false);\r\n  const [isSubmitting, setIsSubmitting] = useState(false);\r\n  const [editingId, setQuestionToEdit] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "r.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||\r\n    r.category?.toLowerCase().includes(searchTerm.toLowerCase())\r\n  );\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Gestão de Apostilas"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Curadoria industrial das apostilas e materiais didáticos."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "document.body.style.pointerEvents = \"\", 100);\r\n          }\r\n        }}>"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Nova Apostila"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Configurar Apostila"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Título"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Categoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Tipo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Público-Alvo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Todos os Alunos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Apenas Turma ETEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Apenas Turma ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Arquivo a ser enviado (Ou Link Externo)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Capa (Opcional - URL)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Resumo Pedagógico"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n        />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": ") : filtered.length === 0 ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Nenhuma apostila localizada"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "startEdit(item)} className=\"h-10 w-10 rounded-full text-accent hover:bg-accent/10\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "handleDelete(item.id)} className=\"h-10 w-10 rounded-full text-muted-foreground hover:text-red-600 hover:bg-red-50\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Ex: Guia de Trigonometria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Todos os Alunos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Ou cole a URL..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "https://..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Descrição breve para o aluno..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\library\\page.tsx",
+    "text": "Pesquisar entre as apostilas..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "([]);\r\n  const [chartData, setChartData] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "([]);\r\n  const [announcements, setAnnouncements] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "([]);\r\n\r\n  const priorityStyles: Record"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "type.includes(key)) || type === '';\r\n      }) || [];\r\n\r\n      const atRisk = students.filter(s => \r\n        !s.last_access || new Date(s.last_access)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Sincronizando Gestão..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Painel de Gestão Docente"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "PROFESSOR"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Controle pedagógico e mentoria de alta performance."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "}\r\n            Diagnóstico"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Nova Trilha"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Sincronizado"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Engajamento de Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Comparativo de atividade por janela de tempo."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Renderizando Analíticos..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Busca Ativa (Social)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Sem alertas pendentes."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": ") : (\r\n                eligibleList.map((aluno, i) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Elegível Isenção"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Orientar"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Ver Base Completa"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Taxa de Sucesso"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Comunicados"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\home\\page.tsx",
+    "text": "Histórico Completo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Central de Ajuda"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Tutoriais interativos e perguntas frequentes"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "setSearchQuery(e.target.value)}\r\n            className=\"pl-12 h-12 bg-white border-border rounded-xl text-sm font-medium\"\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "setSearchQuery(\"\")}\r\n            className=\"rounded-full text-xs font-bold h-8\"\r\n          >\r\n            Todas"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Tutoriais Interativos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Clique em"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "\"Iniciar Tutorial Guiado\""
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "em qualquer pergunta para ver um passo a passo visual \r\n              que destaca os botões exatos na interface. O sistema vai destacar cada elemento com setas indicando onde clicar."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Nenhum resultado encontrado"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Tente buscar com outros termos."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": ") : (\r\n          filteredFaqs.map((faq) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Iniciar Tutorial Guiado"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\help\\page.tsx",
+    "text": "Buscar por pergunta ou categoria..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "([]);\r\n  const [loading, setLoading] = useState(true);\r\n  const [selectedEssay, setSelectedEssay] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "s.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||\r\n    s.theme?.toLowerCase().includes(searchTerm.toLowerCase())\r\n  );\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Central de Auditoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Staff"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Auditoria técnica de redações e submissões da rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Fila de Avaliação"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": ") : filteredSubmissions.length === 0 ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Sem envios recentes."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "SUBMISSÃO ACADÊMICA"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Tema da Redação"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Transcrição do Estudante"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "LAUDO IA"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Nota Aurora"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Parecer do Maestro"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "setMentorFeedback(e.target.value)}\r\n                        placeholder=\"Adicione suas notas pedagógicas ou orientações personalizadas para o aluno...\"\r\n                        className=\"min-h-[180px] rounded-[2rem] bg-white border border-slate-100 p-6 font-medium italic text-sm shadow-inner resize-none focus-visible:ring-accent transition-all\"\r\n                      />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "}\r\n                          Validar Revisão Maestro"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Selecione uma Submissão"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Clique em um aluno na fila industrial para iniciar a auditoria técnica."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Buscar estudante ou tema..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Adicione suas notas pedagógicas ou orientações personalizadas para o aluno..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\essays\\page.tsx",
+    "text": "Conversar com Aluno"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "([]);\r\n  const [cohorts, setCohorts] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "c.id === a.target_group)?.name || '';\r\n    const matchesTarget = targetName.toLowerCase().includes(search);\r\n\r\n    return matchesSearch || matchesTarget;\r\n  });\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Mural de Avisos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Gestão de comunicados oficiais e alertas de rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Ativos"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Urgentes"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "a.priority === 'high').length}"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Nova Mensagem"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Configure o alerta para a rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Assunto Principal"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Corpo do Alerta"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Prioridade"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Informativo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Importante"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Urgente"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Público Alvo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Geral"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Toda a Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Alunos ETEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Alunos ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Staff"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Turmas (Cohorts)"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Atalhos Operacionais"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "applyTemplate(tpl)}\r\n                className=\"w-full flex items-center gap-4 p-4 rounded-2xl bg-white border border-transparent hover:border-accent/20 hover:shadow-lg transition-all group text-left\"\r\n              >"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Carregar Texto Padrão"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n            />"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Sincronizando Mural..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": ") : filtered.length === 0 ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Nenhum aviso localizado"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "c.id === ann.target_group);\r\n                \r\n                return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "handleDelete(ann.id)} className=\"h-10 w-10 rounded-full text-muted-foreground hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Título do aviso..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Escreva os detalhes aqui..."
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Selecione o alvo"
+  },
+  {
+    "file": "src\\app\\dashboard\\teacher\\communication\\page.tsx",
+    "text": "Pesquisar por termo ou turma no histórico..."
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "([]);\r\n  const [input, setInput] = useState(\"\");\r\n  const [loading, setLoading] = useState(false);\r\n  const [latency, setLatency] = useState(0);\r\n  const scrollRef = useRef"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "Engine de Comunicação"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "SINAL ATIVO"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "Reiniciar"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "Categorias de Suporte"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "handleSend(undefined, chip.label)}\r\n                className=\"w-full justify-start h-auto py-4 px-5 rounded-2xl bg-white hover:bg-accent hover:text-white transition-all border-none shadow-md font-bold text-xs gap-4 group\"\r\n              >"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "Status do Polo"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "Latência de Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "Aurora processando solicitação..."
+  },
+  {
+    "file": "src\\app\\dashboard\\support\\page.tsx",
+    "text": "Descreva sua dúvida pedagógica ou administrativa..."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "('loading_subjects');\r\n  const [subjects, setSubjects] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "([]);\r\n  const [questions, setQuestions] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "([]);\r\n  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);\r\n  const [selectedAnswer, setSelectedAnswer] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "(null);\r\n  const [answers, setAnswers] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "([]);\r\n  const [activeSubjectId, setActiveSubjectId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "Analise com calma."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "Simulado Concluído!"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "Sua pontuação foi registrada no banco de dados para acompanhamento pedagógico."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "Acertos Totais"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "setGameState('idle')} className=\"w-full h-14 rounded-xl bg-primary font-black\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "Voltar ao Início"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "Ocorreu um erro ao carregar os dados do simulado."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "fetchSubjects()} variant=\"outline\">Tentar Novamente"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": ")\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "Simulados por Matéria"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\simulados\\page.tsx",
+    "text": "fetchQuestions(subject.id)}\r\n                            className='w-full h-12 rounded-xl bg-primary font-black shadow-lg'\r\n                        >\r\n                            Começar Simulado"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Simulador de Isenção"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Descubra se você tem direito à isenção da taxa de inscrição nos principais vestibulares do país."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Qual a renda mensal total da sua família?"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "setFamilyIncome(e.target.value)}\r\n              className=\"rounded-lg\"\r\n            />"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Você cursou todo o ensino médio em escola pública?"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Sim"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Não"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Sua família está inscrita no Cadastro Único (CadÚnico)?"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Sim"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Não"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Analisando..."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Simular Agora"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "*Este é um resultado preliminar. A confirmação final depende das regras específicas de cada edital de vestibular."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Ex: 2100.50"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Selecione uma opção"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\exemption-simulator\\page.tsx",
+    "text": "Selecione uma opção"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "(null);\r\n  const [charCount, setCharCount] = useState(0);\r\n  const [history, setHistory] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Redação"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Master"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "SINAL ATIVO"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Refine sua escrita com o motor de auditoria Aurora IA."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "}\r\n            Gerar Tema com IA"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Sua Proposta de Tema"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "setTheme(e.target.value)} \r\n                placeholder=\"Ex: A inteligência artificial na educação brasileira...\"\r\n                className=\"h-12 rounded-xl bg-white border-none shadow-inner font-bold italic text-lg md:text-xl text-primary placeholder:opacity-30\"\r\n              />"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "IA Sintonizada"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Contagem"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Sinais"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Segurança Pedagógica"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Análise baseada nos critérios INEP 2024"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Sincronizando Auditoria..."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Submeter para Aurora IA"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "A Aurora IA é uma inteligência artificial e sua correção pode apresentar imprecisões."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Diagnóstico de Performance"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "SINAL FINAL"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Pontuação Maestro"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Nota"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Raio-X de Desvios"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "0 ? (\r\n                  result.detailed_corrections.map((corr: any, i: number) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Nenhum desvio gramatical detectado pela Aurora."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Plano de Evolução"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Sincronizado no Meu Mural"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Base de Apoio ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Motivador"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Evolução"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Aguardando primeira auditoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Ex: A inteligência artificial na educação brasileira..."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\essays\\page.tsx",
+    "text": "Inicie seu texto aqui... Desenvolva sua tese com clareza industrial."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "([]);\r\n\r\n  const [loadingCalc, setLoadingCalc] = useState(false);\r\n  const [members, setFamilyMembers] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "setTimeout(r, 1000));\r\n    const familySize = members.length;\r\n    const perCapita = totalFamilyIncome / familySize;\r\n    const eligible = perCapita"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "acc + group.items.length, 0);\r\n  const progressPercent = Math.round((checkedItems.length / totalDocs) * 100);\r\n\r\n  if (loadingDocs) return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Sincronizando Central de Ingresso..."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Padrão SiSU/ProUni"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Central de"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Ingresso"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Gerencie seus dados e organize sua documentação oficial."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Prontidão Documental"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Checklist de Documentos"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Cálculo de Renda"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "toggleItem(item.id)}\r\n                      >"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "toggleItem(item.id)} className=\"h-6 w-6 rounded-lg border-2\" />"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Nuvem de Documentos"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Use o Google Drive para não perder nada."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "ABRIR MEU DRIVE"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Qualidade da Imagem"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "\"Evite fotos com sombras ou reflexos de luz. Se o texto não estiver legível, sua inscrição poderá ser indeferida pela universidade.\""
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Validade dos Papéis"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "\"Comprovantes de residência devem ter no máximo 90 dias. Certidões não podem ter rasuras ou remendos.\""
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Organização Maestro"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "\"Renomeie seus arquivos como 'RG_FRENTE.pdf' ou 'HISTORICO_MEDIO.pdf'. Isso agiliza a conferência do tutor e evita erros de envio.\""
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Dica de Segurança"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "\"Nunca envie documentos originais por chats informais. Mantenha seu rastro digital seguro em pastas oficiais.\""
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Critério Social"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "O parâmetro de 1,5 salário mínimo per capita."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Teto de Isenção"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Até"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "por morador."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Cálculo de Renda"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Adicione cada integrante da sua residência."
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Soma Familiar"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Membro da Casa"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "updateMember(member.id, 'label', e.target.value)} className=\"h-12 bg-white rounded-xl border-none font-bold italic\" />"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Renda Bruta (R$)"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "updateMember(member.id, 'income', e.target.value)} className=\"h-12 bg-white rounded-xl border-none font-black text-primary\" />"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Adicionar Membro"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "} Verificar Elegibilidade"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Sua Renda Per Capita"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "Limite do Governo (1,5 SM)"
+  },
+  {
+    "file": "src\\app\\dashboard\\student\\documents\\page.tsx",
+    "text": "0.00"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "(null);\r\n  \r\n  const [isUpdating, setIsUpdating] = useState(false);\r\n  const [isUploading, setIsUploading] = useState(false);\r\n  // ✅ FIX 1: começa com fallback local — evita spinner infinito no primeiro render\r\n  const [subjects, setSubjects] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Configurações de Identidade"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Gerencie sua presença digital e preferências acadêmicas."
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "ACESSO VERIFICADO"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Sugestões de Avatar"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "}\r\n                    CONFIRMAR ALTERAÇÕES"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Dados Cadastrais"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Alterações de nome são restritas por segurança de rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Nome de Exibição"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Matéria de Foco"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Sincronizando..."
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Galeria de Avatares Dinâmicos"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "SALVAR PREFERÊNCIAS"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Trocar Foto"
+  },
+  {
+    "file": "src\\app\\dashboard\\settings\\page.tsx",
+    "text": "Selecione sua preferência"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Sintonizando Estúdio Master..."
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": ");\r\n  }\r\n\r\n  const liveNow = lives.filter(l => l.status === 'live');\r\n  const upcoming = lives.filter(l => l.status === 'scheduled');\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Centro de Transmissões"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "REDE ATIVA"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Mentoria técnica e sessões de redação em tempo real."
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Transmissão em Curso"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "SINAL AO VIVO"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "AMBIENTE AUDITADO"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Mentor Responsável"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "ENTRAR NO ESTÚDIO"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Próximas Sessões"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Silêncio no Estúdio"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Nenhuma mentoria externa agendada para as próximas horas."
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "AGENDADA"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Transmissão Remota"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "Sinal Habilitado"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\page.tsx",
+    "text": "GARANTIR ACESSO"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "Sintonizando Satélite..."
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": ");\r\n\r\n  const isLiveNow = live?.status === 'live';\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "router.back()} \r\n            className=\"rounded-full h-11 w-11 shrink-0 bg-primary/5 hover:bg-primary/10 transition-all\"\r\n          >"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "TRANSMISSÃO ATIVA"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "SALA AGENDADA"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "Console de Mentoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "ACESSAR SALA DO GOOGLE MEET"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "Sessão Restrita à Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "Aguardando processamento do link pelo Mentor..."
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "Pauta da Mentoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\live\\[id]\\page.tsx",
+    "text": "O que vamos aprender hoje?"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Carregando Acervo Digital..."
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Minhas Apostilas"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Acervo oficial de materiais e apostilas interativas da rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Filtrar por Tipo"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Estudar Agora"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Ver Videoaula"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Acervo em Sincronização"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Nenhuma apostila encontrada para os filtros atuais."
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\page.tsx",
+    "text": "Buscar apostila..."
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\book\\[id]\\page.tsx",
+    "text": "Carregando Material Interativo..."
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\book\\[id]\\page.tsx",
+    "text": "Descriptografando Material Seguro..."
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\book\\[id]\\page.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\book\\[id]\\page.tsx",
+    "text": "router.back()} className=\"text-white hover:bg-white/10 rounded-full shrink-0\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\book\\[id]\\page.tsx",
+    "text": "Ambiente de Estudo Controlado"
+  },
+  {
+    "file": "src\\app\\dashboard\\library\\book\\[id]\\page.tsx",
+    "text": "ANTI-PIRATARIA ATIVO"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "([]);\r\n  const [libraryResources, setLibraryResources] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "([]);\r\n  const [announcements, setAnnouncements] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "([]);\r\n  const [recentProgress, setRecentProgress] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "([]);\r\n  const [essayStats, setEssayStats] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "(null);\r\n  const [examStats, setExamStats] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Carregando seu ambiente..."
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Pronto para hoje?"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Sua IA Aurora está monitorando seu progresso em tempo real. Continue de onde parou."
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Aurora IA · Mentoria Estratégica"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "\"A constância é a chave da aprovação! Revise os erros do último simulado antes de avançar. Estou disponível 24h para corrigir redações.\""
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Falar com Aurora"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Por Onde Começar"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Ver todas"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": ") : recentProgress.length === 0 ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Nenhuma trilha iniciada"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Explore o catálogo e comece sua jornada."
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Explorar Trilhas"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Progresso"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Comunicados"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Público Geral"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Taxa de Acertos"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Banco de Questões"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Lab. de Redação"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Enviadas"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Média pts"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Comece a escrever hoje!"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Acessar Laboratório"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Acervo & Apostilas"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Ver tudo"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": ")\r\n              ) : libraryResources.length === 0 ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Apostilas em sincronização..."
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": ") : (\r\n                libraryResources.map((res) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Plataforma Educacional"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Patrocinada pela Prefeitura de Santana de Parnaíba"
+  },
+  {
+    "file": "src\\app\\dashboard\\home\\page.tsx",
+    "text": "Compromisso • 2024"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": ";\r\n      case \"Física\": return"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": ";\r\n      case \"Química\": return"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": ";\r\n      case \"Polos\": return"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": ";\r\n      default: return"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Comunidade"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Compromisso"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Onde o conhecimento se torna colaborativo."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Nova Discussão"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Iniciar Tópico"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Compartilhe sua dúvida ou insight com a rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Título do Debate"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Matéria"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "c!==\"Todos\").map(c=>"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Contexto / Detalhes"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Sintonizando Rede..."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Nenhuma discussão encontrada"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Autor"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Participar"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Qual sua dúvida principal?"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Explique um pouco mais..."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\page.tsx",
+    "text": "Pesquisar debates..."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "(null);\r\n\r\n  const [forum, setForum] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [posts, setPosts] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "([]);\r\n  const [loading, setLoading] = useState(true);\r\n  const [isRestricted, setIsRestricted] = useState(false);\r\n  const [isBanned, setIsBanned] = useState(false);\r\n\r\n  // Estados para Gestão de Membros\r\n  const [isMembersOpen, setIsMembersOpen] = useState(false);\r\n  const [members, setMembers] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Sincronizando Debate..."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "router.back()} className=\"rounded-full h-10 w-10 shrink-0 hover:bg-primary/5\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Somente Mentoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Gerenciar Membros"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Membros do Fórum"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "setMemberSearch(e.target.value)}\r\n                    />"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Sincronizando Rede..."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": ") : filteredMembers.length === 0 ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Nenhum aluno localizado"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Debate Ativo"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Pauta Inicial do Debate"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Seja o primeiro a contribuir com este tópico"
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Sua participação foi restrita neste debate pelo moderador."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": ") : isRestricted ? ("
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Este fórum está em modo 'Leitura'. Apenas mentores podem postar."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Buscar aluno no polo..."
+  },
+  {
+    "file": "src\\app\\dashboard\\forum\\[id]\\page.tsx",
+    "text": "Sua contribuição..."
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": ");\n\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Configuração de Segurança"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Bem-vindo,"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Professor!"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Este é seu primeiro acesso com a senha temporária. Por favor, defina sua senha definitiva de segurança acadêmica."
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Sua Nova Senha"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Acesso Configurado!"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Você será redirecionado para a plataforma principal..."
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Nova Senha"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "setNewPassword(e.target.value)}\n                        placeholder=\"••••••••\"\n                        className=\"h-14 bg-muted/30 border-none rounded-2xl font-bold px-6 pr-14 text-lg focus-visible:ring-accent shadow-sm\"\n                      />"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Confirmar Senha"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "setConfirmPassword(e.target.value)}\n                        placeholder=\"••••••••\"\n                        className=\"h-14 bg-muted/30 border-none rounded-2xl font-bold px-6 pr-14 text-lg focus-visible:ring-accent shadow-sm\"\n                      />"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Requisitos de Segurança"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": ": \"Ativar Cadastro de Professor\"}"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Esta senha será seu acesso único ao SIAC-COMPROMISSO"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Compromisso • Sistema Acadêmico Inteligente"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "Configuração de Segurança"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "••••••••"
+  },
+  {
+    "file": "src\\app\\dashboard\\first-access\\page.tsx",
+    "text": "••••••••"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "setTimeout(r, 1200));\r\n\r\n    const familySize = members.length;\r\n    // Se a renda estiver vazia, Number() retorna 0, o que é o comportamento desejado\r\n    const perCapita = totalFamilyIncome / familySize;\r\n    const eligible = perCapita"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Simulador de Isenção"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "VERSÃO 2024"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Não chute o valor. Use nossa calculadora assistida para somar a renda de cada familiar e descobrir sua elegibilidade no SiSU e ProUni."
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "A Regra de 1,5 SM"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "O critério oficial do Governo Federal."
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Teto Atualizado"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "A soma de todas as rendas dividida pelo número de moradores deve ser de até"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Dica da Aurora"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "\"Muitos alunos perdem a isenção porque esquecem de incluir moradores sem renda no cálculo. Deixe o campo de renda vazio para esses integrantes!\""
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Calculadora de Renda"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Adicione cada integrante que mora com você (campos opcionais)."
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Soma Atual"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Integrante / Parentesco"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "updateMember(member.id, 'label', e.target.value)}\r\n                          className=\"h-12 bg-white rounded-xl border-none font-bold italic\"\r\n                        />"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Renda Bruta (R$)"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "updateMember(member.id, 'income', e.target.value)}\r\n                          className=\"h-12 bg-white rounded-xl border-none font-black text-primary\"\r\n                        />"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Adicionar Integrante"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Sua Renda Per Capita"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Valor por cada morador da casa"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Limite de 1,5 Salário Mínimo"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Referência MEC / Governo Federal"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Tirar Dúvidas com Aurora"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "Checklist de Documentos"
+  },
+  {
+    "file": "src\\app\\dashboard\\financial-aid\\page.tsx",
+    "text": "0.00"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Carregando Material Interativo..."
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [modules, setModules] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "([]);\r\n  const [activeModuleId, setActiveModuleId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [activeContentId, setActiveContentId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [contents, setContents] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "(null);\r\n  const progressInterval = useRef"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Sincronizando Estúdio..."
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": ");\r\n  }\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "setIsApiReady(true);\r\n          if ((window as any).YT && typeof (window as any).YT.Player === 'function') setIsApiReady(true);\r\n        }}\r\n      />"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "router.back()} className=\"rounded-full hover:bg-white/10 h-10 w-10 shrink-0 text-white\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "EVOLUÇÃO"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Estúdio em Preparação"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Este mentor ainda está organizando os materiais desta trilha."
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Console"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Math.min(prev + 50, 800)); }} className=\"h-6 w-6 rounded-md hover:bg-white/10 flex items-center justify-center text-white/60\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Math.max(prev - 50, 150)); }} className=\"h-6 w-6 rounded-md hover:bg-white/10 flex items-center justify-center text-white/60\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Unidade Atual"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Dica do Mentor"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "\"A revisão imediata fixa até 3x mais o conhecimento. Utilize as apostilas vinculadas.\""
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Pedagógico"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Apostila Interativa"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Estude simultaneamente com o vídeo usando o modo split-screen."
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "setShowSimultaneousWorkbook(true)} className=\"bg-primary text-white h-12 rounded-xl font-bold text-[10px] uppercase shadow-md hover:scale-105 transition-all gap-2 px-6\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "ESTUDO SIMULTÂNEO"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Sem atividades vinculadas"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Nenhum anexo adicional"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Jornada Maestro"
+  },
+  {
+    "file": "src\\app\\dashboard\\classroom\\[id]\\page.tsx",
+    "text": "Materiais"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\page.tsx",
+    "text": "CANAL SEGURO"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n        />"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\page.tsx",
+    "text": "Sintonizando Rede de Mentores..."
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\page.tsx",
+    "text": ") : filteredContacts.length > 0 ? (\r\n          filteredContacts.map((contact) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\page.tsx",
+    "text": "Nenhum mentor deste polo online"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\page.tsx",
+    "text": "Você pode falar com a Aurora IA para suporte imediato."
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\page.tsx",
+    "text": "Buscar aluno por nome, polo, escola ou curso..."
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "([]);\r\n  const [contact, setContact] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "(null);\r\n  const [loading, setLoading] = useState(true);\r\n  const scrollRef = useRef"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "Sintonizando Canal de Mentoria..."
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "router.back()} className=\"rounded-full h-11 w-11 shrink-0 hover:bg-primary/5\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "SINAL SEGURO"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "inline \r\n                             ?"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "Aurora sintonizando resposta..."
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "handleSend(undefined, \"O que é a regra de 1,5 salário mínimo?\")}\r\n                className=\"bg-accent/10 hover:bg-accent/20 text-accent font-black text-[9px] uppercase tracking-widest px-4 py-2 rounded-full border border-accent/20 transition-all flex items-center gap-2\"\r\n              >"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "Testar Resposta Aurora"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "handleSend(undefined, \"Quais documentos preciso para o ETEC?\")}\r\n                className=\"bg-primary/5 hover:bg-primary/10 text-primary font-black text-[9px] uppercase tracking-widest px-4 py-2 rounded-full border border-primary/10 transition-all flex items-center gap-2\"\r\n              >"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "Testar Signal Pedagógico"
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "A Aurora IA é uma inteligência artificial e pode cometer erros. Verifique informações importantes."
+  },
+  {
+    "file": "src\\app\\dashboard\\chat\\[id]\\page.tsx",
+    "text": "handleSend(e)} className=\"flex items-center gap-4 max-w-4xl mx-auto bg-slate-100 p-2 pl-8 rounded-[2.5rem] border border-slate-200 focus-within:ring-4 focus-within:ring-accent/10 transition-all\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "([]);\r\n  const [processingId, setProcessingId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "pType.includes(key)) || pType === '';\r\n    const isStaff = !isStudent;\r\n\r\n    const matchesRole = roleFilter === 'all' || \r\n                       (roleFilter === 'staff' && isStaff) || \r\n                       (roleFilter === 'student' && isStudent);\r\n\r\n    const isSuspended = u.status === 'suspended';\r\n    const matchesStatus = statusFilter === 'all' ||\r\n                         (statusFilter === 'active' && !isSuspended) ||\r\n                         (statusFilter === 'suspended' && isSuspended);\r\n\r\n    const matchesType = typeFilter === 'all' || u.profile_type === typeFilter;\r\n\r\n    return matchesSearch && matchesRole && matchesStatus && matchesType;\r\n  });\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Diretório de Usuários"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Gestão completa de identidades e acessos da rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Papel na Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Todos os Papéis"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Estudantes"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Staff / Mentoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Status de Acesso"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Todos os Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Apenas Ativos"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Apenas Suspensos"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Tipo de Ingresso"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Todas as Categorias"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "ETEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "CPOP Santana"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "CPOP Osasco"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Mentoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Administração"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Sincronizando Banco de Identidades..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Identidade"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Status de Acesso"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Classificação"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Gestão de Conta"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "pType.includes(key)) || pType === '';\r\n                    const isStaff = !isStudent;\r\n                    const isSuspended = u.status === 'suspended';\r\n                    \r\n                    return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": ": (isSuspended ?"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Excluir Usuário?"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Esta ação removerá permanentemente o perfil de"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "do banco de dados."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Cancelar"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "handleDeleteUser(u.id, u.name)} \r\n                                    className=\"rounded-xl font-black bg-red-600 hover:bg-red-700 text-white px-8\"\r\n                                  >\r\n                                    Confirmar Exclusão"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Nenhum usuário localizado"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Tente ajustar os filtros acima."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Buscar por nome ou @username..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Filtrar Cargo"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Filtrar Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Filtrar Categoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Iniciar Chat"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\users\\page.tsx",
+    "text": "Excluir Definitivamente"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "([]);\r\n  const [searchTerm, setSearchTerm] = useState(\"\");\r\n  const [approvingId, setApprovingId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "t.title.toLowerCase().includes(searchTerm.toLowerCase()));\r\n\r\n  if (loading) return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Carregando Controle de Qualidade..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Controle de Qualidade"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Aprovação e Workflow de Conteúdo Pedagógico"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Filtros Avançados"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Trilha / Conteúdo"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Professor"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Ações"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Aguardando Revisão"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Publicada"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": ": \"Aprovar\"}"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Nenhuma trilha pendente"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\trails\\page.tsx",
+    "text": "Pesquisar por título ou matéria..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "(null);\r\n  \r\n  const [cohorts, setCohorts] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "([]);\r\n  const [poloForums, setPoloForums] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "([]);\r\n  const [students, setStudents] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "(\"\");\r\n  const [destCohortId, setDestCohortId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "(\"\");\r\n\r\n  const [selectedCohortId, setSelectedCohortId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "(null);\r\n  const [selectedPoloName, setSelectedPoloName] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "(null);\r\n\r\n  const [editingStudent, setEditingStudent] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Gestão de Turmas & Comunidades"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Administração centralizada de Cohorts acadêmicos e Polos regionais."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Limpar Filtros"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Mesclar Turmas"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Mesclar Cohorts"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Isso moverá todos os alunos de uma turma para outra e apagará o registro de origem."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Turma de Origem (Será removida)"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Turma de Destino (Receberá os alunos)"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": ": \"Unificar e Sincronizar Alunos\"}"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Criar Nova Turma"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Configurar Turma"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Identificação"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Meta Pedagógica"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": ": \"Registrar Turma\"}"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Agrupamentos Disponíveis"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "COHORT ACADÊMICO"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "COMUNIDADE REGIONAL"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Entrar no Fórum"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Visualização Filtrada"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "setSearchTerm(e.target.value)} />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Estudante"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Unidade / Fórum"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Turma"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Engajamento"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Ações de Gestão"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "!open && setEditingStudent(null)}>"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Alterar Polo / Fórum"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Isso moverá o aluno para a nova comunidade do polo instantaneamente."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Nova Instituição (Polo)"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "setNewInstitution(e.target.value)} placeholder=\"Ex: ETEC Jorge Street\" className=\"h-10 rounded-xl bg-muted/30 border-none font-bold italic text-sm\" />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "A Aurora criará o fórum do polo se não existir."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": ": \"Transferir e Sincronizar\"}"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Excluir Registro?"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Esta ação removerá o perfil de"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "da rede. Esta ação é irreversível."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Cancelar"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "handleDeleteStudent(student.id, student.name)} \r\n                              className=\"rounded-xl font-black bg-red-600 hover:bg-red-700 text-white px-8\"\r\n                            >\r\n                              Confirmar Exclusão"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Selecione a origem..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Selecione o destino..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Pesquisar..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\students\\page.tsx",
+    "text": "Ex: ETEC Jorge Street"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "([]);\r\n  const [timeFilter, setTimeFilter] = useState(\"all\");\r\n  const [riskAlerts, setRiskAlerts] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "p.percentage"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Sincronizando Auditoria Global..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Gabinete de Gestão"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Coordenação"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Visão estratégica e controle industrial de rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Todo o Período"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Última Semana"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Último Mês"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Último Ano"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "fetchDashboardData()} variant=\"ghost\" size=\"icon\" className=\"rounded-2xl h-12 w-12 bg-white shadow-xl\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Segurança de Rede"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Gerencie o código de entrada para novos Mentores/Professores."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "CÓDIGO ATIVO PARA NOVOS MENTORES"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "REDE"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Alunos na Base"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "EQUIPE"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Staff / Mentoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "SUCESSO"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Trilhas Concluídas"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Engajados"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Média Geral"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "SOCIAL"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Elegíveis Isenção"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Rastro Operacional"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Auditoria de atividades em tempo real."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Nenhuma atividade recente registrada."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": ") : (\r\n              logs.map((log) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Status de Sinal"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Banco de Dados"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Alertas de Risco"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Rede em Conformidade Total"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Aplicar Intervenção"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\home\\page.tsx",
+    "text": "Filtrar Período"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "([]);\r\n  const [deletingId, setDeletingId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "(null);\r\n  \r\n  // Estados de Configuração\r\n  const [configForum, setConfigForum] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "(null);\r\n  const [isUpdating, setIsUpdating] = useState(false);\r\n  const [bannedUsers, setBannedUsers] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "([]);\r\n  const [userSearch, setUserSearch] = useState(\"\");\r\n  const [searchResults, setSearchResults] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Moderação de Comunidade"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Gestão de tópicos, permissões de fala e restrições de usuários."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Filtrar por Matéria"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Todas as Matérias"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Nível de Visibilidade"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Todos os Tópicos"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Apenas Públicos"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Apenas Somente Staff"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Escaneando Redes de Debate..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Tópico / Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Autor"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Data"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Ações de Gestão"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Somente Staff"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "handleOpenConfig(f)}>"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Configurações de Debate"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Título do Fórum"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Somente Professores"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Alunos apenas leem"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": ": \"Gravar Preferências\"}"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Restringir Participantes"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "banUserFromForum(u)}\r\n                                              className=\"w-full text-left p-2 hover:bg-red-50 rounded-lg flex items-center justify-between group\"\r\n                                            >"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Banir"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Banidos deste fórum"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Nenhum banimento específico."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": ") : (\r\n                                          bannedUsers.map(b => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "liftBan(b.id)}>"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Banir Tópico?"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Esta ação removerá o debate"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "e todas as mensagens vinculadas."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Cancelar"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "handleDeleteForum(f.id, f.name)} \r\n                                  className=\"rounded-xl font-black bg-red-600 hover:bg-red-700 text-white px-8\"\r\n                                >\r\n                                  Remover Agora"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Nenhuma discussão localizada"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Pesquisar tópico ou autor..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Todas as Categorias"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Todos os Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\forums\\page.tsx",
+    "text": "Buscar aluno para banir..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Auditoria de Documentos"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Supervisão da prontidão documental para vestibulares."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "80%)\", count: students.filter(s => s.status === 'high').length, icon: CheckCircle2, color: \"text-green-600\", bg: \"bg-green-50\" },\r\n        ].map((stat, i) => ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Filtrar por Nível de Risco"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Todos os Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Apenas Críticos"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "progresso iniciado"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Prontos para Matrícula"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Filtrar por Categoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Todos os Perfis"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Alunos ETEC"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Alunos ENEM"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "CPOP Santana"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "CPOP Osasco"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Intervenção Direta"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Conteúdo da Mensagem"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "setBulkContent(e.target.value)}\r\n                />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "}\r\n                  Disparar no Chat"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Publicar Aviso Segmentado"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Alerta Geral de Grupo"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Corpo do Comunicado"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "setBulkContent(e.target.value)}\r\n                />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "}\r\n                  Fixar no Mural de Avisos"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Auditando Registros de Rede..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Estudante / Polo"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Status do Checklist"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Diagnóstico"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Ações"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Cobrar Apoio"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Nenhum registro localizado"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Tente ajustar os filtros de risco ou polo."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Buscar por nome..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Todos os Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Todas as Categorias"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Olá! Notamos que sua documentação está pendente. Precisa de ajuda com algum item?"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Atenção alunos em situação CRÍTICA: O prazo para envio de documentos do SiSU encerra em 48h!"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\checklists\\page.tsx",
+    "text": "Ver Perfil"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "([]);\r\n  const [clearingId, setClearingId] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Auditoria de Chats"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Monitoramento ético e supervisão de interações na rede."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "setSearchTerm(e.target.value)}\r\n          />"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Categoria de Interação"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Todas as Interações"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Aluno ↔ Aluno"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Aluno ↔ Mentoria"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Equipe Técnica (Staff)"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Janela de Recência"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Todo o Histórico"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Apenas Hoje"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Última Semana"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Último Mês"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Sincronizando Logs de Auditoria..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Participantes"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Última Interação"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Status"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Ações de Gestão"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Arquivado"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Limpar Chat?"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Esta ação apagará"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "todas"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "as mensagens entre estes participantes. Esta operação não pode ser desfeita."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Cancelar"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "handleClearChat(thread.u1_id, thread.u2_id)} \r\n                                  className=\"rounded-xl font-black bg-red-600 hover:bg-red-700 text-white h-12 px-8\"\r\n                                >\r\n                                  Limpar Agora"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Abrir Log"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Nenhuma conversa localizada"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Buscar por nome ou conteúdo..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Todas as Interações"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\page.tsx",
+    "text": "Todo o Período"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "([]);\r\n  const [user1, setUser1] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "(null);\r\n  const [user2, setUser2] = useState"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "(null);\r\n  const scrollRef = useRef"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "Descriptografando Log de Segurança..."
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": ");\r\n\r\n  return ("
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "router.back()} className=\"rounded-full h-10 w-10 shrink-0\">"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "LOG DE AUDITORIA • PROTEGIDO"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "MODO AUDITOR"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "Início do Log Histórico"
+  },
+  {
+    "file": "src\\app\\dashboard\\admin\\chats\\audit\\page.tsx",
+    "text": "Visualização restrita ao Gabinete de Gestão. As interações acima são propriedade da rede."
+  }
+]

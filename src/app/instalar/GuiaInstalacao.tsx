@@ -50,7 +50,7 @@ const PASSOS: Record<'ios' | 'android', { icone: React.ReactNode; texto: React.R
     },
     {
       icone: <Smartphone className="h-5 w-5" />,
-      texto: <>Feche o Safari e abra o app <b>pelo ícone novo</b> na sua tela.</>,
+      texto: <>Feche o Safari e abra o Compromisso <b>pelo ícone novo</b> na sua tela.</>,
     },
     {
       icone: <Bell className="h-5 w-5" />,
@@ -72,7 +72,7 @@ const PASSOS: Record<'ios' | 'android', { icone: React.ReactNode; texto: React.R
     },
     {
       icone: <Smartphone className="h-5 w-5" />,
-      texto: <>Abra o app <b>pelo ícone novo</b> na sua tela.</>,
+      texto: <>Abra o Compromisso <b>pelo ícone novo</b> na sua tela.</>,
     },
     {
       icone: <Bell className="h-5 w-5" />,
@@ -142,11 +142,11 @@ export function GuiaInstalacao() {
 
         <header className="text-center space-y-4">
           <div className="mx-auto relative h-20 w-20 rounded-[1.5rem] bg-white shadow-xl border border-slate-100 overflow-hidden p-2">
-            <Image src="/icons/icon-192.png" alt="Plataforma" fill className="object-contain" sizes="80px" />
+            <Image src="/icons/icon-192.png" alt="Compromisso" fill className="object-contain" sizes="80px" />
           </div>
           <div className="space-y-2">
             <h1 className="text-3xl font-black italic tracking-tighter text-slate-900 leading-tight text-balance">
-              Instale o app<br />no seu celular
+              Instale o Compromisso<br />no seu celular
             </h1>
             <p className="text-sm font-medium text-slate-500 leading-relaxed">
               Fica com ícone na tela, abre igual aplicativo e avisa você quando

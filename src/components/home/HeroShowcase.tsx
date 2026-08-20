@@ -4,16 +4,15 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   Award,
-  Bot,
-  Palette,
+  GraduationCap,
   Play,
-  ShieldCheck,
+  Star,
   Users,
+  Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { ReactElement } from "react";
-import { DEMO_WHATSAPP_URL } from "@/lib/site-contact";
 
 const DynamicDashboardMockup = dynamic(
   () => import("@/components/home/DashboardMockup").then((mod) => mod.DashboardMockup),
@@ -27,10 +26,10 @@ interface HeroStat {
 }
 
 const HERO_STATS: readonly HeroStat[] = [
-  { value: "100%", label: "Sua marca, seu domínio", icon: Palette },
-  { value: "24/7", label: "Mentoria com IA", icon: Bot },
-  { value: "Multi", label: "Turmas e unidades", icon: Users },
-  { value: "LGPD", label: "Dado isolado por escola", icon: ShieldCheck },
+  { value: "500+", label: "Aprovações Reais", icon: GraduationCap },
+  { value: "98%", label: "Índice de Sucesso", icon: Star },
+  { value: "50+", label: "Professores Elite", icon: Users },
+  { value: "24/7", label: "Suporte com IA", icon: Zap },
 ];
 
 export interface HeroShowcaseProps {
@@ -63,33 +62,32 @@ export function HeroShowcase({ onNavigate, onScrollTo }: HeroShowcaseProps): Rea
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center relative z-10 w-full pt-6 md:pt-10">
         <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-left duration-1000">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary font-black px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] rounded-full">
-            <Award className="h-3 w-3" /> Plataforma White-Label para Escolas
+            <Award className="h-3 w-3" /> Ensino de Alta Performance
           </div>
 
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tighter">
-            A plataforma da<br />
-            <span className="text-gradient-brand italic">sua instituição.</span>
+            Sua Aprovação é o<br />
+            <span className="text-gradient-brand italic">nosso Compromisso.</span>
           </h1>
 
           <p className="text-sm md:text-base text-gray-400 leading-relaxed max-w-md">
-            Gestão pedagógica, simulados, redação corrigida por IA, trilhas de estudo e
-            gamificação — com{" "}
-            <strong className="text-white">sua marca, suas cores</strong> e{" "}
+            Preparamos você com excelência para{" "}
+            <strong className="text-white">ENEM e ETEC</strong> aliando ensino tradicional à{" "}
             <strong className="text-white hover:text-primary transition-colors">
-              dados isolados por instituição
+              Tecnologia IA de ponta
             </strong>
-            . Leve sua escola pro digital sem construir nada do zero.
+            . Foco total nos seus resultados!
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button
-              asChild
-              className="btn-shimmer h-11 px-8 bg-primary hover:bg-[#0f7a95] text-white font-black text-sm rounded-full glow-orange-strong border-none transition-[transform,box-shadow] active:scale-95 group"
+              onClick={() => onNavigate("/login")}
+              className="btn-shimmer h-11 px-8 bg-primary hover:bg-[#e06000] text-white font-black text-sm rounded-full glow-orange-strong border-none transition-[transform,box-shadow] active:scale-95 group"
             >
-              <a href={DEMO_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                Falar com a gente{" "}
+              <div className="flex items-center gap-2">
+                Entrar na Plataforma{" "}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </div>
             </Button>
             <Button
               asChild
@@ -104,7 +102,7 @@ export function HeroShowcase({ onNavigate, onScrollTo }: HeroShowcaseProps): Rea
                 }}
                 className="flex items-center gap-2"
               >
-                <Play className="h-4 w-4 text-primary fill-primary" /> Ver funcionalidades
+                <Play className="h-4 w-4 text-primary fill-primary" /> Explorar a Plataforma
               </a>
             </Button>
           </div>

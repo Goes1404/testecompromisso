@@ -121,7 +121,7 @@ export default function GoalsPage() {
     ctx.font = 'bold italic 40px Arial';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
-    ctx.fillText('PLATAFORMA', 800, 180);
+    ctx.fillText('COMPROMISSO', 800, 180);
     ctx.font = '900 14px Arial';
     ctx.fillStyle = '#94a3b8';
     ctx.fillText('SISTEMA DE ENSINO', 800, 210);
@@ -158,11 +158,11 @@ export default function GoalsPage() {
     });
     ctx.font = 'italic 20px Arial';
     ctx.fillStyle = '#64748b';
-    ctx.fillText(`Emitido em ${dateStr} • Plataforma EAD`, 800, 840);
+    ctx.fillText(`Emitido em ${dateStr} • Plataforma Compromisso`, 800, 840);
 
     ctx.font = 'italic 28px Georgia';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText('Equipe da Plataforma', 800, 930);
+    ctx.fillText('Equipe Compromisso', 800, 930);
     ctx.fillRect(700, 950, 200, 1);
     ctx.font = 'normal 16px Arial';
     ctx.fillStyle = '#64748b';

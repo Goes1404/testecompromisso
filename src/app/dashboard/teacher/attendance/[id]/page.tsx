@@ -237,7 +237,7 @@ export default function AttendanceSessionPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(34,197,94,0.08) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(34,197,94,0.08) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -319,7 +319,7 @@ export default function AttendanceSessionPage() {
         <div className="p-4">
           {codeActive ? (
             <div className="space-y-3">
-              <div className="bg-[#4CCCED]/8 border border-[#4CCCED]/20 rounded-2xl p-4 text-center">
+              <div className="bg-orange-500/8 border border-orange-500/20 rounded-2xl p-4 text-center">
                 <p className="text-6xl font-black tracking-[0.5em] text-orange-400 font-mono leading-none pl-[0.5em]">
                   {session.checkin_code}
                 </p>
@@ -357,7 +357,7 @@ export default function AttendanceSessionPage() {
               <button
                 onClick={handleGenerateCode}
                 disabled={generatingCode}
-                className="shrink-0 h-11 px-5 flex items-center gap-2 bg-[#4CCCED] hover:bg-orange-600 text-slate-800 font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all touch-manipulation active:scale-95 disabled:opacity-50"
+                className="shrink-0 h-11 px-5 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all touch-manipulation active:scale-95 disabled:opacity-50"
               >
                 {generatingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
                 Gerar Código
@@ -378,7 +378,7 @@ export default function AttendanceSessionPage() {
           </div>
           <button
             onClick={() => { setShowAddPanel((v) => !v); setAddSearch(""); }}
-            className="h-8 flex items-center gap-1.5 bg-[#4CCCED]/15 border border-[#4CCCED]/25 text-orange-400 rounded-xl px-3 text-[9px] font-black uppercase tracking-wider hover:bg-[#4CCCED]/20 transition-all touch-manipulation active:scale-95"
+            className="h-8 flex items-center gap-1.5 bg-orange-500/15 border border-orange-500/25 text-orange-400 rounded-xl px-3 text-[9px] font-black uppercase tracking-wider hover:bg-orange-500/20 transition-all touch-manipulation active:scale-95"
           >
             <UserPlus className="h-3.5 w-3.5" />
             Adicionar
@@ -407,7 +407,7 @@ export default function AttendanceSessionPage() {
                 value={addSearch}
                 onChange={(e) => setAddSearch(e.target.value)}
                 autoFocus
-                className="w-full h-10 bg-white shadow-sm border border-slate-200 rounded-xl pl-9 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
+                className="w-full h-10 bg-white shadow-sm border border-slate-200 rounded-xl pl-9 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
             {availableStudents.length === 0 ? (

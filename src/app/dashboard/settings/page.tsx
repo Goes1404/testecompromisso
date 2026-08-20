@@ -546,7 +546,7 @@ export default function SettingsPage() {
                 <div>
                   <p className="text-sm font-black text-amber-800">Falta instalar na tela de início</p>
                   <p className="text-xs font-medium text-amber-700/80 mt-1 leading-relaxed">
-                    No iPhone, as notificações só funcionam com o app aberto pelo ícone.
+                    No iPhone, as notificações só funcionam com o Compromisso aberto pelo ícone.
                   </p>
                   <ol className="text-xs font-medium text-amber-700/90 mt-2 space-y-1 list-decimal list-inside">
                     <li>Toque em <b>Compartilhar</b>, na barra do Safari.</li>

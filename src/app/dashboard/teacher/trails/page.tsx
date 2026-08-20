@@ -184,7 +184,7 @@ export default function TeacherTrailsPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(168,85,247,0.08) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(168,85,247,0.08) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -227,7 +227,7 @@ export default function TeacherTrailsPage() {
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => setIsCreateDialogOpen(true)}
-          className="h-12 flex items-center justify-center gap-2 bg-[#4CCCED] hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
+          className="h-12 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest transition-all touch-manipulation active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" />
           Nova Aula
@@ -279,7 +279,7 @@ export default function TeacherTrailsPage() {
           placeholder="Pesquisar trilhas..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
+          className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
         />
       </div>
 
@@ -355,7 +355,7 @@ export default function TeacherTrailsPage() {
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
                       <Link
                         href={`/dashboard/teacher/trails/${trail.id}`}
-                        className="flex-1 h-9 flex items-center justify-center gap-1.5 bg-[#4CCCED]/15 border border-[#4CCCED]/25 text-orange-400 rounded-xl text-[9px] font-black uppercase tracking-wider hover:bg-[#4CCCED]/20 transition-all touch-manipulation active:scale-95"
+                        className="flex-1 h-9 flex items-center justify-center gap-1.5 bg-orange-500/15 border border-orange-500/25 text-orange-400 rounded-xl text-[9px] font-black uppercase tracking-wider hover:bg-orange-500/20 transition-all touch-manipulation active:scale-95"
                       >
                         <LayoutDashboard className="h-3.5 w-3.5" />
                         Gerenciar
@@ -410,7 +410,7 @@ export default function TeacherTrailsPage() {
                 value={newTrail.title}
                 onChange={(e) => setNewTrail({ ...newTrail, title: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all disabled:opacity-50"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -449,7 +449,7 @@ export default function TeacherTrailsPage() {
                   accept="image/*"
                   onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                   disabled={isSubmitting}
-                  className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-[#4CCCED]/20 hover:border-[#4CCCED]/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-[#4CCCED] file:text-slate-800"
+                  className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-slate-800"
                 />
                 {!coverFile && (
                   <input
@@ -458,7 +458,7 @@ export default function TeacherTrailsPage() {
                     value={newTrail.image_url}
                     onChange={(e) => setNewTrail({ ...newTrail, image_url: e.target.value })}
                     disabled={isSubmitting}
-                    className="w-full h-10 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-xs font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all disabled:opacity-50"
+                    className="w-full h-10 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-xs font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all disabled:opacity-50"
                   />
                 )}
               </div>
@@ -470,7 +470,7 @@ export default function TeacherTrailsPage() {
                 value={newTrail.description}
                 onChange={(e) => setNewTrail({ ...newTrail, description: e.target.value })}
                 disabled={isSubmitting}
-                className="rounded-xl min-h-[70px] bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-[#4CCCED]/30"
+                className="rounded-xl min-h-[70px] bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30"
               />
             </div>
           </div>

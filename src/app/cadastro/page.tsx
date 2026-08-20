@@ -116,7 +116,7 @@ function CadastroForm() {
           <CheckCircle2 className="h-10 w-10 text-green-600" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-gray-900 italic">Bem-vindo(a) à Plataforma!</h2>
+          <h2 className="text-2xl font-black text-gray-900 italic">Bem-vindo(a) ao Compromisso!</h2>
           <p className="text-gray-500 font-medium">{success}</p>
         </div>
         <p className="text-sm text-gray-400">Redirecionando para a tela de login...</p>
@@ -132,7 +132,7 @@ function CadastroForm() {
       <div className="mb-8 text-center md:text-left">
         <h1 className="text-3xl font-black italic text-gray-900 mb-2">Crie sua Conta</h1>
         <p className="text-gray-500 text-sm">
-          Preencha os dados abaixo para ativar seu perfil de aluno na plataforma.
+          Preencha os dados abaixo para ativar seu perfil de aluno na plataforma Educori-Compromisso.
         </p>
       </div>
 
@@ -302,7 +302,7 @@ export default function CadastroPage() {
           <div className="absolute inset-0 flex flex-col justify-end p-12 text-white z-10">
             <h2 className="text-4xl font-black italic mb-4">A sua jornada começa aqui.</h2>
             <p className="text-lg font-medium text-blue-100 max-w-md">
-              Junte-se à plataforma e tenha acesso aos melhores recursos de estudo para o seu exame.
+              Junte-se à plataforma do Compromisso e tenha acesso aos melhores recursos de estudo para o seu exame.
             </p>
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function CadastroPage() {
       
       {/* Footer */}
       <footer className="bg-[#002f6c] text-white text-xs py-4 text-center shrink-0">
-        <p>Copyright © 1997-2026 Plataforma. Todos os direitos reservados.</p>
+        <p>Copyright © 1997-2026 Colégio Compromisso. Todos os direitos reservados.</p>
       </footer>
     </div>
   );

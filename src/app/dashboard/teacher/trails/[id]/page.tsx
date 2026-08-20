@@ -910,11 +910,11 @@ export default function TrailManagementPage() {
             <div className="flex items-center gap-3">
               <Sparkles className='h-5 w-5 text-accent' />
               <h3 className='text-[10px] font-black text-primary uppercase tracking-widest'>
-                Mentoria da Plataforma
+                Mentoria Compromisso
               </h3>
             </div>
             <p className='text-sm font-medium italic text-primary/70 leading-relaxed border-l-4 border-accent/30 pl-4'>
-              "Organize suas aulas em blocos de até 15 minutos para maximizar o foco dos seus estudantes."
+              "Organize suas aulas em blocos de até 15 minutos para maximizar o foco dos estudantes de Santana de Parnaíba."
             </p>
           </Card>
         </div>

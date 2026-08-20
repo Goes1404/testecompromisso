@@ -11,12 +11,12 @@ export const dynamic = 'force-dynamic';
 
 const getMockLive = (id: string) => ({
   id: id,
-  title: 'Aula Magna de Revisão',
+  title: 'Aula Magna de Revisão Compromisso',
   teacher_name: 'Prof. Ana Lúcia',
   start_time: new Date(Date.now() + 3600 * 1000).toISOString(),
   status: 'scheduled',
   youtube_id: 'dQw4w9WgXcQ',
-  description: 'Uma revisão completa dos tópicos mais importantes para o curso.'
+  description: 'Uma revisão completa dos tópicos mais importantes para o curso Compromisso.'
 });
 
 export async function GET(

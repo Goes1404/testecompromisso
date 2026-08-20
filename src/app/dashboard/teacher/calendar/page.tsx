@@ -40,7 +40,7 @@ const EVENT_TYPES = [
   { value: "feriado",              label: "Feriado",                 chip: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25", dot: "bg-emerald-500" },
   { value: "vestibular",           label: "Vestibular",              chip: "bg-red-500/15 text-red-400 border-red-500/25",           dot: "bg-red-500" },
   { value: "abertura_inscricao",   label: "Abre Inscrições",         chip: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25", dot: "bg-emerald-500" },
-  { value: "fechamento_inscricao", label: "Fecha Inscrições",        chip: "bg-[#4CCCED]/15 text-orange-400 border-[#4CCCED]/25",  dot: "bg-[#4CCCED]" },
+  { value: "fechamento_inscricao", label: "Fecha Inscrições",        chip: "bg-orange-500/15 text-orange-400 border-orange-500/25",  dot: "bg-orange-500" },
   { value: "resultado",            label: "Resultado",               chip: "bg-indigo-500/15 text-indigo-400 border-indigo-500/25",  dot: "bg-indigo-500" },
   { value: "matricula",            label: "Matrícula",               chip: "bg-cyan-500/15 text-cyan-400 border-cyan-500/25",        dot: "bg-cyan-500" },
   { value: "outro",                label: "Outro",                   chip: "bg-white/8 text-white/50 border-white/10",                dot: "bg-white/40" },
@@ -141,7 +141,7 @@ export default function TeacherCalendarPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.10) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(99,102,241,0.10) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -159,7 +159,7 @@ export default function TeacherCalendarPage() {
           </p>
 
           <div className="grid grid-cols-2 gap-2 mt-5">
-            <div className="flex flex-col items-center bg-[#4CCCED]/10 border border-[#4CCCED]/20 rounded-2xl py-2.5">
+            <div className="flex flex-col items-center bg-orange-500/10 border border-orange-500/20 rounded-2xl py-2.5">
               <span className="text-lg font-black text-orange-400 leading-none">{upcoming.length}</span>
               <span className="text-[8px] font-bold text-orange-400/80 uppercase tracking-wider mt-0.5">Futuros</span>
             </div>
@@ -179,7 +179,7 @@ export default function TeacherCalendarPage() {
             setEditId(null);
             setForm(blankForm);
           }}
-          className="w-full h-12 bg-[#4CCCED] hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
+          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Novo Evento
@@ -214,7 +214,7 @@ export default function TeacherCalendarPage() {
                 placeholder="Ex: Aulão de Revisão — Matemática"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
@@ -225,7 +225,7 @@ export default function TeacherCalendarPage() {
                   type="date"
                   value={form.event_date}
                   onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
-                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 outline-none focus:border-[#4CCCED]/40 transition-all [color-scheme:dark]"
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 outline-none focus:border-orange-500/40 transition-all [color-scheme:dark]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -270,7 +270,7 @@ export default function TeacherCalendarPage() {
                 placeholder="Detalhes adicionais..."
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-[#4CCCED]/30 min-h-[80px]"
+                className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
               />
             </div>
 

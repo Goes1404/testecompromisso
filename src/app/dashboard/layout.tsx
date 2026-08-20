@@ -25,7 +25,6 @@ import { ExtractionProvider } from "@/lib/ExtractionContext";
 import { FloatingExtractionBubble } from "@/components/FloatingExtractionBubble";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
-import { useTenant } from "@/components/TenantProvider";
 
 type NavChild = { icon: any; label: string; href: string; id: string; badge?: boolean };
 type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: boolean; initialOpen?: boolean; children?: NavChild[] };
@@ -365,9 +364,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname   = usePathname();
   const router     = useRouter();
   const { user, profile, userRole, loading: isUserLoading, signOut } = useAuth();
-  const { tenant } = useTenant();
   const [hasHydrated, setHasHydrated] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
   useTimeTracker(user?.id);
   useEffect(() => { setHasHydrated(true); }, []);
@@ -445,8 +445,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div id="sidebar-logo" className="flex items-center gap-2.5">
             <div className="relative h-10 w-10 shrink-0 flex items-center justify-center">
               <Image
-                src={tenant.branding.logoUrl}
-                alt="Logo"
+                src="/images/logocompromisso.png"
+                alt="Logo Compromisso"
                 width={40}
                 height={40}
                 className="object-contain"
@@ -454,7 +454,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               />
             </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden gap-0.5">
-              <span className="text-sm font-black text-white italic leading-tight">{tenant.branding.appName}</span>
+              <span className="text-sm font-black text-white italic leading-tight">Compromisso</span>
+              <span className="text-[8px] text-white/50 uppercase tracking-wide font-black">Ensino</span>
             </div>
           </div>
         </SidebarHeader>
@@ -466,6 +467,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarContent>
 
         <SidebarFooter className="p-3 border-t border-white/[0.06] space-y-3">
+          <div className="flex items-center gap-2 px-2 py-2.5 bg-white/[0.04] rounded-xl border border-white/[0.05] group-data-[collapsible=icon]:hidden">
+            <div className="relative h-5 w-5 shrink-0 bg-white rounded-md p-0.5">
+              <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" sizes="20px" />
+            </div>
+            <span className="text-[9px] font-black text-white/50 uppercase tracking-wide leading-tight">
+              Plataforma Patrocinada pela Prefeitura
+            </span>
+          </div>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton

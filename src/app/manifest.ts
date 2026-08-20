@@ -1,6 +1,4 @@
 import { MetadataRoute } from 'next'
-import { headers } from 'next/headers'
-import { getTenantForHost } from '@/lib/get-tenant'
 
 /**
  * Manifesto do PWA — servido em `/manifest.webmanifest`.
@@ -24,27 +22,21 @@ import { getTenantForHost } from '@/lib/get-tenant'
  * cores. Nada o referenciava (o `<link rel="manifest">` vem daqui, via
  * metadata do Next), então foi removido para não haver duas verdades.
  */
-export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const headersList = await headers()
-  const tenant = await getTenantForHost(headersList.get('host'))
-
+export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${tenant.branding.appName} — Sistema de Ensino`,
-    short_name: tenant.branding.appName,
-    description: 'Plataforma de estudos: simulados, provas, redação com correção por IA e trilhas de aprendizado.',
+    name: 'Compromisso — Sistema de Ensino',
+    short_name: 'Compromisso',
+    description: 'Plataforma de estudos do Cursinho Compromisso: simulados, provas, redação e trilhas para ENEM, ETEC e FUVEST.',
     // O aluno que instala já é aluno: cai direto no painel. Sem sessão, o
     // middleware manda para o login e volta depois.
     start_url: '/dashboard/home',
     display: 'standalone',
     // Branco para casar com o fundo do logo e com a tela de abertura.
     background_color: '#ffffff',
-    theme_color: tenant.branding.primaryColor,
+    theme_color: '#FF6B00',
     orientation: 'portrait-primary',
     lang: 'pt-BR',
     categories: ['education'],
-    // Ícones ainda fixos (não por tenant): precisam de asset quadrado
-    // pré-dimensionado por escola — ver comentário no topo do arquivo sobre
-    // a instalação quebrar quando o tamanho declarado não bate com o real.
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

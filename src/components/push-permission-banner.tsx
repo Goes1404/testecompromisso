@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { trackAcao } from "@/lib/telemetry";
 
-const DISMISS_KEY = "app_push_dismissed_at";
+const DISMISS_KEY = "compromisso_push_dismissed_at";
 const DISMISS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
 /** Marca que o estado desta visita já virou telemetria. */
-const MEDIDO_KEY = "app_push_medido";
+const MEDIDO_KEY = "compromisso_push_medido";
 
 type Modo = "pedir" | "ios_instalar" | "bloqueado" | null;
 
@@ -138,7 +138,7 @@ export function PushPermissionBanner() {
             </li>
             <li className="flex items-start gap-2">
               <span className="font-black text-accent shrink-0">3.</span>
-              <span>Abra o app <b>pelo ícone novo</b> e ative os avisos por lá.</span>
+              <span>Abra o Compromisso <b>pelo ícone novo</b> e ative os avisos por lá.</span>
             </li>
           </ol>
         )}

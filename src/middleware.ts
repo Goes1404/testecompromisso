@@ -1,8 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { extractTenantSlug } from '@/lib/tenant'
-
 export async function middleware(request: NextRequest) {
   // Propagate or generate a correlation ID so every log entry for the same
   // request can be joined in any log aggregator (Datadog, Axiom, etc.)
@@ -10,18 +8,12 @@ export async function middleware(request: NextRequest) {
     request.headers.get('x-request-id') ?? crypto.randomUUID();
   request.headers.set('x-request-id', requestId);
 
-  // Extração e resolução do Tenant Slug
-  const host = request.headers.get('host');
-  const tenantSlug = request.headers.get('x-tenant-slug') || extractTenantSlug(host);
-  request.headers.set('x-tenant-slug', tenantSlug);
-
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
   response.headers.set('x-request-id', requestId);
-  response.headers.set('x-tenant-slug', tenantSlug);
 
   // Evita carregar o supabase client em recursos estáticos para performance
   if (request.nextUrl.pathname.startsWith('/_next') || request.nextUrl.pathname.includes('.')) {
@@ -48,16 +40,9 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder')) {
-    return response;
-  }
-
   const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {

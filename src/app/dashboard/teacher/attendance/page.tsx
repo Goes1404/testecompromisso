@@ -100,7 +100,7 @@ export default function TeacherAttendancePage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(16,185,129,0.08) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(16,185,129,0.08) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -151,7 +151,7 @@ export default function TeacherAttendancePage() {
 
       {/* ── CTA ── */}
       <Link href="/dashboard/teacher/attendance/new" className="block">
-        <Button className="w-full h-12 bg-[#4CCCED] hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
+        <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
           <Plus className="h-4 w-4 mr-2" />
           Nova Sessão de Chamada
         </Button>
@@ -201,7 +201,7 @@ export default function TeacherAttendancePage() {
               return (
                 <div
                   key={session.id}
-                  className="group bg-white shadow-sm border border-slate-200 hover:border-[#4CCCED]/20 rounded-2xl p-3.5 transition-all"
+                  className="group bg-white shadow-sm border border-slate-200 hover:border-orange-500/20 rounded-2xl p-3.5 transition-all"
                 >
                   <div className="flex items-start gap-3">
                     {/* Date anchor */}
@@ -248,7 +248,7 @@ export default function TeacherAttendancePage() {
                   <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-slate-100">
                     <Link
                       href={`/dashboard/teacher/attendance/${session.id}`}
-                      className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-400 bg-[#4CCCED]/10 hover:bg-[#4CCCED]/20 transition-all active:scale-95 touch-manipulation"
+                      className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 transition-all active:scale-95 touch-manipulation"
                     >
                       <Eye className="h-3 w-3" />
                       Abrir

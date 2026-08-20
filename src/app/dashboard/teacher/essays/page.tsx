@@ -205,7 +205,7 @@ export default function AssessmentsGraderPage() {
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(168,85,247,0.08) 0%, transparent 60%)",
+                "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(168,85,247,0.08) 0%, transparent 60%)",
             }}
           />
           <div className="relative z-10 flex items-start justify-between gap-3">
@@ -293,7 +293,7 @@ export default function AssessmentsGraderPage() {
           placeholder="Buscar estudante ou tema..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 focus:bg-slate-50 transition-all"
+          className="w-full h-12 bg-white shadow-sm border border-slate-200 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 focus:bg-slate-50 transition-all"
         />
       </div>
 
@@ -333,12 +333,12 @@ export default function AssessmentsGraderPage() {
                         onClick={() => handleSelectEssay(item)}
                         className={`relative p-4 text-left border-b border-slate-100 last:border-0 transition-all touch-manipulation active:scale-[0.99] ${
                           isSelected
-                            ? "bg-[#4CCCED]/8"
+                            ? "bg-orange-500/8"
                             : "hover:bg-slate-50"
                         }`}
                       >
                         {isSelected && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4CCCED] rounded-r-full" />
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 rounded-r-full" />
                         )}
                         <div className="flex items-center justify-between mb-1.5 gap-2">
                           <p className="font-black text-slate-800 text-xs italic leading-none truncate flex-1">
@@ -394,7 +394,7 @@ export default function AssessmentsGraderPage() {
 
                 {/* Student header */}
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-[#4CCCED]/20 border border-[#4CCCED]/30 text-orange-400 flex items-center justify-center font-black italic shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-orange-500/20 border border-orange-500/30 text-orange-400 flex items-center justify-center font-black italic shrink-0">
                     {selectedEssay.profiles?.name?.charAt(0)?.toUpperCase() || "A"}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -428,15 +428,15 @@ export default function AssessmentsGraderPage() {
                 </div>
 
                 {/* AI Score */}
-                <div className="relative bg-[#0d0d0f] border border-[#4CCCED]/15 rounded-2xl p-5 overflow-hidden">
+                <div className="relative bg-[#0d0d0f] border border-orange-500/15 rounded-2xl p-5 overflow-hidden">
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      background: "radial-gradient(ellipse at 100% 0%, rgba(76,204,237,0.15) 0%, transparent 60%)",
+                      background: "radial-gradient(ellipse at 100% 0%, rgba(255,107,0,0.15) 0%, transparent 60%)",
                     }}
                   />
                   <div className="relative z-10 flex items-start justify-between mb-3">
-                    <Badge className="bg-[#4CCCED]/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">
+                    <Badge className="bg-orange-500/20 text-orange-400 border-none font-black text-[9px] px-2 py-0.5 uppercase tracking-widest">
                       Laudo Aurora IA
                     </Badge>
                     <Sparkles className="h-4 w-4 text-orange-400 animate-pulse" />
@@ -470,7 +470,7 @@ export default function AssessmentsGraderPage() {
                             key={i}
                             className={`rounded-lg px-2 py-1 text-[10px] font-mono ${
                               banca.usadas?.includes(i)
-                                ? 'bg-[#4CCCED]/20 text-orange-300 border border-[#4CCCED]/30'
+                                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                                 : 'bg-white/5 text-white/40 border border-white/10 line-through'
                             }`}
                             title={banca.usadas?.includes(i) ? 'Usada na nota final' : 'Descartada pelo protocolo'}
@@ -501,7 +501,7 @@ export default function AssessmentsGraderPage() {
                     </Label>
                     <div className="flex items-center gap-2">
                       <span className="text-[9px] font-bold text-slate-400 uppercase">IA: {selectedEssay.score}</span>
-                      <Badge className="bg-[#4CCCED]/15 text-orange-500 border-none font-black text-[10px] px-2">
+                      <Badge className="bg-orange-500/15 text-orange-500 border-none font-black text-[10px] px-2">
                         {teacherTotal} pts
                       </Badge>
                     </div>
@@ -524,7 +524,7 @@ export default function AssessmentsGraderPage() {
                                   onClick={() => setTeacherComps((prev) => ({ ...prev, [k]: v }))}
                                   className={`flex-1 h-8 rounded-lg text-[10px] font-black transition-all relative ${
                                     active
-                                      ? "bg-[#4CCCED] text-white shadow-sm"
+                                      ? "bg-orange-500 text-white shadow-sm"
                                       : "bg-slate-50 text-slate-500 hover:bg-slate-100"
                                   }`}
                                   title={ai === v ? "Nota original da IA" : undefined}
@@ -555,7 +555,7 @@ export default function AssessmentsGraderPage() {
                     value={mentorFeedback}
                     onChange={(e) => setMentorFeedback(e.target.value)}
                     placeholder="Adicione suas notas pedagógicas ou orientações personalizadas..."
-                    className="min-h-[140px] rounded-2xl bg-white shadow-sm border border-slate-200 p-4 font-medium italic text-sm text-slate-800 placeholder:text-slate-400 resize-none focus-visible:ring-orange-500/30 focus-visible:border-[#4CCCED]/30 transition-all"
+                    className="min-h-[140px] rounded-2xl bg-white shadow-sm border border-slate-200 p-4 font-medium italic text-sm text-slate-800 placeholder:text-slate-400 resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 transition-all"
                   />
                   <div className="flex gap-2">
                     <Button
@@ -572,7 +572,7 @@ export default function AssessmentsGraderPage() {
                     </Button>
                     <Button
                       asChild
-                      className="h-12 w-12 bg-white shadow-sm border border-slate-200 hover:border-[#4CCCED]/40 hover:text-orange-400 text-slate-500 rounded-2xl shrink-0"
+                      className="h-12 w-12 bg-white shadow-sm border border-slate-200 hover:border-orange-500/40 hover:text-orange-400 text-slate-500 rounded-2xl shrink-0"
                       title="Conversar com Aluno"
                     >
                       <Link href={`/dashboard/chat/${selectedEssay.user_id}`}>

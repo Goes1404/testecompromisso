@@ -150,7 +150,7 @@ export default function ForumPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
         <div className="space-y-1">
           <h1 className="text-3xl md:text-4xl font-black text-primary italic tracking-tight leading-none">
-            Comunidade <span className="text-accent">Plataforma</span>
+            Comunidade <span className="text-accent">Compromisso</span>
           </h1>
           <p className="text-muted-foreground font-medium text-sm md:text-lg italic">Onde o conhecimento se torna colaborativo.</p>
         </div>

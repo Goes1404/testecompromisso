@@ -181,11 +181,11 @@ export default function SecretaryFinancePage() {
         @media print{.noprint{display:none;}}
       </style></head><body>
         <div class="container">
-          <div class="header"><div class="logo">Plataforma</div><div class="sub">Recibo de Pagamento</div></div>
+          <div class="header"><div class="logo">Cursinho Compromisso</div><div class="sub">Recibo de Pagamento</div></div>
           <div class="title">Recibo</div>
           <div class="amount">${esc(fmtBRL(Number(p.amount)))}</div>
           <div class="content">
-            <p>Recebi da <strong>instituição</strong> a importância de
+            <p>Recebi de <strong>Cursinho Compromisso</strong> a importância de
             <strong>${esc(fmtBRL(Number(p.amount)))}</strong>, referente aos serviços educacionais prestados
             como docente no mês de <strong>${esc(monthLabel)}</strong>.</p>
             <p>Para clareza e comprovação, firmo o presente recibo, dando plena e total quitação

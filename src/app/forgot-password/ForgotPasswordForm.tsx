@@ -24,7 +24,7 @@ type Step = "phone" | "otp";
  */
 const WHATSAPP_NUMBER = "5511950085875";
 const WHATSAPP_MESSAGE =
-  "Olá! Não consegui recuperar minha senha na plataforma e preciso de ajuda.";
+  "Olá! Não consegui recuperar minha senha na plataforma do Cursinho Compromisso e preciso de ajuda.";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
 async function callApi(action: string, payload: Record<string, unknown>) {

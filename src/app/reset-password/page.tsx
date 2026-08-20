@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export const metadata = {
-  title: "Redefinir Senha | Plataforma",
+  title: "Redefinir Senha | Compromisso",
   description: "Crie sua nova senha de acesso à plataforma.",
 };
 

@@ -8,8 +8,8 @@ import { GuiaInstalacao } from './GuiaInstalacao';
  * justamente quem ainda não entrou.
  */
 export const metadata = {
-  title: 'Instalar o app | Plataforma',
-  description: 'Como instalar o app na tela de início do seu celular e receber os lembretes de estudo.',
+  title: 'Instalar o app | Compromisso',
+  description: 'Como instalar o Compromisso na tela de início do seu celular e receber os lembretes de estudo.',
 };
 
 export default function InstalarPage() {

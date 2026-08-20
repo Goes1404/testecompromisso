@@ -109,7 +109,7 @@ function PrimeiroAcessoContent() {
             <div className="w-8 h-8 bg-white/10 backdrop-blur rounded-xl flex items-center justify-center border border-white/10 shrink-0">
               <Sparkles className="h-4 w-4 text-white/70" />
             </div>
-            <span className="text-white/50 font-black text-[10px] uppercase tracking-[0.3em]">Plataforma</span>
+            <span className="text-white/50 font-black text-[10px] uppercase tracking-[0.3em]">Compromisso</span>
           </div>
           <Link
             href="/login"
@@ -201,7 +201,7 @@ function PrimeiroAcessoContent() {
                   <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Senha padrão</p>
                   <div className="flex items-center gap-2">
                     <KeyRound className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <p className="text-sm font-black text-emerald-900 tracking-wider">mudar123</p>
+                    <p className="text-sm font-black text-emerald-900 tracking-wider">compromisso2026</p>
                   </div>
                 </div>
               </div>
@@ -391,7 +391,7 @@ function PrimeiroAcessoContent() {
         </div>
 
         <p className="text-center text-[9px] font-black text-white/15 uppercase tracking-[0.3em]">
-          © 1997–2026 Plataforma
+          © 1997–2026 Colégio Compromisso
         </p>
       </div>
     </div>

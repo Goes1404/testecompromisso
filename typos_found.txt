@@ -1,0 +1,60 @@
+File: src\app\page.tsx
+Text: Metodologia
+Problem: metodo
+
+File: src\app\page.tsx
+Text: handleScrollTo(e, '#metodologia')}>Metodologia
+Problem: metodo
+
+File: src\app\page.tsx
+Text: Metodologia 360º
+Problem: metodo
+
+File: src\app\dashboard\teacher\trails\[id]\page.tsx
+Text: Este capítulo ainda está sem materiais didáticos.
+Problem: materia
+
+File: src\app\dashboard\teacher\trails\[id]\page.tsx
+Text: Adicione materiais para ver a fila.
+Problem: materia
+
+File: src\app\dashboard\teacher\trails\[id]\page.tsx
+Text: Oriente o aluno sobre como usar este material...
+Problem: materia
+
+File: src\app\dashboard\teacher\library\page.tsx
+Text: Curadoria industrial das apostilas e materiais didáticos.
+Problem: materia
+
+File: src\app\dashboard\student\simulados\page.tsx
+Text: Analise com calma.
+Problem: analise
+
+File: src\app\dashboard\student\documents\page.tsx
+Text: "Renomeie seus arquivos como 'RG_FRENTE.pdf' ou 'HISTORICO_MEDIO.pdf'. Isso agiliza a conferência do tutor e evita erros de envio."
+Problem: historico
+
+File: src\app\dashboard\library\page.tsx
+Text: Acervo oficial de materiais e apostilas interativas da rede.
+Problem: materia
+
+File: src\app\dashboard\library\book\[id]\page.tsx
+Text: Carregando Material Interativo...
+Problem: materia
+
+File: src\app\dashboard\library\book\[id]\page.tsx
+Text: Descriptografando Material Seguro...
+Problem: materia
+
+File: src\app\dashboard\classroom\[id]\page.tsx
+Text: Carregando Material Interativo...
+Problem: materia
+
+File: src\app\dashboard\classroom\[id]\page.tsx
+Text: Este mentor ainda está organizando os materiais desta trilha.
+Problem: materia
+
+File: src\app\dashboard\classroom\[id]\page.tsx
+Text: Materiais
+Problem: materia
+

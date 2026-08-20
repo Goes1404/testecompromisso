@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       .select("name, role")
       .eq("id", user.id)
       .maybeSingle();
-    const senderName = senderProfile?.name || "Plataforma";
+    const senderName = senderProfile?.name || "Compromisso";
 
     // ── Caso 1: Mensagem direta no chat ──────────────────────
     if (body.type === "chat") {

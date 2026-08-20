@@ -545,7 +545,7 @@ export default function AdminStudentProfilePage() {
           </CardHeader>
           <CardContent className="p-4 md:p-8 pt-4 h-[260px] md:h-[350px]">
             {radarData.length > 0 ? (
-              <RadarChartPremium data={radarData} angleKey="subject" yKey="score" color="#4ccced" unit="%" />
+              <RadarChartPremium data={radarData} angleKey="subject" yKey="score" color="#ff6b00" unit="%" />
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground italic text-sm opacity-40">
                 Nenhuma resposta registrada ainda.
@@ -561,7 +561,7 @@ export default function AdminStudentProfilePage() {
             <CardDescription className="italic text-xs">Questões acertadas nos últimos 15 dias.</CardDescription>
           </CardHeader>
           <CardContent className="p-4 md:p-8 pt-4 h-[260px] md:h-[350px]">
-            <AreaChartPremium data={historyData} xKey="date" yKey="acertos" color="#4ccced" />
+            <AreaChartPremium data={historyData} xKey="date" yKey="acertos" color="#ff6b00" />
           </CardContent>
         </Card>
       </div>

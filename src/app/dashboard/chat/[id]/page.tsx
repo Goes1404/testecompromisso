@@ -93,7 +93,7 @@ export default function DirectChatPage() {
               setIsBlockedStudentToStudent(true);
             }
           } else {
-            setContact({ name: "Mentor da Rede", institution: "Plataforma EAD" });
+            setContact({ name: "Mentor da Rede", institution: "Compromisso 360" });
           }
 
           // Teto defensivo: sem limite, uma conversa longa reenviaria o
@@ -285,7 +285,7 @@ export default function DirectChatPage() {
               <h1 className="text-base md:text-xl font-black text-primary italic leading-none truncate">{contact?.name || "Mentor da Rede"}</h1>
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest truncate">
-                  {isAurora ? 'Engine de Apoio 24/7' : (contact?.institution || 'Plataforma EAD')}
+                  {isAurora ? 'Engine de Apoio 24/7' : (contact?.institution || 'Compromisso 360')}
                 </span>
                 <Badge variant="outline" className="bg-primary/5 border-none text-primary/45 font-black text-[7px] px-2 h-4 uppercase tracking-widest leading-none flex items-center justify-center shrink-0">
                   {contact?.profile_type === 'teacher' ? 'Docente' : (contact?.profile_type === 'staff' ? 'Secretaria' : 'Estudante')}

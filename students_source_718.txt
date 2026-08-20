@@ -1,0 +1,1770 @@
+NOME: Alan Henrique
+EMAIL: alanhenrique@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Alana G Costa Nogueira
+EMAIL: alanagnogueira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Alice Agami Koga
+EMAIL: aliceakoga@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Alison Italo Ribeiro
+EMAIL: alisoniribeiro@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Alyson G de Oliveira
+EMAIL: alysongoliveira@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Alice Carvalho
+EMAIL: anaacarvalho@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Clara Alves
+EMAIL: anacalves@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Clara Moises Martins
+EMAIL: anacmartins@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Julia M. de Almeida
+EMAIL: anajalmeida@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Julia Pereira
+EMAIL: anajpereira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Julia das Neves Silva
+EMAIL: anajsilva@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Julia de Souza F
+EMAIL: anajf@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Julia dos Santos
+EMAIL: anajsantos@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Júlia Leite
+EMAIL: anajleite@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Karoline de Oliveira
+EMAIL: anakoliveira@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Laura Teixeira
+EMAIL: analteixeira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Luisa Sena de Aquino
+EMAIL: analaquino@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Luiza Fiuza
+EMAIL: analfiuza@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Luiza Mesquini
+EMAIL: analmesquini@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ana Maria Magalhaes de Oliveira
+EMAIL: anamoliveira@compromisso.com
+ESCOLA: Ullysses SIlveira
+OBJETIVO: ENEM
+------------------------------
+NOME: Andressa Marques da Silva
+EMAIL: andressamsilva@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Anna Beatriz Santos Rocha
+EMAIL: annabrocha@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Anna Laura Miranda
+EMAIL: annalmiranda@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Anny Gabriela Bispo
+EMAIL: annygbispo@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Antonio Carlos
+EMAIL: antoniocarlos@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Antonio Gabriel da Silva
+EMAIL: antoniogsilva@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Antônio Enrique Fernandes
+EMAIL: antonioefernandes@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Arthur Alexandre Vieira da Costa
+EMAIL: arthuracosta@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Arthur Alves de SOuza
+EMAIL: arthurasouza@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Arthur Gabryel Rodrigues
+EMAIL: arthurgrodrigues@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Arthur de Moraes Araujo
+EMAIL: arthurmaraujo@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Artur A. Miziara de Oliveira
+EMAIL: arturaoliveira@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Artur Lopes Barbosa
+EMAIL: arturlbarbosa@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Beatriz Moraes Amorim
+EMAIL: beatrizmamorim@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Beatriz Silva Santana
+EMAIL: beatrizssantana@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Breno Oliveira Souza
+EMAIL: brenoosouza@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Bruno Guilherme Ribeiro
+EMAIL: brunogribeiro@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Bruno Oliveira Lopes
+EMAIL: brunoolopes@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Camila Fonseca Amorim
+EMAIL: camilafamorim@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Camila Miranda Neves
+EMAIL: camilamneves@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Carlos Eduardo Porto
+EMAIL: carloseporto@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Carlos Felipe
+EMAIL: carlosfelipe@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Caroline Souza da Silva
+EMAIL: carolinessilva@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Cassimily Oliveira Santana
+EMAIL: cassimilyosantana@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Caua Henrique
+EMAIL: cauahenrique@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Cauã de Oliveira Costa
+EMAIL: cauaocosta@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Cesar Bernardo Alves
+EMAIL: cesarbalves@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Crystal Vitoria da SIlva
+EMAIL: crystalvsilva@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Daniel Contente Takeda
+EMAIL: danielctakeda@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Debora Corcina Ribeiro
+EMAIL: deboracribeiro@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Dhioxne Pereira L. da Silva
+EMAIL: dhioxnepsilva@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Douglas Henrique Franco
+EMAIL: douglashfranco@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Eduardo Almeida
+EMAIL: eduardoalmeida@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Eduardo Macedo Santos
+EMAIL: eduardomsantos@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ENEM
+------------------------------
+NOME: Elsa P Chuve
+EMAIL: elsapchuve@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Emanoelly Mirand da Silva
+EMAIL: emanoellymsilva@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Emanuelle Oliveira da Silva
+EMAIL: emanuelleosilva@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Emilly Alves
+EMAIL: emillyalves@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Emilly D. Capistrano
+EMAIL: emillydcapistrano@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Emilly Vitoria Maximo
+EMAIL: emillyvmaximo@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Emilly da Silva
+EMAIL: emillysilva@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Emilly de Souza
+EMAIL: emillysouza@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Enzo Pedro Neves
+EMAIL: enzopneves@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Estela Felismino
+EMAIL: estelafelismino@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ENEM
+------------------------------
+NOME: Ester Beatriz Olimpio
+EMAIL: esterbolimpio@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ester Melissa Leonardo
+EMAIL: estermleonardo@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Evanizia Tomaz SIlva
+EMAIL: evaniziatsilva@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Evelyn Sousa Nunes
+EMAIL: evelynsnunes@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Evlyn Silva dos Santos
+EMAIL: evlynssantos@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Felipe Contente Takeda
+EMAIL: felipectakeda@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabriel A. da Silva
+EMAIL: gabrielasilva@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabriel Santos Xavier
+EMAIL: gabrielsxavier@compromisso.com
+ESCOLA: Ullysses SIlveira
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabriel de Oliveira R
+EMAIL: gabrielor@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabriel de Souza
+EMAIL: gabrielsouza@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabriela Dias Barbosa
+EMAIL: gabrieladbarbosa@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabriela Martins Gonçalves
+EMAIL: gabrielamgoncalves@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabrielle Alves Mariano
+EMAIL: gabrielleamariano@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Gabrielly Figueiredo dos Santos
+EMAIL: gabriellyfsantos@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Geovanna Aparecido Rodrigues
+EMAIL: geovannaarodrigues@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Giovana Beatriz C. Batista
+EMAIL: giovanabbatista@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Giovana dos Santos Alves
+EMAIL: giovanasalves@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Giovanna C. Gomes L.
+EMAIL: giovannacl@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Giovanna Ketellin Vieira
+EMAIL: giovannakvieira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Giovanna Rinco Hernandes
+EMAIL: giovannarhernandes@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Giulia Rodrigues de Araujo
+EMAIL: giuliararaujo@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Grazielle Oliveira N Rangel
+EMAIL: grazielleorangel@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Grazielly Alves da SIlva
+EMAIL: graziellyasilva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ENEM
+------------------------------
+NOME: Guilherme Pinheiro Martins
+EMAIL: guilhermepmartins@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Guilherme Ryan dos Santos
+EMAIL: guilhermersantos@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Gustavo Henrique Silva
+EMAIL: gustavohsilva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ENEM
+------------------------------
+NOME: Gustavo Luis dos Santos
+EMAIL: gustavolsantos@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Gustavo Luiz Romao
+EMAIL: gustavolromao@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Gyovana Menezes Magalhães
+EMAIL: gyovanammagalhaes@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Heloisa G, G Ribeiro
+EMAIL: heloisagribeiro@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Heloiza Vitória Rezende de Souza
+EMAIL: heloizavsouza@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Heloísa de Paiva Vieira
+EMAIL: heloisapvieira@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Henrique da Cruz
+EMAIL: henriquecruz@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Isabela de Paiva Lima
+EMAIL: isabelaplima@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Isabelli Reis T. de Sousa
+EMAIL: isabellirsousa@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Isabely Hillary
+EMAIL: isabelyhillary@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Isaque Montell
+EMAIL: isaquemontell@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Israel A. C Carry
+EMAIL: israelacarry@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Israel Fujimoto
+EMAIL: israelfujimoto@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Izaias Santos de Brito
+EMAIL: izaiassbrito@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: JOão Henrique Sousa
+EMAIL: joaohsousa@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Joao Gabriel
+EMAIL: joaogabriel@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: João ALberto Pimentel Bastos
+EMAIL: joaoabastos@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: João Gabriel Ferreira da SIlva
+EMAIL: joaogsilva@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: João Victor SOuza
+EMAIL: joaovsouza@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: João Vitor de Oliveira
+EMAIL: joaovoliveira@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Julia Albano Rodrigues
+EMAIL: juliaarodrigues@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Julia Gabriela Vilas Boas
+EMAIL: juliagboas@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Julia Gonçalves Ribeiro
+EMAIL: juliagribeiro@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Julia Marques Franco
+EMAIL: juliamfranco@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Julia de Cassia Costa
+EMAIL: juliaccosta@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Juliana Fagundes de Oliveira
+EMAIL: julianafoliveira@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Juliana Pavan Sanchez
+EMAIL: julianapsanchez@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Julio Cesar SIlva
+EMAIL: juliocsilva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ENEM
+------------------------------
+NOME: Jullya Mariana de Lacerda
+EMAIL: jullyamlacerda@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Julya Beatriz Alves
+EMAIL: julyabalves@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Junior Silva Santos
+EMAIL: juniorssantos@compromisso.com
+ESCOLA: Etec
+OBJETIVO: ENEM
+------------------------------
+NOME: Kaique Leandro Pires
+EMAIL: kaiquelpires@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ENEM
+------------------------------
+NOME: Kamilly Silva dos Santos
+EMAIL: kamillyssantos@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Kamily Bianca dos Santos Souza
+EMAIL: kamilybsouza@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ENEM
+------------------------------
+NOME: Karen Costa Ribeiro
+EMAIL: karencribeiro@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Karolliny Silva Moraes
+EMAIL: karollinysmoraes@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Katarina Melo
+EMAIL: katarinamelo@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Kauan Henrique
+EMAIL: kauanhenrique@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Kauã Felix Campos
+EMAIL: kauafcampos@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Kauã Viviam
+EMAIL: kauaviviam@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Kelvin De Oliveira Pires de Almeida
+EMAIL: kelvinoalmeida@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Kemes Rogers Moreira
+EMAIL: kemesrmoreira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Kemilly Bernardes
+EMAIL: kemillybernardes@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Kemilly Neves Alves de Sousa
+EMAIL: kemillynsousa@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Kesia Vitoria Da Silva Santos
+EMAIL: kesiavsantos@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ketellyn V.M. Soares
+EMAIL: ketellynvsoares@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Laiane Santos Matos
+EMAIL: laianesmatos@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Larissa Caroline
+EMAIL: larissacaroline@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Larissa Carvalho Araujo
+EMAIL: larissacaraujo@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Larissa Emanuela Braga
+EMAIL: larissaebraga@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Larissa Ferreira Reinaldo
+EMAIL: larissafreinaldo@compromisso.com
+ESCOLA: Ullysses SIlveira
+OBJETIVO: ENEM
+------------------------------
+NOME: Larissa Maria de Sousa Sampaio
+EMAIL: larissamsampaio@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Larissa Pereira da Silva
+EMAIL: larissapsilva@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Laryssa SOuza de Farias
+EMAIL: laryssasfarias@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Laura B.Mininel
+EMAIL: laurabmininel@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Lavinia Da Silva Lima Candido
+EMAIL: laviniascandido@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Lavínia Lopes da SIlva
+EMAIL: lavinialsilva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ENEM
+------------------------------
+NOME: Lavínia Soares Oliveira
+EMAIL: laviniasoliveira@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Laysa Vitória Sousa
+EMAIL: laysavsousa@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Leticia Santana
+EMAIL: leticiasantana@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Letícia F. dos Santos
+EMAIL: leticiafsantos@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Libia SIlva Costa
+EMAIL: libiascosta@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Livia Rezende Rocha
+EMAIL: liviarrocha@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Lohane Marques da Silva
+EMAIL: lohanemsilva@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Lorena Vitoria Nascimento
+EMAIL: lorenavnascimento@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Luana Alencar Carvalho Alves
+EMAIL: luanaaalves@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Luany Ibiapina de Almeida
+EMAIL: luanyialmeida@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Lucas Abner da SIlva
+EMAIL: lucasasilva@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Lucas Costa
+EMAIL: lucascosta@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Lucas Gabriel G, dos Santos
+EMAIL: lucasgsantos@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Luciana Barbosa Queiroz
+EMAIL: lucianabqueiroz@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ENEM
+------------------------------
+NOME: Ludmila Y. Silva Carvalho
+EMAIL: ludmilaycarvalho@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Luisa Pires Afonso
+EMAIL: luisapafonso@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Luiza R. Gonçalves SIlva
+EMAIL: luizarsilva@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Maisa Donizetti Barbara
+EMAIL: maisadbarbara@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Manuela Barros Coelho Moraes
+EMAIL: manuelabmoraes@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Manuele Santos Souza
+EMAIL: manuelessouza@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Clara Ramos
+EMAIL: mariacramos@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Clara de SOusa Gonçalves
+EMAIL: mariacgoncalves@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda ALmeida
+EMAIL: mariaealmeida@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda ALves dos Santos
+EMAIL: mariaesantos@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda Araujo Rodrigues
+EMAIL: mariaerodrigues@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda Da Silva Gonçalves
+EMAIL: mariaegoncalves@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda Lemos dos Santos
+EMAIL: mariaesantos@compromisso.com
+ESCOLA: Ullysses SIlveira
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda Medeiros
+EMAIL: mariaemedeiros@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda Neves
+EMAIL: mariaeneves@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda Polito
+EMAIL: mariaepolito@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda Silva
+EMAIL: mariaesilva@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda de Oliveira
+EMAIL: mariaeoliveira@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduarda de Santana Pereira
+EMAIL: mariaepereira@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Eduardo M.
+EMAIL: mariaem@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Maria Luiza Sousa
+EMAIL: marialsousa@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Mariana L. Gusmão da Silva
+EMAIL: marianalsilva@compromisso.com
+ESCOLA: Aurélio
+OBJETIVO: ENEM
+------------------------------
+NOME: Mariana Nunes Macedo
+EMAIL: mariananmacedo@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Marina Alice Sales
+EMAIL: marinaasales@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Marley R. Reis Macedo
+EMAIL: marleyrmacedo@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Maryane Barreto Lima
+EMAIL: maryaneblima@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Matheus Alves de Oliveira
+EMAIL: matheusaoliveira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Matheus Barbosa Matos
+EMAIL: matheusbmatos@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Matheus Dias Romão
+EMAIL: matheusdromao@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Matheus Guedes dos Santos
+EMAIL: matheusgsantos@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Matheus do C. Francisco
+EMAIL: matheuscfrancisco@compromisso.com
+ESCOLA: Tom Jobim
+OBJETIVO: ENEM
+------------------------------
+NOME: Matheus dos Santos Pereira
+EMAIL: matheusspereira@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Mauricio Melo Araujo
+EMAIL: mauriciomaraujo@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Mayana S. Domingos
+EMAIL: mayanasdomingos@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Murillo SIlva Soares de Menezes
+EMAIL: murillosmenezes@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Murilo Santos
+EMAIL: murilosantos@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Natacha de Assis
+EMAIL: natachaassis@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Nathalia Oliveira Lopes
+EMAIL: nathaliaolopes@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Nathalia Silva Pereira
+EMAIL: nathaliaspereira@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Nayara Bezerra Bastos
+EMAIL: nayarabbastos@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Nicole Pereira Nunes
+EMAIL: nicolepnunes@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Nicole de Carvalho
+EMAIL: nicolecarvalho@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Nicolly Caroline dos Santos
+EMAIL: nicollycsantos@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Nicolly Vicente da Silva
+EMAIL: nicollyvsilva@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Nikolas Dias da SIlva
+EMAIL: nikolasdsilva@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Osmar Julio Pinto
+EMAIL: osmarjpinto@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Pamela Império
+EMAIL: pamelaimperio@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Paola Alexandra Figueiredo
+EMAIL: paolaafigueiredo@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Paulo Henrique P de SOuza
+EMAIL: paulohsouza@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Pedro A. Lima dos Anjos
+EMAIL: pedroaanjos@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Pedro Felipa Barbosa
+EMAIL: pedrofbarbosa@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Pedro Henrique
+EMAIL: pedrohenrique@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Pedro Henrique  Ferreira
+EMAIL: pedrohferreira@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ENEM
+------------------------------
+NOME: Raiana Viana Nascimento
+EMAIL: raianavnascimento@compromisso.com
+ESCOLA: Ullysses SIlveira
+OBJETIVO: ENEM
+------------------------------
+NOME: Raissa Gonçalves Ferreira
+EMAIL: raissagferreira@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Ranielle Santos
+EMAIL: raniellesantos@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Raylla Cruz de Oliveira
+EMAIL: rayllacoliveira@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Rayssa de Carvalho
+EMAIL: rayssacarvalho@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Renan dos Santos
+EMAIL: renansantos@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Ruan Wagner Pereira
+EMAIL: ruanwpereira@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Ryan Batista da Silva
+EMAIL: ryanbsilva@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ryan Henrique Rodrigues
+EMAIL: ryanhrodrigues@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Ryan de Souza Nascimento
+EMAIL: ryansnascimento@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Sabine Rodrigues M. Luzia
+EMAIL: sabinerluzia@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Samuel Lima dos Santos
+EMAIL: samuellsantos@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Sarah da SIlva
+EMAIL: sarahsilva@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Sofia Santos Vieira
+EMAIL: sofiasvieira@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ENEM
+------------------------------
+NOME: Solange Martins de Oliveira
+EMAIL: solangemoliveira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Sophia B. Soares
+EMAIL: sophiabsoares@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Sophia Soares Barbosa
+EMAIL: sophiasbarbosa@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Sophia Soares dos Santos
+EMAIL: sophiassantos@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Sophya de Carvalho
+EMAIL: sophyacarvalho@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Syman Alcantara
+EMAIL: symanalcantara@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Thaiane Beatriz Moraes
+EMAIL: thaianebmoraes@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Thais Oliveira Portugal
+EMAIL: thaisoportugal@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Thayla Luiza dos Anjos
+EMAIL: thaylalanjos@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Thierry Dantas Jonas Pereira
+EMAIL: thierrydpereira@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Tuan Pablo Gonçalves de Freitas
+EMAIL: tuanpfreitas@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Vanessa Costa Andrade
+EMAIL: vanessacandrade@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Victor Hugo Quintino
+EMAIL: victorhquintino@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Victor Santos Maciel
+EMAIL: victorsmaciel@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Vinicius Ferreira
+EMAIL: viniciusferreira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Vinicius Guilherme C. de LIma
+EMAIL: viniciusglima@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ENEM
+------------------------------
+NOME: Vinicius Natista
+EMAIL: viniciusnatista@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Vitor Hugo Vieira
+EMAIL: vitorhvieira@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Vitória  Ribeiro A.
+EMAIL: vitoriara@compromisso.com
+ESCOLA: Ricarda
+OBJETIVO: ENEM
+------------------------------
+NOME: Vitória R. Souza Melo
+EMAIL: vitoriarmelo@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Vitória Santana de Arruda
+EMAIL: vitoriasarruda@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ENEM
+------------------------------
+NOME: Wesley L Sales da Silva
+EMAIL: wesleylsilva@compromisso.com
+ESCOLA: Mário Covas
+OBJETIVO: ENEM
+------------------------------
+NOME: Willian Batista Gonçalves
+EMAIL: willianbgoncalves@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Yasmim Angel Bastos
+EMAIL: yasmimabastos@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Yasmim Aparecida Silva Reis
+EMAIL: yasmimareis@compromisso.com
+ESCOLA: Abelardo Marques
+OBJETIVO: ENEM
+------------------------------
+NOME: Yasmim Figueiredo
+EMAIL: yasmimfigueiredo@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ENEM
+------------------------------
+NOME: Yasmim Nogueira de Raphael
+EMAIL: yasmimnraphael@compromisso.com
+ESCOLA: Imídeo Giuseppe
+OBJETIVO: ENEM
+------------------------------
+NOME: Yasmim Santos Lopes
+EMAIL: yasmimslopes@compromisso.com
+ESCOLA: Ullysses SIlveira
+OBJETIVO: ENEM
+------------------------------
+NOME: Yasmim Vitória dos Anjos
+EMAIL: yasmimvanjos@compromisso.com
+ESCOLA: Aldônio
+OBJETIVO: ENEM
+------------------------------
+NOME: Yasmim X. Pallazoli
+EMAIL: yasmimxpallazoli@compromisso.com
+ESCOLA: Colaço
+OBJETIVO: ENEM
+------------------------------
+NOME: Ycaro Souza Bomfim
+EMAIL: ycarosbomfim@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ENEM
+------------------------------
+NOME: Abner de Jesus Jales da Silva
+EMAIL: abnerjsilva@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ETEC
+------------------------------
+NOME: Adriane Maria da SIlva
+EMAIL: adrianemsilva@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Adriel Mateus Silva Nepomucena
+EMAIL: adrielmnepomucena@compromisso.com
+ESCOLA: Teot�nio Vilela
+OBJETIVO: ETEC
+------------------------------
+NOME: Adryan da Paz Sales
+EMAIL: adryanpsales@compromisso.com
+ESCOLA: Ullysses Guimar�es
+OBJETIVO: ETEC
+------------------------------
+NOME: Agata Beatriz Martins da Silva
+EMAIL: agatabsilva@compromisso.com
+ESCOLA: Benedita Odette
+OBJETIVO: ETEC
+------------------------------
+NOME: Agatha Caroline Lemes
+EMAIL: agathaclemes@compromisso.com
+ESCOLA: Tancredo Neves
+OBJETIVO: ETEC
+------------------------------
+NOME: Agatha Vict�ria F. Silva
+EMAIL: agathavsilva@compromisso.com
+ESCOLA: Benedita Odette
+OBJETIVO: ETEC
+------------------------------
+NOME: Alessandra Gouveia
+EMAIL: alessandragouveia@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Alex Eduardo
+EMAIL: alexeduardo@compromisso.com
+ESCOLA: Celina
+OBJETIVO: ETEC
+------------------------------
+NOME: Alexia Sales Godinho
+EMAIL: alexiasgodinho@compromisso.com
+ESCOLA: Jo�o Jos� de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Alexya Marques Teodosio
+EMAIL: alexyamteodosio@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Alice D Fonseca
+EMAIL: alicedfonseca@compromisso.com
+ESCOLA: Leda Caira
+OBJETIVO: ETEC
+------------------------------
+NOME: Alice Mindelli
+EMAIL: alicemindelli@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Alice Santos de Oliveira
+EMAIL: alicesoliveira@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ETEC
+------------------------------
+NOME: Allefy Augusto Jos� Felix
+EMAIL: allefyafelix@compromisso.com
+ESCOLA: Maria Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Allyne Lidia dos Santos
+EMAIL: allynelsantos@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Amanda Ramos de Almeida
+EMAIL: amandaralmeida@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ETEC
+------------------------------
+NOME: Amanda de Souza Silva
+EMAIL: amandassilva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Beatriz Jesus
+EMAIL: anabjesus@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Carolina Santos de Sousa
+EMAIL: anacsousa@compromisso.com
+ESCOLA: Padre Anacleto
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Clara P Pinheiro
+EMAIL: anacpinheiro@compromisso.com
+ESCOLA: Aur�lio
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Clara da Silva
+EMAIL: anacsilva@compromisso.com
+ESCOLA: Daisy Moraes
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Clara dos Santos
+EMAIL: anacsantos@compromisso.com
+ESCOLA: Ullysses Guimar�es
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Jhulya Arruda Silva
+EMAIL: anajsilva@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Julia Alves dos Santos
+EMAIL: anajsantos@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana J�lia Cardoso LIma
+EMAIL: anajlima@compromisso.com
+ESCOLA: Jo�o Jos� de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana J�lia Carvalho de Oliveira
+EMAIL: anajoliveira@compromisso.com
+ESCOLA: Paulo Botelho
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana J�lia Macedo de Morais
+EMAIL: anajmorais@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana J�lia Souza de S�
+EMAIL: anajsa@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Ana Luiza Andrade
+EMAIL: analandrade@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Geovana Camargo dos Santos
+EMAIL: geovanacsantos@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Geovanna Carolina Rodrigues da Silva
+EMAIL: geovannacrsilva@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Geovanna de Oliveira SIlva
+EMAIL: geovannaosilva@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Giovana Barbosa
+EMAIL: giovanabarbosa@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Giovanna Ferreira Carvalho
+EMAIL: giovannafcarvalho@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Giovanna SIlva Arruda
+EMAIL: giovannasarruda@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Giovanna de LIma Vieira
+EMAIL: giovannalvieira@compromisso.com
+ESCOLA: Daisy Moraes
+OBJETIVO: ETEC
+------------------------------
+NOME: Gisleyne de Almeida SIlva
+EMAIL: gisleynesilva@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Giulia v silva
+EMAIL: giuliavsilva@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Glenda SIlva dos Santos
+EMAIL: glendassantos@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Grazieli Alves Rodrigues
+EMAIL: grazieliarodrigues@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Grazielle Salles de Castro
+EMAIL: graziellecastro@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Grazielly Maria Neves de Sousa
+EMAIL: graziellymsousa@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Guilherme Araujo de Lima
+EMAIL: guilhermelima@compromisso.com
+ESCOLA: Ullysses Guimar�es
+OBJETIVO: ETEC
+------------------------------
+NOME: Guilherme Guedes Gomes
+EMAIL: guilhermegomes@compromisso.com
+ESCOLA: Celina
+OBJETIVO: ETEC
+------------------------------
+NOME: Guilherme Henrique de LIma
+EMAIL: guilhermehlima@compromisso.com
+ESCOLA: Luiza Maria
+OBJETIVO: ETEC
+------------------------------
+NOME: Guilherme de Oliveira Santos
+EMAIL: guilhermeosantos@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Gustavo Almeida
+EMAIL: gustavoalmeida@compromisso.com
+ESCOLA: Jo�o Jos� de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Gustavo Dias Barbosa
+EMAIL: gustavodbarbosa@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Gustavo Henrique C. de Castro
+EMAIL: gustavohccastro@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Gustavo Henrique Rocha Siqueira
+EMAIL: gustavohrsiqueira@compromisso.com
+ESCOLA: Ullysses Guimar�es
+OBJETIVO: ETEC
+------------------------------
+NOME: Gustavo Pereira de Oliveira
+EMAIL: gustavopoliveira@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Gustavo Silva Pires
+EMAIL: gustavospires@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Gustavo de Oliveira SIlva
+EMAIL: gustavoosilva@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: G�istavo Henrique Souza dos Santos
+EMAIL: gustavohssantos@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Helo�sa de Andrade
+EMAIL: heloisaandrade@compromisso.com
+ESCOLA: J.K
+OBJETIVO: ETEC
+------------------------------
+NOME: Henrique da Cruz
+EMAIL: henriquecruz@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ETEC
+------------------------------
+NOME: Hugo G. de Souza
+EMAIL: hugogsouza@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Iago Araujo Neves de Siqueira
+EMAIL: iagoansiqueira@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Ione Maria dos Santos
+EMAIL: ionemsantos@compromisso.com
+ESCOLA: Luiza Maria
+OBJETIVO: ETEC
+------------------------------
+NOME: Isabela Aparecida
+EMAIL: isabelaaparecida@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Isabeli Ferreira da SIlva
+EMAIL: isabelifsilva@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Isabelli Bueno
+EMAIL: isabellibueno@compromisso.com
+ESCOLA: Pedro G.
+OBJETIVO: ETEC
+------------------------------
+NOME: Isabelli Cristina Camargo
+EMAIL: isabelliccamargo@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Isabelli de Almeida Cruz
+EMAIL: isabelliacruz@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Isadora Carolina da Silva
+EMAIL: isadoracsilva@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Isadora Rodrigues de Oliveira
+EMAIL: isadoraroliveira@compromisso.com
+ESCOLA: Jo�o Jos� de Oliveira
+OBJETIVO: ETEC
+------------------------------
+NOME: Isaque de Jesus
+EMAIL: isaquejesus@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------
+NOME: Israel Dias de Oliveira
+EMAIL: israeldoliveira@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Israel Silva Gomes
+EMAIL: israelsgomes@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Izabella Maria
+EMAIL: izabellamaria@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Jana�na de Oliveira Camargo
+EMAIL: janainaocamargo@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: J�ssica Maria
+EMAIL: jessicamaria@compromisso.com
+ESCOLA: Ruth de Azevedo
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Alves Pires
+EMAIL: joaoapires@compromisso.com
+ESCOLA: Luiza Maria
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Gabriel Almeida SIlva
+EMAIL: joaogasilva@compromisso.com
+ESCOLA: Manoel Jacob
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Gabriel Ferreira Lima
+EMAIL: joaogflima@compromisso.com
+ESCOLA: Sebastiana
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Gabriel Mendes Camargo
+EMAIL: joaogmcamargo@compromisso.com
+ESCOLA: Daisy Moraes
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Henrique Rodrigues de Castro
+EMAIL: joaohrcastro@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Lucas Ferreira dos Santos
+EMAIL: joaolfsantos@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Pedro
+EMAIL: joaopedro@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Pedro Rodrigues Mendes
+EMAIL: joaoprmendes@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Victor de LIma
+EMAIL: joaovlima@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Jo�o Vitor de Oliveira Mendes
+EMAIL: joaovomendes@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia Beatriz dos Santos Sampaio
+EMAIL: juliabssampaio@compromisso.com
+ESCOLA: Benedita Odette
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia Camargo Gomes
+EMAIL: juliacgomes@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia Carolina Almeida Mendes
+EMAIL: juliacamendes@compromisso.com
+ESCOLA: Andr� Fernandes
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia Ferreira Rodrigues
+EMAIL: juliafrodrigues@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia Gabriele
+EMAIL: juliagabriele@compromisso.com
+ESCOLA: Sebastiana
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia Maria Neves
+EMAIL: juliamneves@compromisso.com
+ESCOLA: Ana Aparecida
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia de LIma Siqueira
+EMAIL: julialsiqueira@compromisso.com
+ESCOLA: Alba de Mello
+OBJETIVO: ETEC
+------------------------------
+NOME: Julia de LIma Vieira
+EMAIL: julialvieira@compromisso.com
+ESCOLA: Luiza Maria
+OBJETIVO: ETEC
+------------------------------
+NOME: Juliana Beatriz Jesus SIlva
+EMAIL: julianabjsilva@compromisso.com
+ESCOLA: Carlos Alberto
+OBJETIVO: ETEC
+------------------------------
+NOME: Juliana Maria de Sousa
+EMAIL: julianamsousa@compromisso.com
+ESCOLA: Sebasti�o Flor�ncio
+OBJETIVO: ETEC
+------------------------------
+NOME: Julie de Almeida SIlva
+EMAIL: julieasilva@compromisso.com
+ESCOLA: Aur�lio
+OBJETIVO: ETEC
+------------------------------
+NOME: Julio Cesar
+EMAIL: juliocesar@compromisso.com
+ESCOLA: Helena Chaves
+OBJETIVO: ETEC
+------------------------------

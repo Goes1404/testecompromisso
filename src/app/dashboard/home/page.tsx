@@ -23,7 +23,6 @@ import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/AuthProvider";
-import { useTenant } from "@/components/TenantProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useRouter } from "next/navigation";
 import { AreaChartPremium } from "@/components/charts/premium";
@@ -87,6 +86,8 @@ function DashboardChart({ data }: { data: { name: string; score: number }[] }) {
   return <AreaChartPremium data={data} xKey="name" yKey="score" color="#7c3aed" showAxis={false} domainMax={100} />;
 }
 
+const logoUrl = "/images/logocompromisso.png";
+const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
 const localImagesFallback = [
   "/images/capa1.jpeg",
@@ -169,7 +170,7 @@ function SectionHeader({ index, title, icon: Icon, iconClass, children }: {
   );
 }
 
-const MARQUEE_WORDS = ["FOCO", "DISCIPLINA", "CONSTÂNCIA", "APROVAÇÃO", "ENEM", "ETEC", "EXCELÊNCIA"];
+const MARQUEE_WORDS = ["FOCO", "DISCIPLINA", "CONSTÂNCIA", "APROVAÇÃO", "ENEM", "ETEC", "COMPROMISSO"];
 
 interface Announcement {
   id: string;
@@ -195,8 +196,6 @@ const CACHE_DURATION = 5 * 60 * 1000;
 
 export default function DashboardHome() {
   const { user, profile, userRole, loading: isUserLoading, refreshProfile } = useAuth();
-  const { tenant } = useTenant();
-  const logoUrl = tenant.branding.logoUrl;
   const router = useRouter();
   const dataFetchedRef = useRef(false);
   const { toast } = useToast();
@@ -623,7 +622,7 @@ export default function DashboardHome() {
               <input type="tel" inputMode="numeric" value={phoneValue} onChange={handlePhoneChange} placeholder="(00) 00000-0000"
                 className="h-12 flex-1 bg-white/10 backdrop-blur-md text-white placeholder:text-white/50 border border-white/20 focus:border-white rounded-xl font-bold font-mono text-center text-sm focus-visible:outline-none px-3" />
               <Button type="submit" disabled={submittingPhone}
-                className="bg-white text-[#0F7A95] hover:bg-orange-50 font-black rounded-xl shadow-lg border-none h-12 px-6 text-xs uppercase tracking-widest active:scale-95 flex items-center gap-2 justify-center shrink-0">
+                className="bg-white text-orange-600 hover:bg-orange-50 font-black rounded-xl shadow-lg border-none h-12 px-6 text-xs uppercase tracking-widest active:scale-95 flex items-center gap-2 justify-center shrink-0">
                 {submittingPhone ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4" /> Salvar</>}
               </Button>
             </form>
@@ -717,7 +716,7 @@ export default function DashboardHome() {
               </div>
             </div>
             <Link href="/dashboard/student/provas" className="shrink-0">
-              <Button className="w-full sm:w-auto h-11 px-5 rounded-xl bg-white text-[#0F7A95] hover:bg-orange-50 font-black text-[11px] uppercase tracking-widest shadow-lg border-none active:scale-95 flex items-center justify-center gap-2">
+              <Button className="w-full sm:w-auto h-11 px-5 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-black text-[11px] uppercase tracking-widest shadow-lg border-none active:scale-95 flex items-center justify-center gap-2">
                 Fazer simulado <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -814,7 +813,7 @@ export default function DashboardHome() {
                   <defs>
                     <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FF9A00" />
-                      <stop offset="60%" stopColor="#4CCCED" />
+                      <stop offset="60%" stopColor="#FF6B00" />
                       <stop offset="100%" stopColor="#FF3D00" />
                     </linearGradient>
                   </defs>
@@ -832,7 +831,7 @@ export default function DashboardHome() {
                     initial={{ strokeDashoffset: ringC }}
                     animate={{ strokeDashoffset: ringC - (score / 100) * ringC }}
                     transition={{ duration: 1.8, ease: "easeOut", delay: 0.7 }}
-                    style={{ filter: "drop-shadow(0 0 6px rgba(76,204,237,0.8))" }}
+                    style={{ filter: "drop-shadow(0 0 6px rgba(255,107,0,0.8))" }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -918,13 +917,13 @@ export default function DashboardHome() {
               <div className="absolute inset-0 pointer-events-none z-0" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(255,90,0,0.2) 0%, transparent 60%)" }} />
               <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-[#4CCCED]/10 border border-[#4CCCED]/35 flex items-center justify-center shrink-0 shadow-lg">
+                  <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/35 flex items-center justify-center shrink-0 shadow-lg">
                     <Flame className="h-6 w-6 text-orange-500 animate-pulse" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-[8px] font-black uppercase tracking-[0.25em] text-orange-400">Simulado Especial Concluído</span>
-                      <Badge className="bg-[#4CCCED]/25 text-orange-400 border border-[#4CCCED]/30 text-[7px] font-black px-1 rounded">TRI ATIVA</Badge>
+                      <Badge className="bg-orange-500/25 text-orange-400 border border-orange-500/30 text-[7px] font-black px-1 rounded">TRI ATIVA</Badge>
                     </div>
                     <h3 className="font-black italic text-lg leading-tight text-white mt-0.5">{simuladoEspecial.title}</h3>
                     <p className="text-[10px] text-white/60 mt-1">Sua nota oficial estimada pela Teoria de Resposta ao Item.</p>
@@ -950,7 +949,7 @@ export default function DashboardHome() {
                 
                 <div className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-6">
                   <div className="flex items-start gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-[#4CCCED]/10 border border-[#4CCCED]/30 flex items-center justify-center shrink-0 shadow-lg animate-float">
+                    <div className="h-14 w-14 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0 shadow-lg animate-float">
                       <Flame className="h-7 w-7 text-orange-500 fill-orange-500" />
                     </div>
                     <div>
@@ -966,7 +965,7 @@ export default function DashboardHome() {
                       </p>
                     </div>
                   </div>
-                  <Button className="w-full sm:w-auto h-12 px-6 rounded-xl bg-[#4CCCED] hover:bg-orange-600 text-slate-950 font-black text-xs uppercase tracking-widest shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 border-none shrink-0">
+                  <Button className="w-full sm:w-auto h-12 px-6 rounded-xl bg-orange-500 hover:bg-orange-600 text-slate-950 font-black text-xs uppercase tracking-widest shadow-xl shadow-orange-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2 border-none shrink-0">
                     <span>Iniciar Simulado</span>
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -986,7 +985,7 @@ export default function DashboardHome() {
           onClick={() => { setExpandedQ(null); setOnlyErrors(false); setGabaritoOpen(true); }}
           className="w-full text-left relative bg-[#0d0d0f] rounded-[2rem] overflow-hidden p-5 group cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform [touch-action:manipulation]"
         >
-          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(76,204,237,0.3) 0%, transparent 60%)" }} />
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(255,107,0,0.3) 0%, transparent 60%)" }} />
           <div className="relative z-10 flex items-center gap-4">
             <div className="relative shrink-0">
               {simuladoOficial ? (
@@ -1380,13 +1379,14 @@ export default function DashboardHome() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-60 hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-4">
             <div className="relative h-10 w-10 shrink-0 bg-white rounded-xl shadow-md p-1.5 border border-slate-100 overflow-hidden">
-              <Image src={logoUrl} alt="Logo" fill className="object-contain" sizes="40px" />
+              <Image src={cityLogoUrl} alt="Logo Prefeitura" fill className="object-contain" sizes="40px" />
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-primary">Plataforma Educacional</p>
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">Patrocinada pela Prefeitura de Santana de Parnaíba</p>
             </div>
           </div>
-          <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">{new Date().getFullYear()}</p>
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">Compromisso • {new Date().getFullYear()}</p>
         </div>
       </footer>
 
@@ -1472,7 +1472,7 @@ export default function DashboardHome() {
       <Dialog open={gabaritoOpen} onOpenChange={setGabaritoOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[88vh] rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col">
           <DialogHeader className="p-6 pb-4 bg-[#0d0d0f] relative shrink-0 text-left">
-            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 90% 0%, rgba(76,204,237,0.25) 0%, transparent 60%)" }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 90% 0%, rgba(255,107,0,0.25) 0%, transparent 60%)" }} />
             <div className="relative z-10 flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
                 <ClipboardCheck className="h-6 w-6 text-primary" />

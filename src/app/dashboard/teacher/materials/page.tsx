@@ -235,7 +235,7 @@ export default function TeacherMaterialsPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(76,204,237,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(59,130,246,0.08) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(255,107,0,0.13) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, rgba(59,130,246,0.08) 0%, transparent 60%)",
           }}
         />
         <div className="relative z-10">
@@ -278,7 +278,7 @@ export default function TeacherMaterialsPage() {
       {!showForm && (
         <Button
           onClick={() => setShowForm(true)}
-          className="w-full h-12 bg-[#4CCCED] hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
+          className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Novo Material
@@ -317,7 +317,7 @@ export default function TeacherMaterialsPage() {
                 placeholder="Ex: Slides — Funções do 2º Grau"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
+                className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
               />
             </div>
 
@@ -391,7 +391,7 @@ export default function TeacherMaterialsPage() {
                   onClick={() => setUseUpload(true)}
                   className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
                     useUpload
-                      ? "bg-[#4CCCED] text-slate-800 shadow-lg shadow-orange-500/20"
+                      ? "bg-orange-500 text-slate-800 shadow-lg shadow-orange-500/20"
                       : "bg-white shadow-sm border border-slate-200 text-slate-600"
                   }`}
                 >
@@ -401,7 +401,7 @@ export default function TeacherMaterialsPage() {
                   onClick={() => setUseUpload(false)}
                   className={`h-9 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all touch-manipulation ${
                     !useUpload
-                      ? "bg-[#4CCCED] text-slate-800 shadow-lg shadow-orange-500/20"
+                      ? "bg-orange-500 text-slate-800 shadow-lg shadow-orange-500/20"
                       : "bg-white shadow-sm border border-slate-200 text-slate-600"
                   }`}
                 >
@@ -420,7 +420,7 @@ export default function TeacherMaterialsPage() {
                       // Detecta automaticamente o tipo a partir da extensão
                       if (f) setForm((prev) => ({ ...prev, file_type: toClassMaterialType(detectKind(f.name)) }));
                     }}
-                    className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-[#4CCCED]/20 hover:border-[#4CCCED]/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-[#4CCCED] file:text-slate-800"
+                    className="w-full h-11 rounded-xl bg-white shadow-sm border-2 border-dashed border-orange-500/20 hover:border-orange-500/40 cursor-pointer p-2 text-xs text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-orange-500 file:text-slate-800"
                   />
                   <p className="text-[9px] font-bold text-slate-400 mt-1 leading-relaxed">
                     Aceita PDF, Word, PowerPoint, Excel, texto, imagens, vídeo, áudio e mais.
@@ -433,7 +433,7 @@ export default function TeacherMaterialsPage() {
                   placeholder="https://..."
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-[#4CCCED]/40 transition-all"
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl px-4 text-sm font-medium text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
                 />
               )}
             </div>
@@ -446,7 +446,7 @@ export default function TeacherMaterialsPage() {
                 placeholder="Detalhes sobre este material..."
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-[#4CCCED]/30 min-h-[80px]"
+                className="rounded-xl bg-white shadow-sm border-slate-200 text-slate-800 placeholder:text-slate-500 font-medium text-sm resize-none focus-visible:ring-orange-500/30 focus-visible:border-orange-500/30 min-h-[80px]"
               />
             </div>
 
@@ -517,7 +517,7 @@ export default function TeacherMaterialsPage() {
                 className="bg-white shadow-sm border border-slate-200 rounded-2xl p-3.5 group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-[#4CCCED]/15 border border-[#4CCCED]/25 flex items-center justify-center shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0">
                     <Icon className="h-4 w-4 text-orange-400" />
                   </div>
                   <div className="flex-1 min-w-0">

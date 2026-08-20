@@ -211,7 +211,7 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
   const [linkLoading, setLinkLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
-  const [newPassword, setNewPassword] = useState('mudar123');
+  const [newPassword, setNewPassword] = useState('compromisso2026');
   const [directLoading, setDirectLoading] = useState(false);
   const [directError, setDirectError] = useState<string | null>(null);
   const [directSuccess, setDirectSuccess] = useState(false);
@@ -223,7 +223,7 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
       setLink(null);
       setLinkError(null);
       setCopied(false);
-      setNewPassword('mudar123');
+      setNewPassword('compromisso2026');
       setDirectError(null);
       setDirectSuccess(false);
     }

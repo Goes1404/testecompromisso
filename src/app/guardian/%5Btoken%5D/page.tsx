@@ -7,7 +7,6 @@ import {
   TrendingUp, Award, Clock, ArrowRight, Loader2, Sparkles 
 } from 'lucide-react';
 import Image from 'next/image';
-import { useTenant } from '@/components/TenantProvider';
 
 type EngagementData = {
   student_name: string;
@@ -25,7 +24,6 @@ type EngagementData = {
 export default function GuardianDashboardPage({ params }: { params: Promise<{ token: string }> }) {
   const resolvedParams = use(params);
   const token = resolvedParams.token;
-  const { tenant } = useTenant();
   const [data, setData] = useState<EngagementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,11 +97,11 @@ export default function GuardianDashboardPage({ params }: { params: Promise<{ to
         <header className="flex items-center justify-between border-b border-slate-800/80 pb-6">
           <div className="flex items-center gap-3">
             <div className="relative h-8 w-28">
-              <Image
-                src={tenant.branding.logoUrl}
-                alt="Logo"
-                fill
-                className="object-contain"
+              <Image 
+                src="/images/logocompromisso.png" 
+                alt="Compromisso" 
+                fill 
+                className="object-contain" 
               />
             </div>
             <div className="h-4 w-px bg-slate-800" />
