@@ -27,7 +27,17 @@ OUT="${OUT:-${TMPDIR:-/tmp}/etec}"
 BASE="https://fatweb.s3.amazonaws.com/vestibulinhoetec/gabarito"
 
 # rotulo|id-no-s3|arquivo-da-prova|arquivo-do-gabarito
+# Campo de arquivo pode ser uma URL completa (http...): usada como está, sem o
+# BASE/id. Serve para edições fora do S3 — a 2025-2 nunca entrou na página de
+# provas do site e só existe no blob oficial do CPS (bkpsitecpsnew).
 MANIFEST=$(cat <<'L'
+2026-2|20262210689|A-CADERNO-VESTIBULINHO-2SEM2026.pdf|A-GABARITO-VESTIBULINHO-2SEM2026.pdf
+2026-1|20261176943|A-CADERNO-VESTIBULINHO-1SEM2026.pdf|A-GABARITO-VESTIBULINHO-1SEM2026.pdf
+# 2025-2 foi organizada pela IDECAN, não pela FAT: o gabarito traz VÁRIAS versões
+# de prova e módulos por curso num layout que o parser não entende (0 respostas
+# extraídas), e sem saber qual versão casa com o caderno o import viraria gabarito
+# errado. Fica fora até alguém tratar o formato à mão.
+#2025-2|-|https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/1/2025/07/vestibulinho-2025-2sem-prova.pdf|https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/1/2025/07/vestibulinho-2025-2sem-gabarito.pdf
 2025-1|20251468190|Prova.pdf|Gabarito.pdf
 2024-2|20242918930|Prova.pdf|Gabarito-retificado.pdf
 2024-1|202423718|Prova.pdf|Gabarito.pdf
@@ -60,8 +70,10 @@ while IFS='|' read -r rot id prova gab; do
   # Se o usuário pediu edições específicas, ignora as demais.
   if [ -n "$WANTED" ] && ! printf '%s\n' $WANTED | grep -qx "$rot"; then continue; fi
 
-  cp=$(curl -s -o "$OUT/$rot.prova.pdf" -w '%{http_code}' -L "$BASE/$id/$prova")
-  cg=$(curl -s -o "$OUT/$rot.gab.pdf"   -w '%{http_code}' -L "$BASE/$id/$gab")
+  case "$prova" in http*) urlp="$prova";; *) urlp="$BASE/$id/$prova";; esac
+  case "$gab"   in http*) urlg="$gab";;   *) urlg="$BASE/$id/$gab";;   esac
+  cp=$(curl -s -o "$OUT/$rot.prova.pdf" -w '%{http_code}' -L "$urlp")
+  cg=$(curl -s -o "$OUT/$rot.gab.pdf"   -w '%{http_code}' -L "$urlg")
 
   if [ "$cp" != "200" ] || [ "$cg" != "200" ] || [ ! -s "$OUT/$rot.prova.pdf" ]; then
     echo "  ⚠️  $rot: download falhou (prova=$cp gabarito=$cg)"
