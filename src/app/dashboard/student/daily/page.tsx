@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthProvider';
 import { supabase } from '@/app/lib/supabase';
 import { grantXP, XP_VALUES } from '@/lib/xp';
+import { garantirQuestaoDoDia } from '@/lib/daily';
 import { fixEncoding } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -90,7 +91,7 @@ export default function DailyQuestionPage() {
       const audience = rawTarget.includes('etec') ? 'etec' : 'enem';
 
       // 1. Busca a questão do dia
-      const { data: dq, error: dqErr } = await supabase
+      let { data: dq, error: dqErr } = await supabase
         .from('daily_questions')
         .select(`
           id,
@@ -110,6 +111,32 @@ export default function DailyQuestionPage() {
         .maybeSingle();
 
       if (dqErr) throw dqErr;
+
+      if (!dq) {
+        // Sem linha de hoje: pede ao servidor para criar (self-healing) e tenta 1x de novo.
+        const criou = await garantirQuestaoDoDia(supabase, audience);
+        if (criou) {
+          const retry = await supabase
+            .from('daily_questions')
+            .select(`
+              id,
+              scheduled_date,
+              question_id,
+              questions (
+                id,
+                question_text,
+                options,
+                correct_answer,
+                explanation,
+                subjects ( name )
+              )
+            `)
+            .eq('target_audience', audience)
+            .eq('scheduled_date', today)
+            .maybeSingle();
+          if (retry.data) dq = retry.data;
+        }
+      }
 
       if (!dq) {
         setDaily(null);

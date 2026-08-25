@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/app/lib/supabase';
+import { garantirQuestaoDoDia } from '@/lib/daily';
 import { Target, CheckCircle2, Zap, ChevronRight, Flame } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,12 +25,26 @@ export function DailyQuestionCard({ userId, profile }: Props) {
       const audience = rawTarget.includes('etec') ? 'etec' : 'enem';
 
       // Busca questão do dia
-      const { data: dq } = await supabase
+      let { data: dq } = await supabase
         .from('daily_questions')
         .select('id, questions(subjects(name))')
         .eq('target_audience', audience)
         .eq('scheduled_date', today)
         .maybeSingle();
+
+      if (!dq) {
+        // Sem linha de hoje: pede ao servidor para criar (self-healing) e tenta 1x de novo.
+        const criou = await garantirQuestaoDoDia(supabase, audience);
+        if (criou) {
+          const retry = await supabase
+            .from('daily_questions')
+            .select('id, questions(subjects(name))')
+            .eq('target_audience', audience)
+            .eq('scheduled_date', today)
+            .maybeSingle();
+          if (retry.data) dq = retry.data;
+        }
+      }
 
       if (!dq) { setState('empty'); return; }
 
