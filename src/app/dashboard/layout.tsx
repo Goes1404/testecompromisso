@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet, MonitorSmartphone, Megaphone, KeyRound } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet, MonitorSmartphone, Megaphone, KeyRound, School } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -430,8 +430,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (userRole === 'admin') return adminItems;
     if (userRole === 'staff') return secretaryItems;
     if (userRole === 'teacher') return teacherItems;
-    return studentItems;
-  }, [userRole]);
+    // Aluno da trilha ETEC ganha o mapa das unidades (escolher a escola faz
+    // parte da jornada do vestibulinho; para ENEM o item seria só ruído).
+    const alvo = (profile?.exam_target || user?.user_metadata?.exam_target || '').toLowerCase();
+    if (!alvo.includes('etec')) return studentItems;
+    return studentItems.map((item) =>
+      item.id === 'nav-provas-estudo'
+        ? {
+            ...item,
+            children: [
+              ...(item.children ?? []),
+              { icon: School, label: 'Mapa das ETECs 🗺️', href: '/dashboard/student/etecs', id: 'nav-etecs' },
+            ],
+          }
+        : item,
+    );
+  }, [userRole, profile?.exam_target, user?.user_metadata?.exam_target]);
 
   useEffect(() => {
     if (hasHydrated && !isUserLoading) {
