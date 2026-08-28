@@ -375,9 +375,9 @@ export default function StudentMaterialsPage() {
         )}
       </section>
 
-      {/* ── BARRA DE FILTROS STICKY ── */}
+      {/* ── BARRA DE FILTROS ── */}
       {!loading && materials.length > 0 && (
-        <div className="relative md:sticky md:top-2 z-20">
+        <div className="relative z-20">
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100/80 p-2.5 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
 
             {/* Busca */}
@@ -512,7 +512,7 @@ export default function StudentMaterialsPage() {
           )}
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="stagger-parent grid grid-cols-1 sm:grid-cols-2 gap-5">
           {filtered.map((m, idx) => {
             const meta = FILE_TYPES[m.file_type] ?? FILE_TYPES.outro;
             const Icon = meta.icon;

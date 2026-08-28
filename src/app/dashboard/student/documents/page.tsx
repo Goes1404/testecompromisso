@@ -170,7 +170,7 @@ export default function StudentAdmissionCentral() {
             <CardHeader className="p-8 relative z-10">
               <div className="h-14 w-14 rounded-3xl bg-white/10 flex items-center justify-center mb-6 shadow-xl"><Cloud className="h-8 w-8 text-white" /></div>
               <CardTitle className="text-2xl font-black italic">Nuvem de Documentos</CardTitle>
-              <CardDescription className="text-white/90 font-medium font-bold italic">Use o Google Drive para não perder nada.</CardDescription>
+              <CardDescription className="text-white/90 font-bold italic">Use o Google Drive para não perder nada.</CardDescription>
             </CardHeader>
             <CardContent className="p-8 pt-0 space-y-6 relative z-10">
               <div className="space-y-4">

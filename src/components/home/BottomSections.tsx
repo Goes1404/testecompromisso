@@ -219,19 +219,30 @@ export function BottomSections() {
               <div className="space-y-6">
                 <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Plataforma</p>
                 <ul className="space-y-4">
-                  <li><Link href="/login" className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">Portal do Sucesso</Link></li>
-                  <li><Link href="#metodologia" onClick={(e) => { e.preventDefault(); document.querySelector('#metodologia')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">Metodologia 360º</Link></li>
-                  <li><Link href="#localizacao" onClick={(e) => { e.preventDefault(); document.querySelector('#localizacao')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">Localização</Link></li>
+                  <li><Link href="/login" className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">Portal do Sucesso</Link></li>
+                  <li><Link href="#metodologia" onClick={(e) => { e.preventDefault(); document.querySelector('#metodologia')?.scrollIntoView({ behavior: 'smooth' }); }} className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">Metodologia 360º</Link></li>
+                  <li><Link href="#localizacao" onClick={(e) => { e.preventDefault(); document.querySelector('#localizacao')?.scrollIntoView({ behavior: 'smooth' }); }} className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">Localização</Link></li>
                 </ul>
               </div>
               <div className="space-y-6">
-                <p className="text-sm font-bold text-gray-500 break-words md:break-normal">contato@compromisso.edu.br</p>
-                <p className="text-sm font-bold text-gray-500">Unidade Central Parnaíba</p>
+                <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Contato</p>
+                <ul className="space-y-4">
+                  <li>
+                    <a href="mailto:contato@compromisso.edu.br" className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors break-words md:break-normal">
+                      contato@compromisso.edu.br
+                    </a>
+                  </li>
+                  <li>
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">
+                      Unidade Central Parnaíba
+                    </a>
+                  </li>
+                </ul>
               </div>
-              <div className="space-y-6 hidden sm:block">
+              <div className="space-y-6 col-span-2 sm:col-span-1">
                 <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Oficial</p>
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-loose">
-                  © 2024 CURSO COMPROMISSO<br />CNPJ 45.123.456/0001-00
+                  © {new Date().getFullYear()} CURSO COMPROMISSO<br />CNPJ 45.123.456/0001-00
                 </p>
               </div>
             </div>

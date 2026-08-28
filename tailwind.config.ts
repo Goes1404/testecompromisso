@@ -70,6 +70,22 @@ export default {
         'text-body': 'hsl(var(--text-body))',
         'brand-dark': 'hsl(var(--brand-dark))',
       },
+      // Valores usados no código que não existem na escala padrão do Tailwind.
+      // Sem estas entradas as classes não geram CSS nenhum e o efeito some sem
+      // erro: `h-4.5`/`w-4.5` deixavam os ícones no tamanho natural do lucide
+      // (24px em vez de 18px) e `h-13` derrubava a altura do botão para `auto`.
+      spacing: {
+        '4.5': '1.125rem',
+        '13': '3.25rem',
+      },
+      scale: {
+        '102': '1.02',
+      },
+      // O gabarito do simulado é montado em 15 colunas; a escala padrão para em
+      // 12, então `sm:grid-cols-15` não saía e a grade ficava presa em 10.
+      gridTemplateColumns: {
+        '15': 'repeat(15, minmax(0, 1fr))',
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

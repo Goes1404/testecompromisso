@@ -127,7 +127,6 @@
     height: auto;
   }
 
-
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sora, sans-serif);
     letter-spacing: -0.03em;
@@ -154,22 +153,60 @@
   background: linear-gradient(160deg, #000000 0%, #0a0a0a 40%, #1a0a00 70%, #FF6B00 150%);
 }
 
-::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
+/* Barra de rolagem — só a da página é grossa o suficiente para arrastar com o
+   mouse. Antes esta regra era global (`::-webkit-scrollbar`), então TODA faixa
+   com `overflow-x-auto` (filtros de trilha, carrosséis, tabelas) ganhava uma
+   barra laranja de 16px colada embaixo do conteúdo. */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
 }
-::-webkit-scrollbar-track {
-  background: hsl(var(--background));
-  border-left: 1px solid hsl(var(--border));
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track {
+  background: transparent;
 }
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.6);
-  border-radius: 10px;
-  border: 4px solid hsl(var(--background));
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.35);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
   min-height: 48px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.8);
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+main::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.6);
+  background-clip: content-box;
+}
+
+/* Todo o resto rola com uma barra fina e discreta. */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--foreground) / 0.16);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground) / 0.28);
+  background-clip: content-box;
+}
+
+/* Firefox não tem os pseudo-elementos acima. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.4) transparent;
 }
 
 /* DRIVER.JS — Tour Guide Custom Styles */
@@ -276,7 +313,12 @@
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    /* Sem zerar o atraso, uma entrada em cascata deixa o card invisível pelo
+       tempo do delay antes de aparecer de uma vez — o oposto do que quem
+       pediu menos movimento espera. */
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }
@@ -825,25 +867,6 @@ input:-webkit-autofill:active {
   z-index: 1;
 }
 
-/* Glow ring neon para botões e elementos de destaque do simulado especial */
-.glow-orange-neon {
-  box-shadow:
-    0 0 0 1px rgba(255, 107, 0, 0.50),
-    0 0 16px rgba(255, 107, 0, 0.40),
-    0 0 48px rgba(255, 107, 0, 0.20),
-    0 8px 32px rgba(0, 0, 0, 0.40);
-}
-
-/* Permite rolagem horizontal interna sem quebrar o layout do card (barras de filtro) */
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-
 /* ── Mascote 3D ────────────────────────────────────────────────────────────
    O boneco é montado em nove camadas (ver src/components/mascote/arte.tsx).
    O giro é escrito no DOM por rAF; estas keyframes são só o repouso — respirar,
@@ -982,4 +1005,146 @@ input:-webkit-autofill:active {
 @keyframes mascote-sombra-plana {
   0%, 100% { transform: scaleX(1); opacity: 0.25; }
   50%      { transform: scaleX(0.78); opacity: 0.14; }
+}
+
+/* ══════════════════════════════════════════════════════
+   CORREÇÕES DE RECORTE DE TEXTO
+   ══════════════════════════════════════════════════════ */
+
+/* Sora não tem itálico de verdade: o navegador inclina os glifos, e a
+   inclinação estoura a caixa da linha. Quando o mesmo elemento também corta
+   (`truncate`, `line-clamp-*`) e a entrelinha é 1, o topo e a perna das letras
+   ficam de fora — é o "palavra cortada" que aparece nos títulos de card.
+   Medido no Chrome com Sora 800 em "ÃÇÕpgjQ Redação": com line-height 1 sobram
+   2.4px de glifo fora da caixa, e a sobra só chega a zero em 1.25 — que é a
+   altura do bloco ascendente-descendente da fonte. Daí o piso ser exatamente
+   1.25, e não um número redondo qualquer. */
+.truncate.leading-none,
+.truncate[class*="leading-[0"],
+[class*="line-clamp-"].leading-none,
+[class*="line-clamp-"][class*="leading-[0"] {
+  line-height: 1.25;
+}
+
+/* O gradiente só é pintado dentro da caixa do inline, e essa caixa termina
+   exatamente onde o glifo termina (medido: topo e base coincidem em 0px). Meio
+   pixel de arredondamento já apaga a ponta da letra. Padding vertical em
+   elemento inline aumenta a área pintada sem mexer na altura da linha. */
+.text-gradient-brand,
+.text-gradient-fire {
+  padding-block: 0.12em;
+}
+
+/* ══════════════════════════════════════════════════════
+   ANIMAÇÕES REUTILIZÁVEIS
+   ══════════════════════════════════════════════════════ */
+
+/* Curva única para tudo que se move na interface. */
+:root {
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Entrada em cascata: o pai marca `stagger-parent` e cada filho entra na vez
+   dele, pela ordem, até o 12º item — daí para frente todos entram juntos. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+.stagger-parent > * {
+  animation: rise-in 0.55s var(--ease-out-soft) both;
+}
+.stagger-parent > *:nth-child(1)  { animation-delay: 40ms;  }
+.stagger-parent > *:nth-child(2)  { animation-delay: 90ms;  }
+.stagger-parent > *:nth-child(3)  { animation-delay: 140ms; }
+.stagger-parent > *:nth-child(4)  { animation-delay: 190ms; }
+.stagger-parent > *:nth-child(5)  { animation-delay: 240ms; }
+.stagger-parent > *:nth-child(6)  { animation-delay: 290ms; }
+.stagger-parent > *:nth-child(7)  { animation-delay: 340ms; }
+.stagger-parent > *:nth-child(8)  { animation-delay: 390ms; }
+.stagger-parent > *:nth-child(9)  { animation-delay: 440ms; }
+.stagger-parent > *:nth-child(10) { animation-delay: 490ms; }
+.stagger-parent > *:nth-child(11) { animation-delay: 540ms; }
+.stagger-parent > *:nth-child(n+12) { animation-delay: 580ms; }
+
+/* Card que responde ao ponteiro: sobe um pouco e ganha sombra. Só `transform`
+   e `box-shadow` — as duas propriedades que o compositor anima sem refazer
+   layout, que é o que o celular do aluno aguenta. */
+.hover-lift {
+  transition: transform 0.28s var(--ease-out-soft), box-shadow 0.28s var(--ease-out-soft);
+  will-change: transform;
+}
+@media (hover: hover) {
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.28);
+  }
+}
+.hover-lift:active { transform: translateY(-1px) scale(0.995); }
+
+/* Retorno tátil no toque, onde não existe hover. */
+.press {
+  transition: transform 0.14s var(--ease-out-soft);
+}
+.press:active { transform: scale(0.96); }
+
+/* Sublinhado que cresce do início da palavra no hover. */
+.underline-grow {
+  background-image: linear-gradient(hsl(var(--primary)), hsl(var(--primary)));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 2px;
+  transition: background-size 0.3s var(--ease-out-soft);
+}
+@media (hover: hover) {
+  .underline-grow:hover { background-size: 100% 2px; }
+}
+
+/* ══════════════════════════════════════════════════════
+   UTILITÁRIOS DE ROLAGEM
+   ══════════════════════════════════════════════════════ */
+
+/* `scrollbar-hide` é usada em 21 lugares (faixas de filtro, carrosséis) mas
+   nunca existiu no CSS — daí a barra grossa aparecendo embaixo dos chips de
+   categoria. `hide-scrollbar` é o mesmo utilitário com o nome trocado; as duas
+   grafias ficam válidas para não ter que caçar as chamadas uma a uma. */
+.scrollbar-hide,
+.hide-scrollbar,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar,
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* `scrollbar-thin` também era usada sem existir (diálogo de ajuste pedagógico). */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* Faixa horizontal que encaixa cada item no lugar ao soltar o dedo. */
+.snap-row {
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 0.25rem;
+}
+.snap-row > * {
+  scroll-snap-align: start;
+}
+
+/* Faixa horizontal sem barra de rolagem não avisa que continua para o lado.
+   A máscara apaga os últimos 2.5rem, o que dá o recado sem ocupar espaço.
+   Só a borda direita: apagar a esquerda comeria o primeiro chip parado. */
+.fade-edge-x {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent 100%);
 }

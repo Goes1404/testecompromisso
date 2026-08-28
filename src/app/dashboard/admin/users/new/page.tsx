@@ -721,7 +721,7 @@ export default function AdminNewUserPage() {
           <Button
             type="submit"
             disabled={loading || !form.fullName.trim() || !finalEmail}
-            className="w-full h-13 bg-primary text-white font-black text-sm rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all border-none h-12"
+            className="w-full h-12 bg-primary text-white font-black text-sm rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all border-none"
           >
             {loading ? (
               <span className="flex items-center gap-3">

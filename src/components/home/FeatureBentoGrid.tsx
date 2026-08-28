@@ -330,14 +330,14 @@ export function FeatureBentoGrid(): ReactElement {
           initial={reduceMotion ? "visible" : "hidden"}
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:auto-rows-fr"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
         >
           <BentoCard
             icon={LayoutDashboard}
             tagline="Central"
             title="Portal do Aluno"
             description="Seu QG de estudos: simulados, redações, flashcards, metas e boletim — tudo protegido por login e organizado por perfil."
-            className="md:col-span-2 lg:row-span-2"
+            className="md:col-span-2"
           >
             <PortalDemo />
           </BentoCard>
@@ -347,7 +347,6 @@ export function FeatureBentoGrid(): ReactElement {
             tagline="IA 24/7"
             title="Aurora IA"
             description="Tire dúvidas a qualquer hora e receba correção de redação com nota e feedback na hora."
-            className="lg:row-span-2"
           >
             <AuroraDemo />
           </BentoCard>

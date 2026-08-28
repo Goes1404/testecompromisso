@@ -1113,7 +1113,12 @@ export default function StudentEssayPage() {
 
       {/* ── Essay Detail Sheet ── */}
       <Sheet open={!!selectedEntry} onOpenChange={(v) => { if (!v) setSelectedEntry(null); }}>
-        <SheetContent side="bottom" className="h-[92dvh] w-full sm:side-right sm:max-w-2xl overflow-y-auto p-0 rounded-t-[2rem] sm:rounded-none">
+        <SheetContent
+          side="bottom"
+          className="h-[92dvh] w-full overflow-y-auto p-0 rounded-t-[2rem]
+            sm:inset-y-0 sm:left-auto sm:right-0 sm:h-full sm:max-w-2xl sm:rounded-none sm:border-l
+            sm:data-[state=open]:slide-in-from-right sm:data-[state=closed]:slide-out-to-right"
+        >
           {selectedEntry && (() => {
             // A redação guarda a banca com que foi corrigida: uma nota antiga
             // continua sendo lida na escala em que nasceu, mesmo que o aluno

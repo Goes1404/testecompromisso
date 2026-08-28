@@ -65,7 +65,10 @@ export function HeroShowcase({ onNavigate, onScrollTo }: HeroShowcaseProps): Rea
             <Award className="h-3 w-3" /> Ensino de Alta Performance
           </div>
 
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tighter">
+          {/* A coluna de texto para de crescer em 588px (metade do max-w-7xl menos
+              o gap), e "nosso Compromisso." mede 599px em text-6xl — a segunda
+              linha quebrava e "nosso" ficava sozinho. 3.5rem cabe com folga. */}
+          <h1 className="text-3xl md:text-5xl lg:text-[3.5rem] font-black text-white leading-[1.15] md:leading-[1.15] tracking-tighter">
             Sua Aprovação é o<br />
             <span className="text-gradient-brand italic">nosso Compromisso.</span>
           </h1>

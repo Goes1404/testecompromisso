@@ -362,7 +362,7 @@ export default function LearningTrailsPage() {
       </section>
 
       {/* Barra de Filtros Unificada */}
-      <div className="relative md:sticky md:top-2 z-20 space-y-3">
+      <div className="relative z-20 space-y-3">
         <div className="flex flex-col sm:flex-row gap-3 bg-white/80 backdrop-blur-xl rounded-2xl p-3 shadow-xl border border-slate-100">
           {/* Busca */}
           <div className="relative flex-1 group">
@@ -445,13 +445,13 @@ export default function LearningTrailsPage() {
         </div>
 
         {/* Categorias */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide fade-edge-x snap-row">
           {TRAIL_CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
               aria-pressed={activeCategory === cat}
-              className={`rounded-full px-6 h-10 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-sm border-none
+              className={`press rounded-full px-6 h-10 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all shadow-sm border-none
                 ${activeCategory === cat
                   ? 'bg-primary text-white shadow-primary/20 shadow-md'
                   : 'bg-white text-primary hover:bg-primary/5'}`}
@@ -594,7 +594,7 @@ export default function LearningTrailsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+          <div className="stagger-parent grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
             {filteredTrails.map((trail) => {
               const userProgress = allProgress?.find(p => p.trail_id === trail.id);
               const percentage = userProgress?.percentage || 0;
@@ -602,7 +602,7 @@ export default function LearningTrailsPage() {
               const teacherInitial = (trail.teacher_name || "M").charAt(0).toUpperCase();
 
               return (
-                <Card key={trail.id} className="gradient-border group overflow-hidden border-none shadow-xl hover:shadow-2xl hover:glow-orange transition-[transform,box-shadow] duration-300 bg-white rounded-[2.5rem] flex flex-col h-full">
+                <Card key={trail.id} className="hover-lift gradient-border group overflow-hidden border-none shadow-xl hover:glow-orange bg-white rounded-[2.5rem] flex flex-col h-full">
                   <div className="relative aspect-video overflow-hidden shrink-0">
                     <Image
                       src={getSafeTrailImage(trail.image_url, trail.title, trail.category)}

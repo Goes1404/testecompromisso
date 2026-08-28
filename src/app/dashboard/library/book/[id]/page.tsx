@@ -93,7 +93,7 @@ export default function BookViewerPage({ params }: { params: Promise<{ id: strin
           </div>
           
           <div className="flex items-center gap-3">
-            <Badge className="bg-primary/20 text-primary border-none font-black text-[8px] md:text-[10px] uppercase h-8 px-4 flex items-center gap-2 rounded-xl hidden sm:flex">
+            <Badge className="bg-primary/20 text-primary border-none font-black text-[8px] md:text-[10px] uppercase h-8 px-4 items-center gap-2 rounded-xl hidden sm:flex">
               <ShieldCheck className="h-3 w-3 text-accent" /> ANTI-PIRATARIA ATIVO
             </Badge>
             <Button 

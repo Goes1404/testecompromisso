@@ -205,7 +205,7 @@ export default function LibraryPage() {
         </div>
 
         {filteredResources.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="stagger-parent grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredResources.map((item, index) => (
               <Card key={item.id} className="gradient-border overflow-hidden border-none shadow-xl hover:shadow-2xl hover:-translate-y-1.5 hover:glow-orange-strong transition-all duration-300 group bg-white rounded-[2.5rem] flex flex-col h-full">
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 shrink-0">

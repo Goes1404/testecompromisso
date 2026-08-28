@@ -153,7 +153,7 @@ export default function BooksPage() {
             </p>
           </div>
 
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1 shrink-0">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-row -mx-1 px-1 shrink-0">
             {[
               { label: "Obras",       value: resources.length, icon: BookOpen  },
               { label: "Disponíveis", value: filtered.length,  icon: Sparkles  },
@@ -170,8 +170,8 @@ export default function BooksPage() {
         </div>
       </div>
 
-      {/* ── STICKY FILTER BAR ── */}
-      <div className="relative md:sticky md:top-2 z-20 space-y-3 mb-6">
+      {/* ── FILTER BAR ── */}
+      <div className="relative z-20 space-y-3 mb-6">
         <div className="flex flex-col sm:flex-row gap-2 bg-white/80 backdrop-blur-xl rounded-2xl p-3 shadow-xl border border-slate-100">
           {/* search */}
           <div className="relative flex-1 group">
@@ -227,7 +227,7 @@ export default function BooksPage() {
         </div>
 
         {/* category pills */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5 px-0.5">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-row pb-0.5 px-0.5">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
@@ -275,7 +275,7 @@ export default function BooksPage() {
           )}
         </div>
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="stagger-parent grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
           {filtered.map(item => <BookCard key={item.id} item={item} />)}
         </div>
       ) : (

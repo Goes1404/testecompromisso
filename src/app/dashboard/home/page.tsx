@@ -807,7 +807,7 @@ export default function DashboardHome() {
               </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.7rem] leading-[0.92] sm:text-6xl md:text-7xl font-black italic tracking-tighter text-white truncate">
+                className="text-[2.7rem] leading-[0.92] sm:text-6xl md:text-7xl font-black italic tracking-tighter text-white break-words">
                 {firstName}<span className="text-gradient-fire not-italic">.</span>
               </motion.h1>
               <motion.p
