@@ -6,9 +6,15 @@
 -- sentido pedir para a professora redigitar seis questões que ela já escreveu.
 -- IDs fixos: rodar de novo não duplica o cartaz na turma.
 --
--- `autor_id` sai de uma busca por nome em `profiles`; se a conta não for
--- encontrada o post fica sem autor vinculado e assinado só por `autor_nome`,
--- que é o que a tela mostra de qualquer jeito.
+-- `autor_id` sai de uma busca por nome em `profiles`. O casamento é por pedaço
+-- ('%prisc%' E '%lima%'), não por nome inteiro: quase todo cadastro traz nome
+-- completo ("Priscila Lima Ferreira dos Santos"), e um ILIKE sem `%` compara
+-- exato e não acha ninguém — foi o que aconteceu na primeira aplicação. O filtro
+-- de papel é o que impede pegar um aluno de nome parecido.
+--
+-- Se ainda assim não achar, o post fica sem autor vinculado e assinado só por
+-- `autor_nome`, que é o que a tela mostra de qualquer jeito; só a edição pela
+-- própria professora deixa de funcionar (admin e secretaria continuam podendo).
 
 INSERT INTO public.mural_posts
   (id, tipo, titulo, tema, descricao, questoes, instrucoes, entrega_em, imagem_url, destaque, autor_id, autor_nome, created_at)
@@ -24,7 +30,8 @@ VALUES (
   '/mural/bullying-e-crime.jpg',
   true,
   (SELECT id FROM public.profiles
-     WHERE COALESCE(full_name, name) ILIKE 'Priscila Lima'
+     WHERE COALESCE(full_name, name) ILIKE '%prisc%'
+       AND COALESCE(full_name, name) ILIKE '%lima%'
        AND role::text IN ('teacher', 'admin', 'staff')
      ORDER BY id LIMIT 1),
   'Priscila Lima',
@@ -54,7 +61,8 @@ VALUES (
   NULL,
   true,
   (SELECT id FROM public.profiles
-     WHERE COALESCE(full_name, name) ILIKE 'Priscila Lima'
+     WHERE COALESCE(full_name, name) ILIKE '%prisc%'
+       AND COALESCE(full_name, name) ILIKE '%lima%'
        AND role::text IN ('teacher', 'admin', 'staff')
      ORDER BY id LIMIT 1),
   'Priscila Lima',

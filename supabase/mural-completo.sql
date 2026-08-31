@@ -225,7 +225,8 @@ VALUES (
   '/mural/bullying-e-crime.jpg',
   true,
   (SELECT id FROM public.profiles
-     WHERE COALESCE(full_name, name) ILIKE 'Priscila Lima'
+     WHERE COALESCE(full_name, name) ILIKE '%prisc%'
+       AND COALESCE(full_name, name) ILIKE '%lima%'
        AND role::text IN ('teacher', 'admin', 'staff')
      ORDER BY id LIMIT 1),
   'Priscila Lima',
@@ -255,7 +256,8 @@ VALUES (
   NULL,
   true,
   (SELECT id FROM public.profiles
-     WHERE COALESCE(full_name, name) ILIKE 'Priscila Lima'
+     WHERE COALESCE(full_name, name) ILIKE '%prisc%'
+       AND COALESCE(full_name, name) ILIKE '%lima%'
        AND role::text IN ('teacher', 'admin', 'staff')
      ORDER BY id LIMIT 1),
   'Priscila Lima',
