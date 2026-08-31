@@ -7,7 +7,7 @@
  * hora tardia existe porque `entrega_em` é DATE — lida como UTC, uma entrega de
  * sábado vira sexta para quem abre o app às 22h em Brasília.
  */
-import { prazoDoTrabalho, estaPegandoFogo, questoesDeTexto, ordenarMural, normalizarQuestoes } from '../src/lib/mural';
+import { prazoDoTrabalho, estaPegandoFogo, questoesDeTexto, ordenarMural, normalizarQuestoes, pendentesParaHome } from '../src/lib/mural';
 
 let falhas = 0;
 const eq = (nome: string, obtido: any, esperado: any) => {
@@ -66,6 +66,45 @@ eq("sem prazo, o mais novo primeiro",
     p("novo",   { tipo: "anuncio", created_at: "2026-08-30T10:00:00Z" }),
   ], agora).map(x => x.id),
   ["novo", "antigo"]);
+
+// ── Aviso da home ───────────────────────────────────────────────────────────
+const trab = (id: string, extra: any) => p(id, { tipo: "trabalho", ...extra });
+
+eq("mostra o trabalho aberto que o aluno não fez",
+  pendentesParaHome([trab("pesquisa", { entrega_em: "2026-09-05" })], [], agora).map(x => x.id),
+  ["pesquisa"]);
+
+eq("some assim que ele marca 'já fiz'",
+  pendentesParaHome([trab("pesquisa", { entrega_em: "2026-09-05" })], ["pesquisa"], agora),
+  []);
+
+eq("anúncio nunca vira cobrança",
+  pendentesParaHome([p("cartaz", { tipo: "anuncio", destaque: true })], [], agora),
+  []);
+
+eq("trabalho arquivado não cobra",
+  pendentesParaHome([trab("velho", { entrega_em: "2026-09-05", ativo: false })], [], agora),
+  []);
+
+eq("atrasado há 3 dias ainda cobra",
+  pendentesParaHome([trab("atrasado", { entrega_em: "2026-08-28" })], [], agora).map(x => x.id),
+  ["atrasado"]);
+
+eq("atrasado há 8 dias para de cobrar",
+  pendentesParaHome([trab("antigo", { entrega_em: "2026-08-23" })], [], agora),
+  []);
+
+eq("sem data de entrega, cobra até ser arquivado",
+  pendentesParaHome([trab("sem-data", {})], [], agora).map(x => x.id),
+  ["sem-data"]);
+
+eq("o mais urgente vem primeiro",
+  pendentesParaHome([
+    trab("longe", { entrega_em: "2026-09-20" }),
+    trab("amanha", { entrega_em: "2026-09-01" }),
+    trab("semana", { entrega_em: "2026-09-05" }),
+  ], [], agora).map(x => x.id),
+  ["amanha", "semana", "longe"]);
 
 console.log(falhas === 0 ? "\nTODOS OS TESTES PASSARAM" : `\n${falhas} FALHA(S)`);
 process.exit(falhas === 0 ? 0 : 1);

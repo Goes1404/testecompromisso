@@ -124,6 +124,39 @@ export function ordenarMural(posts: MuralPost[], agora?: Date): MuralPost[] {
 }
 
 /**
+ * Por quantos dias um trabalho atrasado continua cobrando na home. Depois disso
+ * ele some de lá — mas continua no mural, porque some da cobrança, não do
+ * enunciado. Uma semana é o intervalo entre dois sábados de aula: passado isso a
+ * correção presencial já aconteceu e o aviso vira só ruído em cima de quem não
+ * pode mais fazer nada a respeito.
+ */
+export const DIAS_DE_COBRANCA_APOS_VENCER = 7;
+
+/**
+ * O que o aviso da home mostra: trabalho no ar que este aluno ainda não marcou
+ * como feito, do mais urgente para o menos. Some sozinho quando ele marca "já
+ * fiz" — por isso o aviso não tem botão de dispensar: dispensar seria esconder
+ * a cobrança sem fazer o trabalho, e o aluno perderia o prazo achando que
+ * resolveu.
+ */
+export function pendentesParaHome(
+  posts: MuralPost[],
+  feitos: Set<string> | string[],
+  agora: Date = new Date(),
+): MuralPost[] {
+  const jaFez = feitos instanceof Set ? feitos : new Set(feitos);
+  const pendentes = posts.filter((p) => {
+    if (p.tipo !== "trabalho" || !p.ativo || jaFez.has(p.id)) return false;
+    const prazo = prazoDoTrabalho(p.entrega_em, agora);
+    // Sem data marcada, o trabalho cobra até alguém arquivá-lo: não há quando
+    // parar de cobrar se ninguém disse quando é para entregar.
+    if (!prazo) return true;
+    return prazo.dias >= -DIAS_DE_COBRANCA_APOS_VENCER;
+  });
+  return ordenarMural(pendentes, agora);
+}
+
+/**
  * O banco aceita `questoes` como qualquer array JSON; a tela precisa de strings
  * limpas. Também é aqui que linhas em branco do textarea somem — o professor
  * separa as questões por linha e sempre sobra uma no fim.

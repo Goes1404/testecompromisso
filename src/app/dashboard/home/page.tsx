@@ -76,6 +76,13 @@ const DailyQuestionCard = dynamic(
   () => import('@/components/DailyQuestionCard').then(m => ({ default: m.DailyQuestionCard })),
   { ssr: false, loading: () => <div className="h-28 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
 );
+// Cobranca dos trabalhos do mural. Dinamico como os demais: quando nao ha nada
+// pendente ele nao renderiza nada, entao nao pode custar bundle no caminho
+// critico de quem esta em dia.
+const MuralPendenteWidget = dynamic(
+  () => import('@/components/MuralPendenteWidget').then(m => ({ default: m.MuralPendenteWidget })),
+  { ssr: false }
+);
 const WeeklyMissionsWidget = dynamic(
   () => import('@/components/WeeklyMissionsWidget').then(m => ({ default: m.WeeklyMissionsWidget })),
   { ssr: false, loading: () => <div className="h-48 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
@@ -700,6 +707,9 @@ export default function DashboardHome() {
           </div>
         </motion.div>
       )}
+
+      {/* ── TRABALHO DO MURAL PENDENTE ── */}
+      {user && <MuralPendenteWidget userId={user.id} />}
 
       {/* ── AVISO DE SIMULADO ── */}
       {simuladoEspecial && !simNoticeDismissed && (

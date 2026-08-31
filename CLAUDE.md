@@ -215,6 +215,14 @@ cargo — a que existisse a mais ficaria para trás na primeira mudança de layo
    sábado. Nada de anexo de aluno aqui: guardar arquivo de menor abriria uma frente de
    LGPD que a plataforma não precisa ter.
 
+7. **O aviso da home é `pendentesParaHome()`**, em `components/MuralPendenteWidget.tsx`:
+   trabalho no ar que o aluno ainda não marcou como feito. **Não tem botão de
+   dispensar** — dispensar esconderia a cobrança sem fazer o trabalho, e o aluno
+   perderia o sábado achando que resolveu; o jeito de sumir é marcar "já fiz".
+   Para de cobrar `DIAS_DE_COBRANCA_APOS_VENCER` (7) dias depois do prazo: aí a
+   correção presencial já aconteceu e o aviso vira ruído sobre quem não pode mais
+   fazer nada. Sai da home, **não** do mural (ver regra 3).
+
 Prova de não-regressão: `npx tsx scripts/test-mural.ts` (roda dentro de `npm test`).
 
 ### IA Extraction (Motor de Provas)
