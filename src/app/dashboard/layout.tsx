@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet, MonitorSmartphone } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet, MonitorSmartphone, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,14 +24,17 @@ import { useTimeTracker } from "@/hooks/useTimeTracker";
 import { ExtractionProvider } from "@/lib/ExtractionContext";
 import { FloatingExtractionBubble } from "@/components/FloatingExtractionBubble";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { estaPegandoFogo } from "@/lib/mural";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 type NavChild = { icon: any; label: string; href: string; id: string; badge?: boolean };
-type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: boolean; initialOpen?: boolean; children?: NavChild[] };
+/** `hot`: item em destaque no menu — moldura laranja e contador do que está pegando fogo. */
+type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: boolean; hot?: boolean; initialOpen?: boolean; children?: NavChild[] };
 
 /* ─── ALUNO ─────────────────────────────────────────────────── */
 const studentItems: NavItem[] = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
+  { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-mural", hot: true },
   {
     icon: BookOpen, label: "Conteúdos", id: "nav-conteudos",
     children: [
@@ -104,6 +107,7 @@ const studentItems: NavItem[] = [
 /* ─── PROFESSOR ─────────────────────────────────────────────── */
 const teacherItems: NavItem[] = [
   { icon: LayoutDashboard, label: "Painel de Gestão", href: "/dashboard/teacher/home", id: "nav-teacher-home" },
+  { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-teacher-mural", hot: true },
   {
     icon: BookOpen, label: "Conteúdo", id: "nav-teacher-conteudo",
     children: [
@@ -152,6 +156,7 @@ const teacherItems: NavItem[] = [
 /* ─── ADMIN ─────────────────────────────────────────────────── */
 const adminItems: NavItem[] = [
   { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home", id: "nav-admin-home" },
+  { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-admin-mural", hot: true },
   {
     icon: Users, label: "Usuários", id: "nav-admin-usuarios",
     children: [
@@ -201,6 +206,7 @@ const adminItems: NavItem[] = [
 const secretaryItems: NavItem[] = [
   { icon: ShieldCheck, label: "Painel Secretaria", href: "/dashboard/secretary/home", id: "nav-secretary-home" },
   { icon: BarChart3,   label: "Painel de KPIs",   href: "/dashboard/secretary/kpi",  id: "nav-secretary-kpi" },
+  { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-secretary-mural", hot: true },
   {
     icon: Users, label: "Matrículas", id: "nav-secretary-matriculas",
     children: [
@@ -251,7 +257,7 @@ const secretaryItems: NavItem[] = [
 ];
 
 /* ─── NavMenu component ──────────────────────────────────────── */
-const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[]; pathname: string; unreadCount: number }) => {
+const NavMenu = memo(({ items, pathname, unreadCount, hotCount }: { items: NavItem[]; pathname: string; unreadCount: number; hotCount: number }) => {
   const { setOpenMobile, isMobile } = useSidebar();
 
   const isItemActive = (itemHref: string) => {
@@ -264,6 +270,12 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[]; path
   };
 
   const isGroupActive = (children: NavChild[]) => children.some(c => isItemActive(c.href));
+
+  // O item em destaque não pode depender só do contador: quando não há nada
+  // pegando fogo ele continua sendo o atalho que queremos que o aluno veja
+  // primeiro, então a moldura fica e só a chama apaga.
+  const hotClass =
+    "bg-gradient-to-r from-orange-500/[0.18] to-amber-500/[0.04] ring-1 ring-inset ring-orange-500/30 shadow-[0_0_24px_-8px_rgba(255,107,0,0.65)]";
 
   const itemClass =
     "h-10 rounded-xl data-[active=true]:bg-gradient-to-r data-[active=true]:from-accent data-[active=true]:to-accent/90 data-[active=true]:text-white data-[active=true]:shadow-lg data-[active=true]:shadow-accent/20 hover:bg-white/[0.07] transition-all duration-150";
@@ -334,7 +346,7 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[]; path
               asChild
               isActive={isItemActive(item.href!)}
               tooltip={item.label}
-              className={itemClass}
+              className={item.hot ? `${itemClass} ${hotClass}` : itemClass}
             >
               <Link
                 id={item.id}
@@ -342,8 +354,18 @@ const NavMenu = memo(({ items, pathname, unreadCount }: { items: NavItem[]; path
                 onClick={() => isMobile && setOpenMobile(false)}
                 className="flex items-center gap-3"
               >
-                <item.icon className="h-4.5 w-4.5 shrink-0" />
+                <item.icon className={`h-4.5 w-4.5 shrink-0 ${item.hot ? "text-orange-400" : ""}`} />
                 <span className="font-bold text-sm">{item.label}</span>
+                {item.hot && (
+                  <span className="ml-auto flex items-center gap-1.5">
+                    <Flame className={`h-3.5 w-3.5 text-orange-400 ${hotCount > 0 ? "animate-pulse" : "opacity-50"}`} />
+                    {hotCount > 0 && (
+                      <Badge className="bg-orange-500 text-white text-[10px] font-black h-5 min-w-5 rounded-full shadow-lg shadow-orange-500/40 animate-in zoom-in">
+                        {hotCount}
+                      </Badge>
+                    )}
+                  </span>
+                )}
                 {item.badge && unreadCount > 0 && (
                   <Badge className="ml-auto bg-accent text-white text-[10px] font-black h-5 min-w-5 rounded-full shadow-lg shadow-accent/30 animate-in zoom-in">
                     {unreadCount}
@@ -366,6 +388,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, profile, userRole, loading: isUserLoading, signOut } = useAuth();
   const [hasHydrated, setHasHydrated] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [hotCount, setHotCount] = useState(0);
 
   const cityLogoUrl = "https://upload.wikimedia.org/wikipedia/commons/7/77/Santana_Parna%C3%ADba.PNG";
 
@@ -386,6 +409,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const channel = supabase
       .channel('unread_sidebar')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `receiver_id=eq.${user.id}` }, fetchUnread)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  // Contador do Mural. A régua de "pegando fogo" é a mesma de `lib/mural.ts`
+  // (fixado, ou entrega em até 3 dias) — o número aqui tem que bater com o que
+  // o aluno encontra ao clicar, senão o menu vira mentira.
+  useEffect(() => {
+    if (!user) return;
+    const contar = async () => {
+      const { data, error } = await supabase
+        .from('mural_posts')
+        .select('destaque, entrega_em')
+        .eq('ativo', true);
+      if (!error) setHotCount((data || []).filter(p => estaPegandoFogo(p as any)).length);
+    };
+    contar();
+    const channel = supabase
+      .channel('mural_sidebar')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mural_posts' }, contar)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
@@ -462,7 +505,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <SidebarContent className="px-2.5">
           <SidebarGroup>
-            <NavMenu items={navItems} pathname={pathname || ''} unreadCount={unreadCount} />
+            <NavMenu items={navItems} pathname={pathname || ''} unreadCount={unreadCount} hotCount={hotCount} />
           </SidebarGroup>
         </SidebarContent>
 
