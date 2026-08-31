@@ -112,6 +112,8 @@ Sempre verifique `/supabase/migrations/` antes de qualquer query — nunca assum
 | `scheduled_lives` | id, title, teacher_id, start_time, meet_url |
 | `notes` | id, user_id, title, blocks (JSONB), subject_id, tags (TEXT[]), is_pinned, updated_at, created_at |
 | `user_badges` | user_id, badge_id, awarded_at |
+| `mural_posts` | tipo (`anuncio`/`trabalho`), titulo, tema, descricao, questoes (JSONB), instrucoes, entrega_em, imagem_url, destaque, ativo, autor_id, autor_nome |
+| `mural_conclusoes` | post_id, user_id, concluido_em |
 
 ### RLS
 Todas as tabelas têm RLS ativo. Filtre sempre por `user_id` ou `role`. Nunca exponha dados de outros usuários.
@@ -180,6 +182,48 @@ Ela **não** escreve em `report_card_entries*.redacao_score`: aquela é a nota o
 secretaria, com fila de aprovação; esta é treino corrigido por IA. Anuladas (nota 0) ficam
 fora da média — medem procedimento, não escrita — e são contadas ao lado (`mediaRedacao()`
 em `report-card-lib.ts`).
+
+### 📌 Mural: anúncios e pedidos de trabalho
+
+Uma tela só (`/dashboard/mural`) para os dois papéis: quem tem `role` em
+`teacher`/`admin`/`staff` vê o compositor, o aluno vê a lista. Sem rota espelho por
+cargo — a que existisse a mais ficaria para trás na primeira mudança de layout.
+
+| | `anuncio` | `trabalho` |
+|---|---|---|
+| Serve para | campanha, cartaz, recado | atividade/pesquisa com prazo |
+| `entrega_em` | sempre `NULL` | a data da entrega presencial |
+| `questoes` | `[]` | a lista de enunciados |
+| No card | imagem em destaque | lista numerada + "já fiz" |
+
+**Regras ao mexer aqui:**
+
+1. **A régua de "pegando fogo" mora em `estaPegandoFogo()` (`src/lib/mural.ts`)** —
+   fixado, ou entrega em até 3 dias. O contador do menu (`layout.tsx`) e o card usam a
+   mesma função de propósito: um número no menu que não bate com o que o aluno acha ao
+   clicar é pior do que não ter contador.
+2. **Prazo se conta por data, nunca por hora.** `entrega_em` é `DATE`, então
+   `prazoDoTrabalho()` monta a data em hora local. `new Date("2026-09-05")` seria UTC e
+   adiantaria o prazo em um dia para quem abre o app à noite em Brasília.
+3. **Trabalho vencido não some.** Só o `ativo=false` tira do mural. Quem está atrasado
+   ainda precisa ler o enunciado — sumir com ele resolve a estética e não o aluno.
+4. **Papel em RLS sai de `profiles.role`** (`pode_publicar_no_mural()`), nunca de
+   `auth.jwt()->>'user_role'` — ver a causa-raiz do claim nulo mais acima.
+5. **`autor_nome` é congelado na publicação.** O card continua assinado depois que o
+   professor sai da escola; `autor_id` só serve para autorizar edição.
+6. **`mural_conclusoes` é autodeclaração, não entrega.** A correção é presencial no
+   sábado. Nada de anexo de aluno aqui: guardar arquivo de menor abriria uma frente de
+   LGPD que a plataforma não precisa ter.
+
+7. **O aviso da home é `pendentesParaHome()`**, em `components/MuralPendenteWidget.tsx`:
+   trabalho no ar que o aluno ainda não marcou como feito. **Não tem botão de
+   dispensar** — dispensar esconderia a cobrança sem fazer o trabalho, e o aluno
+   perderia o sábado achando que resolveu; o jeito de sumir é marcar "já fiz".
+   Para de cobrar `DIAS_DE_COBRANCA_APOS_VENCER` (7) dias depois do prazo: aí a
+   correção presencial já aconteceu e o aviso vira ruído sobre quem não pode mais
+   fazer nada. Sai da home, **não** do mural (ver regra 3).
+
+Prova de não-regressão: `npx tsx scripts/test-mural.ts` (roda dentro de `npm test`).
 
 ### IA Extraction (Motor de Provas)
 - Se o enunciado original diz "utilize o texto para responder as questões X a Y", a IA **deve** repetir o `supporting_text` integralmente em **cada** objeto de questão do JSON gerado.
@@ -347,9 +391,10 @@ Fases:
 ├── student/
 │   ├── notes/          # Caderno de notas (blocos, wikilinks, backlinks)
 │   └── notes/graph/    # Graph View (grafo de conhecimento)
-└── teacher/
-    ├── questions/      # Banco de questões
-    └── analytics/      # BI & analytics
+├── teacher/
+│   ├── questions/      # Banco de questões
+│   └── analytics/      # BI & analytics
+└── mural/              # Anúncios e pedidos de trabalho (lista p/ todos, composer p/ staff)
 ```
 
 ## 🔑 Variáveis de Ambiente
