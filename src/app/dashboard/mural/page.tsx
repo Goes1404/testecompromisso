@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   Flame, Megaphone, ClipboardList, PlusCircle, X, Loader2, Trash2, CalendarClock,
   CheckCircle2, Circle, ImagePlus, Pin, Users, AlertTriangle, Inbox, EyeOff, Eye,
+  BellRing, BellOff,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +16,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   MuralPost, MuralRascunho, MuralTipo, RASCUNHO_VAZIO, TIPOS,
-  lerPost, ordenarMural, podePublicar, prazoDoTrabalho, questoesDeTexto,
+  lerPost, ordenarMural, podePublicar, prazoDoTrabalho, questoesDeTexto, avisoDoPost,
 } from "@/lib/mural";
 
 const ESTILO: Record<MuralTipo, { icon: any; cor: string; bg: string; borda: string; brilho: string }> = {
@@ -48,6 +49,8 @@ export default function MuralPage() {
   const [textoQuestoes, setTextoQuestoes] = useState("");
   const [salvando, setSalvando]   = useState(false);
   const [enviandoImagem, setEnviandoImagem] = useState(false);
+  const [avisando, setAvisando] = useState<string | null>(null);
+  const [avisarAoPublicar, setAvisarAoPublicar] = useState(false);
 
   const buscar = useCallback(async () => {
     setCarregando(true);
@@ -163,15 +166,71 @@ export default function MuralPage() {
       const { data, error } = await supabase.from("mural_posts").insert(payload).select().single();
       if (error) throw error;
 
-      setPosts(prev => [lerPost(data), ...prev]);
+      const publicado = lerPost(data);
+      setPosts(prev => [publicado, ...prev]);
       setRascunho(RASCUNHO_VAZIO);
       setTextoQuestoes("");
       setComposer(false);
       toast({ title: "Publicado no mural!", description: "Todos os alunos já estão vendo." });
+
+      // O aviso vai depois do post existir: se ele falhar, o que ficou no ar é
+      // um post sem aviso — recuperável pelo botão do card. Na ordem inversa,
+      // uma falha na publicação deixaria um aviso apontando para nada.
+      if (avisarAoPublicar) {
+        await avisarTodos(publicado, false);
+        setAvisarAoPublicar(false);
+      }
     } catch (e: any) {
       toast({ title: "Falha ao publicar", description: e.message, variant: "destructive" });
     } finally {
       setSalvando(false);
+    }
+  };
+
+  /**
+   * Dispara o comunicado global: cria o `announcements` de prioridade alta (que
+   * é o que o banner do dashboard lê) e pede o push. O texto sai de
+   * `avisoDoPost`, para o banner e a notificação dizerem a mesma coisa.
+   *
+   * Grava `avisado_em` para o botão não ser clicável duas vezes — dois cliques
+   * seriam dois banners e dois pushes para os mesmos alunos. Se a coluna ainda
+   * não existir no banco (migration não aplicada), o aviso sai do mesmo jeito e
+   * só a memória se perde: melhor isso do que o botão inteiro falhar.
+   */
+  const avisarTodos = async (post: MuralPost, confirmar = true) => {
+    if (!user) return;
+    if (post.avisado_em) return;
+    if (confirmar && !confirm(`Avisar TODOS os alunos sobre "${post.titulo}"?\n\nEles recebem um aviso no painel e uma notificação no celular. Isso não dá para desfazer.`)) return;
+
+    setAvisando(post.id);
+    try {
+      const aviso = avisoDoPost(post);
+      const { data, error } = await supabase
+        .from("announcements")
+        .insert({ ...aviso, target_group: "all", author_id: user.id })
+        .select()
+        .single();
+      if (error) throw error;
+
+      // O push é o extra: quem não tem notificação ligada continua vendo o
+      // banner. Falhar aqui não pode desfazer um aviso que já foi publicado.
+      fetch("/api/push/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "communication", announcementId: data.id }),
+      }).catch(() => {});
+
+      const agora = new Date().toISOString();
+      const marcado = await supabase.from("mural_posts").update({ avisado_em: agora }).eq("id", post.id);
+      if (!marcado.error) {
+        setPosts(prev => prev.map(p => (p.id === post.id ? { ...p, avisado_em: agora } : p)));
+      }
+
+      toast({ title: "Todo mundo avisado!", description: "O aviso está no painel dos alunos e a notificação foi enviada." });
+    } catch (e: any) {
+      toast({ title: "Falha ao avisar", description: e.message, variant: "destructive" });
+    } finally {
+      setAvisando(null);
     }
   };
 
@@ -232,6 +291,7 @@ export default function MuralPage() {
           rascunho={rascunho} setRascunho={setRascunho}
           textoQuestoes={textoQuestoes} setTextoQuestoes={setTextoQuestoes}
           salvando={salvando} enviandoImagem={enviandoImagem}
+          avisarTodos={avisarAoPublicar} setAvisarTodos={setAvisarAoPublicar}
           inputImagem={inputImagem} onImagem={enviarImagem}
           onPublicar={publicar} onFechar={() => setComposer(false)}
         />
@@ -274,6 +334,8 @@ export default function MuralPage() {
               quantosFizeram={contagem[post.id] || 0}
               podeModerar={publica && (post.autor_id === user?.id || userRole === "admin" || userRole === "staff")}
               ehAluno={!publica}
+              avisando={avisando === post.id}
+              onAvisarTodos={() => avisarTodos(post)}
               onAlternarFeito={() => alternarFeito(post.id)}
               onArquivar={() => arquivar(post)}
               onApagar={() => apagar(post)}
@@ -300,14 +362,16 @@ export default function MuralPage() {
 
 /* ─── Card ──────────────────────────────────────────────────────────────── */
 function CardDoMural({
-  post, feito, quantosFizeram, podeModerar, ehAluno,
-  onAlternarFeito, onArquivar, onApagar, onAbrirImagem,
+  post, feito, quantosFizeram, podeModerar, ehAluno, avisando,
+  onAvisarTodos, onAlternarFeito, onArquivar, onApagar, onAbrirImagem,
 }: {
   post: MuralPost;
   feito: boolean;
   quantosFizeram: number;
   podeModerar: boolean;
   ehAluno: boolean;
+  avisando: boolean;
+  onAvisarTodos: () => void;
   onAlternarFeito: () => void;
   onArquivar: () => void;
   onApagar: () => void;
@@ -451,6 +515,27 @@ function CardDoMural({
             </span>
           )}
         </div>
+
+        {/* Avisar todo mundo — só para quem publica, e só uma vez por post. */}
+        {podeModerar && post.ativo && (
+          <div className="pt-1">
+            {post.avisado_em ? (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-emerald-400/70 uppercase tracking-wider">
+                <BellOff className="h-3 w-3" />
+                Todo mundo avisado em {format(new Date(post.avisado_em), "dd/MM 'às' HH:mm", { locale: ptBR })}
+              </span>
+            ) : (
+              <button
+                onClick={onAvisarTodos}
+                disabled={avisando}
+                className="w-full h-10 rounded-xl bg-red-500/12 border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:opacity-50 font-black text-[10px] uppercase tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                {avisando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BellRing className="h-3.5 w-3.5" />}
+                {avisando ? "Avisando…" : "Avisar todo mundo"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -459,7 +544,8 @@ function CardDoMural({
 /* ─── Composer ──────────────────────────────────────────────────────────── */
 function Composer({
   rascunho, setRascunho, textoQuestoes, setTextoQuestoes,
-  salvando, enviandoImagem, inputImagem, onImagem, onPublicar, onFechar,
+  salvando, enviandoImagem, avisarTodos, setAvisarTodos,
+  inputImagem, onImagem, onPublicar, onFechar,
 }: {
   rascunho: MuralRascunho;
   setRascunho: React.Dispatch<React.SetStateAction<MuralRascunho>>;
@@ -467,6 +553,8 @@ function Composer({
   setTextoQuestoes: (v: string) => void;
   salvando: boolean;
   enviandoImagem: boolean;
+  avisarTodos: boolean;
+  setAvisarTodos: React.Dispatch<React.SetStateAction<boolean>>;
   inputImagem: React.RefObject<HTMLInputElement | null>;
   onImagem: (f: File) => void;
   onPublicar: () => void;
@@ -622,6 +710,23 @@ function Composer({
             </p>
             <p className="text-[9px] font-semibold text-white/35 leading-tight">
               Acende o contador do menu para todo mundo.
+            </p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => setAvisarTodos(v => !v)}
+          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all active:scale-[0.99] ${
+            avisarTodos ? "bg-red-500/12 border-red-500/30" : "bg-white/[0.03] border-white/8"
+          }`}
+        >
+          <BellRing className={`h-4 w-4 shrink-0 ${avisarTodos ? "text-red-400" : "text-white/30"}`} />
+          <div className="text-left min-w-0">
+            <p className={`text-[11px] font-black italic ${avisarTodos ? "text-red-400" : "text-white/60"}`}>
+              Avisar todo mundo agora
+            </p>
+            <p className="text-[9px] font-semibold text-white/35 leading-tight">
+              Aviso no painel de todos os alunos e notificação no celular. Não dá para desfazer.
             </p>
           </div>
         </button>

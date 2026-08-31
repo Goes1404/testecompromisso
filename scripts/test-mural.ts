@@ -7,7 +7,7 @@
  * hora tardia existe porque `entrega_em` é DATE — lida como UTC, uma entrega de
  * sábado vira sexta para quem abre o app às 22h em Brasília.
  */
-import { prazoDoTrabalho, estaPegandoFogo, questoesDeTexto, ordenarMural, normalizarQuestoes, pendentesParaHome } from '../src/lib/mural';
+import { prazoDoTrabalho, estaPegandoFogo, questoesDeTexto, ordenarMural, normalizarQuestoes, pendentesParaHome, avisoDoPost } from '../src/lib/mural';
 
 let falhas = 0;
 const eq = (nome: string, obtido: any, esperado: any) => {
@@ -105,6 +105,49 @@ eq("o mais urgente vem primeiro",
     trab("semana", { entrega_em: "2026-09-05" }),
   ], [], agora).map(x => x.id),
   ["amanha", "semana", "longe"]);
+
+// ── Texto do comunicado ─────────────────────────────────────────────────────
+const aviso = avisoDoPost({
+  tipo: "trabalho",
+  titulo: "Atividade para o próximo sábado – 05/09",
+  tema: "Bullying, comportamento humano e responsabilidade social",
+  descricao: "Para o próximo sábado, TODOS os alunos deverão realizar uma pesquisa individual sobre o bullying sob a perspectiva da Psicologia.",
+  entrega_em: "2026-09-05",
+});
+
+eq("o título do aviso é o título do post", aviso.title, "Atividade para o próximo sábado – 05/09");
+eq("sempre urgente", aviso.priority, "high");
+eq("diz o tema", aviso.message.includes("Tema: Bullying"), true);
+eq("diz o prazo", aviso.message.includes("Entrega: faltam 5 dias."), true);
+eq("sempre manda abrir o mural", aviso.message.endsWith("Abra o Mural para ver tudo."), true);
+
+// O push corta em 200 caracteres: a frase que diz onde ler tem que sobreviver.
+eq("cabe nos 200 caracteres do push", aviso.message.length <= 200, true);
+
+// Um tema comprido nao pode empurrar a frase que diz onde ler para fora.
+const temaEnorme = avisoDoPost({
+  tipo: "trabalho",
+  titulo: "Atividade",
+  tema: "Bullying, comportamento humano, responsabilidade social, saude mental na adolescencia e o papel de quem assiste calado",
+  descricao: "Para o proximo sabado, todos os alunos deverao realizar uma pesquisa individual sobre o bullying sob a perspectiva da Psicologia.",
+  entrega_em: "2026-09-05",
+});
+eq("tema comprido: ainda cabe", temaEnorme.message.length <= 200, true);
+eq("tema comprido: 'Abra o Mural' sobrevive", temaEnorme.message.endsWith("Abra o Mural para ver tudo."), true);
+eq("tema comprido: some o resumo em vez de meia palavra",
+  temaEnorme.message.includes("..."), false);
+
+const semTema = avisoDoPost({
+  tipo: "anuncio", titulo: "Bullying é Crime!", tema: null,
+  descricao: "Humilhar, intimidar, excluir ou agredir não é brincadeira.", entrega_em: null,
+});
+eq("anúncio sem tema nem prazo não inventa nenhum dos dois",
+  semTema.message, "Humilhar, intimidar, excluir ou agredir não é brincadeira. Abra o Mural para ver tudo.");
+
+const vencido = avisoDoPost({
+  tipo: "trabalho", titulo: "Antigo", tema: null, descricao: "x", entrega_em: "2026-08-01",
+});
+eq("prazo vencido não vira 'entrega'", vencido.message.includes("Entrega"), false);
 
 console.log(falhas === 0 ? "\nTODOS OS TESTES PASSARAM" : `\n${falhas} FALHA(S)`);
 process.exit(falhas === 0 ? 0 : 1);

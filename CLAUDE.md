@@ -223,6 +223,19 @@ cargo — a que existisse a mais ficaria para trás na primeira mudança de layo
    correção presencial já aconteceu e o aviso vira ruído sobre quem não pode mais
    fazer nada. Sai da home, **não** do mural (ver regra 3).
 
+8. **"Avisar todo mundo" é o único caminho para o banner urgente.** O mural não
+   dispara nada sozinho: quem publica precisa pedir, no interruptor do compositor
+   ou no botão do card. O aviso cria um `announcements` de `priority='high'` (que
+   é o que o `UrgentNotice` lê) e chama `/api/push/notify`. O texto sai de
+   `avisoDoPost()`, montado **por orçamento** dentro de `LIMITE_DO_PUSH` (200):
+   tema, prazo e "Abra o Mural" entram inteiros e o resumo ocupa o que sobrar —
+   cortar o resumo primeiro, com `slice` fixo, estoura o limite e o que se perde
+   no fim é justamente a frase que diz onde ler.
+9. **`mural_posts.avisado_em` existe para o aviso não sair duas vezes.** Dois
+   cliques seriam dois banners e dois pushes para os mesmos ~855 alunos. Se a
+   coluna não existir (migration não aplicada), o aviso sai e só a memória se
+   perde — nunca o botão inteiro.
+
 Prova de não-regressão: `npx tsx scripts/test-mural.ts` (roda dentro de `npm test`).
 
 ### IA Extraction (Motor de Provas)

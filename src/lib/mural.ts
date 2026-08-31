@@ -22,6 +22,8 @@ export interface MuralPost {
   ativo: boolean;
   autor_id: string | null;
   autor_nome: string | null;
+  /** Quando o comunicado global saiu. NULL = ninguém foi avisado ainda. */
+  avisado_em: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -177,6 +179,53 @@ export function questoesDeTexto(texto: string): string[] {
     .filter(Boolean);
 }
 
+/** O push corta a mensagem aqui. Ver `avisoDoPost`. */
+export const LIMITE_DO_PUSH = 200;
+
+/**
+ * O comunicado que um post do mural vira quando quem publicou pede para avisar
+ * todo mundo. Mora aqui, e não na tela, porque o mesmo texto vai para o banner
+ * do dashboard e para o push — e o push corta em 200 caracteres.
+ *
+ * O texto é montado por orçamento, não por corte fixo: tema, prazo e a frase
+ * que diz onde ler entram inteiros, e o resumo do enunciado ocupa o que sobrar.
+ * Cortar na ordem inversa (resumo primeiro, com um `slice` fixo) foi o que
+ * estourou o limite no primeiro teste — e o pedaço que se perde no fim é
+ * justamente "Abra o Mural", sem o qual o aluno lê "tem pesquisa" e não
+ * descobre qual.
+ */
+export function avisoDoPost(post: Pick<MuralPost, "tipo" | "titulo" | "tema" | "descricao" | "entrega_em">): {
+  title: string;
+  message: string;
+  priority: "high";
+} {
+  const ondeLer = "Abra o Mural para ver tudo.";
+  const prazo = prazoDoTrabalho(post.entrega_em);
+
+  const fixos: string[] = [];
+  if (post.tema) fixos.push(`Tema: ${post.tema}.`);
+  const cauda: string[] = [];
+  if (prazo && !prazo.encerrado) {
+    cauda.push(post.tipo === "trabalho" ? `Entrega: ${prazo.rotulo.toLowerCase()}.` : `${prazo.rotulo}.`);
+  }
+  cauda.push(ondeLer);
+
+  const gasto = [...fixos, ...cauda].join(" ").length;
+  // +1 pelo espaço que o resumo precisaria antes da cauda.
+  const sobra = LIMITE_DO_PUSH - gasto - 1;
+
+  const resumo = post.descricao.replace(/\s+/g, " ").trim();
+  const partes = [...fixos];
+  // Abaixo de 40 caracteres o resumo vira reticências e não informa nada; aí é
+  // mais honesto não mostrá-lo do que mostrar meia palavra.
+  if (sobra >= 40) {
+    partes.push(resumo.length <= sobra ? resumo : `${resumo.slice(0, sobra - 3).trimEnd()}...`);
+  }
+  partes.push(...cauda);
+
+  return { title: post.titulo, message: partes.join(" "), priority: "high" };
+}
+
 /** Linha do banco → `MuralPost` com os campos já saneados. */
 export function lerPost(linha: any): MuralPost {
   return {
@@ -187,6 +236,7 @@ export function lerPost(linha: any): MuralPost {
     imagem_url: linha.imagem_url ?? null,
     destaque: !!linha.destaque,
     ativo: linha.ativo !== false,
+    avisado_em: linha.avisado_em ?? null,
     questoes: normalizarQuestoes(linha.questoes),
   } as MuralPost;
 }

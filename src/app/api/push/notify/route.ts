@@ -83,11 +83,20 @@ export async function POST(req: NextRequest) {
 
     // ── Caso 2: Comunicado/Aviso ─────────────────────────────
     if (body.type === "communication") {
-      const { data: ann } = await admin
+      // As colunas sao `message` e `target_group`. Ate 31/08 este select pedia
+      // `content` e `target_audience`, que nunca existiram na tabela: o
+      // PostgREST devolvia erro, `ann` vinha nulo e a rota respondia 404 — e as
+      // duas telas que chamam aqui engolem a falha com `.catch(() => {})`.
+      // Resultado: nenhum push de comunicado jamais saiu.
+      const { data: ann, error: annError } = await admin
         .from("announcements")
-        .select("title, content, target_audience, priority")
+        .select("title, message, priority, target_group")
         .eq("id", body.announcementId)
         .maybeSingle();
+      if (annError) {
+        console.error("[push/notify] falha ao ler comunicado:", annError.message);
+        return NextResponse.json({ error: "Falha ao ler o comunicado" }, { status: 500 });
+      }
       if (!ann) return NextResponse.json({ error: "Comunicado não encontrado" }, { status: 404 });
 
       // Restringe envio a roles autorizadas
@@ -95,19 +104,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
       }
 
-      // Audience: 'all' | 'enem' | 'etec' (best-effort por exam_target)
+      // Publico: 'all' | 'enem' | 'etec' (best-effort por exam_target); quando
+      // `target_group` traz o id de uma turma, cai no geral, que e o
+      // comportamento que a tela ja mostrava antes desta correcao.
       // profile_type é texto livre (ex.: "etec", "Estudante ETEC") — usar role,
       // que é o enum confiável para identificar alunos.
+      const publico = (ann.target_group || "all").toLowerCase();
       let q = admin.from("profiles").select("id").eq("role", "student");
-      if (ann.target_audience === "enem" || ann.target_audience === "etec") {
-        q = q.eq("exam_target", ann.target_audience.toUpperCase());
+      if (publico === "enem" || publico === "etec") {
+        q = q.eq("exam_target", publico.toUpperCase());
       }
       const { data: students } = await q;
       const userIds = (students || []).map((s: any) => s.id);
 
       const result = await sendPushToUsers(userIds, {
         title: ann.priority === "high" ? "⚠️ " + ann.title : ann.title,
-        body: (ann.content || "").slice(0, 200),
+        body: (ann.message || "").slice(0, 200),
         type: "communication",
         url: `/dashboard/home`,
         tag: `comunicado-${body.announcementId}`,
