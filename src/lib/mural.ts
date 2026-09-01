@@ -194,13 +194,19 @@ export const LIMITE_DO_PUSH = 200;
  * justamente "Abra o Mural", sem o qual o aluno lê "tem pesquisa" e não
  * descobre qual.
  */
-export function avisoDoPost(post: Pick<MuralPost, "tipo" | "titulo" | "tema" | "descricao" | "entrega_em">): {
+export function avisoDoPost(
+  post: Pick<MuralPost, "tipo" | "titulo" | "tema" | "descricao" | "entrega_em">,
+  // Último parâmetro e opcional, como nas outras funções daqui: é o que deixa o
+  // teste fixar o relógio. Sem ele, "faltam 5 dias" vira 4 na virada da meia
+  // noite e o teste falha sozinho — aconteceu.
+  agora?: Date,
+): {
   title: string;
   message: string;
   priority: "high";
 } {
   const ondeLer = "Abra o Mural para ver tudo.";
-  const prazo = prazoDoTrabalho(post.entrega_em);
+  const prazo = prazoDoTrabalho(post.entrega_em, agora);
 
   const fixos: string[] = [];
   if (post.tema) fixos.push(`Tema: ${post.tema}.`);

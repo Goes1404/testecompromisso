@@ -247,6 +247,34 @@ Prova de não-regressão: `npx tsx scripts/test-mural.ts` (roda dentro de `npm t
 - Se `image_url` existir, exibi-la no topo do card da questão (prioridade visual).
 - Siga padrão ENEM: 3,5 min/questão, navegação por grade, opção de revisão.
 
+### ⛔ Nunca chame o Supabase dentro de `onAuthStateChange`
+
+O callback de `onAuthStateChange` (`src/lib/AuthProvider.tsx`) é **síncrono**, e o
+trabalho que depende do Supabase é adiado com `setTimeout(..., 0)`. Isso não é
+estilo — é o que impede um deadlock:
+
+`auth.updateUser()` roda inteiro dentro do lock de auth e notifica os inscritos
+**de dentro dele**. Qualquer consulta disparada no callback precisa do access
+token, que sai de `getSession()`, que tenta o mesmo lock; o lock reentrante
+espera a operação de fora terminar, e ela está esperando a notificação. Espera
+circular: `updateUser` nunca resolve.
+
+Sintoma real (31/08): a tela de criação de senha do primeiro acesso caía no
+timeout de 10s e dizia *"Tempo esgotado. Verifique sua conexão"* — sem nenhuma
+relação com a conexão. Atingia todo mundo que chama `updateUser`: os dois passos
+do `first-access`, o `reset-password` e o `OnboardingTour`. O login normal
+escapava porque `signInWithPassword` notifica **fora** do lock.
+
+Prova: `npx tsx scripts/test-auth-lock.ts` (dentro de `npm test`) monta um
+GoTrueClient de verdade e mede os dois jeitos — o antigo trava, o novo resolve.
+
+**Rastro que o defeito deixou:** o aluno atingido teve a senha trocada no
+servidor, mas nunca chegou ao passo 2, então `must_change_password` continua
+`true` e o middleware o devolve ao `/dashboard/first-access` toda vez. Ao voltar,
+ele digita a senha que ele mesmo criou e o GoTrue recusa (`same_password`). Por
+isso o passo 1 trata esse erro como sucesso (`ehMesmaSenha()` em
+`src/lib/auth-erros.ts`) e segue para o passo 2, que é o que realmente falta.
+
 ### Auth & Middleware
 - `src/middleware.ts` protege `/dashboard/*` — redireciona para `/login` sem sessão.
 - Metadado `must_change_password: true` no Supabase Auth força `/dashboard/first-access`.

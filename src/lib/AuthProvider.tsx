@@ -195,7 +195,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
 
-      const { data } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      // ⚠️ O callback é SÍNCRONO, e nada de Supabase pode ser chamado (nem
+      // aguardado) dentro dele. `updateUser` roda inteiro dentro do lock de auth
+      // e nos notifica DE DENTRO dele; qualquer consulta que a gente dispare
+      // aqui precisa do access token, que sai de `getSession()`, que tenta o
+      // mesmo lock — e o lock reentrante espera a operação de fora terminar, que
+      // por sua vez espera esta notificação. Espera circular: `updateUser` nunca
+      // resolve.
+      //
+      // Foi exatamente isso que travou a tela de criação de senha do primeiro
+      // acesso: ela caía no timeout de 10s do `Promise.race` e dizia "Tempo
+      // esgotado. Verifique sua conexão" — sem ter nada a ver com a conexão.
+      // O login normal escapava por sorte: `signInWithPassword` notifica FORA do
+      // lock, então a mesma consulta ali funciona.
+      //
+      // `setTimeout(0)` devolve o controle ao SDK na hora: a notificação
+      // termina, o lock é liberado, e o perfil é buscado logo em seguida.
+      const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
         const currentUser = currentSession?.user ?? null;
         
         if (event === 'SIGNED_OUT') {
@@ -222,8 +238,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const needsProfile =
           profileUserIdRef.current !== currentUser.id || event === 'USER_UPDATED';
         if (needsProfile) {
-          const p = await fetchProfile(currentUser.id);
-          setProfile(p);
+          const id = currentUser.id;
+          setTimeout(() => { fetchProfile(id).then(setProfile); }, 0);
         }
       });
       
