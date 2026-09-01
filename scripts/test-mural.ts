@@ -113,7 +113,7 @@ const aviso = avisoDoPost({
   tema: "Bullying, comportamento humano e responsabilidade social",
   descricao: "Para o próximo sábado, TODOS os alunos deverão realizar uma pesquisa individual sobre o bullying sob a perspectiva da Psicologia.",
   entrega_em: "2026-09-05",
-});
+}, agora);
 
 eq("o título do aviso é o título do post", aviso.title, "Atividade para o próximo sábado – 05/09");
 eq("sempre urgente", aviso.priority, "high");
@@ -131,7 +131,7 @@ const temaEnorme = avisoDoPost({
   tema: "Bullying, comportamento humano, responsabilidade social, saude mental na adolescencia e o papel de quem assiste calado",
   descricao: "Para o proximo sabado, todos os alunos deverao realizar uma pesquisa individual sobre o bullying sob a perspectiva da Psicologia.",
   entrega_em: "2026-09-05",
-});
+}, agora);
 eq("tema comprido: ainda cabe", temaEnorme.message.length <= 200, true);
 eq("tema comprido: 'Abra o Mural' sobrevive", temaEnorme.message.endsWith("Abra o Mural para ver tudo."), true);
 eq("tema comprido: some o resumo em vez de meia palavra",
@@ -140,13 +140,13 @@ eq("tema comprido: some o resumo em vez de meia palavra",
 const semTema = avisoDoPost({
   tipo: "anuncio", titulo: "Bullying é Crime!", tema: null,
   descricao: "Humilhar, intimidar, excluir ou agredir não é brincadeira.", entrega_em: null,
-});
+}, agora);
 eq("anúncio sem tema nem prazo não inventa nenhum dos dois",
   semTema.message, "Humilhar, intimidar, excluir ou agredir não é brincadeira. Abra o Mural para ver tudo.");
 
 const vencido = avisoDoPost({
   tipo: "trabalho", titulo: "Antigo", tema: null, descricao: "x", entrega_em: "2026-08-01",
-});
+}, agora);
 eq("prazo vencido não vira 'entrega'", vencido.message.includes("Entrega"), false);
 
 console.log(falhas === 0 ? "\nTODOS OS TESTES PASSARAM" : `\n${falhas} FALHA(S)`);
