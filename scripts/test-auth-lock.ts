@@ -13,6 +13,7 @@
  * Espera circular.
  */
 import { GoTrueClient } from '@supabase/auth-js';
+import { ehMesmaSenha } from '../src/lib/auth-erros';
 
 let falhas = 0;
 const eq = (nome: string, obtido: any, esperado: any) => {
@@ -87,6 +88,18 @@ async function updateUserResolve(c: GoTrueClient, ms = 3000): Promise<boolean> {
 
   await new Promise(r => setTimeout(r, 50));
   eq('e o trabalho adiado acontece mesmo assim', rodouDepois, true);
+
+  // ── "senha igual à atual" tem que ser reconhecida ────────────────────────
+  // É o aluno que ficou preso voltando e digitando a senha que ele mesmo criou.
+  eq('reconhece pelo código', ehMesmaSenha({ code: 'same_password', message: 'x' }), true);
+  eq('reconhece pela mensagem (GoTrue antigo)',
+     ehMesmaSenha({ message: 'New password should be different from the old password.' }), true);
+  eq('não confunde com senha fraca',
+     ehMesmaSenha({ code: 'weak_password', message: 'Password is too short' }), false);
+  eq('não confunde com credencial errada',
+     ehMesmaSenha({ code: 'invalid_credentials', message: 'Invalid login credentials' }), false);
+  eq('aguenta null', ehMesmaSenha(null), false);
+  eq('aguenta string solta', ehMesmaSenha('erro'), false);
 
   console.log(falhas === 0 ? "\nTODOS OS TESTES PASSARAM" : `\n${falhas} FALHA(S)`);
   process.exit(falhas === 0 ? 0 : 1);

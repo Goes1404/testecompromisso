@@ -268,6 +268,13 @@ escapava porque `signInWithPassword` notifica **fora** do lock.
 Prova: `npx tsx scripts/test-auth-lock.ts` (dentro de `npm test`) monta um
 GoTrueClient de verdade e mede os dois jeitos — o antigo trava, o novo resolve.
 
+**Rastro que o defeito deixou:** o aluno atingido teve a senha trocada no
+servidor, mas nunca chegou ao passo 2, então `must_change_password` continua
+`true` e o middleware o devolve ao `/dashboard/first-access` toda vez. Ao voltar,
+ele digita a senha que ele mesmo criou e o GoTrue recusa (`same_password`). Por
+isso o passo 1 trata esse erro como sucesso (`ehMesmaSenha()` em
+`src/lib/auth-erros.ts`) e segue para o passo 2, que é o que realmente falta.
+
 ### Auth & Middleware
 - `src/middleware.ts` protege `/dashboard/*` — redireciona para `/login` sem sessão.
 - Metadado `must_change_password: true` no Supabase Auth força `/dashboard/first-access`.

@@ -17,6 +17,7 @@ import {
   Eye, EyeOff, LockKeyhole, CheckCircle2, Info,
   Phone, BookOpen, School, ChevronRight, ChevronLeft,
 } from "lucide-react";
+import { ehMesmaSenha } from "@/lib/auth-erros";
 import { useToast } from "@/hooks/use-toast";
 import { trackAcao, trackFalha } from "@/lib/telemetry";
 import { supabase } from "@/app/lib/supabase";
@@ -146,8 +147,12 @@ export default function FirstAccessPage() {
           setTimeout(() => reject(new Error('Tempo esgotado. Verifique sua conexão e tente novamente.')), 10_000)
         ),
       ]);
-      if (result.error) throw result.error;
-      trackAcao('primeiro_acesso_senha_trocada');
+      // Senha igual à atual não é falha aqui: é o aluno que ficou preso no
+      // passo 2 (senha trocada, `must_change_password` ainda ligado) voltando e
+      // digitando a senha que ele mesmo criou. O passo já está cumprido — o que
+      // falta é o passo 2, que é para onde ele segue.
+      if (result.error && !ehMesmaSenha(result.error)) throw result.error;
+      trackAcao(result.error ? 'primeiro_acesso_senha_ja_era_a_nova' : 'primeiro_acesso_senha_trocada');
       setStep(2);
     } catch (err: any) {
       trackFalha('primeiro_acesso_senha_falhou', err);
