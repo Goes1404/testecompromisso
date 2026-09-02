@@ -9,6 +9,7 @@ import { medirCarregamentoDeTela } from '@/lib/perf';
 import { trackFalha } from '@/lib/telemetry';
 import { trackMissionProgress } from '@/lib/missions';
 import { questaoUtilizavel } from '@/lib/questao-integridade';
+import { questoesAvisadasPor } from '@/lib/denuncias';
 import {
   Brain, ChevronLeft, ChevronRight, Loader2, RefreshCw,
   CheckCircle2, XCircle, Zap, BookOpen, Filter,
@@ -264,7 +265,10 @@ export default function FlashcardsPage() {
         last_reviewed: r.last_reviewed,
       }));
 
-      const all = [...existingRows, ...newCards].filter(c => c.question_text);
+      // O aluno que avisou "incompleta" no simulado não reencontra o cartão.
+      const avisadas = await questoesAvisadasPor(user.id);
+      const all = [...existingRows, ...newCards]
+        .filter(c => c.question_text && !avisadas.has(c.question_id));
 
       // Extract unique subjects
       const subs = Array.from(new Set(all.map(c => c.subject).filter(Boolean))) as string[];

@@ -7,7 +7,7 @@ import {
   Loader2, Award, RotateCw, BrainCircuit, Library, AlertCircle,
   Target, Shuffle, ClipboardList, CheckCircle2, XCircle, BookOpen,
   Timer, ChevronRight, ChevronDown, ChevronUp, Zap, Trophy, Play, Pause, LogOut,
-  Sun, Moon, TrendingUp, Flame, Clock
+  Sun, Moon, TrendingUp, Flame, Clock, Flag
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,7 @@ import { trackMissionProgress } from '@/lib/missions';
 import { allowedExamTypesFor, examTypeLabel } from '@/lib/exam-types';
 import { trackAcao, trackFalha } from '@/lib/telemetry';
 import { apenasQuestoesUtilizaveis } from '@/lib/questao-integridade';
+import { questoesAvisadasPor, avisarQuestaoIncompleta } from '@/lib/denuncias';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ALL_TOPICS = '_all';
@@ -153,6 +154,13 @@ export default function SimuladoPage() {
 
   const [questions, setQuestions]   = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  /**
+   * Questões que este aluno marcou como incompletas — as de sessões anteriores
+   * (lidas do banco no início) mais as desta. Serve para o sorteio pular e para
+   * o botão saber que já foi apertado.
+   */
+  const [avisadas, setAvisadas] = useState<Set<string>>(new Set());
+  const [avisando, setAvisando] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answers, setAnswers]       = useState<Answer[]>([]);
 
@@ -309,8 +317,14 @@ export default function SimuladoPage() {
       // true)` na consulta, porque a coluna `ativa` só existe depois da migration
       // 20260902000000 — pedi-la ao PostgREST antes disso derrubaria o simulado
       // inteiro com 400 em vez de esconder uma questão.
+      // Os avisos anteriores deste aluno vêm do banco a cada simulado, e não de
+      // um cache: ele pode ter avisado no celular e estar agora no computador,
+      // e "nunca mais aparece" precisa valer nos dois.
+      const jaAvisadas = user ? await questoesAvisadasPor(user.id) : new Set<string>();
+      setAvisadas(jaAvisadas);
+
       const { utilizaveis, descartadas } = apenasQuestoesUtilizaveis(
-        normalizadas.filter((q) => q.ativa !== false),
+        normalizadas.filter((q) => q.ativa !== false && !jaAvisadas.has(q.id)),
       );
       if (descartadas > 0) {
         // Mede o tamanho do estrago no banco pelo lado de quem sofre com ele.
@@ -400,6 +414,53 @@ export default function SimuladoPage() {
   const pct   = answers.length > 0 ? Math.round((score / answers.length) * 100) : 0;
   const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
   const currentQuestion = questions[currentIndex];
+
+
+  /**
+   * "Questão incompleta".
+   *
+   * Tira a questão da vez deste aluno na hora e manda o aviso ao servidor, que
+   * é quem conta e decide se ela sai para todo mundo — três avisos
+   * independentes. Contar aqui seria deixar o limite na mão de quem clica.
+   *
+   * A questão avisada NÃO entra em `answers`: ela não vira acerto nem erro. Era
+   * o defeito de origem — o aluno chutava numa questão sem pergunta e o erro
+   * entrava no desempenho dele como se fosse conteúdo que ele não sabe. Um
+   * botão que registrasse o erro do mesmo jeito não resolveria nada.
+   */
+  const handleAvisarIncompleta = useCallback(async () => {
+    const q = questions[currentIndex];
+    if (!q || avisando) return;
+    setAvisando(true);
+    triggerHaptic(25);
+
+    setAvisadas(prev => new Set(prev).add(q.id));
+    const r = await avisarQuestaoIncompleta(q.id);
+    trackAcao('questao_avisada_incompleta', {
+      questao: q.id, avisos: r.avisos, desativada: r.desativada, gravado: r.gravado,
+    });
+
+    // A promessa muda conforme o que o servidor conseguiu guardar. Dizer
+    // "não aparece mais" quando o aviso não foi gravado seria mentira que o
+    // aluno descobre no próximo simulado — e aí ele para de usar o botão.
+    toast({
+      title: 'Obrigado pelo aviso',
+      description: !r.gravado
+        ? 'Tirei esta questão do seu simulado. O aviso não chegou ao servidor, então ela pode voltar a aparecer depois.'
+        : r.desativada
+          ? 'Já eram avisos suficientes: esta questão saiu do ar para todo mundo até um professor conferir.'
+          : 'Esta questão não vai mais aparecer para você. Se mais alunos avisarem, ela sai para todos.',
+    });
+
+    // Some da vez dele agora. Sai da lista em vez de só avançar o índice: se
+    // ficasse, ele a reencontraria ao revisar no fim do simulado.
+    const restantes = questions.filter((_, i) => i !== currentIndex);
+    setAvisando(false);
+    if (restantes.length === 0) { setGameState('finished'); return; }
+    setQuestions(restantes);
+    setCurrentIndex(i => Math.min(i, restantes.length - 1));
+    setSelectedAnswer(null);
+  }, [questions, currentIndex, avisando, toast]);
 
   const handleNext = async () => {
     if (!currentQuestion) return;
@@ -688,6 +749,27 @@ export default function SimuladoPage() {
               <p className={`text-sm sm:text-base font-bold leading-[1.8] whitespace-pre-wrap break-words italic pr-2 transition-colors duration-300 ${bodyTextTheme}`}>
                 {currentQuestion.question_text.replace(/\[IMAGEM_PENDENTE\]/g, '').trim()}
               </p>
+
+              {/*
+                O aviso mora aqui, colado no enunciado, e não junto do botão de
+                avançar: é lendo o enunciado que o aluno percebe que falta a
+                tabela. Lá embaixo, ao lado de "Confirmar", ele viraria vizinho
+                de um botão que se aperta no automático — e um aviso apertado
+                sem querer tira uma questão boa do banco de três alunos.
+                Discreto pelo mesmo motivo: quem precisa dele vai procurá-lo.
+              */}
+              <button
+                type="button"
+                onClick={handleAvisarIncompleta}
+                disabled={avisando}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40 touch-manipulation
+                  ${isDark
+                    ? 'border-white/10 text-white/40 hover:text-amber-300 hover:border-amber-400/40 hover:bg-amber-400/5'
+                    : 'border-slate-200 text-slate-400 hover:text-amber-700 hover:border-amber-300 hover:bg-amber-50'}`}
+              >
+                <Flag className="h-3 w-3" />
+                {avisando ? 'Enviando…' : 'Questão incompleta'}
+              </button>
             </div>
           </div>
 

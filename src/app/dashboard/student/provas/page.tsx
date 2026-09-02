@@ -37,6 +37,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { trackAcao, trackFalha } from "@/lib/telemetry";
 import { medirCarregamentoDeTela } from "@/lib/perf";
 import { apenasQuestoesUtilizaveis } from "@/lib/questao-integridade";
+import { questoesAvisadasPor } from "@/lib/denuncias";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
@@ -385,7 +386,14 @@ export default function ProvasCompletasPage() {
       // derrubaria a prova inteira com 400. Não faz falta — a quarentena do
       // banco é escrita pela MESMA régua que roda nesta linha, então o que
       // `ativa = false` marcaria, `questaoUtilizavel` já recusa.
-      const { utilizaveis: qs, descartadas } = apenasQuestoesUtilizaveis(brutas);
+      // "Nunca mais aparece" vale aqui também. Uma questão que o aluno já
+      // marcou como incompleta reaparecer numa prova valendo nota seria a
+      // pior hora de reencontrá-la.
+      const avisadas = user ? await questoesAvisadasPor(user.id) : new Set<string>();
+
+      const { utilizaveis: qs, descartadas } = apenasQuestoesUtilizaveis(
+        brutas.filter((q) => !avisadas.has(q.id)),
+      );
 
       if (descartadas > 0) {
         trackAcao("prova_questoes_descartadas", {

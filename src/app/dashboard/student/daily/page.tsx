@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { trackMissionProgress } from '@/lib/missions';
 import { questaoUtilizavel } from '@/lib/questao-integridade';
+import { questoesAvisadasPor } from '@/lib/denuncias';
 import { SupportingTextBlock } from '@/components/SupportingTextBlock';
 import {
   Zap, CheckCircle2, XCircle, Lock, Trophy,
@@ -131,6 +132,11 @@ export default function DailyQuestionPage() {
       // por régua nenhuma. Se a sorteada estiver quebrada, o aluno perde o dia
       // inteiro — é uma por dia, sem "próxima". Melhor a tela vazia, que ele
       // entende, do que uma pergunta impossível que ele vai achar que errou.
+      // Se ele avisou que esta questão está incompleta, ela não volta — nem
+      // como questão do dia, que é a que ele não tem como pular.
+      const avisadas = await questoesAvisadasPor(user.id);
+      if (avisadas.has(dq.question_id)) { setDaily(null); setLoading(false); return; }
+
       if (!questaoUtilizavel({
         question_text:   q.question_text,
         supporting_text: q.supporting_text,

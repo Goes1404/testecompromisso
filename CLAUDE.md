@@ -338,6 +338,48 @@ npm run auditar:questoes -- --consertar --desativar
 npm run auditar:questoes -- --reativar          # depois de conserto manual
 ```
 
+### 🚩 "Questão incompleta": o aviso do aluno
+
+A régua de integridade pega o defeito que tem forma no texto. O que ela não pega
+é a questão cujo apoio existe mas é o errado, a que perdeu a figura sem citar
+figura, a que veio com o gabarito trocado. Quem vê isso é quem está tentando
+responder — e até 02/09 não tinha como dizer.
+
+Um clique no botão do simulado, duas consequências:
+
+| | Efeito | Custo de errar |
+|---|---|---|
+| **Imediata, individual** | A questão não volta a aparecer **para ele** — no simulado, na prova, no flashcard e na questão do dia | Uma questão a menos no banco de um aluno |
+| **Coletiva, represada** | Ao **3º** aviso independente, `ativa = false` para todos | A turma perde uma questão boa |
+
+**Regras ao mexer aqui:**
+
+1. **A contagem e a desativação moram no servidor** (`avisar_questao_incompleta`,
+   `SECURITY DEFINER`). Um limite avaliado no cliente é um limite que o cliente
+   escolhe.
+2. **O `student_id` sai de `auth.uid()`, nunca do corpo.** Não há parâmetro de id
+   na função — é a regra de IDOR do CLAUDE.md, e aqui o id do cliente decidiria o
+   voto de outra pessoa. `UNIQUE (question_id, student_id)` fecha o resto: sem
+   ele, um aluno sozinho derrubaria qualquer questão apertando três vezes.
+3. **Três, não dois.** É o menor número que não cabe em dois amigos combinando.
+   Mora em `limite_de_avisos()`, sozinho, para ser ajustado quando os primeiros
+   dados chegarem.
+4. **O aviso DESATIVA, não apaga** — mesma razão da quarentena (FK sem cascade em
+   `student_question_answers`, cascade em `exam_questions`), mais uma nova: três
+   alunos apertando o botão podem ser três alunos que não souberam responder. O
+   `motivo_inativa` diz que veio de aluno e não da régua, que é o que o professor
+   precisa para decidir se reverte.
+5. **A questão avisada não vira acerto nem erro.** Ela sai da lista sem entrar em
+   `answers`. Um botão que registrasse o erro do mesmo jeito não resolveria o
+   defeito de origem.
+6. **O botão fica colado no enunciado, não ao lado de "Confirmar".** É lendo o
+   enunciado que o aluno percebe que falta a tabela; lá embaixo ele viraria
+   vizinho de um botão que se aperta no automático, e um aviso sem querer tira
+   questão boa do banco de três alunos.
+7. **Ler os avisos tolera banco sem a migration** (`src/lib/denuncias.ts` engole o
+   erro e devolve conjunto vazio). Mesma lição de `mural_posts.avisado_em`: um
+   recurso que ainda não subiu no banco não derruba o simulado inteiro.
+
 ### Simulados & Provas
 - Renderize `supporting_text` em card destacado **antes** do enunciado.
 - Se `image_url` existir, exibi-la no topo do card da questão (prioridade visual).
