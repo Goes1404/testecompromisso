@@ -400,7 +400,11 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        // A barra de navegacao inferior e `fixed bottom-0 z-50` e vale ate
+        // 1023px. Sem reserva de espaco aqui, ela cobria os ultimos itens do
+        // menu — "Conta" ficava por baixo dela e nao dava para clicar. O
+        // padding some a partir de lg, onde a barra nao existe.
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto pb-20 lg:pb-2 group-data-[collapsible=icon]:overflow-hidden",
         className
       )}
       {...props}
