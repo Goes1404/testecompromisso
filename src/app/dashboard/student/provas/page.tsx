@@ -36,6 +36,8 @@ import {
 import { useAuth } from "@/lib/AuthProvider";
 import { trackAcao, trackFalha } from "@/lib/telemetry";
 import { medirCarregamentoDeTela } from "@/lib/perf";
+import { apenasQuestoesUtilizaveis } from "@/lib/questao-integridade";
+import { questoesAvisadasPor } from "@/lib/denuncias";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SupportingTextBlock } from "@/components/SupportingTextBlock";
@@ -372,13 +374,48 @@ export default function ProvasCompletasPage() {
 
       if (error) throw error;
 
-      const qs: Question[] = (data || []).map((row: any) => row.questions).filter(Boolean);
+      const brutas: Question[] = (data || []).map((row: any) => row.questions).filter(Boolean);
+
+      // Tira da prova a questão que não dá para responder — a que cita um texto
+      // ou uma figura que não veio na importação, a de gabarito impossível.
+      // Numa prova ela é pior do que no simulado: entra como erro na nota, no
+      // relatório do professor e no cálculo de TRI, medindo uma falha nossa
+      // como se fosse desconhecimento do aluno.
+      // Não se consulta `questions.ativa` aqui: o `.select()` é explícito e
+      // pedir uma coluna que só existe depois da migration 20260902000000
+      // derrubaria a prova inteira com 400. Não faz falta — a quarentena do
+      // banco é escrita pela MESMA régua que roda nesta linha, então o que
+      // `ativa = false` marcaria, `questaoUtilizavel` já recusa.
+      // "Nunca mais aparece" vale aqui também. Uma questão que o aluno já
+      // marcou como incompleta reaparecer numa prova valendo nota seria a
+      // pior hora de reencontrá-la.
+      const avisadas = user ? await questoesAvisadasPor(user.id) : new Set<string>();
+
+      const { utilizaveis: qs, descartadas } = apenasQuestoesUtilizaveis(
+        brutas.filter((q) => !avisadas.has(q.id)),
+      );
+
+      if (descartadas > 0) {
+        trackAcao("prova_questoes_descartadas", {
+          prova: exam.exam_type, descartadas, total: brutas.length,
+        });
+        // Dito em voz alta de propósito: o aluno vai comparar com o PDF da
+        // prova e precisa saber por que são 86 e não 90. Silêncio aqui vira
+        // "a plataforma perdeu questão".
+        toast({
+          title: `${descartadas} ${descartadas === 1 ? "questão ficou" : "questões ficaram"} de fora`,
+          description:
+            "Chegaram sem o texto de apoio ou sem gabarito válido e estão em conserto. As demais valem normalmente.",
+        });
+      }
 
       if (qs.length === 0) {
-        trackAcao("prova_sem_questoes", { prova: exam.exam_type });
+        trackAcao("prova_sem_questoes", { prova: exam.exam_type, brutas: brutas.length });
         toast({
-          title: "Prova sem questões",
-          description: "Esta prova ainda não tem questões cadastradas.",
+          title: brutas.length > 0 ? "Prova em conserto" : "Prova sem questões",
+          description: brutas.length > 0
+            ? "Todas as questões desta prova chegaram incompletas na importação. Ela volta assim que forem corrigidas."
+            : "Esta prova ainda não tem questões cadastradas.",
           variant: "destructive",
         });
         setPageState("list");

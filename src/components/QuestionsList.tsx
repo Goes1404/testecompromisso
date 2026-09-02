@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, Pencil, Trash2, Loader2, Search, Filter, Upload, ImageIcon, X } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Loader2, Search, Filter, Upload, ImageIcon, X, AlertTriangle, Flag } from 'lucide-react';
+import { diagnosticarQuestao } from '@/lib/questao-integridade';
 import {
     Select,
     SelectContent,
@@ -83,6 +84,10 @@ export function QuestionsList() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [subjectFilter, setSubjectFilter] = useState('all');
+    /** 'quebradas' isola o que o aluno não consegue responder — é a fila de conserto. */
+    const [saudeFilter, setSaudeFilter] = useState<'all' | 'quebradas' | 'avisos' | 'avisadas'>('all');
+    /** question_id → quantos alunos avisaram "questão incompleta". */
+    const [avisosDeAluno, setAvisosDeAluno] = useState<Map<string, number>>(new Map());
 
     const { toast } = useToast();
     const router = useRouter();
@@ -101,6 +106,17 @@ export function QuestionsList() {
 
                 setQuestions(questionsData as FullQuestion[]);
                 setSubjects(subjectsData as Subject[]);
+
+                // Avisos de aluno, em consulta separada e tolerante: a view só
+                // existe depois da migration 20260902020000, e um banco sem ela
+                // não pode derrubar o banco de questões inteiro — perde-se a
+                // contagem, não a tela.
+                const { data: avisos } = await supabase
+                    .from('questoes_avisadas')
+                    .select('question_id, avisos');
+                if (avisos) {
+                    setAvisosDeAluno(new Map(avisos.map((a: any) => [a.question_id, a.avisos])));
+                }
             } catch (error: any) {
                 console.error("Erro ao carregar repositório:", error);
                 toast({ title: "Erro ao Carregar Dados", description: "Não foi possível buscar as questões do banco.", variant: "destructive" });
@@ -241,19 +257,42 @@ export function QuestionsList() {
     const handleFormChange = (field: string, value: string | number) => setEditForm(prev => ({ ...prev, [field]: value }));
     const handleOptionChange = (key: string, text: string) => setEditForm(prev => ({...prev, options: { ...prev.options, [key]: text }}));
 
+    /**
+     * Diagnóstico por questão, calculado uma vez e não a cada card.
+     *
+     * A lista carrega o banco inteiro; rodar as expressões regulares dentro do
+     * `map` do render as executaria de novo a cada tecla digitada na busca.
+     */
+    const diagnosticos = useMemo(() => {
+        const mapa = new Map<string, ReturnType<typeof diagnosticarQuestao>>();
+        for (const q of questions) mapa.set(q.id, diagnosticarQuestao(q));
+        return mapa;
+    }, [questions]);
+
+    const totalQuebradas = useMemo(
+        () => [...diagnosticos.values()].filter(ds => ds.some(d => d.bloqueia)).length,
+        [diagnosticos],
+    );
+
     const filteredQuestions = useMemo(() => {
         const lowerSearch = searchTerm.toLowerCase();
         return questions.filter(q => {
             const matchesSubject = subjectFilter === 'all' || q.subject_id === subjectFilter;
+            const defeitos = diagnosticos.get(q.id) ?? [];
+            const matchesSaude =
+                saudeFilter === 'all' ? true :
+                saudeFilter === 'quebradas' ? defeitos.some(d => d.bloqueia) :
+                saudeFilter === 'avisadas' ? (avisosDeAluno.get(q.id) ?? 0) > 0 :
+                defeitos.length > 0;
             const matchesSearch = !searchTerm || 
                 q.question_text.toLowerCase().includes(lowerSearch) ||
                 (q.supporting_text?.toLowerCase() || '').includes(lowerSearch) ||
                 (q.subject?.name?.toLowerCase() || '').includes(lowerSearch) ||
                 q.year.toString().includes(lowerSearch) ||
                 (Array.isArray(q.options) && q.options.some((opt: any) => opt.text.toLowerCase().includes(lowerSearch)));
-            return matchesSubject && matchesSearch;
+            return matchesSubject && matchesSaude && matchesSearch;
         });
-    }, [questions, searchTerm, subjectFilter]);
+    }, [questions, searchTerm, subjectFilter, saudeFilter, diagnosticos, avisosDeAluno]);
 
     if (isLoading) return <ListSkeleton />;
 
@@ -272,6 +311,18 @@ export function QuestionsList() {
                                 <SelectContent className="rounded-xl border-none shadow-2xl">
                                     <SelectItem value="all" className="font-bold">Todas as Matérias</SelectItem>
                                     {subjects.map(s => <SelectItem key={s.id} value={s.id} className="font-bold">{s.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Select value={saudeFilter} onValueChange={(v) => setSaudeFilter(v as typeof saudeFilter)}>
+                                <SelectTrigger className="w-full md:w-[200px] rounded-xl bg-muted/30 border-none font-bold h-11">
+                                    <AlertTriangle className="h-4 w-4 mr-2 opacity-40" />
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-none shadow-2xl">
+                                    <SelectItem value="all" className="font-bold">Todas as questões</SelectItem>
+                                    <SelectItem value="quebradas" className="font-bold">Só as quebradas ({totalQuebradas})</SelectItem>
+                                    <SelectItem value="avisadas" className="font-bold">Avisadas por alunos ({avisosDeAluno.size})</SelectItem>
+                                    <SelectItem value="avisos" className="font-bold">Com qualquer alerta</SelectItem>
                                 </SelectContent>
                             </Select>
                             <div className="relative w-full md:w-64">
@@ -308,7 +359,27 @@ export function QuestionsList() {
                                                 Pendente
                                             </Badge>
                                         )}
+                                        {(avisosDeAluno.get(question.id) ?? 0) > 0 && (
+                                            <Badge className="bg-amber-100 text-amber-800 border-none font-black text-[8px] uppercase px-2 h-5 tracking-widest">
+                                                <Flag className="h-3 w-3 mr-1" />
+                                                {avisosDeAluno.get(question.id)} {avisosDeAluno.get(question.id) === 1 ? 'aluno avisou' : 'alunos avisaram'}
+                                            </Badge>
+                                        )}
+                                        {(diagnosticos.get(question.id) ?? []).some(d => d.bloqueia) && (
+                                            <Badge className="bg-red-50 text-red-700 border-none font-black text-[8px] uppercase px-2 h-5 tracking-widest">
+                                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                                Não responde
+                                            </Badge>
+                                        )}
                                     </div>
+                                    {/* O motivo fica no card, não num tooltip: é ele que diz ao
+                                        professor o que abrir para consertar. Escondê-lo atrás de
+                                        um hover transformaria a fila de conserto em adivinhação. */}
+                                    {(diagnosticos.get(question.id) ?? []).length > 0 && (
+                                        <p className="mt-2 text-[10px] font-bold italic text-red-600/70 leading-snug">
+                                            {(diagnosticos.get(question.id) ?? []).map(d => d.detalhe).join(' ')}
+                                        </p>
+                                    )}
                                 </div>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>

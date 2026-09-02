@@ -22,6 +22,7 @@ import { OpenAI } from "openai";
 import { parseGabarito, structureQuestions } from "../src/services/etec-extractor";
 import { classifyIntoCategories } from "../src/services/enem-classifier";
 import { MICRO_TOPICS_BY_SUBJECT } from "../src/services/enem-microtopics";
+import { questaoUtilizavel, motivoDeBloqueio } from "../src/lib/questao-integridade";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
@@ -144,11 +145,36 @@ async function importProva(p: Prova, subjectMap: Record<string, string>) {
   const structured = await structureQuestions(examText, { client: openai, totalQuestions: total });
 
   // Filtra: sem imagem, 5 alternativas, e com gabarito conhecido.
-  const valid = structured.filter(
+  const comGabarito = structured.filter(
     (q) => !q.depends_on_image && q.options.length === 5 && gab[q.number]
   );
+
+  // Segundo portão: a questão ainda faz PERGUNTA sozinha?
+  //
+  // Os três testes acima olhavam a forma (imagem, contagem, gabarito) e nunca o
+  // conteúdo. Passavam por eles as questões em que a IA devolveu só o pé do
+  // enunciado — "utilize o texto para responder às questões 12 a 15" com o
+  // texto entregue apenas na 12 e as irmãs penduradas. Elas entravam no banco
+  // com cinco alternativas certinhas e sem pergunta nenhuma.
+  const orfas: { numero: number; motivo: string }[] = [];
+  const valid = comGabarito.filter((q) => {
+    const ok = questaoUtilizavel({
+      question_text: q.question_text,
+      supporting_text: q.supporting_text,
+      options: q.options,
+      correct_answer: gab[q.number],
+    });
+    if (!ok) orfas.push({ numero: q.number, motivo: motivoDeBloqueio({
+      question_text: q.question_text, supporting_text: q.supporting_text,
+      options: q.options, correct_answer: gab[q.number],
+    }) ?? "" });
+    return ok;
+  });
   const dropped = structured.length - valid.length;
   console.log(`  estruturadas ${structured.length} · válidas ${valid.length} · descartadas ${dropped} (imagem/incompletas)`);
+  if (orfas.length > 0) {
+    console.log(`  ⚠  ${orfas.length} sem enunciado utilizável: ${orfas.map((o) => o.numero).join(", ")}`);
+  }
 
   if (valid.length === 0) return { inserted: 0, skipped: 0, dropped };
 

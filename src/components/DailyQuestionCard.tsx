@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { Target, CheckCircle2, Zap, ChevronRight, Flame } from 'lucide-react';
 import Link from 'next/link';
+import { questaoUtilizavel } from '@/lib/questao-integridade';
 
 type Props = {
   userId: string;
@@ -23,10 +24,13 @@ export function DailyQuestionCard({ userId, profile }: Props) {
       ).toLowerCase();
       const audience = rawTarget.includes('etec') ? 'etec' : 'enem';
 
-      // Busca questão do dia
+      // Busca questão do dia. Os campos da questão vêm junto porque o card
+      // precisa julgar o mesmo que a página `/dashboard/student/daily` julga:
+      // um card que anuncia "questão disponível" e leva a uma tela vazia é
+      // pior do que card nenhum.
       const { data: dq } = await supabase
         .from('daily_questions')
-        .select('id, questions(subjects(name))')
+        .select('id, questions(question_text, supporting_text, image_url, options, correct_answer, subjects(name))')
         .eq('target_audience', audience)
         .eq('scheduled_date', today)
         .maybeSingle();
@@ -34,6 +38,7 @@ export function DailyQuestionCard({ userId, profile }: Props) {
       if (!dq) { setState('empty'); return; }
 
       const q = dq.questions as any;
+      if (!q || !questaoUtilizavel(q)) { setState('empty'); return; }
       setSubjectName(q?.subjects?.name ?? null);
 
       // Verifica se já respondeu

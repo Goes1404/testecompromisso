@@ -8,6 +8,8 @@ import { awardXP } from '@/lib/gamification';
 import { medirCarregamentoDeTela } from '@/lib/perf';
 import { trackFalha } from '@/lib/telemetry';
 import { trackMissionProgress } from '@/lib/missions';
+import { questaoUtilizavel } from '@/lib/questao-integridade';
+import { questoesAvisadasPor } from '@/lib/denuncias';
 import {
   Brain, ChevronLeft, ChevronRight, Loader2, RefreshCw,
   CheckCircle2, XCircle, Zap, BookOpen, Filter,
@@ -150,6 +152,27 @@ function FlipCard({
 }
 
 /* ─── Main page ──────────────────────────────────────────────────── */
+/**
+ * O flashcard cabe?
+ *
+ * Duas exigências, e a segunda é só daqui. A primeira é a de sempre: a questão
+ * tem de ser respondível (`questaoUtilizavel`). A segunda é que o flashcard
+ * mostra APENAS o enunciado — não há espaço, nesta tela, para um texto de apoio
+ * de dois mil caracteres nem para a figura. Então questão que depende de apoio
+ * fica de fora do baralho em vez de virar cartão sem pergunta.
+ *
+ * Antes disso a consulta nem buscava `supporting_text`: toda questão de
+ * interpretação virava um cartão com o enunciado pendurado, e o aluno "errava"
+ * o que não dava para acertar.
+ */
+function cabeNoCartao(q: any): boolean {
+  if (!q) return false;
+  if (!questaoUtilizavel(q)) return false;
+  const temApoio = typeof q.supporting_text === 'string' && q.supporting_text.trim().length > 0;
+  const temImagem = typeof q.image_url === 'string' && q.image_url.trim().length > 0;
+  return !temApoio && !temImagem;
+}
+
 export default function FlashcardsPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -188,7 +211,7 @@ export default function FlashcardsPage() {
         .from('flashcard_progress')
         .select(`
           id, question_id, ease_factor, interval_days, repetitions, next_review, last_reviewed,
-          questions(question_text, options, correct_answer, explanation, subjects(name), exams:exam_questions(exams(exam_type)))
+          questions(question_text, supporting_text, image_url, options, correct_answer, explanation, subjects(name), exams:exam_questions(exams(exam_type)))
         `)
         .eq('student_id', user.id)
         .lte('next_review', today)
@@ -201,8 +224,8 @@ export default function FlashcardsPage() {
         const needed = 10 - (existing || []).length;
         let newQ = supabase
           .from('questions')
-          .select('id, question_text, options, correct_answer, explanation, subjects(name)')
-          .limit(needed * 3); // fetch extra to allow audience filter
+          .select('id, question_text, supporting_text, image_url, options, correct_answer, explanation, subjects(name)')
+          .limit(needed * 4); // sobra para o filtro de público e o de integridade
 
         if (existingQIds.length > 0) {
           newQ = newQ.not('id', 'in', `(${existingQIds.join(',')})`);
@@ -211,7 +234,7 @@ export default function FlashcardsPage() {
         const { data: rawNew } = await newQ;
 
         // Filter by audience via exam_questions join (best-effort)
-        newCards = (rawNew || []).slice(0, needed).map((q: any) => ({
+        newCards = (rawNew || []).filter(cabeNoCartao).slice(0, needed).map((q: any) => ({
           id: '',
           question_id: q.id,
           question_text: q.question_text,
@@ -227,7 +250,7 @@ export default function FlashcardsPage() {
         }));
       }
 
-      const existingRows: CardRow[] = (existing || []).map((r: any) => ({
+      const existingRows: CardRow[] = (existing || []).filter((r: any) => cabeNoCartao(r.questions)).map((r: any) => ({
         id: r.id,
         question_id: r.question_id,
         question_text: r.questions?.question_text || '',
@@ -242,7 +265,10 @@ export default function FlashcardsPage() {
         last_reviewed: r.last_reviewed,
       }));
 
-      const all = [...existingRows, ...newCards].filter(c => c.question_text);
+      // O aluno que avisou "incompleta" no simulado não reencontra o cartão.
+      const avisadas = await questoesAvisadasPor(user.id);
+      const all = [...existingRows, ...newCards]
+        .filter(c => c.question_text && !avisadas.has(c.question_id));
 
       // Extract unique subjects
       const subs = Array.from(new Set(all.map(c => c.subject).filter(Boolean))) as string[];

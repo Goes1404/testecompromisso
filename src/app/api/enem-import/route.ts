@@ -6,6 +6,7 @@ import {
   ENEM_DISCIPLINE_TO_SUBJECT,
   EnemApiError,
 } from '@/services/enem-api';
+import { questaoUtilizavel, motivoDeBloqueio } from '@/lib/questao-integridade';
 
 async function ensureSubject(supabaseAdmin: SupabaseClient, name: string): Promise<string> {
   const { data: existing } = await supabaseAdmin
@@ -116,8 +117,18 @@ export async function POST(request: Request) {
       const image_url = imageFromFiles ?? imageFromContext;
       const supporting_text = contextText.replace(/!\[.*?\]\(https?:\/\/[^)]+\)/g, '').trim() || null;
 
+      // `alternativesIntroduction` é só o PÉ do enunciado ("A quantia que essa
+      // pessoa levava semanalmente para fazer a compra era"); o corpo mora em
+      // `context`. Quando o context é vazio, ou é só a imagem que a linha acima
+      // acabou de tirar, sobra a ponta pendurada — foi assim que o banco ganhou
+      // questão sem pergunta.
+      //
+      // O antigo fallback para "Questão N" era pior ainda: gravava o NÚMERO da
+      // questão como se fosse o enunciado. Saiu.
+      const question_text = q.alternativesIntroduction ?? q.title ?? null;
+
       return {
-        question_text: q.alternativesIntroduction ?? q.title ?? `Questão ${q.index}`,
+        question_text,
         supporting_text,
         image_url,
         options,
@@ -128,12 +139,25 @@ export async function POST(request: Request) {
       };
     });
 
+    // Barra na porta o que o aluno não conseguiria responder. Antes o filtro
+    // não existia e a questão quebrada só aparecia semanas depois, no meio de
+    // um simulado — quando já tinha entrado no desempenho de quem a pegou.
+    const rejeitadas: { indice: number; motivo: string }[] = [];
+    const questionsAceitas = questionsToInsert.filter((q, i) => {
+      if (questaoUtilizavel(q)) return true;
+      rejeitadas.push({
+        indice: apiQuestions[i]?.index ?? i + 1,
+        motivo: motivoDeBloqueio(q) ?? 'defeito não identificado',
+      });
+      return false;
+    });
+
     // Inserir em batches de 20 (evitar timeout)
     const BATCH = 20;
     const insertedIds: string[] = [];
 
-    for (let i = 0; i < questionsToInsert.length; i += BATCH) {
-      const batch = questionsToInsert.slice(i, i + BATCH);
+    for (let i = 0; i < questionsAceitas.length; i += BATCH) {
+      const batch = questionsAceitas.slice(i, i + BATCH);
       const { data: rows, error: insErr } = await supabaseAdmin
         .from('questions')
         .insert(batch)
@@ -175,6 +199,11 @@ export async function POST(request: Request) {
       total: apiQuestions.length,
       inserted,
       skipped,
+      // Contadas e devolvidas com o motivo: quem importa precisa saber que a
+      // prova entrou com 78 de 90, e por quê. Um número que some sem explicação
+      // vira "o import está bugado" no mês seguinte.
+      rejeitadas: rejeitadas.length,
+      motivos: rejeitadas.slice(0, 20),
       examId,
     });
 
