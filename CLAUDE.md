@@ -102,7 +102,7 @@ Sempre verifique `/supabase/migrations/` antes de qualquer query — nunca assum
 | Tabela | Colunas-chave |
 |--------|--------------|
 | `profiles` | id, full_name, email, role (`admin`/`teacher`/`student`), profile_type, institution, course, exam_target, birth_date |
-| `questions` | question_text, options (JSONB), correct_answer, subject_id, micro_topic_id, explanation, target_audience, supporting_text, image_url |
+| `questions` | question_text, options (JSONB), correct_answer, subject_id, micro_topic_id, explanation, target_audience, supporting_text, image_url, exam_board, ativa, motivo_inativa, auditada_em |
 | `subjects` | id, name |
 | `exams` | id, title, year, exam_type, pdf_url |
 | `exam_questions` | exam_id, question_id, order_index |
@@ -242,10 +242,88 @@ Prova de não-regressão: `npx tsx scripts/test-mural.ts` (roda dentro de `npm t
 - Se o enunciado original diz "utilize o texto para responder as questões X a Y", a IA **deve** repetir o `supporting_text` integralmente em **cada** objeto de questão do JSON gerado.
 - Se houver referência a imagem/gráfico, insira `[IMAGEM_PENDENTE]` no enunciado.
 
+### 🚫 Questão sem pergunta: a régua de integridade
+
+Uma questão pode chegar ao aluno **sem o enunciado fazer sentido**. O caso que
+originou a régua: "A quantia que essa pessoa levava semanalmente para fazer a
+compra era" + cinco valores em reais, sem a tabela de compras em lugar nenhum.
+Não é questão difícil — é questão sem pergunta. O aluno chuta, erra, e o erro
+entra no desempenho dele como se fosse conteúdo que ele não sabe.
+
+**Duas causas, as duas fechadas na entrada:**
+
+1. **ENEM** (`api/enem-import`): `question_text` saía de
+   `alternativesIntroduction`, que é só o PÉ do enunciado — o corpo mora em
+   `context`. Com `context` vazio (ou só a imagem, que a rota remove), sobrava a
+   ponta pendurada. O fallback `?? "Questão N"` era pior: gravava o número como
+   se fosse o enunciado.
+2. **ETEC** (`scripts/import-etec.ts`): o prompt manda repetir o
+   `supporting_text` em cada questão do bloco ("utilize o texto para responder
+   às questões 12 a 15"); quando o modelo economiza e entrega só na 12, as irmãs
+   ficam órfãs. O filtro antigo olhava forma (imagem, 5 alternativas, gabarito) e
+   nunca se ainda havia pergunta.
+
+| Arquivo | Papel |
+|---------|-------|
+| `src/lib/questao-integridade.ts` | A régua: `diagnosticarQuestao`, `questaoUtilizavel`, `apenasQuestoesUtilizaveis`, `motivoDeBloqueio` |
+| `scripts/auditar-questoes.ts` | Relatório do banco, conserto por herança e quarentena |
+| `scripts/test-questoes.ts` | Prova de não-regressão (dentro de `npm test`) |
+| `supabase/migrations/20260902000000_questoes_integridade.sql` | `questions.ativa`, `motivo_inativa`, `auditada_em` |
+
+**Regras ao mexer aqui:**
+
+1. **Tela e banco usam a MESMA função.** `questaoUtilizavel()` é quem tira a
+   questão do simulado, da prova, do flashcard e da questão do dia; é a mesma
+   que o script de auditoria usa para desativar. Um filtro de tela que não bata
+   com o relatório faz o professor procurar por uma questão que o aluno vê e ele
+   não encontra.
+2. **A régua erra para o lado do falso negativo.** Evidência ambígua vira
+   `bloqueia: false` — entra no relatório, não some da tela. Questão ruim que
+   passa custa uma; questão boa apagada em massa custa o banco inteiro.
+3. **Metade de `scripts/test-questoes.ts` são casos NEGATIVOS**, e é a metade que
+   importa: "o valor pago foi de", "conclui-se que" e "é igual a" terminam em
+   preposição, conjunção e artigo e são o formato-padrão de completar do ENEM.
+   Uma régua de "fim cortado" que pegasse preposição solta derrubaria a banca
+   inteira. Mesma coisa para `tabela periódica` e `figura de linguagem`
+   (`EXPRESSOES_FIXAS`): ali a palavra de apoio é conteúdo da matéria, não apoio
+   que faltou.
+4. **Nunca `.eq('ativa', true)` na consulta.** O filtro é em JavaScript porque a
+   coluna só existe depois da migration `20260902000000`; pedi-la ao PostgREST
+   num banco sem ela derruba o simulado inteiro com 400 em vez de esconder uma
+   questão. (Mesma lição de `mural_posts.avisado_em`.)
+5. **O filtro vem ANTES do `slice(0, simSize)`.** Filtrar depois entrega 7
+   questões para quem pediu 10.
+6. **A auditoria DESATIVA, nunca APAGA.** `student_question_answers.question_id`
+   é FK sem cascade — o DELETE falharia justamente nas mais respondidas, e
+   forçar o cascade apagaria o histórico do aluno para consertar erro nosso.
+   `exam_questions` tem cascade: apagar furaria a prova e as tentativas já
+   corrigidas.
+7. **O conserto só herda apoio de vizinha a ±2 posições da mesma prova**
+   (`DISTANCIA_MAXIMA`). Texto de três questões antes é de outro bloco, e enfiar
+   o texto errado é pior do que deixar quebrada: vira questão que parece inteira
+   e mede a coisa errada.
+8. **O padrão do script é não escrever.** Rode primeiro sem bandeira, leia as
+   amostras, e só então `--consertar --desativar`. Quem decide sobre o conteúdo
+   do cursinho é o professor.
+
+Fluxo de limpeza:
+
+```bash
+npm run auditar:questoes                        # relatório, não escreve nada
+npm run auditar:questoes -- --csv               # + questoes-com-defeito.csv
+npm run auditar:questoes -- --consertar --desativar
+npm run auditar:questoes -- --reativar          # depois de conserto manual
+```
+
 ### Simulados & Provas
 - Renderize `supporting_text` em card destacado **antes** do enunciado.
 - Se `image_url` existir, exibi-la no topo do card da questão (prioridade visual).
 - Siga padrão ENEM: 3,5 min/questão, navegação por grade, opção de revisão.
+- **Flashcard e Questão do Dia também precisam do apoio.** As duas telas nasceram
+  sem `supporting_text` no `.select()`, então toda questão de interpretação
+  aparecia truncada. A Questão do Dia passou a buscar e renderizar o apoio; o
+  flashcard **exclui** questão que dependa de apoio (`cabeNoCartao`) — não cabe
+  um texto de dois mil caracteres num cartão de memorização.
 
 ### ⛔ Nunca chame o Supabase dentro de `onAuthStateChange`
 

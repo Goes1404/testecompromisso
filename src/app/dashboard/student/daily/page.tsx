@@ -8,6 +8,8 @@ import { fixEncoding } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { trackMissionProgress } from '@/lib/missions';
+import { questaoUtilizavel } from '@/lib/questao-integridade';
+import { SupportingTextBlock } from '@/components/SupportingTextBlock';
 import {
   Zap, CheckCircle2, XCircle, Lock, Trophy,
   Flame, Target, ChevronRight, Loader2, Star,
@@ -20,6 +22,10 @@ type DailyQuestion = {
   daily_id:    string;
   question_id: string;
   question_text: string;
+  /** O texto de apoio da questão. Sem ele, metade das questões do banco vira
+   *  pergunta sem contexto — ver a busca em `fetchDaily`. */
+  supporting_text: string | null;
+  image_url: string | null;
   options:     Option[];
   correct_answer: string;
   explanation: string | null;
@@ -99,6 +105,8 @@ export default function DailyQuestionPage() {
           questions (
             id,
             question_text,
+            supporting_text,
+            image_url,
             options,
             correct_answer,
             explanation,
@@ -118,15 +126,34 @@ export default function DailyQuestionPage() {
       }
 
       const q = dq.questions as any;
+
+      // A questão do dia é sorteada e gravada em `daily_questions` sem passar
+      // por régua nenhuma. Se a sorteada estiver quebrada, o aluno perde o dia
+      // inteiro — é uma por dia, sem "próxima". Melhor a tela vazia, que ele
+      // entende, do que uma pergunta impossível que ele vai achar que errou.
+      if (!questaoUtilizavel({
+        question_text:   q.question_text,
+        supporting_text: q.supporting_text,
+        image_url:       q.image_url,
+        options:         parseOptions(q.options),
+        correct_answer:  q.correct_answer,
+      })) {
+        setDaily(null);
+        setLoading(false);
+        return;
+      }
+
       setDaily({
-        daily_id:       dq.id,
-        question_id:    dq.question_id,
-        question_text:  q.question_text,
-        options:        parseOptions(q.options),
-        correct_answer: q.correct_answer,
-        explanation:    q.explanation ?? null,
-        subject_name:   q.subjects?.name ?? null,
-        scheduled_date: dq.scheduled_date,
+        daily_id:        dq.id,
+        question_id:     dq.question_id,
+        question_text:   q.question_text,
+        supporting_text: q.supporting_text ?? null,
+        image_url:       q.image_url ?? null,
+        options:         parseOptions(q.options),
+        correct_answer:  q.correct_answer,
+        explanation:     q.explanation ?? null,
+        subject_name:    q.subjects?.name ?? null,
+        scheduled_date:  dq.scheduled_date,
       });
 
       // 2. Verifica se já respondeu hoje
@@ -300,6 +327,22 @@ export default function DailyQuestionPage() {
         }`} />
 
         <div className="p-6 md:p-8 space-y-6">
+          {/* Apoio antes do enunciado, como no simulado e na prova: é a ordem em
+              que a questão foi escrita, e sem ele o enunciado não fecha. */}
+          {daily.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={daily.image_url}
+              alt="Imagem de apoio à questão"
+              className="w-full rounded-2xl object-contain max-h-72 border border-slate-200 bg-white"
+            />
+          )}
+          {daily.supporting_text && (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5 text-slate-700">
+              <SupportingTextBlock text={daily.supporting_text} />
+            </div>
+          )}
+
           {/* Texto da questão */}
           <p className="text-slate-800 font-semibold text-base leading-relaxed whitespace-pre-line">
             {fixEncoding(daily.question_text)}

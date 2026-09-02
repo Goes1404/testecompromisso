@@ -24,6 +24,7 @@ import {
 import { trackMissionProgress } from '@/lib/missions';
 import { allowedExamTypesFor, examTypeLabel } from '@/lib/exam-types';
 import { trackAcao, trackFalha } from '@/lib/telemetry';
+import { apenasQuestoesUtilizaveis } from '@/lib/questao-integridade';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ALL_TOPICS = '_all';
@@ -38,6 +39,8 @@ type Question    = {
   options: { key?: string; letter?: string; text: string }[];
   correct_answer: string; subjects: { name: string } | null;
   year: number; explanation?: string; supporting_text?: string; image_url?: string;
+  /** Quarentena (migration 20260902000000). Ausente em banco sem a migration. */
+  ativa?: boolean | null;
 };
 type Answer = {
   questionId: string; selected: string; correct: string; explanation?: string;
@@ -285,7 +288,38 @@ export default function SimuladoPage() {
       }
 
       const items = raw ?? [];
-      const shuffled = items.sort(() => 0.5 - Math.random()).slice(0, simSize);
+
+      // As `options` chegam como texto em parte do banco antigo. A conversão
+      // vinha depois do sorteio; subiu para cá porque a régua de integridade
+      // precisa enxergar a lista de alternativas para julgar a questão.
+      const normalizadas: Question[] = items.map((q: any) => {
+        let opts = q.options;
+        if (typeof opts === 'string') { try { opts = JSON.parse(opts); } catch { opts = []; } }
+        return { ...q, options: opts ?? [], subjects: typeof q.subjects === 'string' ? JSON.parse(q.subjects) : q.subjects };
+      });
+
+      // Tira do sorteio o que o aluno não consegue responder: enunciado órfão
+      // (cita um texto ou uma tabela que não foi importada), alternativa em
+      // branco, gabarito que não bate com nenhuma opção. Errar uma questão
+      // dessas não mede conhecimento — mede que faltou dado na tela — e o erro
+      // ia parar no desempenho dele do mesmo jeito.
+      //
+      // O filtro é aqui, ANTES do `slice(0, simSize)`: filtrar depois entregaria
+      // 7 questões para quem pediu 10. E é em JavaScript, não um `.eq('ativa',
+      // true)` na consulta, porque a coluna `ativa` só existe depois da migration
+      // 20260902000000 — pedi-la ao PostgREST antes disso derrubaria o simulado
+      // inteiro com 400 em vez de esconder uma questão.
+      const { utilizaveis, descartadas } = apenasQuestoesUtilizaveis(
+        normalizadas.filter((q) => q.ativa !== false),
+      );
+      if (descartadas > 0) {
+        // Mede o tamanho do estrago no banco pelo lado de quem sofre com ele.
+        trackAcao('simulado_questoes_descartadas', {
+          descartadas, disponiveis: items.length, banca: selectedBoard, modo: mode,
+        });
+      }
+
+      const shuffled = utilizaveis.sort(() => 0.5 - Math.random()).slice(0, simSize);
       if (shuffled.length === 0) {
         // Estado vazio honesto: diz qual banca e matéria faltam, em vez de
         // completar às escondidas com questões de outro vestibular.
@@ -297,20 +331,24 @@ export default function SimuladoPage() {
         trackAcao('simulado_sem_questoes', {
           banca: selectedBoard, materia: materiaLabel ?? 'nenhuma', modo: mode,
         });
+        // Distingue "banco vazio" de "banco cheio de questão quebrada". Para o
+        // aluno o efeito é o mesmo, mas mandá-lo trocar de matéria quando o
+        // problema é nosso o faria rodar o app inteiro atrás de nada.
+        const soQuebradas = items.length > 0;
         toast({
-          title: bancaLabel ? `Ainda não temos questões de ${bancaLabel}` : 'Sem questões',
-          description: bancaLabel
-            ? `Não há questões de ${bancaLabel}${materiaLabel ? ` em ${materiaLabel}` : ''} por enquanto. Troque a banca ou a matéria para continuar treinando.`
-            : 'Não há questões para este filtro.',
+          title: soQuebradas
+            ? 'Questões em revisão'
+            : bancaLabel ? `Ainda não temos questões de ${bancaLabel}` : 'Sem questões',
+          description: soQuebradas
+            ? 'As questões deste filtro estão em conserto — chegaram sem o texto de apoio. Escolha outra matéria enquanto arrumamos.'
+            : bancaLabel
+              ? `Não há questões de ${bancaLabel}${materiaLabel ? ` em ${materiaLabel}` : ''} por enquanto. Troque a banca ou a matéria para continuar treinando.`
+              : 'Não há questões para este filtro.',
           variant: 'destructive',
         });
         setGameState('idle'); return;
       }
-      const formatted: Question[] = shuffled.map((q: any) => {
-        let opts = q.options;
-        if (typeof opts === 'string') { try { opts = JSON.parse(opts); } catch { opts = []; } }
-        return { ...q, options: opts ?? [], subjects: typeof q.subjects === 'string' ? JSON.parse(q.subjects) : q.subjects };
-      });
+      const formatted: Question[] = shuffled;
       setQuestions(formatted); setCurrentIndex(0); setAnswers([]); setSelectedAnswer(null);
       setTimeLeft(formatted.length * 3.5 * 60); setIsPaused(false);
       setElapsedSeconds(0);
