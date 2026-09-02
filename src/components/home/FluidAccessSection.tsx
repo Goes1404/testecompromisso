@@ -74,16 +74,16 @@ export function FluidAccessSection({ onNavigate }: FluidAccessSectionProps): Rea
             </Button>
           </form>
 
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-center">
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-6 text-center">
             <Link
               href="/primeiro-acesso"
-              className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
+              className="press inline-flex min-h-11 items-center gap-1.5 px-2 text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
             >
               <KeyRound className="h-3.5 w-3.5" /> É meu primeiro acesso
             </Link>
             <Link
               href="/forgot-password"
-              className="text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
+              className="press inline-flex min-h-11 items-center px-2 text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
             >
               Esqueci minha senha
             </Link>

@@ -256,7 +256,7 @@ export function GuiaInstalacao() {
         </div>
 
         <div className="text-center">
-          <Link href="/login" className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">
+          <Link href="/login" className="press inline-flex min-h-11 items-center px-4 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">
             Voltar para o login
           </Link>
         </div>

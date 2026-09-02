@@ -62,11 +62,6 @@ export default function LoginPage() {
         <p className="text-[10px] font-bold text-white/25 uppercase tracking-widest">
           © 2026 Cursinho Compromisso · Santana de Parnaíba
         </p>
-        <div className="flex items-center justify-center gap-4 mt-1.5">
-          <Link href="#" className="text-[9px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest">Privacidade</Link>
-          <span className="text-white/15">·</span>
-          <Link href="#" className="text-[9px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest">Acessibilidade</Link>
-        </div>
       </footer>
     </div>
   );

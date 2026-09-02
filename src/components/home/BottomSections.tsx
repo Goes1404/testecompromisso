@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { motion, useReducedMotion } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { Star, MessageSquare, MapPin, School, ChevronRight, Globe, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,7 +16,28 @@ const galleryItems = [
 
 const mapsUrl = "https://www.google.com/maps/search/?api=1&query=R.+Cel.+Raimundo,+32+-+Centro,+Santana+de+Parnaíba+-+SP,+06501-010";
 
+/* Estas duas seções eram as únicas da vitrine que entravam sem movimento
+   nenhum: o aluno rolava de uma cascata para um bloco estático. As variantes
+   abaixo são as mesmas usadas no bento e na linha do tempo, para o site inteiro
+   se mover com a mesma curva. */
+const revelaContainer: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+
+const revelaItem: Variants = {
+  hidden: { opacity: 0, y: 26 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const VIEWPORT = { once: true, margin: "-70px" } as const;
+
 export function BottomSections() {
+  const reduceMotion = useReducedMotion();
+  // Com movimento reduzido as variantes começam já no estado final, então o
+  // conteúdo aparece inteiro em vez de ficar preso em opacity 0.
+  const inicial = reduceMotion ? "visible" : "hidden";
+
   return (
     <>
       {/* INFRAESTRUTURA */}
@@ -30,9 +53,15 @@ export function BottomSections() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <motion.div
+            variants={revelaContainer}
+            initial={inicial}
+            whileInView="visible"
+            viewport={VIEWPORT}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+          >
             {galleryItems.map((item, i) => (
-              <div key={item.title} className="group relative aspect-[3/4] rounded-3xl overflow-hidden shadow-xl bg-gray-200 ring-1 ring-gray-100">
+              <motion.div key={item.title} variants={revelaItem} className="hover-lift group relative aspect-[3/4] rounded-3xl overflow-hidden shadow-xl bg-gray-200 ring-1 ring-gray-100">
                 <Image
                   src={item.img}
                   alt={item.title}
@@ -42,14 +71,14 @@ export function BottomSections() {
                   sizes="(max-width: 768px) 50vw, 25vw"
                   quality={75}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 flex flex-col justify-end p-8">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 flex flex-col justify-end p-4 sm:p-6 md:p-8">
                   <div className="w-10 h-1 bg-primary rounded-full mb-3 group-hover:w-16 transition-all" />
                   <p className="text-xs font-black text-white uppercase tracking-[0.2em]">{item.title}</p>
                   <p className="text-[10px] font-bold text-gray-400 mt-1">Unidade Santana de Parnaíba</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -63,13 +92,19 @@ export function BottomSections() {
             <h2 className="text-4xl font-black text-gray-900 tracking-tighter">Histórias de Aprovação</h2>
             <p className="text-gray-500 font-medium">Veja quem já estudou conosco e hoje está nas melhores instituições do país.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <motion.div
+            variants={revelaContainer}
+            initial={inicial}
+            whileInView="visible"
+            viewport={VIEWPORT}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
             {[
               { name: "Lucas M.", course: "Aprovado em Engenharia (USP)", desc: "A correção de redação inteligente com IA me poupou semanas de estudo. Saí de 600 pra 940 no ENEM em poucos meses." },
               { name: "Mariana S.", course: "Aprovada na ETEC Parnaíba", desc: "A infraestrutura e os professores são incríveis. A plataforma apontava exatamente no que eu tinha que focar." },
               { name: "Thiago F.", course: "Aprovado em Medicina", desc: "A metodologia de simulados me deu a resistência de prova necessária. O Compromisso foi um divisor de águas pra mim." }
             ].map((test, i) => (
-              <div key={i} className="p-8 rounded-3xl bg-gray-50 border border-gray-100 shadow-sm relative group hover:shadow-xl hover:-translate-y-1 transition-all">
+              <motion.div key={i} variants={revelaItem} className="hover-lift p-8 rounded-3xl bg-gray-50 border border-gray-100 shadow-sm relative group">
                 <div className="flex text-amber-400 mb-4">
                   <Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" /><Star className="h-5 w-5 fill-current" />
                 </div>
@@ -78,9 +113,9 @@ export function BottomSections() {
                   <p className="font-black text-gray-900">{test.name}</p>
                   <p className="text-[10px] font-bold text-primary uppercase">{test.course}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -91,25 +126,37 @@ export function BottomSections() {
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Perguntas Frequentes</h2>
             <p className="text-gray-500 font-medium">Tire as pequenas dúvidas e dê o primeiro passo.</p>
           </div>
-          <div className="space-y-4">
+          <motion.div
+            variants={revelaContainer}
+            initial={inicial}
+            whileInView="visible"
+            viewport={VIEWPORT}
+            className="space-y-4"
+          >
             {[
               { q: "O curso é totalmente gratuito?", a: "Sim! Por sermos patrocinados através de projetos da prefeitura, não existem cobranças de mensalidades para os alunos." },
               { q: "Qual a duração da preparação?", a: "Temos estruturas intensivas (6 meses) e extensivas (1 ano), alinhadas perfeitamente às datas oficiais do ENEM e da ETEC." },
               { q: "Como a IA consegue corrigir minhas redações?", a: "Você redige seu texto no laboratório online e a Aurora (nossa IA) treinou milhares de redações nota 1000. Ela avalia os 5 critérios e sugere melhorias na mesma hora!" },
             ].map((faq, idx) => (
-              <div key={idx} className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <motion.div key={idx} variants={revelaItem} className="hover-lift p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="font-black text-lg text-gray-900 mb-2 flex gap-3"><MessageSquare className="h-5 w-5 text-primary shrink-0" /> {faq.q}</h3>
                 <p className="text-gray-600 font-medium ml-8 leading-relaxed">{faq.a}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* LOCALIZAÇÃO - GOOGLE MAPS */}
       <section id="localizacao" className="py-20 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
-          <div className="space-y-6">
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, x: -28 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={VIEWPORT}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
             <div className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
               <MapPin className="h-4 w-4" /> Nossa Localização
             </div>
@@ -133,9 +180,15 @@ export function BottomSections() {
                 </Button>
               </div>
             </div>
-          </div>
-          
-          <div className="relative h-[450px] md:h-[550px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100 group">
+          </motion.div>
+
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, x: 28 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={VIEWPORT}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="relative h-[450px] md:h-[550px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100 group"
+          >
             <iframe 
               title="Google Maps Location"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d914.9701171802999!2d-46.9174!3d-23.446!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94cf0377c8ccd531%3A0x6e76cf076e01a884!2sR.%20Cel.%20Raimundo%2C%2032%20-%20Centro%2C%20Santana%20de%20Parna%C3%ADba%20-%20SP%2C%2006501-010!5e0!3m2!1spt-BR!2sbr!4v1712123456789!5m2!1spt-BR!2sbr" 
@@ -157,7 +210,7 @@ export function BottomSections() {
               <p className="text-[10px] font-black text-primary uppercase tracking-tighter mb-1">Referência:</p>
               <p className="text-[9px] font-bold text-gray-500 italic">Ao lado do Posto de Saúde Central e da Praça Monumento.</p>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -166,22 +219,28 @@ export function BottomSections() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/30 blur-[150px] rounded-full" />
         </div>
-        <div className="max-w-3xl mx-auto px-6 space-y-8 relative z-10">
-          <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight">
+        <motion.div
+          variants={revelaContainer}
+          initial={inicial}
+          whileInView="visible"
+          viewport={VIEWPORT}
+          className="max-w-3xl mx-auto px-6 space-y-8 relative z-10"
+        >
+          <motion.h2 variants={revelaItem} className="text-4xl md:text-6xl font-black tracking-tighter leading-tight">
             Sua jornada para o<br /><span className="text-primary italic underline decoration-primary/30 decoration-8 underline-offset-8">sucesso começa aqui.</span>
-          </h2>
-          <p className="text-lg text-gray-400 leading-relaxed font-medium">
+          </motion.h2>
+          <motion.p variants={revelaItem} className="text-lg text-gray-400 leading-relaxed font-medium">
             Vagas limitadas para o próximo ciclo de aprovação. Garanta sua mentoria com os melhores do mercado.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
+          </motion.p>
+          <motion.div variants={revelaItem} className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
             <Button asChild size="lg" className="h-16 px-12 bg-primary hover:bg-[#e06000] text-white font-black text-lg rounded-full shadow-[0_10px_40px_-10px_rgba(255,107,0,0.5)] border-none transition-all active:scale-95">
               <Link href="/login">Entrar na Plataforma</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="h-16 px-12 bg-transparent text-white font-black text-lg rounded-full border-2 border-white/20 hover:bg-white/5 transition-all">
               <a href="#faq" onClick={(e) => { e.preventDefault(); document.querySelector('#faq')?.scrollIntoView({ behavior: 'smooth' }); }}>Dúvidas Frequentes</a>
             </Button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* FOOTER PREMIUM */}
@@ -207,39 +266,50 @@ export function BottomSections() {
                 </div>
               </div>
               <div className="flex gap-4">
-                {[Globe, Mail, MapPin].map((Icon, i) => (
-                  <div key={i} className="h-10 w-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-primary hover:border-primary/30 transition-all cursor-pointer">
+                {[
+                  { Icon: Globe, href: "/login", label: "Portal do aluno", externo: false },
+                  { Icon: Mail, href: "mailto:contato@compromisso.edu.br", label: "Enviar e-mail", externo: false },
+                  { Icon: MapPin, href: mapsUrl, label: "Ver no mapa", externo: true },
+                ].map(({ Icon, href, label, externo }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    aria-label={label}
+                    title={label}
+                    {...(externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className="press h-11 w-11 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-primary hover:border-primary/30 transition-all"
+                  >
                     <Icon className="h-5 w-5" />
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-12 lg:gap-24">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-12 lg:gap-24">
               <div className="space-y-6">
                 <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Plataforma</p>
                 <ul className="space-y-4">
-                  <li><Link href="/login" className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">Portal do Sucesso</Link></li>
-                  <li><Link href="#metodologia" onClick={(e) => { e.preventDefault(); document.querySelector('#metodologia')?.scrollIntoView({ behavior: 'smooth' }); }} className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">Metodologia 360º</Link></li>
-                  <li><Link href="#localizacao" onClick={(e) => { e.preventDefault(); document.querySelector('#localizacao')?.scrollIntoView({ behavior: 'smooth' }); }} className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">Localização</Link></li>
+                  <li><Link href="/login" className="underline-grow inline-flex min-h-11 items-center text-sm font-bold text-gray-500 hover:text-primary transition-colors">Portal do Sucesso</Link></li>
+                  <li><Link href="#metodologia" onClick={(e) => { e.preventDefault(); document.querySelector('#metodologia')?.scrollIntoView({ behavior: 'smooth' }); }} className="underline-grow inline-flex min-h-11 items-center text-sm font-bold text-gray-500 hover:text-primary transition-colors">Metodologia 360º</Link></li>
+                  <li><Link href="#localizacao" onClick={(e) => { e.preventDefault(); document.querySelector('#localizacao')?.scrollIntoView({ behavior: 'smooth' }); }} className="underline-grow inline-flex min-h-11 items-center text-sm font-bold text-gray-500 hover:text-primary transition-colors">Localização</Link></li>
                 </ul>
               </div>
               <div className="space-y-6">
                 <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Contato</p>
                 <ul className="space-y-4">
                   <li>
-                    <a href="mailto:contato@compromisso.edu.br" className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors break-words md:break-normal">
+                    <a href="mailto:contato@compromisso.edu.br" className="underline-grow inline-flex min-h-11 items-center text-sm font-bold text-gray-500 hover:text-primary transition-colors break-words md:break-normal">
                       contato@compromisso.edu.br
                     </a>
                   </li>
                   <li>
-                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="underline-grow text-sm font-bold text-gray-500 hover:text-primary transition-colors">
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="underline-grow inline-flex min-h-11 items-center text-sm font-bold text-gray-500 hover:text-primary transition-colors">
                       Unidade Central Parnaíba
                     </a>
                   </li>
                 </ul>
               </div>
-              <div className="space-y-6 col-span-2 sm:col-span-1">
+              <div className="space-y-6">
                 <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Oficial</p>
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-loose">
                   © {new Date().getFullYear()} CURSO COMPROMISSO<br />CNPJ 45.123.456/0001-00
@@ -248,7 +318,7 @@ export function BottomSections() {
             </div>
           </div>
           <div className="pt-10 text-center lg:text-left">
-            <p className="text-[11px] font-black text-gray-300 uppercase tracking-[0.5em]">Educação Inteligente • Resultados Reais</p>
+            <p className="text-[10px] sm:text-[11px] font-black text-gray-300 uppercase tracking-[0.3em] sm:tracking-[0.5em] -mr-[0.3em] sm:-mr-[0.5em]">Educação Inteligente • Resultados Reais</p>
           </div>
         </div>
       </footer>

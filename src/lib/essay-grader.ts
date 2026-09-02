@@ -35,6 +35,18 @@ export type EntradaCorrecao = {
 };
 
 /** Erro com status HTTP, para a rota traduzir sem conhecer as regras. */
+/**
+ * Hash estável (djb2) do texto, usado como semente de amostragem. Precisa ser
+ * inteiro positivo e caber em 32 bits para a API aceitar.
+ */
+function sementeDoTexto(entrada: string): number {
+  let h = 5381;
+  for (let i = 0; i < entrada.length; i++) {
+    h = ((h << 5) + h + entrada.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) % 2_000_000_000;
+}
+
 export class ErroCorrecao extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
@@ -185,7 +197,15 @@ export async function corrigirRedacao(entrada: EntradaCorrecao, openai: OpenAI) 
 
   const userContent = montarUserContent(theme, text, motivadores, origin, analise, banca);
 
-  const corrigir = () =>
+  // Semente derivada do próprio texto. Sem ela, corrigir a mesma redação duas
+  // vezes sorteava amostras diferentes e devolvia notas diferentes — a aluna
+  // que corrigia os erros e reenviava via a nota CAIR, porque o ruído do
+  // sorteio (até 100 pontos, o limite de discrepância) era maior que o ganho
+  // real da correção dela. Agora o mesmo texto sempre cai na mesma amostra, e
+  // uma diferença de nota passa a significar uma diferença de texto.
+  const semente = sementeDoTexto(`${banca.id}|${theme}|${text}`);
+
+  const corrigir = (corretor: number) =>
     openai.chat.completions.create({
       model,
       messages: [
@@ -193,10 +213,14 @@ export async function corrigirRedacao(entrada: EntradaCorrecao, openai: OpenAI) 
         { role: "user", content: userContent },
       ],
       response_format: { type: "json_object" },
-      // Temperatura > 0 é o que torna as correções realmente independentes:
-      // dois corretores idênticos não teriam por que discordar, e o protocolo
-      // de discrepância não teria função.
-      temperature: 0.4,
+      // Cada corretor recebe uma semente distinta: continuam independentes
+      // entre si (o protocolo de discrepância segue tendo função), mas o
+      // conjunto é reprodutível para um mesmo texto.
+      seed: semente + corretor,
+      // Reduzida de 0.4: a dispersão entre corretores era da ordem de uma
+      // banda inteira de competência (40 pontos), e como a nota é a média de
+      // dois, isso batia direto na nota final.
+      temperature: 0.25,
       max_tokens: 2500,
     });
 
@@ -210,7 +234,7 @@ export async function corrigirRedacao(entrada: EntradaCorrecao, openai: OpenAI) 
   };
 
   // ── 3. Dois corretores independentes, em paralelo ──
-  const primeiros = await Promise.allSettled([corrigir(), corrigir()]);
+  const primeiros = await Promise.allSettled([corrigir(0), corrigir(1)]);
   const runs: ParsedRun[] = primeiros.map(parse).filter((r): r is ParsedRun => r !== null);
 
   if (runs.length === 0) {
@@ -219,7 +243,7 @@ export async function corrigirRedacao(entrada: EntradaCorrecao, openai: OpenAI) 
 
   // ── 4. Terceiro corretor SÓ quando há discrepância ──
   if (runs.length >= 2 && motivosDeDiscrepancia(runs[0].vector, runs[1].vector, banca).length > 0) {
-    const terceira = parse((await Promise.allSettled([corrigir()]))[0]);
+    const terceira = parse((await Promise.allSettled([corrigir(2)]))[0]);
     if (terceira) runs.push(terceira);
   }
 

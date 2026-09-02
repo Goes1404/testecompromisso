@@ -103,6 +103,10 @@
   html {
     overflow-x: hidden;
     width: 100%;
+    /* `contain` corta o encadeamento do overscroll: a pagina para de arrastar
+       junto com a barra do navegador e o puxar-para-recarregar do Android nao
+       dispara sozinho no meio de uma rolagem. */
+    overscroll-behavior-y: contain;
   }
 
   body {
@@ -201,6 +205,25 @@ main::-webkit-scrollbar-thumb:hover {
 *::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--foreground) / 0.28);
   background-clip: content-box;
+}
+
+/* A barra lateral do painel é escura nos dois temas, então o polegar
+   cinza-escuro do padrão acima desaparecia dentro dela — e, antes, a trilha
+   pintada com `--background` desenhava uma faixa branca colada no menu preto.
+   Aqui a trilha é transparente e o polegar é claro. */
+[data-sidebar="content"]::-webkit-scrollbar-thumb,
+[data-sidebar="sidebar"]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  background-clip: content-box;
+}
+[data-sidebar="content"]::-webkit-scrollbar-thumb:hover,
+[data-sidebar="sidebar"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+  background-clip: content-box;
+}
+[data-sidebar="content"],
+[data-sidebar="sidebar"] {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
 /* Firefox não tem os pseudo-elementos acima. */
@@ -1147,4 +1170,35 @@ input:-webkit-autofill:active {
 .fade-edge-x {
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent 100%);
   mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent 100%);
+}
+
+/* ══════════════════════════════════════════════════════
+   TELA DE ESPERA DAS ROTAS DE JANELA INTEIRA
+   ══════════════════════════════════════════════════════ */
+
+/* Barra indeterminada: atravessa o topo sem prometer porcentagem nenhuma. */
+@keyframes loader-bar-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.loader-bar {
+  animation: loader-bar-slide 1.15s var(--ease-out-soft) infinite;
+}
+
+/* Anel: um arco em gradiente cônico recortado por máscara, girando. O corte
+   por máscara evita a borda serrilhada que `border-top-color` deixa. */
+@keyframes loader-ring-spin {
+  to { transform: rotate(360deg); }
+}
+.loader-ring {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 107, 0, 0.15) 140deg,
+    hsl(var(--primary)) 330deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  animation: loader-ring-spin 0.9s linear infinite;
 }

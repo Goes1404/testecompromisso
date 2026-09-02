@@ -86,7 +86,14 @@ export function NotificationBell() {
   }, [selectedAnn]);
 
   useEffect(() => {
-    if (!user) return;
+    // `loading` comeca em true. Sair daqui sem desliga-lo deixava o sino preso
+    // em "Sincronizando..." para sempre — era o caso de todo usuario ainda sem
+    // sessao resolvida, e de quem abria o painel antes do AuthProvider
+    // terminar. O spinner nunca mais saia da tela.
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     async function fetchAnnouncements() {
       setLoading(true);
@@ -112,8 +119,16 @@ export function NotificationBell() {
         if (error) throw error;
         setAnnouncements(data || []);
 
+        // Contava no maximo 1: comparava so o comunicado mais novo com o
+        // ultimo lido. Quem passava uma semana fora via "1" com cinco avisos
+        // novos. Agora conta quantos vieram depois do ultimo que ele abriu.
         const lastRead = localStorage.getItem('last_announcement_read');
-        if (data && data.length > 0 && lastRead !== data[0].id) setUnreadCount(1);
+        if (data && data.length > 0) {
+          const idx = lastRead ? data.findIndex(a => a.id === lastRead) : -1;
+          setUnreadCount(idx === -1 ? data.length : idx);
+        } else {
+          setUnreadCount(0);
+        }
       } catch (err) {
         console.error("Erro ao carregar notificações:", err);
       } finally {

@@ -24,6 +24,7 @@ const InteractiveWorkbook = dynamic(
 import { supabase } from "@/app/lib/supabase";
 import { Loader2, ChevronLeft, ShieldCheck, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FullBleedLoader } from "@/components/FullBleedLoader";
 import { Badge } from "@/components/ui/badge";
 
 export default function BookViewerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,12 +60,14 @@ export default function BookViewerPage({ params }: { params: Promise<{ id: strin
     loadMaterial();
   }, [id, router]);
 
+  // Mesmo componente do loading.tsx da rota: a espera do roteador e a espera do
+  // fetch viram uma coisa so, sem piscar entre elas.
   if (authLoading || loading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-slate-950 text-white gap-4">
-        <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Descriptografando Material Seguro...</p>
-      </div>
+      <FullBleedLoader
+        mensagem="Abrindo o material"
+        detalhe="Preparando o ambiente de leitura protegido"
+      />
     );
   }
 

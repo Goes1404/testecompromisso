@@ -45,7 +45,14 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#FF6B00',
+  // O laranja fluorescente pintava a barra do navegador e a faixa que aparece
+  // ao puxar a pagina para baixo — no celular era um bloco de cor gritante
+  // acima do conteudo. O grafite e o mesmo fundo das telas escuras do produto,
+  // entao a barra passa a continuar a pagina em vez de brigar com ela.
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0c' },
+    { media: '(prefers-color-scheme: light)', color: '#0a0a0c' },
+  ],
   width: 'device-width',
   initialScale: 1,
 };
@@ -73,20 +80,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // O sw.js so trata push e notificationclick — nao tem handler de
+              // fetch, entao nenhuma requisicao da pagina passa por ele. O
+              // recarregamento que existia aqui, disparado por
+              // 'controllerchange', nao tinha o que corrigir e criava um laco:
+              // install faz skipWaiting, activate faz clients.claim, o claim
+              // dispara controllerchange na pagina que ainda nao tinha
+              // controlador, e o listener recarregava. Medido: 4 navegacoes na
+              // primeira visita e 1 recarga extra em toda carga seguinte — era
+              // o "fica carregando infinito, so volta com F5".
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    // Force immediate update check so the fixed SW (no fetch handler)
-                    // replaces any broken cached SW as quickly as possible.
-                    reg.update().catch(function() {});
-
-                    // When a new SW takes control, reload once to ensure all
-                    // in-flight requests go through the updated SW.
-                    var reloading = false;
-                    navigator.serviceWorker.addEventListener('controllerchange', function() {
-                      if (!reloading) { reloading = true; window.location.reload(); }
-                    });
-                  }).catch(function() {});
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
                 });
               }
             `,

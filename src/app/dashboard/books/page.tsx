@@ -298,7 +298,7 @@ function BookCard({ item }: { item: any }) {
   return (
     <Link
       href={`/dashboard/library/book/${item.id}`}
-      className="group flex flex-col rounded-[2rem] bg-white border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+      className="group flex flex-col rounded-[2rem] bg-white border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 [touch-action:manipulation] focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
     >
       <div className={`aspect-[3/4] relative overflow-hidden shrink-0 bg-gradient-to-br ${grad}`}>
         {hasImage ? (
@@ -350,7 +350,7 @@ function BookRow({ item }: { item: any }) {
   return (
     <Link
       href={`/dashboard/library/book/${item.id}`}
-      className="group flex items-center gap-4 rounded-2xl bg-white border border-slate-100 p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+      className="group flex items-center gap-4 rounded-2xl bg-white border border-slate-100 p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-300 [touch-action:manipulation] focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
     >
       <div className={`w-14 h-[4.5rem] rounded-xl shrink-0 relative overflow-hidden bg-gradient-to-br ${grad}`}>
         {hasImage ? (

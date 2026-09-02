@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
@@ -44,6 +45,15 @@ export interface HeroShowcaseProps {
  * mockup 3D do dashboard carregado sob demanda apenas em telas grandes.
  */
 export function HeroShowcase({ onNavigate, onScrollTo }: HeroShowcaseProps): ReactElement {
+  const reduceMotion = useReducedMotion();
+  const { scrollY } = useScroll();
+  // O texto sobe um pouco mais devagar que a rolagem e vai sumindo; o brilho
+  // de fundo anda menos ainda. A diferenca de velocidade e o que cria a
+  // profundidade. Tudo em transform/opacity — nada disso toca em layout.
+  const textoY = useTransform(scrollY, [0, 520], [0, 70]);
+  const textoOpacidade = useTransform(scrollY, [0, 380], [1, 0.15]);
+  const brilhoY = useTransform(scrollY, [0, 520], [0, 130]);
+
   return (
     <section
       id="home"
@@ -54,13 +64,19 @@ export function HeroShowcase({ onNavigate, onScrollTo }: HeroShowcaseProps): Rea
       <div className="absolute inset-0 noise pointer-events-none" />
 
       {/* Efeitos de luz */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 hidden md:block">
+      <motion.div
+        style={reduceMotion ? undefined : { y: brilhoY }}
+        className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 hidden md:block"
+      >
         <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[80px]" />
-      </div>
+      </motion.div>
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center relative z-10 w-full pt-6 md:pt-10">
-        <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-left duration-1000">
+        <motion.div
+          style={reduceMotion ? undefined : { y: textoY, opacity: textoOpacidade }}
+          className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-left duration-1000"
+        >
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary font-black px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] rounded-full">
             <Award className="h-3 w-3" /> Ensino de Alta Performance
           </div>
@@ -123,7 +139,7 @@ export function HeroShowcase({ onNavigate, onScrollTo }: HeroShowcaseProps): Rea
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Mockup 3D do dashboard — desktop only */}
         <div className="relative hidden lg:block h-[62vh] max-h-[520px] min-h-[420px]">

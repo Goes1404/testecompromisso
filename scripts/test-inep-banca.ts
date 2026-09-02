@@ -32,18 +32,28 @@ console.log('\nDetecção de discrepância (regra oficial)');
   checar('sem diferença: não há discrepância',
     motivosDeDiscrepancia([160, 160, 160, 160, 160], [160, 160, 160, 160, 160]).length === 0);
 
-  // 800 vs 720: diferença total de 80, com cada competência diferindo no
-  // máximo 40. Abaixo dos dois limiares, então não é discrepância.
-  checar('diferença total de 80 não é discrepância',
-    motivosDeDiscrepancia([160, 160, 160, 160, 160], [120, 120, 160, 160, 160]).length === 0,
+  // 800 vs 760: diferença total de 40, cada competência diferindo 40 no
+  // máximo. Abaixo dos limiares (60 no total, 40 por competência), então
+  // não é discrepância.
+  checar('diferença total de 40 não é discrepância',
+    motivosDeDiscrepancia([160, 160, 160, 160, 160], [120, 160, 160, 160, 160]).length === 0,
+    JSON.stringify(motivosDeDiscrepancia([160, 160, 160, 160, 160], [120, 160, 160, 160, 160])));
+
+  // 800 vs 720 passou a SER discrepância: o limiar caiu de 100 para 60 porque
+  // os dois corretores são amostras do mesmo modelo, não humanos distintos.
+  // Esta é justamente a faixa que antes virava média sem arbitragem nenhuma.
+  checar('diferença total de 80 agora é discrepância',
+    motivosDeDiscrepancia([160, 160, 160, 160, 160], [120, 120, 160, 160, 160]).length > 0,
     JSON.stringify(motivosDeDiscrepancia([160, 160, 160, 160, 160], [120, 120, 160, 160, 160])));
 
   checar('diferença total de 120 é discrepância',
     motivosDeDiscrepancia([200, 200, 200, 200, 200], [200, 200, 200, 160, 120]).length > 0);
 
-  // Competência: "superior a 80". 80 exato não conta; 120 conta.
-  checar('diferença de 80 numa competência não é discrepância',
-    motivosDeDiscrepancia([160, 0, 0, 0, 0], [80, 0, 0, 0, 0]).length === 0);
+  // Competência: "superior a 40". 40 exato não conta; 80 conta.
+  checar('diferença de 40 numa competência não é discrepância',
+    motivosDeDiscrepancia([160, 0, 0, 0, 0], [120, 0, 0, 0, 0]).length === 0);
+  checar('diferença de 80 numa competência agora é discrepância',
+    motivosDeDiscrepancia([160, 0, 0, 0, 0], [80, 0, 0, 0, 0]).length > 0);
   checar('diferença de 120 numa competência é discrepância',
     motivosDeDiscrepancia([200, 0, 0, 0, 0], [80, 0, 0, 0, 0]).length > 0);
   // Aqui as duas regras disparam ao mesmo tempo (total 200 vs 80 = 120, e C1
@@ -53,9 +63,9 @@ console.log('\nDetecção de discrepância (regra oficial)');
     JSON.stringify(motivosDeDiscrepancia([200, 0, 0, 0, 0], [80, 0, 0, 0, 0])));
 
   // Diferenças de nota total são sempre múltiplos de 40, porque cada
-  // competência é. Não existe diferença de exatamente 100 — o limiar oficial
-  // de "mais de 100" equivale, na prática, a "120 ou mais".
-  checar('limiar de 100 equivale a 120 na prática',
+  // competência é. Não existe diferença de exatamente 60 — o limiar de
+  // "mais de 60" equivale, na prática, a "80 ou mais".
+  checar('limiar de 60 equivale a 80 na prática',
     motivosDeDiscrepancia([160, 160, 160, 160, 160], [120, 120, 120, 160, 160])
       .some(m => m.includes('120 pontos')),
     JSON.stringify(motivosDeDiscrepancia([160, 160, 160, 160, 160], [120, 120, 120, 160, 160])));

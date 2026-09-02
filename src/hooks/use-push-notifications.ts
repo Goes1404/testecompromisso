@@ -35,6 +35,25 @@ function ehInstalado(): boolean {
   );
 }
 
+/**
+ * `navigator.serviceWorker.ready` resolve quando ha um worker ativo — e NUNCA
+ * rejeita. Se o registro falhar (arquivo fora do ar, escopo errado, aba
+ * anonima em alguns navegadores), a promise fica pendente para sempre: o
+ * `await` trava, o `finally` que desliga o `loading` nunca roda, e o botao de
+ * ativar notificacao gira sem fim. O prazo transforma isso num erro visivel.
+ */
+async function swPronto(segundos = 10): Promise<ServiceWorkerRegistration> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, rejeitar) =>
+      setTimeout(
+        () => rejeitar(new Error("O navegador nao concluiu o registro do serviço de notificações.")),
+        segundos * 1000,
+      ),
+    ),
+  ]);
+}
+
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -84,11 +103,12 @@ export function usePushNotifications() {
     if (permission !== "granted" || typeof window === "undefined") return;
     (async () => {
       try {
-        const reg = await navigator.serviceWorker.ready;
+        const reg = await swPronto();
         const sub = await reg.pushManager.getSubscription();
         setSubscribed(!!sub);
       } catch (err) {
         console.error('[push] getSubscription check failed:', err);
+        setSubscribed(false);
       }
     })();
   }, [permission]);
@@ -119,7 +139,7 @@ export function usePushNotifications() {
         return;
       }
 
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await swPronto();
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
         sub = await reg.pushManager.subscribe({
@@ -157,7 +177,7 @@ export function usePushNotifications() {
     if (typeof window === "undefined") return;
     setLoading(true);
     try {
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await swPronto();
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
         const endpoint = sub.endpoint;

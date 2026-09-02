@@ -162,7 +162,7 @@ function CadastroForm() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="cpf" className="font-bold text-gray-700">CPF <span className="text-gray-400 font-normal">(Opcional)</span></Label>
             <Input
@@ -203,7 +203,7 @@ function CadastroForm() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="font-bold text-gray-700">Número da Sala <span className="text-red-500">*</span></Label>
             <Select

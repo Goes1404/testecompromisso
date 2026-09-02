@@ -147,7 +147,8 @@ export function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-orange-400 transition-colors p-1"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center text-white/30 hover:text-orange-400 transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -194,7 +195,7 @@ export function LoginForm() {
             <div className="text-center pt-1">
               <Link
                 href="/forgot-password"
-                className="text-[11px] font-bold text-white/40 hover:text-orange-400 transition-colors"
+                className="press inline-flex min-h-11 items-center px-3 text-[11px] font-bold text-white/40 hover:text-orange-400 transition-colors"
               >
                 Esqueci minha senha
               </Link>

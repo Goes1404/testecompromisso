@@ -81,9 +81,9 @@ export function DashboardMockup(): ReactElement {
         className="relative h-full w-full"
       >
         {/* Janela principal */}
-        <div className="gradient-border relative h-full w-full rounded-[2rem] bg-gray-900/70 backdrop-blur-2xl shadow-[0_0_80px_-15px_rgba(255,107,0,0.45)] overflow-hidden noise">
+        <div className="gradient-border relative flex h-full w-full flex-col rounded-[2rem] bg-gray-900/70 backdrop-blur-2xl shadow-[0_0_80px_-15px_rgba(255,107,0,0.45)] overflow-hidden noise">
           {/* Barra da janela */}
-          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/5">
+          <div className="flex shrink-0 items-center gap-2 px-5 py-3.5 border-b border-white/5">
             <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
@@ -92,7 +92,7 @@ export function DashboardMockup(): ReactElement {
             </span>
           </div>
 
-          <div className="flex h-full">
+          <div className="flex min-h-0 flex-1">
             {/* Sidebar */}
             <div className="flex flex-col items-center gap-4 border-r border-white/5 px-3 py-5">
               {SIDEBAR_ITEMS.map((item, i) => (
@@ -110,17 +110,15 @@ export function DashboardMockup(): ReactElement {
             </div>
 
             {/* Conteúdo */}
-            <div className="flex-1 space-y-4 p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-black text-white tracking-tight">
-                    Bom dia, Aluno! 👋
-                  </p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mt-0.5">
-                    Rumo à aprovação
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/25 px-3 py-1.5">
+            <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-5">
+              <div>
+                <p className="text-sm font-black text-white tracking-tight">
+                  Bom dia, Aluno! 👋
+                </p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mt-0.5">
+                  Rumo à aprovação
+                </p>
+                <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/25 px-3 py-1.5">
                   <Flame className="h-3.5 w-3.5 text-primary" />
                   <span className="text-[10px] font-black text-primary">12 dias</span>
                 </div>
@@ -192,7 +190,7 @@ export function DashboardMockup(): ReactElement {
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.1, duration: 0.7 }}
-          style={{ transform: "translateZ(50px)" }}
+          style={{ z: 50 }}
           className="absolute -right-4 top-16 animate-float rounded-2xl bg-white/10 backdrop-blur-xl border border-white/15 px-4 py-3 shadow-2xl"
         >
           <div className="flex items-center gap-2">
@@ -213,8 +211,8 @@ export function DashboardMockup(): ReactElement {
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.4, duration: 0.7 }}
-          style={{ transform: "translateZ(40px)" }}
-          className="absolute -left-5 bottom-14 animate-float [animation-delay:1.5s] rounded-2xl bg-white/10 backdrop-blur-xl border border-white/15 px-4 py-3 shadow-2xl"
+          style={{ z: 40 }}
+          className="absolute -left-5 -bottom-12 animate-float [animation-delay:1.5s] rounded-2xl bg-white/10 backdrop-blur-xl border border-white/15 px-4 py-3 shadow-2xl"
         >
           <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">
             Redação corrigida

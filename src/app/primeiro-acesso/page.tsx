@@ -177,7 +177,7 @@ function PrimeiroAcessoContent() {
 
               <p className="text-center text-xs text-gray-300 font-medium">
                 Já tem senha?{' '}
-                <Link href="/login" className="text-indigo-500 font-bold hover:underline">Faça login aqui</Link>
+                <Link href="/login" className="inline-flex min-h-11 items-center px-1.5 align-middle text-indigo-500 font-bold hover:underline">Faça login aqui</Link>
               </p>
             </form>
           )}

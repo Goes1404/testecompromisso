@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { HeroShowcase } from "@/components/home/HeroShowcase";
+import { ScrollProgress } from "@/components/home/ScrollProgress";
 
 const sectionFallback = (
   <div className="min-h-[40vh] py-32 flex justify-center items-center bg-gray-950">
@@ -78,6 +79,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-950 text-gray-950 selection:bg-primary/20 selection:text-primary scroll-smooth relative">
+      <ScrollProgress />
 
       {/* Transição de Tela de Carregamento */}
       {isRedirecting && (

@@ -43,6 +43,7 @@ import { FlameEmberCanvas } from "@/components/FlameEmberCanvas";
 import { computeTriResult } from "@/lib/tri-solver";
 import { allowedExamTypesFor, examTypeStyles, type ExamType } from "@/lib/exam-types";
 import { TrendingUp } from "lucide-react";
+import { MaterialIncompletoAviso, materialIncompleto } from '@/components/MaterialIncompletoAviso';
 
 const EvolutionChart = dynamic(
   () => import("@/components/provas/EvolutionChart").then((m) => m.EvolutionChart),
@@ -1152,6 +1153,8 @@ export default function ProvasCompletasPage() {
         {/* Question card */}
         <div className="bg-white border border-slate-100 shadow-sm rounded-[1.5rem] overflow-hidden">
           <div className="p-5 space-y-5">
+            {materialIncompleto(currentQuestion) && <MaterialIncompletoAviso />}
+
             {currentQuestion.supporting_text && (
               <SupportingTextBlock text={currentQuestion.supporting_text} />
             )}

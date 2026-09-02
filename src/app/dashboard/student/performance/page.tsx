@@ -56,6 +56,8 @@ export default function StudentPerformancePage() {
   const [subjectData, setSubjectData] = useState<any[]>([]);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [attempts, setAttempts] = useState<any[]>([]);
+  // Puladas ficam fora da taxa de acertos, mas o aluno precisa saber que existem.
+  const [skippedCount, setSkippedCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -65,15 +67,16 @@ export default function StudentPerformancePage() {
         setLoading(true);
         
         // 1. Buscar todas as respostas do aluno
+        // `select('*')` trazia toda linha de resposta do aluno, sem teto e com
+        // join aninhado — o payload crescia a cada simulado feito, e era a
+        // própria tela de desempenho que ficava mais lenta quanto mais o aluno
+        // usava a plataforma. Aqui só entram as colunas que o cálculo lê.
         const { data: answers, error } = await supabase
           .from('student_question_answers')
-          .select(`
-            *,
-            questions (
-              subjects (name)
-            )
-          `)
-          .eq('student_id', user.id);
+          .select('is_correct, selected_option, created_at, answered_at, questions ( subjects (name) )')
+          .eq('student_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5000);
 
         if (error) throw error;
 
@@ -88,13 +91,34 @@ export default function StudentPerformancePage() {
         const realTimeSpent = (attemptRows || []).reduce((acc, a) => acc + (a.duration_seconds || 0), 0);
 
         if (answers && answers.length > 0) {
-          const total = answers.length;
-          const corrects = answers.filter(a => a.is_correct).length;
-          
+          // Questão pulada é gravada com `selected_option: null` e
+          // `is_correct: false`, ou seja, entrava na conta como ERRO. O efeito
+          // era a taxa de acertos CAIR quanto mais o aluno praticava, o que não
+          // descreve o que ele acertou — é o que a aluna relatou. A taxa agora
+          // é sobre o que ela de fato respondeu, e as puladas aparecem à parte.
+          const respondidas = answers.filter(a => a.selected_option !== null && a.selected_option !== undefined);
+          const puladas = answers.length - respondidas.length;
+          const total = respondidas.length;
+          const corrects = respondidas.filter(a => a.is_correct).length;
+          setSkippedCount(puladas);
+
+          // O join do PostgREST devolve objeto para relação singular, mas o tipo
+          // gerado é array. Sob `select('*')` isso era `any` e passava batido;
+          // se algum dia viesse array, TODA questão caía em "Geral" e o radar
+          // por matéria ficava com uma fatia só. Lê os dois formatos.
+          const nomeDaMateria = (a: any): string => {
+            const q = Array.isArray(a?.questions) ? a.questions[0] : a?.questions;
+            const s = Array.isArray(q?.subjects) ? q.subjects[0] : q?.subjects;
+            return s?.name || "Geral";
+          };
+          // A coluna de data é `created_at`; `answered_at` era lida sem existir
+          // no retorno e virava Invalid Date, o que zerava o gráfico de 15 dias.
+          const dataDaResposta = (a: any): string => a?.answered_at || a?.created_at;
+
           // Calcular Radar Data (por matéria)
           const subjectsMap: Record<string, { total: number, corrects: number }> = {};
-          answers.forEach(a => {
-            const subject = a.questions?.subjects?.name || "Geral";
+          respondidas.forEach(a => {
+            const subject = nomeDaMateria(a);
             if (!subjectsMap[subject]) subjectsMap[subject] = { total: 0, corrects: 0 };
             subjectsMap[subject].total++;
             if (a.is_correct) subjectsMap[subject].corrects++;
@@ -113,7 +137,12 @@ export default function StudentPerformancePage() {
           }).reverse();
 
           const history = last15Days.map(dateStr => {
-            const dayAnswers = answers.filter(a => format(new Date(a.answered_at), 'yyyy-MM-dd') === dateStr);
+            const dayAnswers = respondidas.filter(a => {
+              const d = dataDaResposta(a);
+              if (!d) return false;
+              const dt = new Date(d);
+              return !isNaN(dt.getTime()) && format(dt, 'yyyy-MM-dd') === dateStr;
+            });
             return {
               date: format(new Date(dateStr), 'dd/MM'),
               acertos: dayAnswers.filter(a => a.is_correct).length,
@@ -124,7 +153,7 @@ export default function StudentPerformancePage() {
           setStats({
             totalAnswered: total,
             correctCount: corrects,
-            accuracy: Math.round((corrects / total) * 100),
+            accuracy: total > 0 ? Math.round((corrects / total) * 100) : 0,
             // Tempo real gasto em simulados; fallback pro estimado se ainda não houver dados de duração.
             timeSpent: realTimeSpent > 0 ? realTimeSpent : total * 45,
             streak: 5 // Mock
@@ -178,6 +207,10 @@ export default function StudentPerformancePage() {
             <div>
               <p className="text-[9px] font-black text-white/65 uppercase tracking-widest">Taxa de Acerto</p>
               <p className="text-3xl font-black text-accent italic leading-none">{stats.accuracy}%</p>
+              <p className="text-[9px] font-bold text-white/40 mt-1">
+                sobre {stats.totalAnswered} respondidas
+                {skippedCount > 0 ? ` · ${skippedCount} pulada${skippedCount > 1 ? 's' : ''}` : ''}
+              </p>
             </div>
             <div className="h-10 w-10 rounded-full border-4 border-accent border-t-transparent animate-spin-slow shrink-0" />
           </div>
@@ -187,7 +220,7 @@ export default function StudentPerformancePage() {
       {/* ── KPI CARDS — 2×2 on mobile ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
         {[
-          { label: "Questões",     value: stats.totalAnswered,                      icon: BrainCircuit, color: "text-blue-500",   bg: "bg-blue-50" },
+          { label: "Respondidas",  value: stats.totalAnswered,                      icon: BrainCircuit, color: "text-blue-500",   bg: "bg-blue-50" },
           { label: "Taxa de Acerto", value: `${stats.accuracy}%`,                   icon: Target,       color: "text-orange-500", bg: "bg-orange-50" },
           { label: "Tempo em Simulados", value: fmtDurationLong(stats.timeSpent), icon: Clock,        color: "text-purple-500", bg: "bg-purple-50" },
           { label: "Sequência",    value: `${stats.streak}d`,                       icon: Zap,          color: "text-amber-500",  bg: "bg-amber-50" },

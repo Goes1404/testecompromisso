@@ -114,9 +114,20 @@ console.log('\nDiscrepância na escala da FUVEST');
   checar('motivo cita o eixo pelo nome',
     motivosDeDiscrepancia([50, 0, 0], [10, 0, 0], BANCA_FUVEST).some(m => m.includes('DT')),
     JSON.stringify(motivosDeDiscrepancia([50, 0, 0], [10, 0, 0], BANCA_FUVEST)));
-  checar('limiares da FUVEST são proporcionais aos do ENEM',
-    BANCA_FUVEST.discrepanciaTotal / BANCA_FUVEST.totalMax ===
-    BANCA_ENEM.discrepanciaTotal / BANCA_ENEM.totalMax);
+  // A proporção do limiar POR CRITÉRIO é comparável entre as bancas: os dois
+  // são fração do máximo de um critério. A do TOTAL não é — no ENEM o total é
+  // soma de 5 critérios e na FUVEST é média de 3, então a mesma divergência
+  // por eixo produz efeitos de escala diferentes no total.
+  checar('limiar por critério é proporcional ao do ENEM',
+    BANCA_FUVEST.discrepanciaCriterio / 50 === BANCA_ENEM.discrepanciaCriterio / 200);
+
+  // Um eixo divergindo 10 não é discrepância; dois eixos, sim.
+  checar('divergência num eixo só não discrepa',
+    motivosDeDiscrepancia([40, 40, 30], [40, 30, 30], BANCA_FUVEST).length === 0,
+    JSON.stringify(motivosDeDiscrepancia([40, 40, 30], [40, 30, 30], BANCA_FUVEST)));
+  checar('divergência em dois eixos discrepa',
+    motivosDeDiscrepancia([40, 40, 40], [40, 30, 30], BANCA_FUVEST).length > 0,
+    JSON.stringify(motivosDeDiscrepancia([40, 40, 40], [40, 30, 30], BANCA_FUVEST)));
 }
 
 console.log('\nProtocolo aplicado à FUVEST');

@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { trackAcao, trackFalha } from "@/lib/telemetry";
+import { FullBleedLoader } from "@/components/FullBleedLoader";
 
 const InteractiveWorkbook = dynamic(
   () => import("@/components/InteractiveWorkbook").then((mod) => mod.InteractiveWorkbook),
@@ -430,12 +431,10 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
 
   if (authLoading || loading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-white gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-orange-400" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">
-          Carregando Prova e Gabarito...
-        </p>
-      </div>
+      <FullBleedLoader
+        mensagem="Preparando a prova"
+        detalhe="Carregando questões e cronômetro"
+      />
     );
   }
 
@@ -443,10 +442,7 @@ export default function InteractiveExamPage({ params }: { params: Promise<{ id: 
   if (!result && !started) {
     if (!introDecided) {
       return (
-        <div className="h-[100dvh] flex flex-col items-center justify-center bg-[#0a0a0c] text-white gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Preparando prova...</p>
-        </div>
+        <FullBleedLoader mensagem="Preparando a prova" />
       );
     }
 

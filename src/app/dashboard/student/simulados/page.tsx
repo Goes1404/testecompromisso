@@ -24,6 +24,7 @@ import {
 import { trackMissionProgress } from '@/lib/missions';
 import { allowedExamTypesFor, examTypeLabel } from '@/lib/exam-types';
 import { trackAcao, trackFalha } from '@/lib/telemetry';
+import { MaterialIncompletoAviso, materialIncompleto } from '@/components/MaterialIncompletoAviso';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ALL_TOPICS = '_all';
@@ -43,6 +44,8 @@ type Answer = {
   questionId: string; selected: string; correct: string; explanation?: string;
   question_text: string; options: { key?: string; letter?: string; text: string }[];
   subject: string | null;
+  /** Questão sem a imagem de apoio publicada: fica fora da conta de acertos. */
+  naoContabilizada?: boolean;
 };
 type GameState = 'loading_subjects' | 'idle' | 'loading_questions' | 'active' | 'finished' | 'error';
 
@@ -358,8 +361,10 @@ export default function SimuladoPage() {
   };
 
   const norm = (v: string | undefined | null) => (v ?? '').trim().toUpperCase();
-  const score = answers.filter(a => norm(a.selected) === norm(a.correct)).length;
-  const pct   = answers.length > 0 ? Math.round((score / answers.length) * 100) : 0;
+  // A porcentagem só considera questões que dava para responder.
+  const respondiveis = answers.filter(a => !a.naoContabilizada);
+  const score = respondiveis.filter(a => norm(a.selected) === norm(a.correct)).length;
+  const pct   = respondiveis.length > 0 ? Math.round((score / respondiveis.length) * 100) : 0;
   const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
   const currentQuestion = questions[currentIndex];
 
@@ -367,16 +372,21 @@ export default function SimuladoPage() {
     if (!currentQuestion) return;
     const q = currentQuestion;
     const isSkipped = selectedAnswer === null;
+    // Questão sem a imagem de apoio publicada não pode ser respondida, então
+    // não entra na conta de acertos nem vira linha no histórico — senão ela
+    // derruba a porcentagem do aluno por um problema que não é dele.
+    const semMaterial = materialIncompleto(q);
     const newAnswer: Answer = {
       questionId: q.id, selected: selectedAnswer || 'PULADO', correct: q.correct_answer,
       explanation: q.explanation, question_text: q.question_text, options: q.options,
       subject: q.subjects?.name ?? null,
+      naoContabilizada: semMaterial,
     };
     const newAnswers = [...answers, newAnswer];
     setAnswers(newAnswers);
     setSelectedAnswer(null);
 
-    if (user) {
+    if (user && !semMaterial) {
       // Sem `await` de propósito: a navegação para a próxima questão não pode
       // esperar a rede. Mas a falha deixou de ser silenciosa — antes era
       // `.then(() => {})`, e uma resposta que não gravava sumia do histórico
@@ -398,7 +408,8 @@ export default function SimuladoPage() {
       setCurrentIndex(i => i + 1);
       triggerHaptic(15);
     } else {
-      const s = newAnswers.filter(a => norm(a.selected) === norm(a.correct)).length;
+      const contabilizaveis = newAnswers.filter(a => !a.naoContabilizada);
+      const s = contabilizaveis.filter(a => norm(a.selected) === norm(a.correct)).length;
       if (user) {
         // Registra a tentativa (inclui o tempo gasto). subject_id só no modo matéria.
         // O id da tentativa vira a referência do XP: é ele que impede o mesmo
@@ -407,7 +418,7 @@ export default function SimuladoPage() {
           user_id: user.id,
           subject_id: mode === 'materia' && selectedSubjectId ? selectedSubjectId : null,
           score: s,
-          total_questions: newAnswers.length,
+          total_questions: contabilizaveis.length,
           duration_seconds: elapsedSeconds,
         }).select('id').single().then(async ({ data: attempt }) => {
           const ref = attempt?.id;
@@ -639,6 +650,8 @@ export default function SimuladoPage() {
               />
             )}
             
+            {materialIncompleto(currentQuestion) && <MaterialIncompletoAviso escuro={isDark} />}
+
             {currentQuestion.supporting_text && (
               <div className={`border rounded-2xl p-4 sm:p-5 transition-colors duration-300 ${supportTextTheme}`}>
                 <SupportingTextBlock text={currentQuestion.supporting_text} />

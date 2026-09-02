@@ -116,9 +116,13 @@ export function FlowSection(): ReactElement {
                   }`}
                 >
                   {/* Nó na linha */}
+                  {/* `left-auto` precisa valer so para o lado esquerdo. Quando estava
+                      na lista base, ele tambem anulava o `md:left-0` do lado direito
+                      (o Tailwind emite `left-auto` depois de `left-0`), e o no ficava
+                      na posicao estatica — 56px, ou seja, em cima do "Etapa 02/04". */}
                   <span
-                    className={`absolute top-1 left-6 md:left-auto -translate-x-1/2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white border border-primary/25 text-primary shadow-lg shadow-primary/10 ${
-                      isLeft ? "md:right-0 md:translate-x-1/2" : "md:left-0 md:-translate-x-1/2"
+                    className={`absolute top-1 left-6 -translate-x-1/2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white border border-primary/25 text-primary shadow-lg shadow-primary/10 ${
+                      isLeft ? "md:left-auto md:right-0 md:translate-x-1/2" : "md:left-0 md:-translate-x-1/2"
                     }`}
                   >
                     <item.icon className="h-5 w-5" />

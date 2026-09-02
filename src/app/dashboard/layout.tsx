@@ -96,12 +96,7 @@ const studentItems: NavItem[] = [
     ],
   },
   { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-updates" },
-  {
-    icon: Settings, label: "Conta", id: "nav-conta",
-    children: [
-      { icon: Settings,   label: "Meu Perfil",      href: "/dashboard/settings",          id: "nav-settings" },
-    ],
-  },
+  { icon: Settings, label: "Conta", href: "/dashboard/settings", id: "nav-conta" },
 ];
 
 /* ─── PROFESSOR ─────────────────────────────────────────────── */
@@ -248,12 +243,7 @@ const secretaryItems: NavItem[] = [
     ],
   },
   { icon: Sparkles, label: "Novidades", href: "/dashboard/updates", id: "nav-secretary-updates" },
-  {
-    icon: Settings, label: "Conta", id: "nav-secretary-conta",
-    children: [
-      { icon: Settings,   label: "Meu Perfil",       href: "/dashboard/settings",     id: "nav-secretary-settings" },
-    ],
-  },
+  { icon: Settings, label: "Conta", href: "/dashboard/settings", id: "nav-secretary-conta" },
 ];
 
 /* ─── NavMenu component ──────────────────────────────────────── */

@@ -206,8 +206,14 @@ export const BANCA_ENEM: Banca = {
   valoresValidos: [0, 40, 80, 120, 160, 200],
   totalMax: 1000,
   combinarTotal: (vetor) => vetor.reduce((a, b) => a + b, 0),
-  discrepanciaTotal: 100,
-  discrepanciaCriterio: 80,
+  // O INEP usa 100/80 entre dois corretores HUMANOS. Aqui os dois corretores
+  // são amostras do mesmo modelo, e a folga de 100 pontos virava zona cega:
+  // duas correções separadas por 80 pontos viravam média sem que ninguém
+  // arbitrasse, e a nota final carregava esse ruído inteiro. Com 60/40 a
+  // terceira correção entra nos casos que realmente divergem — é onde ela
+  // paga o próprio custo.
+  discrepanciaTotal: 60,
+  discrepanciaCriterio: 40,
   palavrasPorLinha: 11,
   linhasInsuficientes: 7,
   linhasAlvo: [25, 30],
@@ -349,8 +355,14 @@ export const BANCA_FUVEST: Banca = {
   combinarTotal: (vetor) =>
     vetor.length ? Math.round(vetor.reduce((a, b) => a + b, 0) / vetor.length) : 0,
   // Proporcionais aos do ENEM: 10% do total e 40% do teto de um critério.
-  discrepanciaTotal: 5,
-  discrepanciaCriterio: 20,
+  // Mesma razão do ENEM — corretores são amostras do mesmo modelo —, mas a
+  // escala não converte direto: no ENEM o total é a SOMA de 5 critérios, aqui
+  // é a MÉDIA de 3 eixos. Uma divergência de 10 num único eixo já move o total
+  // em ~3,3, então um limiar de 3 marcaria discrepância em toda correção que
+  // diferisse num eixo só. 4 é o primeiro valor que exige divergência real em
+  // mais de um eixo. Por eixo, mantém a proporção do ENEM (20% do máximo).
+  discrepanciaTotal: 4,
+  discrepanciaCriterio: 10,
   palavrasPorLinha: 11,
   linhasInsuficientes: 7,
   linhasAlvo: [25, 30],
