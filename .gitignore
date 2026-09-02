@@ -69,3 +69,6 @@ low_confidence.json
 medium_confidence.json
 real_collisions.json
 duplicates.txt
+
+# relatório da auditoria de questões (dados de aluno — nunca versionar)
+questoes-com-defeito.csv
