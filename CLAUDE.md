@@ -270,7 +270,23 @@ entra no desempenho dele como se fosse conteúdo que ele não sabe.
 | `scripts/test-questoes.ts` | Prova de não-regressão (dentro de `npm test`) |
 | `supabase/migrations/20260902000000_questoes_integridade.sql` | `questions.ativa`, `motivo_inativa`, `auditada_em` |
 
+**Calibrada contra o banco real (02/09/2026, 3.986 questões).** A primeira versão
+acusava 464; depois de conferir amostra por amostra sobraram **93**, e as 371 que
+saíram eram falso positivo. O que os dados ensinaram:
+
+| Regra derrubada | Falsos positivos | Por quê |
+|---|---|---|
+| Fim pendurado (vírgula, `porque`, `pois`, `e`) | ~205 | A frase do ENEM fecha NA ALTERNATIVA: *"…serão, respectivamente,"*, *"…consumo de energia porque"* |
+| Abertura por conjunção (`que`, `assim`, `logo`) | 33 | *"Assim sendo, o valor de N…"*, *"Que princípio marcante…"* abrem enunciado legítimo |
+| Órfã sem teto de tamanho | 135 | Acima de 300 caracteres o apoio veio DENTRO do `question_text` — a questão está inteira, só mal arrumada |
+| Alternativas repetidas em minúsculas | 3 | Genética: `Ee BB` e `ee bb` viravam iguais ao baixar a caixa |
+
 **Regras ao mexer aqui:**
+
+0. **Nada aqui se ajusta sem rodar contra o banco.** Toda régua desta lista errou
+   na primeira versão, e nenhuma delas parecia errada no papel. `npm run
+   auditar:questoes` sem bandeira não escreve nada — rode, leia as amostras, e só
+   então mexa.
 
 1. **Tela e banco usam a MESMA função.** `questaoUtilizavel()` é quem tira a
    questão do simulado, da prova, do flashcard e da questão do dia; é a mesma
@@ -298,10 +314,17 @@ entra no desempenho dele como se fosse conteúdo que ele não sabe.
    forçar o cascade apagaria o histórico do aluno para consertar erro nosso.
    `exam_questions` tem cascade: apagar furaria a prova e as tentativas já
    corrigidas.
-7. **O conserto só herda apoio de vizinha a ±2 posições da mesma prova**
-   (`DISTANCIA_MAXIMA`). Texto de três questões antes é de outro bloco, e enfiar
-   o texto errado é pior do que deixar quebrada: vira questão que parece inteira
-   e mede a coisa errada.
+7. **O conserto só herda apoio de questão que DECLARA o bloco** ("Texto para as
+   questões 12 a 15"), e só para questões dentro da faixa. A versão que herdava
+   da vizinha imediata (±2 posições) "consertava" 23 órfãs do banco real e o
+   conserto era lixo: *"o instante em que a água dessa piscina terminar de
+   escoar"* recebia um texto sobre plaquetas artificiais. No ENEM e na FUVEST
+   cada questão tem o SEU texto — vizinhança não significa nada. Questão que
+   PARECE inteira e mede a coisa errada é pior do que questão quebrada, porque
+   sai do relatório e ninguém mais a encontra.
+   No banco atual isso conserta **zero**: só 64 das 3.986 declaram bloco e
+   nenhuma tem irmã órfã. Zero é o resultado certo — as 81 órfãs são conserto de
+   professor, uma a uma.
 8. **O padrão do script é não escrever.** Rode primeiro sem bandeira, leia as
    amostras, e só então `--consertar --desativar`. Quem decide sobre o conteúdo
    do cursinho é o professor.

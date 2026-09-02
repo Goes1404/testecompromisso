@@ -152,40 +152,70 @@ async function nomeDasProvas(ids: string[]): Promise<Map<string, string>> {
 const vazio = (s: unknown) => typeof s !== 'string' || s.trim().length === 0;
 
 /**
- * Herda o texto de apoio da questão vizinha da mesma prova.
+ * Herda o texto de apoio da questão que DECLARA o bloco.
  *
- * É o conserto que resolve a maioria dos casos, e ele existe porque o defeito
- * tem origem conhecida: o enunciado original diz "utilize o texto para
- * responder às questões 12 a 15" e a IA de extração devolve o texto só na 12.
- * As irmãs ficam órfãs — mas o apoio delas está ali do lado, na mesma prova,
- * a uma ou duas posições de distância.
+ * O defeito tem origem conhecida: o caderno diz "Texto para as questões 12 a
+ * 15" e a extração devolve o texto só na 12. As irmãs ficam órfãs — mas o apoio
+ * delas está ali, na mesma prova.
  *
- * Só olha vizinha IMEDIATA (±2). Um texto de apoio de três questões antes
- * pertence a outro bloco, e enfiar o texto errado na questão é pior do que
- * deixá-la quebrada: vira questão que parece inteira e mede a coisa errada.
+ * ── Por que a declaração do bloco é obrigatória ─────────────────────────────
+ * A primeira versão herdava da vizinha imediata (±2 posições) sem exigir mais
+ * nada. Simulada contra as 3.986 questões reais, ela "consertava" 23 órfãs — e
+ * o conserto era lixo, porque no ENEM e na FUVEST cada questão tem o SEU texto
+ * e vizinhança não significa nada:
+ *
+ *   "O instante em que a água dessa piscina terminar de escoar"
+ *      ← recebia um texto sobre plaquetas artificiais
+ *   "Considerando esse escurecimento das águas"
+ *      ← recebia a carta de Vieira sobre a língua sem F, L nem R
+ *
+ * Pior do que deixar quebrada: vira questão que PARECE inteira e mede a coisa
+ * errada — e ninguém mais descobre, porque saiu do relatório.
+ *
+ * Só 64 das 3.986 declaram bloco. É pouco, e é justamente o ponto: fora dessas,
+ * não existe evidência de que o texto da vizinha seja o texto da questão, e a
+ * decisão volta para o professor.
  */
-const DISTANCIA_MAXIMA = 2;
+
+/** "Texto para as questões 12 a 15", "utilize o texto … às questões de 5 a 8". */
+const DECLARACAO_DE_BLOCO = /quest(?:õ|o)es\s+(?:de\s+)?(\d{1,3})\s*(?:a|à|e|at(?:é|e))\s*(\d{1,3})/i;
+
+function blocoDeclarado(q: Questao): { de: number; ate: number } | null {
+  for (const campo of [q.supporting_text, q.question_text]) {
+    const m = typeof campo === 'string' ? campo.match(DECLARACAO_DE_BLOCO) : null;
+    if (!m) continue;
+    const de = parseInt(m[1], 10);
+    const ate = parseInt(m[2], 10);
+    if (Number.isFinite(de) && Number.isFinite(ate) && ate >= de && ate - de <= 20) return { de, ate };
+  }
+  return null;
+}
 
 function apoioHerdado(
   alvo: Questao,
   posicao: Posicao | undefined,
   porProva: Map<string, { ordem: number; q: Questao }[]>,
-): { texto: string; deQuem: string; distancia: number } | null {
+): { texto: string; deQuem: string; bloco: string } | null {
   if (!posicao) return null;
   const irmas = porProva.get(posicao.exam_id);
   if (!irmas) return null;
 
-  let melhor: { texto: string; deQuem: string; distancia: number } | null = null;
   for (const irma of irmas) {
-    if (irma.q.id === alvo.id) continue;
-    if (vazio(irma.q.supporting_text)) continue;
-    const distancia = Math.abs(irma.ordem - posicao.order_index);
-    if (distancia === 0 || distancia > DISTANCIA_MAXIMA) continue;
-    if (!melhor || distancia < melhor.distancia) {
-      melhor = { texto: irma.q.supporting_text as string, deQuem: irma.q.id, distancia };
-    }
+    if (irma.q.id === alvo.id || vazio(irma.q.supporting_text)) continue;
+    const bloco = blocoDeclarado(irma.q);
+    if (!bloco) continue;
+    // A própria questão que declara o bloco tem de estar dentro dele — senão a
+    // numeração do caderno não bate com o `order_index` desta prova e a
+    // correspondência não vale nada.
+    if (irma.ordem < bloco.de || irma.ordem > bloco.ate) continue;
+    if (posicao.order_index < bloco.de || posicao.order_index > bloco.ate) continue;
+    return {
+      texto: irma.q.supporting_text as string,
+      deQuem: irma.q.id,
+      bloco: `questões ${bloco.de} a ${bloco.ate}`,
+    };
   }
-  return melhor;
+  return null;
 }
 
 // ─── Relatório ───────────────────────────────────────────────────────────────
@@ -240,7 +270,7 @@ async function main() {
   let consertadas = 0;
   const semConserto: Questao[] = [];
   if (CONSERTAR) {
-    console.log('── Conserto: devolvendo o texto de apoio herdado da prova ──');
+    console.log('── Conserto: devolvendo o apoio às questões de bloco declarado ──');
     for (const q of questoes) {
       const defeitos = diagnosticarQuestao(q);
       if (!defeitos.some((d) => d.codigo === 'enunciado_orfao')) continue;
@@ -272,10 +302,10 @@ async function main() {
       q.supporting_text = herdado.texto; // reflete em memória para o relatório abaixo
       consertadas++;
       if (consertadas <= 10) {
-        console.log(`  ✔ ${recorte(q.question_text, 70)}  ← apoio da vizinha (±${herdado.distancia})`);
+        console.log(`  ✔ ${recorte(q.question_text, 70)}  ← apoio do bloco "${herdado.bloco}"`);
       }
     }
-    console.log(`  ${consertadas} consertadas · ${semConserto.length} órfãs sem vizinha com apoio\n`);
+    console.log(`  ${consertadas} consertadas · ${semConserto.length} órfãs sem bloco declarado (vão para a quarentena)\n`);
   }
 
   // ── 2. Diagnóstico final ──

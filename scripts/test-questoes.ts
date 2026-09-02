@@ -133,23 +133,41 @@ eq('cita figura E tem a imagem',
 eq('começa em minúscula = corte',
   bloqueios({ question_text: 'e, portanto, o resultado final da operação descrita é', options: cinco, correct_answer: 'a' }),
   ['enunciado_truncado']);
-eq('termina em conjunção pendurada = corte',
-  bloqueios({ question_text: 'O consumo de energia elétrica da residência aumentou em março, abril e', options: cinco, correct_answer: 'a' }),
-  ['enunciado_truncado']);
-eq('termina em vírgula = corte',
-  bloqueios({ question_text: 'Considerando os dados apurados no ano de 2023, é possível concluir que,', options: cinco, correct_answer: 'a' }),
-  ['enunciado_truncado']);
-
-// Os três fins que PARECEM cortados e são o formato-padrão da banca. Se algum
-// destes começar a falhar, a régua de corte cresceu e vai comer questão boa.
-eq('termina em preposição ("foi de") é formato ENEM',
+// ─── 4b. Os fins que PARECEM cortados e são o formato-padrão da banca ───────
+// Todos estes vieram do banco real: a primeira versão da régua acusou 235
+// questões por "fim pendurado" ou "abertura por conjunção", e as 235 estavam
+// inteiras. A frase é feita para fechar NA ALTERNATIVA. Se algum destes voltar
+// a falhar, a régua de corte cresceu de novo e vai comer questão boa.
+//
+// Os que citam apoio ("fragmento", "trecho", "dessa recomendação") vêm com
+// `supporting_text` porque no banco real vinham: aqui o que está sob teste é o
+// FIM da frase, não a falta de apoio.
+eq('termina em preposição ("foi de")',
   codigos({ question_text: 'O valor total pago pelo consumidor no mês de março foi de', options: cinco, correct_answer: 'a' }),
   []);
-eq('termina em "que" é formato ENEM',
+eq('termina em "que"',
   codigos({ question_text: 'Sobre o processo de fotossíntese nas plantas, conclui-se que', options: cinco, correct_answer: 'a' }),
   []);
-eq('termina em "a" é formato ENEM',
+eq('termina em "a"',
   codigos({ question_text: 'O resultado da operação descrita no problema é igual a', options: cinco, correct_answer: 'a' }),
+  []);
+eq('termina em vírgula ("respectivamente,")',
+  codigos({ question_text: 'A altura, a largura e a profundidade do desenho impresso serão, respectivamente,', options: cinco, correct_answer: 'a' }),
+  []);
+eq('termina em "porque"',
+  codigos({ question_text: 'O não atendimento dessa recomendação resulta em aumento do consumo de energia porque', supporting_text: 'Texto de apoio: a conta de luz da residência subiu 30% em março, segundo o relatório da concessionária divulgado na semana passada.', options: cinco, correct_answer: 'a' }),
+  []);
+eq('termina em "pois"',
+  codigos({ question_text: 'A função da linguagem predominante no fragmento é a emotiva ou expressiva, pois', supporting_text: 'Texto de apoio: a conta de luz da residência subiu 30% em março, segundo o relatório da concessionária divulgado na semana passada.', options: cinco, correct_answer: 'a' }),
+  []);
+eq('termina em "e" ("relação entre X e")',
+  codigos({ question_text: 'O trecho do sermão estabelece uma relação entre a Paixão de Cristo e', supporting_text: 'Texto de apoio: a conta de luz da residência subiu 30% em março, segundo o relatório da concessionária divulgado na semana passada.', options: cinco, correct_answer: 'a' }),
+  []);
+eq('abre com "Assim sendo"',
+  codigos({ question_text: 'Assim sendo, o valor de N calculado na etapa anterior está mais próximo de', supporting_text: 'Texto de apoio: a conta de luz da residência subiu 30% em março, segundo o relatório da concessionária divulgado na semana passada.', options: cinco, correct_answer: 'a' }),
+  []);
+eq('abre com "Que" (interrogativa)',
+  codigos({ question_text: 'Que tipo de intervenção do poder público no espaço rural reduz a marginalização produtiva?', options: cinco, correct_answer: 'a' }),
   []);
 eq('abre com dígito não é corte',
   questaoUtilizavel({ question_text: '150 g de farinha equivalem a quantos quilogramas?', options: cinco, correct_answer: 'a' }),
@@ -157,6 +175,34 @@ eq('abre com dígito não é corte',
 eq('enunciado vazio',
   bloqueios({ question_text: '   ', options: cinco, correct_answer: 'a' }),
   ['enunciado_vazio']);
+
+// ─── 4c. O teto de tamanho da régua de órfã ─────────────────────────────────
+// Enunciado longo quase sempre trouxe o apoio consigo: a importação despejou o
+// texto DENTRO do `question_text` em vez do campo próprio. Das 230 órfãs que a
+// régua sem teto acusava no banco real, as 135 com mais de 300 caracteres
+// estavam todas inteiras.
+const longaComTextoDentro =
+  'Leia o trecho da letra da música Química, de João Bosco e Vinícius de Moraes. ' +
+  'Desde o primeiro dia que a gente se viu, impressionante a química que nos uniu, ' +
+  'e o tempo foi tornando tão intenso o nosso amor. Faróis iluminavam o meu coração, ' +
+  'feito faísca que virou uma explosão, e o tempo foi tornando tão intenso o nosso amor. ' +
+  'A relação entre o eu lírico e a pessoa amada, no trecho, é construída por meio de';
+eq('enunciado longo traz o apoio consigo — não é órfã',
+  codigos({ question_text: longaComTextoDentro, options: cinco, correct_answer: 'a' }),
+  []);
+eq('o mesmo enunciado curto, sem o texto, É órfã',
+  bloqueios({ question_text: 'A relação entre o eu lírico e a pessoa amada, no trecho, é construída por meio de', options: cinco, correct_answer: 'a' }),
+  ['enunciado_orfao']);
+
+// O dêitico solto é evidência mais fraca que nomear o apoio, então tem teto
+// menor: em enunciado médio ele costuma apontar para dentro do próprio texto.
+const deiticoComAntecedenteLonge =
+  'Pedro mantém uma dieta de 3.000 kcal diárias e toda essa energia é consumida por ' +
+  'seu organismo a cada dia. Assim, ao final de um mês de trinta dias, seu organismo ' +
+  'pode ser considerado equivalente a um aparelho elétrico que, nesse mês, tenha consumido';
+eq('dêitico em enunciado médio não basta',
+  codigos({ question_text: deiticoComAntecedenteLonge, options: cinco, correct_answer: 'a' }),
+  []);
 
 // ─── 5. Imagem pendente ─────────────────────────────────────────────────────
 // A tela apaga o marcador antes de exibir, então sem imagem o buraco fica mudo.
@@ -196,6 +242,20 @@ eq('alternativas repetidas bloqueiam',
     options: [...cinco.slice(0, 4), { key: 'e', text: 'R$ 166,00.' }], correct_answer: 'a',
   }),
   ['alternativas_repetidas']);
+// Caixa importa: vieram do banco real, de uma questão de pelagem de labradores
+// que a régua condenou por engano quando comparava em minúsculas.
+eq('genótipos que só diferem na caixa NÃO são repetidos',
+  codigos({
+    question_text: 'Em cães labradores, dois genes condicionam as três pelagens típicas da raça. O genótipo do animal é',
+    supporting_text: 'A pelagem dourada é condicionada pela presença do alelo e em homozigose, independentemente do gene B.',
+    options: [
+      { key: 'a', text: 'Ee BB.' }, { key: 'b', text: 'Ee Bb.' }, { key: 'c', text: 'ee bb.' },
+      { key: 'd', text: 'ee BB.' }, { key: 'e', text: 'ee Bb.' },
+    ],
+    correct_answer: 'c',
+  }),
+  []);
+
 eq('options nulo bloqueia',
   bloqueios({ question_text: 'Qual é a capital do estado de São Paulo?', options: null, correct_answer: 'a' }),
   ['alternativas_de_menos']);

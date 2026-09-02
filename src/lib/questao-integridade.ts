@@ -189,14 +189,31 @@ function trazODadoConsigo(texto: string): boolean {
 /**
  * Enunciado que começa no meio da frase.
  *
- * Sintoma de corte na extração: o pedaço de cima ficou para trás. Minúscula ou
- * conjunção na abertura, sem numeração de questão antes. Letra maiúscula é
- * exigida porque enunciado de prova sempre abre com uma.
+ * Sintoma de corte na extração: o pedaço de cima ficou para trás. Enunciado de
+ * prova sempre abre com maiúscula, então a inicial minúscula é prova de que
+ * falta coisa antes.
+ *
+ * ── O que esta régua NÃO olha, e por quê ────────────────────────────────────
+ * A primeira versão também marcava abertura por conjunção (que, assim, logo,
+ * pois) e fim pendurado (vírgula, "porque", "pois", "e"). Rodada contra as
+ * 3.986 questões reais do banco, ela acusou 235 questões — e as 235 estavam
+ * inteiras:
+ *
+ *   "Assim sendo, o valor de N está mais próximo de"
+ *   "Que princípio marcante do Futurismo … está destacado no texto?"
+ *   "A altura, a largura e a profundidade … serão, respectivamente,"
+ *   "…resulta em aumento do consumo de energia porque"
+ *   "…é a emotiva ou expressiva, pois"
+ *
+ * São o formato-padrão da banca: a frase é feita para fechar NA ALTERNATIVA.
+ * "porque", "pois", "respectivamente," e "entre X e" são justamente onde a
+ * alternativa entra. A parte que sobrou (inicial minúscula) não acusou nenhuma
+ * questão do banco atual — e é assim que se quer: ela existe para o dia em que
+ * uma extração cortar o enunciado de verdade, sem custar uma questão boa hoje.
  */
 function comecaNoMeioDaFrase(texto: string): boolean {
   const primeiro = texto.trimStart();
   if (primeiro.length === 0) return false;
-  if (/^(?:e|ou|mas|porém|porem|que|pois|logo|então|entao|assim)\b/iu.test(primeiro)) return true;
   const inicial = primeiro[0];
   // Dígito, aspas, parêntese e travessão abrem enunciado legítimo ("2 kg de…").
   if (!/\p{L}/u.test(inicial)) return false;
@@ -204,18 +221,25 @@ function comecaNoMeioDaFrase(texto: string): boolean {
 }
 
 /**
- * Enunciado que termina sem fechar a ideia.
+ * Até que tamanho um enunciado sem apoio é suspeito.
  *
- * A régua aqui é estreita de propósito, porque quase todo fim de enunciado do
- * ENEM PARECE cortado: a frase é feita para fechar na alternativa. "…o valor
- * pago foi de", "…conclui-se que", "…é igual a" terminam em preposição, em
- * conjunção e em artigo, e as três estão inteiras. Uma régua que pegasse
- * preposição solta derrubaria o formato-padrão da banca.
+ * A pergunta que a régua faz é "o apoio veio junto?". Num enunciado longo a
+ * resposta é quase sempre sim: a importação despejou o texto de apoio DENTRO
+ * do `question_text` em vez de gravá-lo no campo próprio, e a questão está
+ * inteira — só mal arrumada.
  *
- * Sobra o que nenhuma alternativa completa: vírgula pendurada e conjunção
- * coordenativa no fim ("…em março, abril e"). Aí faltou pedaço mesmo.
+ * Medido no banco: das 230 questões que a régua sem teto acusava, as 135 com
+ * mais de 300 caracteres traziam o texto consigo, todas. Eram falso positivo.
+ *
+ *   "Leia o trecho da letra da música Química, de João Bosco… Desde o primeiro
+ *    dia que a gente se viu / Impressionante a química que nos uniu…"
+ *
+ * O teto do dêitico é menor porque a evidência é mais fraca: "essa situação"
+ * pode estar apontando para dentro do próprio enunciado, e quanto mais longo
+ * ele for, mais provável que esteja.
  */
-const FIM_PENDURADO = /(?:,|;|\b(?:e|ou|mas|por(?:é|e)m|pois|porque|nem)\s*)$/iu;
+const TETO_ORFA_COM_PALAVRA_DE_APOIO = 300;
+const TETO_ORFA_SO_COM_DEITICO = 150;
 
 // ─── Diagnóstico ─────────────────────────────────────────────────────────────
 
@@ -242,11 +266,11 @@ export function diagnosticarQuestao(q: QuestaoParaValidar): DefeitoDeQuestao[] {
     });
     // Sem enunciado, o resto do diagnóstico de texto não diz nada de novo.
   } else {
-    if (comecaNoMeioDaFrase(enunciado) || FIM_PENDURADO.test(enunciado)) {
+    if (comecaNoMeioDaFrase(enunciado)) {
       defeitos.push({
         codigo: 'enunciado_truncado',
         bloqueia: true,
-        detalhe: 'O enunciado começa ou termina no meio da frase — foi cortado na importação.',
+        detalhe: 'O enunciado começa no meio da frase — foi cortado na importação.',
       });
     }
 
@@ -255,7 +279,15 @@ export function diagnosticarQuestao(q: QuestaoParaValidar): DefeitoDeQuestao[] {
     const abertura = primeiraOracao(semFixas);
     const pedeApoioTextual = APOIO_TEXTUAL.test(semFixas);
     const pedeApoioVisual = APOIO_VISUAL.test(semFixas);
-    const apontaParaFora = pedeApoioTextual || pedeApoioVisual || DEITICO.test(abertura);
+    const nomeiaOApoio = pedeApoioTextual || pedeApoioVisual;
+
+    // Duas forças de evidência, dois tetos. Nomear o apoio ("segundo o texto",
+    // "observe a figura") é forte; um dêitico solto ("essa situação") é fraco e
+    // só vale em enunciado curto, onde não há espaço para o antecedente estar
+    // dentro dele.
+    const apontaParaFora =
+      (nomeiaOApoio && enunciado.length <= TETO_ORFA_COM_PALAVRA_DE_APOIO) ||
+      (DEITICO.test(abertura) && enunciado.length <= TETO_ORFA_SO_COM_DEITICO);
 
     if (apontaParaFora && !temApoioTextual && !temImagem && !trazODadoConsigo(enunciado)) {
       // O caso do print: a pergunta aponta para alguma coisa e não há coisa
@@ -304,7 +336,12 @@ export function diagnosticarQuestao(q: QuestaoParaValidar): DefeitoDeQuestao[] {
         detalhe: 'Há alternativa sem texto.',
       });
     }
-    const textos = alternativas.map((a) => a.text.replace(/\s+/g, ' ').trim().toLowerCase());
+    // Comparação sensível a MAIÚSCULA/minúscula, e é ela que importa: em
+    // genética "Ee BB" e "ee bb" são genótipos diferentes, e em química "Co" é
+    // cobalto enquanto "CO" é monóxido de carbono. A primeira versão baixava a
+    // caixa antes de comparar e condenou uma questão de pelagem de labradores
+    // cujas cinco alternativas eram todas distintas.
+    const textos = alternativas.map((a) => a.text.replace(/\s+/g, ' ').trim());
     if (new Set(textos).size < textos.length) {
       defeitos.push({
         codigo: 'alternativas_repetidas',

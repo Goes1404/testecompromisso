@@ -103,18 +103,19 @@ BEGIN
   ELSE
     baixo := lower(enunciado);
 
-    -- Começa no meio da frase: minúscula ou conjunção na abertura. Sintoma de
-    -- corte na extração — o pedaço de cima ficou para trás.
+    -- Começa no meio da frase: enunciado de prova sempre abre com maiúscula,
+    -- então inicial minúscula é prova de que falta pedaço antes.
+    --
+    -- O que esta régua NÃO olha, e por quê: a primeira versão também marcava
+    -- abertura por conjunção (que, assim, logo) e fim pendurado (vírgula,
+    -- "porque", "pois", "e"). Rodada contra as 3.986 questões reais do banco,
+    -- acusou 235 — e as 235 estavam inteiras. São o formato-padrão da banca, em
+    -- que a frase fecha NA ALTERNATIVA:
+    --   "Assim sendo, o valor de N está mais próximo de"
+    --   "A altura, a largura e a profundidade serão, respectivamente,"
+    --   "…resulta em aumento do consumo de energia porque"
     inicial := left(enunciado, 1);
-    IF baixo ~ '^(e|ou|mas|porém|porem|que|pois|logo|então|entao|assim)\y'
-       OR (inicial ~ '[[:alpha:]]' AND inicial = lower(inicial) AND lower(inicial) <> upper(inicial))
-    -- Termina sem fechar a ideia. A régua é estreita de propósito: quase todo
-    -- fim de enunciado do ENEM PARECE cortado, porque a frase fecha na
-    -- alternativa ("…o valor pago foi de", "…conclui-se que", "…é igual a").
-    -- Sobra o que nenhuma alternativa completa: vírgula pendurada e conjunção
-    -- coordenativa no fim.
-       OR baixo ~ '(,|;|\y(e|ou|mas|porém|porem|pois|porque|nem))\s*$'
-    THEN
+    IF inicial ~ '[[:alpha:]]' AND inicial = lower(inicial) AND lower(inicial) <> upper(inicial) THEN
       d := array_append(d, 'enunciado_truncado');
     END IF;
 
@@ -142,7 +143,19 @@ BEGIN
     -- régua ("A quantia que ESSA PESSOA levava…"), onde nenhuma palavra de
     -- apoio aparece. Só vale na PRIMEIRA oração: "Uma pessoa comprou 3 kg. Essa
     -- pessoa gastou…" tem o antecedente dentro do próprio enunciado.
-    aponta_fora := pede_texto OR pede_visual OR abertura ~ '\y(ess[ea]s?|est[ea]s?|aquel[ea]s?|ness[ea]s?|nest[ea]s?|naquel[ea]s?|dess[ea]s?|dest[ea]s?|daquel[ea]s?|referid[oa]s?|mencionad[oa]s?|citad[oa]s?|apresentad[oa]s?|acima|abaixo|ao lado|a seguir|anterior(es)?|supracitad[oa]s?)\y';
+    -- Dois tetos de tamanho, e é isto que separa a régua útil da inútil.
+    --
+    -- Enunciado longo quase sempre trouxe o apoio consigo: a importação despejou
+    -- o texto DENTRO do question_text em vez do campo próprio, e a questão está
+    -- inteira, só mal arrumada. Medido no banco: das 230 que a régua sem teto
+    -- acusava, as 135 com mais de 300 caracteres estavam TODAS inteiras.
+    --
+    -- O teto do dêitico é menor porque a evidência é mais fraca: "essa situação"
+    -- pode apontar para dentro do próprio enunciado, e quanto mais longo ele for,
+    -- mais provável que aponte.
+    aponta_fora :=
+         ((pede_texto OR pede_visual) AND length(enunciado) <= 300)
+      OR (length(enunciado) <= 150 AND abertura ~ '\y(ess[ea]s?|est[ea]s?|aquel[ea]s?|ness[ea]s?|nest[ea]s?|naquel[ea]s?|dess[ea]s?|dest[ea]s?|daquel[ea]s?|referid[oa]s?|mencionad[oa]s?|citad[oa]s?|apresentad[oa]s?|acima|abaixo|ao lado|a seguir|anterior(es)?|supracitad[oa]s?)\y');
 
     IF aponta_fora AND NOT tem_apoio AND NOT tem_imagem AND NOT traz_dado THEN
       d := array_append(d, 'enunciado_orfao');
@@ -173,7 +186,11 @@ BEGIN
     IF EXISTS (SELECT 1 FROM unnest(textos) t WHERE btrim(coalesce(t, '')) = '') THEN
       d := array_append(d, 'alternativa_vazia');
     END IF;
-    IF (SELECT count(DISTINCT lower(btrim(regexp_replace(t, '\s+', ' ', 'g')))) FROM unnest(textos) t) < n_alt THEN
+    -- Comparação SENSÍVEL à caixa: em genética "Ee BB" e "ee bb" são genótipos
+    -- diferentes, e em química "Co" (cobalto) não é "CO" (monóxido). Baixar a
+    -- caixa antes de comparar condenou uma questão de pelagem de labradores cujas
+    -- cinco alternativas eram todas distintas.
+    IF (SELECT count(DISTINCT btrim(regexp_replace(t, '\s+', ' ', 'g'))) FROM unnest(textos) t) < n_alt THEN
       d := array_append(d, 'alternativas_repetidas');
     END IF;
   END IF;

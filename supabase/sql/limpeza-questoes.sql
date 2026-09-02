@@ -46,27 +46,59 @@ HAVING count(*) FILTER (WHERE d.bloqueia) > 0
 ORDER BY quebradas DESC
 LIMIT 20;
 
--- ═══ 4. CONSERTO: devolver o texto de apoio herdado da prova ════════════════
+-- ═══ 4. CONSERTO: devolver o apoio às questões de bloco declarado ══════════
 -- ESCREVE NO BANCO.
 --
--- Resolve a maioria dos casos, e resolve porque a origem é conhecida: o
--- enunciado diz "utilize o texto para responder às questões 12 a 15" e a IA de
--- extração devolveu o texto só na 12. As irmãs ficaram órfãs — mas o apoio
--- delas está ali do lado, na mesma prova.
+-- O defeito tem origem conhecida: o caderno diz "Texto para as questões 12 a
+-- 15" e a extração devolve o texto só na 12. As irmãs ficam órfãs, mas o apoio
+-- delas está ali, na mesma prova.
 --
--- Só olha vizinha IMEDIATA (±2 posições). Texto de três questões antes é de
--- outro bloco, e enfiar o texto errado é PIOR do que deixar a questão
--- quebrada: vira questão que parece inteira e mede a coisa errada.
+-- ⚠ A DECLARAÇÃO DO BLOCO É OBRIGATÓRIA, e essa exigência custou caro para
+--   aparecer. A primeira versão herdava da vizinha imediata (±2 posições) sem
+--   exigir mais nada. Simulada contra as 3.986 questões reais, ela "consertava"
+--   23 órfãs — e o conserto era lixo, porque no ENEM e na FUVEST cada questão
+--   tem o SEU texto e vizinhança não significa nada:
 --
--- E só aplica se o apoio herdado realmente conserta (`questao_utilizavel` na
--- última linha) — um texto que não conserta é um texto que não era dela.
+--     "O instante em que a água dessa piscina terminar de escoar"
+--        recebia um texto sobre plaquetas artificiais;
+--     "Considerando esse escurecimento das águas"
+--        recebia a carta de Vieira sobre a língua sem F, L nem R.
 --
--- Para ver antes sem escrever, troque o UPDATE por:
---   SELECT h.id, h.distancia, left(h.supporting_text, 120) FROM herdeira h;
+--   Pior do que deixar quebrada: vira questão que PARECE inteira e mede a coisa
+--   errada — e ninguém mais descobre, porque saiu do relatório.
+--
+-- No banco de 02/09/2026 este bloco conserta ZERO questões: só 64 das 3.986
+-- declaram bloco, e nenhuma delas tem irmã órfã. Zero é o resultado certo, não
+-- um sinal de que a consulta falhou. As 81 órfãs vão para a quarentena e o
+-- conserto é do professor, questão a questão.
+--
+-- Para ver antes de escrever, troque o UPDATE por:
+--   SELECT h.id, h.bloco, left(h.supporting_text, 120) FROM herdeira h;
+
 WITH posicao AS (
   SELECT DISTINCT ON (eq.question_id) eq.question_id, eq.exam_id, eq.order_index
   FROM public.exam_questions eq
   ORDER BY eq.question_id, eq.exam_id, eq.order_index
+),
+-- Quem declara um bloco, e qual é a faixa. Faixa maior que 20 questões é ruído
+-- de OCR, não bloco de prova.
+declara_valida AS (
+  SELECT d.* FROM (
+    SELECT question_id, exam_id, order_index, supporting_text,
+           (regexp_match(txt, 'quest(?:õ|o)es\s+(?:de\s+)?([0-9]{1,3})\s*(?:a|à|e|até|ate)\s*([0-9]{1,3})', 'i'))[1]::int AS de,
+           (regexp_match(txt, 'quest(?:õ|o)es\s+(?:de\s+)?([0-9]{1,3})\s*(?:a|à|e|até|ate)\s*([0-9]{1,3})', 'i'))[2]::int AS ate
+    FROM (
+      SELECT p.question_id, p.exam_id, p.order_index, q.supporting_text,
+             coalesce(q.supporting_text, '') || ' ' || coalesce(q.question_text, '') AS txt
+      FROM public.questions q
+      JOIN posicao p ON p.question_id = q.id
+      WHERE btrim(coalesce(q.supporting_text, '')) <> ''
+    ) t
+  ) d
+  WHERE d.de IS NOT NULL AND d.ate >= d.de AND d.ate - d.de <= 20
+    -- quem declara o bloco tem de estar DENTRO dele, senão a numeração do
+    -- caderno não bate com o order_index desta prova
+    AND d.order_index BETWEEN d.de AND d.ate
 ),
 orfas AS (
   SELECT q.id, p.exam_id, p.order_index
@@ -77,25 +109,21 @@ orfas AS (
 ),
 herdeira AS (
   SELECT DISTINCT ON (o.id)
-         o.id,
-         vq.supporting_text,
-         abs(vp.order_index - o.order_index) AS distancia
+         o.id, dv.supporting_text,
+         'questões ' || dv.de || ' a ' || dv.ate AS bloco
   FROM orfas o
-  JOIN posicao vp
-    ON  vp.exam_id      = o.exam_id
-    AND vp.question_id <> o.id
-    AND abs(vp.order_index - o.order_index) BETWEEN 1 AND 2
-  JOIN public.questions vq ON vq.id = vp.question_id
-  WHERE btrim(coalesce(vq.supporting_text, '')) <> ''
-  ORDER BY o.id, abs(vp.order_index - o.order_index)
+  JOIN declara_valida dv
+    ON  dv.exam_id      = o.exam_id
+    AND dv.question_id <> o.id
+    AND o.order_index BETWEEN dv.de AND dv.ate
+  ORDER BY o.id, abs(dv.order_index - o.order_index)
 )
 UPDATE public.questions q
-SET supporting_text = h.supporting_text,
-    auditada_em     = now()
+SET supporting_text = h.supporting_text, auditada_em = now()
 FROM herdeira h
 WHERE q.id = h.id
   AND public.questao_utilizavel(q.question_text, h.supporting_text, q.image_url, q.options, q.correct_answer)
-RETURNING q.id, h.distancia, left(q.question_text, 70) AS enunciado;
+RETURNING q.id, h.bloco, left(q.question_text, 70) AS enunciado;
 
 -- ═══ 5. QUARENTENA: desativar o que sobrou quebrado ═════════════════════════
 -- ESCREVE NO BANCO. Rode o bloco 4 primeiro — desativar antes de consertar
