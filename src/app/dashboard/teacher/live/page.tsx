@@ -12,6 +12,8 @@ import {
   Link as LinkIcon,
   AlertCircle,
   Inbox,
+  Pencil,
+  Youtube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +32,17 @@ import { supabase } from "@/app/lib/supabase";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { idDoYoutube, linkExternoSeguro, rotuloDoStatus } from "@/lib/lives";
+
+const FORM_VAZIO = { title: "", description: "", date: "", time: "", meet_link: "", youtube_url: "" };
+
+/**
+ * Sem policy de escrita em `lives` o Supabase recusa o INSERT com 42501 e,
+ * no UPDATE/DELETE, simplesmente não acha linha nenhuma — sem erro. Os dois
+ * casos precisam virar a mesma mensagem, senão o professor vê "Sala removida"
+ * e a sala continua lá.
+ */
+const SEM_PERMISSAO = "Sua conta não tem permissão para alterar aulas ao vivo. Fale com a coordenação.";
 
 export default function ManageLivePage() {
   const { user } = useAuth();
@@ -39,14 +52,29 @@ export default function ManageLivePage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    date: "",
-    time: "",
-    meet_link: "",
-  });
+  const [formData, setFormData] = useState(FORM_VAZIO);
+
+  const abrirNovo = () => {
+    setEditingId(null);
+    setFormData(FORM_VAZIO);
+    setIsCreateOpen(true);
+  };
+
+  const abrirEdicao = (live: any) => {
+    const d = live.start_time ? new Date(live.start_time) : null;
+    setEditingId(live.id);
+    setFormData({
+      title: live.title || "",
+      description: live.description || "",
+      date: d ? format(d, "yyyy-MM-dd") : "",
+      time: d ? format(d, "HH:mm") : "",
+      meet_link: live.meet_link || "",
+      youtube_url: live.youtube_url || (live.youtube_id ? `https://youtu.be/${live.youtube_id}` : ""),
+    });
+    setIsCreateOpen(true);
+  };
 
   async function fetchLives() {
     if (!user) return;
@@ -69,7 +97,7 @@ export default function ManageLivePage() {
     fetchLives();
   }, [user]);
 
-  const handleCreateLive = async () => {
+  const handleSaveLive = async () => {
     if (!formData.title || !formData.date || !formData.time || !user || isSubmitting) {
       if (!isSubmitting)
         toast({
@@ -80,33 +108,67 @@ export default function ManageLivePage() {
       return;
     }
 
+    const youtubeUrl = formData.youtube_url.trim();
+    const youtubeId = idDoYoutube(youtubeUrl);
+    if (youtubeUrl && !youtubeId) {
+      toast({
+        title: "Link do YouTube não reconhecido",
+        description: "Cole o link da transmissão (youtube.com/live/… ou youtu.be/…), não o do canal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const meetUrl = formData.meet_link.trim();
+    if (meetUrl && !linkExternoSeguro(meetUrl)) {
+      toast({
+        title: "Link do Meet inválido",
+        description: "Cole o link completo, começando com https://",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const start_time = new Date(`${formData.date}T${formData.time}`).toISOString();
-
-      const { error } = await supabase.from("lives").insert({
+      const campos = {
         title: formData.title,
         description: formData.description,
         start_time,
-        meet_link: formData.meet_link,
-        teacher_id: user.id,
-        teacher_name: user.user_metadata?.full_name || "Mentor da Rede",
-        status: "scheduled",
+        meet_link: meetUrl || null,
+        youtube_url: youtubeId ? youtubeUrl : null,
+        youtube_id: youtubeId,
+      };
+
+      if (editingId) {
+        const { data, error } = await supabase.from("lives").update(campos).eq("id", editingId).select("id");
+        if (error) throw error;
+        if (!data?.length) throw new Error(SEM_PERMISSAO);
+      } else {
+        const { error } = await supabase.from("lives").insert({
+          ...campos,
+          teacher_id: user.id,
+          teacher_name: user.user_metadata?.full_name || "Mentor da Rede",
+          status: "scheduled",
+        });
+        if (error) throw error;
+      }
+
+      toast({
+        title: editingId ? "Aula atualizada" : "Aula agendada!",
+        description: youtubeId
+          ? "Os alunos vão assistir pelo YouTube dentro da plataforma."
+          : "Adicione o link do YouTube antes da aula para todos conseguirem assistir.",
       });
-
-      if (error) throw new Error(error.message);
-
-      toast({ title: "Sala Criada!", description: "A reunião externa já está na agenda." });
       setIsCreateOpen(false);
-      setFormData({ title: "", description: "", date: "", time: "", meet_link: "" });
+      setEditingId(null);
+      setFormData(FORM_VAZIO);
       fetchLives();
     } catch (error: any) {
       toast({
-        title: "Erro ao agendar",
-        description:
-          error?.message?.includes("status")
-            ? "A coluna 'status' não existe no banco. Execute o script SQL."
-            : error?.message || "Ocorreu um erro desconhecido.",
+        title: editingId ? "Erro ao salvar" : "Erro ao agendar",
+        description: error?.code === "42501" ? SEM_PERMISSAO : error?.message || "Ocorreu um erro desconhecido.",
         variant: "destructive",
       });
     } finally {
@@ -117,10 +179,16 @@ export default function ManageLivePage() {
   const handleDelete = async (id: string) => {
     if (deletingId) return;
     setDeletingId(id);
-    const { error } = await supabase.from("lives").delete().eq("id", id);
-    if (!error) {
+    const { data, error } = await supabase.from("lives").delete().eq("id", id).select("id");
+    if (!error && data?.length) {
       setLives((prev) => prev.filter((live) => live.id !== id));
       toast({ title: "Sala removida" });
+    } else {
+      toast({
+        title: "Não foi possível remover",
+        description: error?.message || SEM_PERMISSAO,
+        variant: "destructive",
+      });
     }
     setDeletingId(null);
   };
@@ -172,9 +240,15 @@ export default function ManageLivePage() {
       </div>
 
       {/* ── CTA ── */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      <Dialog
+        open={isCreateOpen}
+        onOpenChange={(aberto) => {
+          setIsCreateOpen(aberto);
+          if (!aberto) setEditingId(null);
+        }}
+      >
         <DialogTrigger asChild>
-          <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
+          <Button onClick={abrirNovo} className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/20 text-xs uppercase tracking-widest border-none">
             <PlusCircle className="h-4 w-4 mr-2" />
             Agendar Aula
           </Button>
@@ -182,7 +256,7 @@ export default function ManageLivePage() {
         <DialogContent className="rounded-[2rem] p-0 bg-white border-slate-200 w-[95vw] sm:w-full max-w-lg max-h-[95vh] overflow-y-auto shadow-2xl">
           <DialogHeader className="p-5 border-b border-slate-100">
             <DialogTitle className="text-lg font-black italic text-slate-800 uppercase tracking-tighter">
-              Nova Sala Online
+              {editingId ? "Editar Aula" : "Nova Aula ao Vivo"}
             </DialogTitle>
           </DialogHeader>
           <div className="p-5 space-y-3">
@@ -224,7 +298,26 @@ export default function ManageLivePage() {
 
             <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
-                Link da Reunião
+                Transmissão no YouTube
+              </Label>
+              <div className="relative">
+                <Youtube className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-500 pointer-events-none" />
+                <input
+                  placeholder="https://youtube.com/live/..."
+                  value={formData.youtube_url}
+                  onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
+                  disabled={isSubmitting}
+                  className="w-full h-11 bg-white shadow-sm border border-slate-200 rounded-xl pl-10 pr-3 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none focus:border-orange-500/40 transition-all"
+                />
+              </div>
+              <p className="text-[10px] font-medium text-slate-500 leading-snug ml-1">
+                Crie a transmissão como <b>Não listada</b> no YouTube Studio, pelo computador, e cole o link aqui. Todos os alunos assistem dentro da plataforma, sem limite de vagas. Pode deixar para colar depois, em Editar.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                Sala do Meet (opcional)
               </Label>
               <div className="relative">
                 <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
@@ -253,17 +346,17 @@ export default function ManageLivePage() {
           </div>
           <DialogFooter className="p-5 pt-0 flex-col gap-2">
             <Button
-              onClick={handleCreateLive}
+              onClick={handleSaveLive}
               disabled={isSubmitting || !formData.title}
               className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 text-slate-800 font-black rounded-2xl shadow-xl shadow-orange-500/30 border-none text-xs uppercase tracking-widest disabled:opacity-40"
             >
               {isSubmitting ? (
                 <Loader2 className="animate-spin h-4 w-4 mr-2" />
               ) : null}
-              Publicar na Agenda
+              {editingId ? "Salvar Alterações" : "Publicar na Agenda"}
             </Button>
-            <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-              <AlertCircle className="h-3 w-3" /> Execute o SQL no Supabase
+            <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider text-center">
+              <AlertCircle className="h-3 w-3 shrink-0" /> O Meet grátis aceita só 100 pessoas por 60 minutos
             </div>
           </DialogFooter>
         </DialogContent>
@@ -328,12 +421,23 @@ export default function ManageLivePage() {
                             : "bg-purple-500/15 text-purple-400 border-purple-500/25"
                         }`}
                       >
-                        {isLive ? "🔴 No ar" : live.status}
+                        {isLive ? "🔴 No ar" : rotuloDoStatus(live.status)}
                       </Badge>
                     </div>
                     <p className="text-sm font-black text-slate-800 italic leading-snug truncate">
                       {live.title}
                     </p>
+                    {live.youtube_id ? (
+                      <p className="text-[10px] text-red-500/80 font-bold truncate mt-1 flex items-center gap-1">
+                        <Youtube className="h-2.5 w-2.5" />
+                        Transmissão no YouTube pronta
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-amber-600 font-bold truncate mt-1 flex items-center gap-1">
+                        <AlertCircle className="h-2.5 w-2.5" />
+                        Sem link do YouTube: só cabem 100 no Meet
+                      </p>
+                    )}
                     {live.meet_link && (
                       <p className="text-[10px] text-purple-400/70 font-bold truncate mt-1 flex items-center gap-1">
                         <LinkIcon className="h-2.5 w-2.5" />
@@ -356,6 +460,14 @@ export default function ManageLivePage() {
                     ) : (
                       <Trash2 className="h-3 w-3" />
                     )}
+                  </button>
+                  <button
+                    onClick={() => abrirEdicao(live)}
+                    className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all active:scale-95 touch-manipulation"
+                    title="Editar"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Editar
                   </button>
                   <Link
                     href={`/dashboard/teacher/live/${live.id}`}

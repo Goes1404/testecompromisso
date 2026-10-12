@@ -9,6 +9,7 @@ import { supabase } from "@/app/lib/supabase";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { estaNaAgenda, inicioDaJanelaDaAgenda } from "@/lib/lives";
 
 export default function LiveClassesPage() {
   const [lives, setLives] = useState<any[]>([]);
@@ -25,7 +26,7 @@ export default function LiveClassesPage() {
           .from('lives')
           .select('*')
           .in('status', ['live', 'scheduled'])
-          .gte('start_time', new Date(Date.now() - 3600000).toISOString())
+          .gte('start_time', inicioDaJanelaDaAgenda())
           .order('start_time', { ascending: true });
 
         const { data, error } = await Promise.race([
@@ -36,7 +37,11 @@ export default function LiveClassesPage() {
         ]);
 
         if (error) throw error;
-        setLives(data || []);
+        // A regra fina (no ar até 12h, agendada até 3h de atraso) mora em
+        // `estaNaAgenda`; a consulta só traz o piso. O corte antigo de 1h
+        // tirava o aulão da lista no meio dele.
+        const agora = new Date();
+        setLives((data || []).filter((l: any) => estaNaAgenda(l, agora)));
       } catch (err) {
         console.error("Erro ao buscar lives:", err);
         // Em caso de erro/timeout, mostramos a tela vazia em vez de travar.

@@ -22,6 +22,8 @@ import {
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { linkExternoSeguro, urlDoPlayer } from "@/lib/lives";
+import { PlayerDoYoutube } from "@/components/live/PlayerDoYoutube";
 
 export default function StudentLivePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: liveId } = use(params);
@@ -82,9 +84,12 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
   );
 
   const isLiveNow = live?.status === 'live';
+  const encerrada = live?.status === 'completed';
+  const meetLink = linkExternoSeguro(live?.meet_link);
+  const temVideo = !!urlDoPlayer(live?.youtube_id);
 
   return (
-    <div className="flex flex-col h-full space-y-6 animate-in fade-in duration-700 overflow-hidden pb-4">
+    <div className="flex flex-col space-y-6 animate-in fade-in duration-700 pb-4">
       <div className="flex items-center justify-between bg-white/80 backdrop-blur-md p-5 rounded-[1.5rem] shadow-sm border border-white/20 shrink-0">
         <div className="flex items-center gap-5 overflow-hidden">
           <Button 
@@ -99,7 +104,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
             <h1 className="text-sm md:text-xl font-black text-primary italic leading-none truncate tracking-tight">{live?.title}</h1>
             <div className="flex items-center gap-2 mt-1.5">
               <ShieldCheck className="h-3 w-3 text-accent" />
-              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest truncate">
                 Ambiente de Mentoria • {live?.teacher_name || 'Mentor da Rede'}
               </p>
             </div>
@@ -108,34 +113,49 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
         <div className="flex items-center gap-3 shrink-0">
           <Badge className={`${isLiveNow ? 'bg-red-600 animate-pulse' : 'bg-slate-500'} text-white border-none px-4 h-9 font-black text-[10px] flex items-center gap-2.5 rounded-xl shadow-lg`}>
             {isLiveNow ? (
-              <><Signal className="h-4 w-4" /> TRANSMISSÃO ATIVA</>
+              <><Signal className="h-4 w-4" /> <span className="hidden sm:inline">TRANSMISSÃO</span> AO VIVO</>
+            ) : encerrada ? (
+              <><CalendarClock className="h-4 w-4" /> ENCERRADA</>
             ) : (
-              <><CalendarClock className="h-4 w-4" /> SALA AGENDADA</>
+              <><CalendarClock className="h-4 w-4" /> AGENDADA</>
             )}
           </Badge>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col gap-6">
-        <Card className="flex-1 bg-slate-950 rounded-[2.5rem] overflow-hidden shadow-2xl border-none relative flex items-center justify-center group ring-1 ring-white/10">
+      <div className="flex flex-col gap-6">
+        {temVideo ? (
+          /* O aulão: vídeo do YouTube dentro da plataforma, sem limite de público. */
+          <Card className="bg-slate-950 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border-none p-3 md:p-6 space-y-4">
+            <PlayerDoYoutube videoId={live.youtube_id} titulo={live.title || 'Aula ao vivo'} />
+            {meetLink && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-white/5 border border-white/10 p-4">
+                <p className="text-xs text-slate-300 font-medium italic leading-relaxed">
+                  Quer falar com o professor? Há uma sala no Google Meet com vagas limitadas.
+                </p>
+                <Button asChild variant="outline" className="shrink-0 h-11 rounded-xl border-white/20 bg-transparent text-white hover:bg-white/10 font-black text-[11px] uppercase tracking-widest gap-2">
+                  <a href={meetLink} target="_blank" rel="noopener noreferrer">
+                    Entrar no Meet <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+            )}
+          </Card>
+        ) : (
+        <Card className="min-h-[50vh] bg-slate-950 rounded-[2.5rem] overflow-hidden shadow-2xl border-none relative flex items-center justify-center group ring-1 ring-white/10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(30,41,59,1)_0%,rgba(2,6,23,1)_100%)] opacity-100" />
           
           <div className="w-full h-full relative z-10 flex flex-col items-center justify-center p-8 md:p-12 text-center gap-10">
              <div className="absolute top-8 left-8 flex items-center gap-3 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10">
                 <div className={`h-2.5 w-2.5 rounded-full ${isLiveNow ? 'bg-red-600 animate-ping' : 'bg-slate-600'}`} />
                 <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">
-                  {isLiveNow ? 'Sinal em Curso' : 'Link em Verificação'}
+                  {isLiveNow ? 'Sinal em Curso' : 'Aguardando o professor'}
                 </span>
              </div>
 
              <div className={`h-40 w-48 md:h-64 md:w-64 rounded-[3rem] bg-white/5 border-2 ${isLiveNow ? 'border-accent/40 shadow-[0_0_100px_rgba(245,158,11,0.15)]' : 'border-white/5'} flex items-center justify-center relative transition-all duration-1000 rotate-1 group-hover:rotate-0`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-[3rem]" />
                 <MonitorPlay className={`h-20 w-20 md:h-32 md:w-32 ${isLiveNow ? 'text-accent' : 'text-white/10'} transition-colors duration-700 relative z-10`} />
-                {isLiveNow && (
-                  <div className="absolute -bottom-4 -right-4 h-14 w-14 bg-green-500 rounded-2xl border-4 border-slate-950 flex items-center justify-center shadow-2xl rotate-12">
-                     <Signal className="h-7 w-7 text-white animate-pulse" />
-                  </div>
-                )}
              </div>
              
              <div className="space-y-8 max-w-xl">
@@ -144,21 +164,20 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
                     Console de Mentoria
                   </h3>
                   <p className="text-xs md:text-base text-slate-400 font-medium italic leading-relaxed max-w-sm mx-auto">
-                    {live?.meet_link 
+                    {meetLink
                       ? "O acesso externo está liberado. Clique no botão abaixo para iniciar sua participação."
-                      : "Esta sessão está agendada. O link será habilitado assim que o mentor registrar a sala."}
+                      : "Esta sessão está agendada. O vídeo aparece aqui assim que o professor registrar a transmissão — não precisa recarregar a página."}
                   </p>
                 </div>
                 
-                {live?.meet_link ? (
+                {meetLink ? (
                   <div className="flex flex-col gap-5 animate-in zoom-in-95 duration-700">
                     <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90 font-black h-16 md:h-24 px-10 md:px-16 rounded-[2rem] shadow-[0_30px_60px_rgba(245,158,11,0.25)] transition-all hover:scale-105 active:scale-95 group relative overflow-hidden border-none ring-4 ring-accent/20">
-                      <a href={live.meet_link} target="_blank" rel="noopener noreferrer">
+                      <a href={meetLink} target="_blank" rel="noopener noreferrer">
                         <span className="relative z-10 flex items-center gap-5 text-base md:text-2xl uppercase tracking-tighter">
                           ACESSAR SALA DO GOOGLE MEET
                           <ExternalLink className="h-7 w-7 group-hover:translate-x-1.5 group-hover:-translate-y-1.5 transition-transform duration-500" />
                         </span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                       </a>
                     </Button>
                     <div className="flex items-center justify-center gap-3 text-[10px] font-black text-white/60 uppercase tracking-[0.4em]">
@@ -168,13 +187,14 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
                 ) : (
                   <div className="p-10 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-md shadow-inner animate-pulse">
                     <p className="text-sm font-bold text-slate-500 italic">
-                      Aguardando processamento do link pelo Mentor...
+                      Aguardando o link da transmissão...
                     </p>
                   </div>
                 )}
              </div>
           </div>
         </Card>
+        )}
         
         <Card className="bg-white rounded-[2.5rem] shadow-2xl p-10 border-none shrink-0 relative overflow-hidden group">
           <div className="absolute top-[-20%] right-[-5%] p-6 opacity-[0.03] transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-12">

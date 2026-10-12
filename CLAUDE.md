@@ -109,7 +109,7 @@ Sempre verifique `/supabase/migrations/` antes de qualquer query — nunca assum
 | `student_question_answers` | student_id, question_id, selected_option, is_correct |
 | `exam_attempts` | user_id, exam_id, score, completed_at |
 | `essay_submissions` | user_id, theme, content, score, status, created_at |
-| `scheduled_lives` | id, title, teacher_id, start_time, meet_url |
+| `lives` | id, title, description, start_time, status (`scheduled`/`live`/`completed`), teacher_id, teacher_name, meet_link, youtube_url, youtube_id |
 | `notes` | id, user_id, title, blocks (JSONB), subject_id, tags (TEXT[]), is_pinned, updated_at, created_at |
 | `user_badges` | user_id, badge_id, awarded_at |
 | `mural_posts` | tipo (`anuncio`/`trabalho`), titulo, tema, descricao, questoes (JSONB), instrucoes, entrega_em, imagem_url, destaque, ativo, autor_id, autor_nome |
@@ -237,6 +237,43 @@ cargo — a que existisse a mais ficaria para trás na primeira mudança de layo
    perde — nunca o botão inteiro.
 
 Prova de não-regressão: `npx tsx scripts/test-mural.ts` (roda dentro de `npm test`).
+
+### 📺 Aulas ao vivo: YouTube para todos, Meet para quem fala
+
+Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
+`/dashboard/live` (aluno), `/dashboard/teacher/live` (agenda + edição) e
+`/dashboard/teacher/live/[id]` (estúdio). Regras puras em `src/lib/lives.ts`.
+
+**Regras ao mexer aqui:**
+
+1. **O aulão vai pelo YouTube, não pelo Meet.** O Meet grátis corta em 100 pessoas
+   e em 60 minutos; o cursinho tem ~855 alunos. O professor cria a transmissão
+   **não listada** no YouTube Studio, *pelo computador* (pelo celular o YouTube
+   exige 50 inscritos e limita o público até 1.000), e cola o link. O player é
+   embutido na sala do aluno (`components/live/PlayerDoYoutube.tsx`). O Meet fica
+   como sala opcional para quem quer falar.
+2. **`youtube_id` é a fonte da verdade; `youtube_url` é só o que o professor
+   colou.** `idDoYoutube()` aceita os formatos que se cola na prática e recusa o
+   link do *canal* (`/@canal/live`), que não aponta para uma aula. O player
+   revalida o id ao renderizar — a coluna aceita qualquer texto.
+3. **O iframe precisa mandar referrer** (`strict-origin-when-cross-origin`): sem
+   ele o YouTube mostra "erro 153". E nada de `autoplay` — o celular bloqueia som
+   automático e o aluno acha que a aula está muda.
+4. **A agenda do aluno é `estaNaAgenda()`.** No ar: aparece até 12h depois do
+   início (passou disso, o professor esqueceu de encerrar). Agendada: até 3h de
+   atraso. O corte antigo de 1h fixo tirava o aulão da lista no meio dele.
+5. **O status só anda para frente:** agendada → no ar → encerrada (`proximoStatus()`).
+   O antigo "Fechar sala" voltava para agendada e a aula que terminou reaparecia.
+6. **UPDATE/DELETE em `lives` sempre com `.select()`.** Sem policy, o Supabase não
+   dá erro — devolve 0 linhas — e a tela dizia "Sala removida" com a sala lá.
+7. **Policy de escrita:** migration `20261012120000_lives_write_policy.sql`
+   (admin/staff/teacher por `profiles.role`). A limpeza de 10/07 tinha deixado a
+   tabela só com SELECT, e nenhum professor conseguia agendar. Aplicada no
+   educore em 12/10 e verificada por simulação de RLS: professor agenda e abre a
+   sala; aluno lê, mas não cria nem altera link; sem login não lê nada (a
+   leitura `TO public` saiu — `meet_link` é a única tranca da sala do Meet).
+
+Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 
 ### IA Extraction (Motor de Provas)
 - Se o enunciado original diz "utilize o texto para responder as questões X a Y", a IA **deve** repetir o `supporting_text` integralmente em **cada** objeto de questão do JSON gerado.
