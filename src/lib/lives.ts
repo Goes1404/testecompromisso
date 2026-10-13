@@ -290,3 +290,35 @@ export function agruparAgenda<T extends { status: string | null; start_time: str
     .sort((a, b) => t(b) - t(a));
   return { noAr, proximas, anteriores };
 }
+
+// ── Chat do YouTube ─────────────────────────────────────────────────────────
+
+/**
+ * Chat ao vivo do YouTube embutido na sala. Só existe no computador: o
+ * YouTube não libera o chat embutido no navegador do celular ("Embedding live
+ * chat isn't available on mobile web", ajuda oficial). `embed_domain` precisa
+ * bater com o domínio da página, senão o YouTube recusa o quadro.
+ */
+export function urlDoChatEmbutido(id: string | null | undefined, dominio: string | null | undefined): string | null {
+  if (!id || !/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+  const host = (dominio ?? '').trim().toLowerCase();
+  if (!/^[a-z0-9.-]+$/.test(host) || !host) return null;
+  return `https://www.youtube.com/live_chat?v=${id}&embed_domain=${host}&dark_theme=1`;
+}
+
+/** Chat em janela própria (computador) — o professor usa para acompanhar. */
+export function linkDoChatEmJanela(id: string | null | undefined): string | null {
+  if (!id || !/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+  return `https://www.youtube.com/live_chat?is_popout=1&v=${id}`;
+}
+
+/**
+ * Navegador de celular ou tablet, pelo mesmo critério que o YouTube usa para
+ * recusar o chat embutido (o user agent, não a largura da tela).
+ */
+export function ehNavegadorDeCelular(userAgent: string | null | undefined): boolean {
+  const ua = userAgent ?? '';
+  // iPad com iPadOS 13+ se apresenta como Mac: cai como computador aqui e
+  // também no YouTube, que decide pelo mesmo user agent — então o chat abre.
+  return /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini|Silk/i.test(ua);
+}

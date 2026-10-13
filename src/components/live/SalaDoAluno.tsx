@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
-import { ChevronLeft, ExternalLink, Mic } from "lucide-react";
+"use client";
+
+import { useState, type ReactNode } from "react";
+import { ChevronLeft, ExternalLink, Lock, MessagesSquare, Mic } from "lucide-react";
 import { linkExternoSeguro, quandoE, rotuloDasTurmas, urlDoPlayer } from "@/lib/lives";
 import { PlayerDoYoutube } from "./PlayerDoYoutube";
 import { IndicadorDePresenca } from "./IndicadorDePresenca";
@@ -27,17 +29,23 @@ export function SalaDoAluno({
   aula,
   presenca,
   duvidas,
+  chat,
   onVoltar,
 }: {
   aula: AulaNaTela;
   presenca: { segundos: number; segundosDaAula: number } | null;
   duvidas: ReactNode;
+  /** Chat da aula (o do YouTube). Só aparece quando a aula tem vídeo. */
+  chat?: ReactNode;
   onVoltar: () => void;
 }) {
+  const [aba, setAba] = useState<"chat" | "duvida">("chat");
   const temVideo = !!urlDoPlayer(aula.youtube_id);
   const meetLink = linkExternoSeguro(aula.meet_link);
   const encerrada = aula.status === "completed";
   const noAr = aula.status === "live";
+  const temChat = temVideo && !!chat;
+  const abaAtiva = temChat ? aba : "duvida";
 
   return (
     <div className="w-full space-y-3 md:space-y-4 animate-in fade-in duration-500">
@@ -67,7 +75,7 @@ export function SalaDoAluno({
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_360px] items-start">
+      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] items-start">
         <div className="space-y-3 min-w-0">
           {temVideo ? (
             <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} />
@@ -97,7 +105,28 @@ export function SalaDoAluno({
 
         <aside className="space-y-3 min-w-0 lg:row-span-2 lg:sticky lg:top-4">
           {noAr && presenca && <IndicadorDePresenca segundos={presenca.segundos} segundosDaAula={presenca.segundosDaAula} />}
-          {!encerrada && duvidas}
+          {!encerrada && temChat && (
+            <div className={`${CARTAO} grid grid-cols-2 gap-1 p-1 rounded-2xl`} role="tablist" aria-label="Chat ou dúvida">
+              {([
+                { id: "chat", rotulo: "Chat da aula", icone: MessagesSquare },
+                { id: "duvida", rotulo: "Dúvida privada", icone: Lock },
+              ] as const).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={abaAtiva === t.id}
+                  onClick={() => setAba(t.id)}
+                  className={`h-10 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all touch-manipulation ${
+                    abaAtiva === t.id ? "bg-white/15 text-white" : "text-white/45 hover:text-white/75"
+                  }`}
+                >
+                  <t.icone className="h-3.5 w-3.5" /> {t.rotulo}
+                </button>
+              ))}
+            </div>
+          )}
+          {!encerrada && (abaAtiva === "chat" ? chat : duvidas)}
         </aside>
 
         {aula.description?.trim() && (
@@ -118,7 +147,7 @@ export function SalaCarregando() {
   return (
     <div className="w-full space-y-3 md:space-y-4" aria-busy="true" aria-label="Carregando a aula">
       <div className={`${CARTAO} h-[66px] animate-pulse`} />
-      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className={`${CARTAO} aspect-video animate-pulse`} />
         <div className={`${CARTAO} h-48 animate-pulse`} />
       </div>

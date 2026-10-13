@@ -326,6 +326,21 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     põe padding de borda. As duas grades usam `grid-cols-1` no celular: sem isso a
     coluna cresce até o maior conteúdo e a tela inteira transborda para a direita.
 
+17. **O chat da aula é o chat ao vivo do próprio YouTube** (`ChatDoYoutube`), em aba
+    ao lado de "Dúvida privada". O comentário vai para o YouTube e o professor lê no
+    YouTube Studio. **No computador** vem embutido (`live_chat?v=…&embed_domain=<host>`
+    — o domínio precisa bater, por isso é lido de `window.location`). **No celular o
+    YouTube não libera chat embutido** (ajuda oficial: "isn't available on mobile web"),
+    então vira botão "Comentar no YouTube", com o aviso de que a presença só conta com a
+    sala aberta. O chat só existe com a transmissão no ar, não listada ou pública, com
+    incorporação permitida, chat ativado e público "não é para crianças" — o passo a
+    passo do estúdio lembra o professor disso. Verificado em 14/10 com uma transmissão
+    pública real: vídeo e chat (com mensagens) carregaram no computador; no celular, o
+    vídeo carrega e o chat vira o botão.
+    **Por que não um chat nosso repassado pela API do YouTube:** a mensagem sairia com o
+    nome do canal do cursinho, não do aluno, e a cota grátis (`liveChatMessages.insert` =
+    20 unidades de 10.000/dia) cobre ~500 mensagens por dia.
+
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`
 (o aluno se marcava presente em qualquer aula sem código, direto pelo banco). O app

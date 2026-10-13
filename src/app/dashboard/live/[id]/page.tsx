@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePresencaNaLive } from "@/components/live/usePresencaNaLive";
 import { DuvidasDoAluno } from "@/components/live/DuvidasDoAluno";
 import { SalaCarregando, SalaDoAluno } from "@/components/live/SalaDoAluno";
+import { ChatDoYoutube } from "@/components/live/ChatDoYoutube";
 
 export default function StudentLivePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: liveId } = use(params);
@@ -90,6 +91,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
       presenca={presenca}
       onVoltar={() => router.push('/dashboard/live')}
       duvidas={<DuvidasDoAluno liveId={liveId} noAr={live.status === 'live'} />}
+      chat={<ChatDoYoutube videoId={live.youtube_id} noAr={live.status === 'live'} />}
     />
   );
 }

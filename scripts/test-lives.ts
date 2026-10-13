@@ -22,6 +22,9 @@ import {
   quandoE,
   linkDoStudio,
   agruparAgenda,
+  urlDoChatEmbutido,
+  linkDoChatEmJanela,
+  ehNavegadorDeCelular,
 } from '../src/lib/lives';
 
 let falhas = 0;
@@ -138,6 +141,16 @@ eq('studio recusa lixo', linkDoStudio('../../x'), null);
   eq('agenda: próximas, atrasada primeiro', g.proximas.map((a) => a.id), ['atrasada-1h', 'amanha', 'semana-que-vem']);
   eq('agenda: anteriores, recente primeiro', g.anteriores.map((a) => a.id), ['encerrada-hoje', 'nunca-abriu', 'velha-encerrada']);
 }
+
+// ── Chat do YouTube ──
+eq('chat embutido no domínio da escola', urlDoChatEmbutido(ID, 'compromissose.com'),
+  `https://www.youtube.com/live_chat?v=${ID}&embed_domain=compromissose.com&dark_theme=1`);
+eq('chat recusa id ruim', urlDoChatEmbutido('x', 'compromissose.com'), null);
+eq('chat recusa domínio com lixo', urlDoChatEmbutido(ID, 'a.com&v=zzz'), null);
+eq('chat em janela', linkDoChatEmJanela(ID), `https://www.youtube.com/live_chat?is_popout=1&v=${ID}`);
+eq('Android é celular', ehNavegadorDeCelular('Mozilla/5.0 (Linux; Android 14; SM-A145M) AppleWebKit/537.36 Chrome/129 Mobile Safari/537.36'), true);
+eq('iPhone é celular', ehNavegadorDeCelular('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'), true);
+eq('Windows não é', ehNavegadorDeCelular('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/129 Safari/537.36'), false);
 
 if (falhas) {
   console.error(`\n${falhas} falha(s)`);
