@@ -131,7 +131,9 @@ CREATE TABLE IF NOT EXISTS public.live_presencas (
 );
 
 ALTER TABLE public.live_presencas ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON public.live_presencas FROM anon;
+-- O Supabase dá ALL em tabela nova para anon/authenticated por padrão. A falta
+-- de policy de escrita já barra, mas o privilégio sai também: duas trancas.
+REVOKE ALL ON public.live_presencas FROM anon, authenticated;
 GRANT SELECT ON public.live_presencas TO authenticated;
 GRANT ALL ON public.live_presencas TO service_role;
 
