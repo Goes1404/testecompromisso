@@ -19,6 +19,9 @@ import {
   formatarDuracao,
   validarDuvida,
   ordenarDuvidasParaProfessor,
+  quandoE,
+  linkDoStudio,
+  agruparAgenda,
 } from '../src/lib/lives';
 
 let falhas = 0;
@@ -107,6 +110,34 @@ eq('fila do professor',
     d('pendente-antiga', 3), d('respondida-tarde', 8, true),
   ]).map((x) => x.id),
   ['pendente-antiga', 'pendente-nova', 'respondida-tarde', 'respondida-cedo', 'oculta']);
+
+// ── Datas na tela ──
+const noite = new Date(2026, 9, 14, 22, 0); // qua 14/10, 22h
+eq('hoje', quandoE(new Date(2026, 9, 14, 23, 30).toISOString(), noite), 'Hoje, 23:30');
+eq('amanhã cedo, a menos de 24 h', quandoE(new Date(2026, 9, 15, 8, 5).toISOString(), noite), 'Amanhã, 08:05');
+eq('ontem', quandoE(new Date(2026, 9, 13, 19, 0).toISOString(), noite), 'Ontem, 19:00');
+eq('semana que vem', quandoE(new Date(2026, 9, 21, 19, 0).toISOString(), noite), 'qua, 21/10 · 19:00');
+eq('sem horário', quandoE(null, noite), 'Sem horário');
+eq('studio com id válido', linkDoStudio(ID), `https://studio.youtube.com/video/${ID}/livestreaming`);
+eq('studio recusa lixo', linkDoStudio('../../x'), null);
+
+// ── Agenda do professor ──
+{
+  const ag = new Date(2026, 9, 14, 20, 0);
+  const em = (h: number, dia = 14) => new Date(2026, 9, dia, h, 0).toISOString();
+  const g = agruparAgenda([
+    { id: 'velha-encerrada', status: 'completed', start_time: em(19, 10) },
+    { id: 'no-ar', status: 'live', start_time: em(19) },
+    { id: 'semana-que-vem', status: 'scheduled', start_time: em(19, 21) },
+    { id: 'atrasada-1h', status: 'scheduled', start_time: em(19) },
+    { id: 'amanha', status: 'scheduled', start_time: em(19, 15) },
+    { id: 'nunca-abriu', status: 'scheduled', start_time: em(10, 12) },
+    { id: 'encerrada-hoje', status: 'completed', start_time: em(14) },
+  ], ag);
+  eq('agenda: no ar', g.noAr.map((a) => a.id), ['no-ar']);
+  eq('agenda: próximas, atrasada primeiro', g.proximas.map((a) => a.id), ['atrasada-1h', 'amanha', 'semana-que-vem']);
+  eq('agenda: anteriores, recente primeiro', g.anteriores.map((a) => a.id), ['encerrada-hoje', 'nunca-abriu', 'velha-encerrada']);
+}
 
 if (falhas) {
   console.error(`\n${falhas} falha(s)`);

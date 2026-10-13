@@ -311,6 +311,20 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     sala relê a aula. Sem isso, o aluno que ficasse fora da cota de Realtime nunca
     saberia que a aula abriu — e nunca mandaria presença.
 
+15. **Desenho separado de dado.** As telas são componentes que só recebem props —
+    `ListaDeAulas`, `SalaDoAluno`, `EstudioDoProfessor`, `AgendaDoProfessor`,
+    `QuadroDeDuvidas`, `FilaDeDuvidas`, `ResumoDaChamada` — e as páginas e os
+    containers (`DuvidasDoAluno`, `DuvidasDoProfessor`, `PainelDaChamada`) buscam e
+    gravam. É o que deixa revisar o desenho com dados de exemplo, sem login. Estilo no
+    molde do Mural: cartão escuro `CARTAO` (`components/live/pecas.tsx`) sobre o fundo
+    claro do app, laranja da marca, sem rótulo de enfeite ("Ambiente auditado",
+    "Sinal habilitado" saíram — não diziam nada ao aluno).
+16. **As salas são "full bleed"** no layout (`/live/` em `isFullBleedPage`): sem
+    padding e sem barra inferior. O respiro e o `pb-28` (para o botão flutuante da
+    Aurora não cobrir o campo de dúvida) são da própria tela. A grade usa
+    `grid-cols-1` no celular: sem isso a coluna cresce até o maior conteúdo e a tela
+    inteira transborda para a direita.
+
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`
 (o aluno se marcava presente em qualquer aula sem código, direto pelo banco). O app

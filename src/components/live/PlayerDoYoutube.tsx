@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { urlDoPlayer, linkDoVideo } from "@/lib/lives";
+import { CARTAO } from "./pecas";
 
 /**
  * O aulão embutido na plataforma. É um iframe simples, sem a API JS do
@@ -19,13 +20,13 @@ export function PlayerDoYoutube({ videoId, titulo }: { videoId: string | null | 
   if (!src || !link) return null;
 
   return (
-    <div className="w-full space-y-2">
-      <div className="relative w-full aspect-video rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-black shadow-2xl ring-1 ring-white/10">
+    <div className={`${CARTAO} p-1.5 md:p-2 space-y-1.5`}>
+      <div className="relative w-full aspect-video rounded-[1.1rem] overflow-hidden bg-black">
         <iframe
           src={src}
           title={titulo}
           className="absolute inset-0 h-full w-full border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
         />
@@ -34,7 +35,7 @@ export function PlayerDoYoutube({ videoId, titulo }: { videoId: string | null | 
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white transition-colors px-1"
+        className="flex items-center justify-center gap-1.5 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-colors"
       >
         Vídeo travando? Abrir no app do YouTube <ExternalLink className="h-3 w-3" />
       </a>

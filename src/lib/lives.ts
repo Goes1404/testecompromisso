@@ -240,3 +240,53 @@ export function ordenarDuvidasParaProfessor<T extends Pick<Duvida, 'created_at' 
     return grupo(a) === 0 ? ta - tb : tb - ta;
   });
 }
+
+// ── Datas na tela ───────────────────────────────────────────────────────────
+
+const DIAS_DA_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+/**
+ * "Hoje, 19:00", "Amanhã, 08:30", "qua, 16/10 · 19:00". A conta é por dia do
+ * calendário local, não por 24 h: uma aula às 8h vista às 22h da véspera é
+ * "Amanhã", e não "Hoje" por estar a menos de 24 h.
+ */
+export function quandoE(inicio: string | null | undefined, agora: Date = new Date()): string {
+  if (!inicio) return 'Sem horário';
+  const d = new Date(inicio);
+  if (Number.isNaN(d.getTime())) return 'Sem horário';
+  const hora = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const dia = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diferenca = Math.round((dia(d) - dia(agora)) / 86_400_000);
+  if (diferenca === 0) return `Hoje, ${hora}`;
+  if (diferenca === 1) return `Amanhã, ${hora}`;
+  if (diferenca === -1) return `Ontem, ${hora}`;
+  const data = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `${DIAS_DA_SEMANA[d.getDay()]}, ${data} · ${hora}`;
+}
+
+/** Link do painel de transmissão do YouTube Studio, para o professor. */
+export function linkDoStudio(id: string | null | undefined): string | null {
+  if (!id || !/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+  return `https://studio.youtube.com/video/${id}/livestreaming`;
+}
+
+/**
+ * Agenda do professor em três grupos: no ar, próximas (da mais perto para a
+ * mais longe) e anteriores (da mais recente para a mais antiga). Agendada que
+ * já passou do horário continua em "próximas" enquanto `estaNaAgenda()` a
+ * mantém para o aluno — é aula atrasada, não aula velha.
+ */
+export function agruparAgenda<T extends { status: string | null; start_time: string | null }>(
+  aulas: T[],
+  agora: Date = new Date(),
+): { noAr: T[]; proximas: T[]; anteriores: T[] } {
+  const t = (a: T) => (a.start_time ? new Date(a.start_time).getTime() : 0);
+  const noAr = aulas.filter((a) => a.status === 'live');
+  const proximas = aulas
+    .filter((a) => a.status === 'scheduled' && estaNaAgenda(a, agora))
+    .sort((a, b) => t(a) - t(b));
+  const anteriores = aulas
+    .filter((a) => !noAr.includes(a) && !proximas.includes(a))
+    .sort((a, b) => t(b) - t(a));
+  return { noAr, proximas, anteriores };
+}
