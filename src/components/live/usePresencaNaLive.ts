@@ -4,10 +4,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
 import { INTERVALO_DO_SINAL_MS } from "@/lib/lives";
 
-export type Presenca = { segundos: number; segundosDaAula: number };
+export type Presenca = { segundos: number; segundosDaAula: number; status: string | null };
 
 /**
- * Enquanto a aula está no ar e a sala está aberta, avisa o banco a cada 60 s.
+ * Enquanto a sala está aberta, avisa o banco a cada 60 s. O banco só conta
+ * tempo quando a aula está no ar, mas o aviso sai antes também: a resposta
+ * traz o status da aula, e é por ela que a sala descobre que a aula abriu.
+ * O Realtime do Supabase aguenta 200 conexões no Free e 500 no Pro — com
+ * ~855 alunos, quem ficar de fora nunca saberia que a aula começou e nunca
+ * mandaria sinal de presença.
+ *
  * Quem soma o tempo é o banco (`registrar_presenca_live`), com o relógio dele:
  * daqui só sai "estou aqui".
  *
@@ -20,17 +26,21 @@ export type Presenca = { segundos: number; segundosDaAula: number };
  * Devolve `null` enquanto não há resposta, ou se a função não existir no banco
  * (migration não aplicada): a sala segue funcionando, só sem o contador.
  */
-export function usePresencaNaLive(liveId: string | null | undefined, noAr: boolean): Presenca | null {
+export function usePresencaNaLive(liveId: string | null | undefined, ativo: boolean): Presenca | null {
   const [presenca, setPresenca] = useState<Presenca | null>(null);
 
   useEffect(() => {
-    if (!liveId || !noAr) return;
+    if (!liveId || !ativo) return;
     let vivo = true;
 
     const sinal = async () => {
       const { data, error } = await supabase.rpc("registrar_presenca_live", { p_live_id: liveId });
       if (!vivo || error || !Array.isArray(data) || !data[0]) return;
-      setPresenca({ segundos: data[0].segundos ?? 0, segundosDaAula: data[0].segundos_da_aula ?? 0 });
+      setPresenca({
+        segundos: data[0].segundos ?? 0,
+        segundosDaAula: data[0].segundos_da_aula ?? 0,
+        status: data[0].status ?? null,
+      });
     };
 
     sinal();
@@ -46,7 +56,7 @@ export function usePresencaNaLive(liveId: string | null | undefined, noAr: boole
       clearInterval(timer);
       document.removeEventListener("visibilitychange", aoVoltar);
     };
-  }, [liveId, noAr]);
+  }, [liveId, ativo]);
 
   return presenca;
 }

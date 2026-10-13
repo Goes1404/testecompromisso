@@ -198,3 +198,45 @@ export function formatarDuracao(segundos: number): string {
   if (min < 60) return `${min} min`;
   return `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
 }
+
+// ── Dúvidas na sala ─────────────────────────────────────────────────────────
+// Espelhos dos limites do gatilho `live_messages_ao_inserir` (o banco é quem
+// manda; aqui é só para avisar antes de o aluno apertar "Enviar").
+export const LIMITE_DA_DUVIDA = 500;
+export const INTERVALO_ENTRE_DUVIDAS_S = 20;
+export const MAXIMO_DE_DUVIDAS_POR_AULA = 20;
+
+export type Duvida = {
+  id: string;
+  created_at: string;
+  user_name: string | null;
+  content: string;
+  is_answered: boolean;
+  resposta: string | null;
+  oculta: boolean;
+};
+
+/** Mensagem de erro para mostrar ao aluno, ou `null` se dá para enviar. */
+export function validarDuvida(texto: string): string | null {
+  const t = texto.trim();
+  if (!t) return 'Escreva sua dúvida antes de enviar.';
+  if (t.length > LIMITE_DA_DUVIDA) return `A dúvida pode ter até ${LIMITE_DA_DUVIDA} caracteres.`;
+  return null;
+}
+
+/**
+ * Ordem da fila do professor: pendentes primeiro, da mais antiga para a mais
+ * nova — quem perguntou primeiro não pode ficar esperando para sempre atrás
+ * de quem acabou de chegar. Depois as respondidas (mais recente em cima) e,
+ * por último, as ocultas.
+ */
+export function ordenarDuvidasParaProfessor<T extends Pick<Duvida, 'created_at' | 'is_answered' | 'oculta'>>(lista: T[]): T[] {
+  const grupo = (d: T) => (d.oculta ? 2 : d.is_answered ? 1 : 0);
+  return [...lista].sort((a, b) => {
+    const g = grupo(a) - grupo(b);
+    if (g !== 0) return g;
+    const ta = new Date(a.created_at).getTime();
+    const tb = new Date(b.created_at).getTime();
+    return grupo(a) === 0 ? ta - tb : tb - ta;
+  });
+}

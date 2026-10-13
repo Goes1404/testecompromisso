@@ -17,6 +17,8 @@ import {
   rotuloDasTurmas,
   situacaoDaPresenca,
   formatarDuracao,
+  validarDuvida,
+  ordenarDuvidasParaProfessor,
 } from '../src/lib/lives';
 
 let falhas = 0;
@@ -92,6 +94,19 @@ eq('não passa de 100%', situacaoDaPresenca(700, 600).porcentagem, 100);
 eq('duração em segundos', formatarDuracao(45), '45 s');
 eq('duração em minutos', formatarDuracao(12 * 60 + 30), '12 min');
 eq('duração em horas', formatarDuracao(65 * 60), '1h05');
+
+// ── Dúvidas ──
+eq('dúvida vazia', validarDuvida('   '), 'Escreva sua dúvida antes de enviar.');
+eq('dúvida comprida demais', validarDuvida('x'.repeat(501)), 'A dúvida pode ter até 500 caracteres.');
+eq('dúvida no limite passa', validarDuvida(' ' + 'x'.repeat(500) + ' '), null);
+const d = (id: string, min: number, is_answered = false, oculta = false) =>
+  ({ id, created_at: new Date(2026, 9, 14, 19, min).toISOString(), is_answered, oculta });
+eq('fila do professor',
+  ordenarDuvidasParaProfessor([
+    d('respondida-cedo', 1, true), d('pendente-nova', 9), d('oculta', 2, false, true),
+    d('pendente-antiga', 3), d('respondida-tarde', 8, true),
+  ]).map((x) => x.id),
+  ['pendente-antiga', 'pendente-nova', 'respondida-tarde', 'respondida-cedo', 'oculta']);
 
 if (falhas) {
   console.error(`\n${falhas} falha(s)`);

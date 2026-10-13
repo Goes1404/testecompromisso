@@ -294,6 +294,23 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
 11. **`live_presencas` não tem policy de escrita.** Só a função SECURITY DEFINER grava;
     senão o aluno escreveria "fiquei 2 horas" direto na tabela.
 
+12. **Dúvidas vão para o professor, não para a sala** (`live_messages`, migration
+    `20261014120000_live_duvidas.sql`). O aluno vê só as próprias dúvidas e a resposta;
+    a equipe vê todas. Dois motivos: o Realtime do Supabase aguenta **200 conexões no
+    Free e 500 no Pro**, e o aulão tem ~855 alunos — um chat aberto empurraria cada
+    mensagem para cada aluno; e mural aberto entre adolescentes durante a aula é frente
+    de bullying. Por isso **só a equipe assina o Realtime** de dúvidas; o aluno
+    reconsulta a cada 30 s, e só enquanto tem dúvida pendente.
+13. **O banco decide autor e nome da dúvida** (gatilho `live_messages_ao_inserir`):
+    `user_id`, `user_name` (de `profiles`), hora e estado de resposta que vêm do
+    cliente são descartados. Limites por aluno: 1 dúvida a cada 20 s, 20 por aula, até
+    500 caracteres, só com a aula no ar. A equipe responde, marca "respondi na aula" ou
+    **oculta** (o registro fica); só admin/staff apagam. Ninguém reescreve a pergunta.
+14. **A sala não depende do Realtime para nada que importa.** O sinal de presença
+    (60 s) devolve o status da aula; se diverge da tela, ou se está no ar sem vídeo, a
+    sala relê a aula. Sem isso, o aluno que ficasse fora da cota de Realtime nunca
+    saberia que a aula abriu — e nunca mandaria presença.
+
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`
 (o aluno se marcava presente em qualquer aula sem código, direto pelo banco). O app
@@ -446,8 +463,8 @@ por simulação de RLS `set role authenticated` + `request.jwt.claims`):
 - `modules`/`learning_contents`/`library_resources` (gestão de conteúdo) → `profiles.role` admin/staff/teacher.
 - `student_question_answers` (admin/professor viam desempenho do aluno vazio) → SELECT por `profiles.role`.
 
-Policies mortas remanescentes **sem impacto** (feature não usada client-side ou coberta por
-outra policy): `subjects`, `live_messages` (moderador), `classes` (admin gerencia de outros),
+Policies mortas remanescentes **sem impacto** (a de moderação de `live_messages` saiu em `20261014120000`) (feature não usada client-side ou coberta por
+outra policy): `subjects`, `classes` (admin gerencia de outros),
 `announcements` (admin edita de outros), `questions` (redundante). Nota menor de exposição:
 `forums.open_select_for_authenticated_forums` (true) deixa fóruns `is_teacher_only` visíveis a
 alunos — revisar se a confidencialidade importa.

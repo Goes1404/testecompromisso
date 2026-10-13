@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatarDuracao, linkExternoSeguro, situacaoDaPresenca, urlDoPlayer, PRESENCA_MINIMA } from "@/lib/lives";
 import { PlayerDoYoutube } from "@/components/live/PlayerDoYoutube";
 import { usePresencaNaLive, type Presenca } from "@/components/live/usePresencaNaLive";
+import { DuvidasDoAluno } from "@/components/live/DuvidasDoAluno";
 
 /**
  * Mostra ao aluno quanto do tempo dele já contou. Sem isso, a regra dos 60%
@@ -32,7 +33,7 @@ import { usePresencaNaLive, type Presenca } from "@/components/live/usePresencaN
  * presença.
  */
 function IndicadorDePresenca({ presenca }: { presenca: Presenca | null }) {
-  if (!presenca) return null;
+  if (!presenca || presenca.status !== 'live') return null;
   const { porcentagem, presente } = situacaoDaPresenca(presenca.segundos, presenca.segundosDaAula);
   const meta = Math.round(PRESENCA_MINIMA * 100);
   return (
@@ -109,7 +110,25 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
     };
   }, [liveId, user, router, toast]);
 
-  const presenca = usePresencaNaLive(liveId, live?.status === 'live');
+  const presenca = usePresencaNaLive(liveId, !!live && live.status !== 'completed');
+
+  // O sinal de presença traz o status da aula. Se ele diverge do que a tela
+  // tem (Realtime fora do ar ou acima da cota), ou se a aula está no ar e o
+  // vídeo ainda não chegou, relê a aula: é assim que o vídeo e o "ao vivo"
+  // aparecem sem o aluno recarregar a página.
+  useEffect(() => {
+    if (!presenca?.status || !live) return;
+    if (presenca.status === live.status && !(presenca.status === 'live' && !live.youtube_id)) return;
+    supabase
+      .from('lives')
+      .select('*')
+      .eq('id', liveId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setLive(data);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presenca]);
 
   if (loading) return (
     <div className="h-[80vh] flex flex-col items-center justify-center gap-4">
@@ -164,6 +183,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
           <Card className="bg-slate-950 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border-none p-3 md:p-6 space-y-4">
             <PlayerDoYoutube videoId={live.youtube_id} titulo={live.title || 'Aula ao vivo'} />
             <IndicadorDePresenca presenca={presenca} />
+            {!encerrada && <DuvidasDoAluno liveId={liveId} noAr={isLiveNow} />}
             {meetLink && (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-white/5 border border-white/10 p-4">
                 <p className="text-xs text-slate-300 font-medium italic leading-relaxed">
@@ -227,7 +247,10 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
                     </p>
                   </div>
                 )}
-                <div className="text-left"><IndicadorDePresenca presenca={presenca} /></div>
+                <div className="text-left space-y-4">
+                  <IndicadorDePresenca presenca={presenca} />
+                  {!encerrada && <DuvidasDoAluno liveId={liveId} noAr={isLiveNow} />}
+                </div>
              </div>
           </div>
         </Card>

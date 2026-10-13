@@ -22,6 +22,7 @@ import { supabase } from "@/app/lib/supabase";
 import { linkExternoSeguro, proximoStatus, rotuloDasTurmas, rotuloDoStatus, urlDoPlayer } from "@/lib/lives";
 import { PlayerDoYoutube } from "@/components/live/PlayerDoYoutube";
 import { PainelDaChamada } from "@/components/live/PainelDaChamada";
+import { DuvidasDoProfessor } from "@/components/live/DuvidasDoProfessor";
 import Link from "next/link";
 
 /**
@@ -184,6 +185,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
           </Button>
         </Card>
       )}
+      <DuvidasDoProfessor liveId={liveId} />
       <PainelDaChamada liveId={liveId} status={live?.status ?? null} />
     </div>
   );
