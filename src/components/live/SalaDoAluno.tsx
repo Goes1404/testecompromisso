@@ -20,8 +20,8 @@ export type AulaNaTela = {
  * A sala do aluno, só desenho. A página (`/dashboard/live/[id]`) busca a aula,
  * manda o sinal de presença e entrega tudo pronto aqui.
  *
- * A rota é "full bleed" no layout do dashboard (sem padding nem barra
- * inferior), então o respiro das bordas é daqui.
+ * A rota NÃO é "full bleed" (desde 13/10): o layout do dashboard dá o padding
+ * e a folga da barra inferior, então esta tela não põe margem de borda.
  */
 export function SalaDoAluno({
   aula,
@@ -40,7 +40,7 @@ export function SalaDoAluno({
   const noAr = aula.status === "live";
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-3 md:p-6 pb-28 lg:pb-6 space-y-3 md:space-y-4 animate-in fade-in duration-500">
+    <div className="w-full space-y-3 md:space-y-4 animate-in fade-in duration-500">
       <header className={`${CARTAO} relative overflow-hidden p-3 md:p-4`}>
         <div
           className="absolute inset-0 pointer-events-none"
@@ -116,7 +116,7 @@ export function SalaDoAluno({
 /** Esqueleto no formato da sala, no lugar do antigo "Sintonizando satélite…". */
 export function SalaCarregando() {
   return (
-    <div className="w-full max-w-7xl mx-auto p-3 md:p-6 space-y-3 md:space-y-4" aria-busy="true" aria-label="Carregando a aula">
+    <div className="w-full space-y-3 md:space-y-4" aria-busy="true" aria-label="Carregando a aula">
       <div className={`${CARTAO} h-[66px] animate-pulse`} />
       <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className={`${CARTAO} aspect-video animate-pulse`} />

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { escondeFlutuantesNoCelular } from '@/lib/floating-ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquarePlus, Star, X, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 export function FeedbackWidget() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const pathname = usePathname();
+  const escondeNoCelular = escondeFlutuantesNoCelular(pathname);
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -86,7 +90,7 @@ export function FeedbackWidget() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-[164px] right-[30px] lg:bottom-[92px] lg:right-[30px] z-[90] h-11 w-11 bg-primary text-white rounded-full shadow-[0_10px_25px_-5px_rgba(255,107,0,0.5)] flex items-center justify-center border-2 border-white/20 glow-orange group overflow-hidden"
+            className={`fixed ${escondeNoCelular ? 'hidden lg:flex' : 'flex'} bottom-[calc(8.25rem+env(safe-area-inset-bottom,0px))] right-4 lg:bottom-[92px] lg:right-[30px] z-[90] h-10 w-10 lg:h-11 lg:w-11 bg-primary text-white rounded-full shadow-[0_10px_25px_-5px_rgba(255,107,0,0.5)] items-center justify-center border-2 border-white/20 glow-orange group overflow-hidden`}
             aria-label="Deixe seu feedback"
           >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />

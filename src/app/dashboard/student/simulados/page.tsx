@@ -512,7 +512,7 @@ export default function SimuladoPage() {
     const bodyTextTheme = isDark ? 'text-white/90' : 'text-slate-800';
 
     return (
-      <div className={`fixed inset-0 z-[9999] ${containerTheme} flex flex-col h-screen select-none overflow-hidden font-sans transition-colors duration-300`}>
+      <div className={`fixed inset-0 z-[9999] ${containerTheme} flex flex-col h-[100dvh] select-none overflow-hidden font-sans transition-colors duration-300`}>
         
         {/* Confetti canvas placeholder */}
         <canvas id="confetti-canvas" className="fixed inset-0 pointer-events-none z-[10000]" />
@@ -1014,13 +1014,13 @@ export default function SimuladoPage() {
           </p>
 
           {/* Setup stats pills */}
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-3">
             {[
               { label: 'Disciplinas',  value: subjects.length, icon: Library },
               { label: 'Tamanho',   value: `${simSize}q`,   icon: ClipboardList },
               { label: 'Tempo est.', value: `~${Math.round(simSize * 3.5)}m`, icon: Timer },
             ].map(s => (
-              <div key={s.label} className="gradient-border flex items-center gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-2.5 shrink-0 min-w-[110px]">
+              <div key={s.label} className="gradient-border flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-3 sm:px-4 py-2.5 min-w-0 sm:shrink-0 sm:min-w-[110px]">
                 <s.icon className="h-4 w-4 text-orange-400 shrink-0" />
                 <div>
                   <p className="text-white font-black text-sm leading-none">{s.value}</p>

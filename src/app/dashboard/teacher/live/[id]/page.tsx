@@ -90,6 +90,15 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
     if (!error && data?.length) {
       setLive((atual: any) => ({ ...atual, status: para }));
       toast({ title: `Aula ${rotuloDoStatus(para).toLowerCase()}` });
+      // Entrou no ar: avisa os alunos das turmas da aula. A rota só envia uma
+      // vez por live, então reabrir depois de encerrar não repete o push.
+      if (para === 'live') {
+        fetch('/api/push/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'live', liveId, event: 'ao_vivo' }),
+        }).catch(() => {});
+      }
     } else {
       toast({
         title: "Erro ao mudar status",

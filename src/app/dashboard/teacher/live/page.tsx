@@ -174,21 +174,43 @@ export default function ManageLivePage() {
         const { data, error } = await supabase.from("lives").update(campos).eq("id", editingId).select("id");
         if (error) throw error;
         if (!data?.length) throw new Error(SEM_PERMISSAO);
-      } else {
-        const { error } = await supabase.from("lives").insert({
-          ...campos,
-          teacher_id: user.id,
-          teacher_name: user.user_metadata?.full_name || "Mentor da Rede",
-          status: "scheduled",
-        });
-        if (error) throw error;
       }
 
+      // Aviso aos alunos (push + sininho) só na criação. Falha no aviso não
+      // desfaz a aula: ela já está na agenda, e o professor sabe pelo toast.
+      let avisados: boolean | null = null;
+      if (!editingId) {
+        const { data: criada, error } = await supabase
+          .from("lives")
+          .insert({
+            ...campos,
+            teacher_id: user.id,
+            teacher_name: user.user_metadata?.full_name || "Mentor da Rede",
+            status: "scheduled",
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        if (criada?.id) {
+          avisados = await fetch("/api/push/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "live", liveId: criada.id, event: "agendada" }),
+          })
+            .then((r) => r.ok)
+            .catch(() => false);
+        }
+      }
+
+      const sobreOVideo = youtubeId
+        ? "Os alunos vão assistir pelo YouTube dentro da plataforma."
+        : "Adicione o link do YouTube antes da aula para todos conseguirem assistir.";
       toast({
         title: editingId ? "Aula atualizada" : "Aula agendada!",
-        description: youtubeId
-          ? "Os alunos vão assistir pelo YouTube dentro da plataforma."
-          : "Adicione o link do YouTube antes da aula para todos conseguirem assistir.",
+        description:
+          avisados === null
+            ? sobreOVideo
+            : `${avisados ? "Os alunos foram avisados." : "O aviso aos alunos falhou."} ${sobreOVideo}`,
       });
       setIsCreateOpen(false);
       setEditingId(null);

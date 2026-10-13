@@ -117,11 +117,11 @@ export default function AuroraSupportPage() {
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] w-full max-w-6xl mx-auto animate-in fade-in duration-500 overflow-hidden space-y-6">
-      <div className="flex items-center justify-between px-2 shrink-0">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-black italic tracking-tight text-primary uppercase">
+    <div className="flex flex-col h-[calc(100dvh-13.5rem-env(safe-area-inset-bottom,0px))] lg:h-[calc(100vh-8rem)] w-full max-w-6xl mx-auto animate-in fade-in duration-500 overflow-hidden space-y-4 md:space-y-6">
+      <div className="flex items-start justify-between gap-3 px-2 shrink-0">
+        <div className="space-y-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black italic tracking-tight text-primary uppercase leading-tight">
               Engine de Comunicação
             </h1>
             <Badge className="bg-accent/10 text-accent font-black text-[8px] uppercase tracking-widest border-none px-3">SINAL ATIVO</Badge>
@@ -135,9 +135,10 @@ export default function AuroraSupportPage() {
             variant="outline" 
             size="sm" 
             onClick={() => setMessages([{role: "assistant", content: "Sintonizando dados..."}])} 
-            className="rounded-xl border-dashed h-10 px-6 text-xs font-black uppercase hover:bg-red-50 hover:text-red-600 transition-colors"
+            aria-label="Reiniciar conversa"
+            className="rounded-xl border-dashed h-10 w-10 sm:w-auto px-0 sm:px-6 text-xs font-black uppercase hover:bg-red-50 hover:text-red-600 transition-colors shrink-0"
           >
-            <Eraser className="h-4 w-4 mr-2" /> Reiniciar
+            <Eraser className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Reiniciar</span>
           </Button>
         </div>
       </div>
