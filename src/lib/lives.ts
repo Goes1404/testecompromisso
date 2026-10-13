@@ -150,3 +150,51 @@ export function proximoStatus(status: string | null): { para: StatusDaLive; rotu
   if (status === 'completed') return { para: 'live', rotulo: 'Reabrir aula' };
   return { para: 'live', rotulo: 'Abrir para alunos' };
 }
+
+// ── Turmas e chamada automática ─────────────────────────────────────────────
+
+/**
+ * A turma de verdade é `profiles.sala`, digitada de vários jeitos ("5", "05",
+ * "sala 5"). Tudo vira "5"; o que não é número vira `null`. Espelho exato de
+ * `public.sala_normalizada()` — se mudar uma, mude a outra.
+ */
+export function normalizarSala(sala: string | null | undefined): string | null {
+  const x = (sala ?? '').trim().toLowerCase().replace(/^(sala\s*)?0*/, '');
+  return /^[0-9]+$/.test(x) ? x : null;
+}
+
+/** "Todas as turmas", "Sala 3", "Salas 1, 2 e 5". Vazio = todas. */
+export function rotuloDasTurmas(turmas: string[] | null | undefined): string {
+  const lista = [...new Set((turmas ?? []).map(normalizarSala).filter((t): t is string => !!t))]
+    .sort((a, b) => Number(a) - Number(b));
+  if (lista.length === 0) return 'Todas as turmas';
+  if (lista.length === 1) return `Sala ${lista[0]}`;
+  return `Salas ${lista.slice(0, -1).join(', ')} e ${lista[lista.length - 1]}`;
+}
+
+/** Decisão da coordenação (13/10): presente quem ficou 60% da aula na sala. */
+export const PRESENCA_MINIMA = 0.6;
+
+/**
+ * A sala avisa o banco a cada 60 s. O banco soma o tempo real entre dois
+ * avisos, até 130 s por aviso — então um aviso que atrasa por rede ruim ainda
+ * conta inteiro, e metralhar avisos não soma nada.
+ */
+export const INTERVALO_DO_SINAL_MS = 60_000;
+
+export function situacaoDaPresenca(segundos: number, segundosDaAula: number) {
+  const porcentagem = segundosDaAula > 0 ? Math.min(100, Math.floor((segundos / segundosDaAula) * 100)) : 0;
+  return {
+    porcentagem,
+    presente: segundosDaAula > 0 && segundos >= Math.ceil(segundosDaAula * PRESENCA_MINIMA),
+  };
+}
+
+/** "45 s", "12 min", "1h05". */
+export function formatarDuracao(segundos: number): string {
+  const s = Math.max(0, Math.floor(segundos));
+  if (s < 60) return `${s} s`;
+  const min = Math.floor(s / 60);
+  if (min < 60) return `${min} min`;
+  return `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
+}

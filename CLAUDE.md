@@ -273,6 +273,33 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
    sala; aluno lê, mas não cria nem altera link; sem login não lê nada (a
    leitura `TO public` saiu — `meet_link` é a única tranca da sala do Meet).
 
+8. **Turma é `profiles.sala`, normalizada.** O cadastro tem "5", "05", "sala 5" para
+   a mesma sala; `public.sala_normalizada()` e `normalizarSala()` (TS) viram tudo em
+   "5" — as duas precisam bater. ETEC = salas 1–6, ENEM = 7–12. `lives.turmas` guarda
+   as salas escolhidas; vazio = todas, inclusive quem está sem sala. A restrição é RLS
+   (`pode_ver_live()`), não filtro de tela. ⚠️ Em 13/10, ~200 alunos ativos estavam
+   sem sala no cadastro: eles **não veem** aula restrita a turmas.
+9. **Chamada da live é por tempo, sem código** (decisão da coordenação, 13/10):
+   presente quem ficou **60%** do tempo em que a aula esteve no ar com a sala aberta.
+   A sala chama `registrar_presenca_live()` a cada 60 s; o banco soma o tempo real
+   entre sinais, **até 130 s por sinal** — metralhar sinais soma zero e sumir não
+   conta. O cronômetro da aula (`segundos_no_ar`/`no_ar_desde`) só o gatilho mexe.
+   Prova só que a página estava aberta, não atenção.
+10. **Encerrar gera a chamada** (`fechar_chamada_da_live()`, por gatilho): cria a
+    `class_sessions` (`session_type='live'`, `live_id`) e grava presente/ausente com
+    `method='app'` para todos os esperados. **Nunca sobrescreve** o que a secretaria
+    marcou à mão. Reabrir e encerrar recalcula. Aula com menos de 10 min no ar não gera
+    chamada (professor que abriu sem querer não pode marcar ~855 faltas).
+    ⚠️ Contas duplicadas (ver abaixo) entram como esperadas e saem como ausentes.
+11. **`live_presencas` não tem policy de escrita.** Só a função SECURITY DEFINER grava;
+    senão o aluno escreveria "fiquei 2 horas" direto na tabela.
+
+Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
+com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`
+(o aluno se marcava presente em qualquer aula sem código, direto pelo banco). O app
+funciona sem ela — sem turmas, sem contador e sem chamada — para o deploy não depender
+da ordem.
+
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 
 ### IA Extraction (Motor de Provas)

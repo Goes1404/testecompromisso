@@ -22,8 +22,41 @@ import {
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { linkExternoSeguro, urlDoPlayer } from "@/lib/lives";
+import { formatarDuracao, linkExternoSeguro, situacaoDaPresenca, urlDoPlayer, PRESENCA_MINIMA } from "@/lib/lives";
 import { PlayerDoYoutube } from "@/components/live/PlayerDoYoutube";
+import { usePresencaNaLive, type Presenca } from "@/components/live/usePresencaNaLive";
+
+/**
+ * Mostra ao aluno quanto do tempo dele já contou. Sem isso, a regra dos 60%
+ * vira surpresa na chamada — com ela, o aluno sabe que fechar a aba custa
+ * presença.
+ */
+function IndicadorDePresenca({ presenca }: { presenca: Presenca | null }) {
+  if (!presenca) return null;
+  const { porcentagem, presente } = situacaoDaPresenca(presenca.segundos, presenca.segundosDaAula);
+  const meta = Math.round(PRESENCA_MINIMA * 100);
+  return (
+    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-bold text-slate-200">
+          {presente ? "✅ Presença garantida até agora" : "Sua presença está sendo registrada"}
+        </p>
+        <span className="text-[11px] font-black text-white tabular-nums shrink-0">
+          {formatarDuracao(presenca.segundos)} de {formatarDuracao(presenca.segundosDaAula)}
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-white/10 overflow-hidden" role="progressbar" aria-valuenow={porcentagem} aria-valuemin={0} aria-valuemax={100}>
+        <div
+          className={`h-full rounded-full transition-[width] duration-700 ${presente ? "bg-green-500" : "bg-accent"}`}
+          style={{ width: `${porcentagem}%` }}
+        />
+      </div>
+      <p className="text-[10px] font-medium text-slate-400 leading-snug">
+        Conta presença quem fica pelo menos {meta}% da aula com esta página aberta. Fechar a página ou bloquear o celular pausa a contagem.
+      </p>
+    </div>
+  );
+}
 
 export default function StudentLivePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: liveId } = use(params);
@@ -75,6 +108,8 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
       supabase.removeChannel(channel);
     };
   }, [liveId, user, router, toast]);
+
+  const presenca = usePresencaNaLive(liveId, live?.status === 'live');
 
   if (loading) return (
     <div className="h-[80vh] flex flex-col items-center justify-center gap-4">
@@ -128,6 +163,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
           /* O aulão: vídeo do YouTube dentro da plataforma, sem limite de público. */
           <Card className="bg-slate-950 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border-none p-3 md:p-6 space-y-4">
             <PlayerDoYoutube videoId={live.youtube_id} titulo={live.title || 'Aula ao vivo'} />
+            <IndicadorDePresenca presenca={presenca} />
             {meetLink && (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-white/5 border border-white/10 p-4">
                 <p className="text-xs text-slate-300 font-medium italic leading-relaxed">
@@ -191,6 +227,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
                     </p>
                   </div>
                 )}
+                <div className="text-left"><IndicadorDePresenca presenca={presenca} /></div>
              </div>
           </div>
         </Card>

@@ -13,6 +13,10 @@ import {
   linkExternoSeguro,
   estaNaAgenda,
   proximoStatus,
+  normalizarSala,
+  rotuloDasTurmas,
+  situacaoDaPresenca,
+  formatarDuracao,
 } from '../src/lib/lives';
 
 let falhas = 0;
@@ -71,6 +75,23 @@ eq('sem horário não aparece', estaNaAgenda({ status: 'scheduled', start_time: 
 eq('agendada abre', proximoStatus('scheduled').para, 'live');
 eq('no ar encerra, não volta para agendada', proximoStatus('live').para, 'completed');
 eq('encerrada pode reabrir', proximoStatus('completed').para, 'live');
+
+// ── Turmas (espelho de public.sala_normalizada, testada no Postgres) ──
+eq('salas como o cadastro tem', ['01', 'sala 2', 'Sala 05', '10', '07', '0', 'Não informada', '', null, 'Turma A'].map(normalizarSala),
+  ['1', '2', '5', '10', '7', null, null, null, null, null]);
+eq('todas', rotuloDasTurmas([]), 'Todas as turmas');
+eq('uma', rotuloDasTurmas(['3']), 'Sala 3');
+eq('várias em ordem numérica', rotuloDasTurmas(['10', '2', '1']), 'Salas 1, 2 e 10');
+eq('repetida e mal escrita', rotuloDasTurmas(['01', '1', 'sala 2']), 'Salas 1 e 2');
+
+// ── Presença: 60% da aula ──
+eq('36 de 60 min é presente', situacaoDaPresenca(36 * 60, 60 * 60), { porcentagem: 60, presente: true });
+eq('35 de 60 min é ausente', situacaoDaPresenca(35 * 60, 60 * 60), { porcentagem: 58, presente: false });
+eq('aula que não começou', situacaoDaPresenca(0, 0), { porcentagem: 0, presente: false });
+eq('não passa de 100%', situacaoDaPresenca(700, 600).porcentagem, 100);
+eq('duração em segundos', formatarDuracao(45), '45 s');
+eq('duração em minutos', formatarDuracao(12 * 60 + 30), '12 min');
+eq('duração em horas', formatarDuracao(65 * 60), '1h05');
 
 if (falhas) {
   console.error(`\n${falhas} falha(s)`);

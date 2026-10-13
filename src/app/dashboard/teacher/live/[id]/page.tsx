@@ -19,8 +19,9 @@ import {
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
-import { linkExternoSeguro, proximoStatus, rotuloDoStatus, urlDoPlayer } from "@/lib/lives";
+import { linkExternoSeguro, proximoStatus, rotuloDasTurmas, rotuloDoStatus, urlDoPlayer } from "@/lib/lives";
 import { PlayerDoYoutube } from "@/components/live/PlayerDoYoutube";
+import { PainelDaChamada } from "@/components/live/PainelDaChamada";
 import Link from "next/link";
 
 /**
@@ -80,8 +81,17 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
 
   const toggleLiveStatus = async () => {
     if (isUpdating || !live) return;
-    setIsUpdating(true);
     const { para } = proximoStatus(live.status);
+
+    // Encerrar gera a chamada de centenas de alunos: um clique sem querer no
+    // meio da aula marcaria falta para quem ainda não chegou aos 60%.
+    if (
+      para === 'completed' &&
+      !window.confirm('Encerrar a aula gera a chamada: presente quem ficou 60% do tempo com a sala aberta. Encerrar agora?')
+    ) {
+      return;
+    }
+    setIsUpdating(true);
 
     // `.select()` porque, sem policy de escrita, o UPDATE "dá certo" sem
     // tocar em linha nenhuma — e o professor acharia que abriu a sala.
@@ -121,7 +131,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
           </Button>
           <div>
             <h1 className="text-xl md:text-2xl font-black italic tracking-tighter uppercase leading-none">{live?.title}</h1>
-            <p className="text-[10px] font-bold text-slate-500 tracking-[0.3em] mt-1 uppercase">CONSOLE DE TRANSMISSÃO</p>
+            <p className="text-[10px] font-bold text-slate-500 tracking-[0.3em] mt-1 uppercase">CONSOLE DE TRANSMISSÃO · {rotuloDasTurmas(live?.turmas)}</p>
           </div>
         </div>
         
@@ -174,6 +184,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
           </Button>
         </Card>
       )}
+      <PainelDaChamada liveId={liveId} status={live?.status ?? null} />
     </div>
   );
 }

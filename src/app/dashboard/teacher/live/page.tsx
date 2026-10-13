@@ -32,9 +32,20 @@ import { supabase } from "@/app/lib/supabase";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { idDoYoutube, linkExternoSeguro, rotuloDoStatus } from "@/lib/lives";
+import { idDoYoutube, linkExternoSeguro, normalizarSala, rotuloDasTurmas, rotuloDoStatus } from "@/lib/lives";
 
-const FORM_VAZIO = { title: "", description: "", date: "", time: "", meet_link: "", youtube_url: "" };
+const FORM_VAZIO = {
+  title: "",
+  description: "",
+  date: "",
+  time: "",
+  meet_link: "",
+  youtube_url: "",
+  /** Salas normalizadas ("1".."12"). Vazio = todas as turmas. */
+  turmas: [] as string[],
+};
+
+type OpcaoDeTurma = { sala: string; curso: string | null; alunos: number };
 
 /**
  * Sem policy de escrita em `lives` o Supabase recusa o INSERT com 42501 e,
@@ -55,6 +66,28 @@ export default function ManageLivePage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState(FORM_VAZIO);
+  // null = ainda não carregou ou a migration de turmas não foi aplicada. Nesse
+  // caso a aula sai para todas as turmas e o campo `turmas` nem é enviado —
+  // mandar uma coluna que não existe derrubaria o agendamento inteiro.
+  const [opcoesDeTurma, setOpcoesDeTurma] = useState<OpcaoDeTurma[] | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc("turmas_para_lives").then(({ data, error }) => {
+      if (!error && Array.isArray(data)) setOpcoesDeTurma(data as OpcaoDeTurma[]);
+    });
+  }, [user]);
+
+  const alternarTurma = (sala: string) =>
+    setFormData((f) => ({
+      ...f,
+      turmas: f.turmas.includes(sala) ? f.turmas.filter((t) => t !== sala) : [...f.turmas, sala],
+    }));
+
+  const selecionarCurso = (curso: string) => {
+    const salas = (opcoesDeTurma ?? []).filter((o) => o.curso === curso).map((o) => o.sala);
+    setFormData((f) => ({ ...f, turmas: salas }));
+  };
 
   const abrirNovo = () => {
     setEditingId(null);
@@ -72,6 +105,9 @@ export default function ManageLivePage() {
       time: d ? format(d, "HH:mm") : "",
       meet_link: live.meet_link || "",
       youtube_url: live.youtube_url || (live.youtube_id ? `https://youtu.be/${live.youtube_id}` : ""),
+      turmas: Array.isArray(live.turmas)
+        ? live.turmas.map(normalizarSala).filter((t: string | null): t is string => !!t)
+        : [],
     });
     setIsCreateOpen(true);
   };
@@ -139,6 +175,7 @@ export default function ManageLivePage() {
         meet_link: meetUrl || null,
         youtube_url: youtubeId ? youtubeUrl : null,
         youtube_id: youtubeId,
+        ...(opcoesDeTurma ? { turmas: formData.turmas } : {}),
       };
 
       if (editingId) {
@@ -333,6 +370,69 @@ export default function ManageLivePage() {
 
             <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                Quem assiste
+              </Label>
+              {opcoesDeTurma === null ? (
+                <p className="text-[11px] font-medium text-slate-500 ml-1">Todas as turmas.</p>
+              ) : (
+                <div className="space-y-2 rounded-xl border border-slate-200 p-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { rotulo: "Todas as turmas", ativo: formData.turmas.length === 0, onClick: () => setFormData((f) => ({ ...f, turmas: [] })) },
+                      ...["ETEC", "ENEM"]
+                        .filter((c) => opcoesDeTurma.some((o) => o.curso === c))
+                        .map((c) => {
+                          const salas = opcoesDeTurma.filter((o) => o.curso === c).map((o) => o.sala);
+                          const ativo = salas.length > 0 && formData.turmas.length === salas.length && salas.every((s) => formData.turmas.includes(s));
+                          return { rotulo: `Todo o ${c}`, ativo, onClick: () => selecionarCurso(c) };
+                        }),
+                    ].map((b) => (
+                      <button
+                        key={b.rotulo}
+                        type="button"
+                        onClick={b.onClick}
+                        disabled={isSubmitting}
+                        className={`h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                          b.ativo ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        {b.rotulo}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                    {opcoesDeTurma.map((o) => {
+                      const marcada = formData.turmas.includes(o.sala);
+                      return (
+                        <button
+                          key={o.sala}
+                          type="button"
+                          onClick={() => alternarTurma(o.sala)}
+                          disabled={isSubmitting}
+                          aria-pressed={marcada}
+                          className={`h-11 rounded-lg border text-left px-2 transition-all ${
+                            marcada ? "border-orange-500 bg-orange-50" : "border-slate-200 bg-white hover:border-slate-300"
+                          }`}
+                        >
+                          <span className="block text-xs font-black text-slate-800 leading-none">Sala {o.sala}</span>
+                          <span className="block text-[9px] font-bold text-slate-500 mt-0.5">
+                            {o.curso ?? "—"} · {o.alunos}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] font-medium text-slate-500 leading-snug">
+                    {formData.turmas.length === 0
+                      ? "Todos os alunos veem a aula, inclusive quem está sem sala no cadastro."
+                      : `Só ${rotuloDasTurmas(formData.turmas)} veem a aula e entram na chamada. Aluno sem sala no cadastro não vê.`}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
                 Pauta (opcional)
               </Label>
               <textarea
@@ -426,6 +526,9 @@ export default function ManageLivePage() {
                     </div>
                     <p className="text-sm font-black text-slate-800 italic leading-snug truncate">
                       {live.title}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-bold truncate mt-1">
+                      {rotuloDasTurmas(live.turmas)}
                     </p>
                     {live.youtube_id ? (
                       <p className="text-[10px] text-red-500/80 font-bold truncate mt-1 flex items-center gap-1">
