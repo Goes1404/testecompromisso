@@ -30,6 +30,35 @@ interface SubscriptionRow {
   auth: string;
 }
 
+function emLotes<T>(itens: T[], tamanho: number): T[][] {
+  const lotes: T[][] = [];
+  for (let i = 0; i < itens.length; i += tamanho) lotes.push(itens.slice(i, i + tamanho));
+  return lotes;
+}
+
+/**
+ * Ids de todos os alunos. Pagina porque o PostgREST devolve no máximo 1.000
+ * linhas por pedido e a base já passou disso (~1.058 contas de aluno) — sem
+ * paginar, quem vinha depois da milésima linha nunca era avisado.
+ */
+export async function idsDeAlunos(examTarget?: string): Promise<string[]> {
+  const sb = adminClient();
+  const ids: string[] = [];
+  const PAGINA = 1000;
+  for (let de = 0; ; de += PAGINA) {
+    let q = sb.from("profiles").select("id").eq("role", "student").order("id").range(de, de + PAGINA - 1);
+    if (examTarget) q = q.eq("exam_target", examTarget);
+    const { data, error } = await q;
+    if (error) {
+      console.error("[push] falha ao listar alunos:", error.message);
+      break;
+    }
+    ids.push(...(data || []).map((r: any) => r.id));
+    if (!data || data.length < PAGINA) break;
+  }
+  return ids;
+}
+
 // Cliente admin para bypass de RLS ao enviar push em fan-out.
 function adminClient() {
   return createClient(
@@ -57,16 +86,26 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
     body: payload.body || null,
     url: payload.url || null,
   }));
-  const { error: notifErr } = await sb.from("notifications").insert(inboxRows);
-  if (notifErr) console.error("[push] inbox insert error:", notifErr.message);
+  for (const lote of emLotes(inboxRows, 500)) {
+    const { error: notifErr } = await sb.from("notifications").insert(lote);
+    if (notifErr) console.error("[push] inbox insert error:", notifErr.message);
+  }
 
-  // 2) Buscar subscriptions dos destinatários
-  const { data: subs, error: subsErr } = await sb
-    .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth, user_id")
-    .in("user_id", userIds);
+  // 2) Buscar subscriptions dos destinatários — em lotes. O `.in()` vira
+  // querystring: com a escola inteira (~1.000 UUIDs, ~37 KB de URL) o pedido
+  // estoura o limite de URL do gateway e volta erro, e o envio para todo mundo
+  // terminava em "0 enviados" sem ninguém perceber.
+  const subs: any[] = [];
+  for (const lote of emLotes(userIds, 150)) {
+    const { data, error } = await sb
+      .from("push_subscriptions")
+      .select("id, endpoint, p256dh, auth, user_id")
+      .in("user_id", lote);
+    if (error) console.error("[push] subscriptions query error:", error.message);
+    else if (data) subs.push(...data);
+  }
 
-  if (subsErr || !subs || subs.length === 0) {
+  if (subs.length === 0) {
     return { sent: 0, failed: 0, persisted: inboxRows.length };
   }
 

@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import { sendPushToUser, sendPushToUsers } from "@/lib/push";
+import { sendPushToUser, sendPushToUsers, idsDeAlunos } from "@/lib/push";
+import { avisoDaLive, COLUNA_DO_AVISO, type EventoDaLive } from "@/lib/live-aviso";
 
 type NotifyBody =
   | { type: "chat"; receiverId: string; content: string }
   | { type: "communication"; announcementId: string }
-  | { type: "material"; materialId: string };
+  | { type: "material"; materialId: string }
+  | { type: "live"; liveId: string; event: EventoDaLive };
 
 export async function POST(req: NextRequest) {
   try {
@@ -110,12 +112,9 @@ export async function POST(req: NextRequest) {
       // profile_type é texto livre (ex.: "etec", "Estudante ETEC") — usar role,
       // que é o enum confiável para identificar alunos.
       const publico = (ann.target_group || "all").toLowerCase();
-      let q = admin.from("profiles").select("id").eq("role", "student");
-      if (publico === "enem" || publico === "etec") {
-        q = q.eq("exam_target", publico.toUpperCase());
-      }
-      const { data: students } = await q;
-      const userIds = (students || []).map((s: any) => s.id);
+      const userIds = await idsDeAlunos(
+        publico === "enem" || publico === "etec" ? publico.toUpperCase() : undefined,
+      );
 
       const result = await sendPushToUsers(userIds, {
         title: ann.priority === "high" ? "⚠️ " + ann.title : ann.title,
@@ -140,12 +139,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
       }
 
-      let q = admin.from("profiles").select("id").eq("role", "student");
-      if (mat.target_group === "enem" || mat.target_group === "etec") {
-        q = q.eq("exam_target", mat.target_group.toUpperCase());
-      }
-      const { data: students } = await q;
-      const userIds = (students || []).map((s: any) => s.id);
+      const userIds = await idsDeAlunos(
+        mat.target_group === "enem" || mat.target_group === "etec" ? mat.target_group.toUpperCase() : undefined,
+      );
 
       const result = await sendPushToUsers(userIds, {
         title: `📚 Novo material: ${mat.title}`,
@@ -154,6 +150,53 @@ export async function POST(req: NextRequest) {
         url: `/dashboard/student/materials`,
         tag: `material-${body.materialId}`,
       });
+      return NextResponse.json({ ok: true, ...result });
+    }
+
+    // ── Caso 4: Live agendada / entrou no ar ─────────────────
+    // Lives não têm turma: a agenda é da escola inteira, então o aviso vai
+    // para todos os alunos. O texto sai da live GRAVADA (nunca do corpo), e o
+    // evento `ao_vivo` só sai se o status no banco for de fato `live`.
+    if (body.type === "live") {
+      if (!body.liveId || (body.event !== "agendada" && body.event !== "ao_vivo")) {
+        return NextResponse.json({ error: "liveId e event obrigatórios" }, { status: 400 });
+      }
+      if (!senderProfile || !["teacher", "admin", "staff"].includes(senderProfile.role)) {
+        return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+      }
+
+      const { data: live } = await admin
+        .from("lives")
+        .select("id, title, teacher_name, start_time, status")
+        .eq("id", body.liveId)
+        .maybeSingle();
+      if (!live) return NextResponse.json({ error: "Live não encontrada" }, { status: 404 });
+      if (body.event === "ao_vivo" && live.status !== "live") {
+        return NextResponse.json({ error: "A live não está no ar" }, { status: 409 });
+      }
+
+      // Marca antes de enviar, só se ainda não estava marcada: liga/desliga do
+      // sinal ou dois cliques simultâneos não viram dois pushes para ~855
+      // alunos. Coluna ausente (migration não aplicada) → avisa mesmo assim,
+      // só perde a memória (mesma regra do mural).
+      const coluna = COLUNA_DO_AVISO[body.event];
+      const marcado = await admin
+        .from("lives")
+        .update({ [coluna]: new Date().toISOString() })
+        .eq("id", live.id)
+        .is(coluna, null)
+        .select("id");
+      if (!marcado.error && (marcado.data?.length ?? 0) === 0) {
+        return NextResponse.json({ ok: true, skipped: "já avisado" });
+      }
+      if (marcado.error) {
+        console.warn("[push/notify] live sem coluna de aviso:", marcado.error.message);
+      }
+
+      const userIds = await idsDeAlunos();
+
+      const aviso = avisoDaLive(body.event, live);
+      const result = await sendPushToUsers(userIds, { ...aviso, type: "info" });
       return NextResponse.json({ ok: true, ...result });
     }
 

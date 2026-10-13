@@ -84,19 +84,41 @@ export default function ManageLivePage() {
     try {
       const start_time = new Date(`${formData.date}T${formData.time}`).toISOString();
 
-      const { error } = await supabase.from("lives").insert({
-        title: formData.title,
-        description: formData.description,
-        start_time,
-        meet_link: formData.meet_link,
-        teacher_id: user.id,
-        teacher_name: user.user_metadata?.full_name || "Mentor da Rede",
-        status: "scheduled",
-      });
+      const { data: criada, error } = await supabase
+        .from("lives")
+        .insert({
+          title: formData.title,
+          description: formData.description,
+          start_time,
+          meet_link: formData.meet_link,
+          teacher_id: user.id,
+          teacher_name: user.user_metadata?.full_name || "Mentor da Rede",
+          status: "scheduled",
+        })
+        .select("id")
+        .single();
 
       if (error) throw new Error(error.message);
 
-      toast({ title: "Sala Criada!", description: "A reunião externa já está na agenda." });
+      // Avisa todos os alunos (push + sininho). Falha no aviso não desfaz a
+      // sala: ela já está na agenda, e o professor fica sabendo pelo toast.
+      let avisados = true;
+      if (criada?.id) {
+        avisados = await fetch("/api/push/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "live", liveId: criada.id, event: "agendada" }),
+        })
+          .then((r) => r.ok)
+          .catch(() => false);
+      }
+
+      toast({
+        title: "Sala Criada!",
+        description: avisados
+          ? "Está na agenda e os alunos foram notificados."
+          : "Está na agenda, mas o aviso aos alunos falhou.",
+      });
       setIsCreateOpen(false);
       setFormData({ title: "", description: "", date: "", time: "", meet_link: "" });
       fetchLives();

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { Virtuoso } from 'react-virtuoso';
+import { escondeFlutuantesNoCelular } from "@/lib/floating-ui";
 import { usePathname } from "next/navigation";
 import { AuroraAvatar } from "@/components/AuroraAvatar";
 
@@ -27,11 +28,8 @@ export function AccessibilityWidget() {
   const { toast } = useToast();
   const pathname = usePathname();
 
-  const isInputHeavyPage = 
-    pathname.includes('/chat/') || 
-    pathname.includes('/support') || 
-    pathname.includes('/live/') || 
-    pathname.includes('/forum/');
+  // Em telas de digitação o botão caía em cima do "enviar" no celular.
+  const isInputHeavyPage = escondeFlutuantesNoCelular(pathname);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,12 +95,12 @@ export function AccessibilityWidget() {
   
   return (
     <div 
-      className={`fixed ${isInputHeavyPage ? 'bottom-28 lg:bottom-10' : 'bottom-24 lg:bottom-6'} right-6 z-40 flex flex-col gap-3 items-end transition-all duration-500`}
+      className={`fixed ${isInputHeavyPage ? 'hidden lg:flex lg:bottom-10' : 'flex lg:bottom-6'} bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-3 lg:right-6 z-40 flex-col gap-3 items-end transition-all duration-500`}
     >
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
            <button 
-            className={`flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-2xl transition-all hover:scale-110 active:scale-95 border-4 border-white group relative animate-in zoom-in duration-700 ${
+            className={`flex h-12 w-12 lg:h-14 lg:w-14 items-center justify-center rounded-full bg-primary text-white shadow-2xl transition-all hover:scale-110 active:scale-95 border-[3px] lg:border-4 border-white group relative animate-in zoom-in duration-700 ${
               isOpen ? 'rotate-[360deg] shadow-primary/40' : ''
             }`}
             title="Abrir Aurora IA"
@@ -111,7 +109,7 @@ export function AccessibilityWidget() {
                 botão fica visível em quase toda página do dashboard, então é
                 aqui que o detalhe mais aparece. Sem bicho adotado, o robô
                 (mesmo ícone dos outros três lugares onde a Aurora mora). */}
-            <div className="relative flex items-center justify-center h-9 w-9 overflow-hidden rounded-full">
+            <div className="relative flex items-center justify-center h-8 w-8 lg:h-9 lg:w-9 overflow-hidden rounded-full">
               <AuroraAvatar className="h-full w-full transition-all group-hover:scale-95" />
             </div>
             {!isOpen && <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-50 rounded-full border-2 border-white animate-bounce shadow-sm" />}

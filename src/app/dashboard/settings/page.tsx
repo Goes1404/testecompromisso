@@ -512,7 +512,7 @@ export default function SettingsPage() {
                       <Button 
                         onClick={handleGenerateGuardianToken}
                         disabled={generatingToken}
-                        className="bg-primary text-white font-black h-13 px-8 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
+                        className="w-full sm:w-auto whitespace-normal bg-primary text-white font-black h-auto min-h-[3.25rem] py-3 px-6 sm:px-8 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                       >
                         {generatingToken ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                         GERAR LINK DE ACOMPANHAMENTO

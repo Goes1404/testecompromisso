@@ -461,7 +461,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         </div>
       </header>
 
-      <div className={`flex flex-col lg:flex-row items-start relative ${showSimultaneousWorkbook ? 'h-[calc(100vh-64px)] overflow-hidden' : 'min-h-[calc(100vh-64px)]'}`}>
+      <div className={`flex flex-col lg:flex-row items-start relative ${showSimultaneousWorkbook ? 'h-[calc(100dvh-64px)] overflow-hidden' : 'min-h-[calc(100dvh-64px)]'}`}>
         <main className={`flex-1 flex flex-col bg-white min-w-0 transition-all duration-500 ${showSimultaneousWorkbook ? 'h-full overflow-hidden' : ''}`}>
           {modules.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-10 gap-6 opacity-40">
@@ -694,7 +694,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ id: string
         )}
 
         {sidebarOpen && (
-          <aside className="lg:w-[350px] w-full border-l border-muted/20 bg-slate-50/50 sticky top-16 self-start h-[calc(100vh-64px)] overflow-y-auto shrink-0 transition-all duration-500 z-40">
+          <aside className="lg:w-[350px] w-full border-l border-muted/20 bg-slate-50/50 lg:sticky lg:top-16 self-start lg:h-[calc(100dvh-64px)] lg:overflow-y-auto shrink-0 transition-all duration-500 z-40">
             <div className="p-5 bg-white border-b border-muted/20">
               <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/40 mb-4">Jornada Maestro</h2>
               <div className="space-y-1.5">

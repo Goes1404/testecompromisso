@@ -439,7 +439,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user, isUserLoading, router, hasHydrated, pathname]);
 
   const isFullBleedPage = useMemo(
-    () => pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/') || (pathname.includes('/student/provas/') && pathname !== '/dashboard/student/provas'),
+    () => pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || (pathname.includes('/live/') && !pathname.startsWith('/dashboard/live/')) || pathname.includes('/library/book/') || (pathname.includes('/student/provas/') && pathname !== '/dashboard/student/provas'),
     [pathname]
   );
 
@@ -561,7 +561,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
         )}
 
-        <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'} ${!isFullBleedPage ? 'pb-20 lg:pb-8' : ''}`}>
+        <main className={`flex-1 flex flex-col min-h-0 overflow-y-auto ${isFullBleedPage ? 'p-0' : 'p-4 md:p-8'} ${!isFullBleedPage ? 'pb-[calc(8.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8' : ''}`}>
           <div className={isFullBleedPage ? 'flex-1 flex flex-col min-h-0' : 'max-w-7xl mx-auto w-full'}>
             <Suspense fallback={<div className="p-8 opacity-20 animate-pulse"><Sparkles className="h-10 w-10 text-accent" /></div>}>
               {children}

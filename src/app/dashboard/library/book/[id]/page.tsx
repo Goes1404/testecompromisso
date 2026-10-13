@@ -72,7 +72,7 @@ export default function BookViewerPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-900 overflow-hidden select-none">
+    <div className="h-[100dvh] flex flex-col bg-slate-900 overflow-hidden select-none">
       <Script 
         src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" 
         strategy="afterInteractive"

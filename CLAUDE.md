@@ -238,6 +238,39 @@ cargo — a que existisse a mais ficaria para trás na primeira mudança de layo
 
 Prova de não-regressão: `npx tsx scripts/test-mural.ts` (roda dentro de `npm test`).
 
+### 📺 Lives: aviso aos alunos
+
+Toda live gera **dois avisos para todos os alunos** (push + sininho), via
+`/api/push/notify` com `{ type: "live", liveId, event }`:
+
+| evento | quem dispara | coluna de memória |
+|---|---|---|
+| `agendada` | `teacher/live` ao criar a sala | `lives.avisado_agendada_em` |
+| `ao_vivo` | `teacher/live/[id]` ao ligar o sinal | `lives.avisado_ao_vivo_em` |
+
+1. **A rota marca antes de enviar** (`UPDATE … WHERE coluna IS NULL`): ligar e
+   desligar o sinal para testar o Meet não repete o push para ~1.000 alunos.
+2. **O texto sai da live gravada** (`avisoDaLive()` em `src/lib/live-aviso.ts`),
+   nunca do corpo; `ao_vivo` só sai se o status no banco for `live`.
+3. **Horário no fuso da escola** (`America/Sao_Paulo`) — o servidor roda em UTC.
+4. **Fan-out sempre por `idsDeAlunos()`** (`lib/push.ts`): pagina de 1.000 em
+   1.000 (o PostgREST corta aí e a base já passou disso) e a busca de
+   subscriptions vai em lotes, porque um `.in()` com a escola inteira estoura o
+   limite de URL e o envio terminava em "0 enviados" calado.
+
+Prova: `npx tsx scripts/test-live-aviso.ts` (dentro de `npm test`).
+
+### 📱 Mobile
+
+- A tela do aluno é medida em **360px**. Título de card não usa `truncate`
+  (o aluno precisa ler qual é a aula) e botão de ação é `w-full` no celular.
+- Altura de tela cheia é `100dvh`, nunca `100vh`/`h-screen`: no Safari/Chrome do
+  celular o `100vh` inclui a barra do navegador e corta o rodapé (botão de enviar,
+  "próxima questão").
+- Os botões flutuantes (Aurora e Feedback) somem no celular nas telas de digitação
+  — lista em `escondeFlutuantesNoCelular()` (`src/lib/floating-ui.ts`). Eles caíam
+  em cima do botão de enviar.
+
 ### IA Extraction (Motor de Provas)
 - Se o enunciado original diz "utilize o texto para responder as questões X a Y", a IA **deve** repetir o `supporting_text` integralmente em **cada** objeto de questão do JSON gerado.
 - Se houver referência a imagem/gráfico, insira `[IMAGEM_PENDENTE]` no enunciado.

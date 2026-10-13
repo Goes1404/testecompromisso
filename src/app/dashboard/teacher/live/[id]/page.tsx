@@ -92,6 +92,15 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
 
     if (!error) {
       toast({ title: `Sinal: ${newStatus.toUpperCase()}` });
+      // Entrou no ar → avisa todos os alunos. A rota só envia uma vez por live,
+      // então ligar/desligar o sinal para testar não repete o push.
+      if (newStatus === 'live') {
+        fetch('/api/push/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'live', liveId, event: 'ao_vivo' }),
+        }).catch(() => {});
+      }
     } else {
       toast({ title: "Erro ao mudar status", variant: "destructive" });
     }
