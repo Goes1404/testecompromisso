@@ -121,7 +121,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
       onTrocarStatus={toggleLiveStatus}
       onVoltar={() => router.push('/dashboard/teacher/live')}
       duvidas={<DuvidasDoProfessor liveId={liveId} />}
-      chat={<ChatDaAula liveId={liveId} noAr={live.status === 'live'} equipe altura="h-[340px] lg:h-[420px]" />}
+      chat={<ChatDaAula liveId={liveId} noAr={live.status === 'live'} equipe altura="h-[340px] lg:h-[max(260px,calc(100dvh-26rem))]" />}
       chamada={<PainelDaChamada liveId={liveId} status={live.status ?? null} />}
     />
   );

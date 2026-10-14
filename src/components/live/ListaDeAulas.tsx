@@ -100,9 +100,10 @@ export function ListaDeAulas({ aulas, carregando }: { aulas: Aula[]; carregando:
                     </div>
                     <div className="min-w-0 flex-1">
                       <h2 className="text-sm font-black italic text-white leading-snug line-clamp-2">{a.title}</h2>
-                      <p className="text-[11px] font-semibold text-white/50 truncate mt-0.5">
-                        {[quandoE(a.start_time), a.teacher_name].filter(Boolean).join(" · ")}
-                      </p>
+                      <p className="text-[11px] font-black text-orange-300/90 mt-0.5">{quandoE(a.start_time)}</p>
+                      {a.teacher_name && (
+                        <p className="text-[11px] font-semibold text-white/50 leading-snug break-words">{a.teacher_name}</p>
+                      )}
                     </div>
                     <ChevronRight className="h-4 w-4 text-white/30 shrink-0" />
                   </Link>

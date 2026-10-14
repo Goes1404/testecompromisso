@@ -109,7 +109,7 @@ export function ChatAoVivo({
         <div
           ref={lista}
           onScroll={aoRolar}
-          className={`${altura} overflow-y-auto overscroll-contain px-3 py-2 space-y-0.5`}
+          className={`${altura} overflow-y-auto lg:overscroll-contain px-3 py-2 space-y-0.5`}
           role="log"
           aria-live="polite"
           aria-relevant="additions"

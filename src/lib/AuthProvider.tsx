@@ -2,6 +2,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { limparCacheDaSessao } from "@/lib/cache-da-sessao";
 import { supabase, isSupabaseConfigured } from '@/app/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
@@ -148,6 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .filter((k) => k.startsWith('dash_cache_'))
           .forEach((k) => localStorage.removeItem(k));
       }
+      // Cache de tela da aula ao vivo (sessionStorage + memória): ver lib/cache-da-sessao.
+      limparCacheDaSessao();
     } catch (e) {}
     setLoading(false);
     window.location.assign("/login");
@@ -215,6 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const currentUser = currentSession?.user ?? null;
         
         if (event === 'SIGNED_OUT') {
+          limparCacheDaSessao();
           setProfile(null);
           setUser(null);
           setSession(null);

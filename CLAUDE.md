@@ -362,6 +362,15 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     - Testado em Postgres local com cópia de `pode_ver_live`/`sala_normalizada` (13
       cenários de RLS). Prova das regras de tela: `scripts/test-live-chat.ts`.
 
+19. **Voltar à sala não recarrega nada na frente do aluno** (`src/lib/cache-da-sessao.ts`).
+    Lista, sala e chat abrem com o último estado (memória do módulo + `sessionStorage`)
+    e a consulta atualiza por trás; o chat retoma da `versao` guardada e só pede o que
+    mudou. Chaves `dash_cache_<userId>_…`, apagadas no `signOut` e no `SIGNED_OUT`.
+    Falha de rede com a sala já na tela **não** expulsa o aluno (só `PGRST116`).
+    No celular o chat não usa `overscroll-contain`: arrastar no fim do chat continua
+    rolando a página. No computador a lista do chat é `calc(100dvh − …)` para o campo
+    de digitar caber num notebook de 768px. Prova: `scripts/test-cache-da-sessao.ts`.
+
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`
 (o aluno se marcava presente em qualquer aula sem código, direto pelo banco). O app

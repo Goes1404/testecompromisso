@@ -12,6 +12,10 @@ import { DuvidasDoAluno } from "@/components/live/DuvidasDoAluno";
 import { SalaCarregando, SalaDoAluno } from "@/components/live/SalaDoAluno";
 import { ChatDoYoutube } from "@/components/live/ChatDoYoutube";
 import { ChatDaAula } from "@/components/live/ChatDaAula";
+import { chaveDoCache, gravarCache, lerCache } from "@/lib/cache-da-sessao";
+
+/** A sala guardada vale por 6 h (uma aula longa e o intervalo). */
+const VALIDADE_DA_SALA_MS = 6 * 3_600_000;
 
 export default function StudentLivePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: liveId } = use(params);
@@ -19,11 +23,25 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
   const router = useRouter();
   const { toast } = useToast();
 
-  const [live, setLive] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const chave = chaveDoCache(user?.id, "live", liveId);
+  // Voltar para a sala abre com a aula que já estava na tela; a consulta
+  // confirma por trás. Antes, cada volta mostrava o esqueleto de novo.
+  const [live, setLiveNaTela] = useState<any>(() => lerCache(chave, VALIDADE_DA_SALA_MS));
+  const [loading, setLoading] = useState(() => lerCache(chave, VALIDADE_DA_SALA_MS) === null);
+  const setLive = (dado: any) => {
+    setLiveNaTela(dado);
+    if (dado) gravarCache(chave, dado);
+  };
 
   useEffect(() => {
     if (!liveId || !user) return;
+    if (!live) {
+      const guardada = lerCache<any>(chave, VALIDADE_DA_SALA_MS);
+      if (guardada) {
+        setLiveNaTela(guardada);
+        setLoading(false);
+      }
+    }
 
     async function loadLiveData() {
       try {
@@ -38,8 +56,13 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
 
       } catch (error: any) {
         console.error("Erro ao carregar live:", error);
-        toast({ title: "Aula não encontrada", variant: "destructive" });
-        router.push('/dashboard/live');
+        // Com a aula já na tela (cache), uma falha de rede não expulsa o aluno
+        // da sala: a próxima consulta (presença, 60 s) tenta de novo. Só sai
+        // quando o banco diz que a aula não existe (PGRST116) ou não há nada.
+        if (error?.code === 'PGRST116' || !lerCache(chave, VALIDADE_DA_SALA_MS)) {
+          toast({ title: "Aula não encontrada", variant: "destructive" });
+          router.push('/dashboard/live');
+        }
       } finally {
         setLoading(false);
       }
@@ -99,6 +122,9 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
           liveId={liveId}
           noAr={live.status === 'live'}
           equipe={false}
+          // No computador o chat ocupa o que sobra da tela, para o campo de
+          // digitar nunca ficar abaixo da dobra num notebook de 768px.
+          altura="h-[360px] sm:h-[420px] lg:h-[max(240px,calc(100dvh-31rem))]"
           reserva={live.youtube_id ? <ChatDoYoutube videoId={live.youtube_id} noAr={live.status === 'live'} /> : null}
         />
       }

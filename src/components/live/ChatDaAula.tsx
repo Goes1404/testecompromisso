@@ -16,6 +16,17 @@ import {
   type RespostaDoChat,
 } from "@/lib/live-chat";
 import { ChatAoVivo } from "./ChatAoVivo";
+import { chaveDoCache, gravarCache, lerCache } from "@/lib/cache-da-sessao";
+
+/** O chat guardado vale por 6 h; dentro disso, voltar à sala só busca o que é novo. */
+const VALIDADE_DO_CHAT_MS = 6 * 3_600_000;
+
+type ChatGuardado = {
+  mensagens: MensagemDoChat[];
+  versao: number;
+  silenciado: boolean;
+  silenciados: string[];
+};
 
 /** Função ou tabela inexistente = migration do chat não aplicada. */
 function faltaMigration(error: { code?: string } | null): boolean {
@@ -47,14 +58,18 @@ export function ChatDaAula({
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [mensagens, setMensagens] = useState<MensagemDoChat[] | null>(null);
-  const [silenciado, setSilenciado] = useState(false);
-  const [silenciados, setSilenciados] = useState<string[]>([]);
+  const chave = chaveDoCache(user?.id, "chat", liveId, equipe ? "equipe" : "aluno");
+  // Voltar à sala abre o chat como estava, e a consulta pede só o que mudou
+  // desde a versão guardada — sem roda girando e sem baixar tudo de novo.
+  const guardado = lerCache<ChatGuardado>(chave, VALIDADE_DO_CHAT_MS);
+  const [mensagens, setMensagens] = useState<MensagemDoChat[] | null>(guardado?.mensagens ?? null);
+  const [silenciado, setSilenciado] = useState(guardado?.silenciado ?? false);
+  const [silenciados, setSilenciados] = useState<string[]>(guardado?.silenciados ?? []);
   const [indisponivel, setIndisponivel] = useState(false);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [espera, setEspera] = useState(0);
-  const versao = useRef(0);
+  const versao = useRef(guardado?.versao ?? 0);
   const consultando = useRef(false);
 
   const consultar = useCallback(async () => {
@@ -78,12 +93,21 @@ export function ChatDaAula({
     }
   }, [liveId, user, equipe]);
 
-  // Primeira leitura (mesmo fora do ar, para mostrar o histórico).
+  // Primeira leitura (mesmo fora do ar, para mostrar o histórico). Com chat
+  // guardado, parte da versão dele; sem, do zero.
   useEffect(() => {
-    versao.current = 0;
-    setMensagens(null);
+    const g = lerCache<ChatGuardado>(chave, VALIDADE_DO_CHAT_MS);
+    versao.current = g?.versao ?? 0;
+    setMensagens(g?.mensagens ?? null);
     consultar();
-  }, [consultar]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultar, chave]);
+
+  // Guarda o que está na tela para a próxima volta.
+  useEffect(() => {
+    if (!mensagens) return;
+    gravarCache<ChatGuardado>(chave, { mensagens, versao: versao.current, silenciado, silenciados });
+  }, [chave, mensagens, silenciado, silenciados]);
 
   // Enquanto no ar: consulta periódica, pausada com a aba escondida.
   useEffect(() => {

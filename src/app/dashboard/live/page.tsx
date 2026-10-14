@@ -3,13 +3,22 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/app/lib/supabase";
 import { estaNaAgenda, filtroDaAgenda } from "@/lib/lives";
+import { useAuth } from "@/lib/AuthProvider";
+import { chaveDoCache, gravarCache, lerCache } from "@/lib/cache-da-sessao";
+
+/** A lista guardada vale por 10 min; depois disso mostra o esqueleto de novo. */
+const VALIDADE_DA_LISTA_MS = 10 * 60_000;
 import { ListaDeAulas } from "@/components/live/ListaDeAulas";
 
 export default function LiveClassesPage() {
-  const [lives, setLives] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const chave = chaveDoCache(user?.id, "lives_lista");
+  // Volta para a lista com o que já tinha na tela; a consulta atualiza por trás.
+  const [lives, setLives] = useState<any[]>(() => lerCache<any[]>(chave, VALIDADE_DA_LISTA_MS) ?? []);
+  const [loading, setLoading] = useState(() => lerCache(chave, VALIDADE_DA_LISTA_MS) === null);
 
   useEffect(() => {
+    if (!user) return;
     async function fetchLives() {
       try {
         // Promise.race garante que o loading sempre resolva, mesmo que o fetch
@@ -35,11 +44,12 @@ export default function LiveClassesPage() {
         // `estaNaAgenda`; a consulta só traz o piso. O corte antigo de 1h
         // tirava o aulão da lista no meio dele.
         const agora = new Date();
-        setLives((data || []).filter((l: any) => estaNaAgenda(l, agora)));
+        const naAgenda = (data || []).filter((l: any) => estaNaAgenda(l, agora));
+        setLives(naAgenda);
+        gravarCache(chave, naAgenda);
       } catch (err) {
         console.error("Erro ao buscar lives:", err);
-        // Em caso de erro/timeout, mostramos a tela vazia em vez de travar.
-        setLives([]);
+        // Erro/timeout: fica o que já estava na tela (ou vazio), sem travar.
       } finally {
         setLoading(false);
       }
@@ -57,7 +67,7 @@ export default function LiveClassesPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user, chave]);
 
   return <ListaDeAulas aulas={lives} carregando={loading} />;
 }
