@@ -342,7 +342,7 @@ export default function ManageLivePage() {
                 />
               </div>
               <p className="text-[10px] font-medium text-slate-500 leading-snug ml-1">
-                Crie a transmissão como <b>Não listada</b> no YouTube Studio, pelo computador, com <b>incorporação permitida</b>, <b>chat ativado</b> e público <b>“não é para crianças”</b>. Cole o link aqui: todos os alunos assistem e comentam dentro da plataforma, sem limite de vagas. Pode deixar para colar depois, em Editar.
+                Crie a transmissão como <b>Não listada</b> no YouTube Studio, pelo computador, com <b>incorporação permitida</b>. Cole o link aqui: todos os alunos assistem e conversam no chat dentro da plataforma, sem limite de vagas. Pode deixar para colar depois, em Editar.
               </p>
             </div>
 

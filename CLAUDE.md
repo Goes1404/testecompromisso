@@ -326,7 +326,7 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     põe padding de borda. As duas grades usam `grid-cols-1` no celular: sem isso a
     coluna cresce até o maior conteúdo e a tela inteira transborda para a direita.
 
-17. **O chat da aula é o chat ao vivo do próprio YouTube** (`ChatDoYoutube`), em aba
+17. **(Substituído pela regra 18 em 13/10 — fica de reserva.)** O chat da aula era o chat ao vivo do próprio YouTube (`ChatDoYoutube`), em aba
     ao lado de "Dúvida privada". O comentário vai para o YouTube e o professor lê no
     YouTube Studio. **No computador** vem embutido (`live_chat?v=…&embed_domain=<host>`
     — o domínio precisa bater, por isso é lido de `window.location`). **No celular o
@@ -340,6 +340,27 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     **Por que não um chat nosso repassado pela API do YouTube:** a mensagem sairia com o
     nome do canal do cursinho, não do aluno, e a cota grátis (`liveChatMessages.insert` =
     20 unidades de 10.000/dia) cobre ~500 mensagens por dia.
+
+18. **O chat da aula é nosso, dentro da plataforma** (`ChatDaAula` → `ChatAoVivo`,
+    tabela `live_chat`, migration `20261015120000_live_chat.sql`). Motivo: no celular o
+    YouTube não deixa embutir o chat dele, e o aluno saía da sala (e da presença) para
+    comentar. O professor vê o mesmo chat no estúdio e modera por toque.
+    - **Leitura por consulta incremental, não Realtime** (200 conexões no Free): a sala
+      chama `chat_da_live(live, desde)` a cada 5 s (aluno) / 3 s (equipe), só com a
+      aula no ar e a aba visível, e recebe só o que mudou desde a última `versao`.
+    - **`versao` sai de sequência e muda em toda alteração.** É o que faz a mensagem
+      ocultada sumir da tela de quem já a tinha: ela volta sem texto e
+      `mesclarMensagens()` tira da lista. Ordem na tela é por `id`, nunca por versão.
+    - **O aluno não lê `live_chat` direto** (SELECT só da equipe); tudo pela função,
+      que esconde o texto das ocultas. Com RLS escondendo a linha, a ocultação nunca
+      chegaria a quem já tinha a mensagem.
+    - **O banco decide autor, nome, hora e `equipe`** (gatilho). Aluno: só com a aula no
+      ar, 1 mensagem/10 s, 300 caracteres, 150 por aula, não silenciado
+      (`live_chat_silenciados`). Equipe oculta/reexibe e silencia/libera; nada é apagado
+      por quem modera, só admin/staff apagam.
+    - Sem a migration no banco, `ChatDaAula` mostra o chat do YouTube (`reserva`).
+    - Testado em Postgres local com cópia de `pode_ver_live`/`sala_normalizada` (13
+      cenários de RLS). Prova das regras de tela: `scripts/test-live-chat.ts`.
 
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`

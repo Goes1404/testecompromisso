@@ -35,7 +35,7 @@ export function SalaDoAluno({
   aula: AulaNaTela;
   presenca: { segundos: number; segundosDaAula: number } | null;
   duvidas: ReactNode;
-  /** Chat da aula (o do YouTube). Só aparece quando a aula tem vídeo. */
+  /** Chat ao vivo da aula (o nosso, `ChatDaAula`). Funciona com ou sem vídeo. */
   chat?: ReactNode;
   onVoltar: () => void;
 }) {
@@ -44,7 +44,7 @@ export function SalaDoAluno({
   const meetLink = linkExternoSeguro(aula.meet_link);
   const encerrada = aula.status === "completed";
   const noAr = aula.status === "live";
-  const temChat = temVideo && !!chat;
+  const temChat = !!chat;
   const abaAtiva = temChat ? aba : "duvida";
 
   return (
@@ -64,7 +64,7 @@ export function SalaDoAluno({
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="text-base md:text-xl font-black italic tracking-tight text-white leading-tight line-clamp-2">
+            <h1 className="text-base md:text-xl font-black italic tracking-tight text-white leading-tight break-words">
               {aula.title || "Aula ao vivo"}
             </h1>
             <p className="text-[11px] font-semibold text-white/50 mt-0.5 leading-snug">

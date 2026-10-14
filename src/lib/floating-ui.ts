@@ -21,3 +21,12 @@ export function escondeFlutuantesNoCelular(pathname: string | null | undefined):
     (p.includes("/student/provas/") && p !== "/dashboard/student/provas")
   );
 }
+
+/**
+ * Telas em que os flutuantes somem também no computador. Na aula ao vivo o
+ * chat fica no canto direito, e os botões caíam em cima do "enviar".
+ */
+export function escondeFlutuantesSempre(pathname: string | null | undefined): boolean {
+  const p = pathname ?? "";
+  return p.startsWith("/dashboard/live/") || p.startsWith("/dashboard/teacher/live/");
+}

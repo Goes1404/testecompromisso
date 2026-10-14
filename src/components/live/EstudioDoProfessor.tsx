@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Check, ChevronLeft, ExternalLink, Loader2, MessagesSquare, Pencil, Power, Youtube } from "lucide-react";
-import { linkDoChatEmJanela, linkDoStudio, linkExternoSeguro, proximoStatus, quandoE, rotuloDasTurmas, urlDoPlayer } from "@/lib/lives";
+import { Check, ChevronLeft, ExternalLink, Loader2, Pencil, Power, Youtube } from "lucide-react";
+import { linkDoStudio, linkExternoSeguro, proximoStatus, quandoE, rotuloDasTurmas, urlDoPlayer } from "@/lib/lives";
 import { PlayerDoYoutube } from "./PlayerDoYoutube";
 import type { AulaNaTela } from "./SalaDoAluno";
 import { CARTAO, Rotulo, SeloDeStatus } from "./pecas";
@@ -29,6 +29,7 @@ export function EstudioDoProfessor({
   onVoltar,
   duvidas,
   chamada,
+  chat,
 }: {
   aula: AulaNaTela;
   atualizando: boolean;
@@ -36,11 +37,12 @@ export function EstudioDoProfessor({
   onVoltar: () => void;
   duvidas: ReactNode;
   chamada: ReactNode;
+  /** Chat ao vivo da turma, o mesmo que os alunos veem, com moderação. */
+  chat?: ReactNode;
 }) {
   const acao = proximoStatus(aula.status);
   const temVideo = !!urlDoPlayer(aula.youtube_id);
   const studio = linkDoStudio(aula.youtube_id);
-  const chatEmJanela = linkDoChatEmJanela(aula.youtube_id);
   const meet = linkExternoSeguro(aula.meet_link);
   const indiceAtual = Math.max(0, ETAPAS.findIndex((e) => e.status === aula.status));
 
@@ -120,11 +122,6 @@ export function EstudioDoProfessor({
               <Youtube className="h-3.5 w-3.5 text-red-400" /> YouTube Studio <ExternalLink className="h-3 w-3 opacity-60" />
             </a>
           )}
-          {chatEmJanela && (
-            <a href={chatEmJanela} target="_blank" rel="noopener noreferrer" className="h-8 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/75 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors">
-              <MessagesSquare className="h-3.5 w-3.5 text-orange-400" /> Chat da aula <ExternalLink className="h-3 w-3 opacity-60" />
-            </a>
-          )}
           {meet && (
             <a href={meet} target="_blank" rel="noopener noreferrer" className="h-8 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/75 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors">
               Meet <ExternalLink className="h-3 w-3 opacity-60" />
@@ -150,9 +147,9 @@ export function EstudioDoProfessor({
               {
                 feito: false,
                 texto:
-                  "Nas configurações da transmissão: visibilidade Não listada, \"Permitir incorporação\" ligado, chat ativado e público \"Não é conteúdo para crianças\" — senão o YouTube desliga o chat.",
+                  "Nas configurações da transmissão: visibilidade Não listada e \"Permitir incorporação\" ligado — senão o vídeo não abre aqui dentro.",
               },
-              { feito: false, texto: "No YouTube Studio, pelo computador, comece a transmitir. Os comentários dos alunos aparecem no chat do Studio." },
+              { feito: false, texto: "No YouTube Studio, pelo computador, comece a transmitir. Deixe esta tela aberta ao lado: o chat da turma aparece aqui." },
               { feito: false, texto: "Volte aqui e clique em Abrir para alunos. Ao terminar, Encerrar aula gera a chamada." },
             ].map((p, i) => (
               <li key={i} className="flex gap-3 rounded-xl bg-white/[0.04] border border-white/5 p-3">
@@ -190,7 +187,10 @@ export function EstudioDoProfessor({
           )}
         </div>
 
-        <aside className="space-y-3 min-w-0 lg:row-span-2 lg:sticky lg:top-4">{duvidas}</aside>
+        <aside className="space-y-3 min-w-0 lg:row-span-2 lg:sticky lg:top-4">
+          {chat}
+          {duvidas}
+        </aside>
 
         <div className="min-w-0 lg:col-start-1">{chamada}</div>
       </div>

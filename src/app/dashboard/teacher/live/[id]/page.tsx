@@ -11,6 +11,7 @@ import { supabase } from "@/app/lib/supabase";
 import { proximoStatus, rotuloDoStatus } from "@/lib/lives";
 import { PainelDaChamada } from "@/components/live/PainelDaChamada";
 import { DuvidasDoProfessor } from "@/components/live/DuvidasDoProfessor";
+import { ChatDaAula } from "@/components/live/ChatDaAula";
 import { EstudioCarregando, EstudioDoProfessor } from "@/components/live/EstudioDoProfessor";
 
 /** Estúdio do professor: busca a aula e troca o status. O desenho é do EstudioDoProfessor. */
@@ -120,6 +121,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
       onTrocarStatus={toggleLiveStatus}
       onVoltar={() => router.push('/dashboard/teacher/live')}
       duvidas={<DuvidasDoProfessor liveId={liveId} />}
+      chat={<ChatDaAula liveId={liveId} noAr={live.status === 'live'} equipe altura="h-[340px] lg:h-[420px]" />}
       chamada={<PainelDaChamada liveId={liveId} status={live.status ?? null} />}
     />
   );

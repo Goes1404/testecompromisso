@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { Virtuoso } from 'react-virtuoso';
-import { escondeFlutuantesNoCelular } from "@/lib/floating-ui";
+import { escondeFlutuantesNoCelular, escondeFlutuantesSempre } from "@/lib/floating-ui";
 import { usePathname } from "next/navigation";
 import { AuroraAvatar } from "@/components/AuroraAvatar";
 
@@ -95,7 +95,7 @@ export function AccessibilityWidget() {
   
   return (
     <div 
-      className={`fixed ${isInputHeavyPage ? 'hidden lg:flex lg:bottom-10' : 'flex lg:bottom-6'} bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-3 lg:right-6 z-40 flex-col gap-3 items-end transition-all duration-500`}
+      className={`fixed ${escondeFlutuantesSempre(pathname) ? 'hidden' : isInputHeavyPage ? 'hidden lg:flex lg:bottom-10' : 'flex lg:bottom-6'} bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-3 lg:right-6 z-40 flex-col gap-3 items-end transition-all duration-500`}
     >
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
