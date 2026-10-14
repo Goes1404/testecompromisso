@@ -12,7 +12,6 @@ import { DuvidasDoAluno } from "@/components/live/DuvidasDoAluno";
 import { SalaCarregando, SalaDoAluno } from "@/components/live/SalaDoAluno";
 import { ChatDoYoutube } from "@/components/live/ChatDoYoutube";
 import { ChatDaAula } from "@/components/live/ChatDaAula";
-import { PlayerDaPlataforma } from "@/components/live/PlayerDaPlataforma";
 import { chaveDoCache, gravarCache, lerCache } from "@/lib/cache-da-sessao";
 
 /** A sala guardada vale por 6 h (uma aula longa e o intervalo). */
@@ -96,7 +95,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
   // aparecem sem o aluno recarregar a página.
   useEffect(() => {
     if (!presenca?.status || !live) return;
-    if (presenca.status === live.status && !(presenca.status === 'live' && !live.youtube_id && !live.transmissao_sessao)) return;
+    if (presenca.status === live.status && !(presenca.status === 'live' && !live.youtube_id)) return;
     supabase
       .from('lives')
       .select('*')
@@ -108,30 +107,6 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presenca]);
 
-  // Aula no ar: relê a cada 15 s para pegar o professor começando, parando ou
-  // trocando a transmissão pela plataforma mesmo sem Realtime (até ~100
-  // alunos o Realtime dá conta; isto é a rede de segurança).
-  const noArAgora = live?.status === 'live';
-  // Sem vídeo ainda (esperando o professor começar): olha a cada 6 s. Com
-  // vídeo: a cada 20 s, só para notar se ele parou ou trocou de transmissão.
-  const esperandoVideo = noArAgora && !live?.youtube_id && !live?.transmissao_sessao;
-  useEffect(() => {
-    if (!noArAgora || !liveId) return;
-    const t = setInterval(() => {
-      if (document.hidden) return;
-      supabase
-        .from('lives')
-        .select('*')
-        .eq('id', liveId)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) setLive(data);
-        });
-    }, esperandoVideo ? 6_000 : 20_000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noArAgora, esperandoVideo, liveId]);
-
   if (loading || !live) return <SalaCarregando />;
 
   return (
@@ -142,16 +117,6 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
       duvidas={<DuvidasDoAluno liveId={liveId} noAr={live.status === 'live'} />}
       // Chat nosso, dentro da plataforma (funciona no celular). O do YouTube só
       // entra se a migration do chat ainda não estiver no banco.
-      videoDaPlataforma={
-        live.status === 'live' && live.transmissao_sessao ? (
-          <PlayerDaPlataforma
-            liveId={liveId}
-            sessaoDoProfessor={live.transmissao_sessao}
-            faixas={live.transmissao_faixas}
-            titulo={live.title || 'Aula ao vivo'}
-          />
-        ) : null
-      }
       chat={
         <ChatDaAula
           liveId={liveId}

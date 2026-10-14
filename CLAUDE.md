@@ -392,37 +392,17 @@ com cópia das tabelas e policies de produção. Ela também fecha a falha de `a
 funciona sem ela — sem turmas, sem contador e sem chamada — para o deploy não depender
 da ordem.
 
+21. **Aula só pelo Meet é aula, não falta de link** (14/10). Sem `youtube_id` e com
+    `meet_link`, o palco da sala vira "A aula está no Meet" com o botão laranja
+    **Entrar no Meet** (`PalcoDeEspera`), e o cartão "Quer falar com o professor?"
+    some (seria o mesmo link duas vezes). No estúdio, "Aula pelo Meet" com "Abrir o
+    Meet" e passo a passo próprio — nada de "Falta o link do YouTube". Limite do Meet
+    grátis continua valendo (100 pessoas, 60 min): turma grande vai pelo YouTube.
+    A transmissão de tela pela própria plataforma (Cloudflare Realtime) foi feita e
+    **retirada a pedido** no mesmo dia — não reintroduzir sem pedido
+    (`20261016130000_lives_sem_transmissao.sql`).
+
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
-### 🖥️ Transmissão pela plataforma (Cloudflare Realtime)
-
-O professor compartilha a tela **direto na plataforma**, sem YouTube/Meet/Teams
-(`TransmissaoDoProfessor` no estúdio → `PlayerDaPlataforma` na sala do aluno).
-WebRTC via SFU do Cloudflare Realtime; rota única `/api/live/transmissao`
-(`publicar` · `parar` · `assistir` · `responder`). Migration
-`20261016120000_lives_transmissao.sql` (`lives.transmissao_sessao`,
-`transmissao_faixas`, `transmissao_desde`).
-
-1. **Segredos só no servidor:** `CLOUDFLARE_REALTIME_APP_ID` e
-   `CLOUDFLARE_REALTIME_APP_TOKEN` (Vercel). Sem eles a rota devolve 503
-   `nao_configurado` e o painel avisa; nada quebra.
-2. **Só a equipe publica** (`requireTeacherOrAdmin`). O aluno assiste com o
-   cliente de **sessão dele** (RLS/turmas de `pode_ver_live`) e só com a aula
-   `live`. O passo `responder` exige a assinatura HMAC da sessão ligada ao
-   `userId` — ninguém renegocia a sessão de outro.
-3. **Prioridade na sala:** transmissão da plataforma > YouTube. Encerrar a aula
-   limpa as colunas num UPDATE separado (sem a migration, encerrar continua
-   funcionando). Fechar a aba do professor chama `parar` com `keepalive`.
-4. **Professor só pelo computador** (`podeTransmitirAqui`): celular não tem
-   `getDisplayMedia`. Trocar de janela = parar e começar de novo.
-5. **Aluno começa mudo** com botão "Ativar som" (celular bloqueia autoplay com
-   som) e reconecta sozinho; sem vídeo, a sala relê a aula a cada 6 s.
-6. **Custo:** tela 1,2 Mbps + câmera 0,3 Mbps ≈ 0,58 GB por aluno-hora
-   (`gbPorHora`). 1.000 GB/mês grátis, depois US$ 0,05/GB. Pensado para até
-   ~100 alunos; o aulão da escola inteira continua no YouTube. Sem gravação.
-
-Prova: `npx tsx scripts/test-transmissao.ts` (dentro de `npm test`); ponta a
-ponta testado com SFU falso (aiortc) falando a API do Cloudflare — 14/14.
-
 ### 📺 Lives: aviso aos alunos
 
 Toda live gera **dois avisos aos alunos das turmas da aula** (push + sininho), via
@@ -680,8 +660,6 @@ PASSWORD_RESET_TOKEN_SECRET  (server-side only — secret dedicado do wizard de 
 TWILIO_ACCOUNT_SID
 TWILIO_AUTH_TOKEN
 TWILIO_PHONE_NUMBER
-CLOUDFLARE_REALTIME_APP_ID     (server-side only — transmissão pela plataforma)
-CLOUDFLARE_REALTIME_APP_TOKEN  (server-side only)
 ```
 
 ## 📌 Pastas Importantes
