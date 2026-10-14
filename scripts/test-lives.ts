@@ -25,6 +25,8 @@ import {
   urlDoChatEmbutido,
   linkDoChatEmJanela,
   ehNavegadorDeCelular,
+  validarHorarioDaAula,
+  filtroDaAgenda,
 } from '../src/lib/lives';
 
 let falhas = 0;
@@ -70,6 +72,7 @@ eq('texto solto barrado', linkExternoSeguro('meet.google.com/abc'), null);
 // 12/10, 20h01: um aulão das 19h está no meio.
 const agora = new Date(2026, 9, 12, 20, 1);
 const as = (h: number, m = 0, dia = 12) => new Date(2026, 9, dia, h, m).toISOString();
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 eq('aulão das 19h no ar às 20h01 continua na lista', estaNaAgenda({ status: 'live', start_time: as(19) }, agora), true);
 eq('no ar há mais de 12h é esquecimento', estaNaAgenda({ status: 'live', start_time: as(7, 0) }, agora), false);
@@ -78,6 +81,24 @@ eq('agendada com professor 2h atrasado aparece', estaNaAgenda({ status: 'schedul
 eq('agendada que nunca abriu some depois de 3h', estaNaAgenda({ status: 'scheduled', start_time: as(16) }, agora), false);
 eq('encerrada não aparece', estaNaAgenda({ status: 'completed', start_time: as(19) }, agora), false);
 eq('sem horário não aparece', estaNaAgenda({ status: 'scheduled', start_time: null }, agora), false);
+
+// Caso real de 13/10: aula salva com o ano 2007 e aberta pelo professor.
+// Pelo horário agendado ela "começou" 19 anos antes e sumia da lista.
+const aberta = new Date(agora.getTime() - 5 * 60_000).toISOString();
+eq('no ar com data agendada errada aparece (conta de quando abriu)',
+  estaNaAgenda({ status: 'live', start_time: '2007-10-14T00:23:00Z', no_ar_desde: aberta }, agora), true);
+eq('no ar desde ontem, esquecida, sai da lista',
+  estaNaAgenda({ status: 'live', start_time: as(19), no_ar_desde: new Date(agora.getTime() - 13 * 3_600_000).toISOString() }, agora), false);
+eq('no ar sem no_ar_desde (linha antiga) ainda usa o horário agendado',
+  estaNaAgenda({ status: 'live', start_time: as(19), no_ar_desde: null }, agora), true);
+eq('filtro do banco traz toda aula no ar', filtroDaAgenda(agora).endsWith(',status.eq.live'), true);
+
+// Formulário do professor
+eq('data de hoje mais tarde é aceita', validarHorarioDaAula(ymd(agora), '23:59', agora), null);
+eq('ano 2007 é recusado', typeof validarHorarioDaAula('2007-10-13', '21:23', agora), 'string');
+eq('ano 2062 é recusado', typeof validarHorarioDaAula('2062-10-13', '21:23', agora), 'string');
+eq('campo vazio é recusado', typeof validarHorarioDaAula('', '19:00', agora), 'string');
+
 
 // ── Botão do estúdio ──
 eq('agendada abre', proximoStatus('scheduled').para, 'live');

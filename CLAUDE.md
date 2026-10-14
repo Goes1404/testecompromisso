@@ -374,6 +374,16 @@ Toda live gera **dois avisos aos alunos das turmas da aula** (push + sininho), v
 
 Prova: `npx tsx scripts/test-live-aviso.ts` (dentro de `npm test`).
 
+### 📅 Data da aula e aula no ar
+
+- **Aula no ar conta a validade de `lives.no_ar_desde`**, gravado pelo professor ao
+  abrir a sala — não do `start_time` agendado. Em 13/10 uma aula salva com o ano
+  2007 foi aberta, o push de "ao vivo" saiu e ela não apareceu para nenhum aluno.
+- A consulta do aluno usa `filtroDaAgenda()`: toda aula `live` entra, agendadas só
+  a partir do piso. Nunca corte aula no ar pelo `start_time` no banco.
+- O formulário do professor passa por `validarHorarioDaAula()` (até 1 dia no
+  passado, até `ANTECEDENCIA_MAXIMA_DIAS` à frente). Na edição, só se o horário mudou.
+
 ### 📱 Mobile
 
 - A tela do aluno é medida em **360px**. Título de card não usa `truncate`

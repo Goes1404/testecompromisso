@@ -116,21 +116,66 @@ const HORA = 3_600_000;
  * estava no ar: o aulão das 19h sumia da lista às 20h01, no meio da aula.
  */
 export function estaNaAgenda(
-  live: { status: string | null; start_time: string | null },
+  live: { status: string | null; start_time: string | null; no_ar_desde?: string | null },
   agora: Date = new Date(),
 ): boolean {
+  // Aula no ar conta a validade a partir de quando ENTROU no ar, não do
+  // horário agendado. Em 13/10 uma aula salva com o ano 2007 foi aberta pelo
+  // professor e sumiu da lista de todos os alunos: pela data agendada, ela
+  // tinha começado 19 anos antes. `start_time` só vale para linhas antigas,
+  // anteriores à coluna `no_ar_desde`.
+  if (live.status === 'live') {
+    const referencia = live.no_ar_desde || live.start_time;
+    if (!referencia) return false;
+    const t = new Date(referencia).getTime();
+    if (Number.isNaN(t)) return false;
+    return t >= agora.getTime() - VALIDADE_DO_AO_VIVO_H * HORA;
+  }
+
   if (!live.start_time) return false;
   const inicio = new Date(live.start_time).getTime();
   if (Number.isNaN(inicio)) return false;
-
-  if (live.status === 'live') return inicio >= agora.getTime() - VALIDADE_DO_AO_VIVO_H * HORA;
   if (live.status === 'scheduled') return inicio >= agora.getTime() - TOLERANCIA_DE_ATRASO_H * HORA;
   return false;
 }
 
-/** Piso da consulta: nada mais antigo que isso pode entrar na agenda. */
+/**
+ * Piso da consulta para aulas AGENDADAS. Aula no ar entra sempre na consulta
+ * (pelo status) e quem decide se ela vale é `estaNaAgenda` — cortar no banco
+ * pelo `start_time` jogaria fora justamente a aula com data agendada errada.
+ */
 export function inicioDaJanelaDaAgenda(agora: Date = new Date()): string {
   return new Date(agora.getTime() - VALIDADE_DO_AO_VIVO_H * HORA).toISOString();
+}
+
+/** Filtro `.or()` da agenda do aluno: agendadas recentes + tudo que está no ar. */
+export function filtroDaAgenda(agora: Date = new Date()): string {
+  return `and(status.eq.scheduled,start_time.gte.${inicioDaJanelaDaAgenda(agora)}),status.eq.live`;
+}
+
+/** Até onde o professor pode marcar uma aula para a frente. */
+export const ANTECEDENCIA_MAXIMA_DIAS = 180;
+
+/**
+ * Confere a data/hora digitada no formulário do professor. Devolve a mensagem
+ * de erro, ou null se está ok.
+ *
+ * O campo de data do navegador aceita qualquer ano de 4 dígitos, e digitar
+ * "13/10/07" ou errar um dígito vira 2007 ou 2062 sem aviso nenhum. A aula
+ * salva assim some da agenda do aluno (ou aparece meses depois), e o professor
+ * só descobre quando ninguém entra.
+ */
+export function validarHorarioDaAula(data: string, hora: string, agora: Date = new Date()): string | null {
+  const inicio = new Date(`${data}T${hora}`);
+  if (!data || !hora || Number.isNaN(inicio.getTime())) return 'Data ou horário inválido.';
+  const DIA = 24 * HORA;
+  if (inicio.getTime() < agora.getTime() - DIA) {
+    return `A data ${inicio.toLocaleDateString('pt-BR')} já passou. Confira o dia e o ano.`;
+  }
+  if (inicio.getTime() > agora.getTime() + ANTECEDENCIA_MAXIMA_DIAS * DIA) {
+    return `A data ${inicio.toLocaleDateString('pt-BR')} está longe demais. Confira o ano.`;
+  }
+  return null;
 }
 
 export function rotuloDoStatus(status: string | null): string {

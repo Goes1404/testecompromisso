@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/app/lib/supabase";
-import { estaNaAgenda, inicioDaJanelaDaAgenda } from "@/lib/lives";
+import { estaNaAgenda, filtroDaAgenda } from "@/lib/lives";
 import { ListaDeAulas } from "@/components/live/ListaDeAulas";
 
 export default function LiveClassesPage() {
@@ -18,8 +18,9 @@ export default function LiveClassesPage() {
         const query = supabase
           .from('lives')
           .select('*')
-          .in('status', ['live', 'scheduled'])
-          .gte('start_time', inicioDaJanelaDaAgenda())
+          // Aula no ar entra sempre, qualquer que seja o horário agendado;
+          // agendada só a partir do piso. A regra fina é `estaNaAgenda`.
+          .or(filtroDaAgenda())
           .order('start_time', { ascending: true });
 
         const { data, error } = await Promise.race([

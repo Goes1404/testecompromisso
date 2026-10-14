@@ -23,7 +23,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
-import { agruparAgenda, idDoYoutube, linkExternoSeguro, normalizarSala, rotuloDasTurmas } from "@/lib/lives";
+import { agruparAgenda, ANTECEDENCIA_MAXIMA_DIAS, idDoYoutube, linkExternoSeguro, normalizarSala, rotuloDasTurmas, validarHorarioDaAula } from "@/lib/lives";
 import { CabecalhoDaAgenda, ListaDaAgenda } from "@/components/live/AgendaDoProfessor";
 
 const FORM_VAZIO = {
@@ -81,8 +81,12 @@ export default function ManageLivePage() {
     setFormData((f) => ({ ...f, turmas: salas }));
   };
 
+  // Data/hora como estavam ao abrir a edição (ver `handleSaveLive`).
+  const [horarioOriginal, setHorarioOriginal] = useState("");
+
   const abrirNovo = () => {
     setEditingId(null);
+    setHorarioOriginal("");
     setFormData(FORM_VAZIO);
     setIsCreateOpen(true);
   };
@@ -90,6 +94,7 @@ export default function ManageLivePage() {
   const abrirEdicao = (live: any) => {
     const d = live.start_time ? new Date(live.start_time) : null;
     setEditingId(live.id);
+    setHorarioOriginal(d ? `${format(d, "yyyy-MM-dd")}T${format(d, "HH:mm")}` : "");
     setFormData({
       title: live.title || "",
       description: live.description || "",
@@ -133,6 +138,15 @@ export default function ManageLivePage() {
           description: "Título, data e horário são obrigatórios.",
           variant: "destructive",
         });
+      return;
+    }
+
+    // Na edição, só confere se o horário mudou: corrigir o título de uma aula
+    // que já aconteceu não pode ser barrado por "a data já passou".
+    const horarioMudou = !editingId || `${formData.date}T${formData.time}` !== horarioOriginal;
+    const erroDeHorario = horarioMudou ? validarHorarioDaAula(formData.date, formData.time) : null;
+    if (erroDeHorario) {
+      toast({ title: "Confira a data da aula", description: erroDeHorario, variant: "destructive" });
       return;
     }
 
@@ -293,6 +307,8 @@ export default function ManageLivePage() {
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Data</Label>
                 <input
                   type="date"
+                  min={format(new Date(), "yyyy-MM-dd")}
+                  max={format(new Date(Date.now() + ANTECEDENCIA_MAXIMA_DIAS * 86_400_000), "yyyy-MM-dd")}
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   disabled={isSubmitting}

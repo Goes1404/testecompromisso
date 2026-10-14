@@ -83,7 +83,9 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
     // tocar em linha nenhuma — e o professor acharia que abriu a sala.
     const { data, error } = await supabase
       .from('lives')
-      .update({ status: para })
+      // `no_ar_desde`: é dele que a agenda do aluno conta a validade da aula
+      // no ar (ver `estaNaAgenda`), não do horário agendado.
+      .update(para === 'live' ? { status: para, no_ar_desde: new Date().toISOString() } : { status: para })
       .eq('id', liveId)
       .select('id');
 
