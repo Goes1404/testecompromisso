@@ -16,6 +16,8 @@ export type AulaNaTela = {
   youtube_id?: string | null;
   meet_link?: string | null;
   turmas?: string[] | null;
+  /** Sessão do professor no Cloudflare quando ele transmite pela plataforma. */
+  transmissao_sessao?: string | null;
 };
 
 type Aba = "chat" | "duvida" | "info";
@@ -41,6 +43,7 @@ export function SalaDoAluno({
   presenca,
   duvidas,
   chat,
+  videoDaPlataforma,
   onVoltar,
 }: {
   aula: AulaNaTela;
@@ -48,6 +51,11 @@ export function SalaDoAluno({
   duvidas: ReactNode;
   /** Chat ao vivo da aula (`ChatDaAula` com `preencher`). */
   chat?: ReactNode;
+  /**
+   * Transmissão feita pela própria plataforma (`PlayerDaPlataforma`). Quando
+   * existe, tem prioridade sobre o YouTube.
+   */
+  videoDaPlataforma?: ReactNode;
   onVoltar: () => void;
 }) {
   const encerrada = aula.status === "completed";
@@ -134,7 +142,9 @@ export function SalaDoAluno({
           </div>
         </header>
 
-        {temVideo ? (
+        {videoDaPlataforma ? (
+          videoDaPlataforma
+        ) : temVideo ? (
           <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} />
         ) : (
           <PalcoDeEspera status={aula.status} inicio={aula.start_time} meetLink={meetLink} />
@@ -191,7 +201,7 @@ export function SalaDoAluno({
           {abaAtiva === "info" && (
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2.5 lg:hidden rounded-[1.5rem]">
               {presencaCompleta}
-              {temVideo && linkDoVideo(aula.youtube_id) && (
+              {!videoDaPlataforma && temVideo && linkDoVideo(aula.youtube_id) && (
                 <a
                   href={linkDoVideo(aula.youtube_id)!}
                   target="_blank"

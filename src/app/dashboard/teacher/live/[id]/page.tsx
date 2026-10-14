@@ -12,6 +12,7 @@ import { proximoStatus, rotuloDoStatus } from "@/lib/lives";
 import { PainelDaChamada } from "@/components/live/PainelDaChamada";
 import { DuvidasDoProfessor } from "@/components/live/DuvidasDoProfessor";
 import { ChatDaAula } from "@/components/live/ChatDaAula";
+import { TransmissaoDoProfessor } from "@/components/live/TransmissaoDoProfessor";
 import { EstudioCarregando, EstudioDoProfessor } from "@/components/live/EstudioDoProfessor";
 
 /** Estúdio do professor: busca a aula e troca o status. O desenho é do EstudioDoProfessor. */
@@ -92,6 +93,16 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
 
     if (!error && data?.length) {
       setLive((atual: any) => ({ ...atual, status: para }));
+      // Encerrou: tira a transmissão pela plataforma da sala dos alunos. Em
+      // separado do status de propósito — sem a migration da transmissão, esta
+      // escrita falha sozinha e o encerramento (que gera a chamada) não.
+      if (para === 'completed') {
+        supabase
+          .from('lives')
+          .update({ transmissao_sessao: null, transmissao_faixas: [], transmissao_desde: null })
+          .eq('id', liveId)
+          .then(() => {});
+      }
       toast({ title: `Aula ${rotuloDoStatus(para).toLowerCase()}` });
       // Entrou no ar: avisa os alunos das turmas da aula. A rota só envia uma
       // vez por live, então reabrir depois de encerrar não repete o push.
@@ -121,6 +132,7 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
       onTrocarStatus={toggleLiveStatus}
       onVoltar={() => router.push('/dashboard/teacher/live')}
       duvidas={<DuvidasDoProfessor liveId={liveId} />}
+      transmissao={<TransmissaoDoProfessor liveId={liveId} aulaNoAr={live.status === 'live'} />}
       chat={<ChatDaAula liveId={liveId} noAr={live.status === 'live'} equipe altura="h-[340px] lg:h-[max(260px,calc(100dvh-26rem))]" />}
       chamada={<PainelDaChamada liveId={liveId} status={live.status ?? null} />}
     />

@@ -30,6 +30,7 @@ export function EstudioDoProfessor({
   duvidas,
   chamada,
   chat,
+  transmissao,
 }: {
   aula: AulaNaTela;
   atualizando: boolean;
@@ -39,6 +40,8 @@ export function EstudioDoProfessor({
   chamada: ReactNode;
   /** Chat ao vivo da turma, o mesmo que os alunos veem, com moderação. */
   chat?: ReactNode;
+  /** Painel "Transmitir pela plataforma" (`TransmissaoDoProfessor`). */
+  transmissao?: ReactNode;
 }) {
   const acao = proximoStatus(aula.status);
   const temVideo = !!urlDoPlayer(aula.youtube_id);
@@ -142,7 +145,7 @@ export function EstudioDoProfessor({
                 feito: temVideo,
                 texto: temVideo
                   ? "Link do YouTube colado. Os alunos vão assistir aqui dentro."
-                  : "Cole o link da transmissão não listada em Editar aula. Sem ele, só cabem 100 no Meet.",
+                  : "Escolha como transmitir: pela plataforma (painel abaixo, só a tela do computador) ou pelo YouTube (cole o link em Editar aula).",
               },
               {
                 feito: false,
@@ -169,21 +172,22 @@ export function EstudioDoProfessor({
 
       <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[auto_1fr] items-start">
         <div className="space-y-3 min-w-0">
+          {/* Dois jeitos de transmitir: pela plataforma (tela do professor
+              direto para os alunos) ou pelo YouTube (link colado). Se os dois
+              estiverem ativos, a sala do aluno mostra o da plataforma. */}
+          {aula.status !== "completed" && transmissao}
           {temVideo ? (
             <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} />
           ) : (
-            <div className={`${CARTAO} aspect-video flex flex-col items-center justify-center text-center gap-3 p-6`}>
-              <div className="h-12 w-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center">
-                <Youtube className="h-6 w-6" />
-              </div>
-              <p className="text-base font-black italic text-white">Falta o link do YouTube</p>
-              <p className="text-xs text-white/50 font-medium max-w-sm leading-relaxed">
-                Sem ele, os alunos só têm o Meet, que no plano grátis aceita 100 pessoas e corta em 60 minutos.
+            aula.status !== "completed" && (
+              <p className="flex items-center gap-2 px-2 text-[11px] font-semibold text-white/45">
+                <Youtube className="h-3.5 w-3.5 text-red-400/80 shrink-0" />
+                Prefere o YouTube?{" "}
+                <Link href="/dashboard/teacher/live" className="underline underline-offset-2 hover:text-white/80">
+                  Cole o link em Editar
+                </Link>
               </p>
-              <Link href="/dashboard/teacher/live" className="h-10 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
-                <Pencil className="h-3.5 w-3.5" /> Colar o link
-              </Link>
-            </div>
+            )
           )}
         </div>
 
