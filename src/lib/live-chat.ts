@@ -93,12 +93,29 @@ export function nomeCurto(nome: string | null | undefined): string {
 
 /** Cor estável por pessoa, para dar para seguir a conversa sem ler o nome. */
 const CORES = ["text-orange-300", "text-sky-300", "text-emerald-300", "text-fuchsia-300", "text-amber-300", "text-cyan-300", "text-rose-300", "text-lime-300"];
+const coresJaCalculadas = new Map<string, string>();
 export function corDoNome(userId: string): string {
-  let h = 0;
-  for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) >>> 0;
-  return CORES[h % CORES.length];
+  let cor = coresJaCalculadas.get(userId);
+  if (cor === undefined) {
+    let h = 0;
+    for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) >>> 0;
+    cor = CORES[h % CORES.length];
+    coresJaCalculadas.set(userId, cor);
+  }
+  return cor;
 }
 
+// Um formatador só: criar um `Intl.DateTimeFormat` por mensagem, a cada
+// redesenho, era boa parte do congelamento do chat em celular fraco.
+const FORMATO_DA_HORA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
+const horasJaFormatadas = new Map<string, string>();
+
 export function horaDaMensagem(iso: string): string {
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+  let h = horasJaFormatadas.get(iso);
+  if (h === undefined) {
+    h = FORMATO_DA_HORA.format(new Date(iso));
+    if (horasJaFormatadas.size > 2000) horasJaFormatadas.clear();
+    horasJaFormatadas.set(iso, h);
+  }
+  return h;
 }

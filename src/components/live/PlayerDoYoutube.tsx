@@ -20,7 +20,7 @@ export function PlayerDoYoutube({ videoId, titulo }: { videoId: string | null | 
   if (!src || !link) return null;
 
   return (
-    <div className={`${CARTAO} p-1.5 md:p-2 space-y-1.5`}>
+    <div className={`${CARTAO} p-1 md:p-2 md:space-y-1.5`}>
       <div className="relative w-full aspect-video rounded-[1.1rem] overflow-hidden bg-black">
         <iframe
           src={src}
@@ -35,7 +35,7 @@ export function PlayerDoYoutube({ videoId, titulo }: { videoId: string | null | 
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-1.5 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-colors"
+        className="hidden md:flex items-center justify-center gap-1.5 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-colors"
       >
         Vídeo travando? Abrir no app do YouTube <ExternalLink className="h-3 w-3" />
       </a>

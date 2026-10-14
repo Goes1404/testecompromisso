@@ -37,14 +37,14 @@ ok('a chave leva o usuário: outra pessoa no mesmo aparelho não lê', () => {
 
 ok('sobrevive ao recarregar (memória apagada, sessionStorage fica)', () => {
   const k = chaveDoCache('ana', 'live', 'L2');
-  gravarCache(k, { title: 'Aula' });
+  gravarCache(k, { title: 'Aula' }, Date.now(), true);
   _esquecerMemoria();
   assert.deepEqual(lerCache(k, 60_000), { title: 'Aula' });
 });
 
 ok('vencido não volta', () => {
   const k = chaveDoCache('ana', 'velho');
-  gravarCache(k, 1, 1_000);
+  gravarCache(k, 1, 1_000, true);
   assert.equal(lerCache(k, 500, 2_000), null);
   assert.equal(lerCache(k, 5_000, 2_000), 1);
 });

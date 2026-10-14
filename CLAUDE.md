@@ -319,12 +319,17 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     molde do Mural: cartão escuro `CARTAO` (`components/live/pecas.tsx`) sobre o fundo
     claro do app, laranja da marca, sem rótulo de enfeite ("Ambiente auditado",
     "Sinal habilitado" saíram — não diziam nada ao aluno).
-16. **Só o estúdio do professor é "full bleed"** (`/dashboard/teacher/live/[id]` em
-    `isFullBleedPage`): sem padding e sem barra inferior, então o respiro e o `pb-28`
-    são da própria tela. A sala do aluno (`/dashboard/live/[id]`) deixou de ser full
-    bleed em 13/10 e usa o padding e a barra inferior do layout — `SalaDoAluno` não
-    põe padding de borda. As duas grades usam `grid-cols-1` no celular: sem isso a
-    coluna cresce até o maior conteúdo e a tela inteira transborda para a direita.
+16. **A sala do aluno é "app de live" e é "full bleed"** (14/10; antes era página com
+    rolagem). No celular a página **não rola**: cabeçalho da sala, vídeo, abas
+    (Chat · Dúvida · Info) e a aba ocupa o resto — o chat estica até o campo de digitar
+    (`ChatDaAula preencher`). A barra de cima do app some nessa rota abaixo de `lg`
+    (`isSalaAoVivo` no layout); a sala tem o próprio voltar. Motivo: rolagem dentro de
+    rolagem (página + chat) fazia o arrasto "travar" — o dedo que começava no chat
+    mexia no chat, o de fora mexia na página. No computador: vídeo, Meet e pauta à
+    esquerda (só essa coluna rola), chat na coluna da direita inteira; a aba Info não
+    existe. O chat fica montado ao trocar de aba (não recarrega nem perde a rolagem).
+    Medido em 360×640, 375×740, 414×896, 1366×768 e 1920×1080: campo de digitar sempre
+    visível e página sem rolagem. O estúdio do professor também é full bleed.
 
 17. **(Substituído pela regra 18 em 13/10 — fica de reserva.)** O chat da aula era o chat ao vivo do próprio YouTube (`ChatDoYoutube`), em aba
     ao lado de "Dúvida privada". O comentário vai para o YouTube e o professor lê no
@@ -370,6 +375,16 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     No celular o chat não usa `overscroll-contain`: arrastar no fim do chat continua
     rolando a página. No computador a lista do chat é `calc(100dvh − …)` para o campo
     de digitar caber num notebook de 768px. Prova: `scripts/test-cache-da-sessao.ts`.
+
+20. **Chat leve em celular fraco.** `LinhaDoChat` é `memo`: mensagem nova, digitação e
+    presença redesenham só a linha que mudou (antes, as até 200 linhas a cada evento:
+    congelamentos de 130–220 ms com CPU 6× mais lenta). `horaDaMensagem` usa um
+    formatador só (criar `Intl.DateTimeFormat` por linha era caro), `corDoNome` tem
+    cache, a posição da rolagem é `ref` (rolar não redesenha), e o `sessionStorage` do
+    cache é gravado adiado (1,5 s ou ao esconder a aba). Abaixo de `lg`, cabeçalho e
+    barra inferior do app não usam `backdrop-blur` (desfoque sobre conteúdo que rola é
+    caro no celular). Medição: 0 tarefas longas arrastando o chat com mensagens chegando
+    a cada 0,7 s (antes 8, pior 183 ms).
 
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`

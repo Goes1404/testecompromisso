@@ -122,9 +122,9 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
           liveId={liveId}
           noAr={live.status === 'live'}
           equipe={false}
-          // No computador o chat ocupa o que sobra da tela, para o campo de
-          // digitar nunca ficar abaixo da dobra num notebook de 768px.
-          altura="h-[360px] sm:h-[420px] lg:h-[max(240px,calc(100dvh-31rem))]"
+          // Ocupa o espaço que a sala der: no celular, o resto da tela abaixo
+          // do vídeo; no computador, a coluna da direita inteira.
+          preencher
           reserva={live.youtube_id ? <ChatDoYoutube videoId={live.youtube_id} noAr={live.status === 'live'} /> : null}
         />
       }

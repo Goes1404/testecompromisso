@@ -49,19 +49,22 @@ export function ChatDaAula({
   equipe,
   reserva = null,
   altura,
+  preencher = false,
 }: {
   liveId: string;
   noAr: boolean;
   equipe: boolean;
   reserva?: ReactNode;
   altura?: string;
+  /** Ocupa toda a altura do pai (sala no celular). Ver `ChatAoVivo`. */
+  preencher?: boolean;
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const chave = chaveDoCache(user?.id, "chat", liveId, equipe ? "equipe" : "aluno");
   // Voltar à sala abre o chat como estava, e a consulta pede só o que mudou
   // desde a versão guardada — sem roda girando e sem baixar tudo de novo.
-  const guardado = lerCache<ChatGuardado>(chave, VALIDADE_DO_CHAT_MS);
+  const [guardado] = useState(() => lerCache<ChatGuardado>(chave, VALIDADE_DO_CHAT_MS));
   const [mensagens, setMensagens] = useState<MensagemDoChat[] | null>(guardado?.mensagens ?? null);
   const [silenciado, setSilenciado] = useState(guardado?.silenciado ?? false);
   const [silenciados, setSilenciados] = useState<string[]>(guardado?.silenciados ?? []);
@@ -86,8 +89,11 @@ export function ChatDaAula({
       const novas = r?.mensagens ?? [];
       versao.current = ultimaVersao(versao.current, novas);
       setMensagens((atuais) => mesclarMensagens(atuais ?? [], novas, equipe));
+      // Só mexe no estado quando muda: cada set à toa redesenhava o chat
+      // inteiro a cada consulta.
       setSilenciado(!!r?.silenciado);
-      setSilenciados(Array.isArray(r?.silenciados) ? r.silenciados : []);
+      const lista = Array.isArray(r?.silenciados) ? r.silenciados : [];
+      setSilenciados((atual) => (atual.length === lista.length && atual.every((x, i) => x === lista[i]) ? atual : lista));
     } finally {
       consultando.current = false;
     }
@@ -155,16 +161,16 @@ export function ChatDaAula({
     consultar();
   };
 
-  const ocultar = async (id: number, oculta: boolean) => {
+  const ocultar = useCallback(async (id: number, oculta: boolean) => {
     const { data, error } = await supabase.from("live_chat").update({ oculta }).eq("id", id).select("id");
     if (error || !data?.length) {
       toast({ title: "Não foi possível moderar", description: error?.message || "Sua conta não pode moderar o chat.", variant: "destructive" });
       return;
     }
     consultar();
-  };
+  }, [consultar, toast]);
 
-  const silenciar = async (userId: string, calar: boolean) => {
+  const silenciar = useCallback(async (userId: string, calar: boolean) => {
     if (!user) return;
     const { data, error } = calar
       ? await supabase.from("live_chat_silenciados").insert({ live_id: liveId, user_id: userId, silenciado_por: user.id }).select("user_id")
@@ -175,7 +181,7 @@ export function ChatDaAula({
     }
     setSilenciados((s) => (calar ? [...new Set([...s, userId])] : s.filter((x) => x !== userId)));
     toast({ title: calar ? "Aluno silenciado nesta aula" : "Aluno liberado" });
-  };
+  }, [user, liveId, toast]);
 
   if (indisponivel) return <>{reserva}</>;
 
@@ -195,6 +201,7 @@ export function ChatDaAula({
       onOcultar={equipe ? ocultar : undefined}
       onSilenciar={equipe ? silenciar : undefined}
       altura={altura}
+      preencher={preencher}
     />
   );
 }

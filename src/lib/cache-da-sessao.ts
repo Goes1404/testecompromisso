@@ -54,10 +54,12 @@ export function lerCache<T>(chave: string | null, idadeMaximaMs: number, agora =
   return entrada.valor;
 }
 
-export function gravarCache<T>(chave: string | null, valor: T, agora = Date.now()): void {
-  if (!chave) return;
-  const entrada: Entrada<T> = { em: agora, valor };
-  memoria.set(chave, entrada);
+const pendentes = new Set<string>();
+let timerDoDisco: ReturnType<typeof setTimeout> | null = null;
+
+function gravarNoDisco(chave: string) {
+  const entrada = memoria.get(chave);
+  if (!entrada) return;
   try {
     armazenamento()?.setItem(chave, JSON.stringify(entrada));
   } catch {
@@ -65,9 +67,44 @@ export function gravarCache<T>(chave: string | null, valor: T, agora = Date.now(
   }
 }
 
+/** Grava no sessionStorage o que ficou pendente. Chamado ao esconder/fechar a aba. */
+export function descarregarCache(): void {
+  if (timerDoDisco) clearTimeout(timerDoDisco);
+  timerDoDisco = null;
+  pendentes.forEach(gravarNoDisco);
+  pendentes.clear();
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", descarregarCache);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") descarregarCache();
+  });
+}
+
+/**
+ * Memória na hora; `sessionStorage` adiado (1,5 s, ou ao esconder a aba).
+ * Serializar 200 mensagens a cada mensagem que chega era trabalho síncrono no
+ * meio da rolagem do celular.
+ */
+export function gravarCache<T>(chave: string | null, valor: T, agora = Date.now(), imediato = false): void {
+  if (!chave) return;
+  const entrada: Entrada<T> = { em: agora, valor };
+  memoria.set(chave, entrada);
+  if (imediato || !armazenamento()) {
+    gravarNoDisco(chave);
+    return;
+  }
+  pendentes.add(chave);
+  if (!timerDoDisco) timerDoDisco = setTimeout(descarregarCache, 1500);
+}
+
 /** Apaga tudo do cache (memória e sessionStorage). Chamado no signOut. */
 export function limparCacheDaSessao(): void {
   memoria.clear();
+  pendentes.clear();
+  if (timerDoDisco) clearTimeout(timerDoDisco);
+  timerDoDisco = null;
   const s = armazenamento();
   if (!s) return;
   try {

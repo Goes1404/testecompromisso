@@ -439,9 +439,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user, isUserLoading, router, hasHydrated, pathname]);
 
   const isFullBleedPage = useMemo(
-    () => pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || (pathname.includes('/live/') && !pathname.startsWith('/dashboard/live/')) || pathname.includes('/library/book/') || (pathname.includes('/student/provas/') && pathname !== '/dashboard/student/provas'),
+    () => pathname.includes('/chat/') || pathname.includes('/forum/') || pathname.includes('/classroom/') || pathname.includes('/live/') || pathname.includes('/library/book/') || (pathname.includes('/student/provas/') && pathname !== '/dashboard/student/provas'),
     [pathname]
   );
+
+  // Sala do aluno no celular: sem a barra de cima do app (a sala tem o próprio
+  // botão de voltar). São 64 px a mais para o chat numa tela de 640.
+  const isSalaAoVivo = pathname.startsWith('/dashboard/live/');
 
   const hideLayoutHeader = useMemo(
     () => pathname.includes('/library/book/') || (pathname.includes('/student/provas/') && pathname !== '/dashboard/student/provas'),
@@ -527,7 +531,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/[0.02] via-transparent to-accent/[0.02] pointer-events-none" />
 
         {!hideLayoutHeader && (
-          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6 shrink-0 print:hidden">
+          <header className={`sticky top-0 z-40 ${isSalaAoVivo ? 'hidden lg:flex' : 'flex'} h-16 items-center gap-4 border-b bg-background lg:bg-background/95 lg:backdrop-blur-sm px-4 md:px-6 shrink-0 print:hidden`}>
             <SidebarTrigger className="h-10 w-10 rounded-xl hover:bg-muted text-primary">
               <Menu className="h-6 w-6" />
             </SidebarTrigger>
