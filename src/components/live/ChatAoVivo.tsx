@@ -57,7 +57,7 @@ const LinhaDoChat = memo(function LinhaDoChat({
           {calado && <VolumeX className="inline h-3 w-3 text-red-300 ml-1 -mt-0.5" aria-label="Silenciado" />}
           <span className="text-white/35">: </span>
           <span className={m.equipe ? "text-white font-semibold" : "text-white/85 font-medium"}>
-            {m.oculta ? <em className="text-white/50">{m.texto ?? "mensagem oculta"} · oculta</em> : m.texto}
+            {m.oculta ? <em className="text-white/50">{m.texto ? `${m.texto} · oculta` : "mensagem oculta"}</em> : m.texto}
           </span>
         </p>
       </button>

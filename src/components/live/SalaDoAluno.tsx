@@ -206,9 +206,9 @@ export function SalaDoAluno({
                   href={linkDoVideo(aula.youtube_id)!}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`${CARTAO} flex items-center justify-center gap-1.5 h-11 text-[11px] font-black uppercase tracking-widest text-white/70`}
+                  className={`${CARTAO} flex items-center justify-center gap-1.5 min-h-11 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white/70 text-center`}
                 >
-                  Vídeo travando? Abrir no app do YouTube <ExternalLink className="h-3.5 w-3.5" />
+                  Travando? Abrir no YouTube <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                 </a>
               )}
               {meet}

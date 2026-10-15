@@ -13,7 +13,11 @@
  *   SUPABASE_JWT_SECRET  (Dashboard → Project Settings → API → JWT Secret)
  *     Com ele, o script assina um token por aluno e não passa pelo login — o
  *     GoTrue limita logins por IP e 300 logins seguidos seriam barrados. Sem
- *     ele, faz login de 10 em 10 (mais lento; pode cair em 429).
+ *     ele, faz login em lotes (mais lento; espera e repete se cair em 429).
+ *
+ * Sem a chave de serviço (`--aula <id>`): as contas e a aula já foram criadas
+ * por fora (SQL no painel), com a senha em ENSAIO_SENHA; o script só faz os
+ * logins e a carga, e não apaga nada no fim.
  *
  * O que ele cria, e apaga no fim:
  *   - N contas `ensaio.carga.<n>@compromisso.test` (role student, sala 99);
@@ -36,7 +40,7 @@ config({ path: '.env.local' });
 
 const TITULO = 'ENSAIO DE CARGA (apagar)';
 const DOMINIO = 'compromisso.test';
-const SENHA = 'ensaio-de-carga-2026';
+const SENHA = process.env.ENSAIO_SENHA || 'ensaio-de-carga-2026';
 const RAMPA_MS = 15_000;
 
 // ── argumentos ────────────────────────────────────────────────────────────
@@ -53,17 +57,21 @@ const SALA = String(num('sala', 99));
 const MENSAGEM_CADA_S = num('mensagem-cada', 45);
 const MANTER = flag('manter');
 const LIMPAR = flag('limpar');
+const AULA_PRONTA = (() => {
+  const i = args.indexOf('--aula');
+  return i >= 0 ? args[i + 1] : null;
+})();
 
 // ── ambiente ──────────────────────────────────────────────────────────────
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
-if (!URL || !ANON || !SERVICE) {
-  console.error('Faltam NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY ou SUPABASE_SERVICE_ROLE_KEY no .env.local');
+if (!URL || !ANON || (!SERVICE && !AULA_PRONTA)) {
+  console.error('Faltam NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY ou SUPABASE_SERVICE_ROLE_KEY no .env.local (ou passe --aula <id> com a aula e as contas já criadas).');
   process.exit(1);
 }
-const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+const admin = createClient(URL, SERVICE || ANON, { auth: { persistSession: false, autoRefreshToken: false } });
 
 const emailDe = (i: number) => `ensaio.carga.${i}@${DOMINIO}`;
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -214,11 +222,12 @@ async function tokenPorLogin(conta: Conta): Promise<string> {
 
 async function tokensDe(contas: Conta[]): Promise<string[]> {
   if (JWT_SECRET) return contas.map(tokenAssinado);
-  console.warn('Sem SUPABASE_JWT_SECRET: fazendo login de 10 em 10 (o GoTrue limita por IP).');
+  console.warn('Sem SUPABASE_JWT_SECRET: fazendo login em lotes de 20 (o GoTrue limita por IP).');
   const tokens: string[] = [];
-  for (let i = 0; i < contas.length; i += 10) {
-    tokens.push(...(await Promise.all(contas.slice(i, i + 10).map(tokenPorLogin))));
-    await dormir(2_000);
+  for (let i = 0; i < contas.length; i += 20) {
+    tokens.push(...(await Promise.all(contas.slice(i, i + 20).map(tokenPorLogin))));
+    if (tokens.length % 100 === 0) console.log(`  ${tokens.length}/${contas.length} logados`);
+    await dormir(1_500);
   }
   return tokens;
 }
@@ -304,13 +313,27 @@ async function main() {
     process.exit(2);
   }
 
-  console.log(`Contas de ensaio (${ALUNOS})…`);
-  const contas = await garantirContas(ALUNOS);
+  let contas: Conta[];
+  let liveId: string;
+  let equipe: string | null = null;
+  if (AULA_PRONTA) {
+    // Modo sem chave de serviço: contas 1..N e aula criadas por fora.
+    contas = Array.from({ length: ALUNOS }, (_, i) => ({ id: '', email: emailDe(i + 1) }));
+    liveId = AULA_PRONTA;
+    console.log(`Aula do ensaio (já criada): ${liveId}`);
+  } else {
+    console.log(`Contas de ensaio (${ALUNOS})…`);
+    contas = await garantirContas(ALUNOS);
+    equipe = await idDaEquipe();
+    liveId = await criarAula(equipe);
+    console.log(`Aula do ensaio: ${liveId}`);
+  }
   console.log('Tokens…');
   const tokens = await tokensDe(contas);
-  const equipe = await idDaEquipe();
-  const liveId = await criarAula(equipe);
-  console.log(`Aula do ensaio: ${liveId}`);
+  // Sem chave de serviço o id vem do próprio token (o insert no chat precisa dele).
+  if (AULA_PRONTA) {
+    contas = contas.map((c, i) => ({ ...c, id: JSON.parse(Buffer.from(tokens[i].split('.')[1], 'base64url').toString()).sub }));
+  }
 
   let fim = false;
   const parar = () => fim;
@@ -324,6 +347,10 @@ async function main() {
       const prof = clienteCom(tokenAssinado({ id: equipe, email: 'equipe@ensaio' }));
       const { data } = await prof.rpc('presencas_da_live', { p_live_id: liveId });
       if (data) console.log(`\nChamada: ${(data as any).alunos?.length ?? 0} entraram de ${(data as any).esperados} esperados; aula no ar há ${(data as any).segundos_da_aula}s`);
+    }
+    if (AULA_PRONTA) {
+      console.log('\nModo --aula: nada foi apagado. Apague a aula e as contas de ensaio pelo painel (SQL).');
+      return;
     }
     const { count } = await admin.from('live_chat').select('id', { count: 'exact', head: true }).eq('live_id', liveId);
     console.log(`Mensagens no chat do ensaio: ${count ?? '?'}`);

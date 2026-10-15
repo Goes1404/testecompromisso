@@ -318,7 +318,10 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     `ListaDeAulas`, `SalaDoAluno`, `EstudioDoProfessor`, `AgendaDoProfessor`,
     `QuadroDeDuvidas`, `FilaDeDuvidas`, `ResumoDaChamada` — e as páginas e os
     containers (`DuvidasDoAluno`, `DuvidasDoProfessor`, `PainelDaChamada`) buscam e
-    gravam. É o que deixa revisar o desenho com dados de exemplo, sem login. Estilo no
+    gravam. É o que deixa revisar o desenho com dados de exemplo, sem login: a prévia
+    `/dev/live-preview?tela=lista|sala|sala-agendada|agenda|estudio|estudio-agendado`
+    (só fora de produção) monta cada tela com dados de exemplo — é dela que saem as
+    capturas de celular (360×740) e computador (1366×768) das revisões. Estilo no
     molde do Mural: cartão escuro `CARTAO` (`components/live/pecas.tsx`) sobre o fundo
     claro do app, laranja da marca, sem rótulo de enfeite ("Ambiente auditado",
     "Sinal habilitado" saíram — não diziam nada ao aluno).

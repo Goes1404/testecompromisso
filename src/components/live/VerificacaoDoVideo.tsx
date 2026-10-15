@@ -29,24 +29,31 @@ export function VerificacaoDoVideo({
 
   const { titulo, descricao } = mensagemDaVerificacao(verificacao);
   const tom = verificacao.ok ? "ok" : verificacao.definitivo ? "erro" : "aviso";
+  // Só a borda e um brilho no canto mudam de cor: o fundo continua o escuro do
+  // CARTAO. Trocar o fundo por um tom translúcido deixava o cartão quase
+  // branco sobre a página clara, com texto branco em cima — ilegível.
   const estilo = {
-    ok: "border-emerald-500/30 bg-emerald-500/5",
-    erro: "border-red-500/40 bg-red-500/10",
-    aviso: "border-amber-500/30 bg-amber-500/5",
+    ok: { borda: "border-emerald-500/40", brilho: "rgba(16,185,129,0.22)" },
+    erro: { borda: "border-red-500/50", brilho: "rgba(239,68,68,0.28)" },
+    aviso: { borda: "border-amber-500/40", brilho: "rgba(245,158,11,0.22)" },
   }[tom];
   const Icone = tom === "ok" ? CheckCircle2 : tom === "erro" ? AlertTriangle : WifiOff;
   const corDoIcone = tom === "ok" ? "text-emerald-400" : tom === "erro" ? "text-red-300" : "text-amber-300";
 
   return (
-    <section className={`${CARTAO} ${estilo} p-3 md:p-4`} aria-live="polite" aria-label="Verificação do vídeo">
-      <div className="flex items-start gap-3">
+    <section className={`${CARTAO} ${estilo.borda} relative overflow-hidden p-3 md:p-4`} aria-live="polite" aria-label="Verificação do vídeo">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 0% 0%, ${estilo.brilho} 0%, transparent 55%)` }}
+      />
+      <div className="relative flex items-start gap-3">
         <Icone className={`h-5 w-5 shrink-0 mt-0.5 ${corDoIcone}`} aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-black italic text-white leading-tight">{titulo}</p>
           <p className="text-xs font-medium text-white/65 mt-1 leading-snug break-words">{descricao}</p>
         </div>
       </div>
-      <div className="flex flex-wrap gap-1.5 mt-3 sm:pl-8">
+      <div className="relative flex flex-wrap gap-1.5 mt-3 sm:pl-8">
         <button
           type="button"
           onClick={onVerificar}
