@@ -70,22 +70,10 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
     }
 
     loadLiveData();
-
-    const channel = supabase
-      .channel(`live_view_${liveId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'lives',
-        filter: `id=eq.${liveId}`
-      }, (payload) => {
-        setLive(payload.new);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Sem Realtime aqui de propósito (regra 14 do CLAUDE.md): o Supabase
+    // aceita 200 conexões no Free e 500 no Pro, e um aulão tem ~855 alunos.
+    // Quem ficasse de fora tentaria reconectar a aula inteira. A sala relê a
+    // aula por intervalo (abaixo) e pelo sinal de presença.
   }, [liveId, user, router, toast]);
 
   const presenca = usePresencaNaLive(liveId, !!live && live.status !== 'completed');
@@ -108,17 +96,22 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presenca]);
 
-  // Aula no ar: relê a cada 15 s para pegar o professor começando, parando ou
-  // trocando a transmissão pela plataforma mesmo sem Realtime (até ~100
-  // alunos o Realtime dá conta; isto é a rede de segurança).
-  const noArAgora = live?.status === 'live';
-  // Sem vídeo ainda (esperando o professor começar): olha a cada 6 s. Com
-  // vídeo: a cada 20 s, só para notar se ele parou ou trocou de transmissão.
-  const esperandoVideo = noArAgora && !live?.youtube_id && !live?.transmissao_sessao;
+  // Relê a aula por intervalo, conforme o estado:
+  // - agendada: a cada 15 s, para pegar o "abriu" (o sinal de presença, a cada
+  //   60 s, também traz o status — isto só encurta a espera);
+  // - no ar sem vídeo (esperando o professor começar): a cada 6 s;
+  // - no ar com vídeo: a cada 20 s, só para notar se ele parou ou trocou de
+  //   transmissão;
+  // - encerrada: nada.
+  // Cada leitura custa ~0,1 ms no banco (medido em 15/10); é mais barato que
+  // ~855 websockets disputando 200 vagas.
+  const status = live?.status as string | undefined;
+  const esperandoVideo = status === 'live' && !live?.youtube_id && !live?.transmissao_sessao;
+  const intervaloDaReleitura =
+    status === 'live' ? (esperandoVideo ? 6_000 : 20_000) : status === 'scheduled' ? 15_000 : 0;
   useEffect(() => {
-    if (!noArAgora || !liveId) return;
-    const t = setInterval(() => {
-      if (document.hidden) return;
+    if (!intervaloDaReleitura || !liveId) return;
+    const reler = () =>
       supabase
         .from('lives')
         .select('*')
@@ -127,10 +120,21 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
         .then(({ data }) => {
           if (data) setLive(data);
         });
-    }, esperandoVideo ? 6_000 : 20_000);
-    return () => clearInterval(t);
+    const t = setInterval(() => {
+      if (document.hidden) return;
+      reler();
+    }, intervaloDaReleitura);
+    // Voltou do bloqueio de tela ou de outro app: olha na hora.
+    const aoVoltar = () => {
+      if (!document.hidden) reler();
+    };
+    document.addEventListener('visibilitychange', aoVoltar);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', aoVoltar);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noArAgora, esperandoVideo, liveId]);
+  }, [intervaloDaReleitura, liveId]);
 
   if (loading || !live) return <SalaCarregando />;
 

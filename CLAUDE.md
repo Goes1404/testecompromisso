@@ -306,10 +306,13 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     cliente são descartados. Limites por aluno: 1 dúvida a cada 20 s, 20 por aula, até
     500 caracteres, só com a aula no ar. A equipe responde, marca "respondi na aula" ou
     **oculta** (o registro fica); só admin/staff apagam. Ninguém reescreve a pergunta.
-14. **A sala não depende do Realtime para nada que importa.** O sinal de presença
-    (60 s) devolve o status da aula; se diverge da tela, ou se está no ar sem vídeo, a
-    sala relê a aula. Sem isso, o aluno que ficasse fora da cota de Realtime nunca
-    saberia que a aula abriu — e nunca mandaria presença.
+14. **A sala e a lista do aluno não usam Realtime nenhum** (desde 15/10; antes a sala
+    assinava `postgres_changes` em `lives` como atalho). Com ~855 alunos e 200 conexões
+    no plano, 655 celulares ficariam o aulão inteiro tentando reconectar. A sala relê a
+    aula por intervalo (agendada 15 s, no ar sem vídeo 6 s, no ar com vídeo 20 s) e ao
+    voltar para a aba; a lista relê a cada 30 s. O sinal de presença (60 s) também traz
+    o status. Cada releitura custa ~0,1 ms no banco. Só a equipe (estúdio, dúvidas)
+    assina Realtime — são poucas conexões.
 
 15. **Desenho separado de dado.** As telas são componentes que só recebem props —
     `ListaDeAulas`, `SalaDoAluno`, `EstudioDoProfessor`, `AgendaDoProfessor`,
@@ -353,6 +356,11 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     - **Leitura por consulta incremental, não Realtime** (200 conexões no Free): a sala
       chama `chat_da_live(live, desde)` a cada 5 s (aluno) / 3 s (equipe), só com a
       aula no ar e a aba visível, e recebe só o que mudou desde a última `versao`.
+      O ritmo do aluno é adaptativo (`proximoIntervaloDoChat`): 3 consultas sem
+      novidade → 7 s, 6 → 10 s; mensagem nova (ou enviada por ele) volta a 5 s, com
+      ±10 % de variação para os celulares que entraram juntos não baterem no banco no
+      mesmo instante. Medido em 15/10: `chat_da_live` custa 0,4 ms no banco — o que
+      pesa é o número de pedidos na porta (PostgREST), não a consulta.
     - **`versao` sai de sequência e muda em toda alteração.** É o que faz a mensagem
       ocultada sumir da tela de quem já a tinha: ela volta sem texto e
       `mesclarMensagens()` tira da lista. Ordem na tela é por `id`, nunca por versão.
@@ -395,6 +403,15 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     abrir e de novo na hora de abrir a sala (o professor pode ter mudado a visibilidade no
     YouTube Studio). Pelo servidor porque o oEmbed não libera CORS. Nada é gravado.
     Prova: `scripts/test-live-video.ts`.
+
+22. **Ensaio de carga antes do aulão:** `scripts/ensaio-da-live.ts` cria N contas de
+    ensaio (sala 99, `@compromisso.test`) e uma aula no ar restrita a essa sala, e faz
+    cada "aluno" bater no PostgREST como a tela bate (chat 5 s, presença 60 s, aula
+    20 s, uma mensagem a cada 45 s), medindo p50/p95/p99 e erros. Precisa do
+    `SUPABASE_JWT_SECRET` para assinar um token por aluno (o GoTrue limita logins por
+    IP). Apaga tudo no fim; `--manter` guarda as contas e `--limpar` apaga o que
+    sobrou — contas de ensaio mantidas entram como ausentes na chamada de aula para
+    todas as turmas. Roteiro completo do dia: `docs/aulao-dia-d.md`.
 
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`

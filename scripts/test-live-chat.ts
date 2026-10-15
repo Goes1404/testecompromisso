@@ -17,6 +17,8 @@ import {
   horaDaMensagem,
   LIMITE_DA_MENSAGEM,
   type MensagemDoChat,
+  proximoIntervaloDoChat,
+  INTERVALO_MAXIMO_DO_ALUNO_MS,
 } from '../src/lib/live-chat';
 
 const msg = (id: number, versao: number, extra: Partial<MensagemDoChat> = {}): MensagemDoChat => ({
@@ -111,6 +113,17 @@ ok('cor do nome é estável', () => {
 
 ok('hora no fuso da escola', () => {
   assert.equal(horaDaMensagem('2026-10-13T22:05:00Z'), '19:05');
+});
+
+ok('ritmo da consulta: rápido com movimento, espaçado parado, equipe sempre 3 s', () => {
+  assert.equal(proximoIntervaloDoChat(0, false), 5_000);
+  assert.equal(proximoIntervaloDoChat(2, false), 5_000);
+  assert.equal(proximoIntervaloDoChat(3, false), 7_000);
+  assert.equal(proximoIntervaloDoChat(5, false), 7_000);
+  assert.equal(proximoIntervaloDoChat(6, false), INTERVALO_MAXIMO_DO_ALUNO_MS);
+  assert.equal(proximoIntervaloDoChat(100, false), 10_000);
+  assert.equal(proximoIntervaloDoChat(100, true), 3_000);
+  assert.equal(proximoIntervaloDoChat(0, true), 3_000);
 });
 
 console.log(`\nchat ao vivo: ${n} testes, tudo certo`);

@@ -6,10 +6,9 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import {
   ESPERA_ENTRE_MENSAGENS_S,
-  INTERVALO_DA_EQUIPE_MS,
-  INTERVALO_DO_ALUNO_MS,
   erroDoChat,
   mesclarMensagens,
+  proximoIntervaloDoChat,
   ultimaVersao,
   validarMensagemDoChat,
   type MensagemDoChat,
@@ -74,6 +73,8 @@ export function ChatDaAula({
   const [espera, setEspera] = useState(0);
   const versao = useRef(guardado?.versao ?? 0);
   const consultando = useRef(false);
+  // Consultas seguidas que não trouxeram nada: é o que espaça a próxima.
+  const quietos = useRef(0);
 
   const consultar = useCallback(async () => {
     if (!user || consultando.current) return;
@@ -87,6 +88,7 @@ export function ChatDaAula({
       }
       const r = data as RespostaDoChat;
       const novas = r?.mensagens ?? [];
+      quietos.current = novas.length > 0 ? 0 : quietos.current + 1;
       versao.current = ultimaVersao(versao.current, novas);
       setMensagens((atuais) => mesclarMensagens(atuais ?? [], novas, equipe));
       // Só mexe no estado quando muda: cada set à toa redesenhava o chat
@@ -115,20 +117,34 @@ export function ChatDaAula({
     gravarCache<ChatGuardado>(chave, { mensagens, versao: versao.current, silenciado, silenciados });
   }, [chave, mensagens, silenciado, silenciados]);
 
-  // Enquanto no ar: consulta periódica, pausada com a aba escondida.
+  // Enquanto no ar: consulta periódica, pausada com a aba escondida. O
+  // intervalo é decidido a cada volta (`proximoIntervaloDoChat`): chat parado
+  // espaça as consultas, mensagem nova aproxima. Os ±10 % de variação evitam
+  // que os ~855 celulares que entraram juntos (push do "ao vivo") batam no
+  // banco no mesmo instante a cada volta.
   useEffect(() => {
     if (!noAr || indisponivel) return;
-    const intervalo = equipe ? INTERVALO_DA_EQUIPE_MS : INTERVALO_DO_ALUNO_MS;
-    const timer = setInterval(() => {
-      if (typeof document !== "undefined" && document.hidden) return;
-      consultar();
-    }, intervalo);
+    let vivo = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const agendar = () => {
+      if (!vivo) return;
+      const base = proximoIntervaloDoChat(quietos.current, equipe);
+      timer = setTimeout(async () => {
+        if (!(typeof document !== "undefined" && document.hidden)) await consultar();
+        agendar();
+      }, Math.round(base * (0.9 + Math.random() * 0.2)));
+    };
+    agendar();
     const aoVoltar = () => {
-      if (!document.hidden) consultar();
+      if (!document.hidden) {
+        quietos.current = 0;
+        consultar();
+      }
     };
     document.addEventListener("visibilitychange", aoVoltar);
     return () => {
-      clearInterval(timer);
+      vivo = false;
+      if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", aoVoltar);
     };
   }, [noAr, equipe, indisponivel, consultar]);
@@ -158,6 +174,8 @@ export function ChatDaAula({
     }
     setTexto("");
     if (!equipe) setEspera(ESPERA_ENTRE_MENSAGENS_S);
+    // Quem acabou de escrever quer ver a resposta: volta ao ritmo rápido.
+    quietos.current = 0;
     consultar();
   };
 

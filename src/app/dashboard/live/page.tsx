@@ -57,15 +57,20 @@ export default function LiveClassesPage() {
 
     fetchLives();
 
-    const channel = supabase
-      .channel('live_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'lives' }, () => {
-        fetchLives();
-      })
-      .subscribe();
-
+    // Sem Realtime (regra 14 do CLAUDE.md): ~855 alunos não cabem nas 200
+    // conexões do plano. A lista relê a cada 30 s e ao voltar para a aba —
+    // uma aula que abre aparece em no máximo meio minuto.
+    const t = setInterval(() => {
+      if (document.hidden) return;
+      fetchLives();
+    }, 30_000);
+    const aoVoltar = () => {
+      if (!document.hidden) fetchLives();
+    };
+    document.addEventListener('visibilitychange', aoVoltar);
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', aoVoltar);
     };
   }, [user, chave]);
 

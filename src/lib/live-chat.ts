@@ -13,6 +13,24 @@ export const ESPERA_ENTRE_MENSAGENS_S = 10;
 /** Aluno consulta a cada 5 s; a equipe, que modera, a cada 3 s. */
 export const INTERVALO_DO_ALUNO_MS = 5_000;
 export const INTERVALO_DA_EQUIPE_MS = 3_000;
+/** Com o chat parado, o aluno espaça até aqui (ver `proximoIntervaloDoChat`). */
+export const INTERVALO_MAXIMO_DO_ALUNO_MS = 10_000;
+
+/**
+ * Quanto esperar até a próxima consulta.
+ *
+ * Com ~855 alunos, consultar a cada 5 s dá uns 170 pedidos por segundo só do
+ * chat. Quando ele está parado (ninguém escreve), isso é pedido à toa: depois
+ * de 3 consultas sem novidade o aluno passa a 7 s, depois de 6 a 10 s. Na
+ * primeira mensagem que chega (ou que ele manda) volta a 5 s. A equipe, que
+ * modera, fica sempre em 3 s — são poucas conexões.
+ */
+export function proximoIntervaloDoChat(consultasSemNovidade: number, equipe: boolean): number {
+  if (equipe) return INTERVALO_DA_EQUIPE_MS;
+  if (consultasSemNovidade < 3) return INTERVALO_DO_ALUNO_MS;
+  if (consultasSemNovidade < 6) return 7_000;
+  return INTERVALO_MAXIMO_DO_ALUNO_MS;
+}
 /** Quantas mensagens a tela guarda. Mais que isso pesa no celular. */
 export const MAXIMO_NA_TELA = 200;
 
