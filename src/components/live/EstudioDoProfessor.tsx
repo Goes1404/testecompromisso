@@ -31,6 +31,8 @@ export function EstudioDoProfessor({
   chamada,
   chat,
   transmissao,
+  video,
+  videoVerificado = false,
 }: {
   aula: AulaNaTela;
   atualizando: boolean;
@@ -42,6 +44,10 @@ export function EstudioDoProfessor({
   chat?: ReactNode;
   /** Painel "Transmitir pela plataforma" (`TransmissaoDoProfessor`). */
   transmissao?: ReactNode;
+  /** Resultado da verificação do vídeo do YouTube (`VerificacaoDoVideo`). */
+  video?: ReactNode;
+  /** O YouTube confirmou que o vídeo abre para o aluno (marca o passo 2). */
+  videoVerificado?: boolean;
 }) {
   const acao = proximoStatus(aula.status);
   const temVideo = !!urlDoPlayer(aula.youtube_id);
@@ -148,9 +154,10 @@ export function EstudioDoProfessor({
                   : "Escolha como transmitir: pela plataforma (painel abaixo, só a tela do computador) ou pelo YouTube (cole o link em Editar aula).",
               },
               {
-                feito: false,
-                texto:
-                  "Nas configurações da transmissão: visibilidade Não listada e \"Permitir incorporação\" ligado — senão o vídeo não abre aqui dentro.",
+                feito: videoVerificado,
+                texto: videoVerificado
+                  ? "O YouTube confirmou: visibilidade e incorporação estão certas."
+                  : "Nas configurações da transmissão: visibilidade Não listada e \"Permitir incorporação\" ligado — senão o vídeo não abre aqui dentro.",
               },
               { feito: false, texto: "No YouTube Studio, pelo computador, comece a transmitir. Deixe esta tela aberta ao lado: o chat da turma aparece aqui." },
               { feito: false, texto: "Volte aqui e clique em Abrir para alunos. Ao terminar, Encerrar aula gera a chamada." },
@@ -176,6 +183,9 @@ export function EstudioDoProfessor({
               direto para os alunos) ou pelo YouTube (link colado). Se os dois
               estiverem ativos, a sala do aluno mostra o da plataforma. */}
           {aula.status !== "completed" && transmissao}
+          {/* Antes de abrir a sala, o YouTube é consultado: vídeo privado ou
+              sem incorporação viraria erro 150/153 para ~855 alunos. */}
+          {temVideo && aula.status !== "completed" && video}
           {temVideo ? (
             <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} />
           ) : (

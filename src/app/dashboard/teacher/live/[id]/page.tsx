@@ -14,6 +14,9 @@ import { DuvidasDoProfessor } from "@/components/live/DuvidasDoProfessor";
 import { ChatDaAula } from "@/components/live/ChatDaAula";
 import { TransmissaoDoProfessor } from "@/components/live/TransmissaoDoProfessor";
 import { EstudioCarregando, EstudioDoProfessor } from "@/components/live/EstudioDoProfessor";
+import { useVerificacaoDoVideo } from "@/components/live/useVerificacaoDoVideo";
+import { VerificacaoDoVideo } from "@/components/live/VerificacaoDoVideo";
+import { bloqueiaAbertura, mensagemDaVerificacao } from "@/lib/live-video";
 
 /** Estúdio do professor: busca a aula e troca o status. O desenho é do EstudioDoProfessor. */
 export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id: string }> }) {
@@ -67,9 +70,32 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
     };
   }, [liveId, user, router, toast]);
 
+  // Confere com o YouTube se o vídeo abre para o aluno. Roda ao abrir o
+  // estúdio e de novo na hora de abrir a sala.
+  const video = useVerificacaoDoVideo(live?.youtube_id, !!live && live.status !== 'completed');
+
   const toggleLiveStatus = async () => {
     if (isUpdating || !live) return;
     const { para } = proximoStatus(live.status);
+
+    // Abrir a sala com vídeo do YouTube: pergunta de novo ao YouTube, porque
+    // o professor pode ter mudado a visibilidade desde a última conferência.
+    // Só o "não" definitivo (privado, sem incorporação, apagado) barra; se o
+    // YouTube não responder, a aula não fica refém disso e a sala abre.
+    if (para === 'live' && live.youtube_id && !live.transmissao_sessao) {
+      setIsUpdating(true);
+      const v = await video.verificar();
+      setIsUpdating(false);
+      if (v && bloqueiaAbertura(v)) {
+        const { titulo, descricao } = mensagemDaVerificacao(v);
+        toast({ title: `Sala não aberta: ${titulo.toLowerCase()}`, description: descricao, variant: 'destructive' });
+        return;
+      }
+      if (v && !v.ok) {
+        const { titulo, descricao } = mensagemDaVerificacao(v);
+        toast({ title: titulo, description: descricao });
+      }
+    }
 
     // Encerrar gera a chamada de centenas de alunos: um clique sem querer no
     // meio da aula marcaria falta para quem ainda não chegou aos 60%.
@@ -135,6 +161,8 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
       transmissao={<TransmissaoDoProfessor liveId={liveId} aulaNoAr={live.status === 'live'} />}
       chat={<ChatDaAula liveId={liveId} noAr={live.status === 'live'} equipe altura="h-[340px] lg:h-[max(260px,calc(100dvh-26rem))]" />}
       chamada={<PainelDaChamada liveId={liveId} status={live.status ?? null} />}
+      video={<VerificacaoDoVideo verificacao={video.verificacao} verificando={video.verificando} onVerificar={() => video.verificar()} />}
+      videoVerificado={!!video.verificacao?.ok}
     />
   );
 }

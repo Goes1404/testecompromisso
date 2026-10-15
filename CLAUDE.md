@@ -386,6 +386,16 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
     caro no celular). Medição: 0 tarefas longas arrastando o chat com mensagens chegando
     a cada 0,7 s (antes 8, pior 183 ms).
 
+21. **O vídeo é conferido com o YouTube antes de abrir a sala** (`src/lib/live-video.ts`,
+    rota `/api/live/verificar-video`, só equipe). O oEmbed do YouTube diz pelo status se o
+    vídeo abre para o aluno: 200 abre, 401 incorporação desligada, 403 privado, 400/404 não
+    existe. Esses "não" são **definitivos** e barram o "Abrir para alunos" com a mensagem de
+    onde consertar; qualquer outra resposta (YouTube fora, timeout, 429) é "não deu para
+    perguntar" e **não barra** — a aula não fica refém do oEmbed. O estúdio confere ao
+    abrir e de novo na hora de abrir a sala (o professor pode ter mudado a visibilidade no
+    YouTube Studio). Pelo servidor porque o oEmbed não libera CORS. Nada é gravado.
+    Prova: `scripts/test-live-video.ts`.
+
 Migration: `20261013120000_lives_turmas_e_presenca.sql`, testada num Postgres local
 com cópia das tabelas e policies de produção. Ela também fecha a falha de `ar_insert`
 (o aluno se marcava presente em qualquer aula sem código, direto pelo banco). O app
