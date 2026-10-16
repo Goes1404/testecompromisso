@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { validadeDoLink } from "@/lib/link-de-senha";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -340,7 +341,8 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
               {!link && !linkLoading && !linkError && (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Gere um link seguro e envie ao aluno. Ele expira em <strong>1 hora</strong> e funciona uma única vez.
+                    Gere um link seguro e envie ao aluno. Ele vale por <strong>24 horas</strong> e pode ser aberto mais de
+                    uma vez; gerar outro cancela o anterior.
                   </p>
                   <Button
                     onClick={generateLink}
@@ -377,7 +379,7 @@ function ResetPasswordModal({ user, open, onClose }: ResetModalProps) {
                   <div className="flex flex-wrap gap-2">
                     <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">
                       <Clock size={11} />
-                      Expira em 1 hora
+                      {validadeDoLink(link).rotulo}
                     </span>
                     <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold">
                       <CheckCircle2 size={11} />

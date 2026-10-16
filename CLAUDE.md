@@ -562,6 +562,22 @@ A secretaria gera um link por aluno (`/api/admin/generate-link`, só admin/staff
    propósito.** Esse link circula nos grupos: redefinir por nome deixaria qualquer um trocar
    a senha de qualquer colega. Lá, quem já trocou a senha padrão é mandado para o SMS
    (`/forgot-password`) ou para a secretaria.
+6. **O link vale 24 h e funciona várias vezes** (pedido da coordenação, 16/10): é
+   `/reset-password?convite=<token>`, assinado pela plataforma
+   (`src/lib/link-de-senha-token.ts`, HMAC com `LINK_SENHA_SECRET` ou, na falta,
+   `PASSWORD_RESET_TOKEN_SECRET`), porque o token do Supabase é sempre de uso único e de
+   1 h. Conferir e gravar ficam no servidor (`/api/auth/link-de-senha`, sem sessão — o link
+   é a prova), e a tela entra com a senha nova em seguida. Como o link deixa de ser de uso
+   único, um link encaminhado vale 24 h; as travas são:
+   - **gerar outro cancela o anterior** (`app_metadata.link_senha_versao`, que o aluno não
+     consegue escrever);
+   - no máximo **10 trocas por link** e 30 tentativas por IP por hora
+     (`password_reset_attempts`, identificador = hash do token);
+   - **toda troca avisa o aluno no sininho** ("se não foi você, procure a secretaria");
+   - conta arquivada ou bloqueada é recusada.
+   Sem nenhum dos dois segredos, `generate-link` volta ao link de 1 h do Supabase
+   (`?token_hash=`), e a tela da secretaria mostra a validade do link que saiu
+   (`validadeDoLink()`). Os links de 1 h já enviados continuam funcionando.
 
 Testado de ponta a ponta em 16/10 contra o Supabase de produção, com conta de ensaio, em
 360px: link válido → conta certa → senha gravada → home; link reusado → "Link sem
@@ -801,6 +817,7 @@ PASSWORD_RESET_TOKEN_SECRET  (server-side only — secret dedicado do wizard de 
 TWILIO_ACCOUNT_SID
 TWILIO_AUTH_TOKEN
 TWILIO_PHONE_NUMBER
+LINK_SENHA_SECRET  (server-side only, 16+ caracteres — assina o link de senha de 24 h; sem ela usa PASSWORD_RESET_TOKEN_SECRET)
 SENHA_PADRAO_INICIAL  (server-side only, opcional — senha inicial de contas novas; sem ela vale a histórica)
 CLOUDFLARE_REALTIME_APP_ID     (server-side only — transmissão pela plataforma)
 CLOUDFLARE_REALTIME_APP_TOKEN  (server-side only)

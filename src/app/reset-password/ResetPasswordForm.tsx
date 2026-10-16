@@ -34,6 +34,11 @@ import {
  *    o endereço para montar o cartão; se a troca fosse automática, a prévia
  *    gastaria o link de uso único antes do aluno.
  *
+ * O link de 24 h (`?convite=…`, desde 16/10) funciona várias vezes: quem
+ * confere e grava é o servidor (`/api/auth/link-de-senha`), e a tela entra com
+ * a senha nova logo depois. O de 1 h (`?token_hash=…`) é de uso único e vira
+ * sessão no "Continuar", como antes.
+ *
  * Validar o link substitui a sessão aberta sem "sair da conta" antes: o
  * `AuthProvider` manda para `/login` em todo `SIGNED_OUT`, o que interromperia
  * a tela no meio.
@@ -69,7 +74,8 @@ export default function ResetPasswordForm() {
   const [confirmacao, setConfirmacao] = useState("");
   const [mostrar, setMostrar] = useState(false);
 
-  const finalidade: FinalidadeDoLink = link.tipo === "token" || link.tipo === "sessao" ? link.finalidade : "redefinir";
+  const finalidade: FinalidadeDoLink =
+    link.tipo === "token" || link.tipo === "sessao" || link.tipo === "convite" ? link.finalidade : "redefinir";
   const textos = TEXTOS[finalidade];
   const req = requisitosDaSenha(senha);
   const senhaOk = senhaAtendeRequisitos(senha);
@@ -94,9 +100,32 @@ export default function ResetPasswordForm() {
     });
   }, []);
 
+  const pedirAoServidor = async (corpo: Record<string, string>) => {
+    const res = await fetch("/api/auth/link-de-senha", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(corpo),
+    });
+    const dados = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, dados };
+  };
+
   const continuar = async () => {
-    if (link.tipo !== "token" && link.tipo !== "sessao") return;
+    if (link.tipo !== "token" && link.tipo !== "sessao" && link.tipo !== "convite") return;
     setEtapa("validando");
+    if (link.tipo === "convite") {
+      // Só confere de quem é a conta: o link continua valendo, e nada muda até gravar.
+      try {
+        const { ok, dados } = await pedirAoServidor({ acao: "conferir", token: link.convite });
+        if (!ok || !dados?.email) throw new Error(dados?.error || "Não foi possível validar este link.");
+        setConta({ email: dados.email, nome: dados.nome ?? null });
+        setEtapa("formulario");
+      } catch (e: any) {
+        setErro(e?.message || mensagemDoErroDoLink(null, null));
+        setEtapa("invalido");
+      }
+      return;
+    }
     try {
       const { data, error } =
         link.tipo === "token"
@@ -125,6 +154,28 @@ export default function ResetPasswordForm() {
       return;
     }
     setEtapa("salvando");
+    if (link.tipo === "convite") {
+      try {
+        const { ok, status, dados } = await pedirAoServidor({ acao: "gravar", token: link.convite, senha });
+        if (!ok) {
+          if (status === 410 || status === 403) {
+            setErro(dados?.error || mensagemDoErroDoLink(null, null));
+            setEtapa("invalido");
+            return;
+          }
+          throw new Error(dados?.error || "Tente de novo em instantes.");
+        }
+        // A senha já está gravada; entrar é o passo seguinte. Se falhar, o
+        // login normal resolve — não desfaz nada.
+        const { error } = await supabase.auth.signInWithPassword({ email: dados.email, password: senha });
+        setEtapa("sucesso");
+        setTimeout(() => router.push(error ? "/login" : "/dashboard/home"), 2500);
+      } catch (e: any) {
+        setEtapa("formulario");
+        toast({ title: "Não foi possível salvar a senha", description: e?.message, variant: "destructive" });
+      }
+      return;
+    }
     try {
       // `must_change_password: false`: o aluno acabou de escolher a senha aqui;
       // mandá-lo à tela de primeiro acesso em seguida pediria a mesma coisa duas
@@ -208,7 +259,9 @@ export default function ResetPasswordForm() {
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white italic uppercase tracking-tight leading-none">{textos.titulo}</h1>
           <p className="text-white/60 text-sm font-medium leading-relaxed max-w-xs mx-auto">
-            Este link vale uma vez só e por 1 hora. Toque em continuar para validar e escolher a senha.
+            {link.tipo === "convite"
+              ? "Este link vale por 24 horas e pode ser aberto mais de uma vez. Toque em continuar para ver a conta e escolher a senha."
+              : "Este link vale uma vez só e por 1 hora. Toque em continuar para validar e escolher a senha."}
           </p>
         </div>
         <div className={`${CARTAO} space-y-5`}>

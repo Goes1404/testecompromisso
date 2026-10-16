@@ -62,8 +62,33 @@ export function montarLinkDeSenha(origem: string, tokenHash: string, finalidade:
   return `${origem}/reset-password?${p.toString()}`;
 }
 
+/** Token assinado pela plataforma (`src/lib/link-de-senha-token.ts`): payload.assinatura. */
+const CONVITE = /^[A-Za-z0-9_-]{40,560}\.[A-Za-z0-9_-]{40,64}$/;
+
+/**
+ * Link de 24 h que funciona várias vezes (desde 16/10). A tela manda o
+ * `convite` para `/api/auth/link-de-senha`, que confere e grava a senha.
+ */
+export function montarLinkDeConvite(origem: string, convite: string, finalidade: FinalidadeDoLink): string {
+  const p = new URLSearchParams({ convite, para: finalidade });
+  return `${origem}/reset-password?${p.toString()}`;
+}
+
+/** O que a secretaria lê ao lado do link: depende de qual dos dois saiu. */
+export function validadeDoLink(link: string | null | undefined): { rotulo: string; texto: string } {
+  if (link && /[?&]convite=/.test(link)) {
+    return {
+      rotulo: "Vale por 24 horas",
+      texto: "Vale por 24 horas e pode ser aberto mais de uma vez. Gerar um link novo cancela o anterior.",
+    };
+  }
+  return { rotulo: "Expira em 1 hora", texto: "Funciona uma única vez e expira em 1 hora." };
+}
+
 export type LeituraDoLink =
-  /** Link novo: troca o `token_hash` por sessão no clique. */
+  /** Link de 24 h, assinado pela plataforma: conferido e gravado pelo servidor. */
+  | { tipo: "convite"; convite: string; finalidade: FinalidadeDoLink }
+  /** Link de 1 h do Supabase: troca o `token_hash` por sessão no clique. */
   | { tipo: "token"; tokenHash: string; finalidade: FinalidadeDoLink }
   /** Link antigo, já emitido antes da correção: sessão pronta no `#`. */
   | { tipo: "sessao"; accessToken: string; refreshToken: string; finalidade: FinalidadeDoLink }
@@ -92,6 +117,13 @@ export function lerLinkDeSenha(search: string, hash: string): LeituraDoLink {
   }
 
   const finalidade = finalidadeDe(q.get("para") || q.get("type") || h.get("type"));
+
+  const convite = q.get("convite");
+  if (convite) {
+    return CONVITE.test(convite)
+      ? { tipo: "convite", convite, finalidade }
+      : { tipo: "erro", mensagem: mensagemDoErroDoLink("link_quebrado", null) };
+  }
 
   const tokenHash = q.get("token_hash");
   if (tokenHash) {

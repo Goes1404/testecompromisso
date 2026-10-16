@@ -11,11 +11,14 @@ import {
   finalidadeDe,
   lerLinkDeSenha,
   mensagemDoErroDoLink,
+  montarLinkDeConvite,
   montarLinkDeSenha,
   origemDoLink,
+  validadeDoLink,
   senhaAtendeRequisitos,
   TIPO_DO_TOKEN,
 } from '../src/lib/link-de-senha';
+import { assinarLinkDeSenha, conferirLinkDeSenha } from '../src/lib/link-de-senha-token';
 
 let n = 0;
 const ok = (nome: string, fn: () => void) => {
@@ -103,6 +106,62 @@ ok('requisitos da senha iguais aos da tela', () => {
   assert.equal(senhaAtendeRequisitos('compromisso2026'), false); // a senha padrão não passa
   assert.equal(senhaAtendeRequisitos('Ab1!'), false);
   assert.equal(senhaAtendeRequisitos('Abcdefg1_'), true); // qualquer símbolo vale, não só !@#
+});
+
+// ── Link de 24 h, várias vezes (16/10) ──────────────────────────────────
+const SEGREDO = 'segredo-de-teste-com-mais-de-16';
+const ID = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+const AGORA = Date.UTC(2026, 9, 16, 12);
+const HORA = 3_600_000;
+
+ok('link assinado: vale por 24 h e confere quantas vezes for aberto', () => {
+  const t = assinarLinkDeSenha(ID, 3, { agora: AGORA, segredo: SEGREDO });
+  for (let i = 0; i < 5; i++) {
+    const r = conferirLinkDeSenha(t, { agora: AGORA + 23 * HORA, segredo: SEGREDO });
+    assert.deepEqual(r, { ok: true, userId: ID, versao: 3, expiraEm: AGORA + 24 * HORA });
+  }
+});
+
+ok('link assinado: depois de 24 h diz "expirado"', () => {
+  const t = assinarLinkDeSenha(ID, 1, { agora: AGORA, segredo: SEGREDO });
+  assert.deepEqual(conferirLinkDeSenha(t, { agora: AGORA + 24 * HORA + 1, segredo: SEGREDO }), { ok: false, motivo: 'expirado' });
+});
+
+ok('link assinado: trocar o aluno, o prazo ou a versão invalida a assinatura', () => {
+  const t = assinarLinkDeSenha(ID, 1, { agora: AGORA, segredo: SEGREDO });
+  const [payload, sig] = t.split('.');
+  const texto = Buffer.from(payload, 'base64url').toString();
+  const outro = texto.replace(ID, '11111111-2222-4333-8444-555555555555');
+  const prazo = texto.replace(String(AGORA + 24 * HORA), String(AGORA + 999 * HORA));
+  const versao = texto.replace(/\.1\./, '.9.');
+  for (const adulterado of [outro, prazo, versao]) {
+    const tk = `${Buffer.from(adulterado).toString('base64url')}.${sig}`;
+    assert.deepEqual(conferirLinkDeSenha(tk, { agora: AGORA, segredo: SEGREDO }), { ok: false, motivo: 'invalido' });
+  }
+  assert.deepEqual(conferirLinkDeSenha(t, { agora: AGORA, segredo: 'outro-segredo-de-teste-16+' }), { ok: false, motivo: 'invalido' });
+  assert.equal(conferirLinkDeSenha(t + 'x', { agora: AGORA, segredo: SEGREDO }).ok, false);
+  assert.equal(conferirLinkDeSenha('', { segredo: SEGREDO }).ok, false);
+  assert.equal(conferirLinkDeSenha(null, { segredo: SEGREDO }).ok, false);
+});
+
+ok('link assinado: dois links do mesmo aluno são diferentes (nonce)', () => {
+  const a = assinarLinkDeSenha(ID, 1, { agora: AGORA, segredo: SEGREDO });
+  const b = assinarLinkDeSenha(ID, 1, { agora: AGORA, segredo: SEGREDO });
+  assert.notEqual(a, b);
+});
+
+ok('link assinado: ida e volta pela tela', () => {
+  const t = assinarLinkDeSenha(ID, 2, { agora: AGORA, segredo: SEGREDO });
+  const link = montarLinkDeConvite('https://app.exemplo', t, 'primeiro-acesso');
+  const u = new URL(link);
+  assert.equal(u.pathname, '/reset-password');
+  assert.deepEqual(lerLinkDeSenha(u.search, ''), { tipo: 'convite', convite: t, finalidade: 'primeiro-acesso' });
+  assert.equal(lerLinkDeSenha('?convite=abc.def', '').tipo, 'erro');
+});
+
+ok('a secretaria lê a validade certa de cada link', () => {
+  assert.match(validadeDoLink('https://x/reset-password?convite=a.b&para=redefinir').rotulo, /24 horas/);
+  assert.match(validadeDoLink('https://x/reset-password?token_hash=abc&type=recovery').rotulo, /1 hora/);
 });
 
 console.log(`\nlink de senha: ${n} testes, tudo certo`);

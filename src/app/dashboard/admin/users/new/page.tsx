@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { validadeDoLink } from "@/lib/link-de-senha";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -136,7 +137,7 @@ function GeneratedLinkCard({
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">
           <Clock size={12} />
-          Expira em 1 hora
+          {validadeDoLink(link).rotulo}
         </div>
         <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">
           <CheckCircle2 size={12} />
@@ -177,7 +178,7 @@ function GeneratedLinkCard({
       </div>
 
       <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-        Envie este link pelo WhatsApp. Ele funciona <strong>uma única vez</strong> e expira em 1 hora.
+        Envie este link pelo WhatsApp. {validadeDoLink(link).texto}
         O aluno abre, toca em Continuar e cria a senha. Se ele esquecer a senha depois, gere um link
         novo aqui ou em Usuários: o mesmo link também redefine.
       </p>
