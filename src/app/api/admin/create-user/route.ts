@@ -65,13 +65,22 @@ export async function POST(request: Request) {
     // Verificar se email já existe
     const { data: existing } = await supabaseAdmin
       .from('profiles')
-      .select('id')
+      .select('id, name, full_name, arquivado_em')
       .eq('email', email)
       .maybeSingle();
 
     if (existing) {
+      // Diz DE QUEM é o e-mail. "Já cadastrado" sozinho fazia a secretaria
+      // procurar a conta na lista, não achar (a lista cortava em 1.000) e
+      // concluir que o sistema estava errado.
+      const dono = existing.name?.trim() || existing.full_name?.trim();
+      const situacao = existing.arquivado_em ? ' (arquivada)' : '';
       return NextResponse.json(
-        { error: `E-mail ${email} já está cadastrado na plataforma` },
+        {
+          error: dono
+            ? `O e-mail ${email} já é de ${dono}${situacao}. Procure por esse nome em Usuários e use "Redefinir senha" se for a mesma pessoa. Se for outra pessoa com nome parecido, informe um e-mail diferente.`
+            : `O e-mail ${email} já é de uma conta antiga sem nome${situacao}. Procure pelo e-mail em Usuários, ou informe um e-mail diferente.`,
+        },
         { status: 409 }
       );
     }
@@ -128,7 +137,17 @@ export async function POST(request: Request) {
       },
     });
 
-    if (createError) throw createError;
+    if (createError) {
+      // Login antigo sem perfil (há algumas centenas desde fev–abr): o Supabase
+      // recusa em inglês e a secretaria não sabia o que fazer.
+      if (/already (been )?registered|email_exists/i.test(`${createError.code ?? ''} ${createError.message ?? ''}`)) {
+        return NextResponse.json(
+          { error: `O e-mail ${email} já tem um login antigo, sem cadastro na plataforma. Informe um e-mail diferente ou peça à equipe técnica para liberar esse login.` },
+          { status: 409 }
+        );
+      }
+      throw createError;
+    }
     if (!authData?.user) throw new Error('Usuário não foi criado pelo Supabase Auth');
 
     // Criar registro na tabela profiles

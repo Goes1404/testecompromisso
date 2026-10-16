@@ -640,12 +640,15 @@ chamada de aula para todas as turmas. Foram **arquivados** no mesmo dia (`arquiv
 `status='inactive'`); apagar esses perfis e os logins órfãos é decisão pendente. Antes de
 mexer em metadado em massa, filtre `EXISTS (SELECT 1 FROM profiles WHERE id = u.id)`.
 
-**Diretório de usuários só carrega 1.000 perfis.** `admin/users` faz um `select('*')`
-sem paginar e filtra a busca no navegador; o PostgREST corta em 1.000 linhas. Ordenado
-por nome, todo mundo depois de "Sara Barbosa Lucena" (144 contas em 16/10) não aparece
-na busca. A busca também só olha `name`/`username`, não e-mail. (As 300 contas do ensaio
-de carga, nomeadas "Ensaio N", empurraram o corte até "Luiz" entre 15 e 16/10; o nome
-delas foi apagado para irem ao fim da lista.)
+**Listas da secretaria carregam tudo (corrigido em 16/10).** Usuários (`admin/users`) e
+Matrículas (`secretary/enrollments`) faziam `select('*')` sem paginar, e o PostgREST corta
+em 1.000 linhas sem avisar; Gestão de Turmas (`admin/students`) tinha `.limit(500)`.
+Ordenado por nome, quem vinha depois de "Sara" não aparecia, e a secretaria tentava criar
+a conta de novo ("e-mail já cadastrado"). Agora as três usam `carregarTudo()`
+(`src/lib/carregar-tudo.ts`, de 1.000 em 1.000, ordem `name` + `id`) e a mesma busca
+`bateComBusca()` (nome, nome completo, e-mail de login e usuário, sem acento). **Toda lista
+nova de alunos ou usuários precisa paginar assim.** O `create-user` diz de quem é o
+e-mail quando ele já existe. Prova: `scripts/test-carregar-tudo.ts` (dentro de `npm test`).
 
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
 novos usuários) e a `SUPABASE_SERVICE_ROLE_KEY`. São as duas únicas pendências que sobraram

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { carregarTudo, bateComBusca } from "@/lib/carregar-tudo";
 import { supabase } from "@/app/lib/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import {
@@ -84,12 +85,16 @@ export default function AdminStudentsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: studentProfiles, error: pError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'student')
-        .order('name')
-        .limit(500);
+      // Antes: `.limit(500)` — com ~1.100 alunos, mais da metade nunca
+      // aparecia. Agora todos, de 1.000 em 1.000 (`carregarTudo`).
+      const { data: studentProfiles, error: pError } = await carregarTudo<any>((de, ate) =>
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'student')
+          .order('name', { ascending: true, nullsFirst: false })
+          .order('id')
+          .range(de, ate));
 
       if (pError) throw pError;
 
@@ -178,10 +183,7 @@ export default function AdminStudentsPage() {
   const institutionOptions = useMemo(() => distinctOptions(students, "institution"), [students]);
 
   const filteredStudents = students.filter(s => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch =
-      (s.name || '').toLowerCase().includes(searchLower) ||
-      (s.email || '').toLowerCase().includes(searchLower);
+    const matchesSearch = bateComBusca(s, searchTerm);
     const matchesPolo = !selectedPoloName || (s.institution || '').toLowerCase().includes(selectedPoloName.toLowerCase());
     const matchesCourse = !courseFilter || (s.course || '') === courseFilter;
     const matchesExamTarget = !examTargetFilter || (s.exam_target || '').toUpperCase().includes(examTargetFilter);

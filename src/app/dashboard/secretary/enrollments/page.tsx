@@ -66,6 +66,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/AuthProvider";
+import { carregarTudo, bateComBusca } from "@/lib/carregar-tudo";
 import { supabase } from "@/app/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { exportToCsv } from "@/lib/export-csv";
@@ -585,11 +586,15 @@ export default function SecretaryEnrollmentDirectory() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'student')
-        .order('name');
+      // Todos os alunos, de 1.000 em 1.000 (o PostgREST corta em 1.000).
+      const { data, error } = await carregarTudo<any>((de, ate) =>
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'student')
+          .order('name', { ascending: true, nullsFirst: false })
+          .order('id')
+          .range(de, ate));
       if (error) throw error;
       setUsers(data || []);
     } catch (err) {
@@ -677,9 +682,7 @@ export default function SecretaryEnrollmentDirectory() {
   const institutionOptions = useMemo(() => distinctOptions(users, "institution"), [users]);
 
   const filtered = users.filter(u => {
-    const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    const terms = norm(searchTerm).trim().split(/\s+/).filter(Boolean);
-    const matchesSearch = terms.length === 0 || terms.every(t => norm(u.name).includes(t) || norm(u.email).includes(t));
+    const matchesSearch = bateComBusca(u, searchTerm);
 
     const matchesStatus =
       statusFilter === 'all' ||

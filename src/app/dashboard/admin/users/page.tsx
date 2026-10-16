@@ -50,6 +50,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { carregarTudo, bateComBusca, nomeParaMostrar } from "@/lib/carregar-tudo";
 import { supabase } from "@/app/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -539,9 +540,14 @@ export default function AdminUserDirectoryPage() {
       // A situação de acesso vem de `auth.users.last_sign_in_at`, que o cliente
       // não pode ler — por isso uma função com checagem de papel, e não uma
       // view (que rodaria como dono e exporia a lista a qualquer sessão).
+      // Tudo, de 1.000 em 1.000: o PostgREST corta em 1.000 sem avisar, e a
+      // lista parava em "Sara" (ver `carregarTudo`). A situação de acesso tem
+      // o mesmo corte, então pagina também.
       const [{ data, error }, { data: situacoes }] = await Promise.all([
-        supabase.from('profiles').select('*').order('name'),
-        supabase.rpc('listar_status_alunos'),
+        carregarTudo<any>((de, ate) =>
+          supabase.from('profiles').select('*')
+            .order('name', { ascending: true, nullsFirst: false }).order('id').range(de, ate)),
+        carregarTudo<any>((de, ate) => supabase.rpc('listar_status_alunos').order('id').range(de, ate)),
       ]);
       if (error) throw error;
 
@@ -656,12 +662,9 @@ export default function AdminUserDirectoryPage() {
   };
 
   const filtered = users.filter(u => {
-    const norm = (s: string) =>
-      (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    const terms = norm(searchTerm).trim().split(/\s+/).filter(Boolean);
-    const matchesSearch =
-      terms.length === 0 ||
-      terms.every(t => norm(u.name).includes(t) || norm(u.username).includes(t));
+    // Nome, nome completo, e-mail de login e usuário (antes só nome/usuário:
+    // quem procurava pelo login não achava).
+    const matchesSearch = bateComBusca(u, searchTerm);
 
     const pType = (u.profile_type || '').toLowerCase();
     const isStaff = u.role === 'admin' || u.role === 'teacher' ||
@@ -816,11 +819,11 @@ export default function AdminUserDirectoryPage() {
                         <TableCell className="px-4 md:px-6">
                           <div className="flex items-center gap-3">
                             <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm shadow-sm shrink-0 ${isStaff ? 'bg-accent text-white' : 'bg-primary text-white'}`}>
-                              {u.name?.charAt(0)?.toUpperCase() || '?'}
+                              {nomeParaMostrar(u).charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
                               <p className={`font-bold text-sm truncate ${isSuspended ? 'line-through opacity-40 text-slate-400' : 'text-primary italic'}`}>
-                                {u.name || '—'}
+                                {nomeParaMostrar(u)}
                               </p>
                               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 md:hidden truncate">
                                 {u.email || '@' + (u.username || 'user')}
