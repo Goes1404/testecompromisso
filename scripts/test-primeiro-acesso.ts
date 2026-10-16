@@ -15,6 +15,8 @@ ok('nome: sem acento, sem maiúscula, espaços únicos', () => {
   assert.equal(normalizarNome('  MARIA  Eduarda de   Oliveira MÉSSINA '), 'maria eduarda de oliveira messina');
   assert.equal(normalizarNome('João Antônio Çaçapava'), 'joao antonio cacapava');
   assert.equal(normalizarNome(null), '');
+  assert.equal(normalizarNome('Samuel A.Rosa'), 'samuel a rosa');
+  assert.equal(normalizarNome('Samuel A. Rosa'), 'samuel a rosa');
 });
 
 ok('nome do SQL e do TS batem nas letras do português', () => {

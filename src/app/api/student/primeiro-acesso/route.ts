@@ -169,7 +169,12 @@ export async function POST(request: Request) {
       // login. Nunca pedaço do nome, nunca "a primeira que aparecer": ver
       // `src/lib/primeiro-acesso.ts`. A função também diz se a conta ainda
       // usa a senha padrão — só então a tela a mostra.
-      const login = loginDigitado(fullName);
+      // Login: o digitado, ou o que o nome gera. O segundo acha quem foi
+      // cadastrado com o nome abreviado ("Samuel A.Rosa" = `samuelarosa@`)
+      // quando o aluno digita o nome inteiro ("Samuel Alves Rosa"). Se o login
+      // gerado for de OUTRA pessoa e o nome exato de uma terceira, vêm duas
+      // contas e a tela não escolhe.
+      const login = loginDigitado(fullName) ?? (generateEmail(fullName.trim()) || null);
       const { data: contas, error } = await supabaseAdmin.rpc('contas_para_primeiro_acesso', {
         p_nome: fullName,
         p_login: login,

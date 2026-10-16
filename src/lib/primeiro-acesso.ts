@@ -25,6 +25,8 @@ export function normalizarNome(nome: string | null | undefined): string {
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
+    // "Samuel A.Rosa": o ponto da abreviação gruda as palavras.
+    .replace(/\./g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
