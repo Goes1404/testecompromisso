@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { requireAdminUser } from '@/lib/server-auth';
-import { TIPO_DO_TOKEN, finalidadeDe, montarLinkDeConvite, montarLinkDeSenha, origemDoLink } from '@/lib/link-de-senha';
-import { assinarLinkDeSenha, segredoDoLink } from '@/lib/link-de-senha-token';
+import { TIPO_DO_TOKEN, finalidadeDe, montarLinkDeSenha, origemDoLink } from '@/lib/link-de-senha';
+import { segredoDoLink } from '@/lib/link-de-senha-token';
+import { emitirLinkDeSenha } from '@/lib/link-de-senha-emitir';
 
 /**
  * Link de senha para UM aluno, gerado pela secretaria.
@@ -68,26 +69,15 @@ export async function POST(request: Request) {
       }
       const perfil = perfis[0];
 
-      const { data: alvo, error: erroAlvo } = await supabaseAdmin.auth.admin.getUserById(perfil.id);
       // O link fica preso ao id; a tela entra com o e-mail de login da conta
       // (em 3 perfis, em 16/10, ele difere de profiles.email).
-      if (erroAlvo || !alvo?.user) return semConta();
+      const emitido = await emitirLinkDeSenha(supabaseAdmin, perfil.id, origem, finalidade);
+      if (!emitido.ok) {
+        if (emitido.motivo === 'sem_conta') return semConta();
+        throw new Error('não foi possível subir a versão do link');
+      }
 
-      // Versão nova cancela os links anteriores deste aluno. app_metadata é
-      // SUBSTITUÍDO pela Admin API: mescla. (Não mexe em user_metadata, que
-      // dispara o gatilho de perfil.)
-      const versao = (Number(alvo.user.app_metadata?.link_senha_versao) || 0) + 1;
-      const { error: erroVersao } = await supabaseAdmin.auth.admin.updateUserById(perfil.id, {
-        app_metadata: { ...(alvo.user.app_metadata ?? {}), link_senha_versao: versao },
-      });
-      if (erroVersao) throw erroVersao;
-
-      return NextResponse.json({
-        success: true,
-        link: montarLinkDeConvite(origem, assinarLinkDeSenha(perfil.id, versao), finalidade),
-        type,
-        expiresIn: '24 horas',
-      });
+      return NextResponse.json({ success: true, link: emitido.link, type, expiresIn: '24 horas' });
     }
 
     console.warn('[ADMIN_GENERATE_LINK] sem LINK_SENHA_SECRET: link de 1 hora do Supabase');

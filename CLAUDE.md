@@ -561,6 +561,11 @@ A secretaria gera um link por aluno (`/api/admin/generate-link`, só admin/staff
    Sem nenhum dos dois segredos, `generate-link` volta ao link de 1 h do Supabase
    (`?token_hash=`), e a tela da secretaria mostra a validade do link que saiu
    (`validadeDoLink()`). Os links de 1 h já enviados continuam funcionando.
+7. **Links em lote** (`/dashboard/admin/links-de-senha`, rota `/api/admin/generate-links-lote`,
+   só admin/staff, até 300 por vez): a secretaria filtra por sala ou nome, marca os alunos e
+   copia "nome + link" de cada um ou a mensagem pronta para o WhatsApp (`mensagemDoLink()`).
+   Mesmo link do avulso (`emitirLinkDeSenha()` em `src/lib/link-de-senha-emitir.ts`), então
+   gerar de novo cancela o anterior — a tela avisa antes. Feito para o mutirão de 17–18/10.
 
 Testado de ponta a ponta em 16/10 contra o Supabase de produção, com conta de ensaio, em
 360px: link válido → conta certa → senha gravada → home; link reusado → "Link sem

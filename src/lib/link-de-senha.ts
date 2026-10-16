@@ -176,3 +176,22 @@ export function senhaAtendeRequisitos(senha: string): boolean {
   const r = requisitosDaSenha(senha);
   return r.tamanho && r.maiuscula && r.numero && r.simbolo;
 }
+
+/**
+ * Mensagem para o WhatsApp do aluno com o link de 24 h (tela de links em lote).
+ * Primeiro nome só: a mensagem pode ser lida por cima do ombro no grupo da
+ * família.
+ */
+export function mensagemDoLink(nome: string | null | undefined, link: string): string {
+  const primeiro = (nome ?? "").trim().split(/\s+/)[0];
+  const ola = primeiro ? `Olá, ${primeiro}!` : "Olá!";
+  return `${ola} Este é o seu link para criar uma senha nova na plataforma do Compromisso. Ele vale por 24 horas e é só seu — não repasse para ninguém.\n${link}`;
+}
+
+/** Todos os links de uma vez, um bloco por aluno, para colar numa planilha ou no WhatsApp. */
+export function textoDoLote(itens: { nome: string | null; link?: string }[]): string {
+  return itens
+    .filter((i) => i.link)
+    .map((i) => `${(i.nome ?? "").trim() || "Aluno"}\n${i.link}`)
+    .join("\n\n");
+}

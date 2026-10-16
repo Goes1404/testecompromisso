@@ -15,6 +15,8 @@ import {
   montarLinkDeSenha,
   origemDoLink,
   validadeDoLink,
+  mensagemDoLink,
+  textoDoLote,
   senhaAtendeRequisitos,
   TIPO_DO_TOKEN,
 } from '../src/lib/link-de-senha';
@@ -162,6 +164,21 @@ ok('link assinado: ida e volta pela tela', () => {
 ok('a secretaria lê a validade certa de cada link', () => {
   assert.match(validadeDoLink('https://x/reset-password?convite=a.b&para=redefinir').rotulo, /24 horas/);
   assert.match(validadeDoLink('https://x/reset-password?token_hash=abc&type=recovery').rotulo, /1 hora/);
+});
+
+ok('mensagem do WhatsApp: primeiro nome só, avisa que é pessoal, link no fim', () => {
+  const m = mensagemDoLink('Maria Eduarda de Oliveira Messina', 'https://x/reset-password?convite=a.b');
+  assert.match(m, /^Olá, Maria!/);
+  assert.ok(!m.includes('Messina'));
+  assert.match(m, /24 horas/);
+  assert.match(m, /não repasse/);
+  assert.ok(m.endsWith('https://x/reset-password?convite=a.b'));
+  assert.match(mensagemDoLink(null, 'L'), /^Olá! /);
+});
+
+ok('lote: só quem tem link entra no texto, um bloco por aluno', () => {
+  const t = textoDoLote([{ nome: 'Ana', link: 'L1' }, { nome: 'Bia' }, { nome: null, link: 'L3' }]);
+  assert.equal(t, 'Ana\nL1\n\nAluno\nL3');
 });
 
 console.log(`\nlink de senha: ${n} testes, tudo certo`);

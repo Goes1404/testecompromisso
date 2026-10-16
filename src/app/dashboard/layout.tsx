@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarTrigger, SidebarInset, SidebarFooter, useSidebar, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
-import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet, MonitorSmartphone, Megaphone } from "lucide-react";
+import { Home, Compass, BookOpen, Video, Library, LogOut, Bell, LayoutDashboard, ClipboardList, ClipboardCheck, BarChart3, MessageSquare, MessagesSquare, MonitorPlay, FileText, Database, Sparkles, ShieldCheck, Users, Settings, Eye, FileCheck, FilePenLine, Gavel, AlertCircle, HelpCircle, Menu, BrainCircuit, Scroll, ChevronRight, CalendarDays, NotebookPen, Network, StickyNote, BookMarked, FolderOpen, Upload, Calculator, TrendingUp, Target, BookHeart, Flame, Zap, Trophy, Layers, GraduationCap, Wallet, MonitorSmartphone, Megaphone, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -157,6 +157,7 @@ const adminItems: NavItem[] = [
     children: [
       { icon: Users,       label: "Diretório",      href: "/dashboard/admin/users",      id: "nav-admin-users" },
       { icon: Database,    label: "Turmas",          href: "/dashboard/admin/students",   id: "nav-admin-students" },
+      { icon: KeyRound,    label: "Links de Senha",  href: "/dashboard/admin/links-de-senha", id: "nav-admin-links-senha" },
       { icon: AlertCircle, label: "Alunos em Risco", href: "/dashboard/teacher/students", id: "nav-admin-risk" },
     ],
   },
@@ -208,6 +209,7 @@ const secretaryItems: NavItem[] = [
       { icon: Users,       label: "Diretório de Alunos", href: "/dashboard/secretary/enrollments", id: "nav-secretary-enrollments" },
       { icon: TrendingUp,  label: "Renda Per Capita",    href: "/dashboard/secretary/income",      id: "nav-secretary-income" },
       { icon: Database,    label: "Gestão de Turmas",    href: "/dashboard/admin/students",        id: "nav-secretary-students" },
+      { icon: KeyRound,    label: "Links de Senha",      href: "/dashboard/admin/links-de-senha",  id: "nav-secretary-links-senha" },
     ],
   },
   {
