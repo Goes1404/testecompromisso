@@ -16,8 +16,6 @@ export type AulaNaTela = {
   youtube_id?: string | null;
   meet_link?: string | null;
   turmas?: string[] | null;
-  /** Sessão do professor no Cloudflare quando ele transmite pela plataforma. */
-  transmissao_sessao?: string | null;
 };
 
 type Aba = "chat" | "duvida" | "info";
@@ -43,7 +41,6 @@ export function SalaDoAluno({
   presenca,
   duvidas,
   chat,
-  videoDaPlataforma,
   onVoltar,
 }: {
   aula: AulaNaTela;
@@ -51,11 +48,6 @@ export function SalaDoAluno({
   duvidas: ReactNode;
   /** Chat ao vivo da aula (`ChatDaAula` com `preencher`). */
   chat?: ReactNode;
-  /**
-   * Transmissão feita pela própria plataforma (`PlayerDaPlataforma`). Quando
-   * existe, tem prioridade sobre o YouTube.
-   */
-  videoDaPlataforma?: ReactNode;
   onVoltar: () => void;
 }) {
   const encerrada = aula.status === "completed";
@@ -77,7 +69,9 @@ export function SalaDoAluno({
     { id: "info", rotulo: "Info", icone: Info, soCelular: true },
   ];
 
-  const meet = meetLink && !encerrada && (
+  // Com vídeo do YouTube, o Meet é a sala opcional para falar. Sem vídeo, o
+  // Meet É a aula e o botão grande já está no palco.
+  const meet = meetLink && !encerrada && temVideo && (
     <div className={`${CARTAO} p-3 flex items-center gap-3`}>
       <div className="h-9 w-9 shrink-0 rounded-xl bg-white/5 text-white/70 flex items-center justify-center">
         <Mic className="h-4 w-4" />
@@ -142,9 +136,7 @@ export function SalaDoAluno({
           </div>
         </header>
 
-        {videoDaPlataforma ? (
-          videoDaPlataforma
-        ) : temVideo ? (
+        {temVideo ? (
           <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} />
         ) : (
           <PalcoDeEspera status={aula.status} inicio={aula.start_time} meetLink={meetLink} />
@@ -201,7 +193,7 @@ export function SalaDoAluno({
           {abaAtiva === "info" && (
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2.5 lg:hidden rounded-[1.5rem]">
               {presencaCompleta}
-              {!videoDaPlataforma && temVideo && linkDoVideo(aula.youtube_id) && (
+              {temVideo && linkDoVideo(aula.youtube_id) && (
                 <a
                   href={linkDoVideo(aula.youtube_id)!}
                   target="_blank"

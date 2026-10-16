@@ -61,6 +61,44 @@ export function PalcoDeEspera({
   const noAr = status === "live";
   const encerrada = status === "completed";
   const quando = quandoE(inicio, agora);
+  // Sem vídeo do YouTube e com link do Meet: a aula é no Meet. O palco vira o
+  // convite para entrar, em vez de "o vídeo aparece aqui" (não vai aparecer).
+  const peloMeet = !!meetLink && !encerrada;
+  if (peloMeet) {
+    return (
+      <div className="relative w-full aspect-video rounded-[1.25rem] md:rounded-[1.5rem] overflow-hidden bg-black ring-1 ring-white/10">
+        <div
+          className="absolute inset-0"
+          style={{ background: "radial-gradient(ellipse at 80% 0%, rgba(255,107,0,0.22) 0%, transparent 55%)" }}
+        />
+        <div className="relative h-full flex flex-col items-center justify-center text-center gap-3 p-5">
+          <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${noAr ? "bg-red-500/15 text-red-400" : "bg-white/10 text-white/60"}`}>
+            {noAr ? <Radio className="h-5 w-5 animate-pulse" /> : <CalendarClock className="h-5 w-5" />}
+          </div>
+          <div className="space-y-1 max-w-sm">
+            <p className="text-base md:text-lg font-black italic text-white leading-tight">
+              {noAr ? "A aula está no Meet" : `Aula pelo Meet · ${quando}`}
+            </p>
+            <p className="text-xs text-white/55 font-medium leading-relaxed">
+              {noAr
+                ? "Toque para entrar. O chat da turma continua aqui na plataforma."
+                : "O link já está aqui. Volte na hora da aula e toque para entrar."}
+            </p>
+          </div>
+          <a
+            href={meetLink!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors ${
+              noAr ? "bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/20" : "bg-white/10 hover:bg-white/15 text-white"
+            }`}
+          >
+            Entrar no Meet <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      </div>
+    );
+  }
   const atrasada = !noAr && !encerrada && !!inicio && new Date(inicio).getTime() < agora.getTime();
   const titulo = encerrada
     ? "Esta aula já terminou"

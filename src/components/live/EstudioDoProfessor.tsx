@@ -30,7 +30,6 @@ export function EstudioDoProfessor({
   duvidas,
   chamada,
   chat,
-  transmissao,
   video,
   videoVerificado = false,
 }: {
@@ -42,8 +41,6 @@ export function EstudioDoProfessor({
   chamada: ReactNode;
   /** Chat ao vivo da turma, o mesmo que os alunos veem, com moderação. */
   chat?: ReactNode;
-  /** Painel "Transmitir pela plataforma" (`TransmissaoDoProfessor`). */
-  transmissao?: ReactNode;
   /** Resultado da verificação do vídeo do YouTube (`VerificacaoDoVideo`). */
   video?: ReactNode;
   /** O YouTube confirmou que o vídeo abre para o aluno (marca o passo 2). */
@@ -53,6 +50,8 @@ export function EstudioDoProfessor({
   const temVideo = !!urlDoPlayer(aula.youtube_id);
   const studio = linkDoStudio(aula.youtube_id);
   const meet = linkExternoSeguro(aula.meet_link);
+  /** Sem YouTube e com Meet: a aula acontece no Meet; os alunos só recebem o link. */
+  const peloMeet = !temVideo && !!meet;
   const indiceAtual = Math.max(0, ETAPAS.findIndex((e) => e.status === aula.status));
 
   return (
@@ -146,12 +145,19 @@ export function EstudioDoProfessor({
         <section className={`${CARTAO} p-4 md:p-5`} aria-label="Como fazer a aula">
           <Rotulo className="mb-3">Como fazer a aula</Rotulo>
           <ol className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-            {[
+            {(peloMeet
+              ? [
+                  { feito: true, texto: "Link do Meet colado. Os alunos entram pelo botão da sala." },
+                  { feito: false, texto: "Abra o Meet (botão Meet aqui em cima) e compartilhe a tela por lá." },
+                  { feito: false, texto: "O Meet grátis aceita 100 pessoas e corta em 60 minutos. Turma maior: use o YouTube." },
+                  { feito: false, texto: "Clique em Abrir para alunos. Ao terminar, Encerrar aula gera a chamada." },
+                ]
+              : [
               {
                 feito: temVideo,
                 texto: temVideo
                   ? "Link do YouTube colado. Os alunos vão assistir aqui dentro."
-                  : "Escolha como transmitir: pela plataforma (painel abaixo, só a tela do computador) ou pelo YouTube (cole o link em Editar aula).",
+                  : "Cole em Editar aula o link da transmissão não listada do YouTube — ou só o link do Meet, se a aula for por lá.",
               },
               {
                 feito: videoVerificado,
@@ -161,7 +167,7 @@ export function EstudioDoProfessor({
               },
               { feito: false, texto: "No YouTube Studio, pelo computador, comece a transmitir. Deixe esta tela aberta ao lado: o chat da turma aparece aqui." },
               { feito: false, texto: "Volte aqui e clique em Abrir para alunos. Ao terminar, Encerrar aula gera a chamada." },
-            ].map((p, i) => (
+            ]).map((p, i) => (
               <li key={i} className="flex gap-3 rounded-xl bg-white/[0.04] border border-white/5 p-3">
                 <span
                   className={`h-6 w-6 shrink-0 rounded-full flex items-center justify-center text-[11px] font-black ${
@@ -179,25 +185,36 @@ export function EstudioDoProfessor({
 
       <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[auto_1fr] items-start">
         <div className="space-y-3 min-w-0">
-          {/* Dois jeitos de transmitir: pela plataforma (tela do professor
-              direto para os alunos) ou pelo YouTube (link colado). Se os dois
-              estiverem ativos, a sala do aluno mostra o da plataforma. */}
-          {aula.status !== "completed" && transmissao}
           {/* Antes de abrir a sala, o YouTube é consultado: vídeo privado ou
               sem incorporação viraria erro 150/153 para ~855 alunos. */}
           {temVideo && aula.status !== "completed" && video}
           {temVideo ? (
             <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} />
-          ) : (
-            aula.status !== "completed" && (
-              <p className="flex items-center gap-2 px-2 text-[11px] font-semibold text-white/45">
-                <Youtube className="h-3.5 w-3.5 text-red-400/80 shrink-0" />
-                Prefere o YouTube?{" "}
-                <Link href="/dashboard/teacher/live" className="underline underline-offset-2 hover:text-white/80">
-                  Cole o link em Editar
-                </Link>
+          ) : peloMeet ? (
+            <div className={`${CARTAO} aspect-video flex flex-col items-center justify-center text-center gap-3 p-6`}>
+              <p className="text-base font-black italic text-white">Aula pelo Meet</p>
+              <p className="text-xs text-white/50 font-medium max-w-sm leading-relaxed">
+                {aula.status === "live"
+                  ? "Os alunos estão vendo o botão Entrar no Meet. Deixe esta tela aberta ao lado para acompanhar o chat e as dúvidas."
+                  : "Quando você clicar em Abrir para alunos, eles veem o botão Entrar no Meet na sala."}
               </p>
-            )
+              <a href={meet!} target="_blank" rel="noopener noreferrer" className="h-10 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
+                Abrir o Meet <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          ) : (
+            <div className={`${CARTAO} aspect-video flex flex-col items-center justify-center text-center gap-3 p-6`}>
+              <div className="h-12 w-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center">
+                <Youtube className="h-6 w-6" />
+              </div>
+              <p className="text-base font-black italic text-white">Falta o link da aula</p>
+              <p className="text-xs text-white/50 font-medium max-w-sm leading-relaxed">
+                Cole em Editar aula o link do YouTube ou o do Meet — sem nenhum dos dois, os alunos não têm onde assistir.
+              </p>
+              <Link href="/dashboard/teacher/live" className="h-10 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
+                <Pencil className="h-3.5 w-3.5" /> Colar o link
+              </Link>
+            </div>
           )}
         </div>
 

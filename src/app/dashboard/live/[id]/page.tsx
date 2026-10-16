@@ -12,7 +12,6 @@ import { DuvidasDoAluno } from "@/components/live/DuvidasDoAluno";
 import { SalaCarregando, SalaDoAluno } from "@/components/live/SalaDoAluno";
 import { ChatDoYoutube } from "@/components/live/ChatDoYoutube";
 import { ChatDaAula } from "@/components/live/ChatDaAula";
-import { PlayerDaPlataforma } from "@/components/live/PlayerDaPlataforma";
 import { chaveDoCache, gravarCache, lerCache } from "@/lib/cache-da-sessao";
 
 /** A sala guardada vale por 6 h (uma aula longa e o intervalo). */
@@ -84,7 +83,7 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
   // aparecem sem o aluno recarregar a página.
   useEffect(() => {
     if (!presenca?.status || !live) return;
-    if (presenca.status === live.status && !(presenca.status === 'live' && !live.youtube_id && !live.transmissao_sessao)) return;
+    if (presenca.status === live.status && !(presenca.status === 'live' && !live.youtube_id)) return;
     supabase
       .from('lives')
       .select('*')
@@ -100,13 +99,13 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
   // - agendada: a cada 15 s, para pegar o "abriu" (o sinal de presença, a cada
   //   60 s, também traz o status — isto só encurta a espera);
   // - no ar sem vídeo (esperando o professor começar): a cada 6 s;
-  // - no ar com vídeo: a cada 20 s, só para notar se ele parou ou trocou de
-  //   transmissão;
+  // - no ar com vídeo: a cada 20 s, só para notar se ele parou ou trocou o
+  //   vídeo;
   // - encerrada: nada.
   // Cada leitura custa ~0,1 ms no banco (medido em 15/10); é mais barato que
   // ~855 websockets disputando 200 vagas.
   const status = live?.status as string | undefined;
-  const esperandoVideo = status === 'live' && !live?.youtube_id && !live?.transmissao_sessao;
+  const esperandoVideo = status === 'live' && !live?.youtube_id;
   const intervaloDaReleitura =
     status === 'live' ? (esperandoVideo ? 6_000 : 20_000) : status === 'scheduled' ? 15_000 : 0;
   useEffect(() => {
@@ -146,16 +145,6 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
       duvidas={<DuvidasDoAluno liveId={liveId} noAr={live.status === 'live'} />}
       // Chat nosso, dentro da plataforma (funciona no celular). O do YouTube só
       // entra se a migration do chat ainda não estiver no banco.
-      videoDaPlataforma={
-        live.status === 'live' && live.transmissao_sessao ? (
-          <PlayerDaPlataforma
-            liveId={liveId}
-            sessaoDoProfessor={live.transmissao_sessao}
-            faixas={live.transmissao_faixas}
-            titulo={live.title || 'Aula ao vivo'}
-          />
-        ) : null
-      }
       chat={
         <ChatDaAula
           liveId={liveId}
