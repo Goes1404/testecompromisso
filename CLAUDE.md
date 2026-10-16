@@ -617,6 +617,16 @@ servidor+cliente e rotação de segredo (decisão do time):
 | ✅ CORRIGIDO | `api/essay-save` | Exige sessão (`getAuthUser()`) e grava sempre para o usuário autenticado. |
 | ✅ CORRIGIDO (11/08) | `api/student/self-register` | Rate limit por IP (40/hora — alto porque uma turma inteira usa o mesmo Wi-Fi). |
 
+**Senha padrão com troca obrigatória (16/10).** `create-user` criava a conta com a senha
+padrão e `must_change_password: false` — a tela da secretaria prometia "no primeiro login o
+aluno será solicitado a criar uma nova senha", e isso nunca acontecia. Agora nasce com
+`true`. Na base, as **1.122 contas que nunca entraram e ainda tinham a senha padrão**
+ganharam a troca obrigatória. **Ficaram de fora, de propósito, 126 contas já em uso com a
+senha padrão** (122 alunos, 2 professores, 1 staff, 1 admin; 22 entraram nos últimos 30
+dias): ligar a troca nelas leva quem estiver logado direto para `/dashboard/first-access`
+no meio do uso, então é decisão da coordenação, de preferência avisando antes. Contagem
+refeita por `crypt()` no banco, sem expor senha.
+
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
 novos usuários) e a `SUPABASE_SERVICE_ROLE_KEY`. São as duas únicas pendências que sobraram
 desta lista, e ambas dependem de acesso ao painel.

@@ -114,7 +114,12 @@ export async function POST(request: Request) {
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
-        must_change_password: false,
+        // A conta nasce com a senha padrão, que todo mundo conhece (está até na
+        // tela de primeiro acesso). Sem a troca obrigatória, ela valia para
+        // sempre: em 16/10, a maioria das contas criadas aqui ainda entrava com
+        // ela. Ligado, o middleware leva ao /dashboard/first-access no primeiro
+        // login, e o link de senha (`/reset-password`) desliga ao gravar.
+        must_change_password: true,
         profile_type: profileType || role,
         institution: institution || '',
         exam_target: examTarget || 'ENEM',

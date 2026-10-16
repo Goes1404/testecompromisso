@@ -169,7 +169,7 @@ async function run() {
       email,
       password: PASS,
       email_confirm: true,
-      user_metadata: { full_name: s.name, must_change_password: false },
+      user_metadata: { full_name: s.name, must_change_password: true }, // senha padrão: troca obrigatória no 1º login
     });
 
     if (authErr) {
