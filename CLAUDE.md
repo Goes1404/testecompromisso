@@ -621,11 +621,31 @@ servidor+cliente e rotação de segredo (decisão do time):
 padrão e `must_change_password: false` — a tela da secretaria prometia "no primeiro login o
 aluno será solicitado a criar uma nova senha", e isso nunca acontecia. Agora nasce com
 `true`. Na base, as **1.122 contas que nunca entraram e ainda tinham a senha padrão**
-ganharam a troca obrigatória. **Ficaram de fora, de propósito, 126 contas já em uso com a
+ganharam a troca obrigatória — **280 delas são alunos reais**; as outras 842 eram logins
+antigos sem perfil (ver "Logins órfãos" abaixo). **Ficaram de fora, de propósito, 126 contas já em uso com a
 senha padrão** (122 alunos, 2 professores, 1 staff, 1 admin; 22 entraram nos últimos 30
 dias): ligar a troca nelas leva quem estiver logado direto para `/dashboard/first-access`
 no meio do uso, então é decisão da coordenação, de preferência avisando antes. Contagem
 refeita por `crypt()` no banco, sem expor senha.
+
+**Logins órfãos e o gatilho que cria perfil (16/10).** Existem ~846 contas em `auth.users`
+criadas entre 26/02 e 11/04, nunca usadas, sem nome em lugar nenhum e **sem perfil** (620
+com login terminado em número, como `abnerjesus2@`; 438 têm um "gêmeo" com nome). Elas
+ocupam o e-mail: criar o aluno com aquele login dá "já cadastrado", e não há o que achar
+na busca. ⚠️ **Qualquer UPDATE em `auth.users.raw_user_meta_data` dispara
+`sync_profile_display_name`, que CRIA um perfil vazio (aluno ativo, sem nome) para login
+sem perfil.** Foi o que aconteceu em 16/10: o lote da troca obrigatória criou 842 perfis
+vazios, que inflaram "alunos ativos" de 1.091 para 1.933 e entrariam como ausentes na
+chamada de aula para todas as turmas. Foram **arquivados** no mesmo dia (`arquivado_em`,
+`status='inactive'`); apagar esses perfis e os logins órfãos é decisão pendente. Antes de
+mexer em metadado em massa, filtre `EXISTS (SELECT 1 FROM profiles WHERE id = u.id)`.
+
+**Diretório de usuários só carrega 1.000 perfis.** `admin/users` faz um `select('*')`
+sem paginar e filtra a busca no navegador; o PostgREST corta em 1.000 linhas. Ordenado
+por nome, todo mundo depois de "Sara Barbosa Lucena" (144 contas em 16/10) não aparece
+na busca. A busca também só olha `name`/`username`, não e-mail. (As 300 contas do ensaio
+de carga, nomeadas "Ensaio N", empurraram o corte até "Luiz" entre 15 e 16/10; o nome
+delas foi apagado para irem ao fim da lista.)
 
 **Ação recomendada nº 1:** rotacionar a senha `'compromisso2026'` (é também a senha padrão de
 novos usuários) e a `SUPABASE_SERVICE_ROLE_KEY`. São as duas únicas pendências que sobraram
