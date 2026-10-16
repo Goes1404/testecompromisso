@@ -206,9 +206,19 @@ function PrimeiroAcessoContent() {
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
-                <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
-                  Se não conseguir entrar, fale com a secretaria para verificar seu cadastro.
+              {/* Quem já trocou a senha padrão (o caso comum de quem volta depois
+                  de meses) não entra com ela. Sem esta saída, o aluno ficava
+                  repetindo a senha padrão até desistir. Redefinir aqui pelo nome
+                  NÃO é uma opção: este link circula nos grupos, e qualquer um
+                  trocaria a senha de qualquer colega. O caminho seguro é o SMS
+                  para o celular cadastrado ou o link que a secretaria gera. */}
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 space-y-1.5">
+                <p className="text-[11px] font-bold text-amber-800 leading-relaxed">
+                  Já trocou a senha padrão e não lembra a nova?
+                </p>
+                <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
+                  <Link href="/forgot-password" className="font-black underline underline-offset-2">Recupere pelo celular</Link>{' '}
+                  ou peça à secretaria um link para criar uma senha nova.
                 </p>
               </div>
 

@@ -18,6 +18,9 @@ export function escondeFlutuantesNoCelular(pathname: string | null | undefined):
     p.includes("/teacher/live/") ||
     // Sala do aluno: tem o campo de dúvidas para o professor (não a lista).
     p.startsWith("/dashboard/live/") ||
+    // Criar/redefinir senha pelo link: o robô cobria os requisitos da senha e
+    // ficava ao lado do botão de gravar, em 360px.
+    p.startsWith("/reset-password") ||
     (p.includes("/student/provas/") && p !== "/dashboard/student/provas")
   );
 }

@@ -537,6 +537,37 @@ ele digita a senha que ele mesmo criou e o GoTrue recusa (`same_password`). Por
 isso o passo 1 trata esse erro como sucesso (`ehMesmaSenha()` em
 `src/lib/auth-erros.ts`) e segue para o passo 2, que é o que realmente falta.
 
+### 🔑 Link de senha (primeiro acesso e redefinição)
+
+A secretaria gera um link por aluno (`/api/admin/generate-link`, só admin/staff): o
+"Link de Primeiro Acesso" logo depois de criar a conta e o "Link de Reset" em Usuários.
+**Os dois são o mesmo link** e servem para criar ou redefinir a senha. Regras puras em
+`src/lib/link-de-senha.ts`; tela em `/reset-password`.
+
+1. **Token `recovery` para os dois.** O `invite` do Supabase só existe para conta que ainda
+   não existe; aqui a conta é criada antes (`create-user`, `email_confirm: true`) e o
+   Supabase recusava o convite com "e-mail já cadastrado". Até 16/10 o Link de Primeiro
+   Acesso nunca saía.
+2. **O link aponta para a nossa tela com `token_hash`**, nunca para o `action_link` do
+   Supabase. O link antigo entregava a sessão no `#access_token`, e o cliente do
+   `@supabase/ssr` (fluxo PKCE) recusa esse formato: todo link caía em "Link expirado".
+3. **O token só é usado no toque em "Continuar"** (`verifyOtp`). A prévia do WhatsApp abre
+   o endereço para montar o cartão; troca automática gastaria o link de uso único.
+4. **O formulário só aparece depois de validar ESTE link nesta visita.** A tela antiga
+   aceitava qualquer sessão aberta no navegador e trocava a senha de quem estava logado
+   (a secretaria testando, o irmão no mesmo celular), não a do aluno do link. Se houver
+   alguém logado, a tela avisa; validar o link substitui a sessão sem `signOut` (o
+   `AuthProvider` manda para `/login` em todo `SIGNED_OUT`).
+5. **Redefinir pelo link de cadastro em massa (`/primeiro-acesso?invite=`) NÃO existe, de
+   propósito.** Esse link circula nos grupos: redefinir por nome deixaria qualquer um trocar
+   a senha de qualquer colega. Lá, quem já trocou a senha padrão é mandado para o SMS
+   (`/forgot-password`) ou para a secretaria.
+
+Testado de ponta a ponta em 16/10 contra o Supabase de produção, com conta de ensaio, em
+360px: link válido → conta certa → senha gravada → home; link reusado → "Link sem
+validade"; aparelho logado em outra conta + link inválido → aviso e nenhum formulário.
+Prova: `npx tsx scripts/test-link-de-senha.ts` (dentro de `npm test`).
+
 ### Auth & Middleware
 - `src/middleware.ts` protege `/dashboard/*` — redireciona para `/login` sem sessão.
 - Metadado `must_change_password: true` no Supabase Auth força `/dashboard/first-access`.

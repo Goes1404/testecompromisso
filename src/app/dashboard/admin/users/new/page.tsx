@@ -177,8 +177,9 @@ function GeneratedLinkCard({
       </div>
 
       <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-        Envie este link pelo WhatsApp ou e-mail. Ele funciona <strong>uma única vez</strong> e
-        expira em 1 hora. O usuário será redirecionado para definir uma nova senha.
+        Envie este link pelo WhatsApp. Ele funciona <strong>uma única vez</strong> e expira em 1 hora.
+        O aluno abre, toca em Continuar e cria a senha. Se ele esquecer a senha depois, gere um link
+        novo aqui ou em Usuários: o mesmo link também redefine.
       </p>
     </div>
   );
