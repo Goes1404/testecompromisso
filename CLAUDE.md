@@ -628,7 +628,7 @@ dias): ligar a troca nelas leva quem estiver logado direto para `/dashboard/firs
 no meio do uso, então é decisão da coordenação, de preferência avisando antes. Contagem
 refeita por `crypt()` no banco, sem expor senha.
 
-**Logins órfãos e o gatilho que cria perfil (16/10).** Existem ~846 contas em `auth.users`
+**Logins órfãos e o gatilho que cria perfil (16/10).** Existiam ~846 contas em `auth.users`
 criadas entre 26/02 e 11/04, nunca usadas, sem nome em lugar nenhum e **sem perfil** (620
 com login terminado em número, como `abnerjesus2@`; 438 têm um "gêmeo" com nome). Elas
 ocupam o e-mail: criar o aluno com aquele login dá "já cadastrado", e não há o que achar
@@ -636,9 +636,12 @@ na busca. ⚠️ **Qualquer UPDATE em `auth.users.raw_user_meta_data` dispara
 `sync_profile_display_name`, que CRIA um perfil vazio (aluno ativo, sem nome) para login
 sem perfil.** Foi o que aconteceu em 16/10: o lote da troca obrigatória criou 842 perfis
 vazios, que inflaram "alunos ativos" de 1.091 para 1.933 e entrariam como ausentes na
-chamada de aula para todas as turmas. Foram **arquivados** no mesmo dia (`arquivado_em`,
-`status='inactive'`); apagar esses perfis e os logins órfãos é decisão pendente. Antes de
-mexer em metadado em massa, filtre `EXISTS (SELECT 1 FROM profiles WHERE id = u.id)`.
+chamada de aula para todas as turmas. Foram arquivados no mesmo dia e **apagados em 16/10**
+(840 logins, junto com as 300 contas e as 2 aulas do ensaio de carga), depois de conferir
+que nenhum tinha dado em outra tabela. Ficaram, de propósito: 1 conta sem nome que alguém
+da equipe usou em março (tem registro em `activity_logs`), 1 de `teste.com` e 4 logins sem
+perfil (teste e um professor). Base depois da limpeza: 1.147 perfis, 1.092 alunos ativos.
+Antes de mexer em metadado em massa, filtre `EXISTS (SELECT 1 FROM profiles WHERE id = u.id)`.
 
 **Listas da secretaria carregam tudo (corrigido em 16/10).** Usuários (`admin/users`) e
 Matrículas (`secretary/enrollments`) faziam `select('*')` sem paginar, e o PostgREST corta
