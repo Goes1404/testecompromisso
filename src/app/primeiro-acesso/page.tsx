@@ -235,12 +235,22 @@ function PrimeiroAcessoContent() {
                 )}
               </div>
 
+              {/* Quem já trocou a senha e esqueceu resolve sozinho pelo SMS: o
+                  código vai para o celular cadastrado, então só o dono troca.
+                  Nome sozinho nunca troca senha (o link deste convite circula
+                  nos grupos — ver CLAUDE.md, "Link de senha", regra 5). */}
               {!senhaInicial && (
-                <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 space-y-1.5">
-                  <p className="text-[11px] font-bold text-amber-800 leading-relaxed">Não lembra a senha?</p>
-                  <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
-                    <Link href="/forgot-password" className="font-black underline underline-offset-2">Recupere pelo celular</Link>{' '}
-                    ou peça à secretaria um link para criar uma senha nova.
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-4 space-y-3">
+                  <p className="text-sm font-black text-amber-900 leading-snug">Esqueceu a senha?</p>
+                  <Link
+                    href="/forgot-password"
+                    className="flex items-center justify-center gap-2 w-full h-12 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest active:scale-95 transition-all"
+                  >
+                    <KeyRound className="h-4 w-4" /> Redefinir pelo celular
+                  </Link>
+                  <p className="text-[11px] font-medium text-amber-800 leading-relaxed">
+                    Chega um código por SMS no celular cadastrado na sua conta. Sem celular cadastrado? Peça à
+                    secretaria o seu link para criar uma senha nova.
                   </p>
                 </div>
               )}
