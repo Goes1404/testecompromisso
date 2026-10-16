@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { verifyRegistrationToken } from '@/lib/registration-token';
 import crypto from 'crypto';
 import { generateResetToken, verifyResetToken } from '@/lib/password-reset-token';
+import { SENHA_PADRAO } from '@/lib/senha-padrao';
+import { DOMINIO_DO_LOGIN, emailsCandidatos, loginDigitado, resultadoDaBusca, type ContaAchada } from '@/lib/primeiro-acesso';
 import { sendOtpSms } from '@/lib/sms';
 
 const SUPABASE_TIMEOUT_MS = 10_000;
@@ -163,33 +165,33 @@ export async function POST(request: Request) {
 
       console.log('[PRIMEIRO_ACESSO] Busca de aluno recebida');
 
-      const generatedEmail = generateEmail(fullName.trim());
-      // Segurança: remove caracteres de controle do PostgREST (vírgula/parênteses/*) antes
-      // de interpolar no filtro .or(), evitando injeção de filtro. Nomes reais não usam isso.
-      const safeName = fullName.trim().replace(/[,()*\\]/g, ' ').replace(/\s+/g, ' ').trim();
-
-      const { data: profiles, error } = await supabaseAdmin
-        .from('profiles')
-        .select('id, email, name')
-        .or(`email.eq.${generatedEmail},name.ilike.%${safeName}%`)
-        .limit(1);
+      // Nome completo EXATO (sem acento, sem diferença de maiúscula) ou o
+      // login. Nunca pedaço do nome, nunca "a primeira que aparecer": ver
+      // `src/lib/primeiro-acesso.ts`. A função também diz se a conta ainda
+      // usa a senha padrão — só então a tela a mostra.
+      const login = loginDigitado(fullName);
+      const { data: contas, error } = await supabaseAdmin.rpc('contas_para_primeiro_acesso', {
+        p_nome: fullName,
+        p_login: login,
+        p_senha_padrao: SENHA_PADRAO,
+      });
 
       if (error) {
-        console.error('[PRIMEIRO_ACESSO] Erro na query:', error);
+        console.error('[PRIMEIRO_ACESSO] Erro na busca:', error.message);
         throw error;
       }
 
-      if (profiles && profiles.length > 0) {
-        // Sem o `id`: a tela nunca usou (só exibe nome e e-mail de login), e o
-        // uuid do perfil é a chave usada em várias rotas — não há motivo para
-        // entregá-lo a quem só digitou um nome.
+      const resultado = resultadoDaBusca((contas ?? []) as ContaAchada[], fullName);
+      // Sem `id` nunca: a tela só mostra nome e login. A senha padrão só vai
+      // quando a conta ainda a usa — antes ia para todo mundo, e 1 em cada 4
+      // alunos já tinha trocado.
+      if (resultado.encontrado === 'um') {
         return NextResponse.json({
-          found: true,
-          user: { email: profiles[0].email, name: profiles[0].name }
+          ...resultado,
+          senhaInicial: resultado.senhaPadrao ? SENHA_PADRAO : null,
         });
-      } else {
-        return NextResponse.json({ found: false });
       }
+      return NextResponse.json(resultado);
     }
 
     // AÇÃO: BUSCAR POR TELEFONE (passo 1 do wizard de recuperação por SMS)
@@ -398,7 +400,7 @@ export async function POST(request: Request) {
 
     // 3. AÇÃO: CADASTRAR NOVO
     if (action === 'register') {
-      const { fullName, examTarget, password, institution, classroom, inviteToken } = body;
+      const { fullName, examTarget, password, institution, classroom, inviteToken, permitirEmailDiferente } = body;
 
       // Validação do Token de Convite
       if (!inviteToken) {
@@ -417,33 +419,75 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Preencha todos os campos corretamente.' }, { status: 400 });
       }
 
-      const email = generateEmail(fullName);
-      const username = email.replace('@compromisso.com', '');
-
-      const { data: existing } = await supabaseAdmin.from('profiles').select('id').eq('email', email).maybeSingle();
-      if (existing) {
-        return NextResponse.json({ error: 'Este perfil já existe. Tente recuperar pelo seu nome.' }, { status: 409 });
+      const emailBase = generateEmail(fullName);
+      if (!emailBase) {
+        return NextResponse.json({ error: 'Digite o nome completo.' }, { status: 400 });
       }
 
-      console.log('[PRIMEIRO_ACESSO] Criando Auth User (student) via convite');
-      const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: fullName,
-          profile_type: 'student',
-          role: 'student',
-          exam_target: examTarget || 'ENEM',
-          institution: institution || '',
-          course: classroom || '',
-        },
-      });
-
-      if (createError) {
-        console.error('[PRIMEIRO_ACESSO] Erro ao criar Auth User:', createError);
-        throw createError;
+      // E-mail diferente (`base2@`, `base3@`…) só quando JÁ existem duas ou
+      // mais contas com este nome exato — é a saída que a coordenação pediu
+      // para o aluno novo que tem homônimo. O servidor confere; o pedido do
+      // navegador sozinho não basta. Fora disso, nome já usado continua
+      // recusado: é o que impede o próprio aluno de abrir mais uma conta.
+      let candidatos = [emailBase];
+      if (permitirEmailDiferente === true) {
+        const { data: mesmoNome, error: erroBusca } = await supabaseAdmin.rpc('contas_para_primeiro_acesso', {
+          p_nome: fullName,
+          p_login: null,
+          p_senha_padrao: '',
+        });
+        if (erroBusca) throw erroBusca;
+        if ((mesmoNome ?? []).length < 2) {
+          return NextResponse.json(
+            { error: 'Só dá para criar com outro e-mail quando já existem duas contas com esse nome. Volte e busque pelo seu nome.' },
+            { status: 409 },
+          );
+        }
+        candidatos = emailsCandidatos(emailBase).slice(1);
       }
+
+      let email = '';
+      let authData: any = null;
+      for (const candidato of candidatos) {
+        const { data: ocupado } = await supabaseAdmin.from('profiles').select('id').eq('email', candidato).maybeSingle();
+        if (ocupado) continue;
+
+        console.log('[PRIMEIRO_ACESSO] Criando Auth User (student) via convite');
+        const { data, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: candidato,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: fullName,
+            profile_type: 'student',
+            role: 'student',
+            exam_target: examTarget || 'ENEM',
+            institution: institution || '',
+            course: classroom || '',
+          },
+        });
+        if (createError) {
+          // Login antigo sem perfil ocupando o e-mail: tenta o próximo.
+          if (/already (been )?registered|email_exists/i.test(`${(createError as any).code ?? ''} ${createError.message ?? ''}`)) continue;
+          console.error('[PRIMEIRO_ACESSO] Erro ao criar Auth User:', createError.message);
+          throw createError;
+        }
+        email = candidato;
+        authData = data;
+        break;
+      }
+
+      if (!email || !authData?.user) {
+        return NextResponse.json(
+          {
+            error: permitirEmailDiferente === true
+              ? 'Não achamos um e-mail livre para esse nome. Procure a secretaria.'
+              : 'Já existe uma conta com esse nome. Volte e busque pelo seu nome completo para ver o seu login.',
+          },
+          { status: 409 },
+        );
+      }
+      const username = email.replace(`@${DOMINIO_DO_LOGIN}`, '');
 
       console.log('[PRIMEIRO_ACESSO] Auth User criado. Criando Profile...');
 

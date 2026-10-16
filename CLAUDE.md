@@ -568,6 +568,30 @@ Testado de ponta a ponta em 16/10 contra o Supabase de produção, com conta de 
 validade"; aparelho logado em outra conta + link inválido → aviso e nenhum formulário.
 Prova: `npx tsx scripts/test-link-de-senha.ts` (dentro de `npm test`).
 
+### 🔎 Busca do primeiro acesso (link de convite em massa)
+
+`/primeiro-acesso` (e `?invite=`) acha a conta do aluno pelo nome. Até 16/10 era a maior
+fonte de "e-mail ou senha inválidos" (143 recusas contra 32 entradas em 24 h). Regras em
+`src/lib/primeiro-acesso.ts`; busca no banco por `contas_para_primeiro_acesso()` (migration
+`20261016150000`, só `service_role`).
+
+1. **Nome completo EXATO ou o login**, sem acento, sem diferença de maiúscula, espaços
+   normalizados (`normalizar_nome()` no SQL = `normalizarNome()` no TS). Nunca pedaço do
+   nome: o `ilike %nome%` com `limit 1` entregava "Pietro Gabriel de Souza" a quem digitava
+   "Gabriel de Souza".
+2. **Duas ou mais contas com o nome exato: a tela não escolhe** (em 16/10, 170 nomes em 341
+   contas, quase sempre o mesmo aluno duplicado). Ela manda quem já tem cadastro à
+   secretaria e deixa quem NÃO tem criar conta nova com e-mail diferente (`base2@`,
+   `base3@`…) — decisão da coordenação. O servidor só aceita `permitirEmailDiferente`
+   depois de conferir que há 2+ contas com aquele nome, e só com convite válido.
+3. **A senha padrão só aparece se a conta ainda a usa** (conferido no banco com `crypt`).
+   Antes ia para todo mundo, e 1 em cada 4 alunos ativos já tinha trocado. Para os outros,
+   a tela diz "você já criou a sua senha" e aponta o SMS ou a secretaria. A senha padrão
+   vem de `src/lib/senha-padrao.ts` (`SENHA_PADRAO_INICIAL`, com a histórica de reserva).
+4. **O erro do login tem atalhos**: "Esqueci minha senha" e "Não sei meu login".
+
+Prova: `npx tsx scripts/test-primeiro-acesso.ts` (dentro de `npm test`).
+
 ### Auth & Middleware
 - `src/middleware.ts` protege `/dashboard/*` — redireciona para `/login` sem sessão.
 - Metadado `must_change_password: true` no Supabase Auth força `/dashboard/first-access`.
@@ -777,6 +801,7 @@ PASSWORD_RESET_TOKEN_SECRET  (server-side only — secret dedicado do wizard de 
 TWILIO_ACCOUNT_SID
 TWILIO_AUTH_TOKEN
 TWILIO_PHONE_NUMBER
+SENHA_PADRAO_INICIAL  (server-side only, opcional — senha inicial de contas novas; sem ela vale a histórica)
 CLOUDFLARE_REALTIME_APP_ID     (server-side only — transmissão pela plataforma)
 CLOUDFLARE_REALTIME_APP_TOKEN  (server-side only)
 ```

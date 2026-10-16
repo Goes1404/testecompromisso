@@ -15,11 +15,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
-type Step = 'search' | 'found' | 'register' | 'success';
+type Step = 'search' | 'found' | 'varios' | 'register' | 'success';
 
 const HEADER: Record<Step, { label: string; sub: string; color: string }> = {
   search:   { label: 'Primeiro Acesso', sub: 'Identificação',   color: 'from-indigo-600 to-indigo-700'  },
   found:    { label: 'Primeiro Acesso', sub: 'Conta Localizada', color: 'from-emerald-600 to-emerald-700' },
+  varios:   { label: 'Primeiro Acesso', sub: 'Mais de uma conta', color: 'from-amber-500 to-amber-600'   },
   register: { label: 'Primeiro Acesso', sub: 'Criar Conta',     color: 'from-orange-500 to-orange-600'  },
   success:  { label: 'Primeiro Acesso', sub: 'Pronto!',         color: 'from-emerald-600 to-emerald-700' },
 };
@@ -35,6 +36,14 @@ function PrimeiroAcessoContent() {
   const [fullName, setFullName] = useState('');
   // Sem `id`: a rota deixou de devolver o uuid do perfil, que esta tela nunca usou.
   const [userFound, setUserFound] = useState<{ email: string; name: string } | null>(null);
+  // A senha padrão só vem do servidor quando a conta AINDA a usa. `null` =
+  // o aluno já criou a própria senha (a tela antiga mostrava a padrão para
+  // todo mundo, e 1 em cada 4 levava "e-mail ou senha inválidos").
+  const [senhaInicial, setSenhaInicial] = useState<string | null>(null);
+  // Duas ou mais contas com o nome exato: a tela não escolhe nenhuma.
+  const [quantasContas, setQuantasContas] = useState(0);
+  // O aluno pediu conta nova com e-mail diferente (só existe no passo `varios`).
+  const [emailDiferente, setEmailDiferente] = useState(false);
 
   // Register fields
   const [password, setPassword] = useState('');
@@ -66,8 +75,17 @@ function PrimeiroAcessoContent() {
       const res = await apiPost({ action: 'search', fullName });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      if (data.found && data.user) { setUserFound(data.user); setStep('found'); }
-      else setStep('register');
+      setEmailDiferente(false);
+      if (data.encontrado === 'um' && data.user) {
+        setUserFound(data.user);
+        setSenhaInicial(typeof data.senhaInicial === 'string' ? data.senhaInicial : null);
+        setStep('found');
+      } else if (data.encontrado === 'varios') {
+        setQuantasContas(Number(data.quantidade) || 2);
+        setStep('varios');
+      } else {
+        setStep('register');
+      }
     } catch (err: any) {
       setError(err.message || 'Erro ao buscar aluno.');
     } finally {
@@ -82,7 +100,10 @@ function PrimeiroAcessoContent() {
     setError('');
     setIsLoading(true);
     try {
-      const res = await apiPost({ action: 'register', fullName, examTarget, password, institution, classroom: sala, inviteToken });
+      const res = await apiPost({
+        action: 'register', fullName, examTarget, password, institution, classroom: sala, inviteToken,
+        permitirEmailDiferente: emailDiferente,
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setUserFound({ email: data.email, name: fullName });
@@ -139,7 +160,7 @@ function PrimeiroAcessoContent() {
               <div className="space-y-1.5">
                 <h1 className="text-3xl font-black text-gray-900 italic tracking-tighter leading-tight">Quem é você?</h1>
                 <p className="text-sm text-gray-400 font-medium leading-relaxed">
-                  Digite seu nome completo para localizar seu perfil ou criar sua conta.
+                  Digite seu nome completo, igual ao da matrícula, ou o seu login.
                 </p>
               </div>
 
@@ -150,7 +171,7 @@ function PrimeiroAcessoContent() {
               )}
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nome Completo</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nome completo ou login</Label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 pointer-events-none" />
                   <Input
@@ -162,7 +183,7 @@ function PrimeiroAcessoContent() {
                     required
                   />
                 </div>
-                <p className="text-[10px] text-gray-300 ml-1 font-medium">Use o nome exato como foi cadastrado pela escola.</p>
+                <p className="text-[10px] text-gray-400 ml-1 font-medium">Nome inteiro, com todos os sobrenomes. Acento e maiúscula não importam.</p>
               </div>
 
               <Button
@@ -194,33 +215,35 @@ function PrimeiroAcessoContent() {
 
               <div className="bg-emerald-50 rounded-2xl px-5 py-4 border border-emerald-100 space-y-3">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Seu e-mail de login</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Seu e-mail de login</p>
                   <p className="text-sm font-black text-emerald-900 break-all">{userFound.email}</p>
                 </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Senha padrão</p>
-                  <div className="flex items-center gap-2">
-                    <KeyRound className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <p className="text-sm font-black text-emerald-900 tracking-wider">compromisso2026</p>
+                {senhaInicial ? (
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Senha inicial</p>
+                    <div className="flex items-center gap-2">
+                      <KeyRound className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <p className="text-sm font-black text-emerald-900 tracking-wider">{senhaInicial}</p>
+                    </div>
+                    <p className="text-[10px] font-semibold text-emerald-700 mt-1">No primeiro login a plataforma pede para você criar a sua senha.</p>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Senha</p>
+                    <p className="text-sm font-bold text-emerald-900 leading-snug">Você já criou a sua própria senha. Use ela para entrar.</p>
+                  </div>
+                )}
               </div>
 
-              {/* Quem já trocou a senha padrão (o caso comum de quem volta depois
-                  de meses) não entra com ela. Sem esta saída, o aluno ficava
-                  repetindo a senha padrão até desistir. Redefinir aqui pelo nome
-                  NÃO é uma opção: este link circula nos grupos, e qualquer um
-                  trocaria a senha de qualquer colega. O caminho seguro é o SMS
-                  para o celular cadastrado ou o link que a secretaria gera. */}
-              <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 space-y-1.5">
-                <p className="text-[11px] font-bold text-amber-800 leading-relaxed">
-                  Já trocou a senha padrão e não lembra a nova?
-                </p>
-                <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
-                  <Link href="/forgot-password" className="font-black underline underline-offset-2">Recupere pelo celular</Link>{' '}
-                  ou peça à secretaria um link para criar uma senha nova.
-                </p>
-              </div>
+              {!senhaInicial && (
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 space-y-1.5">
+                  <p className="text-[11px] font-bold text-amber-800 leading-relaxed">Não lembra a senha?</p>
+                  <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
+                    <Link href="/forgot-password" className="font-black underline underline-offset-2">Recupere pelo celular</Link>{' '}
+                    ou peça à secretaria um link para criar uma senha nova.
+                  </p>
+                </div>
+              )}
 
               <Link
                 href="/login"
@@ -239,6 +262,55 @@ function PrimeiroAcessoContent() {
             </div>
           )}
 
+          {/* ── STEP: VÁRIAS CONTAS (nome exato em 2+ contas) ── */}
+          {step === 'varios' && (
+            <div className="p-7 space-y-5">
+              <div className="space-y-1.5">
+                <h1 className="text-3xl font-black text-gray-900 italic tracking-tighter leading-tight">
+                  Achamos {quantasContas} contas com esse nome
+                </h1>
+                <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                  Para não entregar o login de outra pessoa, não escolhemos nenhuma.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3.5 space-y-1">
+                <p className="text-xs font-black text-gray-900">Já tenho cadastro</p>
+                <p className="text-[11px] font-medium text-gray-600 leading-relaxed">
+                  Fale com a secretaria: ela confere qual conta é a sua e passa o seu login. Se souber o login, volte e digite ele no lugar do nome.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3.5 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-black text-orange-900">Ainda não tenho cadastro</p>
+                  <p className="text-[11px] font-medium text-orange-800 leading-relaxed">
+                    Crie uma conta nova. Como o nome já existe, o seu login vai ter um número no final.
+                  </p>
+                </div>
+                {inviteToken ? (
+                  <Button
+                    type="button"
+                    onClick={() => { setEmailDiferente(true); setError(''); setStep('register'); }}
+                    className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest border-none"
+                  >
+                    Criar conta nova
+                  </Button>
+                ) : (
+                  <p className="text-[11px] font-bold text-amber-700">Para criar conta, abra o link de convite que a escola enviou.</p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => { setStep('search'); setError(''); }}
+                className="w-full min-h-11 text-[10px] font-black uppercase text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Voltar e buscar de novo
+              </button>
+            </div>
+          )}
+
           {/* ── STEP: REGISTER ── */}
           {step === 'register' && (
             <form onSubmit={handleRegister} className="p-7 space-y-5">
@@ -246,8 +318,10 @@ function PrimeiroAcessoContent() {
                 <h1 className="text-3xl font-black text-gray-900 italic tracking-tighter leading-tight">
                   Vamos criar<br />sua conta!
                 </h1>
-                <p className="text-sm text-gray-400 font-medium">
-                  Não encontramos <strong className="text-orange-600">{fullName}</strong>. Preencha os dados abaixo.
+                <p className="text-sm text-gray-500 font-medium">
+                  {emailDiferente
+                    ? <>Conta nova para <strong className="text-orange-600">{fullName}</strong>. O seu login vai ter um número no final e aparece na próxima tela.</>
+                    : <>Não encontramos <strong className="text-orange-600">{fullName}</strong>. Preencha os dados abaixo.</>}
                 </p>
               </div>
 

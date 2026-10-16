@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { SENHA_PADRAO } from '@/lib/senha-padrao';
 import { NextResponse } from 'next/server';
 import { requireAdminUser } from '@/lib/server-auth';
 
@@ -20,7 +21,8 @@ function generateEmail(fullName: string): string {
   return `${first}${middleInitial}${last}@compromisso.com`;
 }
 
-const DEFAULT_PASSWORD = 'compromisso2026';
+// Ver src/lib/senha-padrao.ts (variável SENHA_PADRAO_INICIAL, com a histórica de reserva).
+const DEFAULT_PASSWORD = SENHA_PADRAO;
 
 export async function POST(request: Request) {
   try {

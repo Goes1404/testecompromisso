@@ -166,9 +166,28 @@ export function LoginForm() {
 
             {/* Error */}
             {authError && (
-              <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/25 p-3.5 rounded-xl animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-300">
-                <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-                <p className="text-red-300 text-xs font-bold">{authError}</p>
+              <div className="bg-red-500/10 border border-red-500/25 p-3.5 rounded-xl space-y-2.5 animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-300">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                  <p className="text-red-300 text-xs font-bold">{authError}</p>
+                </div>
+                {/* Quem erra aqui quase sempre é o aluno que não sabe o próprio
+                    login ou a senha (em 16/10: 143 recusas contra 32 entradas em
+                    24 h). Antes ele só tinha "tente novamente". */}
+                <div className="flex flex-wrap gap-2 pl-7">
+                  <Link
+                    href="/forgot-password"
+                    className="press inline-flex min-h-10 items-center rounded-lg bg-white/10 px-3 text-[11px] font-black text-white hover:bg-white/15"
+                  >
+                    Esqueci minha senha
+                  </Link>
+                  <Link
+                    href="/primeiro-acesso"
+                    className="press inline-flex min-h-10 items-center rounded-lg bg-white/10 px-3 text-[11px] font-black text-white hover:bg-white/15"
+                  >
+                    Não sei meu login
+                  </Link>
+                </div>
               </div>
             )}
 
