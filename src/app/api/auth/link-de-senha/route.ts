@@ -27,6 +27,16 @@ export const dynamic = 'force-dynamic';
 const MAX_TROCAS_POR_LINK = 10;
 const MAX_POR_IP_HORA = 30;
 
+/**
+ * Fim de semana do mutirão de senhas (17–18/10, pedido da coordenação): sem os
+ * dois limites acima, porque a turma inteira usa o mesmo Wi-Fi (um IP só) e o
+ * mesmo celular pode servir a vários alunos. Volta sozinho na segunda,
+ * 19/10 00:00 em Brasília. O registro em `password_reset_attempts`, a versão do
+ * link e o aviso no sininho continuam valendo.
+ */
+const SEM_LIMITE_ATE = Date.parse('2026-10-19T03:00:00Z');
+const limitesLigados = () => Date.now() >= SEM_LIMITE_ATE;
+
 function admin() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -63,7 +73,7 @@ export async function POST(request: Request) {
   const idDoLink = `link-senha:${createHash('sha256').update(String(token)).digest('hex')}`;
 
   // Freio contra força bruta e uso em massa, antes de qualquer coisa cara.
-  try {
+  if (limitesLigados()) try {
     const { count } = await sb.from('password_reset_attempts').select('id', { count: 'exact', head: true })
       .eq('ip', ip).like('identifier', 'link-senha:%').gte('created_at', new Date(Date.now() - 3_600_000).toISOString());
     if ((count ?? 0) >= MAX_POR_IP_HORA) return recusa(429, 'Muitas tentativas deste local. Espere uma hora.');
@@ -93,7 +103,7 @@ export async function POST(request: Request) {
     return recusa(400, 'A senha precisa ter 8 caracteres ou mais, com letra maiúscula, número e símbolo.');
   }
 
-  try {
+  if (limitesLigados()) try {
     const { count } = await sb.from('password_reset_attempts').select('id', { count: 'exact', head: true })
       .eq('identifier', idDoLink).eq('success', true)
       .gte('created_at', new Date(Date.now() - 86_400_000).toISOString());

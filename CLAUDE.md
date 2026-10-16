@@ -555,6 +555,9 @@ A secretaria gera um link por aluno (`/api/admin/generate-link`, só admin/staff
      (`password_reset_attempts`, identificador = hash do token);
    - **toda troca avisa o aluno no sininho** ("se não foi você, procure a secretaria");
    - conta arquivada ou bloqueada é recusada.
+   ⚠️ Os dois limites ficam **desligados no fim de semana de 17–18/10** (mutirão de senhas,
+   turma inteira no mesmo Wi-Fi) e voltam sozinhos em 19/10 00:00 de Brasília
+   (`SEM_LIMITE_ATE` na rota). O aviso no sininho e a versão do link continuam valendo.
    Sem nenhum dos dois segredos, `generate-link` volta ao link de 1 h do Supabase
    (`?token_hash=`), e a tela da secretaria mostra a validade do link que saiu
    (`validadeDoLink()`). Os links de 1 h já enviados continuam funcionando.
