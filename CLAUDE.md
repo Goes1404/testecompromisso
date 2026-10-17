@@ -285,6 +285,9 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
    sala em 17/10). Foco "Não informado" não vê aula por foco. Migration
    `20261017090000_lives_por_foco.sql` (`pode_ver_live`, `alunos_esperados_da_live` e o
    rótulo da chamada em `fechar_chamada_da_live`, que fazia `t::int` em todo item).
+   **`FocoGate`** (`components/FocoGate.tsx`, montado no layout por cima do `PhoneGate`):
+   aluno sem foco ENEM/ETEC é obrigado a escolher antes de qualquer coisa — sem foco ele
+   não vê aula nenhuma (65 alunos ativos em 17/10). Grava `profiles.exam_target`.
 9. **Chamada da live é por tempo, sem código** (decisão da coordenação, 13/10):
    presente quem ficou **60%** do tempo em que a aula esteve no ar com a sala aberta.
    A sala chama `registrar_presenca_live()` a cada 60 s; o banco soma o tempo real

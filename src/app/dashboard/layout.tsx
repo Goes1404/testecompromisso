@@ -18,6 +18,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UrgentNotice } from "@/components/UrgentNotice";
 import { PhoneGate } from "@/components/PhoneGate";
+import { FocoGate } from "@/components/FocoGate";
 import { TelemetryProvider } from "@/components/TelemetryProvider";
 import { PushPermissionBanner } from "@/components/push-permission-banner";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
@@ -578,6 +579,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <TelemetryProvider />
         <OnboardingTour />
         <PhoneGate />
+        {/* Por cima do telefone: o foco é o primeiro passo (aulas separadas por foco). */}
+        <FocoGate />
         <UrgentNotice />
         <PushPermissionBanner />
         <FloatingExtractionBubble />
