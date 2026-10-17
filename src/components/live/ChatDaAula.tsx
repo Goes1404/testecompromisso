@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import {
   ESPERA_ENTRE_MENSAGENS_S,
+  INTERVALO_DA_REACAO_MS,
   erroDoChat,
   mesclarMensagens,
   proximoIntervaloDoChat,
@@ -206,8 +207,11 @@ export function ChatDaAula({
 
   // Reação: sobe na hora para quem tocou; o banco recebe por trás. O excesso
   // (mais de uma a cada 2 s) o banco ignora em silêncio.
+  const ultimoEnvioDeReacao = useRef(0);
   const reagir = useCallback(async (emoji: Emoji) => {
     soltar(emoji);
+    if (Date.now() - ultimoEnvioDeReacao.current < INTERVALO_DA_REACAO_MS) return;
+    ultimoEnvioDeReacao.current = Date.now();
     const { data } = await supabase.rpc("reagir_na_live", { p_live: liveId, p_emoji: emoji });
     if (typeof data === "number") minhasReacoes.current.add(data);
   }, [liveId, soltar]);

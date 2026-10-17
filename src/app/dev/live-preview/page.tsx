@@ -10,6 +10,7 @@
 import { notFound, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { ListaDeAulas } from "@/components/live/ListaDeAulas";
+import { PainelDoTermometro } from "@/components/live/TermometroDaTurma";
 import { SalaDoAluno } from "@/components/live/SalaDoAluno";
 import { ChatAoVivo } from "@/components/live/ChatAoVivo";
 import { QuadroDeDuvidas } from "@/components/live/QuadroDeDuvidas";
@@ -152,7 +153,14 @@ function Telas() {
       onTrocarStatus={nada}
       onVoltar={nada}
       duvidas={<FilaDeDuvidas duvidas={DUVIDAS_DO_PROFESSOR} salvandoId={null} onRespondidaNaAula={nada} onResponder={async () => true} onOcultar={nada} />}
-      chamada={<ResumoDaChamada resumo={agendado ? { ...CHAMADA, segundos_da_aula: 0, alunos: [] } : CHAMADA} status={aula.status} />}
+      chamada={
+        <div className="space-y-3">
+          {!agendado && (
+            <PainelDoTermometro dados={{ na_sala: 412, passaram: 468, esperados: 660, reacoes_minuto: { "👍": 31, "🔥": 12, "😂": 4 }, mensagens_5min: 57 }} />
+          )}
+          <ResumoDaChamada resumo={agendado ? { ...CHAMADA, segundos_da_aula: 0, alunos: [] } : CHAMADA} status={aula.status} />
+        </div>
+      }
       chat={<Chat equipe altura="h-[340px] lg:h-[max(260px,calc(100dvh-26rem))]" />}
       video={<VerificacaoDoVideo verificacao={agendado ? { ok: false, motivo: "nao_embute", definitivo: true } : { ok: true, titulo: "Aulão de Matemática — funções", canal: "Cursinho Compromisso" }} verificando={false} onVerificar={nada} />}
       videoVerificado={!agendado}

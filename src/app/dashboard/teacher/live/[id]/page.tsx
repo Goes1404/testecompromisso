@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { proximoStatus, rotuloDoStatus } from "@/lib/lives";
+import { TermometroDaTurma } from "@/components/live/TermometroDaTurma";
 import { PainelDaChamada } from "@/components/live/PainelDaChamada";
 import { DuvidasDoProfessor } from "@/components/live/DuvidasDoProfessor";
 import { ChatDaAula } from "@/components/live/ChatDaAula";
@@ -148,7 +149,12 @@ export default function TeacherLiveStudioPage({ params }: { params: Promise<{ id
       onVoltar={() => router.push('/dashboard/teacher/live')}
       duvidas={<DuvidasDoProfessor liveId={liveId} />}
       chat={<ChatDaAula liveId={liveId} noAr={live.status === 'live'} equipe altura="h-[340px] lg:h-[max(260px,calc(100dvh-26rem))]" />}
-      chamada={<PainelDaChamada liveId={liveId} status={live.status ?? null} />}
+      chamada={
+        <div className="space-y-3">
+          <TermometroDaTurma liveId={liveId} noAr={live.status === 'live'} />
+          <PainelDaChamada liveId={liveId} status={live.status ?? null} />
+        </div>
+      }
       video={<VerificacaoDoVideo verificacao={video.verificacao} verificando={video.verificando} onVerificar={() => video.verificar()} />}
       videoVerificado={!!video.verificacao?.ok}
     />

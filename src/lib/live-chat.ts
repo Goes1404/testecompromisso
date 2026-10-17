@@ -60,6 +60,14 @@ export type RespostaDoChat = {
 /** Cópia da mensagem fixada (`lives.chat_fixado`). */
 export type MensagemFixada = { id: number; texto: string | null; autor: string; equipe: boolean; em: string };
 
+/**
+ * Uma reação enviada a cada 5 s por aluno (o banco também segura). O toque
+ * dentro da janela ainda sobe na tela de quem tocou, mas não sai do celular:
+ * com ~1.000 alunos e o banco no menor tamanho, 2 s permitia centenas de
+ * gravações por segundo.
+ */
+export const INTERVALO_DA_REACAO_MS = 5_000;
+
 /** As reações rápidas, na ordem dos botões. Precisa bater com o CHECK de `live_reacoes`. */
 export const REACOES = ["👍", "❤️", "😂", "🔥", "👏"] as const;
 export type Emoji = (typeof REACOES)[number];

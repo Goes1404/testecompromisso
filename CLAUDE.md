@@ -472,6 +472,14 @@ da ordem.
     as de id novo e nenhuma na primeira consulta. Sem Realtime. Migration
     `20261017110000_chat_fixada_e_reacoes.sql`; as chaves novas não quebram app antigo.
 
+27. **Reações leves e termômetro** (17/10): reação **uma a cada 5 s** por aluno, no banco
+    (`reagir_na_live`) e no celular (`INTERVALO_DA_REACAO_MS`: o toque sobe na tela, mas o
+    pedido não sai). `live_reacoes` é limpa todo dia às 4h (`limpar_reacoes_antigas()`, job
+    `limpar-reacoes`). **Termômetro da turma** no estúdio (`TermometroDaTurma`, 15 s, só no
+    ar): na sala agora (sinal de presença nos últimos 150 s), quantos passaram, reações do
+    último minuto e mensagens dos últimos 5 — `termometro_da_live()`, só equipe. Migration
+    `20261017120000_reacoes_leves_e_termometro.sql`.
+
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 ### 📺 Lives: aviso aos alunos
 
