@@ -148,9 +148,31 @@ export function inicioDaJanelaDaAgenda(agora: Date = new Date()): string {
   return new Date(agora.getTime() - VALIDADE_DO_AO_VIVO_H * HORA).toISOString();
 }
 
-/** Filtro `.or()` da agenda do aluno: agendadas recentes + tudo que está no ar. */
+/**
+ * Aula gravada (17/10): encerrada, com vídeo do YouTube, fica na lista do aluno
+ * por 30 dias para rever. O YouTube guarda a transmissão no mesmo endereço
+ * depois que ela termina; antes, a aula sumia da lista no fim e quem perdeu
+ * dependia de alguém mandar o link.
+ */
+export const DIAS_DA_GRAVACAO = 30;
+
+export function estaNasGravadas(
+  live: { status: string | null; start_time: string | null; youtube_id?: string | null },
+  agora: Date = new Date(),
+): boolean {
+  if (live.status !== 'completed' || !idDoYoutube(live.youtube_id ?? null) || !live.start_time) return false;
+  const inicio = new Date(live.start_time).getTime();
+  if (Number.isNaN(inicio)) return false;
+  return inicio >= agora.getTime() - DIAS_DA_GRAVACAO * 24 * HORA && inicio <= agora.getTime();
+}
+
+/** Filtro `.or()` da lista do aluno: agendadas recentes, tudo no ar e gravadas. */
 export function filtroDaAgenda(agora: Date = new Date()): string {
-  return `and(status.eq.scheduled,start_time.gte.${inicioDaJanelaDaAgenda(agora)}),status.eq.live`;
+  const gravadasDesde = new Date(agora.getTime() - DIAS_DA_GRAVACAO * 24 * HORA).toISOString();
+  return (
+    `and(status.eq.scheduled,start_time.gte.${inicioDaJanelaDaAgenda(agora)}),status.eq.live,` +
+    `and(status.eq.completed,youtube_id.not.is.null,start_time.gte.${gravadasDesde})`
+  );
 }
 
 /** Até onde o professor pode marcar uma aula para a frente. */
@@ -391,4 +413,35 @@ export function ehNavegadorDeCelular(userAgent: string | null | undefined): bool
   // iPad com iPadOS 13+ se apresenta como Mac: cai como computador aqui e
   // também no YouTube, que decide pelo mesmo user agent — então o chat abre.
   return /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini|Silk/i.test(ua);
+}
+
+/** Aula que precisa do aviso de "sem link" (`lives_sem_link_para_avisar()`). */
+export type AulaSemLink = {
+  id: string;
+  title: string | null;
+  start_time: string;
+  teacher_id: string | null;
+  teacher_name: string | null;
+};
+
+const HORA_DA_ESCOLA = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/**
+ * Texto do aviso à equipe (17/10): uma notificação por pessoa, listando as
+ * aulas. Horário no fuso da escola — o servidor roda em UTC. Corpo curto: o
+ * push corta texto longo, e o que importa é o horário e onde resolver.
+ */
+export function avisoDeAulaSemLink(aulas: Pick<AulaSemLink, 'title' | 'start_time'>[]): { title: string; body: string } {
+  const ordenadas = [...aulas].sort((a, b) => a.start_time.localeCompare(b.start_time));
+  const hora = HORA_DA_ESCOLA.format(new Date(ordenadas[0].start_time));
+  const nomes = ordenadas.map((a) => (a.title ?? '').trim() || 'Aula ao vivo');
+  const lista = nomes.length <= 2 ? nomes.join(' e ') : `${nomes.slice(0, 2).join(', ')} e mais ${nomes.length - 2}`;
+  return {
+    title: nomes.length === 1 ? `Aula das ${hora} sem link` : `${nomes.length} aulas das ${hora} sem link`,
+    body: `${lista}: cole o link do YouTube ou do Meet e abra a sala em Aulas ao vivo.`.slice(0, 200),
+  };
 }

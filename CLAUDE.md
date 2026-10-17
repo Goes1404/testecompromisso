@@ -441,6 +441,17 @@ da ordem.
     **retirada a pedido** no mesmo dia — não reintroduzir sem pedido
     (`20261016130000_lives_sem_transmissao.sql`).
 
+23. **Aula gravada** (17/10): encerrada **com vídeo** do YouTube fica na lista do aluno por
+    `DIAS_DA_GRAVACAO` (30) dias, numa seção "Gravadas" (`estaNasGravadas()`), e a sala toca
+    o vídeo. O YouTube guarda a transmissão no mesmo id. Sem vídeo (aula só pelo Meet) não
+    há o que rever, e ela some como antes.
+24. **Aviso de aula sem link** (17/10): `pg_cron` (`aula-sem-link`, a cada 5 min) chama
+    `/api/cron/aula-sem-link`, que pega `lives_sem_link_para_avisar()` (agendada, começa em
+    até 15 min ou atrasou até 10, sem YouTube nem Meet) e avisa por push + sininho o
+    professor da aula e toda a coordenação/secretaria. Uma notificação por pessoa por
+    rodada, listando as aulas. `lives.avisado_sem_link_em` marca antes de enviar: uma vez
+    por aula. Autorização do cron em `src/lib/cron-auth.ts` (mesma do lembrete diário).
+
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 ### 📺 Lives: aviso aos alunos
 

@@ -207,7 +207,11 @@ export function SalaDoAluno({
               {pauta}
               {!presencaCompleta && !meet && !pauta && (
                 <p className={`${CARTAO} p-4 text-xs text-white/50 font-medium`}>
-                  {encerrada ? "Esta aula já terminou." : "O professor não colocou pauta para esta aula."}
+                  {encerrada
+                    ? temVideo
+                      ? "Aula gravada: assista quando quiser. A presença foi contada durante a aula ao vivo."
+                      : "Esta aula já terminou."
+                    : "O professor não colocou pauta para esta aula."}
                 </p>
               )}
             </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Play, Radio, Tv } from "lucide-react";
+import { ChevronRight, Clapperboard, Play, Radio, Tv } from "lucide-react";
 import { quandoE, rotuloDasTurmas } from "@/lib/lives";
 import type { AulaNaTela } from "./SalaDoAluno";
 import { CARTAO, Rotulo, SeloDeStatus } from "./pecas";
@@ -11,7 +11,11 @@ const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "o
 /** Lista do aluno (`/dashboard/live`), só desenho. */
 export function ListaDeAulas({ aulas, carregando }: { aulas: Aula[]; carregando: boolean }) {
   const noAr = aulas.filter((a) => a.status === "live");
-  const proximas = aulas.filter((a) => a.status !== "live");
+  const proximas = aulas.filter((a) => a.status === "scheduled");
+  // Gravadas: a mais recente primeiro (a lista vem em ordem de horário).
+  const gravadas = aulas
+    .filter((a) => a.status === "completed")
+    .sort((x, y) => (y.start_time ?? "").localeCompare(x.start_time ?? ""));
 
   return (
     <div className="pb-28 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -109,6 +113,30 @@ export function ListaDeAulas({ aulas, carregando }: { aulas: Aula[]; carregando:
                   </Link>
                 );
               })}
+            </section>
+          )}
+
+          {gravadas.length > 0 && (
+            <section className="space-y-2" aria-label="Aulas gravadas">
+              <Rotulo className="!text-muted-foreground px-1">Gravadas · assista quando quiser</Rotulo>
+              {gravadas.map((a) => (
+                <Link
+                  key={a.id}
+                  href={`/dashboard/live/${a.id}`}
+                  className={`${CARTAO} flex items-center gap-3 p-3 transition-colors hover:border-white/20 active:scale-[0.99] touch-manipulation`}
+                >
+                  <div className="h-12 w-12 shrink-0 rounded-xl bg-white/5 text-white/70 flex items-center justify-center">
+                    <Clapperboard className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-sm font-black italic text-white leading-snug line-clamp-2">{a.title}</h2>
+                    <p className="text-[11px] font-semibold text-white/50 leading-snug break-words">
+                      {[a.teacher_name, quandoE(a.start_time)].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-white/30 shrink-0" />
+                </Link>
+              ))}
             </section>
           )}
         </>

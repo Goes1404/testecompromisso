@@ -12,6 +12,8 @@ import {
   urlDoPlayer,
   linkExternoSeguro,
   estaNaAgenda,
+  estaNasGravadas,
+  avisoDeAulaSemLink,
   proximoStatus,
   normalizarSala,
   normalizarFoco,
@@ -93,7 +95,23 @@ eq('no ar desde ontem, esquecida, sai da lista',
   estaNaAgenda({ status: 'live', start_time: as(19), no_ar_desde: new Date(agora.getTime() - 13 * 3_600_000).toISOString() }, agora), false);
 eq('no ar sem no_ar_desde (linha antiga) ainda usa o horário agendado',
   estaNaAgenda({ status: 'live', start_time: as(19), no_ar_desde: null }, agora), true);
-eq('filtro do banco traz toda aula no ar', filtroDaAgenda(agora).endsWith(',status.eq.live'), true);
+eq('filtro do banco traz toda aula no ar', filtroDaAgenda(agora).includes(',status.eq.live,'), true);
+eq('filtro do banco traz as gravadas com vídeo', filtroDaAgenda(agora).includes('and(status.eq.completed,youtube_id.not.is.null,'), true);
+
+// Aula gravada (17/10): encerrada com vídeo fica 30 dias para rever.
+const VID = 'dQw4w9WgXcQ';
+eq('encerrada com vídeo vira gravada', estaNasGravadas({ status: 'completed', start_time: as(19), youtube_id: VID }, agora), true);
+eq('encerrada sem vídeo não vira gravada', estaNasGravadas({ status: 'completed', start_time: as(19), youtube_id: null }, agora), false);
+eq('id de vídeo inválido não vira gravada', estaNasGravadas({ status: 'completed', start_time: as(19), youtube_id: 'x' }, agora), false);
+eq('gravada de 29 dias atrás aparece', estaNasGravadas({ status: 'completed', start_time: new Date(agora.getTime() - 29 * 86_400_000).toISOString(), youtube_id: VID }, agora), true);
+eq('gravada de 31 dias atrás sai', estaNasGravadas({ status: 'completed', start_time: new Date(agora.getTime() - 31 * 86_400_000).toISOString(), youtube_id: VID }, agora), false);
+eq('aviso de uma aula sem link, no horário de Brasília',
+  avisoDeAulaSemLink([{ title: 'Redação — ENEM', start_time: '2026-10-17T11:00:00Z' }]),
+  { title: 'Aula das 08:00 sem link', body: 'Redação — ENEM: cole o link do YouTube ou do Meet e abra a sala em Aulas ao vivo.' });
+eq('aviso junta as aulas do mesmo horário',
+  avisoDeAulaSemLink([{ title: 'B', start_time: '2026-10-17T11:00:00Z' }, { title: 'A', start_time: '2026-10-17T11:00:00Z' }, { title: 'C', start_time: '2026-10-17T11:00:00Z' }]).title,
+  '3 aulas das 08:00 sem link');
+eq('agendada não é gravada', estaNasGravadas({ status: 'scheduled', start_time: as(19), youtube_id: VID }, agora), false);
 
 // Formulário do professor
 eq('data de hoje mais tarde é aceita', validarHorarioDaAula(ymd(agora), '23:59', agora), null);

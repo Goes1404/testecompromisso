@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/app/lib/supabase";
-import { estaNaAgenda, filtroDaAgenda } from "@/lib/lives";
+import { estaNaAgenda, estaNasGravadas, filtroDaAgenda } from "@/lib/lives";
 import { useAuth } from "@/lib/AuthProvider";
 import { chaveDoCache, gravarCache, lerCache } from "@/lib/cache-da-sessao";
 
@@ -44,7 +44,7 @@ export default function LiveClassesPage() {
         // `estaNaAgenda`; a consulta só traz o piso. O corte antigo de 1h
         // tirava o aulão da lista no meio dele.
         const agora = new Date();
-        const naAgenda = (data || []).filter((l: any) => estaNaAgenda(l, agora));
+        const naAgenda = (data || []).filter((l: any) => estaNaAgenda(l, agora) || estaNasGravadas(l, agora));
         setLives(naAgenda);
         gravarCache(chave, naAgenda);
       } catch (err) {
