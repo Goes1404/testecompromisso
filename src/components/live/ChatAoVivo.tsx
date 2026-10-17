@@ -118,6 +118,7 @@ export function ChatAoVivo({
   onSilenciar,
   altura = "h-[360px] sm:h-[420px] lg:h-[480px]",
   preencher = false,
+  sobreposto = false,
 }: {
   mensagens: MensagemDoChat[] | null;
   meuId: string | null;
@@ -135,6 +136,12 @@ export function ChatAoVivo({
   onSilenciar?: (userId: string, silenciar: boolean) => void;
   altura?: string;
   preencher?: boolean;
+  /**
+   * Tela cheia da sala (17/10), no jeito do YouTube: sem cartão, por cima do
+   * vídeo, e as mensagens somem num degradê no alto conforme as novas sobem.
+   * Sombra no texto para ler sobre qualquer imagem.
+   */
+  sobreposto?: boolean;
 }) {
   const lista = useRef<HTMLDivElement>(null);
   const colado = useRef(true);
@@ -182,10 +189,13 @@ export function ChatAoVivo({
   const bloqueado = !podeEscrever || enviando || espera > 0;
 
   return (
-    <section className={`${CARTAO} overflow-hidden flex flex-col ${preencher ? "h-full min-h-0" : ""}`} aria-label="Chat da aula">
+    <section
+      className={sobreposto ? "h-full min-h-0 flex flex-col [text-shadow:0_1px_3px_rgba(0,0,0,0.95)]" : `${CARTAO} overflow-hidden flex flex-col ${preencher ? "h-full min-h-0" : ""}`}
+      aria-label="Chat da aula"
+    >
       {/* No modo preencher (sala no celular) a aba "Chat" já diz o que é: o
           cabeçalho some e o espaço vai para as mensagens. */}
-      <div className={`${preencher ? "hidden lg:flex" : "flex"} items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-white/5 shrink-0`}>
+      <div className={`${sobreposto ? "hidden" : preencher ? "hidden lg:flex" : "flex"} items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-white/5 shrink-0`}>
         <div className="flex items-center gap-2 min-w-0">
           <MessagesSquare className="h-4 w-4 text-orange-400 shrink-0" />
           <h2 className="text-sm font-black italic text-white truncate">Chat da aula</h2>
@@ -204,7 +214,9 @@ export function ChatAoVivo({
         <div
           ref={lista}
           onScroll={aoRolar}
-          className={`${preencher ? "h-full" : altura} overflow-y-auto ${preencher ? "overscroll-contain" : "lg:overscroll-contain"} px-3 py-2 space-y-0.5 [-webkit-overflow-scrolling:touch]`}
+          className={`${preencher ? "h-full" : altura} overflow-y-auto ${preencher ? "overscroll-contain" : "lg:overscroll-contain"} px-3 py-2 space-y-0.5 [-webkit-overflow-scrolling:touch] ${
+            sobreposto ? "[mask-image:linear-gradient(to_bottom,transparent,black_40%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_40%)]" : ""
+          }`}
           role="log"
           aria-live="polite"
           aria-relevant="additions"
@@ -248,7 +260,7 @@ export function ChatAoVivo({
         )}
       </div>
 
-      <div className="border-t border-white/5 p-2.5 shrink-0">
+      <div className={`${sobreposto ? "" : "border-t border-white/5"} p-2.5 shrink-0`}>
         {!noAr ? (
           <p className="text-[11px] text-white/45 font-semibold text-center py-2">O chat abre quando a aula estiver no ar.</p>
         ) : !souEquipe && silenciado ? (
@@ -271,7 +283,7 @@ export function ChatAoVivo({
               enterKeyHint="send"
               autoComplete="off"
               aria-label="Mensagem do chat"
-              className="flex-1 min-w-0 h-11 rounded-xl bg-white/5 border border-white/10 focus:border-orange-500/50 px-3.5 text-[16px] sm:text-sm text-white placeholder:text-white/35 outline-none"
+              className={`flex-1 min-w-0 h-11 rounded-xl ${sobreposto ? "bg-black/55 backdrop-blur-sm" : "bg-white/5"} border border-white/10 focus:border-orange-500/50 px-3.5 text-[16px] sm:text-sm text-white placeholder:text-white/35 outline-none`}
             />
             <button
               type="submit"

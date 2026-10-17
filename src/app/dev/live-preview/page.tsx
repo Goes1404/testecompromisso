@@ -68,7 +68,7 @@ const CHAMADA = {
   ],
 };
 
-function Chat({ preencher, altura, equipe = false }: { preencher?: boolean; altura?: string; equipe?: boolean }) {
+function Chat({ preencher, altura, equipe = false, sobreposto = false }: { preencher?: boolean; altura?: string; equipe?: boolean; sobreposto?: boolean }) {
   const [texto, setTexto] = useState("");
   return (
     <ChatAoVivo
@@ -86,6 +86,7 @@ function Chat({ preencher, altura, equipe = false }: { preencher?: boolean; altu
       onSilenciar={equipe ? () => {} : undefined}
       preencher={preencher}
       altura={altura}
+      sobreposto={sobreposto}
     />
   );
 }

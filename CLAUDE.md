@@ -452,6 +452,15 @@ da ordem.
     rodada, listando as aulas. `lives.avisado_sem_link_em` marca antes de enviar: uma vez
     por aula. Autorização do cron em `src/lib/cron-auth.ts` (mesma do lembrete diário).
 
+25. **Tela cheia no jeito do YouTube** (17/10): botão de tela cheia no cabeçalho da sala. A
+    tela cheia é da **sala**, não do iframe (a do player do YouTube esconderia o nosso chat):
+    vídeo ocupando tudo e o chat por cima (`sobreposto` em `ChatDaAula`/`ChatAoVivo`),
+    deitado numa coluna à direita, em pé numa faixa embaixo, com as mensagens sumindo num
+    degradê no alto. "Esconder chat" e "Sair". **Nada é recriado** ao entrar e sair — só
+    mudam classes, e o chat é o mesmo elemento (`cloneElement`) —, então o vídeo não
+    reinicia e o chat não recarrega. Android entra em tela cheia de verdade e tenta deitar o
+    aparelho; iPhone não deixa `<div>` em tela cheia, então lá é `fixed inset-0`.
+
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 ### 📺 Lives: aviso aos alunos
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { ChevronLeft, ExternalLink, Info, Lock, MessagesSquare, Mic } from "lucide-react";
+import { cloneElement, isValidElement, useCallback, useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
+import { ChevronLeft, ExternalLink, Info, Lock, Maximize, MessageSquare, MessageSquareOff, MessagesSquare, Mic, Minimize } from "lucide-react";
 import { linkDoVideo, linkExternoSeguro, quandoE, rotuloDasTurmas, urlDoPlayer } from "@/lib/lives";
 import { PlayerDoYoutube } from "./PlayerDoYoutube";
 import { IndicadorDePresenca } from "./IndicadorDePresenca";
@@ -56,6 +56,58 @@ export function SalaDoAluno({
   const meetLink = linkExternoSeguro(aula.meet_link);
   const temChat = !!chat && !encerrada;
   const [aba, setAba] = useState<Aba>(temChat ? "chat" : "info");
+
+  // ── Tela cheia no jeito do YouTube (17/10) ────────────────────────────────
+  // O vídeo ocupa a tela e o chat corre por cima, com as mensagens subindo e
+  // sumindo no alto; dá para esconder os comentários. A tela cheia é da SALA
+  // (não do iframe): a tela cheia do próprio player do YouTube esconderia o
+  // nosso chat. Nada é recriado ao entrar ou sair — só mudam as classes —,
+  // então o vídeo não reinicia e o chat não recarrega.
+  // iPhone não deixa um <div> entrar em tela cheia de verdade: lá fica o
+  // `fixed inset-0`, que cobre a página igual (só a barra do Safari aparece).
+  const raiz = useRef<HTMLDivElement>(null);
+  const [cinema, setCinema] = useState(false);
+  const [comentarios, setComentarios] = useState(true);
+  const podeCinema = temVideo;
+
+  const entrarNoCinema = useCallback(async () => {
+    setCinema(true);
+    try {
+      const el = raiz.current as (HTMLDivElement & { webkitRequestFullscreen?: () => Promise<void> }) | null;
+      if (el?.requestFullscreen) await el.requestFullscreen({ navigationUI: "hide" });
+      else if (el?.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      // Deitar o celular sozinho, como o YouTube. Só funciona em tela cheia
+      // de verdade (Android); no resto, o aluno gira o aparelho.
+      await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> })?.lock?.("landscape");
+    } catch {
+      // Sem API de tela cheia: segue no modo `fixed inset-0`.
+    }
+  }, []);
+
+  const sairDoCinema = useCallback(async () => {
+    setCinema(false);
+    try {
+      (screen.orientation as ScreenOrientation & { unlock?: () => void })?.unlock?.();
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch {
+      // nada a desfazer
+    }
+  }, []);
+
+  // Voltar do sistema (gesto ou botão do Android) sai da tela cheia nativa:
+  // a sala acompanha em vez de ficar presa no modo cinema.
+  useEffect(() => {
+    const aoMudar = () => {
+      if (!document.fullscreenElement) setCinema(false);
+    };
+    document.addEventListener("fullscreenchange", aoMudar);
+    return () => document.removeEventListener("fullscreenchange", aoMudar);
+  }, []);
+
+  // O chat é o mesmo elemento nos dois modos (não remonta); só ganha o visual
+  // de "por cima do vídeo".
+  const chatNaTela =
+    chat && isValidElement(chat) ? cloneElement(chat as ReactElement<{ sobreposto?: boolean }>, { sobreposto: cinema }) : chat;
   // No computador não existe a aba Info (o conteúdo dela fica à esquerda).
   const abaAtiva: Aba = !temChat && aba !== "info" ? "info" : aba;
 
@@ -102,10 +154,17 @@ export function SalaDoAluno({
   );
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-2.5 p-2.5 sm:p-3 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 lg:p-6">
+    <div
+      ref={raiz}
+      className={
+        cinema
+          ? "fixed inset-0 z-[400] bg-black overflow-hidden"
+          : "flex-1 min-h-0 flex flex-col gap-2.5 p-2.5 sm:p-3 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 lg:p-6"
+      }
+    >
       {/* ── Coluna principal: cabeçalho e vídeo (no computador, também pauta e Meet) ── */}
-      <div className="shrink-0 space-y-2.5 lg:space-y-4 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
-        <header className={`${CARTAO} relative overflow-hidden px-2.5 py-2 md:p-4`}>
+      <div className={cinema ? "absolute inset-0" : "shrink-0 space-y-2.5 lg:space-y-4 lg:min-h-0 lg:overflow-y-auto lg:pr-1"}>
+        <header className={`${CARTAO} relative overflow-hidden px-2.5 py-2 md:p-4 ${cinema ? "hidden" : ""}`}>
           <div
             className="absolute inset-0 pointer-events-none"
             style={{ background: "radial-gradient(ellipse at 90% 0%, rgba(255,107,0,0.16) 0%, transparent 60%)" }}
@@ -133,31 +192,80 @@ export function SalaDoAluno({
               </p>
             </div>
             <SeloDeStatus status={aula.status} />
+            {podeCinema && (
+              <button
+                type="button"
+                onClick={entrarNoCinema}
+                aria-label="Assistir em tela cheia com o chat"
+                title="Tela cheia"
+                className="h-10 w-10 shrink-0 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center touch-manipulation"
+              >
+                <Maximize className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </header>
 
         {temVideo ? (
-          <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} />
+          <PlayerDoYoutube videoId={aula.youtube_id} titulo={aula.title || "Aula ao vivo"} telaCheia={cinema} />
         ) : (
           <PalcoDeEspera status={aula.status} inicio={aula.start_time} meetLink={meetLink} />
         )}
 
-        <div className="hidden lg:block space-y-4">
+        <div className={cinema ? "hidden" : "hidden lg:block space-y-4"}>
           {meet}
           {pauta}
         </div>
       </div>
 
+      {/* ── Controles da tela cheia, por cima do vídeo ── */}
+      {cinema && (
+        <div className="absolute top-2 right-2 z-20 flex gap-2 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)]">
+          {temChat && (
+            <button
+              type="button"
+              onClick={() => setComentarios((c) => !c)}
+              aria-pressed={comentarios}
+              aria-label={comentarios ? "Esconder comentários" : "Mostrar comentários"}
+              className="h-10 px-3 rounded-full bg-black/60 backdrop-blur-sm text-white text-[11px] font-black flex items-center gap-1.5 touch-manipulation"
+            >
+              {comentarios ? <MessageSquareOff className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+              <span className="hidden sm:inline">{comentarios ? "Esconder chat" : "Mostrar chat"}</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={sairDoCinema}
+            aria-label="Sair da tela cheia"
+            className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-sm text-white flex items-center justify-center touch-manipulation"
+          >
+            <Minimize className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* ── Coluna do chat: no celular, o resto da tela ── */}
-      <aside className="flex-1 min-h-[260px] lg:min-h-0 flex flex-col gap-2.5 lg:gap-3">
-        {noAr && presenca && (
+      <aside
+        className={
+          cinema
+            ? // Deitado: coluna à direita, como o YouTube. Em pé: faixa embaixo.
+              // O degradê escuro só onde há texto, para o vídeo seguir visível.
+              `absolute z-10 flex flex-col inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black/85 via-black/45 to-transparent
+               landscape:inset-x-auto landscape:right-0 landscape:top-0 landscape:h-full landscape:w-[38%] landscape:max-w-[380px]
+               landscape:bg-gradient-to-l landscape:from-black/80 landscape:via-black/40 landscape:to-transparent
+               pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)] pt-14
+               ${comentarios && temChat ? "" : "hidden"}`
+            : "flex-1 min-h-[260px] lg:min-h-0 flex flex-col gap-2.5 lg:gap-3"
+        }
+      >
+        {!cinema && noAr && presenca && (
           <>
             <BarraDePresenca segundos={presenca.segundos} segundosDaAula={presenca.segundosDaAula} onDetalhes={() => setAba("info")} />
             <div className="hidden lg:block">{presencaCompleta}</div>
           </>
         )}
 
-        {abas.length > 1 && (
+        {!cinema && abas.length > 1 && (
           <div
             className={`${CARTAO} shrink-0 grid gap-1 p-1 rounded-2xl ${temChat ? "grid-cols-3 lg:grid-cols-2" : "grid-cols-1"}`}
             role="tablist"
@@ -185,12 +293,12 @@ export function SalaDoAluno({
             // O chat fica montado mesmo em outra aba: trocar de aba e voltar
             // não recarrega nada nem perde a posição da rolagem.
             // (No computador a aba Info não existe: lá o chat aparece no lugar dela.)
-            <div className={`flex-1 min-h-0 flex-col ${abaAtiva === "chat" ? "flex" : abaAtiva === "info" ? "hidden lg:flex" : "hidden"}`}>{chat}</div>
+            <div className={`flex-1 min-h-0 flex-col ${cinema || abaAtiva === "chat" ? "flex" : abaAtiva === "info" ? "hidden lg:flex" : "hidden"}`}>{chatNaTela}</div>
           )}
-          {temChat && abaAtiva === "duvida" && (
+          {!cinema && temChat && abaAtiva === "duvida" && (
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain rounded-[1.5rem]">{duvidas}</div>
           )}
-          {abaAtiva === "info" && (
+          {!cinema && abaAtiva === "info" && (
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2.5 lg:hidden rounded-[1.5rem]">
               {presencaCompleta}
               {temVideo && linkDoVideo(aula.youtube_id) && (
@@ -216,7 +324,7 @@ export function SalaDoAluno({
               )}
             </div>
           )}
-          {abaAtiva === "info" && encerrada && (
+          {!cinema && abaAtiva === "info" && encerrada && (
             <div className="hidden lg:flex flex-1 items-center justify-center">
               <p className="text-xs text-white/50 font-medium">Esta aula já terminou.</p>
             </div>

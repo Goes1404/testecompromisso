@@ -14,14 +14,27 @@ import { CARTAO } from "./pecas";
  * - Para transmissão agendada que ainda não começou, o próprio YouTube mostra
  *   a contagem regressiva — não precisa de tela de espera aqui.
  */
-export function PlayerDoYoutube({ videoId, titulo }: { videoId: string | null | undefined; titulo: string }) {
+export function PlayerDoYoutube({
+  videoId,
+  titulo,
+  telaCheia = false,
+}: {
+  videoId: string | null | undefined;
+  titulo: string;
+  /**
+   * Modo tela cheia da sala (`SalaDoAluno`): o vídeo ocupa o pai inteiro, sem
+   * cartão. A árvore é a MESMA dos dois jeitos (só as classes mudam) para o
+   * iframe não ser recriado — recriar recarregaria o vídeo do começo.
+   */
+  telaCheia?: boolean;
+}) {
   const src = urlDoPlayer(videoId);
   const link = linkDoVideo(videoId);
   if (!src || !link) return null;
 
   return (
-    <div className={`${CARTAO} p-1 md:p-2 md:space-y-1.5`}>
-      <div className="relative w-full aspect-video rounded-[1.1rem] overflow-hidden bg-black">
+    <div className={telaCheia ? "absolute inset-0 bg-black" : `${CARTAO} p-1 md:p-2 md:space-y-1.5`}>
+      <div className={telaCheia ? "absolute inset-0 bg-black" : "relative w-full aspect-video rounded-[1.1rem] overflow-hidden bg-black"}>
         <iframe
           src={src}
           title={titulo}
@@ -35,7 +48,7 @@ export function PlayerDoYoutube({ videoId, titulo }: { videoId: string | null | 
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className="hidden md:flex items-center justify-center gap-1.5 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-colors"
+        className={`${telaCheia ? "hidden" : "hidden md:flex"} items-center justify-center gap-1.5 h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-colors`}
       >
         Vídeo travando? Abrir no app do YouTube <ExternalLink className="h-3 w-3" />
       </a>

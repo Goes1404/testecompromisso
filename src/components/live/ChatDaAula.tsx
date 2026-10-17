@@ -49,6 +49,7 @@ export function ChatDaAula({
   reserva = null,
   altura,
   preencher = false,
+  sobreposto = false,
 }: {
   liveId: string;
   noAr: boolean;
@@ -57,6 +58,8 @@ export function ChatDaAula({
   altura?: string;
   /** Ocupa toda a altura do pai (sala no celular). Ver `ChatAoVivo`. */
   preencher?: boolean;
+  /** Por cima do vídeo, na tela cheia da sala. Ver `ChatAoVivo`. */
+  sobreposto?: boolean;
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -220,6 +223,7 @@ export function ChatDaAula({
       onSilenciar={equipe ? silenciar : undefined}
       altura={altura}
       preencher={preencher}
+      sobreposto={sobreposto}
     />
   );
 }
