@@ -23,7 +23,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
-import { agruparAgenda, ANTECEDENCIA_MAXIMA_DIAS, idDoYoutube, linkExternoSeguro, normalizarSala, rotuloDasTurmas, validarHorarioDaAula } from "@/lib/lives";
+import { agruparAgenda, ANTECEDENCIA_MAXIMA_DIAS, FOCOS, idDoYoutube, linkExternoSeguro, normalizarFoco, normalizarTurma, rotuloDasTurmas, validarHorarioDaAula } from "@/lib/lives";
 import { CabecalhoDaAgenda, ListaDaAgenda } from "@/components/live/AgendaDoProfessor";
 
 const FORM_VAZIO = {
@@ -33,7 +33,7 @@ const FORM_VAZIO = {
   time: "",
   meet_link: "",
   youtube_url: "",
-  /** Salas normalizadas ("1".."12"). Vazio = todas as turmas. */
+  /** Salas normalizadas ("1".."12") ou foco ("ENEM"/"ETEC"). Vazio = todas as turmas. */
   turmas: [] as string[],
 };
 
@@ -70,16 +70,17 @@ export default function ManageLivePage() {
     });
   }, [user]);
 
+  // Marcar uma sala sai do modo "por foco": misturar os dois confunde quem lê.
   const alternarTurma = (sala: string) =>
-    setFormData((f) => ({
-      ...f,
-      turmas: f.turmas.includes(sala) ? f.turmas.filter((t) => t !== sala) : [...f.turmas, sala],
-    }));
+    setFormData((f) => {
+      const salas = f.turmas.filter((t) => !normalizarFoco(t));
+      return { ...f, turmas: salas.includes(sala) ? salas.filter((t) => t !== sala) : [...salas, sala] };
+    });
 
-  const selecionarCurso = (curso: string) => {
-    const salas = (opcoesDeTurma ?? []).filter((o) => o.curso === curso).map((o) => o.sala);
-    setFormData((f) => ({ ...f, turmas: salas }));
-  };
+  // Por foco (17/10): vale para todo aluno com aquele foco no cadastro, com ou
+  // sem sala — antes "Todo o ETEC" marcava as salas 1–6 e quem estava sem sala
+  // (222 alunos em 17/10) ficava sem ver a aula.
+  const selecionarCurso = (curso: string) => setFormData((f) => ({ ...f, turmas: [curso] }));
 
   // Data/hora como estavam ao abrir a edição (ver `handleSaveLive`).
   const [horarioOriginal, setHorarioOriginal] = useState("");
@@ -103,7 +104,7 @@ export default function ManageLivePage() {
       meet_link: live.meet_link || "",
       youtube_url: live.youtube_url || (live.youtube_id ? `https://youtu.be/${live.youtube_id}` : ""),
       turmas: Array.isArray(live.turmas)
-        ? live.turmas.map(normalizarSala).filter((t: string | null): t is string => !!t)
+        ? live.turmas.map(normalizarTurma).filter((t: string | null): t is string => !!t)
         : [],
     });
     setIsCreateOpen(true);
@@ -373,13 +374,11 @@ export default function ManageLivePage() {
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       { rotulo: "Todas as turmas", ativo: formData.turmas.length === 0, onClick: () => setFormData((f) => ({ ...f, turmas: [] })) },
-                      ...["ETEC", "ENEM"]
-                        .filter((c) => opcoesDeTurma.some((o) => o.curso === c))
-                        .map((c) => {
-                          const salas = opcoesDeTurma.filter((o) => o.curso === c).map((o) => o.sala);
-                          const ativo = salas.length > 0 && formData.turmas.length === salas.length && salas.every((s) => formData.turmas.includes(s));
-                          return { rotulo: `Todo o ${c}`, ativo, onClick: () => selecionarCurso(c) };
-                        }),
+                      ...FOCOS.map((c) => ({
+                        rotulo: `Todo o ${c}`,
+                        ativo: formData.turmas.length === 1 && normalizarFoco(formData.turmas[0]) === c,
+                        onClick: () => selecionarCurso(c),
+                      })),
                     ].map((b) => (
                       <button
                         key={b.rotulo}
@@ -419,7 +418,9 @@ export default function ManageLivePage() {
                   <p className="text-[10px] font-medium text-slate-500 leading-snug">
                     {formData.turmas.length === 0
                       ? "Todos os alunos veem a aula, inclusive quem está sem sala no cadastro."
-                      : `Só ${rotuloDasTurmas(formData.turmas)} veem a aula e entram na chamada. Aluno sem sala no cadastro não vê.`}
+                      : formData.turmas.some((t) => normalizarFoco(t))
+                        ? `Só os alunos com ${rotuloDasTurmas(formData.turmas)} no cadastro veem a aula e entram na chamada, com ou sem sala. Quem está com o foco "não informado" não vê.`
+                        : `Só ${rotuloDasTurmas(formData.turmas)} veem a aula e entram na chamada. Aluno sem sala no cadastro não vê.`}
                   </p>
                 </div>
               )}

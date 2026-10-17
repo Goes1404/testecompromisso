@@ -279,6 +279,12 @@ Tabela `lives` (a `scheduled_lives` é legado de demo: o app não lê). Telas:
    as salas escolhidas; vazio = todas, inclusive quem está sem sala. A restrição é RLS
    (`pode_ver_live()`), não filtro de tela. ⚠️ Em 13/10, ~200 alunos ativos estavam
    sem sala no cadastro: eles **não veem** aula restrita a turmas.
+   **Por foco (17/10):** `lives.turmas` também aceita `'ENEM'`/`'ETEC'`, comparados com
+   `profiles.exam_target` (`public.foco_normalizado()` = `normalizarFoco()`). "Todo o ETEC"
+   no formulário grava `['ETEC']`: vale para todo aluno ETEC, **com ou sem sala** (222 sem
+   sala em 17/10). Foco "Não informado" não vê aula por foco. Migration
+   `20261017090000_lives_por_foco.sql` (`pode_ver_live`, `alunos_esperados_da_live` e o
+   rótulo da chamada em `fechar_chamada_da_live`, que fazia `t::int` em todo item).
 9. **Chamada da live é por tempo, sem código** (decisão da coordenação, 13/10):
    presente quem ficou **60%** do tempo em que a aula esteve no ar com a sala aberta.
    A sala chama `registrar_presenca_live()` a cada 60 s; o banco soma o tempo real

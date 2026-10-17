@@ -14,6 +14,8 @@ import {
   estaNaAgenda,
   proximoStatus,
   normalizarSala,
+  normalizarFoco,
+  normalizarTurma,
   rotuloDasTurmas,
   situacaoDaPresenca,
   formatarDuracao,
@@ -112,6 +114,13 @@ eq('todas', rotuloDasTurmas([]), 'Todas as turmas');
 eq('uma', rotuloDasTurmas(['3']), 'Sala 3');
 eq('várias em ordem numérica', rotuloDasTurmas(['10', '2', '1']), 'Salas 1, 2 e 10');
 eq('repetida e mal escrita', rotuloDasTurmas(['01', '1', 'sala 2']), 'Salas 1 e 2');
+// Por foco (17/10): espelho de public.foco_normalizado().
+eq('foco como o cadastro tem', ['ETEC', 'etec', ' Enem ', 'Não informado', '', null, 'ETEC/ENEM'].map(normalizarFoco),
+  ['ETEC', 'ETEC', 'ENEM', null, null, null, null]);
+eq('turma aceita foco e sala', ['ETEC', '05', 'lixo'].map(normalizarTurma), ['ETEC', '5', null]);
+eq('rótulo por foco', rotuloDasTurmas(['ETEC']), 'Foco ETEC');
+eq('rótulo com os dois focos', rotuloDasTurmas(['ETEC', 'ENEM']), 'Foco ENEM e ETEC');
+eq('rótulo misto', rotuloDasTurmas(['ENEM', '3']), 'Foco ENEM · Sala 3');
 
 // ── Presença: 60% da aula ──
 eq('36 de 60 min é presente', situacaoDaPresenca(36 * 60, 60 * 60), { porcentagem: 60, presente: true });

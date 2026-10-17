@@ -208,13 +208,38 @@ export function normalizarSala(sala: string | null | undefined): string | null {
   return /^[0-9]+$/.test(x) ? x : null;
 }
 
-/** "Todas as turmas", "Sala 3", "Salas 1, 2 e 5". Vazio = todas. */
+/**
+ * Foco do aluno (`profiles.exam_target`): "ENEM" ou "ETEC"; o resto ("Não
+ * informado", vazio) vira `null`. Espelho de `public.foco_normalizado()`.
+ * Desde 17/10, `lives.turmas` aceita o foco além do número da sala: aula com
+ * turmas = ["ETEC"] vale para todo aluno ETEC, com ou sem sala no cadastro.
+ */
+export const FOCOS = ['ENEM', 'ETEC'] as const;
+export type Foco = (typeof FOCOS)[number];
+
+export function normalizarFoco(foco: string | null | undefined): Foco | null {
+  const x = (foco ?? '').trim().toUpperCase();
+  return x === 'ENEM' || x === 'ETEC' ? x : null;
+}
+
+/** Item de `lives.turmas`: foco ("ETEC") ou sala ("5"); lixo vira `null`. */
+export function normalizarTurma(t: string | null | undefined): string | null {
+  return normalizarFoco(t) ?? normalizarSala(t);
+}
+
+function juntarComE(itens: string[]): string {
+  return itens.length <= 1 ? itens.join('') : `${itens.slice(0, -1).join(', ')} e ${itens[itens.length - 1]}`;
+}
+
+/** "Todas as turmas", "Foco ETEC", "Sala 3", "Salas 1, 2 e 5". Vazio = todas. */
 export function rotuloDasTurmas(turmas: string[] | null | undefined): string {
-  const lista = [...new Set((turmas ?? []).map(normalizarSala).filter((t): t is string => !!t))]
+  const focos = FOCOS.filter((f) => (turmas ?? []).some((t) => normalizarFoco(t) === f));
+  const salas = [...new Set((turmas ?? []).map(normalizarSala).filter((t): t is string => !!t))]
     .sort((a, b) => Number(a) - Number(b));
-  if (lista.length === 0) return 'Todas as turmas';
-  if (lista.length === 1) return `Sala ${lista[0]}`;
-  return `Salas ${lista.slice(0, -1).join(', ')} e ${lista[lista.length - 1]}`;
+  const partes: string[] = [];
+  if (focos.length) partes.push(`Foco ${juntarComE([...focos])}`);
+  if (salas.length) partes.push(`${salas.length === 1 ? 'Sala' : 'Salas'} ${juntarComE(salas)}`);
+  return partes.length ? partes.join(' · ') : 'Todas as turmas';
 }
 
 /** Decisão da coordenação (13/10): presente quem ficou 60% da aula na sala. */

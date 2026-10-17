@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import { createClient } from "@supabase/supabase-js";
-import { normalizarSala } from "@/lib/lives";
+import { normalizarFoco, normalizarSala } from "@/lib/lives";
 
 // Configuração VAPID (somente server-side)
 if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
@@ -67,15 +67,18 @@ export async function idsDeAlunos(examTarget?: string): Promise<string[]> {
  * que a RLS usa para decidir quem consegue abrir a aula.
  */
 export async function idsDeAlunosDasSalas(salas: string[]): Promise<string[]> {
+  // Desde 17/10 `lives.turmas` também traz o foco ("ENEM"/"ETEC"), espelho de
+  // `alunos_esperados_da_live()`: avisa quem é daquele foco, com ou sem sala.
   const alvo = new Set(salas.map(normalizarSala).filter((s): s is string => !!s));
-  if (alvo.size === 0) return idsDeAlunos();
+  const focos = new Set(salas.map(normalizarFoco).filter((f): f is NonNullable<typeof f> => !!f));
+  if (alvo.size === 0 && focos.size === 0) return idsDeAlunos();
   const sb = adminClient();
   const ids: string[] = [];
   const PAGINA = 1000;
   for (let de = 0; ; de += PAGINA) {
     const { data, error } = await sb
       .from("profiles")
-      .select("id, sala")
+      .select("id, sala, exam_target")
       .eq("role", "student")
       .order("id")
       .range(de, de + PAGINA - 1);
@@ -85,7 +88,8 @@ export async function idsDeAlunosDasSalas(salas: string[]): Promise<string[]> {
     }
     for (const r of data || []) {
       const sala = normalizarSala((r as any).sala);
-      if (sala && alvo.has(sala)) ids.push((r as any).id);
+      const foco = normalizarFoco((r as any).exam_target);
+      if ((sala && alvo.has(sala)) || (foco && focos.has(foco))) ids.push((r as any).id);
     }
     if (!data || data.length < PAGINA) break;
   }
