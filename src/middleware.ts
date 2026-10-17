@@ -1,5 +1,25 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isAuthRetryableFetchError } from '@supabase/supabase-js'
+
+// Quanto o middleware espera o Auth antes de deixar a página seguir.
+const PRAZO_DO_AUTH_MS = 4000;
+
+/** Resolve com o resultado, ou com `null` se o prazo estourar antes. */
+function comPrazo<T>(promessa: Promise<T>, ms: number): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const prazo = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), ms);
+  });
+  return Promise.race([promessa, prazo]).finally(() => clearTimeout(timer));
+}
+
+/** Falha de rede ou do servidor do Auth — não diz nada sobre a sessão. */
+function ehFalhaDeRede(err: unknown): boolean {
+  if (isAuthRetryableFetchError(err)) return true;
+  const status = (err as { status?: number } | null)?.status;
+  return typeof status === 'number' && (status === 0 || status >= 500);
+}
 
 export async function middleware(request: NextRequest) {
   // Propagate or generate a correlation ID so every log entry for the same
@@ -62,23 +82,51 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANTE: Usamos getUser() em vez de getSession() para garantir que metadados
-  // (como must_change_password) estejam 100% atualizados e evitar loops.
+  // Quem é o usuário, sem ida à rede quando dá (17/10).
   //
-  // O try/catch não é defensivo à toa: em produção este ponto acumulou 20
-  // ocorrências de `Invalid Refresh Token: Refresh Token Not Found` entre
-  // 16/06 e 10/08, com 3 alunos afetados. Sem capturar, cada uma vira erro de
-  // runtime na Vercel e a requisição morre no meio.
-  let user = null;
+  // Antes era `getUser()` em toda navegação: uma chamada a `/auth/v1/user` por
+  // página. No começo das aulas de 17/10 foram ~1.800 em 6 minutos, o Supabase
+  // engasgou, e cada página ficava 25 s presa aqui até a Vercel matar a função
+  // (ERR_CONNECTION_ABORTED no celular do aluno). `getClaims()` confere a
+  // assinatura do token com a chave pública do projeto (ES256, guardada em
+  // memória), sem rede; só renova o token quando ele venceu.
+  //
+  // Três regras para o Supabase lento não virar queda do site:
+  // 1. Prazo de `PRAZO_DO_AUTH_MS`. Estourou: a página segue sem decidir nada
+  //    (os dados continuam protegidos por RLS; o AuthProvider cuida do resto).
+  // 2. Erro de rede/5xx NÃO é sessão inválida. Antes ele apagava o cookie e
+  //    mandava para o login: num engasgo, deslogava a escola inteira, e todo
+  //    mundo entrando de novo de uma vez piorava o engasgo.
+  // 3. Só erro de verdade do Auth (token recusado, refresh inexistente) apaga
+  //    o cookie — o caso de `Invalid Refresh Token` de 16/06–10/08.
+  let user: { id: string; user_metadata?: Record<string, unknown> } | null = null;
   let sessaoInvalida = false;
+  let indefinido = false;
   try {
-    const { data, error } = await supabase.auth.getUser();
-    user = data.user;
-    // `refresh_token_not_found` e afins: o cookie existe mas não vale mais.
-    if (error && !user) sessaoInvalida = true;
-  } catch {
-    sessaoInvalida = true;
+    const resultado = await comPrazo(supabase.auth.getClaims(), PRAZO_DO_AUTH_MS);
+    if (resultado === null) {
+      indefinido = true;
+    } else {
+      const { data, error } = resultado;
+      if (data?.claims?.sub) {
+        user = {
+          id: data.claims.sub,
+          user_metadata: (data.claims.user_metadata ?? {}) as Record<string, unknown>,
+        };
+      } else if (error && ehFalhaDeRede(error)) {
+        indefinido = true;
+      } else if (error) {
+        sessaoInvalida = true;
+      }
+    }
+  } catch (err) {
+    if (ehFalhaDeRede(err)) indefinido = true;
+    else sessaoInvalida = true;
   }
+
+  // Sem resposta do Auth: não redireciona e não apaga nada.
+  if (indefinido) return response;
+
   const session = user ? { user } : null;
 
   // Cookie de sessão morto precisa ser APAGADO, não apenas ignorado.
@@ -131,7 +179,22 @@ export async function middleware(request: NextRequest) {
     // A condição correta é o metadado, não a rota. Assim não há o
     // redirect-loop que motivou o bloqueio original: quem precisa trocar entra
     // e fica; quem já trocou é mandado para fora.
-    const precisaTrocarSenha = user?.user_metadata?.must_change_password === true;
+    // O metadado do token só se atualiza quando o token renova (até 1 h).
+    // Quem acabou de trocar a senha ainda carrega `true` no token antigo e
+    // ficaria preso no primeiro acesso; por isso o `true` é confirmado no
+    // servidor (`getUser`). O `false` vale como está — é a imensa maioria, e é
+    // ela que não pode custar ida à rede.
+    let precisaTrocarSenha = user?.user_metadata?.must_change_password === true;
+    if (precisaTrocarSenha) {
+      try {
+        const confirmado = await comPrazo(supabase.auth.getUser(), PRAZO_DO_AUTH_MS);
+        if (confirmado?.data?.user) {
+          precisaTrocarSenha = confirmado.data.user.user_metadata?.must_change_password === true;
+        }
+      } catch {
+        // Fica com o que o token diz.
+      }
+    }
     const estaNoPrimeiroAcesso = request.nextUrl.pathname === '/dashboard/first-access';
 
     if (precisaTrocarSenha && !estaNoPrimeiroAcesso) {
