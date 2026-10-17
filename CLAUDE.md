@@ -721,6 +721,17 @@ reais), então o problema não cresce. **Fundir as contas existentes continua pe
 da secretaria** — escolher qual sobrevive é escolha sobre o histórico do aluno.
 Relatório: `npx tsx scripts/duplicatas-de-alunos.ts --csv`.
 
+**Fusão de 17/10 (parcial, só os casos sem decisão a tomar).** Em 203 nomes com 2+ contas, a
+conta "que sobra" quase nunca estava vazia: 181 contas nunca logadas tinham **nota de
+simulado** importada e 106 tinham **boletim**. Arquivar sem mover sumiria com nota. Foi feito:
+nos nomes com **exatamente uma conta usada** (login ou atividade própria), a conta nunca usada
+teve simulados, boletim, chamada manual e mensagens recebidas **movidos** para a conta usada e
+foi **arquivada** (`arquivado_motivo` = "Conta duplicada: dados movidos para <login>") —
+**106 contas**, 177 linhas, todas em `fusao_de_contas_log` (desfazer: `UPDATE <tabela> SET
+<coluna> = de WHERE id = linha_id`, e limpar `arquivado_em`). **Ficaram para a secretaria:**
+33 com boletim do mesmo semestre nas duas contas (escolher qual nota vale), 17 nomes com duas
+contas usadas e 60 nomes em que nenhuma conta foi usada.
+
 ### 🔒 Auditoria de RLS + Edge Functions (2026-07-10) — aplicado em produção
 
 Auditoria completa do banco (Supabase security advisor) + edge functions. Correções
