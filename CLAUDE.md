@@ -461,6 +461,17 @@ da ordem.
     reinicia e o chat não recarrega. Android entra em tela cheia de verdade e tenta deitar o
     aparelho; iPhone não deixa `<div>` em tela cheia, então lá é `fixed inset-0`.
 
+26. **Chat com cara de app de live** (17/10): bolinha com a inicial na cor do nome
+    (`corDoAvatar`), horário só ao tocar na mensagem, linhas compactas. **Fixar mensagem:**
+    a equipe toca numa mensagem → "Fixar"; vai para `lives.chat_fixado` por `fixar_no_chat()`
+    e chega a todos dentro da resposta do `chat_da_live` (chave `fixada`), recolhida em uma
+    linha. **Reações** (👍 ❤️ 😂 🔥 👏): botão ao lado do campo abre a bandeja; sobem
+    flutuando para todo mundo. `reagir_na_live()` grava em `live_reacoes` (1 a cada 2 s por
+    aluno, o excesso é ignorado; só com a aula no ar e só quem vê a aula) e o
+    `chat_da_live` devolve as dos últimos 15 s (chave `reacoes`); `reacoesNovas()` anima só
+    as de id novo e nenhuma na primeira consulta. Sem Realtime. Migration
+    `20261017110000_chat_fixada_e_reacoes.sql`; as chaves novas não quebram app antigo.
+
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 ### 📺 Lives: aviso aos alunos
 

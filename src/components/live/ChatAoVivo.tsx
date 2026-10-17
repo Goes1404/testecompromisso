@@ -1,13 +1,18 @@
 "use client";
 
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowDown, EyeOff, Eye, Loader2, MessageCircleOff, MessagesSquare, Send, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+import { ArrowDown, EyeOff, Eye, Loader2, MessageCircleOff, MessagesSquare, Pin, PinOff, Send, ShieldCheck, SmilePlus, Volume2, VolumeX } from "lucide-react";
 import {
   LIMITE_DA_MENSAGEM,
+  REACOES,
+  corDoAvatar,
   corDoNome,
   horaDaMensagem,
+  inicialDoNome,
   nomeCurto,
+  type Emoji,
   type MensagemDoChat,
+  type MensagemFixada,
 } from "@/lib/live-chat";
 import { CARTAO } from "./pecas";
 
@@ -26,6 +31,7 @@ const LinhaDoChat = memo(function LinhaDoChat({
   onAlternar,
   onOcultar,
   onSilenciar,
+  onFixar,
 }: {
   m: MensagemDoChat;
   minha: boolean;
@@ -35,21 +41,29 @@ const LinhaDoChat = memo(function LinhaDoChat({
   onAlternar: (id: number) => void;
   onOcultar?: (id: number, oculta: boolean) => void;
   onSilenciar?: (userId: string, silenciar: boolean) => void;
+  onFixar?: (id: number | null) => void;
 }) {
   const primeiroNome = nomeCurto(m.user_name).split(" ")[0];
   return (
     <div className={m.oculta ? "opacity-45" : undefined}>
+      {/* Tocar mostra o horário (17/10: sair de cada linha deixou o chat com
+          cara de app de live, não de planilha) e, para a equipe, as ações. */}
       <button
         type="button"
-        disabled={!podeModerar}
         onClick={() => onAlternar(m.id)}
-        className={`w-full text-left rounded-xl px-2 py-1.5 ${m.equipe ? "bg-orange-500/10 ring-1 ring-orange-500/20 my-1" : ""} ${
-          podeModerar ? "hover:bg-white/5 active:bg-white/10 cursor-pointer" : "cursor-default"
+        className={`w-full text-left rounded-xl px-1.5 py-1 flex items-start gap-2 hover:bg-white/5 active:bg-white/10 ${
+          m.equipe ? "bg-orange-500/10 ring-1 ring-orange-500/20 my-0.5" : ""
         } ${aberta ? "bg-white/5" : ""}`}
       >
-        <p className="text-[13px] leading-snug break-words">
-          <span className="text-[10px] text-white/30 font-semibold tabular-nums mr-1.5">{horaDaMensagem(m.created_at)}</span>
-          {m.equipe && <ShieldCheck className="inline h-3.5 w-3.5 text-orange-400 mr-1 -mt-0.5" aria-label="Professor" />}
+        <span
+          aria-hidden
+          className={`mt-px h-6 w-6 shrink-0 rounded-full flex items-center justify-center text-[11px] font-black text-white [text-shadow:none] ${
+            m.equipe ? "bg-orange-500" : corDoAvatar(m.user_id)
+          }`}
+        >
+          {m.equipe ? <ShieldCheck className="h-3.5 w-3.5" /> : inicialDoNome(m.user_name)}
+        </span>
+        <p className="min-w-0 flex-1 text-[13px] leading-snug break-words">
           <span className={`font-black ${m.equipe ? "text-orange-300" : minha ? "text-white" : corDoNome(m.user_id)}`}>
             {nomeCurto(m.user_name)}
             {minha && !m.equipe && <span className="text-white/40 font-bold"> (você)</span>}
@@ -61,8 +75,23 @@ const LinhaDoChat = memo(function LinhaDoChat({
           </span>
         </p>
       </button>
-      {podeModerar && aberta && (
-        <div className="flex flex-wrap gap-1.5 px-2 pb-2 pt-1">
+      {aberta && (
+        <div className="flex flex-wrap items-center gap-1.5 pl-9 pr-2 pb-1.5">
+          <span className="text-[10px] text-white/40 font-semibold tabular-nums mr-1">às {horaDaMensagem(m.created_at)}</span>
+          {onFixar && !m.oculta && (
+            <button
+              type="button"
+              onClick={() => {
+                onFixar(m.id);
+                onAlternar(m.id);
+              }}
+              className="h-9 px-3 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 text-orange-200 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"
+            >
+              <Pin className="h-3.5 w-3.5" /> Fixar
+            </button>
+          )}
+          {podeModerar && (
+          <>
           <button
             type="button"
             onClick={() => {
@@ -86,6 +115,8 @@ const LinhaDoChat = memo(function LinhaDoChat({
             >
               {calado ? <><Volume2 className="h-3.5 w-3.5" /> Liberar {primeiroNome}</> : <><VolumeX className="h-3.5 w-3.5" /> Silenciar {primeiroNome}</>}
             </button>
+          )}
+          </>
           )}
         </div>
       )}
@@ -119,6 +150,10 @@ export function ChatAoVivo({
   altura = "h-[360px] sm:h-[420px] lg:h-[480px]",
   preencher = false,
   sobreposto = false,
+  fixada = null,
+  onFixar,
+  reacoes = [],
+  onReagir,
 }: {
   mensagens: MensagemDoChat[] | null;
   meuId: string | null;
@@ -142,6 +177,14 @@ export function ChatAoVivo({
    * Sombra no texto para ler sobre qualquer imagem.
    */
   sobreposto?: boolean;
+  /** Mensagem presa no topo pela equipe. */
+  fixada?: MensagemFixada | null;
+  /** Só a equipe: fixa (id) ou solta (null). */
+  onFixar?: (id: number | null) => void;
+  /** Reações subindo agora (as da turma e as minhas). */
+  reacoes?: { chave: string; emoji: string }[];
+  /** Com a aula no ar: manda uma reação rápida. */
+  onReagir?: (emoji: Emoji) => void;
 }) {
   const lista = useRef<HTMLDivElement>(null);
   const colado = useRef(true);
@@ -185,6 +228,12 @@ export function ChatAoVivo({
 
   useEffect(() => setAberta(null), [noAr]);
 
+  // Bandeja de reações (abre por cima do campo, sem ocupar espaço fixo) e a
+  // fixada recolhida em uma linha: em 360×740 as duas juntas deixavam uma
+  // mensagem e meia visível no chat.
+  const [bandeja, setBandeja] = useState(false);
+  const [fixadaAberta, setFixadaAberta] = useState(false);
+
   const podeEscrever = noAr && (souEquipe || !silenciado);
   const bloqueado = !podeEscrever || enviando || espera > 0;
 
@@ -209,6 +258,37 @@ export function ChatAoVivo({
           <span className="text-[9px] font-black uppercase tracking-widest text-white/35 shrink-0">Toque para moderar</span>
         )}
       </div>
+
+      {fixada?.texto && (
+        <div
+          className={`shrink-0 mx-2 mt-2 rounded-xl px-3 py-1.5 flex items-start gap-2 ${
+            sobreposto ? "bg-black/60 backdrop-blur-sm" : "bg-orange-500/10 ring-1 ring-orange-500/25"
+          }`}
+          role="note"
+          aria-label="Mensagem fixada"
+        >
+          <Pin className="h-3.5 w-3.5 text-orange-300 mt-0.5 shrink-0" aria-hidden />
+          <button
+            type="button"
+            onClick={() => setFixadaAberta((a) => !a)}
+            aria-expanded={fixadaAberta}
+            className={`min-w-0 flex-1 text-left text-[12px] leading-snug text-white/90 break-words ${fixadaAberta ? "" : "line-clamp-1"}`}
+          >
+            <span className="font-black text-orange-300">{nomeCurto(fixada.autor)}: </span>
+            {fixada.texto}
+          </button>
+          {onFixar && (
+            <button
+              type="button"
+              onClick={() => onFixar(null)}
+              aria-label="Soltar a mensagem fixada"
+              className="h-7 w-7 -mr-1 -mt-0.5 shrink-0 rounded-lg text-white/50 hover:text-white hover:bg-white/10 flex items-center justify-center"
+            >
+              <PinOff className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       <div className={`relative ${preencher ? "flex-1 min-h-0" : ""}`}>
         <div
@@ -244,9 +324,23 @@ export function ChatAoVivo({
                 onAlternar={alternar}
                 onOcultar={onOcultar}
                 onSilenciar={onSilenciar}
+                onFixar={onFixar}
               />
             ))
           )}
+        </div>
+
+        {/* Reações subindo, como no YouTube. Só transform/opacity (regra 4 do mascote vale aqui também). */}
+        <div className="pointer-events-none absolute right-2 bottom-1 w-12 h-3/4" aria-hidden>
+          {reacoes.map((r) => {
+            let h = 0;
+            for (let i = 0; i < r.chave.length; i++) h = (h * 31 + r.chave.charCodeAt(i)) >>> 0;
+            return (
+              <span key={r.chave} className="reacao-sobe absolute bottom-0 text-2xl leading-none" style={{ right: `${h % 28}px` }}>
+                {r.emoji}
+              </span>
+            );
+          })}
         </div>
 
         {novas > 0 && (
@@ -260,7 +354,7 @@ export function ChatAoVivo({
         )}
       </div>
 
-      <div className={`${sobreposto ? "" : "border-t border-white/5"} p-2.5 shrink-0`}>
+      <div className={`relative ${sobreposto ? "" : "border-t border-white/5"} p-2.5 shrink-0`}>
         {!noAr ? (
           <p className="text-[11px] text-white/45 font-semibold text-center py-2">O chat abre quando a aula estiver no ar.</p>
         ) : !souEquipe && silenciado ? (
@@ -268,6 +362,26 @@ export function ChatAoVivo({
             <MessageCircleOff className="h-3.5 w-3.5" /> O professor pausou suas mensagens nesta aula.
           </p>
         ) : (
+          <>
+          {onReagir && bandeja && (
+            <div
+              className="absolute left-2.5 bottom-full mb-1 z-10 flex items-center gap-1 rounded-2xl bg-neutral-900/95 ring-1 ring-white/10 p-1 shadow-2xl [text-shadow:none]"
+              role="group"
+              aria-label="Reações rápidas"
+            >
+              {REACOES.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => onReagir(e)}
+                  aria-label={`Reagir com ${e}`}
+                  className="h-11 w-11 rounded-xl text-xl leading-none hover:bg-white/10 transition-transform active:scale-90 touch-manipulation"
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -275,6 +389,19 @@ export function ChatAoVivo({
             }}
             className="flex items-center gap-2"
           >
+            {onReagir && (
+              <button
+                type="button"
+                onClick={() => setBandeja((b) => !b)}
+                aria-expanded={bandeja}
+                aria-label={bandeja ? "Fechar reações" : "Reagir"}
+                className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center touch-manipulation ${
+                  bandeja ? "bg-orange-500/20 text-orange-200" : sobreposto ? "bg-black/55 text-white/80" : "bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+              >
+                <SmilePlus className="h-5 w-5" />
+              </button>
+            )}
             <input
               value={texto}
               onChange={(e) => onTexto(e.target.value.slice(0, LIMITE_DA_MENSAGEM))}
@@ -294,6 +421,7 @@ export function ChatAoVivo({
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : espera > 0 ? <span className="tabular-nums">{espera}s</span> : <Send className="h-4 w-4" />}
             </button>
           </form>
+          </>
         )}
       </div>
     </section>

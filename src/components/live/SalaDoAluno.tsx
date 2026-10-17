@@ -179,10 +179,15 @@ export function SalaDoAluno({
               <ChevronLeft className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-sm md:text-xl font-black italic tracking-tight text-white leading-tight break-words">
+              {/* Duas linhas no celular: cada linha a mais aqui é uma mensagem a
+                  menos no chat. O título inteiro está na lista de aulas. */}
+              <h1
+                title={aula.title || undefined}
+                className="text-sm md:text-xl font-black italic tracking-tight text-white leading-tight break-words line-clamp-2 md:line-clamp-none"
+              >
                 {aula.title || "Aula ao vivo"}
               </h1>
-              <p className="text-[11px] font-semibold text-white/50 mt-0.5 leading-snug">
+              <p className="text-[11px] font-semibold text-white/50 mt-0.5 leading-snug truncate md:whitespace-normal">
                 {aula.teacher_name || "Aula ao vivo"}
                 {/* Turma e horário só a partir do tablet: no celular cada linha
                     a menos aqui é uma mensagem a mais no chat. */}

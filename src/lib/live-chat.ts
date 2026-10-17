@@ -51,7 +51,39 @@ export type RespostaDoChat = {
   status: string | null;
   silenciado: boolean;
   silenciados: string[];
+  /** Mensagem fixada no topo pela equipe (17/10). Ausente no banco antigo. */
+  fixada?: MensagemFixada | null;
+  /** Reações dos últimos 15 s (17/10). Ausente no banco antigo. */
+  reacoes?: Reacao[];
 };
+
+/** Cópia da mensagem fixada (`lives.chat_fixado`). */
+export type MensagemFixada = { id: number; texto: string | null; autor: string; equipe: boolean; em: string };
+
+/** As reações rápidas, na ordem dos botões. Precisa bater com o CHECK de `live_reacoes`. */
+export const REACOES = ["👍", "❤️", "😂", "🔥", "👏"] as const;
+export type Emoji = (typeof REACOES)[number];
+export type Reacao = { id: number; emoji: string };
+
+/**
+ * Das reações que vieram do banco, as que ainda não subiram na tela. O banco
+ * devolve as dos últimos 15 s a cada consulta, então a mesma volta várias
+ * vezes: só anima o que tem id acima do último já visto. Na PRIMEIRA consulta
+ * (`ultimoVisto` nulo) não anima nada — quem abre a sala não recebe uma rajada
+ * de corações de 15 s atrás.
+ */
+export function reacoesNovas(reacoes: Reacao[] | null | undefined, ultimoVisto: number | null): { novas: Reacao[]; ultimo: number | null } {
+  const lista = (reacoes ?? []).filter((r) => (REACOES as readonly string[]).includes(r.emoji));
+  const maior = lista.reduce((m, r) => (r.id > m ? r.id : m), ultimoVisto ?? 0);
+  if (ultimoVisto === null) return { novas: [], ultimo: lista.length ? maior : 0 };
+  return { novas: lista.filter((r) => r.id > ultimoVisto).sort((a, b) => a.id - b.id), ultimo: maior };
+}
+
+/** Inicial do avatar: primeira letra do nome, maiúscula, sem acento quebrado. */
+export function inicialDoNome(nome: string | null | undefined): string {
+  const letra = (nome ?? "").trim().charAt(0);
+  return letra ? letra.toLocaleUpperCase("pt-BR") : "?";
+}
 
 /**
  * Junta o que chegou com o que já está na tela.
@@ -111,16 +143,24 @@ export function nomeCurto(nome: string | null | undefined): string {
 
 /** Cor estável por pessoa, para dar para seguir a conversa sem ler o nome. */
 const CORES = ["text-orange-300", "text-sky-300", "text-emerald-300", "text-fuchsia-300", "text-amber-300", "text-cyan-300", "text-rose-300", "text-lime-300"];
-const coresJaCalculadas = new Map<string, string>();
-export function corDoNome(userId: string): string {
-  let cor = coresJaCalculadas.get(userId);
-  if (cor === undefined) {
+// Fundo do avatar, na mesma posição da cor do nome: o aluno é a mesma cor nos dois.
+const FUNDOS = ["bg-orange-500", "bg-sky-500", "bg-emerald-500", "bg-fuchsia-500", "bg-amber-500", "bg-cyan-500", "bg-rose-500", "bg-lime-500"];
+const indicesJaCalculados = new Map<string, number>();
+function indiceDaCor(userId: string): number {
+  let i = indicesJaCalculados.get(userId);
+  if (i === undefined) {
     let h = 0;
-    for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) >>> 0;
-    cor = CORES[h % CORES.length];
-    coresJaCalculadas.set(userId, cor);
+    for (let k = 0; k < userId.length; k++) h = (h * 31 + userId.charCodeAt(k)) >>> 0;
+    i = h % CORES.length;
+    indicesJaCalculados.set(userId, i);
   }
-  return cor;
+  return i;
+}
+export function corDoNome(userId: string): string {
+  return CORES[indiceDaCor(userId)];
+}
+export function corDoAvatar(userId: string): string {
+  return FUNDOS[indiceDaCor(userId)];
 }
 
 // Um formatador só: criar um `Intl.DateTimeFormat` por mensagem, a cada

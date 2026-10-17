@@ -70,6 +70,17 @@ const CHAMADA = {
 
 function Chat({ preencher, altura, equipe = false, sobreposto = false }: { preencher?: boolean; altura?: string; equipe?: boolean; sobreposto?: boolean }) {
   const [texto, setTexto] = useState("");
+  // Reações de exemplo subindo, para ver a animação sem aula de verdade.
+  const [subindo, setSubindo] = useState<{ chave: string; emoji: string }[]>([]);
+  const soltar = (emoji: string) => {
+    const chave = `${Date.now()}-${Math.random()}`;
+    setSubindo((x) => [...x.slice(-14), { chave, emoji }]);
+    setTimeout(() => setSubindo((x) => x.filter((y) => y.chave !== chave)), 2600);
+  };
+  useEffect(() => {
+    const t = setInterval(() => soltar(["👍", "❤️", "😂", "🔥", "👏"][Math.floor(Math.random() * 5)]), 700);
+    return () => clearInterval(t);
+  }, []);
   return (
     <ChatAoVivo
       mensagens={MENSAGENS}
@@ -87,6 +98,10 @@ function Chat({ preencher, altura, equipe = false, sobreposto = false }: { preen
       preencher={preencher}
       altura={altura}
       sobreposto={sobreposto}
+      fixada={{ id: 1, texto: "Pessoal, estamos na questão 3 da lista (página 12). Mandem a dúvida pela aba Dúvida!", autor: "Prof. Carlos Henrique", equipe: true, em: new Date().toISOString() }}
+      onFixar={equipe ? () => {} : undefined}
+      reacoes={subindo}
+      onReagir={soltar}
     />
   );
 }

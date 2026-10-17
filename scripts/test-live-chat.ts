@@ -14,6 +14,10 @@ import {
   erroDoChat,
   nomeCurto,
   corDoNome,
+  corDoAvatar,
+  inicialDoNome,
+  reacoesNovas,
+  REACOES,
   horaDaMensagem,
   LIMITE_DA_MENSAGEM,
   type MensagemDoChat,
@@ -127,3 +131,24 @@ ok('ritmo da consulta: rápido com movimento, espaçado parado, equipe sempre 3 
 });
 
 console.log(`\nchat ao vivo: ${n} testes, tudo certo`);
+
+// ── Reações, avatar e fixada (17/10) ──
+{
+  const r = (id: number, emoji = '👍') => ({ id, emoji });
+  assert.deepEqual(reacoesNovas([r(5), r(6)], null), { novas: [], ultimo: 6 }, 'primeira consulta não anima rajada antiga');
+  assert.deepEqual(reacoesNovas([], null), { novas: [], ultimo: 0 });
+  assert.deepEqual(reacoesNovas([r(5), r(6), r(7, '🔥')], 6), { novas: [r(7, '🔥')], ultimo: 7 }, 'só a nova sobe');
+  assert.deepEqual(reacoesNovas([r(5), r(6)], 6), { novas: [], ultimo: 6 }, 'a mesma volta e não sobe de novo');
+  assert.deepEqual(reacoesNovas([r(9, '💩')], 6), { novas: [], ultimo: 6 }, 'emoji fora da lista é ignorado');
+  assert.deepEqual(reacoesNovas([r(9), r(8)], 6).novas.map((x) => x.id), [8, 9], 'sobem em ordem');
+  assert.equal(REACOES.length, 5);
+  assert.equal(inicialDoNome('ana Beatriz'), 'A');
+  assert.equal(inicialDoNome('  élida'), 'É');
+  assert.equal(inicialDoNome(''), '?');
+  assert.equal(inicialDoNome(null), '?');
+  // Avatar e nome com a mesma cor para o mesmo aluno.
+  const id = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+  assert.equal(corDoAvatar(id).replace('bg-', '').replace('-500', ''), corDoNome(id).replace('text-', '').replace('-300', ''));
+  console.log('ok   reações, avatar e fixada');
+}
+

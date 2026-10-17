@@ -9,9 +9,12 @@ import {
   erroDoChat,
   mesclarMensagens,
   proximoIntervaloDoChat,
+  reacoesNovas,
   ultimaVersao,
   validarMensagemDoChat,
+  type Emoji,
   type MensagemDoChat,
+  type MensagemFixada,
   type RespostaDoChat,
 } from "@/lib/live-chat";
 import { ChatAoVivo } from "./ChatAoVivo";
@@ -79,6 +82,18 @@ export function ChatDaAula({
   // Consultas seguidas que não trouxeram nada: é o que espaça a próxima.
   const quietos = useRef(0);
 
+  // Mensagem fixada e reações (17/10). As reações que estão subindo na tela
+  // ficam numa lista curta e saem sozinhas quando a animação acaba.
+  const [fixada, setFixada] = useState<MensagemFixada | null>(null);
+  const [subindo, setSubindo] = useState<{ chave: string; emoji: string }[]>([]);
+  const ultimaReacao = useRef<number | null>(null);
+  const minhasReacoes = useRef(new Set<number>());
+  const soltar = useCallback((emoji: string) => {
+    const chave = `${Date.now()}-${Math.random()}`;
+    setSubindo((s) => [...s.slice(-14), { chave, emoji }]);
+    setTimeout(() => setSubindo((s) => s.filter((x) => x.chave !== chave)), 2600);
+  }, []);
+
   const consultar = useCallback(async () => {
     if (!user || consultando.current) return;
     consultando.current = true;
@@ -99,6 +114,13 @@ export function ChatDaAula({
       setSilenciado(!!r?.silenciado);
       const lista = Array.isArray(r?.silenciados) ? r.silenciados : [];
       setSilenciados((atual) => (atual.length === lista.length && atual.every((x, i) => x === lista[i]) ? atual : lista));
+      // Fixada: só troca o estado quando muda (outra mensagem ou foi solta).
+      const f = r?.fixada ?? null;
+      setFixada((atual) => (atual?.id === f?.id && atual?.em === f?.em ? atual : f));
+      // Reações: anima só as novas, e não as minhas (essas subiram no toque).
+      const { novas: chegaram, ultimo } = reacoesNovas(r?.reacoes, ultimaReacao.current);
+      ultimaReacao.current = ultimo;
+      chegaram.filter((x) => !minhasReacoes.current.has(x.id)).forEach((x, i) => setTimeout(() => soltar(x.emoji), i * 180));
     } finally {
       consultando.current = false;
     }
@@ -182,6 +204,24 @@ export function ChatDaAula({
     consultar();
   };
 
+  // Reação: sobe na hora para quem tocou; o banco recebe por trás. O excesso
+  // (mais de uma a cada 2 s) o banco ignora em silêncio.
+  const reagir = useCallback(async (emoji: Emoji) => {
+    soltar(emoji);
+    const { data } = await supabase.rpc("reagir_na_live", { p_live: liveId, p_emoji: emoji });
+    if (typeof data === "number") minhasReacoes.current.add(data);
+  }, [liveId, soltar]);
+
+  const fixar = useCallback(async (id: number | null) => {
+    const { data, error } = await supabase.rpc("fixar_no_chat", { p_live: liveId, p_mensagem: id });
+    if (error) {
+      toast({ title: "Não foi possível fixar", description: error.message, variant: "destructive" });
+      return;
+    }
+    setFixada((data as MensagemFixada | null) ?? null);
+    toast({ title: id ? "Mensagem fixada no topo do chat" : "Mensagem solta" });
+  }, [liveId, toast]);
+
   const ocultar = useCallback(async (id: number, oculta: boolean) => {
     const { data, error } = await supabase.from("live_chat").update({ oculta }).eq("id", id).select("id");
     if (error || !data?.length) {
@@ -224,6 +264,10 @@ export function ChatDaAula({
       altura={altura}
       preencher={preencher}
       sobreposto={sobreposto}
+      fixada={fixada}
+      onFixar={equipe ? fixar : undefined}
+      reacoes={subindo}
+      onReagir={noAr ? reagir : undefined}
     />
   );
 }
