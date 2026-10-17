@@ -2,7 +2,7 @@
 
 /**
  * Prévia das telas da aula ao vivo com dados de exemplo, sem login.
- * `/dev/live-preview?tela=lista|sala|sala-agendada|agenda|estudio|estudio-agendado`
+ * `/dev/live-preview?tela=lista|sala|sala-agendada|sala-gravada|agenda|estudio|estudio-agendado`
  *
  * Só existe fora de produção. É o que deixa revisar o desenho no celular e no
  * computador (regra 15 das aulas ao vivo) e tirar as capturas de tela.
@@ -27,7 +27,7 @@ const haMin = (min: number) => new Date(Date.now() - min * 60_000).toISOString()
 const AULAS = [
   { id: "a1", title: "Aulão de Matemática: funções e gráficos que caem no ENEM", status: "live", start_time: haMin(25), teacher_name: "Prof. Carlos Henrique de Souza", youtube_id: "dQw4w9WgXcQ", turmas: [] as string[], meet_link: "https://meet.google.com/abc-defg-hij", description: "Revisão completa de função afim e quadrática com questões do ENEM 2023 e 2024." },
   { id: "a2", title: "Redação: proposta de intervenção sem perder a C5", status: "scheduled", start_time: daquiA(90), teacher_name: "Profa. Ana Beatriz", youtube_id: null, turmas: ["7", "8", "9"] },
-  { id: "a3", title: "Química orgânica", status: "scheduled", start_time: daquiA(60 * 26), teacher_name: "Prof. Marcos", youtube_id: null, turmas: ["1", "2", "3", "4", "5", "6"] },
+  { id: "a3", title: "Química orgânica", status: "scheduled", start_time: daquiA(60 * 26), teacher_name: "Prof. Marcos", youtube_id: null, turmas: ["ETEC"] },
   { id: "a4", title: "Plantão de dúvidas de História", status: "completed", start_time: haMin(60 * 30), teacher_name: "Prof. Rafael", youtube_id: "dQw4w9WgXcQ", turmas: [] as string[] },
 ];
 
@@ -99,7 +99,11 @@ function Telas() {
   const tela = useSearchParams().get("tela") ?? "lista";
   const nada = () => {};
 
-  if (tela === "lista") return <div className="p-4 max-w-2xl mx-auto"><ListaDeAulas aulas={AULAS.filter((a) => a.status !== "completed")} carregando={false} /></div>;
+  if (tela === "lista") return <div className="p-4 max-w-2xl mx-auto"><ListaDeAulas aulas={AULAS} carregando={false} /></div>;
+
+  if (tela === "sala-gravada") {
+    return <SalaDoAluno aula={AULAS[3]} presenca={null} onVoltar={nada} duvidas={<Duvidas noAr={false} />} chat={<Chat preencher />} />;
+  }
 
   if (tela === "sala" || tela === "sala-agendada") {
     const aula = tela === "sala" ? AULAS[0] : { ...AULAS[1], meet_link: null };
