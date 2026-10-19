@@ -504,6 +504,16 @@ Toda live gera **dois avisos aos alunos das turmas da aula** (push + sininho), v
    2 não notifica a escola inteira — o resto nem consegue abrir a sala (RLS). Lista
    vazia = todas as turmas. Sem a coluna (migration de turmas não aplicada), avisa
    todo mundo, como antes.
+6. **Aula criada ou aberta fora das telas também avisa** (18/10). O aulão de 17/10 foi
+   criado em lote, direto no banco, e nenhum aviso saiu. `pg_cron` (`avisos-de-live`, a
+   cada minuto) chama `/api/cron/avisos-de-live`, que escolhe o que falta por
+   `avisosQueFaltam()`: "ao vivo" para aula `live` sem aviso que entrou no ar há até
+   60 min; "agendada" para aula `scheduled` sem aviso que começa entre 15 min e 14 dias
+   — e **só das 07:00 às 21:59** de Brasília (aula criada à 00:15 avisa às 07:00).
+   Marca a mesma coluna antes de enviar, então tela e cron não repetem. Cada aluno
+   recebe **uma** notificação por rodada com as aulas dele (`agruparPorAluno()`,
+   `avisoDeVariasLives()`): as 6 aulas ETEC criadas juntas viram um toque só.
+   Migration `20261018120000_cron_avisos_de_live.sql`.
 
 Prova: `npx tsx scripts/test-live-aviso.ts` (dentro de `npm test`).
 
