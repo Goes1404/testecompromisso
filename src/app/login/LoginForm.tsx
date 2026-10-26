@@ -9,6 +9,21 @@ import Image from "next/image";
 
 const logoUrl = "/images/logocompromisso.png";
 
+/**
+ * Para onde ir depois do login: só caminho deste site. Comparar o texto
+ * ("começa com /, não com //") não basta — o navegador apaga tab e quebra de
+ * linha da URL, então `/\t/site.com` passaria e viraria `//site.com`. O parser
+ * de URL resolve igual ao navegador; vale se a origem continuar a nossa.
+ */
+function destinoInterno(next: string | null | undefined): string {
+  if (!next) return "/dashboard";
+  try {
+    const url = new URL(next, window.location.origin);
+    if (url.origin === window.location.origin) return url.pathname + url.search + url.hash;
+  } catch {}
+  return "/dashboard";
+}
+
 export function LoginForm() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +64,7 @@ export function LoginForm() {
         return;
       }
 
-      window.location.assign("/dashboard");
+      window.location.assign(destinoInterno(params?.get("next")));
     } catch {
       setLoading(false);
       setAuthError("Falha crítica na autenticação. Tente novamente.");

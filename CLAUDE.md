@@ -504,8 +504,24 @@ da ordem.
     - 24/10 foi fechado na migration **sem chamada**: o tempo de todo mundo ficou somado na
       primeira aula (com abas abertas até o dia seguinte) e não dá para separar por aula.
     Migration `20261026120000_grade_de_lives_automatica.sql`, testada em Postgres (PGlite)
-    com espelho das tabelas: 28 verificações (abre, encerra, sobreposição, cron parado, aviso
-    único, chamada sem professor, 24/10).
+    com espelho das tabelas: 36 verificações (abre, encerra, sobreposição, cron parado, aviso
+    único, chamada sem professor, 24/10, ensaio, leitura por turma).
+
+29. **Aula de teste (`lives.ensaio`) e avisos duplicados** (26/10). Entre 8h03 e 8h17 de
+    24/10 cada aluno recebeu de 6 a 8 notificações: aulas de teste ("enem", "Etec") criadas
+    na produção para as turmas de verdade, "6/7 aulas ao vivo agora", e o script da grade
+    rodado duas vezes — ele apagava e recriava as aulas, e cada recriação avisava "5 aulas
+    marcadas" de novo (e matava os links das notificações anteriores). Agora:
+    - **Ensaio:** botão "Aula de teste" no formulário do professor. O gatilho
+      `trg_lives_ensaio_sem_aviso` marca as três colunas de aviso na hora (tela e cron pulam),
+      `fechar_chamada_da_live()` não gera chamada e só a equipe vê a aula. **Teste na
+      produção é sempre ensaio.**
+    - **Script da grade não apaga mais:** aula que já existe (mesmo horário e título) só é
+      atualizada. Rodar na véspera, entre 7h e 22h (`scripts/seed_lives_24_outubro.mjs`).
+    - **Leitura por turma de volta:** `20261023000000_harden_and_index_lives.sql` (aplicada
+      direto no banco em 23/10) apagou todas as policies de `lives` e recriou a leitura como
+      `USING (true)` — o aluno ENEM via as aulas ETEC. `20261026130000_lives_leitura_por_turma`
+      volta a `pode_ver_live(turmas)` e esconde o ensaio de quem não é equipe.
 
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 ### 📺 Lives: aviso aos alunos

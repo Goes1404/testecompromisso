@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, ChevronLeft, Loader2, MessageSquare, ShieldCheck, AlertCircle, Sparkles, Terminal, ShieldAlert } from "lucide-react";
+import { Send, ChevronLeft, Loader2, ShieldCheck, AlertCircle, Sparkles, Terminal, ShieldAlert, Paperclip, X, Image as ImageIcon, Video, WandSparkles } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
@@ -25,13 +25,21 @@ interface ChatMessage {
   created_at: string;
   isError?: boolean;
   is_read?: boolean;
+  media?: { type: "image" | "video"; url?: string; id?: string; status?: string } | null;
+}
+
+interface CreativeReference {
+  id: string;
+  name: string;
+  type: string;
+  dataUrl: string;
 }
 
 export default function DirectChatPage() {
   const params = useParams();
   const contactId = params.id as string;
   const isAurora = contactId === "aurora-ai";
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, userRole, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -42,9 +50,16 @@ export default function DirectChatPage() {
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isBlockedStudentToStudent, setIsBlockedStudentToStudent] = useState(false);
+  const [creativeMode, setCreativeMode] = useState<"image" | "video">("image");
+  const [references, setReferences] = useState<CreativeReference[]>([]);
+  const [isCreativeMode, setIsCreativeMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isStaffUser = ['teacher', 'staff', 'admin'].includes(profile?.profile_type?.toLowerCase() || '');
+  // Criar foto/vídeo gasta crédito pago; a rota só aceita equipe, então o botão
+  // nem aparece para aluno.
+  const podeCriarMidia = userRole === 'teacher' || userRole === 'staff' || userRole === 'admin';
 
   useEffect(() => {
     if (!user || isAurora || !contactId) return;
@@ -159,6 +174,27 @@ export default function DirectChatPage() {
     }
   }, [messages, isAiThinking]);
 
+  const readReference = (file: File) => new Promise<CreativeReference>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ id: `${file.name}-${file.lastModified}`, name: file.name, type: file.type, dataUrl: String(reader.result) });
+    reader.onerror = () => reject(new Error("Não foi possível ler a referência."));
+    reader.readAsDataURL(file);
+  });
+
+  const handleReferenceChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []).filter(file => file.type.startsWith("image/") && file.size <= 6 * 1024 * 1024);
+    if (!files.length) return;
+    try {
+      const next = await Promise.all(files.slice(0, 4 - references.length).map(readReference));
+      setReferences(prev => [...prev, ...next]);
+      setIsCreativeMode(true);
+    } catch {
+      toast({ title: "Referência não adicionada", description: "Escolha uma imagem válida e tente novamente.", variant: "destructive" });
+    } finally {
+      event.target.value = "";
+    }
+  };
+
   const handleSend = async (e?: React.FormEvent, customText?: string) => {
     e?.preventDefault();
     const userText = customText || input;
@@ -167,11 +203,31 @@ export default function DirectChatPage() {
     if (!customText) setInput("");
 
     if (isAurora) {
-      const newUserMessage = { id: `u-${Date.now()}`, sender_id: user.id, content: userText, created_at: new Date().toISOString() };
+      const sentReferences = isCreativeMode ? references : [];
+      const newUserMessage = { id: `u-${Date.now()}`, sender_id: user.id, content: userText, created_at: new Date().toISOString(), media: sentReferences[0] ? { type: "image" as const, url: sentReferences[0].dataUrl } : null };
       setMessages(prev => [...prev, newUserMessage]);
       setIsAiThinking(true);
 
       try {
+        if (isCreativeMode) {
+          const response = await fetch("/api/creative-assistant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mode: creativeMode, prompt: userText, references: sentReferences }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Erro na criação.");
+          setMessages(prev => [...prev, {
+            id: `ai-${Date.now()}`,
+            sender_id: "aurora-ai",
+            content: data.needsClarification ? `${data.response}\n\n${(data.questions || []).map((question: string) => `- ${question}`).join("\n")}` : data.response,
+            created_at: new Date().toISOString(),
+            media: data.media || (data.video ? { type: "video" as const, id: data.video.id, status: data.video.status } : null),
+          }]);
+          if (!data.needsClarification) setReferences([]);
+          return;
+        }
+
         const history = messages
           .filter(m => !m.isError && m.id !== 'initial')
           .map(m => ({
@@ -325,6 +381,15 @@ export default function DirectChatPage() {
                      {isError && <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />}
                      
                      <div className="w-full text-sm leading-relaxed overflow-hidden">
+                       {msg.media?.type === "image" && msg.media.url && (
+                         <img src={msg.media.url} alt="Referência ou imagem criada" className="mb-3 max-h-72 w-full rounded-2xl object-cover" />
+                       )}
+                       {msg.media?.type === "video" && (
+                         <div className="mb-3 flex items-center gap-3 rounded-2xl bg-primary/5 p-3 text-primary">
+                           <Video className="h-5 w-5 text-accent" />
+                           <span className="text-xs font-bold">Vídeo enviado para criação ({msg.media.status || "na fila"})</span>
+                         </div>
+                       )}
                        <ReactMarkdown
                          remarkPlugins={[remarkGfm]}
                          components={{
@@ -384,11 +449,11 @@ export default function DirectChatPage() {
 
         {/* Input area styled with Stitch glassmorphism */}
         <div className="p-4 md:p-6 bg-white/90 border-t shrink-0 backdrop-blur-md relative z-10">
-          {isAurora && (
+           {isAurora && (
             <p className="text-[9px] text-center text-muted-foreground/60 mb-2 px-4 uppercase tracking-widest italic font-bold">
               A Aurora IA é uma inteligência artificial e pode cometer erros. Verifique informações importantes.
             </p>
-          )}
+             )}
           {isBlockedStudentToStudent ? (
             <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center gap-3 text-red-700 shadow-sm">
               <ShieldAlert className="h-5 w-5 shrink-0 animate-pulse" />
@@ -396,8 +461,41 @@ export default function DirectChatPage() {
                 Diretrizes de Segurança: Estudantes não podem enviar mensagens para outros estudantes.
               </p>
             </div>
-          ) : (
-            <form onSubmit={(e) => handleSend(e)} className="flex items-center gap-3 max-w-4xl mx-auto bg-slate-100 p-2 pl-6 rounded-[2.5rem] border border-slate-200/80 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
+           ) : (
+             <>
+             {isAurora && podeCriarMidia && (
+              <div className="mb-3 rounded-2xl border border-orange-100 bg-orange-50/80 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <button type="button" onClick={() => setIsCreativeMode(value => !value)} className={`flex min-h-11 items-center gap-2 rounded-xl px-3 text-[10px] font-black uppercase tracking-wider transition-colors ${isCreativeMode ? "bg-orange-500 text-white" : "bg-white text-primary"}`}>
+                    <WandSparkles className="h-4 w-4" /> {isCreativeMode ? "Modo criação ativo" : "Criar foto ou vídeo"}
+                  </button>
+                  {isCreativeMode && (
+                    <div className="flex rounded-xl bg-white p-1">
+                      <button type="button" onClick={() => setCreativeMode("image")} className={`flex min-h-9 items-center gap-1 rounded-lg px-3 text-[10px] font-black uppercase ${creativeMode === "image" ? "bg-primary text-white" : "text-primary/50"}`}><ImageIcon className="h-3.5 w-3.5" /> Foto</button>
+                      <button type="button" onClick={() => setCreativeMode("video")} className={`flex min-h-9 items-center gap-1 rounded-lg px-3 text-[10px] font-black uppercase ${creativeMode === "video" ? "bg-primary text-white" : "text-primary/50"}`}><Video className="h-3.5 w-3.5" /> Vídeo</button>
+                    </div>
+                  )}
+                </div>
+                {isCreativeMode && <p className="mt-2 text-[10px] font-semibold text-primary/55">A Aurora vai perguntar o que faltar antes de criar. Você pode anexar até 4 referências visuais.</p>}
+                {isCreativeMode && references.length > 0 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {references.map(reference => (
+                      <div key={reference.id} className="relative shrink-0">
+                        <img src={reference.dataUrl} alt={reference.name} className="h-16 w-16 rounded-xl object-cover ring-2 ring-white" />
+                        <button type="button" onClick={() => setReferences(prev => prev.filter(item => item.id !== reference.id))} aria-label={`Remover ${reference.name}`} className="absolute -right-1.5 -top-1.5 rounded-full bg-primary p-1 text-white"><X className="h-3 w-3" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+             )}
+             <form onSubmit={(e) => handleSend(e)} className="flex items-center gap-2 max-w-4xl mx-auto bg-slate-100 p-2 pl-3 md:pl-5 rounded-[2.5rem] border border-slate-200/80 focus-within:ring-4 focus-within:ring-accent/10 transition-all">
+              {isAurora && isCreativeMode && (
+                <>
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleReferenceChange} className="hidden" />
+                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={references.length >= 4} aria-label="Anexar referência visual" className="h-10 w-10 shrink-0 rounded-full text-primary/60 transition-colors hover:bg-white hover:text-accent disabled:opacity-30"><Paperclip className="mx-auto h-5 w-5" /></button>
+                </>
+              )}
                <input 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -412,8 +510,9 @@ export default function DirectChatPage() {
               >
                 {isAiThinking || isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </button>
-            </form>
-          )}
+             </form>
+             </>
+           )}
         </div>
       </div>
     </div>
