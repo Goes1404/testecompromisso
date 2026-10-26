@@ -208,26 +208,36 @@ def build():
             ["Levar o aluno para a plataforma", "158 alunos acessaram o módulo; ETEC teve pico de 107 simultâneos", "Associar entrada, presença e tempo assistido"],
             ["Melhorar o primeiro acesso", "24 trocas de senha e 20 conclusões do fluxo", "Antecipar orientação de acesso na semana"],
         ],
-        [55 * mm, 60 * mm, 59 * mm]), Spacer(1, 9 * mm),
-    p("Ajustes que consolidam o resultado", S["H2"]),
-    p("A operação foi bem-sucedida, mas a próxima versão precisa deixar a medição à altura da experiência. Dez aulas permaneceram marcadas como “agendadas” no banco depois do horário e não houve sessões formais de presença. Além disso, os avisos automáticos geraram notificações duplicadas e mensagens de teste. São oportunidades de acabamento, não obstáculos para o sucesso da manhã.", S["Body"]),
+        [55 * mm, 60 * mm, 59 * mm]), Spacer(1, 8 * mm),
+    p("O que não funcionou", S["H2"]),
+    p("A transmissão funcionou; a parte da plataforma em volta dela teve três falhas, todas já diagnosticadas.", S["Body"]),
+    data_table(
+        ["FALHA", "O QUE ACONTECEU", "EFEITO"],
+        [
+            ["Aulas presas", "As duas primeiras aulas abriram às 8h16 e nunca foram encerradas; as outras dez ficaram como “agendadas”. A troca de aula dependia de alguém mudar cada uma à mão.", "Nenhuma chamada foi gerada em 24/10"],
+            ["Avisos repetidos", "Entre 8h03 e 8h17, aulas de teste criadas na plataforma real e a grade cadastrada duas vezes dispararam 11 avisos diferentes.", "6.997 notificações para 1.114 alunos: 6 por aluno, em média"],
+            ["Aulas de outra turma", "Desde 23/10, uma mudança no banco deixou todas as aulas visíveis para todos os alunos.", "O aluno ENEM via as aulas ETEC na lista, e vice-versa"],
+        ],
+        [34 * mm, 84 * mm, 56 * mm]), Spacer(1, 8 * mm),
+    callout("Presença de 24/10", "145 alunos ficaram com a sala aberta (118 ETEC e 27 ENEM). Como as aulas não trocaram, o tempo de cada um ficou somado na primeira aula; em 6 casos passou da duração da transmissão, porque a aba ficou aberta depois da manhã. Não dá para separar esse tempo por aula. Se haverá chamada de 24/10 é decisão da secretaria."),
     PageBreak()]
 
     # PAGE 6
-    story += page_header("PRÓXIMO SÁBADO", "Transformar um sucesso operacional em padrão", "A base já está pronta: sinal estável, grade completa e adesão maior à plataforma. Os próximos passos aumentam a confiabilidade do dado e a qualidade percebida pelo aluno.")
+    story += page_header("PRÓXIMO SÁBADO", "Transformar um sucesso operacional em padrão", "A base já está pronta: sinal estável, grade completa e adesão maior à plataforma. As correções das três falhas já foram feitas e testadas, e entram no ar antes de 31/10.")
     story += [data_table(
-        ["PRIORIDADE", "AÇÃO", "RESULTADO ESPERADO"],
+        ["FRENTE", "O QUE MUDA", "SITUAÇÃO"],
         [
-            ["Presença", "Criar sessão de chamada para cada aula e associar a entrada na sala", "Presença automática e auditável"],
-            ["Status", "Automatizar abertura e encerramento de cada aula", "Grade confiável, sem itens presos em “agendada”"],
-            ["Comunicação", "Separar ambiente de teste e deduplicar os avisos", "Notificação certa, uma vez, para o público certo"],
-            ["Métricas", "Salvar tempo assistido, chat, reações e dúvidas por aula", "Relatório pedagógico completo por turma"],
-            ["Acesso", "Enviar orientação e link de primeiro acesso antes do sábado", "Menos atrito no horário de pico"],
+            ["Grade e chamada", "Cada aula abre e encerra sozinha no horário. Ao encerrar, sai a chamada daquela aula: presente quem ficou 60% do tempo com a sala aberta. A sala do aluno passa para a aula seguinte sem ele sair.", "Corrigido e testado; entra antes de 31/10"],
+            ["Avisos", "Aula de teste não avisa alunos nem aparece para eles. A grade não é mais recriada. O “ao vivo” sai só na primeira aula de cada transmissão.", "Corrigido e testado; entra antes de 31/10"],
+            ["Turmas", "A lista volta a mostrar só as aulas da turma do aluno.", "Corrigido e testado; entra antes de 31/10"],
+            ["Ensaio", "Grade de teste com aulas curtas para ver a troca automática funcionando antes do sábado.", "A fazer na semana"],
+            ["Acesso", "Enviar orientação e link de primeiro acesso para quem nunca entrou.", "A fazer na quinta ou sexta"],
+            ["Métricas", "Tempo assistido por aula vem da própria chamada. Chat e reações por aula ficam para depois.", "Tempo por aula em 31/10"],
         ],
-        [34 * mm, 78 * mm, 62 * mm]), Spacer(1, 15 * mm),
-    callout("Síntese", "24 de outubro demonstrou que o Cursinho Compromisso conseguiu evoluir rapidamente: uma manhã inteira de aulas foi transmitida com estabilidade, em uma grade robusta, e com mais alunos entrando pelo ambiente da própria plataforma. O próximo passo é medir essa experiência com a mesma qualidade com que ela já está sendo entregue.", GREEN),
+        [30 * mm, 96 * mm, 48 * mm]), Spacer(1, 12 * mm),
+    callout("Síntese", "24 de outubro demonstrou que o Cursinho Compromisso conseguiu evoluir rapidamente: uma manhã inteira de aulas foi transmitida com estabilidade, em uma grade robusta, e com mais alunos entrando pelo ambiente da própria plataforma. O que faltou foi a chamada, e a causa já foi corrigida: a partir de 31/10 cada aula gera a sua presença sozinha.", GREEN),
     Spacer(1, 15 * mm),
-    p("Fontes: Vercel Analytics, banco de dados da plataforma, telemetria de produto e YouTube Studio. Visualizações não equivalem a espectadores únicos; os dados de duração, simultaneidade, mensagens e reações se referem às transmissões ao vivo de 24/10/2026.", S["Small"])]
+    p("Fontes: Vercel Analytics, banco de dados da plataforma (aulas, presença e notificações, consultados em 26/10), telemetria de produto e YouTube Studio. Visualizações não equivalem a espectadores únicos; os dados de duração, simultaneidade, mensagens e reações se referem às transmissões ao vivo de 24/10/2026.", S["Small"])]
 
     doc.build(story)
     print(OUT)
