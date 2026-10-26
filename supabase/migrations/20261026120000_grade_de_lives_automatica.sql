@@ -34,6 +34,39 @@ ALTER TABLE public.lives
 COMMENT ON COLUMN public.lives.termina_em IS
   'Fim da aula na grade. Preenchido = o sistema abre na hora (se tiver vídeo do YouTube) e encerra no fim. NULL = aula aberta e encerrada pelo professor.';
 
+-- ── 1b. Aula de ensaio ────────────────────────────────────────────────────
+-- Em 24/10, entre 8h03 e 8h17, cada aluno recebeu de 6 a 8 notificações: aulas
+-- de teste ("enem", "Etec") criadas na produção para as turmas de verdade
+-- avisaram "Nova live" e "Ao vivo agora", e o script da grade, rodado duas
+-- vezes, apagou e recriou as aulas (novo "5 aulas marcadas"). Aula de ensaio
+-- (`ensaio = true`) nasce já marcada como avisada — o cron e a tela pulam —, o
+-- aluno não a vê (policy de leitura, migration seguinte) e ela não gera chamada.
+ALTER TABLE public.lives
+  ADD COLUMN IF NOT EXISTS ensaio boolean NOT NULL DEFAULT false;
+
+COMMENT ON COLUMN public.lives.ensaio IS
+  'Aula de teste: só a equipe vê, não avisa ninguém e não gera chamada.';
+
+CREATE OR REPLACE FUNCTION public.lives_ensaio_sem_aviso()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $$
+BEGIN
+  IF NEW.ensaio THEN
+    NEW.avisado_agendada_em := coalesce(NEW.avisado_agendada_em, now());
+    NEW.avisado_ao_vivo_em  := coalesce(NEW.avisado_ao_vivo_em, now());
+    NEW.avisado_sem_link_em := coalesce(NEW.avisado_sem_link_em, now());
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_lives_ensaio_sem_aviso ON public.lives;
+CREATE TRIGGER trg_lives_ensaio_sem_aviso
+  BEFORE INSERT OR UPDATE OF ensaio ON public.lives
+  FOR EACH ROW EXECUTE FUNCTION public.lives_ensaio_sem_aviso();
+
 -- ── 2. Chamada sem professor com conta ───────────────────────────────────
 -- Sem isto, a aula da Prô Jota (sem login) nunca tem chamada quando é o
 -- sistema que encerra. A chamada fica sem dono; `teacher_name` guarda o nome, e
@@ -56,7 +89,7 @@ DECLARE
   v_inicio  timestamptz;
 BEGIN
   SELECT * INTO v_live FROM public.lives WHERE id = p_live_id;
-  IF NOT FOUND THEN RETURN NULL; END IF;
+  IF NOT FOUND OR v_live.ensaio THEN RETURN NULL; END IF;
   v_dur := public.duracao_da_live(v_live);
   IF v_dur < 600 THEN RETURN NULL; END IF;
   v_min := ceil(v_dur * 0.6);

@@ -35,6 +35,8 @@ const FORM_VAZIO = {
   youtube_url: "",
   /** Salas normalizadas ("1".."12") ou foco ("ENEM"/"ETEC"). Vazio = todas as turmas. */
   turmas: [] as string[],
+  /** Aula de teste: só a equipe vê, ninguém é avisado e não gera chamada. */
+  ensaio: false,
 };
 
 type OpcaoDeTurma = { sala: string; curso: string | null; alunos: number };
@@ -106,6 +108,7 @@ export default function ManageLivePage() {
       turmas: Array.isArray(live.turmas)
         ? live.turmas.map(normalizarTurma).filter((t: string | null): t is string => !!t)
         : [],
+      ensaio: !!live.ensaio,
     });
     setIsCreateOpen(true);
   };
@@ -186,6 +189,9 @@ export default function ManageLivePage() {
         youtube_id: youtubeId,
         ...(opcoesDeTurma ? { turmas: formData.turmas } : {}),
         ...(termina_em ? { termina_em } : {}),
+        // Só manda a coluna quando há o que dizer: sem a migration do ensaio,
+        // uma aula normal continua salvando.
+        ...(formData.ensaio || original?.ensaio ? { ensaio: formData.ensaio } : {}),
       };
 
       if (editingId) {
@@ -428,6 +434,23 @@ export default function ManageLivePage() {
                 </div>
               )}
             </div>
+
+            <button
+              type="button"
+              onClick={() => setFormData((f) => ({ ...f, ensaio: !f.ensaio }))}
+              disabled={isSubmitting}
+              aria-pressed={formData.ensaio}
+              className={`w-full rounded-xl border p-3 text-left transition-all ${
+                formData.ensaio ? "border-orange-500 bg-orange-50" : "border-slate-200 bg-white hover:border-slate-300"
+              }`}
+            >
+              <span className="block text-[10px] font-black uppercase tracking-widest text-slate-800">
+                {formData.ensaio ? "✓ Aula de teste" : "Aula de teste"}
+              </span>
+              <span className="block text-[10px] font-medium text-slate-500 mt-0.5 leading-snug">
+                Só a equipe vê. Nenhum aluno é avisado e não gera chamada. Use para ensaiar antes do sábado.
+              </span>
+            </button>
 
             <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
