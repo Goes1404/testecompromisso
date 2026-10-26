@@ -109,7 +109,7 @@ Sempre verifique `/supabase/migrations/` antes de qualquer query — nunca assum
 | `student_question_answers` | student_id, question_id, selected_option, is_correct |
 | `exam_attempts` | user_id, exam_id, score, completed_at |
 | `essay_submissions` | user_id, theme, content, score, status, created_at |
-| `lives` | id, title, description, start_time, status (`scheduled`/`live`/`completed`), teacher_id, teacher_name, meet_link, youtube_url, youtube_id |
+| `lives` | id, title, description, start_time, termina_em (grade automática), status (`scheduled`/`live`/`completed`), teacher_id, teacher_name, meet_link, youtube_url, youtube_id, turmas |
 | `notes` | id, user_id, title, blocks (JSONB), subject_id, tags (TEXT[]), is_pinned, updated_at, created_at |
 | `user_badges` | user_id, badge_id, awarded_at |
 | `mural_posts` | tipo (`anuncio`/`trabalho`), titulo, tema, descricao, questoes (JSONB), instrucoes, entrega_em, imagem_url, destaque, ativo, autor_id, autor_nome |
@@ -479,6 +479,33 @@ da ordem.
     ar): na sala agora (sinal de presença nos últimos 150 s), quantos passaram, reações do
     último minuto e mensagens dos últimos 5 — `termometro_da_live()`, só equipe. Migration
     `20261017120000_reacoes_leves_e_termometro.sql`.
+
+28. **Grade de sábado vira sozinha** (26/10). O aulão é um vídeo contínuo por foco e
+    uma linha em `lives` por aula, todas com o mesmo `youtube_id`. Em 24/10 ninguém virou
+    as linhas: as duas primeiras ficaram no ar por mais de 50 h, as outras dez presas em
+    "agendada", e nenhuma chamada saiu. Agora a aula da grade tem **`lives.termina_em`** e
+    o `pg_cron` (`virar-aulas-da-grade`, a cada minuto) roda `virar_aulas_da_grade()`:
+    - **encerra** a aula `live`/`scheduled` que passou do `termina_em` ou cuja próxima do
+      mesmo sinal já começou → o gatilho gera a chamada **daquela aula** (60% do tempo
+      dela no ar); agendada que passou sem abrir fecha com 0 s e sem chamada;
+    - **abre** a agendada com vídeo na hora marcada. Só a primeira aula do sinal toca o
+      celular ("ao vivo" pelo cron de avisos); as seguintes abrem com
+      `avisado_ao_vivo_em` já marcado.
+    - **A sala do aluno segue o sinal:** aula da tela encerrada → `router.replace` para a
+      próxima de mesmo `youtube_id` em até `JANELA_DA_GRADE_H` (12 h). O player continua.
+    - **Só vale para quem tem `termina_em`.** Aula criada pelo professor na tela fica como
+      antes (botão do estúdio). Reabrir uma aula da grade depois do fim não segura: o
+      cron encerra de novo no minuto seguinte. Remarcar pela tela leva o fim junto
+      (`fimRemarcado()`); o banco recusa `termina_em <= start_time`.
+    - **Quem cria a grade (script em lote) precisa gravar `termina_em`.** Sem ele, nada
+      disso acontece e a manhã volta a ficar presa como em 24/10.
+    - `class_sessions.teacher_id` aceita NULL: a aula da Prô Jota (sem conta) encerrada pelo
+      sistema ficava sem chamada (em 17/10, 2 das 12).
+    - 24/10 foi fechado na migration **sem chamada**: o tempo de todo mundo ficou somado na
+      primeira aula (com abas abertas até o dia seguinte) e não dá para separar por aula.
+    Migration `20261026120000_grade_de_lives_automatica.sql`, testada em Postgres (PGlite)
+    com espelho das tabelas: 28 verificações (abre, encerra, sobreposição, cron parado, aviso
+    único, chamada sem professor, 24/10).
 
 Prova de não-regressão: `npx tsx scripts/test-lives.ts` (roda dentro de `npm test`).
 ### 📺 Lives: aviso aos alunos

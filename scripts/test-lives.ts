@@ -31,6 +31,8 @@ import {
   ehNavegadorDeCelular,
   validarHorarioDaAula,
   filtroDaAgenda,
+  limiteDaProximaDoSinal,
+  fimRemarcado,
 } from '../src/lib/lives';
 
 let falhas = 0;
@@ -199,6 +201,17 @@ eq('chat em janela', linkDoChatEmJanela(ID), `https://www.youtube.com/live_chat?
 eq('Android é celular', ehNavegadorDeCelular('Mozilla/5.0 (Linux; Android 14; SM-A145M) AppleWebKit/537.36 Chrome/129 Mobile Safari/537.36'), true);
 eq('iPhone é celular', ehNavegadorDeCelular('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'), true);
 eq('Windows não é', ehNavegadorDeCelular('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/129 Safari/537.36'), false);
+
+// ── Grade de sábado ──
+eq('próxima do sinal: até 12 h depois', limiteDaProximaDoSinal('2026-10-31T11:00:00.000Z'), '2026-10-31T23:00:00.000Z');
+eq('próxima do sinal: sem início', limiteDaProximaDoSinal(null), null);
+eq('próxima do sinal: início inválido', limiteDaProximaDoSinal('ontem'), null);
+eq('remarcar 1 h depois leva o fim junto',
+  fimRemarcado({ start_time: '2026-10-31T11:00:00.000Z', termina_em: '2026-10-31T11:35:00.000Z' }, '2026-10-31T12:00:00.000Z'),
+  '2026-10-31T12:35:00.000Z');
+eq('remarcar para antes também', fimRemarcado({ start_time: '2026-10-31T11:40:00.000Z', termina_em: '2026-10-31T12:15:00.000Z' }, '2026-10-31T11:00:00.000Z'),
+  '2026-10-31T11:35:00.000Z');
+eq('aula do professor (sem fim) não ganha fim', fimRemarcado({ start_time: '2026-10-31T11:00:00.000Z', termina_em: null }, '2026-10-31T12:00:00.000Z'), null);
 
 if (falhas) {
   console.error(`\n${falhas} falha(s)`);
