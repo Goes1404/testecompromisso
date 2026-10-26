@@ -23,7 +23,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/app/lib/supabase";
 import { format } from "date-fns";
-import { agruparAgenda, ANTECEDENCIA_MAXIMA_DIAS, FOCOS, idDoYoutube, linkExternoSeguro, normalizarFoco, normalizarTurma, rotuloDasTurmas, validarHorarioDaAula } from "@/lib/lives";
+import { agruparAgenda, ANTECEDENCIA_MAXIMA_DIAS, fimRemarcado, FOCOS, idDoYoutube, linkExternoSeguro, normalizarFoco, normalizarTurma, rotuloDasTurmas, validarHorarioDaAula } from "@/lib/lives";
 import { CabecalhoDaAgenda, ListaDaAgenda } from "@/components/live/AgendaDoProfessor";
 
 const FORM_VAZIO = {
@@ -175,6 +175,8 @@ export default function ManageLivePage() {
     setIsSubmitting(true);
     try {
       const start_time = new Date(`${formData.date}T${formData.time}`).toISOString();
+      const original = editingId ? lives.find((l) => l.id === editingId) : null;
+      const termina_em = original && horarioMudou ? fimRemarcado(original, start_time) : null;
       const campos = {
         title: formData.title,
         description: formData.description,
@@ -183,6 +185,7 @@ export default function ManageLivePage() {
         youtube_url: youtubeId ? youtubeUrl : null,
         youtube_id: youtubeId,
         ...(opcoesDeTurma ? { turmas: formData.turmas } : {}),
+        ...(termina_em ? { termina_em } : {}),
       };
 
       if (editingId) {

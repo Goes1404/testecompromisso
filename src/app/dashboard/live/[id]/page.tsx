@@ -13,6 +13,7 @@ import { SalaCarregando, SalaDoAluno } from "@/components/live/SalaDoAluno";
 import { ChatDoYoutube } from "@/components/live/ChatDoYoutube";
 import { ChatDaAula } from "@/components/live/ChatDaAula";
 import { chaveDoCache, gravarCache, lerCache } from "@/lib/cache-da-sessao";
+import { limiteDaProximaDoSinal } from "@/lib/lives";
 
 /** A sala guardada vale por 6 h (uma aula longa e o intervalo). */
 const VALIDADE_DA_SALA_MS = 6 * 3_600_000;
@@ -134,6 +135,34 @@ export default function StudentLivePage({ params }: { params: Promise<{ id: stri
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intervaloDaReleitura, liveId]);
+
+  // Grade de sábado (26/10): as aulas da manhã dividem o mesmo vídeo, uma
+  // linha por aula, e o banco encerra cada uma no fim. A sala passa sozinha
+  // para a próxima aula do mesmo sinal — o aluno segue no vídeo, e o tempo dele
+  // passa a contar na chamada da aula seguinte, não na que acabou.
+  const sinal = live?.status === 'completed' ? live?.youtube_id : null;
+  useEffect(() => {
+    const ate = limiteDaProximaDoSinal(live?.start_time);
+    if (!sinal || !ate) return;
+    let vivo = true;
+    supabase
+      .from('lives')
+      .select('id')
+      .eq('youtube_id', sinal)
+      .gt('start_time', live.start_time)
+      .lte('start_time', ate)
+      .in('status', ['scheduled', 'live'])
+      .order('start_time', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (vivo && data?.id && data.id !== liveId) router.replace(`/dashboard/live/${data.id}`);
+      });
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sinal, live?.start_time, liveId]);
 
   if (loading || !live) return <SalaCarregando />;
 

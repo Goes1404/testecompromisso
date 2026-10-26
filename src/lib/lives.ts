@@ -218,6 +218,38 @@ export function proximoStatus(status: string | null): { para: StatusDaLive; rotu
   return { para: 'live', rotulo: 'Abrir para alunos' };
 }
 
+// ── Grade de sábado ─────────────────────────────────────────────────────────
+
+/**
+ * Aula da grade (26/10): tem `termina_em`, e quem abre e encerra é o banco
+ * (`virar_aulas_da_grade()`, `pg_cron` a cada minuto). As aulas da manhã dividem
+ * o mesmo vídeo do YouTube, uma linha por aula. A próxima aula do sinal é a de
+ * mesmo `youtube_id` que começa depois, dentro desta janela — o vídeo do sábado
+ * que vem é outro, mas a janela evita depender disso.
+ */
+export const JANELA_DA_GRADE_H = 12;
+
+/** Até quando procurar a próxima aula do mesmo sinal (ISO), ou `null`. */
+export function limiteDaProximaDoSinal(inicio: string | null | undefined): string | null {
+  const t = inicio ? new Date(inicio).getTime() : NaN;
+  return Number.isNaN(t) ? null : new Date(t + JANELA_DA_GRADE_H * HORA).toISOString();
+}
+
+/**
+ * Remarcar uma aula da grade leva o fim junto: o banco recusa `termina_em`
+ * antes do início, e um fim que ficou para trás encerraria a aula na hora
+ * errada. Sem `termina_em` (aula do professor), nada muda.
+ */
+export function fimRemarcado(
+  original: { start_time: string | null; termina_em?: string | null },
+  novoInicio: string,
+): string | null {
+  if (!original.termina_em || !original.start_time) return null;
+  const desloca = new Date(novoInicio).getTime() - new Date(original.start_time).getTime();
+  const fim = new Date(original.termina_em).getTime() + desloca;
+  return Number.isNaN(fim) ? null : new Date(fim).toISOString();
+}
+
 // ── Turmas e chamada automática ─────────────────────────────────────────────
 
 /**
