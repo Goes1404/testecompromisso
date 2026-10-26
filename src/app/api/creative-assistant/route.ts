@@ -8,7 +8,14 @@ export const dynamic = "force-dynamic";
 type Reference = { name: string; type: string; dataUrl: string };
 type CreativeMode = "image" | "video";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Criado na primeira chamada, não no import: o SDK recusa construir sem chave, e
+// o `next build` importa a rota para coletar dados — sem a variável no ambiente
+// de build, o deploy inteiro quebrava.
+let cliente: OpenAI | null = null;
+function openai(): OpenAI {
+  cliente ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return cliente;
+}
 
 // Cada pedido chama até três modelos pagos (gpt-4o-mini, gpt-image-1, sora-2)
 // com a chave do servidor. Teto por pessoa contra clique repetido ou script.
@@ -87,7 +94,7 @@ export async function POST(request: Request) {
       })),
     ];
 
-    const analysis = await client.chat.completions.create({
+    const analysis = await openai().chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       response_format: { type: "json_object" },
@@ -117,7 +124,7 @@ response deve ser uma mensagem curta em português do Brasil, explicando o que e
     }
 
     if (mode === "image") {
-      const generated = await client.images.generate({
+      const generated = await openai().images.generate({
         model: "gpt-image-1",
         prompt: result.prompt,
         size: "1024x1024",
@@ -133,7 +140,7 @@ response deve ser uma mensagem curta em português do Brasil, explicando o que e
       });
     }
 
-    const video = await client.videos.create({
+    const video = await openai().videos.create({
       model: "sora-2",
       prompt: result.prompt,
       seconds: "8",
