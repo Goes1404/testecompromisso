@@ -1,14 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { requireAdminUser } from '@/lib/server-auth';
+import { exigirAdmin } from '@/lib/server-auth';
 
 export async function POST(request: Request) {
   try {
     // Segurança: exige sessão de admin/staff (cookie) em vez de senha mestra no body.
-    const admin = await requireAdminUser();
-    if (!admin) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const { negado } = await exigirAdmin();
+    if (negado) return negado;
 
     const { email, newPassword } = await request.json();
 

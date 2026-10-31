@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { requireAdminUser } from '@/lib/server-auth';
+import { exigirAdmin } from '@/lib/server-auth';
 import { origemDoLink } from '@/lib/link-de-senha';
 import { segredoDoLink } from '@/lib/link-de-senha-token';
 import { emitirLinkDeSenha } from '@/lib/link-de-senha-emitir';
@@ -23,8 +23,8 @@ const EM_PARALELO = 8;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: Request) {
-  const admin = await requireAdminUser();
-  if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  const { negado } = await exigirAdmin();
+  if (negado) return negado;
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: 'Configuração do servidor incompleta' }, { status: 500 });

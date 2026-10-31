@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { SENHA_PADRAO } from '@/lib/senha-padrao';
 import { NextResponse } from 'next/server';
-import { requireAdminUser } from '@/lib/server-auth';
+import { exigirAdmin } from '@/lib/server-auth';
 
 // Converte nome completo para o padrão: primeiroNome + inicialSegundoNome + ultimoNome@compromisso.com
 // "João Carlos Silva" → "joaocsilva@compromisso.com"
@@ -27,10 +27,8 @@ const DEFAULT_PASSWORD = SENHA_PADRAO;
 export async function POST(request: Request) {
   try {
     // Segurança: exige sessão de admin/staff (cookie) em vez de senha mestra no body.
-    const admin = await requireAdminUser();
-    if (!admin) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const { negado } = await exigirAdmin();
+    if (negado) return negado;
 
     const {
       fullName,
