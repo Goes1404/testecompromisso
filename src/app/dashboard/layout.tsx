@@ -36,6 +36,7 @@ type NavItem  = { icon: any; label: string; href?: string; id: string; badge?: b
 const studentItems: NavItem[] = [
   { icon: Home, label: "Meu Painel", href: "/dashboard/home", id: "nav-home" },
   { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-mural", hot: true },
+  { icon: ClipboardCheck, label: "Simulado Presencial", href: "/dashboard/student/simulado-presencial", id: "nav-simulado-presencial" },
   {
     icon: BookOpen, label: "Conteúdos", id: "nav-conteudos",
     children: [
@@ -153,6 +154,7 @@ const teacherItems: NavItem[] = [
 const adminItems: NavItem[] = [
   { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home", id: "nav-admin-home" },
   { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-admin-mural", hot: true },
+  { icon: ClipboardCheck, label: "Simulado Presencial", href: "/dashboard/secretary/simulado-presencial", id: "nav-admin-simulado-presencial" },
   {
     icon: Users, label: "Usuários", id: "nav-admin-usuarios",
     children: [
@@ -204,6 +206,7 @@ const secretaryItems: NavItem[] = [
   { icon: ShieldCheck, label: "Painel Secretaria", href: "/dashboard/secretary/home", id: "nav-secretary-home" },
   { icon: BarChart3,   label: "Painel de KPIs",   href: "/dashboard/secretary/kpi",  id: "nav-secretary-kpi" },
   { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-secretary-mural", hot: true },
+  { icon: ClipboardCheck, label: "Simulado Presencial", href: "/dashboard/secretary/simulado-presencial", id: "nav-secretary-simulado-presencial" },
   {
     icon: Users, label: "Matrículas", id: "nav-secretary-matriculas",
     children: [

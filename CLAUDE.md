@@ -560,6 +560,32 @@ Toda live gera **dois avisos aos alunos das turmas da aula** (push + sininho), v
 
 Prova: `npx tsx scripts/test-live-aviso.ts` (dentro de `npm test`).
 
+### 📝 Simulado presencial: inscrição obrigatória e sala sorteada (06/11)
+
+Pedido da coordenação para o simulado de 14/11: o aluno se inscreve pela plataforma
+(08–11/11), a secretaria sorteia as salas e a sala aparece para o aluno a partir de 12/11.
+No dia ele leva RG original e a ficha. Telas: `/dashboard/student/simulado-presencial`
+(aluno + ficha para imprimir), aviso na home (`SimuladoPresencialWidget`, sem dispensar) e
+`/dashboard/secretary/simulado-presencial` (admin/staff: simulado, salas, inscritos,
+sorteio, listas). Regras puras em `src/lib/simulado-presencial.ts`; prévia sem login em
+`/dev/simulado-preview`. Migration `20261106120000_simulado_presencial.sql`.
+
+1. **O aluno não lê nem grava as tabelas.** Tudo por `simulados_presenciais_do_aluno()` e
+   `inscrever_no_simulado()`. A função esconde sala e carteira até `salas_divulgadas_em`,
+   mesmo com o sorteio feito — por RLS a sala vazaria antes da hora.
+2. **Número de inscrição é sequencial por simulado**, gerado com a linha do simulado
+   travada (`FOR UPDATE`). Inscrever de novo devolve o mesmo número (não é erro).
+3. **Janela e público (ENEM/ETEC por `foco_normalizado`) valem só para o aluno.** A
+   secretaria inscreve no balcão a qualquer hora (`inscrever_aluno_no_simulado`).
+4. **Sorteio = ordem aleatória enchendo as salas na ordem cadastrada** (menos salas e
+   fiscais). Salas `reserva` (prédio do fundo, para quem chega sem inscrição/documento)
+   ficam fora. "Encaixar quem está sem sala" (`p_so_sem_sala`) não mexe em quem já tem sala.
+   Refazer depois da divulgação exige `p_forcar` — o aluno já pode ter anotado a sala.
+5. **`nome` da inscrição é congelado** (é o que sai na ficha e na lista de assinatura).
+6. Testado em Postgres (PGlite) com espelho de `profiles`: 33 verificações (RLS, janela,
+   público, numeração, capacidade, reserva, divulgação, encaixe, refazer). Prova das regras
+   de tela: `scripts/test-simulado-presencial.ts` (dentro de `npm test`).
+
 ### 📅 Data da aula e aula no ar
 
 - **Aula no ar conta a validade de `lives.no_ar_desde`**, gravado pelo professor ao

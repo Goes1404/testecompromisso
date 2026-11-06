@@ -76,6 +76,11 @@ const DailyQuestionCard = dynamic(
   () => import('@/components/DailyQuestionCard').then(m => ({ default: m.DailyQuestionCard })),
   { ssr: false, loading: () => <div className="h-28 rounded-[2.5rem] bg-muted/20 animate-pulse" /> }
 );
+// Simulado presencial: inscricao obrigatoria e sala sorteada (some quando nao ha o que fazer).
+const SimuladoPresencialWidget = dynamic(
+  () => import('@/components/SimuladoPresencialWidget').then(m => ({ default: m.SimuladoPresencialWidget })),
+  { ssr: false }
+);
 // Cobranca dos trabalhos do mural. Dinamico como os demais: quando nao ha nada
 // pendente ele nao renderiza nada, entao nao pode custar bundle no caminho
 // critico de quem esta em dia.
@@ -707,6 +712,9 @@ export default function DashboardHome() {
           </div>
         </motion.div>
       )}
+
+      {/* ── SIMULADO PRESENCIAL (inscrição obrigatória / sala sorteada) ── */}
+      {user && <SimuladoPresencialWidget />}
 
       {/* ── TRABALHO DO MURAL PENDENTE ── */}
       {user && <MuralPendenteWidget userId={user.id} />}
