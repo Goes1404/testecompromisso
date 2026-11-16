@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { SCHOOL_LIST } from "@/lib/constants";
 import {
   Ficha, FICHA_VAZIA, PASSOS, ESCOLA_TIPOS, TURNOS, COMO_CONHECEU, PARENTESCOS,
-  ErrosDaFicha, validarFicha, errosDoPasso, ehMenor, hojeNaEscola, FOCOS_NA_FICHA_ONLINE, Foco,
+  ErrosDaFicha, validarFicha, errosDoPasso, ehMenor, hojeNaEscola, FOCOS_NA_FICHA_ONLINE, Foco, SALAS_DE_ORIGEM,
 } from "@/lib/matricula";
 
 export type RespostaDoEnvio = { protocolo: string } | { erro: string; erros?: ErrosDaFicha };
@@ -144,6 +144,22 @@ export function FormularioDaFicha({
               colunas={modo === "site" ? 1 : 2} grande
             />
           </Campo>
+          {f.foco === "ETEC" && (
+            <Campo grupo rotulo="Sua sala no Compromisso" erro={erros.sala_origem}
+              dica="A sala da sua prova vai ser outra: o sistema escolhe na hora e mostra no fim.">
+              <div className="relative">
+                <select
+                  aria-label="Sua sala no Compromisso" value={f.sala_origem}
+                  onChange={(e) => set("sala_origem", e.target.value)}
+                  className={`${SELETOR} ${f.sala_origem ? "text-slate-900 dark:text-white" : "text-muted-foreground"}`}
+                >
+                  <option value="" disabled>Escolha a sua sala</option>
+                  {SALAS_DE_ORIGEM.map((n) => <option key={n} value={String(n)}>Sala {n}</option>)}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-orange-500" />
+              </div>
+            </Campo>
+          )}
           <Campo grupo rotulo="Escola onde estuda" erro={erros.escola}>
             <EscolhaDaEscola valor={f.escola} onChange={(v) => set("escola", v)} />
           </Campo>
@@ -235,6 +251,7 @@ export function FormularioDaFicha({
  * para digitar. O <datalist> antigo não mostrava as escolas no celular.
  */
 const OUTRA_ESCOLA = "__outra__";
+const SELETOR = "w-full h-12 appearance-none rounded-xl border border-input bg-background pl-3 pr-11 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500";
 function EscolhaDaEscola({ valor, onChange }: { valor: string; onChange: (v: string) => void }) {
   const naLista = SCHOOL_LIST.includes(valor);
   const [outra, setOutra] = useState(!!valor && !naLista);
@@ -249,8 +266,7 @@ function EscolhaDaEscola({ valor, onChange }: { valor: string; onChange: (v: str
             if (v === OUTRA_ESCOLA) { setOutra(true); onChange(""); }
             else { setOutra(false); onChange(v); }
           }}
-          className={`w-full h-12 appearance-none rounded-xl border border-input bg-background pl-3 pr-11 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
-            outra || naLista ? "text-slate-900 dark:text-white" : "text-muted-foreground"}`}
+          className={`${SELETOR} ${outra || naLista ? "text-slate-900 dark:text-white" : "text-muted-foreground"}`}
         >
           <option value="" disabled>Escolha a escola</option>
           {SCHOOL_LIST.map((e) => <option key={e} value={e}>{e}</option>)}

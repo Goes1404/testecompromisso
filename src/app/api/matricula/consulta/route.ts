@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const busca = typeof corpo.busca === "string" ? corpo.busca.replace(/\s+/g, " ").trim() : "";
   const nascimento = typeof corpo.nascimento === "string" ? corpo.nascimento.trim() : "";
   if (!busca || !/^\d{4}-\d{2}-\d{2}$/.test(nascimento)) {
-    return NextResponse.json({ error: "Preencha o nome completo (ou o protocolo) e a data de nascimento." }, { status: 400 });
+    return NextResponse.json({ error: "Preencha o nome completo (ou o número de inscrição) e a data de nascimento." }, { status: 400 });
   }
 
   const supa = supabaseServico();
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   const inscricao = await consultar(supa, busca, nascimento);
   if (!inscricao) {
     return NextResponse.json(
-      { error: "Não achamos nenhuma inscrição com esses dados. Confira o nome completo (como na ficha) e a data de nascimento, ou use o número do protocolo." },
+      { error: "Não achamos nenhuma inscrição com esses dados. Confira o nome completo (como na ficha) e a data de nascimento, ou use o número de inscrição." },
       { status: 404 },
     );
   }

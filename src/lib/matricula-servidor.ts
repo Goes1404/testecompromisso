@@ -17,7 +17,7 @@ export function supabaseServico(): SupabaseClient | null {
 const CAMPOS: (keyof Ficha)[] = [
   "nome", "nascimento", "celular", "email", "bairro", "cidade", "foco", "serie", "escola", "escola_tipo",
   "turno_escola", "ja_fez_cursinho", "ex_aluno", "resp_nome", "resp_parentesco", "resp_celular",
-  "como_conheceu", "aceite_veracidade", "aceite_dados", "aceite_imagem",
+  "como_conheceu", "aceite_veracidade", "aceite_dados", "aceite_imagem", "sala_origem",
 ];
 
 export function fichaDoCorpo(corpo: unknown): Ficha {

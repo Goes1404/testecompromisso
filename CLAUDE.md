@@ -612,6 +612,14 @@ Migration `20261116120000_matriculas_2027.sql`.
    35 lugares** (315); **8, 10 e 12 são reserva** (`matricula_salas.reserva`: ENEM-aula e
    atrasados da ETEC) — a ficha e o "Preencher vagas" nunca usam reserva, só a equipe à mão. O
    aviso "a prova é aplicada de manhã" aparece só para ETEC. Tudo editável na aba "Salas e vagas".
+10. **Simulado Pré-Etec 2026** (16/11, `20261116220000_sala_de_origem.sql`): o aluno escolhe a
+    **sala dele no Compromisso** (1–12, `matriculas.sala_origem`) e a sala da prova é **sempre
+    outra** — `sala_livre_da_matricula(ano, foco, evitar)` pega a mais vazia fora a de origem e
+    fora as reservas; o "Preencher vagas" respeita o mesmo. **40 por sala** (360 lugares). A tela
+    não fala de secretaria nem WhatsApp: "Inscrição confirmada com sucesso!", sala, **número de
+    inscrição** (`numeroDeInscricao()`, o protocolo sem o ano) e "leve o RG: conferido na porta
+    da sala". Lista para imprimir (`listasDasSalasHtml`, botão "Imprimir listas das salas"): uma
+    folha por sala, nº, nome, nascimento, ☐ RG conferido e assinatura — sem celular (papel na porta).
 
 Testado em Postgres (PGlite): 36 verificações (RLS de anon/aluno/professor/staff, janela,
 repetida com acento, sala x foco, histórico, sorteio equilibrado, espera por ordem, vaga nova

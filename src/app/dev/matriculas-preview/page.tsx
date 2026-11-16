@@ -28,13 +28,13 @@ function exemplo(): Matricula[] {
       resp_nome: foco === "ETEC" ? `Maria ${nome.split(" ").at(-1)}` : "", resp_parentesco: foco === "ETEC" ? "Mãe" : "", resp_celular: foco === "ETEC" ? "11998877665" : "",
       como_conheceu: "Instagram", aceite_veracidade: true, aceite_dados: true, aceite_imagem: i % 2 === 0,
       status, sala: (status === "confirmada" || status === "recebida") ? (foco === "ETEC" ? (i % 4) + 1 : 5 + (i % 4)) : null,
-      observacoes: i === 5 ? "Irmã da Ana, querem a mesma sala" : null, origem: i === 9 ? "secretaria" : "site",
+      sala_origem: (i % 6) + 1, observacoes: i === 5 ? "Irmã da Ana, querem a mesma sala" : null, origem: i === 9 ? "secretaria" : "site",
       created_at: new Date(Date.UTC(2026, 10, 16, 12, i * 7)).toISOString(), updated_at: "2026-11-16T12:00:00Z",
     } as Matricula;
   }).concat([{ ...({} as Matricula), ...{
     ...FICHA_VAZIA, id: "dup", ano: 2027, numero: 21, protocolo: "2027-0021", nome: "ANA BEATRIZ SOUZA", nascimento: "2011-01-10",
     celular: "11912345678", email: null, foco: "ETEC", serie: "9EF", escola: "Leda Caira", escola_tipo: "publica", turno_escola: "manha",
-    bairro: "Fazendinha", status: "recebida", sala: null, observacoes: null, origem: "site", aceite_dados: true, aceite_veracidade: true,
+    bairro: "Fazendinha", status: "recebida", sala: null, sala_origem: null, observacoes: null, origem: "site", aceite_dados: true, aceite_veracidade: true,
     created_at: "2026-11-16T15:00:00Z", updated_at: "2026-11-16T15:00:00Z",
   } } as Matricula]);
 }

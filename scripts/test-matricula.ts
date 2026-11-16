@@ -5,7 +5,7 @@
 import {
   validarFicha, FICHA_VAZIA, Ficha, idade, ehMenor, errosDoPasso, repetidas, previaDoSorteio,
   situacaoDaFicha, instante, paraCampoDeData, doCampoDeData, dataBR, abasDoExcel, Matricula,
-  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula, serieDoFoco, textoDaSituacao, buscarNaConferencia, placarDaConferencia,
+  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula, serieDoFoco, textoDaSituacao, buscarNaConferencia, placarDaConferencia, numeroDeInscricao,
 } from "../src/lib/matricula";
 
 let falhas = 0;
@@ -16,7 +16,7 @@ const eq = (n: string, a: any, b: any) => {
 };
 const HOJE = "2026-11-16";
 const boa: Ficha = {
-  ...FICHA_VAZIA, nome: "  Maria  Eduarda Santos ", nascimento: "2011-03-10", celular: "(11) 91234-5678",
+  ...FICHA_VAZIA, sala_origem: "2", nome: "  Maria  Eduarda Santos ", nascimento: "2011-03-10", celular: "(11) 91234-5678",
   bairro: "Fazendinha", foco: "ETEC", serie: "9EF", escola: "Leda Caira", escola_tipo: "publica", turno_escola: "manha",
   resp_nome: "Ana Santos", resp_parentesco: "Mãe", resp_celular: "11 99876-5432",
   aceite_veracidade: true, aceite_dados: true,
@@ -55,7 +55,7 @@ eq("data BR sem fuso", dataBR("2011-03-10"), "10/03/2011");
 eq("celular formatado", formatarCelular("11912345678"), "(11) 91234-5678");
 
 const m = (i: number, x: Partial<Matricula> = {}): Matricula => ({
-  ...boa, ...v.limpa, id: `m${i}`, ano: 2027, numero: i, protocolo: `2027-${String(i).padStart(4, "0")}`, email: null,
+  ...boa, ...v.limpa, id: `m${i}`, ano: 2027, numero: i, protocolo: `2027-${String(i).padStart(4, "0")}`, email: null, sala_origem: 2,
   foco: "ETEC", serie: "9EF", escola_tipo: "publica", turno_escola: "manha", status: "confirmada", sala: null,
   observacoes: null, origem: "site", created_at: "2026-11-16T13:00:00Z", updated_at: "2026-11-16T13:00:00Z",
   nome: `Aluno ${i}`, celular: `119000000${String(i).padStart(2, "0")}`, ...x,
@@ -104,6 +104,12 @@ const comReserva: SalaDaMatricula[] = [
 const pRes = previaDoSorteio("ETEC", [m(1, { status: "espera" }), m(2, { status: "espera" }), m(3, { status: "espera" }), m(4, { sala: 8 })], comReserva);
 eq("reserva fora da prévia: só a sala 1 aparece, 2 vagas, 1 continua na fila", [pRes.salas.map((x) => x.sala), pRes.vagas, pRes.entram, pRes.espera], [[1], 2, 2, 1]);
 eq("refazer não conta quem está na reserva", previaDoSorteio("ETEC", [m(4, { sala: 8 })], comReserva, true).candidatos, 0);
+
+eq("ETEC sem sala no Compromisso: erro", !!validarFicha({ ...boa, sala_origem: "" }, HOJE).erros.sala_origem, true);
+eq("sala 13 não existe", !!validarFicha({ ...boa, sala_origem: "13" }, HOJE).erros.sala_origem, true);
+eq("número de inscrição sem o ano", numeroDeInscricao("2027-0012"), "0012");
+const folha = listasDasSalasHtml([m(1, { sala: 1, nome: "Ana Souza" })], [{ ano: 2027, sala: 1, foco: "ETEC", capacidade: 40 }]);
+eq("lista impressa: RG conferido, sem celular", folha.includes("RG conferido") && !folha.includes("91234"), true);
 
 if (falhas) { console.error(`\n${falhas} falha(s)`); process.exit(1); }
 console.log("\ntudo ok");

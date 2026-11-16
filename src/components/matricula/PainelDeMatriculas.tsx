@@ -125,6 +125,9 @@ export function PainelDeMatriculas({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={imprimir} disabled={!lista.length} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
+            <Printer className="h-4 w-4 mr-2" /> Imprimir listas das salas
+          </Button>
           <Button asChild className="h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-xs uppercase tracking-widest">
             <Link href="/dashboard/secretary/matriculas/conferencia"><ScanLine className="h-4 w-4 mr-2" /> Conferência rápida</Link>
           </Button>
@@ -553,7 +556,7 @@ function SalasESorteio({ salas, lista, ano, acoes, onImprimir }: {
             <Button variant="outline" onClick={onImprimir} disabled={!ocup.size} className="h-10 rounded-xl font-black text-xs">
               <Printer className="h-4 w-4 mr-1.5" /> Listas por sala
             </Button>
-            <Button onClick={() => acoes.criarSala({ ano, sala: proxima, foco: "ETEC", capacidade: 35 })} className="h-10 rounded-xl font-black text-xs">
+            <Button onClick={() => acoes.criarSala({ ano, sala: proxima, foco: "ETEC", capacidade: 40 })} className="h-10 rounded-xl font-black text-xs">
               <PlusCircle className="h-4 w-4 mr-1.5" /> Sala {proxima}
             </Button>
           </div>

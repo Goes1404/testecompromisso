@@ -12,6 +12,13 @@ import { normalizarNome } from "@/lib/primeiro-acesso";
 export const ANO_MATRICULA = 2027;
 /** A ficha online é só para o Vestibulinho ETEC (16/11). ENEM entra pelo balcão. */
 export const FOCOS_NA_FICHA_ONLINE: Foco[] = ["ETEC"];
+/** Nome do evento, igual na ficha, na lista impressa e no recado. */
+export const TITULO_DO_SIMULADO = "Simulado Pré-Etec 2026";
+/** Salas do cursinho que o aluno pode dizer que é a dele (a sala da prova é sempre outra). */
+export const SALAS_DE_ORIGEM = Array.from({ length: 12 }, (_, i) => i + 1);
+
+/** "2027-0012" → "0012": o número que o aluno vê e diz na porta. */
+export const numeroDeInscricao = (protocolo: string) => protocolo.split("-").pop() ?? protocolo;
 export const FUSO = "America/Sao_Paulo";
 
 export type Foco = "ETEC" | "ENEM";
@@ -83,18 +90,20 @@ export interface Ficha {
   aceite_veracidade: boolean;
   aceite_dados: boolean;
   aceite_imagem: boolean;
+  /** Sala do aluno no cursinho (1–12), como texto do campo. */
+  sala_origem: string;
 }
 
 export const FICHA_VAZIA: Ficha = {
   nome: "", nascimento: "", celular: "", email: "", bairro: "", cidade: "Santana de Parnaíba",
   foco: "", serie: "", escola: "", escola_tipo: "", turno_escola: "", ja_fez_cursinho: false, ex_aluno: false,
   resp_nome: "", resp_parentesco: "", resp_celular: "", como_conheceu: "",
-  aceite_veracidade: false, aceite_dados: false, aceite_imagem: false,
+  aceite_veracidade: false, aceite_dados: false, aceite_imagem: false, sala_origem: "",
 };
 
 export const PASSOS = [
   { titulo: "Aluno", campos: ["nome", "nascimento", "celular", "email", "bairro", "cidade"] },
-  { titulo: "Estudos", campos: ["foco", "escola", "escola_tipo", "turno_escola", "ja_fez_cursinho", "ex_aluno"] },
+  { titulo: "Estudos", campos: ["foco", "sala_origem", "escola", "escola_tipo", "turno_escola", "ja_fez_cursinho", "ex_aluno"] },
   { titulo: "Responsável", campos: ["resp_nome", "resp_parentesco", "resp_celular", "como_conheceu"] },
   { titulo: "Autorizações", campos: ["aceite_veracidade", "aceite_dados", "aceite_imagem"] },
 ] as const;
@@ -166,6 +175,11 @@ export function validarFicha(f: Ficha, hoje: string): { erros: ErrosDaFicha; lim
   if (limpa.cidade.length < 2) e.cidade = "Informe a cidade.";
 
   if (!limpa.foco) e.foco = "Escolha ETEC ou ENEM.";
+  limpa.sala_origem = soDigitos(f.sala_origem);
+  if (limpa.foco === "ETEC") {
+    const n = Number(limpa.sala_origem);
+    if (!limpa.sala_origem || !SALAS_DE_ORIGEM.includes(n)) e.sala_origem = "Escolha a sua sala no Compromisso.";
+  }
   if (limpa.escola.length < 2) e.escola = "Informe a escola.";
   if (!limpa.escola_tipo) e.escola_tipo = "Escolha o tipo de escola.";
   if (!limpa.turno_escola) e.turno_escola = "Escolha o turno.";
@@ -203,6 +217,7 @@ export function paraOBanco(f: Ficha, ano = ANO_MATRICULA) {
     ex_aluno: f.ex_aluno, resp_nome: f.resp_nome || null, resp_parentesco: f.resp_parentesco || null,
     resp_celular: f.resp_celular || null, como_conheceu: f.como_conheceu || null,
     aceite_veracidade: f.aceite_veracidade, aceite_dados: f.aceite_dados, aceite_imagem: f.aceite_imagem,
+    sala_origem: f.sala_origem ? Number(f.sala_origem) : null,
   };
 }
 
@@ -246,7 +261,9 @@ export function paraCampoDeData(iso: string | null | undefined): string {
 export const doCampoDeData = (v: string) => (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v) ? `${v}:00-03:00` : null);
 
 // ── Planilha da equipe ──────────────────────────────────────────────────────
-export interface Matricula extends Omit<Ficha, "foco" | "serie" | "escola_tipo" | "turno_escola" | "email"> {
+export interface Matricula extends Omit<Ficha, "foco" | "serie" | "escola_tipo" | "turno_escola" | "email" | "sala_origem"> {
+  /** Sala do aluno no cursinho; nula nas inscrições antigas. */
+  sala_origem?: number | null;
   id: string;
   ano: number;
   numero: number;
@@ -310,12 +327,10 @@ export function textoDaSituacao(s: Pick<SituacaoDaInscricao, "status" | "sala" |
   if (s.sala) {
     return {
       titulo: `Sala ${s.sala}`,
-      frase: s.status === "confirmada"
-        ? "Matrícula confirmada. Esta é a sua sala."
-        : "Esta é a sua sala. A matrícula ainda precisa ser confirmada na secretaria, com o RG original.",
+      frase: "Esta é a sala da sua prova no dia do simulado.",
     };
   }
-  return { titulo: "Sala a definir", frase: "A secretaria vai definir a sua sala. Consulte aqui de novo em alguns dias." };
+  return { titulo: "Inscrição registrada", frase: "No dia do simulado, procure a equipe do cursinho na entrada com o seu número de inscrição." };
 }
 
 /**
@@ -430,6 +445,7 @@ export function linhaDoExcel(m: Matricula, hoje: string): Record<string, string 
     Protocolo: m.protocolo,
     Status: statusParaMostrar(m),
     Sala: m.sala ?? "",
+    "Sala no Compromisso": m.sala_origem ?? "",
     Nome: m.nome,
     Nascimento: dataBR(m.nascimento),
     Idade: idade(m.nascimento, hoje),
@@ -474,22 +490,34 @@ export function esc(v: unknown): string {
   return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-/** Uma folha por sala, em ordem alfabética, com coluna de assinatura. */
+/**
+ * Lista de inscrição para imprimir: uma folha por sala de prova, em ordem
+ * alfabética. É a lista que fica na porta da sala no dia do simulado: o fiscal
+ * confere o RG e o aluno assina. Sem celular nem responsável — é papel que
+ * fica exposto na porta.
+ */
 export function listasDasSalasHtml(lista: Matricula[], salas: SalaDaMatricula[], ano = ANO_MATRICULA): string {
   const paginas = [...salas].sort((a, b) => a.sala - b.sala).map((s) => {
     const daSala = lista.filter((m) => ocupaSala(m) && m.sala === s.sala)
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     if (!daSala.length) return "";
-    return `<div class="pagina"><h1>Sala ${s.sala} · ${esc(s.foco)} · ${ano}</h1>
-      <div class="sub">Cursinho Compromisso · ${daSala.length} aluno(s)</div>
-      <table><thead><tr><th>#</th><th>Protocolo</th><th>Nome</th><th>Celular</th><th>Situação</th><th class="ass">Assinatura</th></tr></thead><tbody>
-      ${daSala.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.protocolo)}</td><td>${esc(m.nome)}</td><td>${esc(formatarCelular(m.celular))}</td><td>${m.status === "confirmada" ? "Confirmada" : "Falta confirmar"}</td><td></td></tr>`).join("")}
+    return `<div class="pagina">
+      <div class="topo"><div><div class="ev">${esc(TITULO_DO_SIMULADO)}</div><h1>Sala ${s.sala}</h1></div>
+      <div class="cont">${daSala.length} aluno(s)${s.reserva ? " · sala de reserva" : ""}</div></div>
+      <p class="inst">Confira o RG original de cada aluno com o nome e a data de nascimento desta lista. O aluno assina ao entrar.</p>
+      <table><thead><tr><th class="n">#</th><th>Nº de inscrição</th><th>Nome</th><th>Nascimento</th><th class="rg">RG conferido</th><th class="ass">Assinatura do aluno</th></tr></thead><tbody>
+      ${daSala.map((m, i) => `<tr><td class="n">${i + 1}</td><td>${esc(numeroDeInscricao(m.protocolo))}</td><td>${esc(m.nome)}</td><td>${esc(dataBR(m.nascimento))}</td><td class="rg">☐</td><td></td></tr>`).join("")}
       </tbody></table></div>`;
   }).join("");
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Salas ${ano}</title><style>
-    body{font-family:Arial,sans-serif;margin:24px;color:#111} h1{font-size:20px;margin:0} .sub{color:#555;font-size:12px;margin:4px 0 12px}
-    table{width:100%;border-collapse:collapse;font-size:12px} th,td{border:1px solid #999;padding:6px 8px;text-align:left} th{background:#f2f2f2}
-    .ass{width:35%} .pagina{page-break-after:always} .pagina:last-child{page-break-after:auto}
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Listas de inscrição · ${esc(TITULO_DO_SIMULADO)}</title><style>
+    body{font-family:Arial,sans-serif;margin:24px;color:#111}
+    .topo{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #ea580c;padding-bottom:8px}
+    .ev{font-size:12px;color:#555;font-weight:bold} h1{font-size:34px;margin:0} .cont{font-size:13px;color:#555}
+    .inst{font-size:12px;color:#333;margin:10px 0 12px}
+    table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid #999;padding:8px;text-align:left} th{background:#fff1e6}
+    td{height:22px} .n{width:28px;text-align:center} .rg{width:90px;text-align:center;font-size:16px} .ass{width:32%}
+    .pagina{page-break-after:always} .pagina:last-child{page-break-after:auto}
+    tr{page-break-inside:avoid}
   </style></head><body>${paginas || "<p>Ninguém nas salas ainda.</p>"}
   <script>window.onload=function(){setTimeout(function(){window.print()},250)}</script></body></html>`;
 }
@@ -497,7 +525,7 @@ export function listasDasSalasHtml(lista: Matricula[], salas: SalaDaMatricula[],
 /** Recado pronto para o WhatsApp e o Instagram. */
 export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" | "fecha_em">): string {
   return [
-    `📚 *Inscrições abertas — Simulado Pré-Etec · Cursinho Compromisso*`,
+    `📚 *Inscrições abertas — ${TITULO_DO_SIMULADO} · Cursinho Compromisso*`,
     "",
     "Para quem vai prestar o Vestibulinho ETEC, em Santana de Parnaíba.",
     "Preencha a ficha de inscrição pelo celular (uns 5 minutos) e veja a sua sala na hora:",
@@ -507,6 +535,6 @@ export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" 
     "👨‍👩‍👧 Menor de 18 anos: precisa dos dados do responsável.",
     "📝 O simulado é aplicado de manhã.",
     "🔎 Já se inscreveu? No mesmo link, toque em \"Consultar inscrição\".",
-    "📄 Depois a secretaria chama para confirmar a matrícula com RG original e o responsável.",
+    "🪪 No dia, leve o RG original: ele é conferido na porta da sala da prova.",
   ].join("\n");
 }

@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  CheckCircle2, Loader2, CalendarClock, IdCard, Sunrise, MessageCircle, Lock, Camera, Search, ClipboardList, Hourglass, XCircle, RotateCcw,
+  CheckCircle2, Loader2, CalendarClock, IdCard, Sunrise, Lock, Camera, Search, ClipboardList, Hourglass, XCircle, RotateCcw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormularioDaFicha, RespostaDoEnvio } from "@/components/matricula/FormularioDaFicha";
 import { FundoDeGabarito } from "@/components/matricula/FundoDeGabarito";
-import { ANO_MATRICULA, AVISO_DA_PROVA, Ficha, instante, SituacaoDaFicha, SituacaoDaInscricao, textoDaSituacao, hojeNaEscola } from "@/lib/matricula";
+import { ANO_MATRICULA, AVISO_DA_PROVA, numeroDeInscricao, Ficha, instante, SituacaoDaFicha, SituacaoDaInscricao, textoDaSituacao, hojeNaEscola } from "@/lib/matricula";
 
 type Janela = { ano: number; situacao: SituacaoDaFicha | "indisponivel"; abre_em?: string; fecha_em?: string };
 type Aba = "ficha" | "consulta";
@@ -65,8 +65,8 @@ export default function FichaDeInscricaoPage() {
           </div>
           <p className="mt-10 text-sm font-semibold text-white/85">Cursinho Compromisso em Santana de Parnaíba</p>
           <h1 className="mt-1 font-black italic tracking-tighter leading-[0.9] drop-shadow-[0_2px_12px_rgba(124,45,18,0.35)]">
-            <span className="block text-[1.65rem] sm:text-3xl text-white/90">Inscrição para</span>
-            <span className="block text-[2.6rem] sm:text-5xl">Simulado <span className="whitespace-nowrap">Pré-Etec</span></span>
+            <span className="block text-[1.65rem] sm:text-3xl text-white/90">Inscrição</span>
+            <span className="block text-[2.6rem] sm:text-5xl">Simulado <span className="whitespace-nowrap">Pré-Etec</span> 2026</span>
           </h1>
           {janela?.situacao === "aberta" && janela.fecha_em && !recebida && aba === "ficha" && (
             <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-orange-950/20 px-3 h-8 text-sm font-semibold text-white">
@@ -95,9 +95,13 @@ export default function FichaDeInscricaoPage() {
             </div>
           )}
         </div>
-        <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-6 max-w-sm mx-auto">
-          Os dados são usados só para a inscrição e o contato sobre as aulas, e ficam com a secretaria do cursinho.
-        </p>
+        <section className="mt-6 max-w-md mx-auto text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
+          <p className="font-bold text-slate-600 dark:text-slate-300">🔒 Privacidade e Proteção de Dados</p>
+          <p>
+            Seus dados pessoais são tratados com segurança e utilizados exclusivamente para fins de inscrição, matrícula e
+            comunicação institucional, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 – LGPD).
+          </p>
+        </section>
       </main>
     </div>
   );
@@ -121,7 +125,7 @@ function Abas({ aba, onTrocar }: { aba: Aba; onTrocar: (a: Aba) => void }) {
   );
 }
 
-/** Consulta pelo mesmo link: nome completo (ou protocolo) + data de nascimento. */
+/** Consulta pelo mesmo link: nome completo (ou número de inscrição) + data de nascimento. */
 function Consulta() {
   const [busca, setBusca] = useState("");
   const [nascimento, setNascimento] = useState("");
@@ -132,7 +136,7 @@ function Consulta() {
   const consultar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busca.trim().length < 1 || !nascimento) {
-      setErro("Preencha o nome completo (ou o protocolo) e a data de nascimento.");
+      setErro("Preencha o nome completo (ou o número de inscrição) e a data de nascimento.");
       return;
     }
     setCarregando(true);
@@ -169,8 +173,8 @@ function Consulta() {
         <p className="text-sm text-slate-500 mt-1">Veja a sua sala ou o seu lugar na lista de espera.</p>
       </div>
       <label className="block space-y-1.5">
-        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Nome completo do aluno ou protocolo</span>
-        <Input value={busca} onChange={(e) => setBusca(e.target.value)} autoComplete="name" placeholder="Como foi escrito na ficha, ou 2027-0001" className="h-12 rounded-xl" />
+        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Nome completo do aluno ou número de inscrição</span>
+        <Input value={busca} onChange={(e) => setBusca(e.target.value)} autoComplete="name" placeholder="Como foi escrito na ficha, ou o número (ex.: 0012)" className="h-12 rounded-xl" />
       </label>
       <label className="block space-y-1.5">
         <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Data de nascimento do aluno</span>
@@ -203,14 +207,14 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
         </span>
         <div className="min-w-0">
           <p className="font-black text-base leading-tight">Tire um print desta tela agora</p>
-          <p className="text-xs text-white/75 mt-0.5">Ela é o seu comprovante. Mostre na secretaria e no primeiro dia de aula.</p>
+          <p className="text-xs text-white/75 mt-0.5">Ela é o seu comprovante de inscrição. Guarde até o dia do simulado.</p>
         </div>
       </div>
 
       <div>
         {nova && (
           <h2 className="text-2xl font-black italic tracking-tight text-slate-900 dark:text-white">
-            Inscrição recebida{s.primeiro_nome ? `, ${s.primeiro_nome}` : ""}!
+            Inscrição confirmada com sucesso!
           </h2>
         )}
         {!nova && s.primeiro_nome && (
@@ -223,7 +227,7 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
         : "bg-amber-50 text-amber-900 border-2 border-amber-200 dark:bg-amber-500/10 dark:text-amber-100"}`}>
         {comSala ? (
           <>
-            <p className="text-base font-bold text-white/90">Sua sala{s.foco ? ` de ${s.foco}` : ""}</p>
+            <p className="text-base font-bold text-white/90">Sala da sua prova</p>
             {/* A sala como uma bolinha de gabarito preenchida — o mesmo desenho do topo. */}
             <div className="relative mx-auto mt-3 h-36 w-36">
               <span className="absolute inset-0 rounded-full border-[3px] border-white/45" />
@@ -255,24 +259,17 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
       )}
 
       <div className="rounded-2xl border-2 border-dashed border-orange-300 p-4">
-        <span className="text-xs font-semibold text-slate-500">Protocolo</span>
-        <p className="text-3xl font-black tracking-widest tabular-nums text-slate-900 dark:text-white">{protocolo}</p>
+        <span className="text-xs font-semibold text-slate-500">Número de inscrição</span>
+        <p className="text-4xl font-black tracking-widest tabular-nums text-slate-900 dark:text-white">{numeroDeInscricao(protocolo)}</p>
       </div>
 
       {s.status !== "cancelada" && (
         <ol className="text-left space-y-3">
-          {s.status !== "confirmada" && (
-            <>
-              <Passo icone={MessageCircle} titulo="A secretaria chama no WhatsApp">
-                Para marcar a confirmação da matrícula.
-              </Passo>
-              <Passo icone={IdCard} titulo="Confirmação na secretaria">
-                Leve o RG original do aluno. Menor de 18 anos vai com o responsável, que assina.
-              </Passo>
-            </>
-          )}
+          <Passo icone={IdCard} titulo="Leve o RG original">
+            O RG será conferido na porta da sala da sua prova, com a lista de inscrição.
+          </Passo>
           <Passo icone={Search} titulo="Consulte quando quiser">
-            Neste mesmo link, em &quot;Consultar&quot;, com o nome completo e a data de nascimento (ou o protocolo).
+            Neste mesmo link, em &quot;Consultar&quot;, com o nome completo e a data de nascimento (ou o número de inscrição).
           </Passo>
         </ol>
       )}
