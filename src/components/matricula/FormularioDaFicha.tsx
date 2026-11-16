@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SCHOOL_LIST } from "@/lib/constants";
@@ -230,33 +230,33 @@ export function FormularioDaFicha({
 }
 
 /**
- * Escola: as escolas da cidade aparecem na tela para tocar (o <datalist> antigo
- * não mostrava nada no celular — o aluno via só um campo vazio). "Outra escola"
- * abre o campo para digitar.
+ * Escola: caixa com setinha que abre a lista das escolas da cidade (o seletor
+ * nativo do celular, que rola e é fácil de tocar). "Outra escola" abre o campo
+ * para digitar. O <datalist> antigo não mostrava as escolas no celular.
  */
+const OUTRA_ESCOLA = "__outra__";
 function EscolhaDaEscola({ valor, onChange }: { valor: string; onChange: (v: string) => void }) {
   const naLista = SCHOOL_LIST.includes(valor);
   const [outra, setOutra] = useState(!!valor && !naLista);
-  const item = (ativo: boolean) =>
-    `rounded-xl border-2 px-3 py-2.5 text-left text-sm font-bold transition-colors ${
-      ativo ? "border-orange-500 bg-orange-50 text-orange-900 dark:bg-orange-500/15 dark:text-orange-100"
-        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"}`;
   return (
     <div className="space-y-2">
-      <div role="radiogroup" aria-label="Escola" className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {SCHOOL_LIST.map((e) => {
-          const ativo = !outra && valor === e;
-          return (
-            <button key={e} type="button" role="radio" aria-checked={ativo} className={item(ativo)}
-              onClick={() => { setOutra(false); onChange(e); }}>
-              {e}
-            </button>
-          );
-        })}
-        <button type="button" role="radio" aria-checked={outra} className={item(outra)}
-          onClick={() => { setOutra(true); if (naLista) onChange(""); }}>
-          Outra escola
-        </button>
+      <div className="relative">
+        <select
+          aria-label="Escola"
+          value={outra ? OUTRA_ESCOLA : naLista ? valor : ""}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === OUTRA_ESCOLA) { setOutra(true); onChange(""); }
+            else { setOutra(false); onChange(v); }
+          }}
+          className={`w-full h-12 appearance-none rounded-xl border border-input bg-background pl-3 pr-11 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+            outra || naLista ? "text-slate-900 dark:text-white" : "text-muted-foreground"}`}
+        >
+          <option value="" disabled>Escolha a escola</option>
+          {SCHOOL_LIST.map((e) => <option key={e} value={e}>{e}</option>)}
+          <option value={OUTRA_ESCOLA}>Outra escola</option>
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-orange-500" />
       </div>
       {outra && (
         <Input autoFocus value={valor} onChange={(e) => onChange(e.target.value)} placeholder="Escreva o nome da escola" className="h-12 rounded-xl" aria-label="Nome da escola" />
