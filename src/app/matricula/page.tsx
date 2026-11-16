@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormularioDaFicha, RespostaDoEnvio } from "@/components/matricula/FormularioDaFicha";
+import { FundoDeGabarito } from "@/components/matricula/FundoDeGabarito";
 import { ANO_MATRICULA, AVISO_DA_PROVA, Ficha, instante, SituacaoDaFicha, SituacaoDaInscricao, textoDaSituacao, hojeNaEscola } from "@/lib/matricula";
 
 type Janela = { ano: number; situacao: SituacaoDaFicha | "indisponivel"; abre_em?: string; fecha_em?: string };
@@ -47,9 +48,10 @@ export default function FichaDeInscricaoPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950">
-      <header className="bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500 text-white">
-        <div className="max-w-xl mx-auto px-5 pt-6 pb-10">
+    <div className="papel-quadriculado min-h-[100dvh]">
+      <header className="relative isolate overflow-hidden bg-[linear-gradient(160deg,#fb923c_0%,#f97316_38%,#ea580c_72%,#c2410c_100%)] text-white">
+        <FundoDeGabarito className="-z-10" />
+        <div className="max-w-xl mx-auto px-5 pt-6 pb-16">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex items-center gap-2 min-w-0">
               <span className="h-10 w-10 rounded-xl bg-white flex items-center justify-center overflow-hidden shadow-lg shrink-0">
@@ -57,22 +59,25 @@ export default function FichaDeInscricaoPage() {
               </span>
               <span className="font-black tracking-tight leading-tight">Cursinho Compromisso</span>
             </Link>
-            <Link href="/login" className="shrink-0 whitespace-nowrap text-[11px] font-black uppercase tracking-wider bg-white/15 border border-white/30 rounded-full px-3 h-8 flex items-center">
+            <Link href="/login" className="shrink-0 whitespace-nowrap text-xs font-bold bg-white/15 border border-white/35 backdrop-blur-sm rounded-full px-3.5 h-9 flex items-center hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
               Já sou aluno
             </Link>
           </div>
-          <p className="mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/80">Vestibulinho ETEC · Santana de Parnaíba</p>
-          <h1 className="text-[2rem] sm:text-4xl font-black italic tracking-tighter leading-[0.95] mt-1">Ficha de inscrição {ANO_MATRICULA}</h1>
+          <p className="mt-10 text-sm font-semibold text-white/85">Vestibulinho ETEC em Santana de Parnaíba</p>
+          <h1 className="mt-1 font-black italic tracking-tighter leading-[0.9] drop-shadow-[0_2px_12px_rgba(124,45,18,0.35)]">
+            <span className="block text-[2.6rem] sm:text-5xl">Ficha de</span>
+            <span className="block text-[2.6rem] sm:text-5xl">inscrição <span className="tabular-nums">{ANO_MATRICULA}</span></span>
+          </h1>
           {janela?.situacao === "aberta" && janela.fecha_em && !recebida && aba === "ficha" && (
-            <p className="mt-3 text-sm font-semibold text-white/90 flex items-center gap-1.5">
+            <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-orange-950/20 px-3 h-8 text-sm font-semibold text-white">
               <CalendarClock className="h-4 w-4" /> Inscrições até {instante(janela.fecha_em)}
             </p>
           )}
         </div>
       </header>
 
-      <main className="max-w-xl mx-auto px-4 -mt-6 pb-16">
-        <div className="rounded-[2.5rem] bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-8">
+      <main className="relative max-w-xl mx-auto px-4 -mt-10 pb-16">
+        <div className="rounded-[2.5rem] bg-white dark:bg-slate-900 shadow-[0_24px_60px_-20px_rgba(124,45,18,0.35)] ring-1 ring-orange-900/5 dark:ring-white/10 p-5 sm:p-8">
           {!janela ? (
             <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-orange-500" /></div>
           ) : recebida ? (
@@ -90,7 +95,7 @@ export default function FichaDeInscricaoPage() {
             </div>
           )}
         </div>
-        <p className="text-center text-xs text-slate-400 mt-6">
+        <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-6 max-w-sm mx-auto">
           Os dados são usados só para a inscrição e o contato sobre as aulas, e ficam com a secretaria do cursinho.
         </p>
       </main>
@@ -102,7 +107,7 @@ function Abas({ aba, onTrocar }: { aba: Aba; onTrocar: (a: Aba) => void }) {
   const item = (valor: Aba, rotulo: string, Icone: typeof Search) => (
     <button
       type="button" role="tab" aria-selected={aba === valor} onClick={() => onTrocar(valor)}
-      className={`flex-1 h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${
+      className={`flex-1 h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500 ${
         aba === valor ? "bg-white text-orange-600 shadow dark:bg-slate-800 dark:text-orange-300" : "text-slate-500 dark:text-slate-400"}`}
     >
       <Icone className="h-4 w-4 shrink-0" /> {rotulo}
@@ -197,7 +202,7 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
           <Camera className="h-6 w-6" />
         </span>
         <div className="min-w-0">
-          <p className="font-black uppercase tracking-wide text-sm leading-tight">Tire um print desta tela agora</p>
+          <p className="font-black text-base leading-tight">Tire um print desta tela agora</p>
           <p className="text-xs text-white/75 mt-0.5">Ela é o seu comprovante. Mostre na secretaria e no primeiro dia de aula.</p>
         </div>
       </div>
@@ -213,24 +218,25 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
         )}
       </div>
 
-      <div className={`rounded-[2rem] p-6 ${comSala ? "bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-xl"
+      <div className={`rounded-[2rem] p-6 ${comSala ? "bg-[linear-gradient(160deg,#fb923c_0%,#f97316_45%,#c2410c_100%)] text-white shadow-[0_18px_40px_-16px_rgba(194,65,12,0.6)]"
         : s.status === "cancelada" ? "bg-red-50 text-red-900 border-2 border-red-200 dark:bg-red-500/10 dark:text-red-100"
         : "bg-amber-50 text-amber-900 border-2 border-amber-200 dark:bg-amber-500/10 dark:text-amber-100"}`}>
         {comSala ? (
           <>
-            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/85">Sua sala</span>
-            <p className="text-7xl font-black italic tracking-tighter leading-none mt-1 tabular-nums">{s.sala}</p>
-            {s.foco && (
-              <span className="inline-flex mt-3 rounded-full bg-white/20 border border-white/30 px-3 h-7 items-center text-xs font-black tracking-wider">
-                {s.foco}
+            <p className="text-base font-bold text-white/90">Sua sala{s.foco ? ` de ${s.foco}` : ""}</p>
+            {/* A sala como uma bolinha de gabarito preenchida — o mesmo desenho do topo. */}
+            <div className="relative mx-auto mt-3 h-36 w-36">
+              <span className="absolute inset-0 rounded-full border-[3px] border-white/45" />
+              <span className="absolute inset-2.5 rounded-full bg-white flex items-center justify-center shadow-[inset_0_-6px_0_rgba(234,88,12,0.12)]">
+                <span className="text-7xl font-black italic tracking-tighter leading-none tabular-nums text-orange-600">{s.sala}</span>
               </span>
-            )}
+            </div>
           </>
         ) : (
           <>
             <Icone className="h-10 w-10 mx-auto opacity-80" />
             <p className="text-2xl font-black italic tracking-tight mt-2">{t.titulo}</p>
-            {s.foco && <span className="inline-flex mt-2 rounded-full bg-white/60 dark:bg-white/10 px-3 h-7 items-center text-xs font-black tracking-wider">{s.foco}</span>}
+            {s.foco && <p className="mt-1 text-sm font-bold opacity-80">{s.foco}</p>}
           </>
         )}
       </div>
@@ -249,7 +255,7 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
       )}
 
       <div className="rounded-2xl border-2 border-dashed border-orange-300 p-4">
-        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Protocolo</span>
+        <span className="text-xs font-semibold text-slate-500">Protocolo</span>
         <p className="text-3xl font-black tracking-widest tabular-nums text-slate-900 dark:text-white">{protocolo}</p>
       </div>
 

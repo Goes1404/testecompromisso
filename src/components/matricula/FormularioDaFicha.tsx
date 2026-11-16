@@ -79,20 +79,28 @@ export function FormularioDaFicha({
 
   return (
     <div className="space-y-6">
-      {/* Passos */}
-      <ol className="grid grid-cols-4 gap-2" aria-label="Passos da ficha">
-        {PASSOS.map((p, i) => (
-          <li key={p.titulo} className="space-y-1.5">
-            <div className={`h-1.5 rounded-full ${i <= passo ? "bg-orange-500" : "bg-slate-200 dark:bg-slate-700"}`} />
-            <span className={`hidden sm:block text-[10px] font-black uppercase tracking-wider ${i === passo ? "text-orange-600" : "text-slate-400"}`}>
-              {i + 1}. {p.titulo}
-            </span>
-          </li>
-        ))}
+      {/* Passos como bolinhas de gabarito: preenchida = feito, contornada = agora. */}
+      <ol className="flex items-start" aria-label="Passos da ficha">
+        {PASSOS.map((p, i) => {
+          const feito = i < passo, agora = i === passo;
+          return (
+            <li key={p.titulo} className="flex-1 flex flex-col items-center gap-1.5 relative" aria-current={agora ? "step" : undefined}>
+              {i > 0 && (
+                <span className={`absolute top-[15px] right-1/2 w-full h-0.5 -z-0 ${i <= passo ? "bg-orange-400" : "bg-slate-200 dark:bg-slate-700"}`} />
+              )}
+              <span className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center text-sm font-black transition-colors ${
+                feito ? "bg-orange-500 text-white"
+                  : agora ? "bg-white text-orange-600 ring-[3px] ring-orange-500 dark:bg-slate-900"
+                  : "bg-white text-slate-400 ring-2 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700"}`}>
+                {feito ? <Check className="h-4 w-4" strokeWidth={3} /> : i + 1}
+              </span>
+              <span className={`text-xs font-bold ${agora ? "text-orange-600" : feito ? "text-slate-600 dark:text-slate-300" : "text-slate-400"}`}>
+                {p.titulo}
+              </span>
+            </li>
+          );
+        })}
       </ol>
-      <p className="sm:hidden -mt-3 text-[11px] font-black uppercase tracking-wider text-orange-600">
-        Passo {passo + 1} de {PASSOS.length} · {PASSOS[passo].titulo}
-      </p>
 
       {/* Isca para robô: fora da tela, sem tab, sem preencher automático. */}
       <input
@@ -213,7 +221,7 @@ export function FormularioDaFicha({
           type="button"
           onClick={ultimo ? enviar : avancar}
           disabled={enviando}
-          className="flex-1 min-w-0 h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs sm:text-sm uppercase tracking-wider sm:tracking-widest shadow-lg active:scale-[0.98]"
+          className="flex-1 min-w-0 h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-base shadow-[0_10px_24px_-10px_rgba(234,88,12,0.7)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
         >
           {enviando ? <Loader2 className="h-5 w-5 animate-spin" />
             : ultimo ? <><Check className="h-5 w-5 mr-2" /> {modo === "site" ? "Enviar inscrição" : "Registrar inscrição"}</>
