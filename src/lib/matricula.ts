@@ -276,6 +276,12 @@ export function statusParaMostrar(m: Pick<Matricula, "status" | "sala">): string
 }
 
 // ── Consulta e tela de "inscrição recebida" ─────────────────────────────────
+/** Aviso fixo na tela da sala (inscrição e consulta) e no recado do WhatsApp. */
+export const AVISO_DA_PROVA = {
+  titulo: "As provas são aplicadas de manhã",
+  texto: "Programe-se: as provas do cursinho acontecem no período da manhã.",
+};
+
 /** O que `consultar_inscricao()` devolve: só o que o aluno precisa ver. */
 export interface SituacaoDaInscricao {
   protocolo: string;
@@ -451,6 +457,7 @@ export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" 
     "",
     `🗓️ Inscrições até ${instante(t.fecha_em)}`,
     "👨‍👩‍👧 Menor de 18 anos: precisa dos dados do responsável.",
+    "📝 As provas são aplicadas de manhã.",
     "🔎 Já se inscreveu? No mesmo link, toque em \"Consultar inscrição\".",
     "📄 Depois a secretaria chama para confirmar a matrícula com RG original e o responsável.",
   ].join("\n");

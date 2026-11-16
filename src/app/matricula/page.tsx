@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  CheckCircle2, Loader2, CalendarClock, IdCard, MessageCircle, Lock, Camera, Search, ClipboardList, Hourglass, XCircle, RotateCcw,
+  CheckCircle2, Loader2, CalendarClock, IdCard, Sunrise, MessageCircle, Lock, Camera, Search, ClipboardList, Hourglass, XCircle, RotateCcw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormularioDaFicha, RespostaDoEnvio } from "@/components/matricula/FormularioDaFicha";
-import { ANO_MATRICULA, Ficha, instante, SituacaoDaFicha, SituacaoDaInscricao, textoDaSituacao, hojeNaEscola } from "@/lib/matricula";
+import { ANO_MATRICULA, AVISO_DA_PROVA, Ficha, instante, SituacaoDaFicha, SituacaoDaInscricao, textoDaSituacao, hojeNaEscola } from "@/lib/matricula";
 
 type Janela = { ano: number; situacao: SituacaoDaFicha | "indisponivel"; abre_em?: string; fecha_em?: string };
 type Aba = "ficha" | "consulta";
@@ -235,6 +235,18 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
         )}
       </div>
       <p className="text-sm text-slate-600 dark:text-slate-300 -mt-1">{t.frase}</p>
+
+      {s.status !== "cancelada" && (
+        <div className="rounded-2xl bg-sky-50 border-2 border-sky-200 p-4 flex items-center gap-3 text-left dark:bg-sky-500/10 dark:border-sky-500/30">
+          <span className="h-11 w-11 rounded-xl bg-sky-500 text-white flex items-center justify-center shrink-0">
+            <Sunrise className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-black text-sky-950 dark:text-sky-100 leading-tight">{AVISO_DA_PROVA.titulo}</p>
+            <p className="text-sm text-sky-900/80 dark:text-sky-100/80 mt-0.5">{AVISO_DA_PROVA.texto}</p>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl border-2 border-dashed border-orange-300 p-4">
         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Protocolo</span>
