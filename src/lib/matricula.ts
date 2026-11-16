@@ -1,8 +1,9 @@
 /**
- * Matrícula 2027 — regras puras da ficha online e da planilha da equipe.
+ * Ficha de inscrição 2027 — regras puras da ficha online e da planilha da equipe.
  *
- * O banco (`20261116120000_matriculas_2027.sql`) decide janela, número,
- * repetida, sala x foco e o sorteio. Aqui fica o que a tela precisa saber
+ * O banco (`20261116120000_matriculas_2027.sql` e `20261116180000_inscricao_com_sala.sql`)
+ * decide janela, número, repetida, a sala na hora da inscrição (sempre do foco
+ * do aluno), a lista de espera e o "preencher vagas". Aqui fica o que a tela precisa saber
  * antes de perguntar ao banco: validação da ficha (mesma na API e no
  * navegador), rótulos, prévia do sorteio, repetidas e a planilha do Excel.
  */
@@ -45,6 +46,16 @@ export const STATUS: { valor: StatusMatricula; rotulo: string; cor: string }[] =
 export const COMO_CONHECEU = ["Instagram", "Amigo ou familiar", "Escola", "WhatsApp", "Já fui aluno", "Outro"];
 export const PARENTESCOS = ["Mãe", "Pai", "Avó/Avô", "Tia/Tio", "Irmã/Irmão", "Responsável legal", "Outro"];
 
+/**
+ * A série sai do foco (decisão da coordenação, 16/11): quem faz ETEC está no
+ * 9º ano, quem faz ENEM está no 3º ano (ou já terminou). A ficha não pergunta.
+ */
+export const serieDoFoco = (foco: Foco | ""): Serie | "" => (foco === "ETEC" ? "9EF" : foco === "ENEM" ? "3EM" : "");
+
+/** Status que ocupam lugar numa sala. Lista de espera e cancelada não têm sala. */
+export const TEM_SALA: StatusMatricula[] = ["recebida", "confirmada"];
+export const ocupaSala = (m: { status: StatusMatricula; sala: number | null }) => !!m.sala && TEM_SALA.includes(m.status);
+
 export const rotulo = <T extends string>(lista: { valor: T; rotulo: string }[], v: T | null | undefined) =>
   lista.find((x) => x.valor === v)?.rotulo ?? (v ?? "");
 
@@ -81,7 +92,7 @@ export const FICHA_VAZIA: Ficha = {
 
 export const PASSOS = [
   { titulo: "Aluno", campos: ["nome", "nascimento", "celular", "email", "bairro", "cidade"] },
-  { titulo: "Estudos", campos: ["foco", "serie", "escola", "escola_tipo", "turno_escola", "ja_fez_cursinho", "ex_aluno"] },
+  { titulo: "Estudos", campos: ["foco", "escola", "escola_tipo", "turno_escola", "ja_fez_cursinho", "ex_aluno"] },
   { titulo: "Responsável", campos: ["resp_nome", "resp_parentesco", "resp_celular", "como_conheceu"] },
   { titulo: "Autorizações", campos: ["aceite_veracidade", "aceite_dados", "aceite_imagem"] },
 ] as const;
@@ -134,6 +145,8 @@ export function validarFicha(f: Ficha, hoje: string): { erros: ErrosDaFicha; lim
     resp_nome: t(f.resp_nome), resp_parentesco: t(f.resp_parentesco), como_conheceu: t(f.como_conheceu),
     celular: soDigitos(f.celular), resp_celular: soDigitos(f.resp_celular),
   };
+  // A série não é perguntada na ficha: vem do foco. A equipe ainda pode corrigir na planilha.
+  if (!limpa.serie) limpa.serie = serieDoFoco(limpa.foco);
 
   if (limpa.nome.split(" ").length < 2 || limpa.nome.length < 5) e.nome = "Escreva o nome completo (nome e sobrenome).";
   else if (limpa.nome.length > 120) e.nome = "Nome muito longo.";
@@ -151,7 +164,6 @@ export function validarFicha(f: Ficha, hoje: string): { erros: ErrosDaFicha; lim
   if (limpa.cidade.length < 2) e.cidade = "Informe a cidade.";
 
   if (!limpa.foco) e.foco = "Escolha ETEC ou ENEM.";
-  if (!limpa.serie) e.serie = "Escolha a série.";
   if (limpa.escola.length < 2) e.escola = "Informe a escola.";
   if (!limpa.escola_tipo) e.escola_tipo = "Escolha o tipo de escola.";
   if (!limpa.turno_escola) e.turno_escola = "Escolha o turno.";
@@ -259,7 +271,41 @@ export interface SalaDaMatricula {
 
 export function statusParaMostrar(m: Pick<Matricula, "status" | "sala">): string {
   if (m.status === "confirmada" && m.sala) return `Sala ${m.sala}`;
+  if (m.status === "recebida" && m.sala) return `Recebida · Sala ${m.sala}`;
   return rotulo(STATUS, m.status);
+}
+
+// ── Consulta e tela de "inscrição recebida" ─────────────────────────────────
+/** O que `consultar_inscricao()` devolve: só o que o aluno precisa ver. */
+export interface SituacaoDaInscricao {
+  protocolo: string;
+  primeiro_nome: string;
+  foco: Foco;
+  status: StatusMatricula;
+  sala: number | null;
+  posicao: number | null;
+}
+
+/** Título e frase da situação, para a tela do aluno (inscrição e consulta). */
+export function textoDaSituacao(s: Pick<SituacaoDaInscricao, "status" | "sala" | "posicao" | "foco">): { titulo: string; frase: string } {
+  if (s.status === "cancelada") {
+    return { titulo: "Inscrição cancelada", frase: "Esta inscrição foi cancelada. Se foi engano, fale com a secretaria do cursinho." };
+  }
+  if (s.status === "espera") {
+    return {
+      titulo: s.posicao ? `Lista de espera · ${s.posicao}º lugar` : "Lista de espera",
+      frase: `As salas de ${s.foco} estão cheias agora. Se abrir vaga, a secretaria chama pela ordem da fila. Consulte aqui de vez em quando.`,
+    };
+  }
+  if (s.sala) {
+    return {
+      titulo: `Sala ${s.sala}`,
+      frase: s.status === "confirmada"
+        ? "Matrícula confirmada. Esta é a sua sala."
+        : "Esta é a sua sala. A matrícula ainda precisa ser confirmada na secretaria, com o RG original.",
+    };
+  }
+  return { titulo: "Sala a definir", frase: "A secretaria vai definir a sua sala. Consulte aqui de novo em alguns dias." };
 }
 
 /**
@@ -291,9 +337,10 @@ export interface PreviaDoSorteio {
 }
 
 /**
- * O que o sorteio faria, em números (quem cai onde só o banco decide). Mesma
- * regra de `sortear_salas_matricula()`: concorrem Confirmadas sem sala e a
- * Lista de espera; entram até as vagas; cada um vai para a sala menos cheia.
+ * O que o "preencher vagas" faria, em números (quem cai onde só o banco decide).
+ * Mesma regra de `sortear_salas_matricula()`: concorrem Recebidas/Confirmadas
+ * sem sala e a Lista de espera; entram até as vagas; cada um vai para a sala
+ * menos cheia do foco.
  */
 export function previaDoSorteio(
   foco: Foco,
@@ -304,9 +351,9 @@ export function previaDoSorteio(
   const doFoco = matriculas.filter((m) => m.foco === foco);
   const minhas = salas.filter((s) => s.foco === foco).sort((a, b) => a.sala - b.sala);
   const ocup = new Map(minhas.map((s) => [s.sala, 0]));
-  if (!refazer) for (const m of doFoco) if (m.status === "confirmada" && m.sala && ocup.has(m.sala)) ocup.set(m.sala, ocup.get(m.sala)! + 1);
+  if (!refazer) for (const m of doFoco) if (ocupaSala(m) && ocup.has(m.sala!)) ocup.set(m.sala!, ocup.get(m.sala!)! + 1);
   const agora = new Map(ocup);
-  const candidatos = doFoco.filter((m) => (m.status === "confirmada" && (refazer || !m.sala)) || m.status === "espera").length;
+  const candidatos = doFoco.filter((m) => (TEM_SALA.includes(m.status) && (refazer || !m.sala)) || m.status === "espera").length;
   const capTotal = minhas.reduce((t, s) => t + s.capacidade, 0);
   const ocupTotal = [...ocup.values()].reduce((t, n) => t + n, 0);
   const vagas = Math.max(0, capTotal - ocupTotal);
@@ -358,9 +405,9 @@ export function linhaDoExcel(m: Matricula, hoje: string): Record<string, string 
 export function abasDoExcel(lista: Matricula[], hoje: string): { nome: string; linhas: Record<string, string | number>[] }[] {
   const porNome = (a: Matricula, b: Matricula) => a.nome.localeCompare(b.nome, "pt-BR");
   const abas = [{ nome: "Geral", linhas: [...lista].sort((a, b) => a.numero - b.numero).map((m) => linhaDoExcel(m, hoje)) }];
-  const salas = [...new Set(lista.filter((m) => m.status === "confirmada" && m.sala).map((m) => m.sala!))].sort((a, b) => a - b);
+  const salas = [...new Set(lista.filter(ocupaSala).map((m) => m.sala!))].sort((a, b) => a - b);
   for (const s of salas) {
-    const daSala = lista.filter((m) => m.status === "confirmada" && m.sala === s).sort(porNome);
+    const daSala = lista.filter((m) => ocupaSala(m) && m.sala === s).sort(porNome);
     abas.push({ nome: `Sala ${s} (${daSala[0].foco})`, linhas: daSala.map((m) => linhaDoExcel(m, hoje)) });
   }
   const espera = lista.filter((m) => m.status === "espera").sort((a, b) => a.numero - b.numero);
@@ -376,34 +423,35 @@ export function esc(v: unknown): string {
 /** Uma folha por sala, em ordem alfabética, com coluna de assinatura. */
 export function listasDasSalasHtml(lista: Matricula[], salas: SalaDaMatricula[], ano = ANO_MATRICULA): string {
   const paginas = [...salas].sort((a, b) => a.sala - b.sala).map((s) => {
-    const daSala = lista.filter((m) => m.status === "confirmada" && m.sala === s.sala)
+    const daSala = lista.filter((m) => ocupaSala(m) && m.sala === s.sala)
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     if (!daSala.length) return "";
     return `<div class="pagina"><h1>Sala ${s.sala} · ${esc(s.foco)} · ${ano}</h1>
       <div class="sub">Cursinho Compromisso · ${daSala.length} aluno(s)</div>
-      <table><thead><tr><th>#</th><th>Protocolo</th><th>Nome</th><th>Celular</th><th class="ass">Assinatura</th></tr></thead><tbody>
-      ${daSala.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.protocolo)}</td><td>${esc(m.nome)}</td><td>${esc(formatarCelular(m.celular))}</td><td></td></tr>`).join("")}
+      <table><thead><tr><th>#</th><th>Protocolo</th><th>Nome</th><th>Celular</th><th>Situação</th><th class="ass">Assinatura</th></tr></thead><tbody>
+      ${daSala.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.protocolo)}</td><td>${esc(m.nome)}</td><td>${esc(formatarCelular(m.celular))}</td><td>${m.status === "confirmada" ? "Confirmada" : "Falta confirmar"}</td><td></td></tr>`).join("")}
       </tbody></table></div>`;
   }).join("");
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Salas ${ano}</title><style>
     body{font-family:Arial,sans-serif;margin:24px;color:#111} h1{font-size:20px;margin:0} .sub{color:#555;font-size:12px;margin:4px 0 12px}
     table{width:100%;border-collapse:collapse;font-size:12px} th,td{border:1px solid #999;padding:6px 8px;text-align:left} th{background:#f2f2f2}
     .ass{width:35%} .pagina{page-break-after:always} .pagina:last-child{page-break-after:auto}
-  </style></head><body>${paginas || "<p>Ninguém nas salas ainda. Faça o sorteio primeiro.</p>"}
+  </style></head><body>${paginas || "<p>Ninguém nas salas ainda.</p>"}
   <script>window.onload=function(){setTimeout(function(){window.print()},250)}</script></body></html>`;
 }
 
 /** Recado pronto para o WhatsApp e o Instagram. */
 export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" | "fecha_em">): string {
   return [
-    `📚 *Matrículas abertas — Cursinho Compromisso ${t.ano}*`,
+    `📚 *Inscrições abertas — Cursinho Compromisso ${t.ano}*`,
     "",
     "Preparatório para ETEC e ENEM em Santana de Parnaíba.",
-    "Faça a inscrição pelo celular, leva uns 5 minutos:",
+    "Preencha a ficha de inscrição pelo celular (uns 5 minutos) e veja a sua sala na hora:",
     link,
     "",
     `🗓️ Inscrições até ${instante(t.fecha_em)}`,
     "👨‍👩‍👧 Menor de 18 anos: precisa dos dados do responsável.",
+    "🔎 Já se inscreveu? No mesmo link, toque em \"Consultar inscrição\".",
     "📄 Depois a secretaria chama para confirmar a matrícula com RG original e o responsável.",
   ].join("\n");
 }

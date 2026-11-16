@@ -87,11 +87,11 @@ export default function MatriculasPage() {
     },
     sortear: async (foco, refazer) => {
       const { data, error } = await supabase.rpc("sortear_salas_matricula", { p_ano: ANO_MATRICULA, p_foco: foco, p_refazer: refazer });
-      if (error) { falhou("O sorteio não foi feito", error); return; }
+      if (error) { falhou("As vagas não foram preenchidas", error); return; }
       const r = data as { alocados: number; espera: number };
       toast({
         title: `${foco}: ${r.alocados} aluno(s) com sala nova`,
-        description: r.espera ? `${r.espera} na lista de espera. Aumente a capacidade ou crie salas e sorteie de novo para chamar os próximos.` : undefined,
+        description: r.espera ? `${r.espera} na lista de espera. Aumente a capacidade ou crie salas e toque em Preencher vagas de novo para chamar os próximos.` : undefined,
       });
       await carregar();
     },

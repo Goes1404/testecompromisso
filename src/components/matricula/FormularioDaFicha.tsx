@@ -6,14 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SCHOOL_LIST } from "@/lib/constants";
 import {
-  Ficha, FICHA_VAZIA, PASSOS, SERIES, ESCOLA_TIPOS, TURNOS, COMO_CONHECEU, PARENTESCOS,
+  Ficha, FICHA_VAZIA, PASSOS, ESCOLA_TIPOS, TURNOS, COMO_CONHECEU, PARENTESCOS,
   ErrosDaFicha, validarFicha, errosDoPasso, ehMenor, hojeNaEscola,
 } from "@/lib/matricula";
 
 export type RespostaDoEnvio = { protocolo: string } | { erro: string; erros?: ErrosDaFicha };
 
 /**
- * Ficha de matrícula em 4 passos. Só desenha e valida; quem grava é quem usa
+ * Ficha de inscrição em 4 passos. A série não é perguntada: vem do foco
+ * (`serieDoFoco`). Só desenha e valida; quem grava é quem usa
  * (`/matricula` chama a API pública, a planilha da equipe chama a do balcão).
  * A validação é a mesma de `validarFicha()` que a API roda de novo.
  */
@@ -129,12 +130,9 @@ export function FormularioDaFicha({
           <Campo grupo rotulo="Vai se preparar para" erro={erros.foco}>
             <Opcoes
               valor={f.foco} onChange={(v) => set("foco", v as Ficha["foco"])}
-              opcoes={[{ valor: "ETEC", rotulo: "ETEC", sub: "Vestibulinho" }, { valor: "ENEM", rotulo: "ENEM", sub: "e vestibulares" }]}
+              opcoes={[{ valor: "ETEC", rotulo: "ETEC", sub: "Vestibulinho · 9º ano" }, { valor: "ENEM", rotulo: "ENEM", sub: "3º ano ou já formado" }]}
               colunas={2} grande
             />
-          </Campo>
-          <Campo grupo rotulo="Série em 2027" erro={erros.serie}>
-            <Opcoes valor={f.serie} onChange={(v) => set("serie", v as Ficha["serie"])} opcoes={SERIES} colunas={1} />
           </Campo>
           <Campo rotulo="Escola" erro={erros.escola}>
             <Input list="escolas-matricula" value={f.escola} onChange={(e) => set("escola", e.target.value)} placeholder="Nome da escola" className="h-12 rounded-xl" />

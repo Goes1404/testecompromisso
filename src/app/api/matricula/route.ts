@@ -63,5 +63,5 @@ export async function POST(request: Request) {
 
   const r = await registrar(supa, fichaDoCorpo(corpo), "site");
   if (!r.ok) return NextResponse.json({ error: r.erro, erros: r.erros }, { status: r.status });
-  return NextResponse.json({ protocolo: r.protocolo });
+  return NextResponse.json({ protocolo: r.protocolo, inscricao: r.inscricao });
 }

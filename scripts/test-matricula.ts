@@ -5,7 +5,7 @@
 import {
   validarFicha, FICHA_VAZIA, Ficha, idade, ehMenor, errosDoPasso, repetidas, previaDoSorteio,
   situacaoDaFicha, instante, paraCampoDeData, doCampoDeData, dataBR, abasDoExcel, Matricula,
-  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula,
+  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula, serieDoFoco, textoDaSituacao,
 } from "../src/lib/matricula";
 
 let falhas = 0;
@@ -40,6 +40,8 @@ eq("celular curto", !!validarFicha({ ...boa, celular: "912345678" }, HOJE).erros
 eq("e-mail errado", !!validarFicha({ ...boa, email: "maria@" }, HOJE).erros.email, true);
 eq("sem aceites", Object.keys(validarFicha({ ...boa, aceite_dados: false, aceite_veracidade: false }, HOJE).erros).sort(), ["aceite_dados", "aceite_veracidade"]);
 eq("erro do passo 1 não trava o passo 0", errosDoPasso(0, validarFicha({ ...boa, foco: "" }, HOJE).erros), {});
+eq("série não é perguntada: vem do foco", [validarFicha({ ...boa, serie: "" }, HOJE).erros.serie, validarFicha({ ...boa, serie: "" }, HOJE).limpa.serie], [undefined, "9EF"]);
+eq("série do ENEM", serieDoFoco("ENEM"), "3EM");
 eq("erro do passo 1 aparece no passo 1", Object.keys(errosDoPasso(1, validarFicha({ ...boa, foco: "" }, HOJE).erros)), ["foco"]);
 
 const t = { ano: 2027, abre_em: "2026-11-16T00:00:00-03:00", fecha_em: "2027-01-31T23:59:00-03:00", aberta: true };
@@ -65,14 +67,20 @@ const salas: SalaDaMatricula[] = [1, 2, 3, 4].map((s) => ({ ano: 2027, sala: s, 
 salas.push({ ano: 2027, sala: 5, foco: "ENEM", capacidade: 3 });
 const lista = [m(1, { sala: 1 }), m(2, { sala: 1 }), ...[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((i) => m(i)), m(14, { status: "espera" }), m(15, { status: "recebida" }), m(16, { foco: "ENEM" })];
 const p = previaDoSorteio("ETEC", lista, salas);
-eq("prévia ETEC: 12 vagas, 10 vagas livres, 12 candidatos, 10 entram, 2 espera", [p.vagas, p.candidatos, p.entram, p.espera], [10, 12, 10, 2]);
+eq("prévia ETEC: 10 vagas livres, 13 na fila (recebida sem sala conta), 10 entram, 3 espera", [p.vagas, p.candidatos, p.entram, p.espera], [10, 13, 10, 3]);
 eq("prévia: salas cheias e equilibradas", p.salas.map((s) => s.depois), [3, 3, 3, 3]);
 const pr = previaDoSorteio("ETEC", lista, salas, true);
-eq("prévia refazer: 14 concorrem, 12 entram", [pr.candidatos, pr.entram, pr.espera], [14, 12, 2]);
+eq("prévia refazer: 15 concorrem, 12 entram", [pr.candidatos, pr.entram, pr.espera], [15, 12, 3]);
+const pRec = previaDoSorteio("ETEC", [m(1, { status: "recebida", sala: 1 }), m(2, { status: "recebida", sala: 1 })], salas);
+eq("recebida com sala ocupa lugar", pRec.salas[0].agora, 2);
 const p2 = previaDoSorteio("ETEC", lista.slice(0, 5), salas);
 eq("poucos alunos: diferença ≤ 1", p2.salas.map((s) => s.depois), [2, 1, 1, 1]);
 
 eq("status mostra a sala", statusParaMostrar({ status: "confirmada", sala: 3 }), "Sala 3");
+eq("recebida com sala", statusParaMostrar({ status: "recebida", sala: 2 }), "Recebida · Sala 2");
+eq("tela: sala", textoDaSituacao({ status: "recebida", sala: 2, posicao: null, foco: "ETEC" }).titulo, "Sala 2");
+eq("tela: fila com posição", textoDaSituacao({ status: "espera", sala: null, posicao: 3, foco: "ENEM" }).titulo, "Lista de espera · 3º lugar");
+eq("tela: cancelada", textoDaSituacao({ status: "cancelada", sala: null, posicao: null, foco: "ENEM" }).titulo, "Inscrição cancelada");
 const abas = abasDoExcel([m(2, { sala: 1 }), m(1, { sala: 1, nome: "Ana" }), m(3, { status: "espera" }), m(4)], HOJE);
 eq("abas do Excel", abas.map((a) => [a.nome, a.linhas.length]), [["Geral", 4], ["Sala 1 (ETEC)", 2], ["Lista de espera", 1]]);
 eq("aba da sala em ordem alfabética", abas[1].linhas.map((l) => l.Nome), ["Aluno 2", "Ana"]);

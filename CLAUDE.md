@@ -578,13 +578,24 @@ Migration `20261116120000_matriculas_2027.sql`.
    do responsável (LGPD art. 14). Idade conta por data no fuso da escola (`idade()`).
 4. **Repetida é recusada na entrada**: mesmo `normalizar_nome` + mesmo nascimento no ano,
    salvo se a anterior está cancelada. A planilha ainda marca "mesmo celular".
-5. **Sala só para Confirmada e do mesmo foco** (gatilho). Mudar status tira a sala. Sala com
+5. **A sala sai na hora da inscrição** (16/11, `20261116180000_inscricao_com_sala.sql`):
+   `registrar_matricula` põe o aluno na sala **do foco dele** com menos alunos (desempate
+   aleatório, `sala_livre_da_matricula`) e a tela mostra a sala com o pedido de print. Salas
+   cheias → Lista de espera; e **se já há alguém esperando no foco, quem chega também espera**
+   (vaga que abre é do 1º da fila). Recebida e Confirmada têm sala; espera e cancelada não
+   (gatilho). **ENEM e ETEC nunca se misturam**: o gatilho recusa sala de outro foco. Sala com
    aluno não é apagada nem troca de foco.
-6. **Sorteio por foco** (`sortear_salas_matricula`): concorrem Confirmadas sem sala + Lista de
-   espera; entram pela **ordem de inscrição** até as vagas; quem entra vai em ordem aleatória
-   para a sala do foco **menos cheia** (diferença ≤ 1); o resto vai para a Lista de espera.
-   Quem já tem sala não muda, salvo "Refazer tudo". `previaDoSorteio()` (TS) mostra o mesmo
-   resultado em números antes de gravar.
+6. **"Preencher vagas"** (`sortear_salas_matricula`): concorrem Recebidas/Confirmadas sem sala
+   + Lista de espera; entram pela **ordem de inscrição** até as vagas, na sala menos cheia do
+   foco; quem sai da espera volta a Recebida. Quem já tem sala não muda. **"Refazer tudo"
+   troca a sala de quem já tirou print** — a tela avisa. `previaDoSorteio()` (TS) mostra o
+   mesmo resultado em números.
+6b. **Consulta pública no mesmo link** (aba "Consultar" em `/matricula`, `?consultar` abre
+   nela): nome completo exato **ou** protocolo, sempre com a data de nascimento
+   (`consultar_inscricao`, só service_role, via `/api/matricula/consulta` com 40/IP/hora).
+   Devolve só primeiro nome, foco, situação, sala e lugar na fila.
+6c. **Série não é perguntada**: vem do foco (`serieDoFoco`: ETEC → 9º EF, ENEM → 3º EM). A
+   equipe corrige na planilha se precisar. Para o aluno o nome é "Ficha de inscrição".
 7. **Toda edição vai para `matriculas_historico`** (gatilho, com o nome de quem mudou).
 8. **2027 ainda NÃO vira conta na plataforma.** `profiles.sala` é a sala de 2026 (ETEC 1–6,
    ENEM 7–12) e alimenta chamada e restrição de live: conta de 2027 agora entraria nas aulas de

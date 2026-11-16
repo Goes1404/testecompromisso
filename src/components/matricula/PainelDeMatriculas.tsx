@@ -18,7 +18,7 @@ import { FormularioDaFicha, RespostaDoEnvio } from "@/components/matricula/Formu
 import {
   Matricula, SalaDaMatricula, TurmaDaMatricula, StatusMatricula, Foco, Ficha,
   STATUS, SERIES, ESCOLA_TIPOS, TURNOS, rotulo, idade, formatarCelular, dataBR, instante,
-  repetidas, previaDoSorteio, abasDoExcel, listasDasSalasHtml, situacaoDaFicha, recadoDaMatricula,
+  repetidas, previaDoSorteio, ocupaSala, statusParaMostrar, TEM_SALA, abasDoExcel, listasDasSalasHtml, situacaoDaFicha, recadoDaMatricula,
   paraCampoDeData, doCampoDeData, soDigitos, ehMenor,
 } from "@/lib/matricula";
 
@@ -73,7 +73,7 @@ export function PainelDeMatriculas({
       .filter((m) => foco === "todos" || m.foco === foco)
       .filter((m) =>
         status === "todos" ? true
-          : status === "sem_sala" ? m.status === "confirmada" && !m.sala
+          : status === "sem_sala" ? TEM_SALA.includes(m.status) && !m.sala
           : status === "repetidas" ? rep.has(m.id)
           : m.status === status)
       .filter((m) => sala === "todas" || String(m.sala ?? "") === sala)
@@ -91,7 +91,7 @@ export function PainelDeMatriculas({
       c.total++;
       if (m.status !== "cancelada") c[m.foco]++;
       c[m.status]++;
-      if (m.status === "confirmada" && !m.sala) c.semSala++;
+      if (TEM_SALA.includes(m.status) && !m.sala) c.semSala++;
     }
     return c;
   }, [lista]);
@@ -146,7 +146,7 @@ export function PainelDeMatriculas({
       <Tabs defaultValue="planilha">
         <TabsList className="h-12 rounded-2xl">
           <TabsTrigger value="planilha" className="rounded-xl font-black text-xs uppercase tracking-wider"><Users className="h-4 w-4 mr-1.5" /> Planilha</TabsTrigger>
-          <TabsTrigger value="salas" className="rounded-xl font-black text-xs uppercase tracking-wider"><DoorOpen className="h-4 w-4 mr-1.5" /> Salas e sorteio</TabsTrigger>
+          <TabsTrigger value="salas" className="rounded-xl font-black text-xs uppercase tracking-wider"><DoorOpen className="h-4 w-4 mr-1.5" /> Salas e vagas</TabsTrigger>
           <TabsTrigger value="ficha" className="rounded-xl font-black text-xs uppercase tracking-wider"><Settings2 className="h-4 w-4 mr-1.5" /> Ficha online</TabsTrigger>
         </TabsList>
 
@@ -164,7 +164,7 @@ export function PainelDeMatriculas({
               <select value={status} onChange={(e) => setStatus(e.target.value as FiltroStatus)} className={`${SELECT} h-11 rounded-xl`} aria-label="Status">
                 <option value="todos">Todos os status</option>
                 {STATUS.map((s) => <option key={s.valor} value={s.valor}>{s.rotulo}</option>)}
-                <option value="sem_sala">Confirmadas sem sala</option>
+                <option value="sem_sala">Sem sala (falta preencher vaga)</option>
                 <option value="repetidas">Repetidas</option>
               </select>
               <select value={sala} onChange={(e) => setSala(e.target.value)} className={`${SELECT} h-11 rounded-xl`} aria-label="Sala">
@@ -259,7 +259,7 @@ function Numero({ rotulo: r, valor, alerta, onClick }: { rotulo: string; valor: 
 
 function Selo({ status, sala }: { status: StatusMatricula; sala: number | null }) {
   const s = STATUS.find((x) => x.valor === status)!;
-  return <span className={`inline-flex rounded-full px-2.5 h-6 items-center text-[11px] font-black ${s.cor}`}>{status === "confirmada" && sala ? `Sala ${sala}` : s.rotulo}</span>;
+  return <span className={`inline-flex rounded-full px-2.5 h-6 items-center text-[11px] font-black ${s.cor}`}>{statusParaMostrar({ status, sala })}</span>;
 }
 
 function LinhaDaPlanilha({ m, hoje, salas, repetida, onAbrir, onMudar }: {
@@ -300,10 +300,10 @@ function LinhaDaPlanilha({ m, hoje, salas, repetida, onAbrir, onMudar }: {
       </td>
       <td className={td}>
         <select
-          value={m.sala ?? ""} disabled={m.status !== "confirmada"}
+          value={m.sala ?? ""} disabled={!TEM_SALA.includes(m.status)}
           onChange={(e) => onMudar({ sala: e.target.value ? Number(e.target.value) : null })}
           className={`${SELECT} disabled:opacity-40`} aria-label={`Sala de ${m.nome}`}
-          title={m.status !== "confirmada" ? "Só matrícula confirmada tem sala" : undefined}
+          title={!TEM_SALA.includes(m.status) ? "Lista de espera e cancelada não têm sala" : undefined}
         >
           <option value="">—</option>
           {salas.filter((s) => s.foco === m.foco).map((s) => <option key={s.sala} value={s.sala}>Sala {s.sala}</option>)}
@@ -473,15 +473,15 @@ function SalasESorteio({ salas, lista, ano, acoes, onImprimir }: {
   const [ocupado, setOcupado] = useState<string | null>(null);
   const ocup = useMemo(() => {
     const c = new Map<number, number>();
-    for (const m of lista) if (m.status === "confirmada" && m.sala) c.set(m.sala, (c.get(m.sala) ?? 0) + 1);
+    for (const m of lista) if (ocupaSala(m)) c.set(m.sala!, (c.get(m.sala!) ?? 0) + 1);
     return c;
   }, [lista]);
 
   const sortear = async (foco: Foco, refazer: boolean) => {
     const p = previaDoSorteio(foco, lista, salas, refazer);
     const msg = refazer
-      ? `Refazer o sorteio de ${foco}? TODOS os alunos de ${foco} mudam de sala. ${p.entram} ficam com sala e ${p.espera} na lista de espera.`
-      : `Sortear ${foco}: ${p.entram} aluno(s) ganham sala${p.espera ? ` e ${p.espera} vão para a lista de espera (os últimos inscritos)` : ""}. Quem já tem sala não muda. Continuar?`;
+      ? `ATENÇÃO: refazer ${foco} troca a sala de TODOS os alunos de ${foco}, e eles já viram a sala deles na tela da inscrição (e tiraram print). ${p.entram} ficam com sala e ${p.espera} na lista de espera. Só continue se for avisar todo mundo.`
+      : `Preencher as vagas de ${foco}: ${p.entram} aluno(s) ganham sala, pela ordem da fila${p.espera ? `, e ${p.espera} continuam na lista de espera` : ""}. Quem já tem sala não muda. Continuar?`;
     if (!confirm(msg)) return;
     setOcupado(`${foco}-${refazer}`);
     try { await acoes.sortear(foco, refazer); } finally { setOcupado(null); }
@@ -501,7 +501,7 @@ function SalasESorteio({ salas, lista, ano, acoes, onImprimir }: {
                 <span className={ROTULO}>{p.salas.length} sala(s) · {p.salas.reduce((t, s) => t + s.capacidade, 0)} lugares</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <Mini rotulo="Esperando sala" valor={p.candidatos} />
+                <Mini rotulo="Na fila / sem sala" valor={p.candidatos} />
                 <Mini rotulo="Vagas livres" valor={p.vagas} />
                 <Mini rotulo="Iriam p/ espera" valor={p.espera} alerta={p.espera > 0} />
               </div>
@@ -521,11 +521,11 @@ function SalasESorteio({ salas, lista, ano, acoes, onImprimir }: {
                 {!p.salas.length && <p className="text-sm text-slate-500">Nenhuma sala de {foco}. Cadastre abaixo.</p>}
               </div>
               <p className="text-xs text-slate-500">
-                Laranja forte = já na sala. Claro = o que o sorteio colocaria agora. Só entram matrículas <b>Confirmadas</b> (e a lista de espera, se abrir vaga).
+                Laranja forte = já na sala. Claro = o que &quot;Preencher vagas&quot; colocaria agora. A ficha já põe cada inscrição na sala de {foco} com menos alunos, na hora; quando as salas enchem, quem chega vai para a lista de espera. Se abrir vaga (cancelamento ou sala nova), &quot;Preencher vagas&quot; chama a fila na ordem de inscrição.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button onClick={() => sortear(foco, false)} disabled={!!ocupado || p.candidatos === 0 || !p.salas.length} className="h-11 rounded-xl bg-orange-500 hover:bg-orange-600 font-black text-xs uppercase tracking-widest">
-                  {ocupado === `${foco}-false` ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Shuffle className="h-4 w-4 mr-2" /> Sortear {p.candidatos ? `(${p.candidatos})` : ""}</>}
+                  {ocupado === `${foco}-false` ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Shuffle className="h-4 w-4 mr-2" /> Preencher vagas {p.candidatos ? `(${p.candidatos})` : ""}</>}
                 </Button>
                 <Button variant="outline" onClick={() => sortear(foco, true)} disabled={!!ocupado || !p.salas.some((s) => s.agora > 0)} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
                   {ocupado === `${foco}-true` ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refazer tudo"}

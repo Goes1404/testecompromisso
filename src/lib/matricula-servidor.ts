@@ -2,7 +2,7 @@
  * Matrícula 2027 — parte do servidor (service_role). Só importar em rotas /api.
  */
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { ANO_MATRICULA, Ficha, paraOBanco, validarFicha, hojeNaEscola, ErrosDaFicha } from "@/lib/matricula";
+import { ANO_MATRICULA, Ficha, paraOBanco, validarFicha, hojeNaEscola, ErrosDaFicha, SituacaoDaInscricao } from "@/lib/matricula";
 
 export function supabaseServico(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,7 +29,7 @@ export function fichaDoCorpo(corpo: unknown): Ficha {
 }
 
 export type ResultadoDoRegistro =
-  | { ok: true; protocolo: string }
+  | { ok: true; protocolo: string; inscricao: SituacaoDaInscricao | null }
   | { ok: false; status: number; erro: string; erros?: ErrosDaFicha };
 
 /** Valida e grava pela função do banco (que confere janela, número e repetida). */
@@ -46,5 +46,21 @@ export async function registrar(
     const doBanco = error.code === "P0001" && error.message;
     return { ok: false, status: doBanco ? 400 : 500, erro: doBanco || "Não deu para registrar agora. Tente de novo em alguns minutos." };
   }
-  return { ok: true, protocolo: String(data) };
+  const protocolo = String(data);
+  // A sala já foi decidida pelo banco na inscrição; a consulta traz sala ou lugar na fila.
+  const inscricao = await consultar(supa, protocolo, limpa.nascimento);
+  return { ok: true, protocolo, inscricao };
+}
+
+/** Nome completo OU protocolo, sempre com a data de nascimento. Null = não achou. */
+export async function consultar(
+  supa: SupabaseClient,
+  busca: string,
+  nascimento: string,
+): Promise<SituacaoDaInscricao | null> {
+  const { data, error } = await supa.rpc("consultar_inscricao", {
+    p_ano: ANO_MATRICULA, p_busca: busca.slice(0, 120), p_nascimento: nascimento,
+  });
+  if (error || !data) return null;
+  return data as SituacaoDaInscricao;
 }
