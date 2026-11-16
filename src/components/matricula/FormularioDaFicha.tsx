@@ -144,7 +144,10 @@ export function FormularioDaFicha({
               colunas={modo === "site" ? 1 : 2} grande
             />
           </Campo>
-          {f.foco === "ETEC" && (
+          <Marcar marcado={f.ex_aluno} onChange={(v) => { set("ex_aluno", v); if (!v) set("sala_origem", ""); }} destaque>
+            Estou no cursinho Compromisso este ano
+          </Marcar>
+          {f.ex_aluno && (
             <Campo grupo rotulo="Sua sala no Compromisso" erro={erros.sala_origem}
               dica="A sala da sua prova vai ser outra: o sistema escolhe na hora e mostra no fim.">
               <div className="relative">
@@ -171,7 +174,6 @@ export function FormularioDaFicha({
           </Campo>
           <div className="space-y-2">
             <Marcar marcado={f.ja_fez_cursinho} onChange={(v) => set("ja_fez_cursinho", v)}>Já fez cursinho antes</Marcar>
-            <Marcar marcado={f.ex_aluno} onChange={(v) => set("ex_aluno", v)}>Foi aluno do Compromisso em 2026</Marcar>
           </div>
         </Grupo>
       )}

@@ -176,7 +176,9 @@ export function validarFicha(f: Ficha, hoje: string): { erros: ErrosDaFicha; lim
 
   if (!limpa.foco) e.foco = "Escolha ETEC ou ENEM.";
   limpa.sala_origem = soDigitos(f.sala_origem);
-  if (limpa.foco === "ETEC") {
+  // A sala no Compromisso só vale (e só é pedida) para quem marcou que está no cursinho.
+  if (!limpa.ex_aluno) limpa.sala_origem = "";
+  else {
     const n = Number(limpa.sala_origem);
     if (!limpa.sala_origem || !SALAS_DE_ORIGEM.includes(n)) e.sala_origem = "Escolha a sua sala no Compromisso.";
   }
@@ -299,8 +301,8 @@ export function statusParaMostrar(m: Pick<Matricula, "status" | "sala">): string
 // ── Consulta e tela de "inscrição recebida" ─────────────────────────────────
 /** Aviso fixo na tela da sala (inscrição e consulta) e no recado do WhatsApp. */
 export const AVISO_DA_PROVA = {
-  titulo: "O simulado é aplicado de manhã",
-  texto: "Programe-se: o Simulado Pré-Etec acontece no período da manhã.",
+  titulo: "O simulado é de manhã",
+  texto: "Entrada às 8h, os portões fecham às 8h30 e a prova começa às 9h. Depois das 8h30 não entra.",
 };
 
 /** O que `consultar_inscricao()` devolve: só o que o aluno precisa ver. */
@@ -462,7 +464,7 @@ export function linhaDoExcel(m: Matricula, hoje: string): Record<string, string 
     Parentesco: m.resp_parentesco ?? "",
     "Celular do responsável": formatarCelular(m.resp_celular),
     "Já fez cursinho": m.ja_fez_cursinho ? "Sim" : "Não",
-    "Ex-aluno Compromisso": m.ex_aluno ? "Sim" : "Não",
+    "Está no cursinho (2026)": m.ex_aluno ? "Sim" : "Não",
     "Como conheceu": m.como_conheceu ?? "",
     "Autoriza imagem": m.aceite_imagem ? "Sim" : "Não",
     Origem: m.origem === "site" ? "Site" : "Secretaria",
@@ -533,7 +535,8 @@ export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" 
     "",
     `🗓️ Inscrições até ${instante(t.fecha_em)}`,
     "👨‍👩‍👧 Menor de 18 anos: precisa dos dados do responsável.",
-    "📝 O simulado é aplicado de manhã.",
+    "⚠️ É o simulado do cursinho, não a inscrição oficial do Vestibulinho ETEC.",
+    "🕗 Entrada às 8h · portões fecham às 8h30 · prova às 9h.",
     "🔎 Já se inscreveu? No mesmo link, toque em \"Consultar inscrição\".",
     "🪪 No dia, leve o RG original: ele é conferido na porta da sala da prova.",
   ].join("\n");

@@ -105,8 +105,9 @@ const pRes = previaDoSorteio("ETEC", [m(1, { status: "espera" }), m(2, { status:
 eq("reserva fora da prévia: só a sala 1 aparece, 2 vagas, 1 continua na fila", [pRes.salas.map((x) => x.sala), pRes.vagas, pRes.entram, pRes.espera], [[1], 2, 2, 1]);
 eq("refazer não conta quem está na reserva", previaDoSorteio("ETEC", [m(4, { sala: 8 })], comReserva, true).candidatos, 0);
 
-eq("ETEC sem sala no Compromisso: erro", !!validarFicha({ ...boa, sala_origem: "" }, HOJE).erros.sala_origem, true);
-eq("sala 13 não existe", !!validarFicha({ ...boa, sala_origem: "13" }, HOJE).erros.sala_origem, true);
+eq("está no cursinho sem sala: erro", !!validarFicha({ ...boa, ex_aluno: true, sala_origem: "" }, HOJE).erros.sala_origem, true);
+eq("não está no cursinho: sala não é pedida e é limpa", [validarFicha({ ...boa, ex_aluno: false, sala_origem: "3" }, HOJE).erros.sala_origem, validarFicha({ ...boa, ex_aluno: false, sala_origem: "3" }, HOJE).limpa.sala_origem], [undefined, ""]);
+eq("sala 13 não existe", !!validarFicha({ ...boa, ex_aluno: true, sala_origem: "13" }, HOJE).erros.sala_origem, true);
 eq("número de inscrição sem o ano", numeroDeInscricao("2027-0012"), "0012");
 const folha = listasDasSalasHtml([m(1, { sala: 1, nome: "Ana Souza" })], [{ ano: 2027, sala: 1, foco: "ETEC", capacidade: 40 }]);
 eq("lista impressa: RG conferido, sem celular", folha.includes("RG conferido") && !folha.includes("91234"), true);

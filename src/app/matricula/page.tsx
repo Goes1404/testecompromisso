@@ -84,6 +84,7 @@ export default function FichaDeInscricaoPage() {
             <TelaDaSituacao protocolo={recebida.protocolo} inscricao={recebida.inscricao} nova />
           ) : (
             <div className="space-y-6">
+              <AvisoNaoOficial />
               <Abas aba={aba} onTrocar={setAba} />
               {aba === "consulta" ? (
                 <Consulta />
@@ -104,6 +105,14 @@ export default function FichaDeInscricaoPage() {
         </section>
       </main>
     </div>
+  );
+}
+
+function AvisoNaoOficial() {
+  return (
+    <p className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-3.5 text-sm font-bold text-amber-950 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
+      ⚠️ Atenção: esta inscrição é para o simulado do cursinho. Não é a inscrição oficial do Vestibulinho ETEC.
+    </p>
   );
 }
 

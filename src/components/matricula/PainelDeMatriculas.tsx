@@ -284,7 +284,7 @@ function LinhaDaPlanilha({ m, hoje, salas, repetida, onAbrir, onMudar }: {
         </button>
         <div className="flex flex-wrap gap-1 mt-0.5">
           {repetida && <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-700 bg-amber-100 rounded px-1.5"><AlertTriangle className="h-3 w-3" />{repetida}</span>}
-          {m.ex_aluno && <span className="text-[10px] font-black text-sky-700 bg-sky-100 rounded px-1.5">Ex-aluno</span>}
+          {m.ex_aluno && <span className="text-[10px] font-black text-sky-700 bg-sky-100 rounded px-1.5">Aluno 2026{m.sala_origem ? ` · sala ${m.sala_origem}` : ""}</span>}
           {m.origem === "secretaria" && <span className="text-[10px] font-black text-slate-600 bg-slate-100 rounded px-1.5">Balcão</span>}
         </div>
       </td>
@@ -429,7 +429,7 @@ function DetalheDaMatricula({ m, hoje, salas, acoes, onFechar, repetida }: {
             <Textarea value={rascunho.observacoes ?? ""} onChange={(e) => set("observacoes", e.target.value)} rows={3} className="rounded-lg" />
           </label>
           <p className="text-xs text-slate-500">
-            {m.ja_fez_cursinho ? "Já fez cursinho. " : ""}{m.ex_aluno ? "Foi aluno do Compromisso em 2026. " : ""}
+            {m.ja_fez_cursinho ? "Já fez cursinho. " : ""}{m.ex_aluno ? `Está no cursinho este ano${m.sala_origem ? ` (sala ${m.sala_origem})` : ""}. ` : ""}
             {m.como_conheceu ? `Conheceu por: ${m.como_conheceu}.` : ""}
           </p>
 
