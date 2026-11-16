@@ -282,8 +282,8 @@ export function statusParaMostrar(m: Pick<Matricula, "status" | "sala">): string
 // ── Consulta e tela de "inscrição recebida" ─────────────────────────────────
 /** Aviso fixo na tela da sala (inscrição e consulta) e no recado do WhatsApp. */
 export const AVISO_DA_PROVA = {
-  titulo: "A prova é aplicada de manhã",
-  texto: "Programe-se: a prova do Vestibulinho ETEC acontece no período da manhã.",
+  titulo: "O simulado é aplicado de manhã",
+  texto: "Programe-se: o Simulado Pré-Etec acontece no período da manhã.",
 };
 
 /** O que `consultar_inscricao()` devolve: só o que o aluno precisa ver. */
@@ -497,15 +497,15 @@ export function listasDasSalasHtml(lista: Matricula[], salas: SalaDaMatricula[],
 /** Recado pronto para o WhatsApp e o Instagram. */
 export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" | "fecha_em">): string {
   return [
-    `📚 *Inscrições abertas — Cursinho Compromisso ${t.ano}*`,
+    `📚 *Inscrições abertas — Simulado Pré-Etec · Cursinho Compromisso*`,
     "",
-    "Preparatório para o Vestibulinho ETEC em Santana de Parnaíba.",
+    "Para quem vai prestar o Vestibulinho ETEC, em Santana de Parnaíba.",
     "Preencha a ficha de inscrição pelo celular (uns 5 minutos) e veja a sua sala na hora:",
     link,
     "",
     `🗓️ Inscrições até ${instante(t.fecha_em)}`,
     "👨‍👩‍👧 Menor de 18 anos: precisa dos dados do responsável.",
-    "📝 A prova é aplicada de manhã.",
+    "📝 O simulado é aplicado de manhã.",
     "🔎 Já se inscreveu? No mesmo link, toque em \"Consultar inscrição\".",
     "📄 Depois a secretaria chama para confirmar a matrícula com RG original e o responsável.",
   ].join("\n");

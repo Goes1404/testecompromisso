@@ -144,11 +144,8 @@ export function FormularioDaFicha({
               colunas={modo === "site" ? 1 : 2} grande
             />
           </Campo>
-          <Campo rotulo="Escola" erro={erros.escola}>
-            <Input list="escolas-matricula" value={f.escola} onChange={(e) => set("escola", e.target.value)} placeholder="Nome da escola" className="h-12 rounded-xl" />
-            <datalist id="escolas-matricula">
-              {SCHOOL_LIST.map((s) => <option key={s} value={s} />)}
-            </datalist>
+          <Campo grupo rotulo="Escola onde estuda" erro={erros.escola}>
+            <EscolhaDaEscola valor={f.escola} onChange={(v) => set("escola", v)} />
           </Campo>
           <Campo grupo rotulo="A escola é" erro={erros.escola_tipo}>
             <Opcoes valor={f.escola_tipo} onChange={(v) => set("escola_tipo", v as Ficha["escola_tipo"])} opcoes={ESCOLA_TIPOS} colunas={3} />
@@ -228,6 +225,42 @@ export function FormularioDaFicha({
             : <>Continuar <ArrowRight className="h-5 w-5 ml-2" /></>}
         </Button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Escola: as escolas da cidade aparecem na tela para tocar (o <datalist> antigo
+ * não mostrava nada no celular — o aluno via só um campo vazio). "Outra escola"
+ * abre o campo para digitar.
+ */
+function EscolhaDaEscola({ valor, onChange }: { valor: string; onChange: (v: string) => void }) {
+  const naLista = SCHOOL_LIST.includes(valor);
+  const [outra, setOutra] = useState(!!valor && !naLista);
+  const item = (ativo: boolean) =>
+    `rounded-xl border-2 px-3 py-2.5 text-left text-sm font-bold transition-colors ${
+      ativo ? "border-orange-500 bg-orange-50 text-orange-900 dark:bg-orange-500/15 dark:text-orange-100"
+        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"}`;
+  return (
+    <div className="space-y-2">
+      <div role="radiogroup" aria-label="Escola" className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {SCHOOL_LIST.map((e) => {
+          const ativo = !outra && valor === e;
+          return (
+            <button key={e} type="button" role="radio" aria-checked={ativo} className={item(ativo)}
+              onClick={() => { setOutra(false); onChange(e); }}>
+              {e}
+            </button>
+          );
+        })}
+        <button type="button" role="radio" aria-checked={outra} className={item(outra)}
+          onClick={() => { setOutra(true); if (naLista) onChange(""); }}>
+          Outra escola
+        </button>
+      </div>
+      {outra && (
+        <Input autoFocus value={valor} onChange={(e) => onChange(e.target.value)} placeholder="Escreva o nome da escola" className="h-12 rounded-xl" aria-label="Nome da escola" />
+      )}
     </div>
   );
 }

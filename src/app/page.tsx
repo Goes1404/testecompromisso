@@ -128,7 +128,7 @@ export default function LandingPage() {
             ))}
             <div className="flex items-center gap-3">
               <Link href="/matricula" className={`text-sm font-black h-10 px-5 rounded-full border-2 flex items-center transition-colors ${scrolled ? 'border-primary text-primary hover:bg-primary/10' : 'border-white text-white hover:bg-white/10'}`}>
-                Inscrição 2027
+                Simulado Pré-Etec
               </Link>
               <Button onClick={() => handleRedirect('/login')} className="bg-primary hover:bg-[#e06000] text-white font-black h-10 px-6 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95 border-none">
                 Entrar
@@ -174,7 +174,7 @@ export default function LandingPage() {
             ))}
             <div className="pt-8 space-y-3">
               <Link href="/matricula" className="w-full h-14 rounded-full border-2 border-primary text-primary text-lg font-black flex items-center justify-center">
-                Inscrição 2027
+                Simulado Pré-Etec
               </Link>
               <Button onClick={() => handleRedirect('/login')} disabled={isRedirecting} className="w-full bg-primary h-14 text-white rounded-full border-none text-lg font-black shadow-xl shadow-primary/20">
                 Entrar no Portal

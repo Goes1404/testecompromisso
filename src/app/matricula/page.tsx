@@ -63,10 +63,10 @@ export default function FichaDeInscricaoPage() {
               Já sou aluno
             </Link>
           </div>
-          <p className="mt-10 text-sm font-semibold text-white/85">Vestibulinho ETEC em Santana de Parnaíba</p>
+          <p className="mt-10 text-sm font-semibold text-white/85">Cursinho Compromisso em Santana de Parnaíba</p>
           <h1 className="mt-1 font-black italic tracking-tighter leading-[0.9] drop-shadow-[0_2px_12px_rgba(124,45,18,0.35)]">
-            <span className="block text-[2.6rem] sm:text-5xl">Ficha de</span>
-            <span className="block text-[2.6rem] sm:text-5xl">inscrição <span className="tabular-nums">{ANO_MATRICULA}</span></span>
+            <span className="block text-[1.65rem] sm:text-3xl text-white/90">Inscrição para</span>
+            <span className="block text-[2.6rem] sm:text-5xl">Simulado <span className="whitespace-nowrap">Pré-Etec</span></span>
           </h1>
           {janela?.situacao === "aberta" && janela.fecha_em && !recebida && aba === "ficha" && (
             <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-orange-950/20 px-3 h-8 text-sm font-semibold text-white">
