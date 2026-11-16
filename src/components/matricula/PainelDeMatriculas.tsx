@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Search, Download, Printer, Shuffle, PlusCircle, Trash2, Copy, ExternalLink, AlertTriangle,
-  UserPlus, Loader2, Save, History, Users, DoorOpen, Settings2, MessageCircle,
+  UserPlus, Loader2, Save, History, Users, DoorOpen, Settings2, MessageCircle, ScanLine,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -124,6 +125,9 @@ export function PainelDeMatriculas({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button asChild className="h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-xs uppercase tracking-widest">
+            <Link href="/dashboard/secretary/matriculas/conferencia"><ScanLine className="h-4 w-4 mr-2" /> Conferência rápida</Link>
+          </Button>
           <Button onClick={() => setBalcao(true)} className="h-11 rounded-xl bg-orange-500 hover:bg-orange-600 font-black text-xs uppercase tracking-widest">
             <UserPlus className="h-4 w-4 mr-2" /> Inscrever no balcão
           </Button>

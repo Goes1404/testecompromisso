@@ -594,6 +594,12 @@ Migration `20261116120000_matriculas_2027.sql`.
    nela): nome completo exato **ou** protocolo, sempre com a data de nascimento
    (`consultar_inscricao`, só service_role, via `/api/matricula/consulta` com 40/IP/hora).
    Devolve só primeiro nome, foco, situação, sala e lugar na fila.
+6d. **Conferência rápida** (`/dashboard/secretary/matriculas/conferencia`, botão verde na
+   planilha; desenho em `ConferenciaRapida`, prévia `?tela=conferencia`): no dia da prova a
+   secretaria digita o protocolo do print ("12") ou o nome (`buscarNaConferencia`), marca "RG
+   conferido" (e "responsável presente", se menor) e confirma. Só muda `status` → a sala é a
+   que o aluno printou. Lista de espera, cancelada e sem sala não confirmam ali. Relê a lista a
+   cada 60 s (mais de uma pessoa na porta).
 6c. **Série não é perguntada**: vem do foco (`serieDoFoco`: ETEC → 9º EF, ENEM → 3º EM). A
    equipe corrige na planilha se precisar. Para o aluno o nome é "Ficha de inscrição".
 7. **Toda edição vai para `matriculas_historico`** (gatilho, com o nome de quem mudou).

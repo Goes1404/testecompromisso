@@ -5,7 +5,7 @@
 import {
   validarFicha, FICHA_VAZIA, Ficha, idade, ehMenor, errosDoPasso, repetidas, previaDoSorteio,
   situacaoDaFicha, instante, paraCampoDeData, doCampoDeData, dataBR, abasDoExcel, Matricula,
-  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula, serieDoFoco, textoDaSituacao,
+  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula, serieDoFoco, textoDaSituacao, buscarNaConferencia, placarDaConferencia,
 } from "../src/lib/matricula";
 
 let falhas = 0;
@@ -87,6 +87,16 @@ eq("aba da sala em ordem alfabética", abas[1].linhas.map((l) => l.Nome), ["Alun
 eq("Excel tem idade e responsável", [abas[0].linhas[0].Idade, abas[0].linhas[0]["Responsável"]], [15, "Ana Santos"]);
 const html = listasDasSalasHtml([m(1, { sala: 1, nome: "<b>X</b> Y" })], salas);
 eq("lista impressa escapa nome", html.includes("&lt;b&gt;X") && !html.includes("<b>X"), true);
+
+const conf = [m(12, { nome: "José Luiz Real Pereira" }), m(7, { nome: "Ana Júlia Real" }), m(3, { nome: "Pedro Henrique Ferreira Silva" })];
+eq("conferência: número curto", buscarNaConferencia(conf, "12").map((x) => x.numero), [12]);
+eq("conferência: protocolo completo", buscarNaConferencia(conf, "2027-0007").map((x) => x.numero), [7]);
+eq("conferência: com zeros", buscarNaConferencia(conf, "0003").map((x) => x.numero), [3]);
+eq("conferência: protocolo de outro ano não acha", buscarNaConferencia(conf, "2026-0007"), []);
+eq("conferência: pedaços do nome sem acento", buscarNaConferencia(conf, "jose real").map((x) => x.numero), [12]);
+eq("conferência: começo do nome vem antes", buscarNaConferencia(conf, "real").map((x) => x.numero), [7, 12]);
+eq("conferência: 1 letra não busca", buscarNaConferencia(conf, "a"), []);
+eq("placar só conta quem tem sala", placarDaConferencia([m(1, { sala: 1 }), m(2, { status: "recebida", sala: 2 }), m(3, { status: "espera" })]).ETEC, { confirmadas: 1, comSala: 2 });
 
 if (falhas) { console.error(`\n${falhas} falha(s)`); process.exit(1); }
 console.log("\ntudo ok");

@@ -21,6 +21,8 @@ export function escondeFlutuantesNoCelular(pathname: string | null | undefined):
     // Criar/redefinir senha pelo link: o robô cobria os requisitos da senha e
     // ficava ao lado do botão de gravar, em 360px.
     p.startsWith("/reset-password") ||
+    // Conferência rápida da matrícula: o robô cobria o "Confirmar · Sala".
+    p.startsWith("/dashboard/secretary/matriculas/conferencia") ||
     (p.includes("/student/provas/") && p !== "/dashboard/student/provas")
   );
 }

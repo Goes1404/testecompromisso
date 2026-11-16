@@ -376,6 +376,48 @@ export function previaDoSorteio(
   };
 }
 
+// ── Conferência rápida (dia da prova) ───────────────────────────────────────
+/**
+ * Acha a inscrição pelo que a secretaria digita na porta: número do protocolo
+ * ("12", "0012", "2027-0012") ou pedaço do nome (sem acento, cada palavra
+ * digitada tem que aparecer). Número acha um só; nome devolve até `limite`,
+ * quem começa pelo que foi digitado primeiro.
+ */
+export function buscarNaConferencia<T extends Pick<Matricula, "numero" | "nome" | "ano">>(
+  lista: T[],
+  termo: string,
+  limite = 8,
+): T[] {
+  const t = termo.trim();
+  if (!t) return [];
+  const prot = t.match(/^(?:(\d{4})\s*[-–]\s*)?0*(\d{1,4})$/);
+  if (prot) {
+    const ano = prot[1] ? Number(prot[1]) : null;
+    const n = Number(prot[2]);
+    return lista.filter((m) => m.numero === n && (ano === null || m.ano === ano)).slice(0, 1);
+  }
+  const q = normalizarNome(t);
+  if (q.length < 2) return [];
+  const palavras = q.split(" ");
+  return lista
+    .map((m) => ({ m, nome: normalizarNome(m.nome) }))
+    .filter(({ nome }) => palavras.every((p) => nome.split(" ").some((w) => w.startsWith(p))))
+    .sort((a, b) => Number(!b.nome.startsWith(q)) - Number(!a.nome.startsWith(q)) || a.nome.localeCompare(b.nome, "pt-BR"))
+    .slice(0, limite)
+    .map(({ m }) => m);
+}
+
+/** Contagem da porta, por foco: quantos com sala já confirmaram. */
+export function placarDaConferencia(lista: Pick<Matricula, "foco" | "status" | "sala">[]) {
+  const c = { ETEC: { confirmadas: 0, comSala: 0 }, ENEM: { confirmadas: 0, comSala: 0 } };
+  for (const m of lista) {
+    if (!ocupaSala(m)) continue;
+    c[m.foco].comSala++;
+    if (m.status === "confirmada") c[m.foco].confirmadas++;
+  }
+  return c;
+}
+
 // ── Excel ───────────────────────────────────────────────────────────────────
 export function linhaDoExcel(m: Matricula, hoje: string): Record<string, string | number> {
   return {

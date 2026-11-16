@@ -2,12 +2,13 @@
 
 /**
  * Prévia da matrícula 2027 com dados de exemplo, sem login (só fora de produção).
- * `/dev/matriculas-preview?tela=ficha|painel`
+ * `/dev/matriculas-preview?tela=ficha|painel|conferencia`
  */
 import { Suspense, useMemo, useState } from "react";
 import { notFound, useSearchParams } from "next/navigation";
 import { FormularioDaFicha } from "@/components/matricula/FormularioDaFicha";
 import { PainelDeMatriculas, AcoesDoPainel } from "@/components/matricula/PainelDeMatriculas";
+import { ConferenciaRapida } from "@/components/matricula/ConferenciaRapida";
 import { Matricula, SalaDaMatricula, TurmaDaMatricula, FICHA_VAZIA, Foco, previaDoSorteio } from "@/lib/matricula";
 
 const NOMES = ["Ana Beatriz Souza", "Bruno Henrique Lima", "Carla Dias Pereira", "Davi Lucas Martins", "Eduarda Alves Rocha", "Felipe Costa Nunes",
@@ -26,7 +27,7 @@ function exemplo(): Matricula[] {
       escola_tipo: "publica", turno_escola: i % 2 ? "manha" : "tarde", ja_fez_cursinho: i % 5 === 0, ex_aluno: i % 7 === 0,
       resp_nome: foco === "ETEC" ? `Maria ${nome.split(" ").at(-1)}` : "", resp_parentesco: foco === "ETEC" ? "Mãe" : "", resp_celular: foco === "ETEC" ? "11998877665" : "",
       como_conheceu: "Instagram", aceite_veracidade: true, aceite_dados: true, aceite_imagem: i % 2 === 0,
-      status, sala: status === "confirmada" && i % 2 === 0 ? (foco === "ETEC" ? (i % 4) + 1 : 5 + (i % 4)) : null,
+      status, sala: (status === "confirmada" || status === "recebida") ? (foco === "ETEC" ? (i % 4) + 1 : 5 + (i % 4)) : null,
       observacoes: i === 5 ? "Irmã da Ana, querem a mesma sala" : null, origem: i === 9 ? "secretaria" : "site",
       created_at: new Date(Date.UTC(2026, 10, 16, 12, i * 7)).toISOString(), updated_at: "2026-11-16T12:00:00Z",
     } as Matricula;
@@ -48,7 +49,7 @@ function Previa() {
   const [turma, setTurma] = useState<TurmaDaMatricula>({ ano: 2027, abre_em: "2026-11-16T03:00:00Z", fecha_em: "2027-02-01T02:59:00Z", aberta: true });
 
   const acoes = useMemo<AcoesDoPainel>(() => ({
-    atualizar: async (m, x) => { setLista((l) => l.map((y) => (y.id === m.id ? { ...y, ...x, sala: (x.status ?? y.status) === "confirmada" ? (x.sala !== undefined ? x.sala : y.sala) : null, updated_at: new Date().toISOString() } : y))); return true; },
+    atualizar: async (m, x) => { setLista((l) => l.map((y) => (y.id === m.id ? { ...y, ...x, sala: ["confirmada", "recebida"].includes(x.status ?? y.status) ? (x.sala !== undefined ? x.sala : y.sala) : null, updated_at: new Date().toISOString() } : y))); return true; },
     apagar: async (m) => { setLista((l) => l.filter((y) => y.id !== m.id)); return true; },
     historico: async () => [{ campo: "status", de: "recebida", para: "confirmada", por_nome: "Secretaria Ana", em: "2026-11-16T14:00:00Z" }],
     registrarNoBalcao: async () => ({ protocolo: "2027-0099" }),
@@ -59,6 +60,15 @@ function Previa() {
     salvarTurma: async (x) => { setTurma((t) => ({ ...t, ...x })); return true; },
   }), [lista, salas]);
 
+  if (tela === "conferencia") {
+    const mudar = async (m: Matricula, status: Matricula["status"]) => { setLista((l) => l.map((y) => (y.id === m.id ? { ...y, status } : y))); return true; };
+    return (
+      <div className="min-h-[100dvh] bg-slate-50 p-4">
+        <ConferenciaRapida lista={lista} hoje="2026-11-16" onRecarregar={async () => {}}
+          onConfirmar={(m) => mudar(m, "confirmada")} onDesfazer={(m) => mudar(m, "recebida")} voltar="/dev/matriculas-preview" />
+      </div>
+    );
+  }
   if (tela === "ficha") {
     return (
       <div className="min-h-[100dvh] bg-slate-50 p-4">
