@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { SCHOOL_LIST } from "@/lib/constants";
 import {
   Ficha, FICHA_VAZIA, PASSOS, ESCOLA_TIPOS, TURNOS, COMO_CONHECEU, PARENTESCOS,
-  ErrosDaFicha, validarFicha, errosDoPasso, ehMenor, hojeNaEscola,
+  ErrosDaFicha, validarFicha, errosDoPasso, ehMenor, hojeNaEscola, FOCOS_NA_FICHA_ONLINE, Foco,
 } from "@/lib/matricula";
 
 export type RespostaDoEnvio = { protocolo: string } | { erro: string; erros?: ErrosDaFicha };
@@ -28,7 +28,8 @@ export function FormularioDaFicha({
   inicial?: Ficha;
 }) {
   const hoje = useMemo(() => hojeNaEscola(), []);
-  const [f, setF] = useState<Ficha>(inicial);
+  // Na ficha online só existe ETEC: já vem marcado.
+  const [f, setF] = useState<Ficha>(modo === "site" && !inicial.foco ? { ...inicial, foco: FOCOS_NA_FICHA_ONLINE[0] } : inicial);
   const [passo, setPasso] = useState(0);
   const [erros, setErros] = useState<ErrosDaFicha>({});
   const [enviando, setEnviando] = useState(false);
@@ -127,11 +128,12 @@ export function FormularioDaFicha({
 
       {passo === 1 && (
         <Grupo titulo="Estudos">
-          <Campo grupo rotulo="Vai se preparar para" erro={erros.foco}>
+          <Campo grupo rotulo={modo === "site" ? "Inscrição para" : "Vai se preparar para"} erro={erros.foco}>
             <Opcoes
               valor={f.foco} onChange={(v) => set("foco", v as Ficha["foco"])}
-              opcoes={[{ valor: "ETEC", rotulo: "ETEC", sub: "Vestibulinho · 9º ano" }, { valor: "ENEM", rotulo: "ENEM", sub: "3º ano ou já formado" }]}
-              colunas={2} grande
+              opcoes={[{ valor: "ETEC", rotulo: "ETEC", sub: "Vestibulinho · 9º ano" }, { valor: "ENEM", rotulo: "ENEM", sub: "3º ano ou já formado" }]
+                .filter((o) => modo !== "site" || FOCOS_NA_FICHA_ONLINE.includes(o.valor as Foco))}
+              colunas={modo === "site" ? 1 : 2} grande
             />
           </Campo>
           <Campo rotulo="Escola" erro={erros.escola}>

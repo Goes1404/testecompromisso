@@ -10,6 +10,8 @@
 import { normalizarNome } from "@/lib/primeiro-acesso";
 
 export const ANO_MATRICULA = 2027;
+/** A ficha online é só para o Vestibulinho ETEC (16/11). ENEM entra pelo balcão. */
+export const FOCOS_NA_FICHA_ONLINE: Foco[] = ["ETEC"];
 export const FUSO = "America/Sao_Paulo";
 
 export type Foco = "ETEC" | "ENEM";
@@ -267,6 +269,8 @@ export interface SalaDaMatricula {
   sala: number;
   foco: Foco;
   capacidade: number;
+  /** Reserva (8, 10 e 12 em 2027): a distribuição automática nunca usa; só a equipe, à mão. */
+  reserva?: boolean;
 }
 
 export function statusParaMostrar(m: Pick<Matricula, "status" | "sala">): string {
@@ -278,8 +282,8 @@ export function statusParaMostrar(m: Pick<Matricula, "status" | "sala">): string
 // ── Consulta e tela de "inscrição recebida" ─────────────────────────────────
 /** Aviso fixo na tela da sala (inscrição e consulta) e no recado do WhatsApp. */
 export const AVISO_DA_PROVA = {
-  titulo: "As provas são aplicadas de manhã",
-  texto: "Programe-se: as provas do cursinho acontecem no período da manhã.",
+  titulo: "A prova é aplicada de manhã",
+  texto: "Programe-se: a prova do Vestibulinho ETEC acontece no período da manhã.",
 };
 
 /** O que `consultar_inscricao()` devolve: só o que o aluno precisa ver. */
@@ -355,11 +359,13 @@ export function previaDoSorteio(
   refazer = false,
 ): PreviaDoSorteio {
   const doFoco = matriculas.filter((m) => m.foco === foco);
-  const minhas = salas.filter((s) => s.foco === foco).sort((a, b) => a.sala - b.sala);
+  const minhas = salas.filter((s) => s.foco === foco && !s.reserva).sort((a, b) => a.sala - b.sala);
   const ocup = new Map(minhas.map((s) => [s.sala, 0]));
   if (!refazer) for (const m of doFoco) if (ocupaSala(m) && ocup.has(m.sala!)) ocup.set(m.sala!, ocup.get(m.sala!)! + 1);
   const agora = new Map(ocup);
-  const candidatos = doFoco.filter((m) => (TEM_SALA.includes(m.status) && (refazer || !m.sala)) || m.status === "espera").length;
+  const naReserva = new Set(salas.filter((s) => s.reserva).map((s) => s.sala));
+  const candidatos = doFoco.filter((m) =>
+    (TEM_SALA.includes(m.status) && (!m.sala || (refazer && !naReserva.has(m.sala)))) || m.status === "espera").length;
   const capTotal = minhas.reduce((t, s) => t + s.capacidade, 0);
   const ocupTotal = [...ocup.values()].reduce((t, n) => t + n, 0);
   const vagas = Math.max(0, capTotal - ocupTotal);
@@ -493,13 +499,13 @@ export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" 
   return [
     `📚 *Inscrições abertas — Cursinho Compromisso ${t.ano}*`,
     "",
-    "Preparatório para ETEC e ENEM em Santana de Parnaíba.",
+    "Preparatório para o Vestibulinho ETEC em Santana de Parnaíba.",
     "Preencha a ficha de inscrição pelo celular (uns 5 minutos) e veja a sua sala na hora:",
     link,
     "",
     `🗓️ Inscrições até ${instante(t.fecha_em)}`,
     "👨‍👩‍👧 Menor de 18 anos: precisa dos dados do responsável.",
-    "📝 As provas são aplicadas de manhã.",
+    "📝 A prova é aplicada de manhã.",
     "🔎 Já se inscreveu? No mesmo link, toque em \"Consultar inscrição\".",
     "📄 Depois a secretaria chama para confirmar a matrícula com RG original e o responsável.",
   ].join("\n");

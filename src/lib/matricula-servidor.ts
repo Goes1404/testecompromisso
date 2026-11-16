@@ -2,7 +2,9 @@
  * Matrícula 2027 — parte do servidor (service_role). Só importar em rotas /api.
  */
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { ANO_MATRICULA, Ficha, paraOBanco, validarFicha, hojeNaEscola, ErrosDaFicha, SituacaoDaInscricao } from "@/lib/matricula";
+import {
+  ANO_MATRICULA, Ficha, paraOBanco, validarFicha, hojeNaEscola, ErrosDaFicha, SituacaoDaInscricao, FOCOS_NA_FICHA_ONLINE,
+} from "@/lib/matricula";
 
 export function supabaseServico(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,6 +42,9 @@ export async function registrar(
 ): Promise<ResultadoDoRegistro> {
   const { erros, limpa } = validarFicha(ficha, hojeNaEscola());
   if (Object.keys(erros).length) return { ok: false, status: 400, erro: "Confira os campos marcados.", erros };
+  if (origem === "site" && !FOCOS_NA_FICHA_ONLINE.includes(limpa.foco as never)) {
+    return { ok: false, status: 400, erro: "A ficha online é só para o Vestibulinho ETEC. Para o ENEM, procure a secretaria.", erros: { foco: "Só ETEC pela internet." } };
+  }
   const { data, error } = await supa.rpc("registrar_matricula", { p: paraOBanco(limpa, ANO_MATRICULA), p_origem: origem });
   if (error) {
     // Mensagens P0001 do banco são escritas para quem preenche; o resto não.

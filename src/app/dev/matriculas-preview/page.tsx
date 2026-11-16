@@ -44,7 +44,7 @@ function Previa() {
   const tela = useSearchParams().get("tela") ?? "painel";
   const [lista, setLista] = useState<Matricula[]>(exemplo);
   const [salas, setSalas] = useState<SalaDaMatricula[]>(
-    [1, 2, 3, 4, 5, 6, 7, 8].map((s) => ({ ano: 2027, sala: s, foco: s <= 4 ? "ETEC" : "ENEM", capacidade: s <= 4 ? 3 : 2 })),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((s) => ({ ano: 2027, sala: s, foco: "ETEC" as Foco, capacidade: 35, reserva: [8, 10, 12].includes(s) })),
   );
   const [turma, setTurma] = useState<TurmaDaMatricula>({ ano: 2027, abre_em: "2026-11-16T03:00:00Z", fecha_em: "2027-02-01T02:59:00Z", aberta: true });
 

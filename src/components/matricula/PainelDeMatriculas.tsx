@@ -310,7 +310,7 @@ function LinhaDaPlanilha({ m, hoje, salas, repetida, onAbrir, onMudar }: {
           title={!TEM_SALA.includes(m.status) ? "Lista de espera e cancelada não têm sala" : undefined}
         >
           <option value="">—</option>
-          {salas.filter((s) => s.foco === m.foco).map((s) => <option key={s.sala} value={s.sala}>Sala {s.sala}</option>)}
+          {salas.filter((s) => s.foco === m.foco).map((s) => <option key={s.sala} value={s.sala}>Sala {s.sala}{s.reserva ? " (reserva)" : ""}</option>)}
         </select>
       </td>
       <td className={`${td} min-w-[200px]`}>
@@ -502,7 +502,10 @@ function SalasESorteio({ salas, lista, ano, acoes, onImprimir }: {
             <section key={foco} className={`${CARTAO} space-y-4`}>
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-black italic tracking-tighter">{foco}</h2>
-                <span className={ROTULO}>{p.salas.length} sala(s) · {p.salas.reduce((t, s) => t + s.capacidade, 0)} lugares</span>
+                <span className={ROTULO}>
+                  {p.salas.length} sala(s) · {p.salas.reduce((t, s) => t + s.capacidade, 0)} lugares
+                  {salas.some((s) => s.foco === foco && s.reserva) ? ` · reserva: ${salas.filter((s) => s.foco === foco && s.reserva).map((s) => s.sala).join(", ")}` : ""}
+                </span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <Mini rotulo="Na fila / sem sala" valor={p.candidatos} />
@@ -550,7 +553,7 @@ function SalasESorteio({ salas, lista, ano, acoes, onImprimir }: {
             <Button variant="outline" onClick={onImprimir} disabled={!ocup.size} className="h-10 rounded-xl font-black text-xs">
               <Printer className="h-4 w-4 mr-1.5" /> Listas por sala
             </Button>
-            <Button onClick={() => acoes.criarSala({ ano, sala: proxima, foco: "ENEM", capacidade: 40 })} className="h-10 rounded-xl font-black text-xs">
+            <Button onClick={() => acoes.criarSala({ ano, sala: proxima, foco: "ETEC", capacidade: 35 })} className="h-10 rounded-xl font-black text-xs">
               <PlusCircle className="h-4 w-4 mr-1.5" /> Sala {proxima}
             </Button>
           </div>
@@ -579,7 +582,10 @@ function CartaoDaSala({ s, ocupadas, acoes }: { s: SalaDaMatricula; ocupadas: nu
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-lg font-black">Sala {s.sala}</span>
+        <span className="text-lg font-black">
+          Sala {s.sala}
+          {s.reserva && <span className="ml-2 align-middle text-[10px] font-black uppercase tracking-wider text-sky-700 bg-sky-100 rounded px-1.5 py-0.5">Reserva</span>}
+        </span>
         <button
           type="button" disabled={ocupadas > 0} aria-label={`Apagar sala ${s.sala}`}
           onClick={() => { if (confirm(`Apagar a sala ${s.sala}?`)) acoes.apagarSala(s.sala); }}
@@ -602,6 +608,13 @@ function CartaoDaSala({ s, ocupadas, acoes }: { s: SalaDaMatricula; ocupadas: nu
         />
       </div>
       <p className={`text-xs font-bold ${ocupadas > s.capacidade ? "text-red-600" : "text-slate-500"}`}>{ocupadas} de {s.capacidade} lugares ocupados</p>
+      <label className="flex items-center justify-between gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+        <span>
+          Reserva
+          <span className="block font-medium text-slate-400">A ficha não coloca ninguém aqui; só a equipe, à mão.</span>
+        </span>
+        <Switch checked={!!s.reserva} onCheckedChange={(v) => acoes.salvarSala(s.sala, { reserva: v })} aria-label={`Sala ${s.sala} é reserva`} />
+      </label>
     </div>
   );
 }

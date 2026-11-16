@@ -606,8 +606,12 @@ Migration `20261116120000_matriculas_2027.sql`.
 8. **2027 ainda NÃO vira conta na plataforma.** `profiles.sala` é a sala de 2026 (ETEC 1–6,
    ENEM 7–12) e alimenta chamada e restrição de live: conta de 2027 agora entraria nas aulas de
    2026 e sairia como ausente. Criar as contas é a fase 2, junto com arquivar a turma 2026.
-9. Começo: abre 16/11/2026, fecha 31/01/2027 23:59; ETEC salas 1–4, ENEM 5–8, 40 lugares —
-   tudo editável na aba "Ficha online"/"Salas e sorteio".
+9. Começo: abre 16/11/2026, fecha 31/01/2027 23:59. **Desde 16/11 a ficha online é só ETEC**
+   (`FOCOS_NA_FICHA_ONLINE`, conferido na API e no banco; ENEM só pelo balcão, e entra "sala a
+   definir"). Salas da prova (`20261116200000_salas_da_prova_etec.sql`): ETEC **1–7, 9 e 11 com
+   35 lugares** (315); **8, 10 e 12 são reserva** (`matricula_salas.reserva`: ENEM-aula e
+   atrasados da ETEC) — a ficha e o "Preencher vagas" nunca usam reserva, só a equipe à mão. O
+   aviso "a prova é aplicada de manhã" aparece só para ETEC. Tudo editável na aba "Salas e vagas".
 
 Testado em Postgres (PGlite): 36 verificações (RLS de anon/aluno/professor/staff, janela,
 repetida com acento, sala x foco, histórico, sorteio equilibrado, espera por ordem, vaga nova

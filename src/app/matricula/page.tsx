@@ -61,7 +61,7 @@ export default function FichaDeInscricaoPage() {
               Já sou aluno
             </Link>
           </div>
-          <p className="mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/80">ETEC e ENEM · Santana de Parnaíba</p>
+          <p className="mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/80">Vestibulinho ETEC · Santana de Parnaíba</p>
           <h1 className="text-[2rem] sm:text-4xl font-black italic tracking-tighter leading-[0.95] mt-1">Ficha de inscrição {ANO_MATRICULA}</h1>
           {janela?.situacao === "aberta" && janela.fecha_em && !recebida && aba === "ficha" && (
             <p className="mt-3 text-sm font-semibold text-white/90 flex items-center gap-1.5">
@@ -236,7 +236,7 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
       </div>
       <p className="text-sm text-slate-600 dark:text-slate-300 -mt-1">{t.frase}</p>
 
-      {s.status !== "cancelada" && (
+      {s.status !== "cancelada" && s.foco === "ETEC" && (
         <div className="rounded-2xl bg-sky-50 border-2 border-sky-200 p-4 flex items-center gap-3 text-left dark:bg-sky-500/10 dark:border-sky-500/30">
           <span className="h-11 w-11 rounded-xl bg-sky-500 text-white flex items-center justify-center shrink-0">
             <Sunrise className="h-6 w-6" />

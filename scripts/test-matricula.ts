@@ -98,5 +98,12 @@ eq("conferência: começo do nome vem antes", buscarNaConferencia(conf, "real").
 eq("conferência: 1 letra não busca", buscarNaConferencia(conf, "a"), []);
 eq("placar só conta quem tem sala", placarDaConferencia([m(1, { sala: 1 }), m(2, { status: "recebida", sala: 2 }), m(3, { status: "espera" })]).ETEC, { confirmadas: 1, comSala: 2 });
 
+const comReserva: SalaDaMatricula[] = [
+  { ano: 2027, sala: 1, foco: "ETEC", capacidade: 2 }, { ano: 2027, sala: 8, foco: "ETEC", capacidade: 2, reserva: true },
+];
+const pRes = previaDoSorteio("ETEC", [m(1, { status: "espera" }), m(2, { status: "espera" }), m(3, { status: "espera" }), m(4, { sala: 8 })], comReserva);
+eq("reserva fora da prévia: só a sala 1 aparece, 2 vagas, 1 continua na fila", [pRes.salas.map((x) => x.sala), pRes.vagas, pRes.entram, pRes.espera], [[1], 2, 2, 1]);
+eq("refazer não conta quem está na reserva", previaDoSorteio("ETEC", [m(4, { sala: 8 })], comReserva, true).candidatos, 0);
+
 if (falhas) { console.error(`\n${falhas} falha(s)`); process.exit(1); }
 console.log("\ntudo ok");
