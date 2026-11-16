@@ -135,7 +135,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     setLoading(true);
     try {
-      await supabase.auth.signOut();
+      // `local`: sai SÓ deste aparelho. O padrão do Supabase é `global`, que
+      // derruba a conta em todos os computadores. A equipe divide a conta
+      // `adm@`: em 31/10, cada "Sair" numa máquina deixava as outras com a
+      // tela aberta e a sessão morta no servidor, e criar usuário/trocar senha
+      // respondia "Não autorizado" sem explicação.
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (e) {}
     setUser(null);
     setSession(null);
@@ -180,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               });
             }
             try {
-              await supabase.auth.signOut();
+              await supabase.auth.signOut({ scope: 'local' });
             } catch (e) {}
             router.replace('/login');
           }

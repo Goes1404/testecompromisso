@@ -560,6 +560,42 @@ Toda live gera **dois avisos aos alunos das turmas da aula** (push + sininho), v
 
 Prova: `npx tsx scripts/test-live-aviso.ts` (dentro de `npm test`).
 
+### 🧾 Matrícula 2027: ficha online, planilha da equipe e sorteio nas salas 1–8 (16/11)
+
+Proposta aprovada pela coordenação em 16/11. Ficha pública **sem login** em `/matricula`
+(botão "Matrícula 2027" no topo do site), planilha da equipe em
+`/dashboard/secretary/matriculas` (admin/staff). Regras puras em `src/lib/matricula.ts`
+(mesma validação na tela e na API); servidor em `src/lib/matricula-servidor.ts`; desenho em
+`components/matricula/` (prévia sem login: `/dev/matriculas-preview?tela=ficha|painel`).
+Migration `20261116120000_matriculas_2027.sql`.
+
+1. **De fora, ninguém lê nem grava as tabelas.** A ficha entra por `/api/matricula`
+   (campo-isca, 30 por IP/hora em `password_reset_attempts`, identifier `matricula`) que chama
+   `registrar_matricula()` com service_role. O balcão usa `/api/admin/matriculas` (`exigirAdmin`),
+   que vale fora do prazo. Leitura/edição: só admin/staff (`pode_gerir_matricula()`).
+2. **Sem CPF, RG, endereço completo nem renda.** Documento é conferido no balcão.
+3. **Menor de 18 exige responsável** (nome, parentesco, celular) e o "de acordo" dos dados é
+   do responsável (LGPD art. 14). Idade conta por data no fuso da escola (`idade()`).
+4. **Repetida é recusada na entrada**: mesmo `normalizar_nome` + mesmo nascimento no ano,
+   salvo se a anterior está cancelada. A planilha ainda marca "mesmo celular".
+5. **Sala só para Confirmada e do mesmo foco** (gatilho). Mudar status tira a sala. Sala com
+   aluno não é apagada nem troca de foco.
+6. **Sorteio por foco** (`sortear_salas_matricula`): concorrem Confirmadas sem sala + Lista de
+   espera; entram pela **ordem de inscrição** até as vagas; quem entra vai em ordem aleatória
+   para a sala do foco **menos cheia** (diferença ≤ 1); o resto vai para a Lista de espera.
+   Quem já tem sala não muda, salvo "Refazer tudo". `previaDoSorteio()` (TS) mostra o mesmo
+   resultado em números antes de gravar.
+7. **Toda edição vai para `matriculas_historico`** (gatilho, com o nome de quem mudou).
+8. **2027 ainda NÃO vira conta na plataforma.** `profiles.sala` é a sala de 2026 (ETEC 1–6,
+   ENEM 7–12) e alimenta chamada e restrição de live: conta de 2027 agora entraria nas aulas de
+   2026 e sairia como ausente. Criar as contas é a fase 2, junto com arquivar a turma 2026.
+9. Começo: abre 16/11/2026, fecha 31/01/2027 23:59; ETEC salas 1–4, ENEM 5–8, 40 lugares —
+   tudo editável na aba "Ficha online"/"Salas e sorteio".
+
+Testado em Postgres (PGlite): 36 verificações (RLS de anon/aluno/professor/staff, janela,
+repetida com acento, sala x foco, histórico, sorteio equilibrado, espera por ordem, vaga nova
+chama o 1º da espera, refazer). Prova das regras de tela: `scripts/test-matricula.ts` (no `npm test`).
+
 ### 📅 Data da aula e aula no ar
 
 - **Aula no ar conta a validade de `lives.no_ar_desde`**, gravado pelo professor ao
