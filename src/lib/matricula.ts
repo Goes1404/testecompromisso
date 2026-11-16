@@ -14,8 +14,8 @@ export const ANO_MATRICULA = 2027;
 export const FOCOS_NA_FICHA_ONLINE: Foco[] = ["ETEC"];
 /** Nome do evento, igual na ficha, na lista impressa e no recado. */
 export const TITULO_DO_SIMULADO = "Simulado Pré-Etec 2026";
-/** Salas do cursinho que o aluno pode dizer que é a dele (a sala da prova é sempre outra). */
-export const SALAS_DE_ORIGEM = Array.from({ length: 12 }, (_, i) => i + 1);
+/** Salas do cursinho que o aluno pode dizer que é a dele (1–8; a sala da prova é sempre outra). */
+export const SALAS_DE_ORIGEM = Array.from({ length: 8 }, (_, i) => i + 1);
 
 /** "2027-0012" → "0012": o número que o aluno vê e diz na porta. */
 export const numeroDeInscricao = (protocolo: string) => protocolo.split("-").pop() ?? protocolo;

@@ -625,6 +625,9 @@ Migration `20261116120000_matriculas_2027.sql`.
     inscrição** (`numeroDeInscricao()`, o protocolo sem o ano) e "leve o RG: conferido na porta
     da sala". Lista para imprimir (`listasDasSalasHtml`, botão "Imprimir listas das salas"): uma
     folha por sala, nº, nome, nascimento, ☐ RG conferido e assinatura — sem celular (papel na porta).
+    **Salas da prova só de 1 a 8** (16/11 à noite, `20261116230000_salas_da_prova_1_a_8.sql`):
+    todas de prova, sem reserva, 40 lugares (320); 9–12 saíram e quem estava na 9/11 foi para
+    1–8. A sala no Compromisso que o aluno escolhe também vai de 1 a 8 (`SALAS_DE_ORIGEM`).
     ⚠️ **Em produção (16/11) o "Preencher vagas" ficou na versão anterior** (sem evitar a sala de
     origem): a coordenação disse que tanto faz cair na mesma sala nesse caso. A ficha evita. Se
     um dia aplicar `20261116220000` inteira, o botão passa a evitar também — sem outro efeito.
