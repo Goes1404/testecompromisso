@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Search, Download, Printer, Shuffle, PlusCircle, Trash2, Copy, ExternalLink, AlertTriangle,
-  UserPlus, Loader2, Save, History, Users, DoorOpen, Settings2, MessageCircle, ScanLine,
+  UserPlus, Loader2, Save, History, Users, DoorOpen, Settings2, MessageCircle, ScanLine, Link2,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,24 @@ export function PainelDeMatriculas({
     XLSX.writeFile(wb, `matriculas-${turma.ano}-${hoje}${somenteFiltro ? "-filtro" : ""}.xlsx`);
   };
 
+  /** Link da conferência para os fiscais da porta, sem login, com validade curta. */
+  const linkDaPorta = async () => {
+    try {
+      const r = await fetch("/api/admin/matriculas/link-da-porta", { method: "POST" });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { toast({ title: "Não deu para gerar o link", description: j.error, variant: "destructive" }); return; }
+      const ate = instante(j.expiraEm);
+      try {
+        await navigator.clipboard.writeText(j.url);
+        toast({ title: "Link da porta copiado", description: `Mande só para os fiscais. Vale até ${ate}.` });
+      } catch {
+        window.prompt(`Link da porta (vale até ${ate}). Copie e mande só para os fiscais:`, j.url);
+      }
+    } catch {
+      toast({ title: "Sem conexão", variant: "destructive" });
+    }
+  };
+
   const imprimir = () => {
     const j = window.open("", "_blank");
     if (!j) { toast({ title: "O navegador bloqueou a janela", description: "Libere pop-ups para este site.", variant: "destructive" }); return; }
@@ -127,6 +145,9 @@ export function PainelDeMatriculas({
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={imprimir} disabled={!lista.length} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
             <Printer className="h-4 w-4 mr-2" /> Imprimir listas das salas
+          </Button>
+          <Button variant="outline" onClick={linkDaPorta} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
+            <Link2 className="h-4 w-4 mr-2" /> Link da porta (sem login)
           </Button>
           <Button asChild className="h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-xs uppercase tracking-widest">
             <Link href="/dashboard/secretary/matriculas/conferencia"><ScanLine className="h-4 w-4 mr-2" /> Conferência rápida</Link>

@@ -600,6 +600,11 @@ Migration `20261116120000_matriculas_2027.sql`.
    conferido" (e "responsável presente", se menor) e confirma. Só muda `status` → a sala é a
    que o aluno printou. Lista de espera, cancelada e sem sala não confirmam ali. Relê a lista a
    cada 60 s (mais de uma pessoa na porta).
+   **Link da porta, sem login** (16/11): botão "Link da porta (sem login)" na planilha gera
+   `/conferencia?t=<chave>` (`src/lib/conferencia-token.ts`, HMAC com o segredo do link de senha,
+   vale `VALIDADE_DA_PORTA_HORAS` = 72 h). A rota `/api/conferencia` só responde com chave válida
+   e só devolve nº, nome, nascimento, foco, status e sala (sem celular nem responsável); POST só
+   troca recebida ↔ confirmada. Na porta do simulado só o RG é conferido (`pedirResponsavel=false`).
 6c. **Série não é perguntada**: vem do foco (`serieDoFoco`: ETEC → 9º EF, ENEM → 3º EM). A
    equipe corrige na planilha se precisar. Para o aluno o nome é "Ficha de inscrição".
 7. **Toda edição vai para `matriculas_historico`** (gatilho, com o nome de quem mudou).

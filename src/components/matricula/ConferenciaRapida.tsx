@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Matricula, buscarNaConferencia, placarDaConferencia, idade, dataBR, formatarCelular, statusParaMostrar,
+  Matricula, buscarNaConferencia, placarDaConferencia, idade, dataBR, formatarCelular, statusParaMostrar, numeroDeInscricao,
 } from "@/lib/matricula";
 
 /**
@@ -18,14 +18,17 @@ import {
  * Só desenha; quem grava é a página (`/dashboard/secretary/matriculas/conferencia`).
  */
 export function ConferenciaRapida({
-  lista, hoje, onConfirmar, onDesfazer, onRecarregar, voltar = "/dashboard/secretary/matriculas",
+  lista, hoje, onConfirmar, onDesfazer, onRecarregar, voltar = "/dashboard/secretary/matriculas", pedirResponsavel = true,
 }: {
   lista: Matricula[];
   hoje: string;
   onConfirmar: (m: Matricula) => Promise<boolean>;
   onDesfazer: (m: Matricula) => Promise<boolean>;
   onRecarregar: () => Promise<void>;
-  voltar?: string;
+  /** null esconde o "voltar à planilha" (link da porta, sem login). */
+  voltar?: string | null;
+  /** Na porta do simulado só o RG é conferido; na matrícula, também o responsável do menor. */
+  pedirResponsavel?: boolean;
 }) {
   const [termo, setTermo] = useState("");
   const [escolhidaId, setEscolhidaId] = useState<string | null>(null);
@@ -57,9 +60,9 @@ export function ConferenciaRapida({
     <div className="max-w-2xl mx-auto space-y-5 pb-24">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link href={voltar} className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-wider text-slate-500 hover:text-orange-600">
+          {voltar && <Link href={voltar} className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-wider text-slate-500 hover:text-orange-600">
             <ArrowLeft className="h-3.5 w-3.5" /> Planilha
-          </Link>
+          </Link>}
           <h1 className="text-3xl font-black italic tracking-tighter text-slate-900 dark:text-white mt-1">Conferência rápida</h1>
           <p className="text-sm text-slate-500">Digite o protocolo do print (ex.: 12) ou o nome. Confira o RG e confirme.</p>
         </div>
@@ -106,7 +109,7 @@ export function ConferenciaRapida({
                   className="w-full text-left rounded-2xl border-2 border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 p-4 hover:border-orange-400 flex items-center justify-between gap-3">
                   <span className="min-w-0">
                     <span className="block font-black text-slate-900 dark:text-white leading-tight">{m.nome}</span>
-                    <span className="block text-xs text-slate-500 font-mono">{m.protocolo} · {dataBR(m.nascimento)}</span>
+                    <span className="block text-xs text-slate-500">Nº {numeroDeInscricao(m.protocolo)} · {dataBR(m.nascimento)}</span>
                   </span>
                   <span className="text-xs font-black text-slate-600 dark:text-slate-300 whitespace-nowrap">{m.foco} · {statusParaMostrar(m)}</span>
                 </button>
@@ -120,7 +123,7 @@ export function ConferenciaRapida({
 
       {escolhida && (
         <CartaoDaConferencia
-          key={`${escolhida.id}-${escolhida.status}`} m={escolhida} hoje={hoje}
+          key={`${escolhida.id}-${escolhida.status}`} m={escolhida} hoje={hoje} pedirResponsavel={pedirResponsavel}
           onConfirmar={async () => {
             const ok = await onConfirmar(escolhida);
             if (ok) { setUltima({ nome: escolhida.nome, sala: escolhida.sala, foco: escolhida.foco }); proximo(); }
@@ -133,16 +136,17 @@ export function ConferenciaRapida({
   );
 }
 
-function CartaoDaConferencia({ m, hoje, onConfirmar, onDesfazer, onProximo }: {
-  m: Matricula; hoje: string; onConfirmar: () => Promise<void>; onDesfazer: () => Promise<boolean>; onProximo: () => void;
+function CartaoDaConferencia({ m, hoje, onConfirmar, onDesfazer, onProximo, pedirResponsavel }: {
+  m: Matricula; hoje: string; pedirResponsavel: boolean; onConfirmar: () => Promise<void>; onDesfazer: () => Promise<boolean>; onProximo: () => void;
 }) {
   const anos = idade(m.nascimento, hoje);
   const menor = anos < 18;
+  const exigeResp = pedirResponsavel && menor;
   const [rg, setRg] = useState(false);
   const [resp, setResp] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const pode = m.status === "recebida" && !!m.sala;
-  const liberado = rg && (!menor || resp);
+  const liberado = rg && (!exigeResp || resp);
 
   const confirmar = async () => {
     setSalvando(true);
@@ -160,7 +164,7 @@ function CartaoDaConferencia({ m, hoje, onConfirmar, onDesfazer, onProximo }: {
         <div className="min-w-0 space-y-1">
           <p className="text-xl font-black leading-tight text-slate-900 dark:text-white">{m.nome}</p>
           <p className="text-sm text-slate-500">
-            <span className="font-mono">{m.protocolo}</span> · nasc. {dataBR(m.nascimento)} ({anos} anos)
+            <span>Nº {numeroDeInscricao(m.protocolo)}</span> · nasc. {dataBR(m.nascimento)} ({anos} anos)
           </p>
           <div className="flex flex-wrap gap-1.5 pt-1">
             <span className="rounded-full bg-slate-900 text-white px-2.5 h-6 inline-flex items-center text-[11px] font-black dark:bg-white dark:text-slate-900">{m.foco}</span>
@@ -196,7 +200,7 @@ function CartaoDaConferencia({ m, hoje, onConfirmar, onDesfazer, onProximo }: {
           <Conferir marcado={rg} onChange={setRg} icone={IdCard}>
             RG original conferido: nome e nascimento batem com a ficha
           </Conferir>
-          {menor && (
+          {exigeResp && (
             <Conferir marcado={resp} onChange={setResp} icone={Users}>
               Responsável presente e assinou
               {m.resp_nome && (
@@ -228,7 +232,7 @@ function CartaoDaConferencia({ m, hoje, onConfirmar, onDesfazer, onProximo }: {
       </div>
       {pode && !liberado && (
         <p className="text-xs text-slate-500 text-center -mt-2">
-          Marque {menor ? "as duas conferências" : "a conferência do RG"} para liberar o botão.
+          Marque {exigeResp ? "as duas conferências" : "a conferência do RG"} para liberar o botão.
         </p>
       )}
     </section>
