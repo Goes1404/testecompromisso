@@ -628,6 +628,11 @@ Migration `20261116120000_matriculas_2027.sql`.
     **Salas da prova só de 1 a 8** (16/11 à noite, `20261116230000_salas_da_prova_1_a_8.sql`):
     todas de prova, sem reserva, 40 lugares (320); 9–12 saíram e quem estava na 9/11 foi para
     1–8. A sala no Compromisso que o aluno escolhe também vai de 1 a 8 (`SALAS_DE_ORIGEM`).
+    **Sala nova abre sozinha quando tudo lota** (17/11, `20261117090000_abre_sala_quando_lota.sql`,
+    aplicada em produção): se nenhuma sala de prova tem lugar, `abrir_proxima_sala_matricula()`
+    tira da reserva a menor sala reservada (hoje 9–12) ou cria a próxima (maior + 1) com 40, e o
+    aluno entra nela. Lista de espera só depois da sala 30. As salas 9–12 ficaram como reserva
+    vazia justamente para isso.
     ⚠️ **Em produção (16/11) o "Preencher vagas" ficou na versão anterior** (sem evitar a sala de
     origem): a coordenação disse que tanto faz cair na mesma sala nesse caso. A ficha evita. Se
     um dia aplicar `20261116220000` inteira, o botão passa a evitar também — sem outro efeito.
