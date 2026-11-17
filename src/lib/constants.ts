@@ -15,7 +15,8 @@ export const SCHOOL_LIST = [
   "Tom Jobim",
   "Ana Aparecida Santana",
   "Dep. Ulysses Silveira Guimarães",
-  "Manoel Jacob Cremm"
+  "Manoel Jacob Cremm",
+  "Tancredo Neves"
 ];
 
 export const EDUCATIONAL_CATEGORIES = [
