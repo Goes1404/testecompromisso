@@ -301,8 +301,11 @@ export function statusParaMostrar(m: Pick<Matricula, "status" | "sala">): string
 // ── Consulta e tela de "inscrição recebida" ─────────────────────────────────
 /** Aviso fixo na tela da sala (inscrição e consulta) e no recado do WhatsApp. */
 export const AVISO_DA_PROVA = {
-  titulo: "O simulado é de manhã",
-  texto: "Entrada às 8h, os portões fecham às 8h30 e a prova começa às 9h. Depois das 8h30 não entra.",
+  titulo: "O simulado será no período da manhã.",
+  linhas: [
+    "Entrada às 8h. Os portões fecham às 8h30 e a prova começa às 9h. Depois das 8h30 não entra.",
+    "Tempo mínimo na sala: até as 12h. Tempo máximo: até as 13h.",
+  ],
 };
 
 /** O que `consultar_inscricao()` devolve: só o que o aluno precisa ver. */
@@ -536,7 +539,8 @@ export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" 
     `🗓️ Inscrições até ${instante(t.fecha_em)}`,
     "👨‍👩‍👧 Menor de 18 anos: precisa dos dados do responsável.",
     "⚠️ É o simulado do cursinho, não a inscrição oficial do Vestibulinho ETEC.",
-    "🕗 Entrada às 8h · portões fecham às 8h30 · prova às 9h.",
+    "🕗 O simulado será no período da manhã: entrada às 8h, portões fecham às 8h30, prova às 9h.",
+    "⏱️ Tempo mínimo na sala até as 12h; tempo máximo até as 13h.",
     "🔎 Já se inscreveu? No mesmo link, toque em \"Consultar inscrição\".",
     "🪪 No dia, leve o RG original: ele é conferido na porta da sala da prova.",
   ].join("\n");

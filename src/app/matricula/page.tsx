@@ -262,7 +262,9 @@ function TelaDaSituacao({ protocolo, inscricao, nova }: { protocolo: string; ins
           </span>
           <div className="min-w-0">
             <p className="font-black text-sky-950 dark:text-sky-100 leading-tight">{AVISO_DA_PROVA.titulo}</p>
-            <p className="text-sm text-sky-900/80 dark:text-sky-100/80 mt-0.5">{AVISO_DA_PROVA.texto}</p>
+            {AVISO_DA_PROVA.linhas.map((l) => (
+              <p key={l} className="text-sm text-sky-900/80 dark:text-sky-100/80 mt-1">{l}</p>
+            ))}
           </div>
         </div>
       )}
