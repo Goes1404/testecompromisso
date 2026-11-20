@@ -527,6 +527,43 @@ export function listasDasSalasHtml(lista: Matricula[], salas: SalaDaMatricula[],
   <script>window.onload=function(){setTimeout(function(){window.print()},250)}</script></body></html>`;
 }
 
+/**
+ * Lista para colar na PAREDE (pedido da coordenação, 20/11): o aluno procura o
+ * próprio nome e acha a sala. UMA folha A4 em pé por sala (40 alunos cabem),
+ * com o nome completo numa linha só — nome quebrado aumenta a linha e o número
+ * de folhas; a escola, se for longa, é cortada com "…". Número da sala bem grande, nº de inscrição, nome completo e escola
+ * (a escola ajuda o aluno a ter certeza de que é ele). Sem nascimento, RG nem
+ * assinatura: é papel exposto no corredor.
+ */
+export function listaDaParedeHtml(lista: Matricula[], salas: SalaDaMatricula[]): string {
+  const paginas = [...salas].sort((a, b) => a.sala - b.sala).map((s) => {
+    const daSala = lista.filter((m) => ocupaSala(m) && m.sala === s.sala)
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    if (!daSala.length) return "";
+    return `<div class="pagina">
+      <div class="topo"><div class="sala">SALA ${s.sala}</div>
+      <div class="ev">${esc(TITULO_DO_SIMULADO)}<br><span>${daSala.length} aluno(s) · procure o seu nome</span></div></div>
+      <table><thead><tr><th class="n">Nº</th><th>Nome completo</th><th class="esc">Escola</th></tr></thead><tbody>
+      ${daSala.map((m) => `<tr><td class="n">${esc(numeroDeInscricao(m.protocolo))}</td><td class="nome">${esc(m.nome)}</td><td class="esc">${esc(m.escola)}</td></tr>`).join("")}
+      </tbody></table></div>`;
+  }).join("");
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Listas da parede · ${esc(TITULO_DO_SIMULADO)}</title><style>
+    @page{size:A4 portrait;margin:8mm 10mm}
+    body{font-family:Arial,sans-serif;margin:0;color:#111}
+    .topo{display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #ea580c;padding-bottom:6px;margin-bottom:8px}
+    .sala{font-size:60px;font-weight:900;letter-spacing:-1px;line-height:1}
+    .ev{text-align:right;font-size:16px;font-weight:bold;color:#333} .ev span{font-size:13px;font-weight:normal;color:#555}
+    table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+    th,td{border:1px solid #bbb;padding:3px 7px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    th{background:#fff1e6;font-size:13px}
+    .n{width:46px;text-align:center;font-weight:bold} .nome{font-weight:bold;font-size:14px}
+    th.esc,td.esc{width:30%;font-size:12px}
+    tr{page-break-inside:avoid}
+    .pagina{page-break-after:always} .pagina:last-child{page-break-after:auto}
+  </style></head><body>${paginas || "<p>Ninguém nas salas ainda.</p>"}
+  <script>window.onload=function(){setTimeout(function(){window.print()},250)}</script></body></html>`;
+}
+
 /** Recado pronto para o WhatsApp e o Instagram. */
 export function recadoDaMatricula(link: string, t: Pick<TurmaDaMatricula, "ano" | "fecha_em">): string {
   return [

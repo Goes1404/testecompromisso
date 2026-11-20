@@ -19,7 +19,7 @@ import { FormularioDaFicha, RespostaDoEnvio } from "@/components/matricula/Formu
 import {
   Matricula, SalaDaMatricula, TurmaDaMatricula, StatusMatricula, Foco, Ficha,
   STATUS, SERIES, ESCOLA_TIPOS, TURNOS, rotulo, idade, formatarCelular, dataBR, instante,
-  repetidas, previaDoSorteio, ocupaSala, statusParaMostrar, TEM_SALA, abasDoExcel, listasDasSalasHtml, situacaoDaFicha, recadoDaMatricula,
+  repetidas, previaDoSorteio, listaDaParedeHtml, ocupaSala, statusParaMostrar, TEM_SALA, abasDoExcel, listasDasSalasHtml, situacaoDaFicha, recadoDaMatricula,
   paraCampoDeData, doCampoDeData, soDigitos, ehMenor,
 } from "@/lib/matricula";
 
@@ -126,6 +126,12 @@ export function PainelDeMatriculas({
     }
   };
 
+  const imprimirParede = () => {
+    const j = window.open("", "_blank");
+    if (!j) { toast({ title: "O navegador bloqueou a janela", description: "Libere pop-ups para este site.", variant: "destructive" }); return; }
+    j.document.open(); j.document.write(listaDaParedeHtml(lista, salas)); j.document.close();
+  };
+
   const imprimir = () => {
     const j = window.open("", "_blank");
     if (!j) { toast({ title: "O navegador bloqueou a janela", description: "Libere pop-ups para este site.", variant: "destructive" }); return; }
@@ -145,6 +151,9 @@ export function PainelDeMatriculas({
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={imprimir} disabled={!lista.length} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
             <Printer className="h-4 w-4 mr-2" /> Imprimir listas das salas
+          </Button>
+          <Button variant="outline" onClick={imprimirParede} disabled={!lista.length} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
+            <Printer className="h-4 w-4 mr-2" /> Lista para a parede
           </Button>
           <Button variant="outline" onClick={linkDaPorta} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
             <Link2 className="h-4 w-4 mr-2" /> Link da porta (sem login)

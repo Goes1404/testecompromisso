@@ -5,7 +5,7 @@
 import {
   validarFicha, FICHA_VAZIA, Ficha, idade, ehMenor, errosDoPasso, repetidas, previaDoSorteio,
   situacaoDaFicha, instante, paraCampoDeData, doCampoDeData, dataBR, abasDoExcel, Matricula,
-  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula, serieDoFoco, textoDaSituacao, buscarNaConferencia, placarDaConferencia, numeroDeInscricao,
+  statusParaMostrar, listasDasSalasHtml, formatarCelular, SalaDaMatricula, serieDoFoco, textoDaSituacao, buscarNaConferencia, placarDaConferencia, numeroDeInscricao, listaDaParedeHtml,
 } from "../src/lib/matricula";
 
 let falhas = 0;
@@ -111,6 +111,10 @@ eq("sala 13 não existe", !!validarFicha({ ...boa, ex_aluno: true, sala_origem: 
 eq("número de inscrição sem o ano", numeroDeInscricao("2027-0012"), "0012");
 const folha = listasDasSalasHtml([m(1, { sala: 1, nome: "Ana Souza" })], [{ ano: 2027, sala: 1, foco: "ETEC", capacidade: 40 }]);
 eq("lista impressa: RG conferido, sem celular", folha.includes("RG conferido") && !folha.includes("91234"), true);
+
+const parede = listaDaParedeHtml([m(1, { sala: 1, nome: "Ana <b>Souza</b>", escola: "Leda Caira" })], [{ ano: 2027, sala: 1, foco: "ETEC", capacidade: 40 }]);
+eq("parede: sala, nome escapado e escola, sem nascimento/RG/assinatura",
+  parede.includes("SALA 1") && parede.includes("Ana &lt;b&gt;Souza") && parede.includes("Leda Caira") && !parede.includes("Assinatura") && !parede.includes("RG") && !parede.includes("/2011"), true);
 
 if (falhas) { console.error(`\n${falhas} falha(s)`); process.exit(1); }
 console.log("\ntudo ok");
