@@ -153,7 +153,7 @@ const teacherItems: NavItem[] = [
 const adminItems: NavItem[] = [
   { icon: ShieldCheck, label: "Gestão 360", href: "/dashboard/admin/home", id: "nav-admin-home" },
   { icon: Megaphone, label: "Mural", href: "/dashboard/mural", id: "nav-admin-mural", hot: true },
-  { icon: ClipboardList, label: "Matrículas 2027", href: "/dashboard/secretary/matriculas", id: "nav-admin-matriculas-2027" },
+  { icon: ClipboardList, label: "Simulado Etec", href: "/dashboard/secretary/matriculas", id: "nav-admin-matriculas-2027" },
   {
     icon: Users, label: "Usuários", id: "nav-admin-usuarios",
     children: [
@@ -208,7 +208,7 @@ const secretaryItems: NavItem[] = [
   {
     icon: Users, label: "Matrículas", id: "nav-secretary-matriculas",
     children: [
-      { icon: ClipboardList, label: "Matrículas 2027",  href: "/dashboard/secretary/matriculas",  id: "nav-secretary-matriculas-2027" },
+      { icon: ClipboardList, label: "Simulado Etec",  href: "/dashboard/secretary/matriculas",  id: "nav-secretary-matriculas-2027" },
       { icon: Users,       label: "Diretório de Alunos", href: "/dashboard/secretary/enrollments", id: "nav-secretary-enrollments" },
       { icon: TrendingUp,  label: "Renda Per Capita",    href: "/dashboard/secretary/income",      id: "nav-secretary-income" },
       { icon: Database,    label: "Gestão de Turmas",    href: "/dashboard/admin/students",        id: "nav-secretary-students" },

@@ -105,7 +105,7 @@ export function PainelDeMatriculas({
       ws["!cols"] = Object.keys(aba.linhas[0] ?? { Aviso: "" }).map((k) => ({ wch: Math.min(40, Math.max(10, k.length + 2)) }));
       XLSX.utils.book_append_sheet(wb, ws, aba.nome.slice(0, 31));
     }
-    XLSX.writeFile(wb, `matriculas-${turma.ano}-${hoje}${somenteFiltro ? "-filtro" : ""}.xlsx`);
+    XLSX.writeFile(wb, `simulado-etec-${hoje}${somenteFiltro ? "-filtro" : ""}.xlsx`);
   };
 
   /** Link da conferência para os fiscais da porta, sem login, com validade curta. */
@@ -142,8 +142,8 @@ export function PainelDeMatriculas({
     <div className="max-w-[1400px] mx-auto space-y-6 pb-24">
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500">Alunos novos</span>
-          <h1 className="text-3xl md:text-4xl font-black italic tracking-tighter text-slate-900 dark:text-white">Matrículas {turma.ano}</h1>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500">Inscrições</span>
+          <h1 className="text-3xl md:text-4xl font-black italic tracking-tighter text-slate-900 dark:text-white">Simulado Etec</h1>
           <p className="text-sm text-slate-500 font-medium">
             Ficha online {rotuloDaSituacao(situacaoDaFicha(turma))} · até {instante(turma.fecha_em)}
           </p>
