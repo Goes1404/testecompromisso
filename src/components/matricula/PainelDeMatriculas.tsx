@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Search, Download, Printer, Shuffle, PlusCircle, Trash2, Copy, ExternalLink, AlertTriangle,
-  UserPlus, Loader2, Save, History, Users, DoorOpen, Settings2, MessageCircle, ScanLine, Link2,
+  UserPlus, Loader2, Save, History, Users, DoorOpen, Settings2, MessageCircle, ScanLine, Link2, Camera,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -157,6 +157,9 @@ export function PainelDeMatriculas({
           </Button>
           <Button variant="outline" onClick={linkDaPorta} className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
             <Link2 className="h-4 w-4 mr-2" /> Link da porta (sem login)
+          </Button>
+          <Button asChild variant="outline" className="h-11 rounded-xl font-black text-xs uppercase tracking-widest">
+            <Link href="/dashboard/secretary/matriculas/correcao"><Camera className="h-4 w-4 mr-2" /> Correção por foto</Link>
           </Button>
           <Button asChild className="h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-xs uppercase tracking-widest">
             <Link href="/dashboard/secretary/matriculas/conferencia"><ScanLine className="h-4 w-4 mr-2" /> Conferência rápida</Link>

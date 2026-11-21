@@ -637,6 +637,16 @@ Migration `20261116120000_matriculas_2027.sql`.
     origem): a coordenação disse que tanto faz cair na mesma sala nesse caso. A ficha evita. Se
     um dia aplicar `20261116220000` inteira, o botão passa a evitar também — sem outro efeito.
 
+11. **Correção por foto** (21/11, `/dashboard/secretary/matriculas/correcao`, botão "Correção por
+    foto" na planilha): foto do gabarito certo → a equipe confere as letras; fotos dos cartões →
+    `/api/admin/simulado/ler-cartao` (só admin/staff, GPT-4o com visão) **só lê** nome, nº e
+    marcações; quem corrige é `corrigir()` (`src/lib/correcao-gabarito.ts`): branco, "2+ marcadas"
+    anula, questão anulada no gabarito vale para todos. O aluno é achado entre os inscritos por
+    `acharAluno()` (nº de inscrição primeiro; senão nome com tolerância a letra mal lida — "parecido"
+    pede conferência; o mesmo aluno em dois cartões é marcado). Resultado em Excel. **Fotos não são
+    guardadas** (menores); o trabalho fica na aba em `sessionStorage` `dash_cache_correcao_simulado`
+    (o signOut apaga). Prova: `scripts/test-correcao-gabarito.ts`.
+
 Testado em Postgres (PGlite): 36 verificações (RLS de anon/aluno/professor/staff, janela,
 repetida com acento, sala x foco, histórico, sorteio equilibrado, espera por ordem, vaga nova
 chama o 1º da espera, refazer). Prova das regras de tela: `scripts/test-matricula.ts` (no `npm test`).
