@@ -12,12 +12,15 @@ import { ANO_MATRICULA, hojeNaEscola } from "@/lib/matricula";
 import {
   Marca, LETRAS, Inscrito, Achado, corrigir, acharAluno, linhaDoResultado, Correcao,
 } from "@/lib/correcao-gabarito";
+import { LancarNotas, Lancado, Pronto } from "@/components/matricula/LancarNotas";
 
 /**
  * Correção do Simulado Pré-Etec por foto (admin/staff).
  * 1) foto do gabarito certo → a IA lê e a equipe confere;
  * 2) fotos dos cartões → a IA lê nome, nº e marcações; a tela corrige e acha
- *    o aluno entre os inscritos; 3) Excel com nota e sala.
+ *    o aluno entre os inscritos; 3) "Lançar notas" grava no banco e o aluno
+ *    já vê no link `/resultado` e, se tem conta, na plataforma (23/11).
+ *    O Excel continua saindo.
  * As fotos não são guardadas. O trabalho fica na aba (sessionStorage com a
  * chave `dash_cache_…`, que o signOut apaga) para um recarregar não perder tudo.
  */
@@ -75,6 +78,30 @@ export default function CorrecaoPorFotoPage() {
   const [aberto, setAberto] = useState<string | null>(null);
   const fila = useRef<{ id: string; file: File }[]>([]);
   const ativos = useRef(0);
+  const [lancados, setLancados] = useState<Lancado[]>([]);
+  const [faltaMigration, setFaltaMigration] = useState(false);
+  const chaveRef = useRef<Marca[] | null>(null);
+  chaveRef.current = chave;
+
+  // O que já foi lançado e o gabarito guardado. Quem abre a tela em outro
+  // computador não precisa fotografar o gabarito de novo — e todo mundo que
+  // corrige usa o mesmo.
+  const carregarLancados = useCallback(async () => {
+    try {
+      const r = await fetch("/api/admin/simulado/resultados", { cache: "no-store" });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) return;
+      setFaltaMigration(!!j.faltaMigration);
+      setLancados(Array.isArray(j.resultados) ? j.resultados : []);
+      if (Array.isArray(j.gabarito) && j.gabarito.length && !chaveRef.current) {
+        setChave(j.gabarito);
+        toast({ title: `Gabarito guardado carregado (${j.gabarito.length} questões)`, description: "É o mesmo do último lançamento." });
+      }
+    } catch { /* sem rede: a tela segue só com o que está na aba */ }
+  }, [toast]);
+  useEffect(() => {
+    if (user && podeGerir) carregarLancados();
+  }, [user, podeGerir, carregarLancados]);
 
   // Restaura o trabalho da aba.
   useEffect(() => {
@@ -172,6 +199,15 @@ export default function CorrecaoPorFotoPage() {
     erro: linhas.filter((l) => l.c.estado === "erro").length,
     conferir: linhas.filter((l) => l.c.estado === "lido" && (!l.inscrito || l.c.confianca === "parecido" || (repetidos.get(l.inscrito.id) ?? 0) > 1)).length,
   }), [linhas, repetidos]);
+
+  // Prontos para lançar: lidos, com aluno escolhido, nome conferido e sem repetição.
+  const prontos = useMemo<Pronto[]>(() => linhas
+    .filter((l) => l.c.estado === "lido" && l.inscrito && l.correcao && l.c.confianca !== "parecido" && (repetidos.get(l.inscrito.id) ?? 0) === 1)
+    .map((l) => ({
+      matricula_id: l.inscrito!.id, nome: l.inscrito!.nome, numero: l.inscrito!.protocolo.split("-").pop()!,
+      respostas: l.c.respostas, acertos: l.correcao!.acertos, total: l.correcao!.total,
+    })), [linhas, repetidos]);
+  const lancadoDe = useMemo(() => new Map(lancados.map((l) => [l.matricula_id, l])), [lancados]);
 
   const baixarExcel = async () => {
     const XLSX = await import("xlsx");
@@ -271,6 +307,18 @@ export default function CorrecaoPorFotoPage() {
                     {c.estado === "lido" && (c.confianca === "parecido" || repetido || c.erro) && (
                       <p className="text-xs font-bold text-amber-700 mt-0.5">
                         {repetido ? "Este aluno aparece em mais de um cartão. " : ""}{c.confianca === "parecido" ? "Nome parecido: confira. " : ""}{c.erro ?? ""}
+                        {c.confianca === "parecido" && inscrito && (
+                          <button type="button" onClick={() => atualizar(c.id, { confianca: "nome" })} className="ml-1 underline underline-offset-2 text-emerald-700">
+                            É este aluno mesmo
+                          </button>
+                        )}
+                      </p>
+                    )}
+                    {inscrito && correcao && lancadoDe.has(inscrito.id) && (
+                      <p className="text-xs font-bold text-emerald-700 mt-0.5">
+                        {lancadoDe.get(inscrito.id)!.acertos === correcao.acertos
+                          ? "Nota já lançada."
+                          : `Lançada com ${lancadoDe.get(inscrito.id)!.acertos}/${lancadoDe.get(inscrito.id)!.total}: lance de novo para atualizar.`}
                       </p>
                     )}
                   </div>
@@ -295,6 +343,13 @@ export default function CorrecaoPorFotoPage() {
           })}
         </ul>
       </section>
+
+      <LancarNotas
+        chave={chave} prontos={prontos} lancados={lancados} faltaMigration={faltaMigration}
+        foraDoLancamento={linhas.filter((l) => l.c.estado !== "lendo").length - prontos.length}
+        nomeDe={(id) => porId.get(id)?.nome ?? "Inscrição removida"}
+        onMudou={carregarLancados}
+      />
     </div>
   );
 }

@@ -2,13 +2,15 @@
 
 /**
  * Prévia da matrícula 2027 com dados de exemplo, sem login (só fora de produção).
- * `/dev/matriculas-preview?tela=ficha|painel|conferencia`
+ * `/dev/matriculas-preview?tela=ficha|painel|conferencia|lancar`
+ * (`lancar` chama a API de verdade: sem login, só serve com a rede simulada nas capturas.)
  */
 import { Suspense, useMemo, useState } from "react";
 import { notFound, useSearchParams } from "next/navigation";
 import { FormularioDaFicha } from "@/components/matricula/FormularioDaFicha";
 import { PainelDeMatriculas, AcoesDoPainel } from "@/components/matricula/PainelDeMatriculas";
 import { ConferenciaRapida } from "@/components/matricula/ConferenciaRapida";
+import { LancarNotas } from "@/components/matricula/LancarNotas";
 import { Matricula, SalaDaMatricula, TurmaDaMatricula, FICHA_VAZIA, Foco, previaDoSorteio } from "@/lib/matricula";
 
 const NOMES = ["Ana Beatriz Souza", "Bruno Henrique Lima", "Carla Dias Pereira", "Davi Lucas Martins", "Eduarda Alves Rocha", "Felipe Costa Nunes",
@@ -66,6 +68,21 @@ function Previa() {
       <div className="min-h-[100dvh] bg-slate-50 p-4">
         <ConferenciaRapida lista={lista} hoje="2026-11-16" onRecarregar={async () => {}}
           onConfirmar={(m) => mudar(m, "confirmada")} onDesfazer={(m) => mudar(m, "recebida")} voltar="/dev/matriculas-preview" />
+      </div>
+    );
+  }
+  if (tela === "lancar") {
+    const prontos = lista.slice(0, 8).map((m, i) => ({
+      matricula_id: m.id, nome: m.nome, numero: m.protocolo.split("-")[1], respostas: Array.from({ length: 50 }, () => "A" as const),
+      acertos: 20 + i * 3, total: 50,
+    }));
+    return (
+      <div className="min-h-[100dvh] bg-slate-50 p-4">
+        <div className="max-w-5xl mx-auto">
+          <LancarNotas chave={Array.from({ length: 50 }, () => "A" as const)} prontos={prontos} foraDoLancamento={2} faltaMigration={false}
+            lancados={lista.slice(8, 11).map((m, i) => ({ matricula_id: m.id, acertos: 30 + i, total: 50, perfil_id: i ? "x" : null, lancado_em: "2026-11-23T12:00:00Z" }))}
+            nomeDe={(id) => lista.find((m) => m.id === id)?.nome ?? "?"} onMudou={() => {}} />
+        </div>
       </div>
     );
   }

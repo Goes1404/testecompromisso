@@ -37,6 +37,7 @@ export function escondeFlutuantesSempre(pathname: string | null | undefined): bo
     p.startsWith("/dashboard/live/") || p.startsWith("/dashboard/teacher/live/") ||
     // Ficha pública de matrícula: quem preenche ainda não é aluno, e o robô
     // caía em cima do "Continuar" em 360px.
-    p.startsWith("/matricula")
+    p.startsWith("/matricula") ||
+    p.startsWith("/resultado")
   );
 }

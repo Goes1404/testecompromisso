@@ -40,6 +40,7 @@ import {
   SIMULADO_GABARITO_TITULO,
   SIMULADO_GABARITO_TOTAL,
 } from "@/lib/gabarito-simulado";
+import { TITULO_DA_PROVA_DO_SIMULADO } from "@/lib/simulado-resultado";
 
 const GamificationWidget = dynamic(
   () => import('@/components/GamificationWidget').then(m => ({ default: m.GamificationWidget })),
@@ -461,7 +462,11 @@ export default function DashboardHome() {
       const simOficialData = (simOficialRes?.data || []).find(
         (a: any) => {
           const examObj = Array.isArray(a.exam) ? a.exam[0] : a.exam;
-          return examObj?.exam_type === 'simulado_importado';
+          // O cartão "Gabarito Comentado" é do Simulado ENEM de 23/05: compara as
+          // respostas com AQUELE gabarito. O Pré-Etec também é simulado_importado e
+          // não pode cair aqui — mostraria a nota dele contra o gabarito de outra
+          // prova. O aluno vê o Pré-Etec em Simulados → Resultados Oficiais.
+          return examObj?.exam_type === 'simulado_importado' && examObj?.title !== TITULO_DA_PROVA_DO_SIMULADO;
         }
       ) as any;
       let newSimOficial: typeof simuladoOficial = null;

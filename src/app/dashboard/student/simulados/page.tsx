@@ -23,6 +23,7 @@ import {
 } from '@/lib/gamification';
 import { trackMissionProgress } from '@/lib/missions';
 import { allowedExamTypesFor, examTypeLabel } from '@/lib/exam-types';
+import { ANULADA_NA_PROVA, situacaoNaProva } from "@/lib/simulado-resultado";
 import { trackAcao, trackFalha } from '@/lib/telemetry';
 import { MaterialIncompletoAviso, materialIncompleto } from '@/components/MaterialIncompletoAviso';
 
@@ -177,13 +178,15 @@ export default function SimuladoPage() {
     if (!user) return;
     supabase
       .from('exam_attempts')
-      .select('score, completed_at, answers, exam:exams!inner(title, exam_type, answer_key)')
+      .select('score, total_questions, completed_at, answers, exam:exams!inner(title, exam_type, answer_key)')
       .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
       .then(({ data }) => {
         const oficiais = (data || [])
           .filter((a: any) => a.exam?.exam_type === 'simulado_importado')
-          .map((a: any) => ({ title: a.exam.title, score: Number(a.score), total: 60, completed_at: a.completed_at, answers: a.answers || [], answerKey: a.exam.answer_key || null }));
+          // O total vem do lançamento (o Pré-Etec não tem 60 questões); 60 fica só
+          // para as importações antigas, que gravavam 0.
+          .map((a: any) => ({ title: a.exam.title, score: Number(a.score), total: Number(a.total_questions) || (Array.isArray(a.exam.answer_key) ? a.exam.answer_key.length : 0) || 60, completed_at: a.completed_at, answers: a.answers || [], answerKey: a.exam.answer_key || null }));
         setResultadosOficiais(oficiais);
       });
   }, [user]);
@@ -1273,21 +1276,32 @@ export default function SimuladoPage() {
                       {r.answerKey.map((correct, qi) => {
                         const ans = r.answers.find(x => x.q === qi + 1);
                         const selected = ans?.selected || '';
-                        const right = correct && selected && selected.toUpperCase() === correct.toUpperCase();
-                        const wrong = correct && selected && !right;
+                        // Questão anulada ("*" no gabarito) vale ponto; "*" na resposta = duas marcadas.
+                        const sit = situacaoNaProva(correct, selected);
+                        const anulada = correct === ANULADA_NA_PROVA;
+                        const right = sit === 'certa';
+                        const wrong = sit === 'errada' || sit === 'anulada';
                         return (
                           <div key={qi} className={`flex flex-col items-center p-1.5 rounded-xl text-[9px] font-black ${right ? 'bg-emerald-100 text-emerald-700' : wrong ? 'bg-red-100 text-red-600' : 'bg-white/60 text-slate-300'}`}>
                             <span className="opacity-60 text-[8px]">{qi + 1}</span>
-                            <span className="text-xs">{selected || '–'}</span>
+                            <span className="text-xs">{selected === '*' ? '2+' : selected || '–'}</span>
                             {wrong && <span className="text-[7px] opacity-60">{correct}</span>}
+                            {anulada && <span className="text-[7px] opacity-60">anul.</span>}
                           </div>
                         );
                       })}
                     </div>
                     <div className="flex gap-3 text-[10px] font-black pt-1">
-                      <span className="text-emerald-700">✓ {r.answers.filter(a => r.answerKey![a.q-1] && a.selected.toUpperCase() === r.answerKey![a.q-1].toUpperCase()).length} acertos</span>
-                      <span className="text-red-500">✗ {r.answers.filter(a => r.answerKey![a.q-1] && a.selected.toUpperCase() !== r.answerKey![a.q-1].toUpperCase()).length} erros</span>
-                      <span className="text-slate-400">– {r.answerKey.length - r.answers.length} sem resposta</span>
+                      {(() => {
+                        const sits = r.answerKey!.map((g, qi) => situacaoNaProva(g, r.answers.find(x => x.q === qi + 1)?.selected));
+                        return (
+                          <>
+                            <span className="text-emerald-700">✓ {sits.filter(x => x === 'certa').length} acertos</span>
+                            <span className="text-red-500">✗ {sits.filter(x => x === 'errada' || x === 'anulada').length} erros</span>
+                            <span className="text-slate-400">– {sits.filter(x => x === 'branco').length} sem resposta</span>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}

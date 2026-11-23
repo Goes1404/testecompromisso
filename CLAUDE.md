@@ -647,6 +647,36 @@ Migration `20261116120000_matriculas_2027.sql`.
     guardadas** (menores); o trabalho fica na aba em `sessionStorage` `dash_cache_correcao_simulado`
     (o signOut apaga). Prova: `scripts/test-correcao-gabarito.ts`.
 
+12. **Notas lançadas: link público e plataforma** (23/11, migration
+    `20261123120000_simulado_resultados.sql`). O passo 3 da correção por foto ("Lançar notas",
+    `components/matricula/LancarNotas.tsx`) grava pela rota `/api/admin/simulado/resultados`
+    (`exigirAdmin`) em `simulado_gabaritos` (um gabarito por ano, o mesmo para todo mundo que
+    corrige) e `simulado_resultados` (marcações + nota por inscrição). **Lançar publica na hora**
+    (decisão da coordenação) e o aluno vê de dois jeitos:
+    - **Link `/resultado`** (sem login): nome completo exato **ou** nº de inscrição, **sempre com
+      a data de nascimento** — sem ela qualquer um veria a nota de qualquer colega pelo nome.
+      `resultado_do_simulado()` (só service_role) via `/api/matricula/resultado`, 40/IP/hora.
+    - **Plataforma**: quem tem conta ganha um `exam_attempts` (`source='teacher'`) na prova
+      "Simulado Pré-Etec 2026" (`exam_type='simulado_importado'`) e um aviso no sininho; aparece
+      em Simulados → Resultados Oficiais. Quem não tem conta fica só no link (2027 ainda não
+      vira conta — regra 8).
+    Regras (`src/lib/simulado-resultado.ts`):
+    - **A nota nunca vem do navegador**: rota e link refazem a conta com `corrigir()`. Gabarito
+      mudou → todas as notas já lançadas são refeitas no mesmo lançamento.
+    - **A conta é escolhida por `escolherConta()`**: nome completo EXATO; nascimento diferente no
+      cadastro nunca é ligado sozinho; quem não marcou "estou no cursinho" só é ligado sozinho se
+      o nascimento confirma (homônimo de fora); duas contas desempatam por nascimento → sala →
+      "a única já usada". O resto é **dúvida e a equipe escolhe na tela** antes de gravar. Uma
+      conta recebe a nota de uma inscrição só (índice único).
+    - **Questão anulada no `answer_key` da prova é `"*"`**, nunca `""`: vazio já existe em
+      gabaritos antigos como "não preenchido" (`situacaoNaProva()`).
+    - **O cartão "Gabarito Comentado" da home ignora o Pré-Etec**: ele compara com o gabarito
+      fixo do Simulado ENEM de 23/05.
+    - O total do resultado oficial vem de `exam_attempts.total_questions` (era `60` fixo).
+    - Sem a migration, a tela avisa e o Excel segue funcionando; o link diz "ainda não publicados".
+    Provas: `scripts/test-simulado-resultado.ts` (no `npm test`) e 26 verificações em Postgres
+    (consulta, RLS de anon/aluno/staff, uma conta por nota, cancelada e refeita).
+
 Testado em Postgres (PGlite): 36 verificações (RLS de anon/aluno/professor/staff, janela,
 repetida com acento, sala x foco, histórico, sorteio equilibrado, espera por ordem, vaga nova
 chama o 1º da espera, refazer). Prova das regras de tela: `scripts/test-matricula.ts` (no `npm test`).
