@@ -140,6 +140,7 @@ export async function POST(req: NextRequest) {
       return ["nome", "estudante", "aluno", "student", "name"].some((kw) => nh.includes(kw));
     });
     const finalNameIdx = nameIdx !== -1 ? nameIdx : 0;
+    const salaIdx = headerRow.findIndex((h) => ['sala', 'turma', 'class', 'room'].some(kw => normalizeHeader(h).includes(kw)));
 
     const scoreIdx = headerRow.findIndex((h) => {
       const nh = normalizeHeader(h);
@@ -153,23 +154,35 @@ export async function POST(req: NextRequest) {
     });
 
     const dataRows = rows.slice(1);
-    const { data: profiles } = await db.from('profiles').select('id, name').limit(1000);
+    const { data: profiles } = await db.from('profiles').select('id, name, sala').eq('role', 'student').limit(2000);
     const list = profiles || [];
 
     const results = dataRows.map(row => {
       const name = String(row[finalNameIdx] || '').trim();
       if (!name) return null;
-      const match = bestMatch(name, list);
+      const sala = salaIdx >= 0 ? String(row[salaIdx] || '').trim() : '';
+      const salaCandidates = sala ? list.filter(p => (p.sala || '').toLowerCase().includes(sala.toLowerCase())) : list;
+      const match = bestMatch(name, salaCandidates.length ? salaCandidates : list);
       const isDetailed = hasQHeaders || (row.length > 3 && scoreIdx === -1);
       const scoreRaw = isDetailed ? null : Number(row[finalScoreIdx]);
       let answers: string[] | null = null;
       if (isDetailed) {
-        answers = row.filter((_, idx) => idx !== finalNameIdx).map(v => (v || '').trim().toUpperCase());
+        answers = row.filter((_, idx) => idx !== finalNameIdx && idx !== salaIdx).map(v => (v || '').trim().toUpperCase());
       }
-      return { name, userId: match?.profile.id ?? null, matchedName: match?.profile.name ?? null, confidence: match?.confidence ?? 'none', score: scoreRaw, answers, isDetailed };
+      return { name, sala, userId: match?.profile.id ?? null, matchedName: match?.profile.name ?? null, matchedSala: match?.profile.sala ?? null, confidence: match?.confidence ?? 'none', score: scoreRaw, answers, isDetailed };
     }).filter(Boolean);
 
     return NextResponse.json({ results });
+  }
+
+  if (action === 'search_students') {
+    const { name, sala } = body as { name: string; sala?: string };
+    if (!name?.trim()) return NextResponse.json({ students: [] });
+    let query = db.from('profiles').select('id, name, sala, institution').eq('role', 'student').ilike('name', `%${name.trim()}%`).limit(100);
+    if (sala?.trim()) query = query.ilike('sala', `%${sala.trim()}%`);
+    const { data, error } = await query.order('name');
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ students: data || [] });
   }
 
   // ── Excel apply ────────────────────────────────────────────
@@ -181,6 +194,7 @@ export async function POST(req: NextRequest) {
     };
 
     let ok = 0, err = 0;
+    const appliedUserIds: string[] = [];
     for (const e of entries) {
       let score = e.score ?? 0;
       let answers: object[] = [];
@@ -191,9 +205,9 @@ export async function POST(req: NextRequest) {
       const { error } = await saveTeacherAttempt(db, {
         user_id: e.userId, exam_id: examId, score, total_questions: answerKey?.length ?? 0, answers,
       });
-      if (error) err++; else ok++;
+      if (error) err++; else { ok++; appliedUserIds.push(e.userId); }
     }
-    return NextResponse.json({ ok, err });
+    return NextResponse.json({ ok, err, appliedUserIds });
   }
 
   return NextResponse.json({ error: 'Ação desconhecida' }, { status: 400 });

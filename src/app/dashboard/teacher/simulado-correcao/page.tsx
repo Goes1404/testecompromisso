@@ -7,15 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, Upload, ClipboardList, Grid3X3, FileSpreadsheet, Search, Save, ChevronDown, ChevronUp, BarChart3, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle2, Upload, ClipboardList, Grid3X3, FileSpreadsheet, Search, Save, ChevronDown, ChevronUp, BarChart3, AlertTriangle, Trash2, UserRoundSearch } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-const TOTAL_Q = 60;
+const TOTAL_Q = 50;
 const OPTS = ['A', 'B', 'C', 'D', 'E'];
 
 type Exam = { id: string; title: string; year: number; answer_key: string[] | null };
 type Attempt = { id: string; user_id: string; score: number; answers: { q: number; selected: string }[]; completed_at: string; profile: { name: string } | null };
-type ExcelRow = { name: string; userId: string | null; matchedName: string | null; confidence: 'high' | 'low' | 'none'; score: number | null; answers: string[] | null; isDetailed: boolean };
+type ExcelRow = { name: string; sala?: string; userId: string | null; matchedName: string | null; matchedSala?: string | null; confidence: 'high' | 'low' | 'none'; score: number | null; answers: string[] | null; isDetailed: boolean };
+type StudentMatch = { id: string; name: string; sala: string | null; institution: string | null };
 
 export default function SimuladoCorrecaoPage() {
   const { toast } = useToast();
@@ -49,6 +50,11 @@ export default function SimuladoCorrecaoPage() {
 
   // Excel state
   const [excelRows, setExcelRows] = useState<ExcelRow[]>([]);
+  const [manualSearchIndex, setManualSearchIndex] = useState<number | null>(null);
+  const [manualName, setManualName] = useState('');
+  const [manualSala, setManualSala] = useState('');
+  const [manualMatches, setManualMatches] = useState<StudentMatch[]>([]);
+  const [manualSearching, setManualSearching] = useState(false);
   const [excelLoading, setExcelLoading] = useState(false);
   const [applying, setApplying] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -157,7 +163,29 @@ export default function SimuladoCorrecaoPage() {
     });
     const d = await r.json();
     setExcelRows(d.results || []);
+    setManualSearchIndex(null);
+    setManualMatches([]);
     setExcelLoading(false);
+  };
+
+  const searchStudentsManually = async () => {
+    setManualSearching(true);
+    const r = await fetch('/api/teacher/simulado-correcao', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'search_students', name: manualName, sala: manualSala }),
+    });
+    const d = await r.json();
+    setManualMatches(d.students || []);
+    setManualSearching(false);
+  };
+
+  const linkManualStudent = (student: StudentMatch) => {
+    if (manualSearchIndex === null) return;
+    setExcelRows(prev => prev.map((row, i) => i === manualSearchIndex
+      ? { ...row, userId: student.id, matchedName: student.name, matchedSala: student.sala, confidence: 'high' }
+      : row));
+    setManualSearchIndex(null);
+    setManualMatches([]);
   };
 
   const handleApplyExcel = async () => {
@@ -171,7 +199,8 @@ export default function SimuladoCorrecaoPage() {
     });
     const d = await r.json();
     toast({ title: `✅ ${d.ok} importados${d.err ? ` · ❌ ${d.err} erros` : ''}` });
-    setExcelRows([]);
+    const imported = new Set<string>(d.appliedUserIds || []);
+    setExcelRows(prev => prev.filter(row => !row.userId || !imported.has(row.userId)));
     loadExam(selectedExamId);
     setApplying(false);
   };
@@ -439,7 +468,7 @@ export default function SimuladoCorrecaoPage() {
                     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs font-medium text-blue-700 space-y-1">
                       <p className="font-black">Formatos aceitos:</p>
                       <p>• <strong>Simples:</strong> <code>Aluno | Acertos</code> (1 linha por aluno, ex: João Silva | 45)</p>
-                      <p>• <strong>Detalhado:</strong> <code>Aluno | Q1 | Q2 | ... | Q60</code> (letra marcada em cada coluna, ex: A | C | B...)</p>
+                      <p>• <strong>Detalhado:</strong> <code>Aluno | Q1 | Q2 | ... | Q50</code> (letra marcada em cada coluna, ex: A | C | B...)</p>
                     </div>
 
                     {excelRows.length === 0 && (
@@ -462,6 +491,19 @@ export default function SimuladoCorrecaoPage() {
                           <span className="text-red-600 bg-red-100 px-3 py-1 rounded-xl">✗ {excelRows.filter(r => r.confidence === 'none').length} sem match</span>
                         </div>
 
+                        {manualSearchIndex !== null && (
+                          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+                            <p className="text-sm font-black text-primary">Pesquisar aluno para “{excelRows[manualSearchIndex]?.name}”</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="Nome do aluno" className="flex-1 min-w-48 rounded-xl" />
+                              <Input value={manualSala} onChange={e => setManualSala(e.target.value)} placeholder="Sala / turma" className="w-36 rounded-xl" />
+                              <Button onClick={searchStudentsManually} disabled={manualSearching || !manualName.trim()} className="rounded-xl">{manualSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />} Pesquisar</Button>
+                              <Button variant="outline" onClick={() => { setManualSearchIndex(null); setManualMatches([]); }} className="rounded-xl">Fechar</Button>
+                            </div>
+                            {manualMatches.map(student => <button key={student.id} onClick={() => linkManualStudent(student)} className="w-full flex justify-between rounded-xl bg-white p-3 text-left text-xs hover:bg-green-50"><span className="font-bold">{student.name}</span><span className="text-slate-500">{student.sala || 'Sem sala'}{student.institution ? ` · ${student.institution}` : ''}</span></button>)}
+                            {!manualSearching && manualMatches.length === 0 && <p className="text-xs text-slate-500">Pesquise pelo nome; informe a sala para restringir os resultados.</p>}
+                          </div>
+                        )}
                         <div className="overflow-auto rounded-2xl border border-slate-100">
                           <table className="w-full text-xs">
                             <thead className="bg-slate-50">
@@ -471,6 +513,7 @@ export default function SimuladoCorrecaoPage() {
                                 <th className="px-4 py-3 text-center font-black text-slate-500 uppercase tracking-widest">Tipo</th>
                                 <th className="px-4 py-3 text-center font-black text-slate-500 uppercase tracking-widest">Acertos</th>
                                 <th className="px-4 py-3 text-center font-black text-slate-500 uppercase tracking-widest">Status</th>
+                                <th className="px-4 py-3 text-center font-black text-slate-500 uppercase tracking-widest">Ações</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -492,6 +535,12 @@ export default function SimuladoCorrecaoPage() {
                                     <Badge className={`text-[9px] font-black border-none ${confColor(r.confidence)}`}>
                                       {r.confidence === 'high' ? '✓' : r.confidence === 'low' ? '⚠' : '✗'}
                                     </Badge>
+                                  </td>
+                                  <td className="px-4 py-2 text-center">
+                                    {r.confidence === 'none' ? <div className="flex justify-center gap-1">
+                                      <Button size="sm" variant="outline" className="h-8 rounded-lg px-2 text-[10px]" onClick={() => { setManualSearchIndex(i); setManualName(r.name); setManualSala(r.sala || ''); setManualMatches([]); }}><UserRoundSearch className="h-3.5 w-3.5 mr-1" /> Pesquisar</Button>
+                                      <Button size="sm" variant="ghost" title="Remover aluno não encontrado" className="h-8 rounded-lg px-2 text-red-600" onClick={() => setExcelRows(prev => prev.filter((_, index) => index !== i))}><Trash2 className="h-4 w-4" /></Button>
+                                    </div> : <span className="text-slate-300">—</span>}
                                   </td>
                                 </tr>
                               ))}
